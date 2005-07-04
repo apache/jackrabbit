@@ -16,28 +16,28 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.BatchedItemOperations;
-import org.apache.jackrabbit.core.Constants;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.util.Base64;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.util.Base64;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ImportUUIDBehavior;

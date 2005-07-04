@@ -16,23 +16,23 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Weight;
-import org.apache.lucene.search.Searcher;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.HitCollector;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
-import java.util.BitSet;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Implements a lucene <code>Query</code> which returns the nodes selected by

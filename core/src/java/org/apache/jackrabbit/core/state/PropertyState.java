@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.util.Base64;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.util.Base64;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -38,7 +38,8 @@ import java.io.StringWriter;
  */
 public class PropertyState extends ItemState {
 
-    static final long serialVersionUID = 5169077648295079463L;
+    /** Serialization UID of this class. */
+    static final long serialVersionUID = 8960688206140247183L;
 
     protected QName name;
     protected InternalValue[] values;

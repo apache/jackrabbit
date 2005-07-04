@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * <code>ItemDef</code> is the internal representation of

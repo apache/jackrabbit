@@ -17,29 +17,29 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import EDU.oswego.cs.dl.util.concurrent.FIFOReadWriteLock;
+import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
-import org.apache.jackrabbit.core.query.QueryConstants;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Hits;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 
-import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
 import java.io.IOException;
 
 /**
@@ -195,7 +195,7 @@ public class SearchIndex extends AbstractQueryHandler {
             SortField[] sortFields = new SortField[orderProps.length];
             for (int i = 0; i < orderProps.length; i++) {
                 String prop = null;
-                if (QueryConstants.JCR_SCORE.equals(orderProps[i])) {
+                if (Constants.JCR_SCORE.equals(orderProps[i])) {
                     // order on jcr:score does not use the natural order as
                     // implemented in lucene. score ascending in lucene means that
                     // higher scores are first. JCR specs that lower score values

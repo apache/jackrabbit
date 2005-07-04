@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Entity resolver for Jackrabbit configuration files.

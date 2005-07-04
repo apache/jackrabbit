@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.IllegalNameException;
 import org.apache.jackrabbit.core.ItemLifeCycleListener;
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
 
 import javax.jcr.Item;
 import javax.jcr.PropertyIterator;

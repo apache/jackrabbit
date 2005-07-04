@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.state.obj;
 
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 
 import java.io.InputStream;
 

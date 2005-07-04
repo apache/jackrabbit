@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.core.util.ISO9075;
 import org.apache.xerces.util.XMLChar;
 import junit.framework.TestCase;

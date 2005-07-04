@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 
 import javax.jcr.NamespaceRegistry;
 import java.io.File;

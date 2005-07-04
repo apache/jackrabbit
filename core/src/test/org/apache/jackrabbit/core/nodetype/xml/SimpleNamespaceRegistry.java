@@ -20,7 +20,7 @@ import java.util.Properties;
 
 import javax.jcr.NamespaceRegistry;
 
-import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.Constants;
 
 /**
  * Simple utility implementation of the NamespaceRegistry interface.

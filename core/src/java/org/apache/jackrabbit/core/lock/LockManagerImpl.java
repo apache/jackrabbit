@@ -16,36 +16,36 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.PathMap;
-import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.core.observation.EventImpl;
-import org.apache.log4j.Logger;
 import org.apache.commons.collections.map.LinkedMap;
+import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PathMap;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.observation.EventImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.Path;
+import org.apache.log4j.Logger;
 
-import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Node;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.io.File;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 
 
 /**

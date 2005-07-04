@@ -20,8 +20,8 @@ import org.apache.commons.collections.MapIterator;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.name.QName;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -44,7 +44,7 @@ import java.util.Set;
 public class NodeState extends ItemState {
 
     /** Serialization UID of this class. */
-    static final long serialVersionUID = -1755253053645185279L;
+    static final long serialVersionUID = -764076390011517389L;
 
     /** the uuid of this node */
     protected String uuid;

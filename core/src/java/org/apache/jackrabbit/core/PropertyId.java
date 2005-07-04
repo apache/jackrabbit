@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.name.QName;
+
 /**
  * Property identifier. An instance of this class identifies a single
  * property using the UUID of the parent node and the qualified name of

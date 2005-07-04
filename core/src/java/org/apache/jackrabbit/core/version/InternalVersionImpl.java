@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;

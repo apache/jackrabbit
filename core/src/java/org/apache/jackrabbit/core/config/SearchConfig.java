@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.util.Properties;
-
 import org.apache.jackrabbit.core.fs.FileSystem;
+
+import java.util.Properties;
 
 /**
  * Search index configuration. This bean configuration class

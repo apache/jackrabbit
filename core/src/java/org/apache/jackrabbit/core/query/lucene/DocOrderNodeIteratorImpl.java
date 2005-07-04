@@ -17,13 +17,13 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.Path;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.name.Path;
 import org.apache.log4j.Logger;
 
-import javax.jcr.NodeIterator;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import java.util.Arrays;
 import java.util.Comparator;

@@ -16,13 +16,9 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -31,10 +27,13 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.w3c.dom.Element;
-import org.xml.sax.InputSource;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Repository configuration. This configuration class is used to

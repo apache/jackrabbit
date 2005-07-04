@@ -16,27 +16,26 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.NamespaceResolver;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
-import org.apache.commons.collections.iterators.IteratorChain;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.TreeMap;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

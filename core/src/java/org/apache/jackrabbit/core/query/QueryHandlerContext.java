@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 
 /**
  * Acts as an argument for the {@link QueryHandler} to keep the interface

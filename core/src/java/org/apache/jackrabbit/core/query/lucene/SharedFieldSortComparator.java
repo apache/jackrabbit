@@ -1,11 +1,11 @@
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.search.SortComparator;
-import org.apache.lucene.search.ScoreDocComparator;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.FieldCache;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.FieldCache;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.ScoreDocComparator;
+import org.apache.lucene.search.SortComparator;
+import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
 

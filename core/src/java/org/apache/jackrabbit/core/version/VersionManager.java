@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
+import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;

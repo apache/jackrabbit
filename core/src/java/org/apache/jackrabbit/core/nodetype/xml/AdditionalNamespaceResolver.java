@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import java.util.Enumeration;
-import java.util.Properties;
+import org.apache.jackrabbit.name.NamespaceResolver;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.core.NamespaceResolver;
+import java.util.Enumeration;
+import java.util.Properties;
 
 /**
  * A simple namespace resolver implementation, that uses the additional

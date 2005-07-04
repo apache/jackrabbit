@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public class QueryRootNode extends QueryNode {
     private PathQueryNode locationNode;
 
     /**
-     * The list of property names (as {@link org.apache.jackrabbit.core.QName}s
+     * The list of property names (as {@link org.apache.jackrabbit.name.QName}s
      * to select.
      */
     private List selectProperties = new ArrayList();

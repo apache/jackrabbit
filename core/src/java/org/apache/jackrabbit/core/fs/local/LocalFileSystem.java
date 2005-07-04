@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.fs.local;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
-import org.apache.jackrabbit.core.util.LazyFileInputStream;
+import org.apache.jackrabbit.util.LazyFileInputStream;
 import org.apache.log4j.Logger;
 
 import java.io.File;

@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import org.apache.commons.collections.BeanMap;
+
 import java.util.Iterator;
 import java.util.Properties;
-
-import org.apache.commons.collections.BeanMap;
 
 /**
  * Bean configuration class. BeanConfig instances contain the class name

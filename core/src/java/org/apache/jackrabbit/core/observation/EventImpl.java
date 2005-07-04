@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.Path;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;

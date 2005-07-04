@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.log4j.Logger;
 import org.xml.sax.helpers.DefaultHandler;
 

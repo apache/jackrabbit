@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.io.File;
-
 import org.apache.jackrabbit.core.fs.FileSystem;
+
+import java.io.File;
 
 /**
  * Versioning configuration. This configuration class is used to

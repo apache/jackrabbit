@@ -16,22 +16,22 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
-import org.apache.jackrabbit.core.util.uuid.Constants;
+import org.apache.jackrabbit.uuid.Constants;
 import org.apache.log4j.Logger;
 
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.Writer;
-import java.io.OutputStreamWriter;
 import java.io.BufferedWriter;
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Implements a redo log for the {@link VolatileIndex}. While nodes are added to

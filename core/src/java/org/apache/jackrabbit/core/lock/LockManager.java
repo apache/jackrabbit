@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.name.Path;
 
-import javax.jcr.lock.LockException;
-import javax.jcr.lock.Lock;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
 
 /**
  * Defines the functionality needed for locking and unlocking nodes.

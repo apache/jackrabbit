@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.store.RAMDirectory;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.commons.collections.map.LinkedMap;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.store.RAMDirectory;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Implements an in-memory index with a redo log.

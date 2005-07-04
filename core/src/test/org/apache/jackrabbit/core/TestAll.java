@@ -35,8 +35,6 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("Core tests");
 
-        suite.addTestSuite(PathTest.class);
-        suite.addTestSuite(QNameTest.class);
         suite.addTestSuite(XATest.class);
 
         return suite;

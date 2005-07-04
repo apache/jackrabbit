@@ -16,28 +16,27 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.NodeTypeQueryNode;
+import org.apache.jackrabbit.core.query.NotQueryNode;
+import org.apache.jackrabbit.core.query.OrQueryNode;
 import org.apache.jackrabbit.core.query.OrderQueryNode;
+import org.apache.jackrabbit.core.query.PathQueryNode;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryParser;
 import org.apache.jackrabbit.core.query.QueryRootNode;
-import org.apache.jackrabbit.core.query.OrQueryNode;
-import org.apache.jackrabbit.core.query.AndQueryNode;
-import org.apache.jackrabbit.core.query.NotQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
-import org.apache.jackrabbit.core.query.PathQueryNode;
-import org.apache.jackrabbit.core.query.QueryConstants;
 import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
@@ -48,9 +47,9 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Arrays;
 
 /**
  * Implements the {@link ExecutableQuery} interface.
@@ -201,11 +200,11 @@ class QueryImpl implements ExecutableQuery {
         }
 
         // add jcr:path
-        selectProps.add(QueryConstants.JCR_PATH);
+        selectProps.add(Constants.JCR_PATH);
 
         // add jcr:score if necessary
         if (hasTextsearchNode(root.getLocationNode())) {
-            selectProps.add(QueryConstants.JCR_SCORE);
+            selectProps.add(Constants.JCR_SCORE);
         }
 
         // return QueryResult

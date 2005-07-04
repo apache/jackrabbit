@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.virtual;
 
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * A <code>VirtualValueProvider</code> is used for virtual properties that

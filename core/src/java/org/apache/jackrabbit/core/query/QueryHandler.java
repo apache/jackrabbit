@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.state.NodeState;
 
-import javax.jcr.query.InvalidQueryException;
 import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
 import java.io.IOException;
 
 /**

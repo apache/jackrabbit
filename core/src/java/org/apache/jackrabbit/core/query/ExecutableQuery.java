@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import javax.jcr.query.QueryResult;
 import javax.jcr.RepositoryException;
+import javax.jcr.query.QueryResult;
 
 /**
  * Specifies an interface for a query object implementation that can just be

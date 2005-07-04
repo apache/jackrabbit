@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 import java.util.Iterator;
 

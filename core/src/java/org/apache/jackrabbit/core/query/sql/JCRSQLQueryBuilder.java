@@ -16,11 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.NAryQueryNode;
@@ -34,7 +30,11 @@ import org.apache.jackrabbit.core.query.QueryNode;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
-import org.apache.jackrabbit.core.util.ISO8601;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.util.ISO8601;
 import org.apache.log4j.Logger;
 
 import javax.jcr.query.InvalidQueryException;
@@ -270,7 +270,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             }, data);
             QName identifier = tmp[0];
 
-            if (identifier.equals(QueryConstants.JCR_PATH)) {
+            if (identifier.equals(Constants.JCR_PATH)) {
                 if (tmp[1] != null) {
                     // simply ignore, this is a join of a mixin node type
                 } else {

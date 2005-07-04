@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 public class ASTIdentifier extends SimpleNode {
 

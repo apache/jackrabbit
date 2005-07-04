@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.BaseException;
+import org.apache.jackrabbit.BaseException;
 
 /**
  * TransactionException is thrown when some operation inside the transaction

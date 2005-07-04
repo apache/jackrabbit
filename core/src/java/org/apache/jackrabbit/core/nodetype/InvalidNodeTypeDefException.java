@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.BaseException;
+import org.apache.jackrabbit.BaseException;
 
 /**
  * The <code>NodeTypeConflictException</code> ...
