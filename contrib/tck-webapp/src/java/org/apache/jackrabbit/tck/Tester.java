@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.RepositoryHelper;
@@ -132,7 +134,8 @@ public class Tester {
             } else {
                 TestSuite ts = new TestSuite();
                 ts.setName(testClassName);
-                Map testcases = new HashMap();
+                //Map testcases = new HashMap();
+                List testcases = new ArrayList();
                 boolean recreate = false;
 
                 Enumeration testMethods = testClass.tests();
@@ -142,16 +145,15 @@ public class Tester {
                     if (excludeList.containsKey(testClassName + "#" + methodname)) {
                         recreate = true;
                     } else {
-                        testcases.put(methodname, tc);
+                        testcases.add(tc);
                     }
                 }
                 if (recreate) {
                     TestSuite recreatedTS = new TestSuite(ts.toString());
-                    Iterator itr = testcases.keySet().iterator();
+                    Iterator itr = testcases.iterator();
 
                     while (itr.hasNext()) {
-                        String key = (String) itr.next();
-                        recreatedTS.addTest((TestCase) testcases.get(key));
+                        recreatedTS.addTest((TestCase) itr.next());
                     }
                     updatedTS.addTest(recreatedTS);
                 } else {
