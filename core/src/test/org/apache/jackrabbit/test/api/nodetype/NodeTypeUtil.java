@@ -71,6 +71,23 @@ public class NodeTypeUtil {
 
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
+
+            // node types with more than one residual child node definition
+            // will cause trouble in test cases. the implementation
+            // might pick another definition than the definition returned by
+            // this method, when a child node is set.
+            NodeDefinition[] childDefs = type.getChildNodeDefinitions();
+            int residuals = 0;
+            for (int i = 0; i < childDefs.length; i++) {
+                if (childDefs[i].getName().equals("*")) {
+                    residuals++;
+                }
+            }
+            if (residuals > 1) {
+                // more than one residual, not suitable for tests
+                continue;
+            }
+
             NodeDefinition nodeDefs[] = type.getDeclaredChildNodeDefinitions();
 
             for (int i = 0; i < nodeDefs.length; i++) {
@@ -97,7 +114,7 @@ public class NodeTypeUtil {
                     continue;
                 }
 
-                if (!residual && i == 0) {
+                if (!residual) {
                     // if another child node def is a residual definition
                     // overjump the current node type
                     NodeDefinition nodeDefsAll[] = type.getChildNodeDefinitions();
@@ -245,10 +262,46 @@ public class NodeTypeUtil {
                     continue;
                 }
 
+                // also skip property residual property definition if there
+                // is another residual definition
+                if (residual) {
+                    // check if there is another residual property def
+                    if (getNumResidualPropDefs(type) > 1) {
+                        continue;
+                    }
+                }
+
+                if (!residual) {
+                    // if not looking for a residual property def then there
+                    // must not be any residual definition at all on the node
+                    // type
+                    if (getNumResidualPropDefs(type) > 0) {
+                        continue;
+                    }
+                }
+
                 return propDef;
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the number of residual property definitions of <code>type</code>
+     * including its base types.
+     * @param type the node type
+     * @return the number of residual property definitions.
+     */
+    private static int getNumResidualPropDefs(NodeType type) {
+        PropertyDefinition[] pDefs = type.getPropertyDefinitions();
+        int residuals = 0;
+        for (int j = 0; j < pDefs.length; j++) {
+            PropertyDefinition pDef = pDefs[j];
+            if (pDef.getName().equals("*")) {
+                residuals++;
+            }
+        }
+        return residuals;
     }
 
     /**
