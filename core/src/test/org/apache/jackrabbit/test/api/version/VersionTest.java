@@ -211,26 +211,6 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.getDefinition()</code> returns the correct Node
-     * definition
-     * {@link Node#getDefinition()} is implementation specific, cannot be tested.
-     */
-    /*
-    public void testGetDefinition() throws Exception {
-        assertFalse("Version.getDefinition() does not return correct Node definition", version.getDefinition().allowsSameNameSiblings());
-        assertEquals("Version.getDefinition() does not return correct Node definition", ntVersionHistory, version.getDefinition().getDeclaringNodeType().getName());
-        assertNull("Version.getDefinition() does not return correct Node definition", version.getDefinition().getDefaultPrimaryType());
-        assertEquals("Version.getDefinition() does not return correct Node definition", jcrFrozenNode, version.getDefinition().getName());
-        assertEquals("Version.getDefinition() does not return correct Node definition", OnParentVersionAction.ABORT, version.getDefinition().getOnParentVersion());
-        assertEquals("Version.getDefinition() does not return correct Node definition", jcrFrozenNode, (version.getDefinition().getRequiredPrimaryTypes())[0].getName());
-        assertFalse("Version.getDefinition() does not return correct Node definition", version.getDefinition().isAutoCreated());
-        assertFalse("Version.getDefinition() does not return correct Node definition", version.getDefinition().isMandatory());
-        assertTrue("Version.getDefinition() does not return correct Node definition", version.getDefinition().isProtected());
-    }
-    */
-
-
-    /**
      * Tests if <code>Version.getDepth()</code> returns the right depth
      */
     public void testGetDepth() throws Exception {
@@ -352,35 +332,6 @@ public class VersionTest extends AbstractVersionTest {
      */
     public void testGetProperty() throws Exception {
         assertTrue("Version.getProperty(String) does not return property jcr:created", version.getProperty(jcrCreated).getName().equals(jcrCreated));
-    }
-
-    /**
-     * Tests if <code>Version.getReferences()</code> returns the right reference
-     * to the current node
-     */
-    public void testGetReferences() throws Exception {
-        /*
-
-        inter-versionstorage references MAY not be supported by the rep.
-
-        PropertyIterator pi = version.getReferences();
-        boolean hasRootVersionReference = false;
-        while (pi.hasNext()) {
-            Property p = pi.nextProperty();
-            if (p.getName().equals(jcrSuccessors) && p.getDefinition().isMultiple()) {
-                Value[] values = p.getValues();
-                for (int i = 0; i < values.length; i++) {
-                    Value value = values[i];
-                    if (superuser.getNodeByUUID(value.getString()).isNodeType(ntVersion)) {
-                        hasRootVersionReference = true;
-                        break;
-                    }
-                }
-            }
-        }
-        assertTrue("Version.getReferences() does not return the jcr:successors property of the jcr:rootVersion", hasRootVersionReference);
-
-        */
     }
 
     /**

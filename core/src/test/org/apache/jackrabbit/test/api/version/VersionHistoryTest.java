@@ -98,32 +98,6 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Test if initially auto-created root version does not provide any state
-     * information
-     */
-    public void testAutocreatedRootVersionHasNoState() throws
-            RepositoryException {
-
-        /*
-
-        the spec 1.0 does not properly define this anymore. the
-        nt:version does not have a jcr:frozenUUID or jcr:primaryType, this was
-        moved to nt:frozenNode. so, the jcr:rootVersion is initialzied with an
-        'empty' frozen node. but this is wrongly described in chapter
-        8.2.4 Initializing the Version History.
-
-        Version rootVersion = vHistory.getRootVersion();
-        try {
-            rootVersion.getNode(jcrFrozenNode);
-            fail("The root vesion must not store any state information.");
-        } catch (PathNotFoundException e) {
-            // success
-        }
-
-        */
-    }
-
-    /**
      * The version history must initially contain two versions (root version +
      * first test version).
      *
