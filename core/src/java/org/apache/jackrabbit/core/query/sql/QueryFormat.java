@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.ExactQueryNode;
@@ -35,7 +32,10 @@ import org.apache.jackrabbit.core.query.QueryNodeVisitor;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
-import org.apache.jackrabbit.core.util.ISO8601;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.util.ISO8601;
 
 import javax.jcr.query.InvalidQueryException;
 import java.util.ArrayList;
@@ -284,7 +284,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         try {
             if (containsDescendantOrSelf(node)) {
                 sb.append("(");
-                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(Constants.JCR_PATH.toJCRName(resolver));
                 sb.append(" LIKE '");
                 LocationStepQueryNode[] steps = node.getPathSteps();
                 for (int i = 0; i < steps.length; i++) {
@@ -299,7 +299,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 }
                 sb.append('\'');
                 sb.append(" OR ");
-                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(Constants.JCR_PATH.toJCRName(resolver));
                 sb.append(" LIKE '");
                 for (int i = 0; i < steps.length; i++) {
                     if (steps[i].getNameTest() == null
@@ -312,7 +312,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 }
                 sb.append("')");
             } else if (containsAllChildrenMatch(node)) {
-                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(Constants.JCR_PATH.toJCRName(resolver));
                 sb.append(" LIKE '");
                 StringBuffer path = new StringBuffer();
                 LocationStepQueryNode[] steps = node.getPathSteps();
@@ -326,12 +326,12 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 sb.append(path);
                 sb.append('\'');
                 sb.append(" AND NOT ");
-                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(Constants.JCR_PATH.toJCRName(resolver));
                 sb.append(" LIKE '");
                 sb.append(path).append("/%").append('\'');
             } else {
                 // just do a best effort
-                sb.append(QueryConstants.JCR_PATH.toJCRName(resolver));
+                sb.append(Constants.JCR_PATH.toJCRName(resolver));
                 sb.append(" LIKE '");
                 LocationStepQueryNode[] steps = node.getPathSteps();
                 for (int i = 0; i < steps.length; i++) {

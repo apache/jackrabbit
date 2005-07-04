@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -28,9 +28,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Document builder class. This class provides an intuitive

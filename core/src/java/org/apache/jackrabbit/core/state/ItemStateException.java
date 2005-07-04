@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.BaseException;
+import org.apache.jackrabbit.BaseException;
 
 /**
  * The <code>ItemStateException</code> ...

@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

@@ -16,16 +16,26 @@
  */
 package org.apache.jackrabbit.core.value;
 
-import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.util.ISO8601;
-import org.apache.jackrabbit.core.util.uuid.UUID;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.BinaryValue;
+import org.apache.jackrabbit.value.BooleanValue;
+import org.apache.jackrabbit.value.DateValue;
+import org.apache.jackrabbit.value.DoubleValue;
+import org.apache.jackrabbit.value.LongValue;
+import org.apache.jackrabbit.value.NameValue;
+import org.apache.jackrabbit.value.PathValue;
+import org.apache.jackrabbit.value.ReferenceValue;
+import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;

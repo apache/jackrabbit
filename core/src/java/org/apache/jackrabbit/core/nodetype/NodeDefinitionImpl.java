@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
 
 /**
  * This class implements the <code>NodeDefinition</code> interface.

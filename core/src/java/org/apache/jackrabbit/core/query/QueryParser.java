@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.query.xpath.XPathQueryBuilder;
 import org.apache.jackrabbit.core.query.sql.JCRSQLQueryBuilder;
-import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.core.query.xpath.XPathQueryBuilder;
+import org.apache.jackrabbit.name.NamespaceResolver;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;

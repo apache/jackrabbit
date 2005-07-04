@@ -20,11 +20,11 @@ import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.log4j.Logger;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.io.PrintStream;
 
 /**
  * An <code>ItemStateCache</code> maintains a cache of <code>ItemState</code>

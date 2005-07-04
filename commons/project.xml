@@ -36,12 +36,20 @@
             <artifactId>jackrabbit-api</artifactId>
             <version>${pom.currentVersion}</version>
         </dependency>
-
         <dependency>
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
             <version>1.0</version>
             <url>http://jcp.org/en/jsr/detail?id=170</url>
+        </dependency>
+        <dependency>
+            <id>junit</id>
+            <version>3.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.6.2</version>
         </dependency>
     </dependencies>
 

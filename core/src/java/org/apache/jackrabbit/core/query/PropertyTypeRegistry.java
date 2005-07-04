@@ -16,22 +16,22 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.Constants;
+import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Map;
 
 /**
  * The <code>PropertyTypeRegistry</code> keeps track of registered node type

@@ -16,28 +16,27 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Vector;
+import org.apache.jackrabbit.core.nodetype.InvalidConstraintException;
+import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.PropDefImpl;
+import org.apache.jackrabbit.core.nodetype.ValueConstraint;
+import org.apache.jackrabbit.core.util.DOMWalker;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
-
-import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.InvalidConstraintException;
-import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.ValueConstraint;
-import org.apache.jackrabbit.core.nodetype.PropDefImpl;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
-import org.apache.jackrabbit.core.util.DOMWalker;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Vector;
 
 /**
  * Node type definition reader. This class is used to read the

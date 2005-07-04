@@ -18,10 +18,7 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.MalformedPathException;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -30,6 +27,9 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PathNotFoundException;

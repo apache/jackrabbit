@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.query.QueryConstants;
-import org.apache.jackrabbit.core.value.LongValue;
-import org.apache.jackrabbit.core.value.PathValue;
-import org.apache.jackrabbit.core.value.StringValue;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.value.LongValue;
+import org.apache.jackrabbit.value.PathValue;
+import org.apache.jackrabbit.value.StringValue;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Property;
@@ -215,9 +215,9 @@ class RowIteratorImpl implements RowIterator {
                         }
                     } else {
                         // property not set or jcr:path / jcr:score
-                        if (QueryConstants.JCR_PATH.equals(properties[i])) {
+                        if (Constants.JCR_PATH.equals(properties[i])) {
                             tmp[i] = PathValue.valueOf(node.getPath());
-                        } else if (QueryConstants.JCR_SCORE.equals(properties[i])) {
+                        } else if (Constants.JCR_SCORE.equals(properties[i])) {
                             tmp[i] = new LongValue((int) (score * 1000f));
                         } else {
                             tmp[i] = null;
@@ -265,9 +265,9 @@ class RowIteratorImpl implements RowIterator {
                     }
                 } else {
                     // either jcr:score, jcr:path or not set
-                    if (QueryConstants.JCR_PATH.equals(prop)) {
+                    if (Constants.JCR_PATH.equals(prop)) {
                         return PathValue.valueOf(node.getPath());
-                    } else if (QueryConstants.JCR_SCORE.equals(prop)) {
+                    } else if (Constants.JCR_SCORE.equals(prop)) {
                         return new LongValue((int) (score * 1000f));
                     } else {
                         return null;

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * Implements a query node that defines an exact match of a property and a

@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.xerces.util.XMLChar;
 
 import javax.jcr.NamespaceException;

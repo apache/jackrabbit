@@ -16,6 +16,13 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.query.LocationStepQueryNode;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.name.QName;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
@@ -25,15 +32,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.document.Document;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.query.LocationStepQueryNode;
+import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
 import java.util.ArrayList;

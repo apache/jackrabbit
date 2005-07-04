@@ -16,13 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.MalformedPathException;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.Path;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.UnknownPrefixException;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.ExactQueryNode;
@@ -40,7 +34,13 @@ import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.util.ISO8601;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.util.ISO8601;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
@@ -80,12 +80,12 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * QName for jcr:primaryType
      */
-    private static QName primaryType = org.apache.jackrabbit.core.Constants.JCR_PRIMARYTYPE;
+    private static QName primaryType = org.apache.jackrabbit.Constants.JCR_PRIMARYTYPE;
 
     /**
      * QName for jcr:mixinTypes
      */
-    private static QName mixinTypes = org.apache.jackrabbit.core.Constants.JCR_MIXINTYPES;
+    private static QName mixinTypes = org.apache.jackrabbit.Constants.JCR_MIXINTYPES;
 
     /**
      * Root node of the abstract query tree

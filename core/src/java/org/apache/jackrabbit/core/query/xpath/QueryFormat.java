@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.xpath;
 
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.NoPrefixDeclaredException;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.ExactQueryNode;
@@ -35,8 +32,11 @@ import org.apache.jackrabbit.core.query.QueryNodeVisitor;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
-import org.apache.jackrabbit.core.util.ISO8601;
 import org.apache.jackrabbit.core.util.ISO9075;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.util.ISO8601;
 
 import javax.jcr.query.InvalidQueryException;
 import java.util.ArrayList;

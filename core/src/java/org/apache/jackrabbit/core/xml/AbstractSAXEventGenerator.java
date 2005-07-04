@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.BaseException;
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.NamespaceResolver;
+import org.apache.jackrabbit.BaseException;
+import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;

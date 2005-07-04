@@ -16,6 +16,15 @@
  */
 package org.apache.jackrabbit.core.value;
 
+import org.apache.jackrabbit.value.BinaryValue;
+import org.apache.jackrabbit.value.BooleanValue;
+import org.apache.jackrabbit.value.DateValue;
+import org.apache.jackrabbit.value.DoubleValue;
+import org.apache.jackrabbit.value.LongValue;
+import org.apache.jackrabbit.value.ReferenceValue;
+import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.value.ValueHelper;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;

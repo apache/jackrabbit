@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.Path;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.name.Path;
 
 import javax.jcr.Session;
 import javax.jcr.observation.Event;

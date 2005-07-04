@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.core.fs.local;
 
+import org.apache.jackrabbit.util.LazyFileInputStream;
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.core.util.LazyFileInputStream;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.HashSet;
-import java.io.InputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * This Class implements a very simple open handle monitor for the local

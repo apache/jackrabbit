@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * the base interface for nodes that were versioned and turned either into

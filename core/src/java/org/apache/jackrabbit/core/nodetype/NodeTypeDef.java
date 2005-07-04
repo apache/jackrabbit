@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.PropertyType;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Arrays;
 
 /**
  * A <code>NodeTypeDef</code> holds the definition of a node type.

@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.BaseException;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.BaseException;
 import org.apache.jackrabbit.core.util.ISO9075;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

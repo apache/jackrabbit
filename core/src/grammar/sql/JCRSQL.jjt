@@ -41,10 +41,10 @@ PARSER_BEGIN(JCRSQLParser)
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.UnknownPrefixException;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.core.query.QueryConstants;
 
 public class JCRSQLParser {

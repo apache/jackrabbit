@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 
 import java.io.IOException;

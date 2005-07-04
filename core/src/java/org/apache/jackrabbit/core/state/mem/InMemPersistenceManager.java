@@ -16,12 +16,9 @@
  */
 package org.apache.jackrabbit.core.state.mem;
 
-import org.apache.jackrabbit.core.value.BLOBFileValue;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.QName;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -36,6 +33,9 @@ import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.obj.BLOBStore;
 import org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
@@ -302,7 +302,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         try {
             out = new BufferedOutputStream(internalBlobFile.getOutputStream());
             byte[] buffer = new byte[8192];
-            int read = 0;
+            int read;
             while ((read = in.read(buffer)) > 0) {
                 out.write(buffer, 0, read);
             }

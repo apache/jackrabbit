@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.log4j.Logger;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.document.Document;
-import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Implements an <code>IndexReader</code> that maintains caches to resolve

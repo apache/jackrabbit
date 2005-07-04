@@ -17,12 +17,12 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.Constants;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.NamespaceRegistry;

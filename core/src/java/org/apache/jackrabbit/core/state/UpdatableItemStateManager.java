@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * Identifies an <code>ItemStateManager</code> that allows updating

@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.search.FieldCache;
-import org.apache.lucene.search.SortComparator;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.search.FieldCache;
+import org.apache.lucene.search.SortComparator;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.HashMap;
 
 /**
  * Implements a variant of the lucene class <code>org.apache.lucene.search.FieldCacheImpl</code>.

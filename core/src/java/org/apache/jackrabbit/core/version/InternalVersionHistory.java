@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.version.VersionException;
 import java.util.Iterator;

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.BaseException;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
@@ -33,11 +34,7 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.util.ChildrenCollectorFilter;
-import org.apache.jackrabbit.core.util.IteratorHelper;
-import org.apache.jackrabbit.core.util.uuid.UUID;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.ValueHelper;
 import org.apache.jackrabbit.core.version.GenericVersionSelector;
 import org.apache.jackrabbit.core.version.InternalFreeze;
 import org.apache.jackrabbit.core.version.InternalFrozenNode;
@@ -46,6 +43,16 @@ import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.util.ChildrenCollectorFilter;
+import org.apache.jackrabbit.util.IteratorHelper;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;

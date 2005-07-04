@@ -16,17 +16,16 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import java.util.Collections;
-import java.util.Map;
+import org.apache.jackrabbit.core.config.ConfigurationException;
+import org.apache.jackrabbit.core.config.LoginModuleConfig;
 
 import javax.jcr.Credentials;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-
-import org.apache.jackrabbit.core.config.ConfigurationException;
-import org.apache.jackrabbit.core.config.LoginModuleConfig;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * An authentication context used to authenticate users. It is similar to JAAS' <code>LoginContext</code>

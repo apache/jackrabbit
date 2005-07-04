@@ -16,16 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.RepositoryException;
-import javax.security.auth.Subject;
-import javax.transaction.xa.XAException;
-import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
-
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.security.AuthContext;
@@ -33,6 +23,15 @@ import org.apache.jackrabbit.core.state.TransactionContext;
 import org.apache.jackrabbit.core.state.TransactionException;
 import org.apache.jackrabbit.core.state.TransactionListener;
 import org.apache.log4j.Logger;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.RepositoryException;
+import javax.security.auth.Subject;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Session extension that provides XA support.

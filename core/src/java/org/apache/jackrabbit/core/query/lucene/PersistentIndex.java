@@ -18,10 +18,10 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.index.IndexReader;
 import org.apache.log4j.Logger;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.Directory;
 
 import java.io.IOException;
 

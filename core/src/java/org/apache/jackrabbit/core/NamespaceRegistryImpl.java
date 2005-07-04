@@ -16,16 +16,18 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.log4j.Logger;
 import org.apache.xerces.util.XMLChar;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.AccessDeniedException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;

@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.query.lucene.FieldNames;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
 
 import javax.jcr.RepositoryException;
-import java.util.Map;
-import java.util.HashMap;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implements a {@link TextFilter} that handles binary properties of mime-type

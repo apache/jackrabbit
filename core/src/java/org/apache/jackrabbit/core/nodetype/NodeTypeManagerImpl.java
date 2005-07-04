@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.IllegalNameException;
-import org.apache.jackrabbit.core.NamespaceResolver;
-import org.apache.jackrabbit.core.QName;
-import org.apache.jackrabbit.core.UnknownPrefixException;
-import org.apache.jackrabbit.core.util.IteratorHelper;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -32,8 +32,8 @@ import javax.jcr.nodetype.NodeTypeManager;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
