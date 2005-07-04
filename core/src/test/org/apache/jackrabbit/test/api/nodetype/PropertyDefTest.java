@@ -389,7 +389,8 @@ public class PropertyDefTest extends AbstractJCRTest {
                 foundMandatoryProperty = true;
                 String name = propDef.getName();
 
-                assertTrue("Node instance does not contain value for mandatory property.", node.hasProperty(name));
+                assertTrue("Node " + node.getPath() + " does not contain " +
+                        "value for mandatory property: " + name, node.hasProperty(name));
                 // todo check back with latest spec!
                 /*
                 try {
