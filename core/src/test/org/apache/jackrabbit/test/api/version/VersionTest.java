@@ -28,6 +28,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
+import javax.jcr.lock.LockException;
 
 import java.util.GregorianCalendar;
 import java.util.Calendar;
@@ -225,14 +226,14 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.getLock()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
+     * Tests if <code>Version.getLock()</code> throws a {@link
+     * javax.jcr.lock.LockException}
      */
     public void testGetLock() throws Exception {
         try {
             version.getLock();
-            fail("Version should not be lockable: Version.getLock() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("Version should not be lockable: Version.getLock() did not throw a LockException");
+        } catch (LockException success) {
         }
     }
 
@@ -450,29 +451,29 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.lock(boolean, boolean)</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
+     * Tests if <code>Version.lock(boolean, boolean)</code> throws a {@link
+     * javax.jcr.lcok.LockException}
      */
     public void testLock() throws Exception {
         try {
             version.lock(true, true);
-            fail("Version should not be lockable: Version.lock(true,true) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("Version should not be lockable: Version.lock(true,true) did not throw a LockException");
+        } catch (LockException success) {
         }
         try {
             version.lock(true, false);
-            fail("Version should not be lockable: Version.lock(true,false) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("Version should not be lockable: Version.lock(true,false) did not throw a LockException");
+        } catch (LockException success) {
         }
         try {
             version.lock(false, true);
-            fail("Version should not be lockable: Version.lock(false,true) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("Version should not be lockable: Version.lock(false,true) did not throw a LockException");
+        } catch (LockException success) {
         }
         try {
             version.lock(false, false);
-            fail("Version should not be lockable: Version.lock(false,false) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("Version should not be lockable: Version.lock(false,false) did not throw a LockException");
+        } catch (LockException success) {
         }
     }
 
@@ -677,14 +678,14 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.unlock()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
+     * Tests if <code>Version.unlock()</code> throws a {@link
+     * javax.jcr.lock.LockException}
      */
     public void testUnlock() throws Exception {
         try {
             version.unlock();
-            fail("Version should not be lockable: Version.unlock() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("Version should not be lockable: Version.unlock() did not throw a LockException");
+        } catch (LockException success) {
         }
     }
 

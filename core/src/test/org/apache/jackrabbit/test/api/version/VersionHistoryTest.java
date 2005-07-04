@@ -30,6 +30,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
@@ -322,13 +323,13 @@ public class VersionHistoryTest extends AbstractVersionTest {
 
     /**
      * Tests if <code>VersionHistory.getLock()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
+     * javax.jcr.lock.LockException}
      */
     public void testGetLock() throws Exception {
         try {
             vHistory.getLock();
-            fail("VersionHistory should not be lockable: VersionHistory.getLock() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("VersionHistory should not be lockable: VersionHistory.getLock() did not throw a LockException");
+        } catch (LockException success) {
         }
     }
 
@@ -574,29 +575,29 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.lock(boolean, boolean)</code> throws an
-     * {@link javax.jcr.UnsupportedRepositoryOperationException}
+     * Tests if <code>VersionHistory.lock(boolean, boolean)</code> throws a
+     * {@link javax.jcr.lock.LockException}
      */
     public void testLock() throws Exception {
         try {
             vHistory.lock(true, true);
-            fail("VersionHistory should not be lockable: VersionHistory.lock(true,true) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("VersionHistory should not be lockable: VersionHistory.lock(true,true) did not throw a LockException");
+        } catch (LockException success) {
         }
         try {
             vHistory.lock(true, false);
-            fail("VersionHistory should not be lockable: VersionHistory.lock(true,false) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("VersionHistory should not be lockable: VersionHistory.lock(true,false) did not throw a LockException");
+        } catch (LockException success) {
         }
         try {
             vHistory.lock(false, true);
-            fail("VersionHistory should not be lockable: VersionHistory.lock(false,true) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("VersionHistory should not be lockable: VersionHistory.lock(false,true) did not throw a LockException");
+        } catch (LockException success) {
         }
         try {
             vHistory.lock(false, false);
-            fail("VersionHistory should not be lockable: VersionHistory.lock(false,false) did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("VersionHistory should not be lockable: VersionHistory.lock(false,false) did not throw a UnsupportedRepositoryOperationException");
+        } catch (LockException success) {
         }
     }
 
@@ -800,14 +801,14 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.unlock()</code> throws an {@link
-     * javax.jcr.UnsupportedRepositoryOperationException}
+     * Tests if <code>VersionHistory.unlock()</code> throws a {@link
+     * javax.jcr.lock.LockException}
      */
     public void testUnlock() throws Exception {
         try {
             vHistory.unlock();
-            fail("VersionHistory should not be lockable: VersionHistory.unlock() did not throw an UnsupportedRepositoryOperationException");
-        } catch (UnsupportedRepositoryOperationException success) {
+            fail("VersionHistory should not be lockable: VersionHistory.unlock() did not throw a LockException");
+        } catch (LockException success) {
         }
     }
 
