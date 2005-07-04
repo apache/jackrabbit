@@ -134,7 +134,6 @@ public class Tester {
             } else {
                 TestSuite ts = new TestSuite();
                 ts.setName(testClassName);
-                //Map testcases = new HashMap();
                 List testcases = new ArrayList();
                 boolean recreate = false;
 
