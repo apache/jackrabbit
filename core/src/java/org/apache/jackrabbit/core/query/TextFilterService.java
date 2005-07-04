@@ -20,13 +20,12 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.core.state.PropertyState;
 
 import javax.jcr.RepositoryException;
+import javax.imageio.spi.ServiceRegistry;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
-
-import sun.misc.Service;
 
 /**
  * Implements a service that looks up {@link TextFilter} implementations that
@@ -67,9 +66,13 @@ public class TextFilterService {
      * Initializes the {@link #filters} list.
      */
     static {
-        Iterator it = Service.providers(TextFilterService.class);
-        while (it.hasNext()) {
-            filters.add(it.next());
+        try {
+            Iterator it = ServiceRegistry.lookupProviders(TextFilterService.class);
+            while (it.hasNext()) {
+                filters.add(it.next());
+            }
+        } catch (Error e) {
+            log.warn("Unable to load providers for TextFilterService: " + e);
         }
     }
 
