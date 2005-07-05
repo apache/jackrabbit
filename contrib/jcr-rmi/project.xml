@@ -48,6 +48,18 @@
     </developer>
   </developers>
 
+  <contributors>
+    <contributor>
+      <name>Felix Meschberger</name>
+      <email/>
+      <organization>Day Software</organization>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
+  </contributors>
+
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
