@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.value;
 
+import java.io.Serializable;
 import java.util.Calendar;
 
 import javax.jcr.PropertyType;
@@ -26,13 +27,14 @@ import javax.jcr.ValueFormatException;
  * Double values as a part of the State design pattern (Gof) used by this
  * package. 
  * 
- * @version $Revision$, $Date$
- * @author Jukka Zitting
  * @since 0.16.4.1
- * 
  * @see org.apache.jackrabbit.value.SerialValue
  */
-public class DoubleValue extends BaseNonStreamValue implements StatefulValue {
+public class DoubleValue extends BaseNonStreamValue
+        implements Serializable, StatefulValue {
+
+    /** The serial version UID */
+    private static final long serialVersionUID = 1008752925622023274L;
 
     /** The double value */
     private final double value;
