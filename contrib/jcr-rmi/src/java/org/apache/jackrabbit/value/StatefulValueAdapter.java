@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Calendar;
 
 import javax.jcr.PropertyType;
@@ -40,13 +41,14 @@ import javax.jcr.ValueFormatException;
  * {@link #readObject(ObjectInputStream)} method is here just to guarantee
  * symetric implementation.
  *
- * @version $Revision$, $Date$
  * @author Felix Meschberger
  * @since 0.16.4.1
- * 
  * @see SerialValue
  */
-final class StatefulValueAdapter implements StatefulValue {
+final class StatefulValueAdapter implements Serializable, StatefulValue {
+
+    /** The serial version UID */
+    private static final long serialVersionUID = -8467636003279312276L;
 
     /** The delegatee value. */
     private Value delegatee;
