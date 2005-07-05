@@ -1254,9 +1254,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * responsibility to make sure that the type of the given value is compatible
      * with the specified property's definition.
      * <p/>
-     * <b>Important:</b> This method is public in order to make it accessible
-     * from internal code located in subpackages, i.e. it should never be called
-     * from an application directly.
+     * <strong>Important:</strong> This method is public in order to make it
+     * accessible from internal code located in subpackages, i.e. it should
+     * never be called from an application directly!!!
      *
      * @param name
      * @param value
@@ -1266,6 +1266,24 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property internalSetProperty(QName name, InternalValue value)
             throws ValueFormatException, RepositoryException {
+        /**
+         * todo FIXME internalSetProperty being public is a potential security risk
+         * the following code snippet is a workaround that verifies that the
+         * caller is located in the same package (i.e. 'core') or a subpackage
+         * thereof; it is tested with jackrabbit being run standalone; however
+         * i commented it out as i am not sure whether there are potential
+         * problems/side effects with other setups/environments.
+         */
+/*
+        CallContext ctx = new CallContext();
+        String calledFromPackage = ctx.getCaller().getPackage().getName();
+        String thisPackage = NodeImpl.class.getPackage().getName();
+        // check if we're called from current package (i.e. 'core')
+        // or a subpackage thereof
+        if (!calledFromPackage.startsWith(thisPackage)) {
+            throw new SecurityException("illegal method invokation");
+        }
+*/
         int type;
         if (value == null) {
             type = PropertyType.UNDEFINED;
@@ -1298,9 +1316,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * Note that no type conversion is being performed, i.e. it's the caller's
      * responsibility to make sure that the type of the given values is compatible
      * with the specified property's definition.
-     * <p/>
-     * <b>Important:</b> This method is for internal use only and should never
-     * be called from an application directly.
      *
      * @param name
      * @param values
@@ -1308,7 +1323,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    public Property internalSetProperty(QName name, InternalValue[] values)
+    protected Property internalSetProperty(QName name, InternalValue[] values)
             throws ValueFormatException, RepositoryException {
         int type;
         if (values == null || values.length == 0
@@ -1334,7 +1349,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    public Property internalSetProperty(QName name, InternalValue[] values,
+    protected Property internalSetProperty(QName name, InternalValue[] values,
                                            int type)
             throws ValueFormatException, RepositoryException {
         BitSet status = new BitSet();
@@ -2664,12 +2679,23 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // @todo optimize, no need to build entire path just to find this node's index
-        int index = getPrimaryPath().getNameElement().getIndex();
-        if (index == 0) {
+        String parentUUID = state.getParentUUID();
+        if (parentUUID == null) {
+            // the root node cannot have same-name siblings; always return 1
             return 1;
-        } else {
-            return index;
+        }
+
+        try {
+            NodeState parent =
+                    (NodeState) stateMgr.getItemState(new NodeId(parentUUID));
+            NodeState.ChildNodeEntry parentEntry =
+                    parent.getChildNodeEntry(((NodeState) state).getUUID());
+            return parentEntry.getIndex();
+        } catch (ItemStateException ise) {
+            // should never get here...
+            String msg = "internal error: failed to determine index";
+            log.error(msg, ise);
+            throw new RepositoryException(msg, ise);
         }
     }
 
@@ -3799,5 +3825,19 @@ public class NodeImpl extends ItemImpl implements Node {
     protected void checkLock() throws LockException, RepositoryException {
         LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         lockMgr.checkLock(this);
+    }
+
+    //--------------------------------------------------------< inner classes >
+    private static class CallContext extends SecurityManager {
+        Class getCaller() {
+            // getClassContext()[0] is 'this' class
+            // getClassContext()[1] is the class that called getCaller() (i.e. 'this' method)
+            // getClassContext()[2] is the one we're looking for
+            return super.getClassContext()[2];
+        }
+
+        Class[] getCallerStack() {
+            return super.getClassContext();
+        }
     }
 }
