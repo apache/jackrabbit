@@ -16,8 +16,14 @@
  */
 package org.apache.jackrabbit;
 
+import javax.jcr.Session;
+
 /**
- * This Interface defines some jcr constants
+ * This Interface defines some of the item names that are defined in the
+ * jcr spec 1.0, using the default prefixes 'jcr', 'nt' and 'mix'. Please note
+ * that those prefixes can by redefined by an application using the
+ * {@link Session#setNamespacePrefix(String, String)} method. As a result, the
+ * constants could not refer to the respective items.
  */
 public interface JcrConstants {
     /**
