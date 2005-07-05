@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.value;
 
+import java.io.Serializable;
+
 import javax.jcr.PropertyType;
 
 /**
@@ -23,13 +25,14 @@ import javax.jcr.PropertyType;
  * Boolean values as a part of the State design pattern (Gof) used by this
  * package. 
  * 
- * @version $Revision$, $Date$
- * @author Jukka Zitting
  * @since 0.16.4.1
- * 
  * @see org.apache.jackrabbit.value.SerialValue
  */
-public class BooleanValue extends BaseNonStreamValue implements StatefulValue {
+public class BooleanValue extends BaseNonStreamValue
+        implements Serializable, StatefulValue {
+
+    /** The serial version UID */
+    private static final long serialVersionUID = 8212168298890947089L;
 
     /** The boolean value */
     private final boolean value;

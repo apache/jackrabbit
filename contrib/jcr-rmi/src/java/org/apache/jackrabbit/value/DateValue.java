@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.value;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,13 +36,14 @@ import javax.jcr.ValueFormatException;
  * the era specification as defined in the JCR specification (+/- prefix) as
  * well as full time zone naming are not supported.
  * 
- * @version $Revision$, $Date$
- * @author Jukka Zitting
  * @since 0.16.4.1
- * 
  * @see org.apache.jackrabbit.value.SerialValue
  */
-public class DateValue extends BaseNonStreamValue implements StatefulValue {
+public class DateValue extends BaseNonStreamValue
+        implements Serializable, StatefulValue {
+
+    /** The serial version UID */
+    private static final long serialVersionUID = 7158448867450810873L;
 
     /** The <code>Calendar</code> value */
     private final Calendar value;

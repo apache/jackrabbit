@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 
@@ -42,13 +43,13 @@ import javax.jcr.ValueFormatException;
  * {@link #writeObject(ObjectOutputStream)} methods to (de-)serialize the
  * data.
  *
- * @version $Revision$, $Date$
- * @author Jukka Zitting
  * @since 0.16.4.1
- *
  * @see org.apache.jackrabbit.value.SerialValue
  */
-public class BinaryValue implements StatefulValue {
+public class BinaryValue implements Serializable, StatefulValue {
+
+    /** The serial version UID */
+    private static final long serialVersionUID = -2410070522924274051L;
 
     /** The <code>InputStream</code> providing the value */
     private InputStream stream;

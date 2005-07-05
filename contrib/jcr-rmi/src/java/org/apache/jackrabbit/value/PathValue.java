@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.value;
 
+import java.io.Serializable;
+
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
@@ -24,11 +26,14 @@ import javax.jcr.ValueFormatException;
  * The <code>PathValue</code> class implements the committed value state for
  * Path values as a part of the State design pattern (Gof) used by this package. 
  * 
- * @version $Revision$, $Date$
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
-public class PathValue extends BaseNonStreamValue implements StatefulValue {
+public class PathValue extends BaseNonStreamValue
+        implements Serializable, StatefulValue {
+
+    /** The serial version UID */
+    private static final long serialVersionUID = 961536566073928748L;
 
     /** The path value. */
     private final String value;

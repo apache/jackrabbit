@@ -19,6 +19,7 @@ package org.apache.jackrabbit.value;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Calendar;
 
 import javax.jcr.PropertyType;
@@ -39,7 +40,10 @@ import javax.jcr.ValueFormatException;
  *
  * @see SerialValue
  */
-final class InitialValue implements StatefulValue {
+final class InitialValue implements Serializable, StatefulValue {
+
+    /** The serial version UID */
+    private static final long serialVersionUID = -3277781963593015976L;
 
     /** The containing general value instance. */
     private final SerialValue general;

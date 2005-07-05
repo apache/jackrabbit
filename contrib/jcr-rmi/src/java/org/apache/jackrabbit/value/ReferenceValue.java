@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.value;
 
+import java.io.Serializable;
+
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
@@ -25,12 +27,14 @@ import javax.jcr.ValueFormatException;
  * for Reference values as a part of the State design pattern (Gof) used by
  * this package. 
  * 
- * @version $Revision$, $Date$
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
 public class ReferenceValue extends BaseNonStreamValue
-        implements StatefulValue {
+        implements Serializable, StatefulValue {
+
+    /** The serial version UID */
+    private static final long serialVersionUID = -3160494922729580458L;
 
     /** The reference value */
     private final String value;
