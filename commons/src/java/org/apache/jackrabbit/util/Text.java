@@ -17,9 +17,11 @@
 package org.apache.jackrabbit.util;
 
 import java.io.UnsupportedEncodingException;
+import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.BitSet;
 
 /**
  * This Class provides some text related utilities
@@ -159,6 +161,23 @@ public class Text {
     }
 
     /**
+     * Concatenates all strings in the string array using the specified delimiter.
+     * @param arr
+     * @param delim
+     * @return
+     */
+    public static String implode(String[] arr, String delim) {
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < arr.length; i++) {
+            if (i > 0) {
+                buf.append(delim);
+            }
+            buf.append(arr[i]);
+        }
+        return buf.toString();
+    }
+
+    /**
      * Replaces all occurences of <code>oldString</code> in <code>text</code>
      * with <code>newString</code>.
      *
@@ -243,4 +262,293 @@ public class Text {
             return buf.toString();
         }
     }
+
+    /**
+     * The list of characters that are not encoded by the <code>escape()</code>
+     * and <code>unescape()</code> METHODS. They contains the characters as
+     * defined 'unreserved' in section 2.3 of the RFC 2396 'URI genric syntax':
+     * <p/>
+     * <pre>
+     * unreserved  = alphanum | mark
+     * mark        = "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"
+     * </pre>
+     */
+    public static BitSet URISave;
+
+    /**
+     * Same as {@link #URISave} but also contains the '/'
+     */
+    public static BitSet URISaveEx;
+
+    static {
+        URISave = new BitSet(256);
+        int i;
+        for (i = 'a'; i <= 'z'; i++) {
+            URISave.set(i);
+        }
+        for (i = 'A'; i <= 'Z'; i++) {
+            URISave.set(i);
+        }
+        for (i = '0'; i <= '9'; i++) {
+            URISave.set(i);
+        }
+        URISave.set('-');
+        URISave.set('_');
+        URISave.set('.');
+        URISave.set('!');
+        URISave.set('~');
+        URISave.set('*');
+        URISave.set('\'');
+        URISave.set('(');
+        URISave.set(')');
+
+        URISaveEx = (BitSet) URISave.clone();
+        URISaveEx.set('/');
+    }
+
+    /**
+     * Does an URL encoding of the <code>string</code> using the
+     * <code>escape</code> character. The characters that don't need encoding
+     * are those defined 'unreserved' in section 2.3 of the 'URI genric syntax'
+     * RFC 2396, but without the escape character.
+     *
+     * @param string the string to encode.
+     * @param escape the escape character.
+     * @return the escaped string
+     * @throws NullPointerException if <code>string</code> is <code>null</code>.
+     */
+    public static String escape(String string, char escape) {
+        return escape(string, escape, false);
+    }
+
+    /**
+     * Does an URL encoding of the <code>string</code> using the
+     * <code>escape</code> character. The characters that don't need encoding
+     * are those defined 'unreserved' in section 2.3 of the 'URI genric syntax'
+     * RFC 2396, but without the escape character. If <code>isPath</code> is
+     * <code>true</code>, additionally the slash '/' is ignored, too.
+     *
+     * @param string the string to encode.
+     * @param escape the escape character.
+     * @param isPath if <code>true</code>, the string is treated as path
+     * @return the escaped string
+     * @throws NullPointerException if <code>string</code> is <code>null</code>.
+     */
+    public static String escape(String string, char escape, boolean isPath) {
+        try {
+            BitSet validChars = isPath ? URISaveEx : URISave;
+            byte[] bytes = string.getBytes("utf-8");
+            StringBuffer out = new StringBuffer(bytes.length);
+            for (int i = 0; i < bytes.length; i++) {
+                int c = bytes[i] & 0xff;
+                if (validChars.get(c) && c != escape) {
+                    out.append((char) c);
+                } else {
+                    out.append(escape);
+                    out.append(hexTable[(c >> 4) & 0x0f]);
+                    out.append(hexTable[(c) & 0x0f]);
+                }
+            }
+            return out.toString();
+        } catch (UnsupportedEncodingException e) {
+            throw new InternalError(e.toString());
+        }
+    }
+
+    /**
+     * Does a URL encoding of the <code>string</code>. The characters that
+     * don't need encoding are those defined 'unreserved' in section 2.3 of
+     * the 'URI genric syntax' RFC 2396.
+     *
+     * @param string the string to encode
+     * @return the escaped string
+     * @throws NullPointerException if <code>string</code> is <code>null</code>.
+     */
+    public static String escape(String string) {
+        return escape(string, '%');
+    }
+
+    /**
+     * Does a URL encoding of the <code>path</code>. The characters that
+     * don't need encoding are those defined 'unreserved' in section 2.3 of
+     * the 'URI genric syntax' RFC 2396. In contrast to the
+     * {@link #escape(String)} method, not the entire path string is escaped,
+     * but every individual part (i.e. the slashes are not escaped).
+     *
+     * @param path the path to encode
+     * @return the escaped path
+     * @throws NullPointerException if <code>path</code> is <code>null</code>.
+     */
+    public static String escapePath(String path) {
+        return escape(path, '%', true);
+    }
+
+    /**
+     * Does a URL decoding of the <code>string</code> using the
+     * <code>escape</code> character. Please note that in opposite to the
+     * {@link java.net.URLDecoder} it does not transform the + into spaces.
+     *
+     * @param string the string to decode
+     * @param escape the escape character
+     * @return the decoded string
+     * @throws NullPointerException           if <code>string</code> is <code>null</code>.
+     * @throws ArrayIndexOutOfBoundsException if not enough character follow an
+     *                                        escape character
+     * @throws IllegalArgumentException       if the 2 characters following the escape
+     *                                        character do not represent a hex-number.
+     */
+    public static String unescape(String string, char escape) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream(string.length());
+        for (int i = 0; i < string.length(); i++) {
+            char c = string.charAt(i);
+            if (c == escape) {
+                try {
+                    out.write(Integer.parseInt(string.substring(i + 1, i + 3), 16));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException();
+                }
+                i += 2;
+            } else {
+                out.write(c);
+            }
+        }
+
+        try {
+            return new String(out.toByteArray(), "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new InternalError(e.toString());
+        }
+    }
+
+    /**
+     * Does a URL decoding of the <code>string</code>. Please note that in
+     * opposite to the {@link java.net.URLDecoder} it does not transform the +
+     * into spaces.
+     *
+     * @param string the string to decode
+     * @return the decoded string
+     * @throws NullPointerException           if <code>string</code> is <code>null</code>.
+     * @throws ArrayIndexOutOfBoundsException if not enough character follow an
+     *                                        escape character
+     * @throws IllegalArgumentException       if the 2 characters following the escape
+     *                                        character do not represent a hex-number.
+     */
+    public static String unescape(String string) {
+        return unescape(string, '%');
+    }
+
+    /**
+     * Returns the name part of the path
+     *
+     * @param path the path
+     * @return the name part
+     */
+    public static String getName(String path) {
+        int pos = path.lastIndexOf('/');
+        return pos >= 0 ? path.substring(pos + 1) : "";
+    }
+
+    /**
+     * Returns the name part of the path, delimited by the given <code>delim</code>
+     *
+     * @param path the path
+     * @param delim the delimiter
+     * @return the name part
+     */
+    public static String getName(String path, char delim) {
+        int pos = path.lastIndexOf(delim);
+        return pos >= 0 ? path.substring(pos + 1) : "";
+    }
+
+    /**
+     * Determines, if two paths denote hierarchical siblins.
+     *
+     * @param p1 first path
+     * @param p2 second path
+     * @return true if on same level, false otherwise
+     */
+    public static boolean isSibling(String p1, String p2) {
+        int pos1 = p1.lastIndexOf('/');
+        int pos2 = p2.lastIndexOf('/');
+        return (pos1 == pos2 && pos1 >= 0 && p1.regionMatches(0, p2, 0, pos1));
+    }
+
+    /**
+     * Determines if the <code>descendant</code> path is hierarchical a
+     * descendant of <code>path</code>.
+     *
+     * @param path     the current path
+     * @param descendant the potential descendant
+     * @return <code>true</code> if the <code>descendant</code> is a descendant;
+     *         <code>false</code> otherwise.
+     */
+    public static boolean isDescendant(String path, String descendant) {
+        return !path.equals(descendant) &&
+                descendant.startsWith(path) &&
+                descendant.charAt(path.length()) == '/';
+    }
+
+    /**
+     * Determines if the <code>descendant</code> path is hierarchical a
+     * descendant of <code>path</code> or equal to it.
+     *
+     * @param path       the path to check
+     * @param descendant the potential descendant
+     * @return <code>true</code> if the <code>descendant</code> is a descendant
+     *         or equal; <code>false</code> otherwise.
+     */
+    public static boolean isDescendantOrEqual(String path, String descendant) {
+        if (path.equals(descendant)) {
+            return true;
+        } else {
+            String pattern = path.endsWith("/") ? path : path + "/";
+            return descendant.startsWith(pattern);
+        }
+    }
+
+    /**
+     * Returns the n<sup>th</sup> relative parent of the path, where n=level.
+     * <p>Example:<br>
+     * <code>
+     * Text.getRelativeParent("/foo/bar/test", 1) == "/foo/bar"
+     * </code>
+     *
+     * @param path the path of the page
+     * @param level  the level of the parent
+     */
+    public static String getRelativeParent(String path, int level) {
+        int idx = path.length();
+        while (level > 0) {
+            idx = path.lastIndexOf('/', idx - 1);
+            if (idx < 0) {
+                return "";
+            }
+            level--;
+        }
+        return (idx == 0) ? "/" : path.substring(0, idx);
+    }
+
+    /**
+     * Returns the n<sup>th</sup> absolute parent of the path, where n=level.
+     * <p>Example:<br>
+     * <code>
+     * Text.getAbsoluteParent("/foo/bar/test", 1) == "/foo/bar"
+     * </code>
+     *
+     * @param path the path of the page
+     * @param level  the level of the parent
+     */
+    public static String getAbsoluteParent(String path, int level) {
+        int idx = 0;
+        int len = path.length();
+        while (level >= 0 && idx < len) {
+            idx = path.indexOf('/', idx + 1);
+            if (idx < 0) {
+                idx = len;
+            }
+            level--;
+        }
+        return level >= 0 ? "" : path.substring(0, idx);
+    }
+
 }
