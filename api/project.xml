@@ -35,11 +35,7 @@
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
             <version>1.0</version>
-            <!--
-            <version>0.16.4.1</version>
-            <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
-            <url>http://jcp.org/en/jsr/detail?id=170</url> -->
-            -->
+            <url>http://jcp.org/en/jsr/detail?id=170</url>
         </dependency>
     </dependencies>
 
