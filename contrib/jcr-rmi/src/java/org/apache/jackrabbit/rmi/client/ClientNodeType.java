@@ -25,7 +25,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
-import org.apache.jackrabbit.value.SerialValueFactory;
+import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
  * Local adapter for the JCR-RMI

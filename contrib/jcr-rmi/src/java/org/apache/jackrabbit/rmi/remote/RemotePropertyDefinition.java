@@ -36,7 +36,7 @@ import javax.jcr.Value;
  * <p>
  * Note that the returned Value objects must be serializable and implemented
  * using classes available on both the client and server side. The
- * {@link org.apache.jackrabbit.value.SerialValueFactory SerialValueFactory}
+ * {@link org.apache.jackrabbit.rmi.value.SerialValueFactory SerialValueFactory}
  * class provides two convenience methods to satisfy this requirement.
  *
  * @author Jukka Zitting

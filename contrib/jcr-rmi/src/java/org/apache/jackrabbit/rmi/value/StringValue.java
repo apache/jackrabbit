@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.value;
+package org.apache.jackrabbit.rmi.value;
 
 import java.io.Serializable;
 import java.util.Calendar;
@@ -28,7 +28,7 @@ import javax.jcr.ValueFormatException;
  * package. 
  * 
  * @since 0.16.4.1
- * @see org.apache.jackrabbit.value.SerialValue
+ * @see org.apache.jackrabbit.rmi.value.SerialValue
  */
 public class StringValue extends BaseNonStreamValue
         implements Serializable, StatefulValue {

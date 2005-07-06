@@ -22,7 +22,7 @@ import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
-import org.apache.jackrabbit.value.SerialValueFactory;
+import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
  * Remote adapter for the JCR

@@ -38,7 +38,7 @@ import javax.jcr.version.VersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.value.SerialValueFactory;
+import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
  * Local adapter for the JCR-RMI
