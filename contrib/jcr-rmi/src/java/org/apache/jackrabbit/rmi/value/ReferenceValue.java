@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.value;
+package org.apache.jackrabbit.rmi.value;
 
 import java.io.Serializable;
 
@@ -23,53 +23,54 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 
 /**
- * The <code>PathValue</code> class implements the committed value state for
- * Path values as a part of the State design pattern (Gof) used by this package. 
+ * The <code>ReferenceValue</code> class implements the committed value state
+ * for Reference values as a part of the State design pattern (Gof) used by
+ * this package. 
  * 
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
-public class PathValue extends BaseNonStreamValue
+public class ReferenceValue extends BaseNonStreamValue
         implements Serializable, StatefulValue {
 
     /** The serial version UID */
-    private static final long serialVersionUID = 961536566073928748L;
+    private static final long serialVersionUID = -3160494922729580458L;
 
-    /** The path value. */
+    /** The reference value */
     private final String value;
     
     /**
-     * Creates an instance for the given path <code>value</code>.
+     * Creates an instance for the given reference <code>value</code>.
      */
-    protected PathValue(String value) throws ValueFormatException {
-        this.value = toPath(value);
+    protected ReferenceValue(String value) throws ValueFormatException {
+        this.value = toReference(value);
     }
     
     /**
-     * Checks whether the string value adheres to the path syntax.
+     * Checks whether the string value adheres to the reference syntax.
      * 
      * @param value The string to check for synthactical compliance with a
-     *      path value.
+     *      reference value.
      * 
      * @return The input value.
      * 
      * @throws ValueFormatException if the string <code>value</code> is not a
-     *      synthactically correct path.
+     *      synthactically correct reference.
      */
-    protected static String toPath(String value) throws ValueFormatException {
+    protected static String toReference(String value) throws ValueFormatException {
         // TODO: check syntax
         return value;
     }
 
     /**
-     * Returns <code>PropertyType.PATH</code>.
+     * Returns <code>PropertyType.REFERENCE</code>.
      */
     public int getType() {
-        return PropertyType.PATH;
+        return PropertyType.REFERENCE;
     }
 
     /**
-     * Returns the string representation of the path value.
+     * Returns the string representation of the reference value.
      */
     public String getString() throws ValueFormatException, RepositoryException {
         return value;

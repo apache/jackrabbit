@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.value;
+package org.apache.jackrabbit.rmi.value;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -28,7 +28,7 @@ import javax.jcr.ValueFormatException;
  * used by this package.
  * <p>
  * This class implements all methods of the
- * {@link org.apache.jackrabbit.value.StatefullValue} except
+ * {@link org.apache.jackrabbit.rmi.value.StatefullValue} except
  * <code>getString</code> and <code>getType</code> interface by always
  * throwing an appropriate exception. Extensions of this class should overwrite
  * methods as appropriate except for the {@link #getStream()} which must throw

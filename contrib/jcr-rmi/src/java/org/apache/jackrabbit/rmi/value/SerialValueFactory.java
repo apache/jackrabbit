@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.value;
+package org.apache.jackrabbit.rmi.value;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -35,7 +35,7 @@ import javax.jcr.ValueFormatException;
  * <p>
  * This class may be extended to overwrite any of the
  * <code>createXXXValue</code> methods to create instances of the respective
- * type of {@link org.apache.jackrabbit.value.StatefullValue}implementation. The
+ * type of {@link org.apache.jackrabbit.rmi.value.StatefullValue}implementation. The
  * methods of the <code>ValueFactory</code> interface are declared final to
  * guard against breaking the rules.
  * 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.value;
+package org.apache.jackrabbit.rmi.value;
 
 import java.io.Serializable;
 
@@ -23,54 +23,53 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 
 /**
- * The <code>ReferenceValue</code> class implements the committed value state
- * for Reference values as a part of the State design pattern (Gof) used by
- * this package. 
+ * The <code>NameValue</code> class implements the committed value state for
+ * Name values as a part of the State design pattern (Gof) used by this package. 
  * 
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
-public class ReferenceValue extends BaseNonStreamValue
+public class NameValue extends BaseNonStreamValue
         implements Serializable, StatefulValue {
 
     /** The serial version UID */
-    private static final long serialVersionUID = -3160494922729580458L;
+    private static final long serialVersionUID = -2165655071495230179L;
 
-    /** The reference value */
+    /** The name value. */
     private final String value;
     
     /**
-     * Creates an instance for the given reference <code>value</code>.
+     * Creates an instance for the given name <code>value</code>.
      */
-    protected ReferenceValue(String value) throws ValueFormatException {
-        this.value = toReference(value);
+    protected NameValue(String value) throws ValueFormatException {
+        this.value = toName(value);
     }
     
     /**
-     * Checks whether the string value adheres to the reference syntax.
+     * Checks whether the string value adheres to the name syntax.
      * 
      * @param value The string to check for synthactical compliance with a
-     *      reference value.
+     *      name value.
      * 
      * @return The input value.
      * 
      * @throws ValueFormatException if the string <code>value</code> is not a
-     *      synthactically correct reference.
+     *      synthactically correct name.
      */
-    protected static String toReference(String value) throws ValueFormatException {
+    protected static String toName(String value) throws ValueFormatException {
         // TODO: check syntax
         return value;
     }
 
     /**
-     * Returns <code>PropertyType.REFERENCE</code>.
+     * Returns <code>PropertyType.NAME</code>.
      */
     public int getType() {
-        return PropertyType.REFERENCE;
+        return PropertyType.NAME;
     }
 
     /**
-     * Returns the string representation of the reference value.
+     * Returns the string representation of the Name value.
      */
     public String getString() throws ValueFormatException, RepositoryException {
         return value;

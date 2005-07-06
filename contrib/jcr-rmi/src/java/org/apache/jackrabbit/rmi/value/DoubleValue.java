@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.value;
+package org.apache.jackrabbit.rmi.value;
 
 import java.io.Serializable;
 import java.util.Calendar;
@@ -23,65 +23,65 @@ import javax.jcr.PropertyType;
 import javax.jcr.ValueFormatException;
 
 /**
- * The <code>LongValue</code> class implements the committed value state for
- * Long values as a part of the State design pattern (Gof) used by this
+ * The <code>DoubleValue</code> class implements the committed value state for
+ * Double values as a part of the State design pattern (Gof) used by this
  * package. 
  * 
  * @since 0.16.4.1
- * @see org.apache.jackrabbit.value.SerialValue
+ * @see org.apache.jackrabbit.rmi.value.SerialValue
  */
-public class LongValue extends BaseNonStreamValue
+public class DoubleValue extends BaseNonStreamValue
         implements Serializable, StatefulValue {
 
     /** The serial version UID */
-    private static final long serialVersionUID = 2115837525193497922L;
+    private static final long serialVersionUID = 1008752925622023274L;
 
-    /** The long value */
-    private final long value;
+    /** The double value */
+    private final double value;
 
     /**
-     * Creates an instance for the given long <code>value</code>.
+     * Creates an instance for the given double <code>value</code>.
      */
-    protected LongValue(long value) {
+    protected DoubleValue(double value) {
         this.value = value;
     }
 
     /**
-     * Creates an instance for the given string representation of a long.
+     * Creates an instance for the given string representation of a double.
      * <p>
-     * This implementation uses the <code>Long.valueOf(String)</code> method
-     * to convert the string to a long.
+     * This implementation uses the <code>Double.valueOf(String)</code> method
+     * to convert the string to a double.
      * 
      * @throws ValueFormatException if the string <code>value</code> cannot be
-     *      parsed to long.
+     *      parsed to double.
      */
-    protected LongValue(String value) throws ValueFormatException {
-        this(toLong(value));
+    protected DoubleValue(String value) throws ValueFormatException {
+        this(toDouble(value));
     }
 
     /**
-     * Returns the long value represented by the string <code>value</code>.
+     * Returns the double value represented by the string <code>value</code>.
      * 
      * @throws ValueFormatException if the string <code>value</code> cannot be
-     *      parsed to long.
+     *      parsed to double.
      */
-    protected static long toLong(String value) throws ValueFormatException {
+    protected static double toDouble(String value) throws ValueFormatException {
         try {
-            return Long.valueOf(value).longValue();
+            return Double.valueOf(value).doubleValue();
         } catch (NumberFormatException e) {
             throw new ValueFormatException(e);
         }
     }
 
     /**
-     * Returns <code>PropertyType.LONG</code>.
+     * Returns <code>PropertyType.DOUBLE</code>.
      */
     public int getType() {
-        return PropertyType.LONG;
+        return PropertyType.DOUBLE;
     }
 
     /**
-     * Returns a <code>Calendar</code> instance interpreting the long as the
+     * Returns a <code>Calendar</code> instance interpreting the double as the
      * time in milliseconds since the epoch (1.1.1970, 0:00, UTC). 
      */
     public Calendar getDate() throws ValueFormatException {
@@ -93,22 +93,22 @@ public class LongValue extends BaseNonStreamValue
     /**
      * Returns the double value.
      */
-    public long getLong() {
-        return value;
-    }
-
-    /**
-     * Returns the long as a string converted by the
-     * <code>Long.toString(long)</code>.
-     */
-    public String getString() {
-        return Long.toString(value);
-    }
-
-    /**
-     * Returns the value converted to a double.
-     */
     public double getDouble() {
         return value;
+    }
+
+    /**
+     * Returns the double as a string converted by the
+     * <code>Double.toString(double)</code>.
+     */
+    public String getString() {
+        return Double.toString(value);
+    }
+
+    /**
+     * Returns the value converted to a long.
+     */
+    public long getLong() {
+        return (long) value;
     }
 }
