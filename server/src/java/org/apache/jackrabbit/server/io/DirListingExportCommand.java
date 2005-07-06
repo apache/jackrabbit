@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.FileInputStream;
-import java.io.Writer;
 import java.io.OutputStreamWriter;
 import java.util.HashSet;
 
@@ -144,7 +143,7 @@ public class DirListingExportCommand extends AbstractCommand {
         NodeIterator iter = node.getNodes();
         while (iter.hasNext()) {
             Node child = iter.nextNode();
-            String label = Text.getLabel(child.getPath());
+            String label = Text.getName(child.getPath());
             writer.print("<li><a href=\"");
             writer.print(Text.escape(label));
             if (isCollectionNodeType(child.getPrimaryNodeType().getName())) {

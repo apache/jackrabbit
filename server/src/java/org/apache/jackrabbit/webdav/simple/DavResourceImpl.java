@@ -156,7 +156,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             }
         }
         if (name == null && getResourcePath() != null) {
-            name = Text.getLabel(getResourcePath());
+            name = Text.getName(getResourcePath());
         }
         return name;
     }

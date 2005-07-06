@@ -124,7 +124,7 @@ public class ExportViewReport implements Report {
 
         try {
             // create tmpFile in default system-tmp directory
-            String prefix = "_tmp_" + Text.getLabel(absPath);
+            String prefix = "_tmp_" + Text.getName(absPath);
             File tmpfile = File.createTempFile(prefix, null, null);
             tmpfile.deleteOnExit();
             FileOutputStream out = new FileOutputStream(tmpfile);

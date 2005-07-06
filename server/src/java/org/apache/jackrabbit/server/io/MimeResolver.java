@@ -70,7 +70,7 @@ public class MimeResolver {
      * @return
      */
     public String getMimeType(String filename) {
-	String ext = Text.getLabel(filename, '.');
+	String ext = Text.getName(filename, '.');
         if (ext.equals("")) {
             ext = filename;
         }

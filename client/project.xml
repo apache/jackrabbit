@@ -43,7 +43,8 @@
             <version>${jackrabbit.build.version.jcr}</version>
         </dependency>
         <dependency>
-            <id>jackrabbit</id>
+            <groupId>jackrabbit</groupId>
+            <artifactId>jackrabbit-core</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
         
