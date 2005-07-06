@@ -592,7 +592,7 @@ public class DefaultItemCollection extends AbstractItemResource
                 if (found) {
                     destRelPath = childPath;
                 } else {
-                    found = afterRelPath.equals(Text.getLabel(childPath));
+                    found = afterRelPath.equals(Text.getName(childPath));
                 }
             }
         } else {

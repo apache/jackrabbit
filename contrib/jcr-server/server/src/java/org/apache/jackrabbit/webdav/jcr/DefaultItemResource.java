@@ -108,7 +108,7 @@ public class DefaultItemResource extends AbstractItemResource {
             int type = prop.getType();
             if (property.getName().equals(JCR_VALUE)) {
                 String strVal = (property.getValue() != null) ? String.valueOf(property.getValue()) : "";
-                Value val = ValueHelper.deserialize(getRepositorySession().getValueFactory(), strVal, type, false);
+                Value val = ValueHelper.deserialize(strVal, type, false);
                 prop.setValue(val);
             } else if (property.getName().equals(JCR_VALUES)) {
                 prop.setValue(new ValuesProperty(property).getValues(getRepositorySession().getValueFactory(), prop.getType()));

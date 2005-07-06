@@ -15,7 +15,7 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.apache.jackrabbit.util.uuid.UUID;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.webdav.DavConstants;
 
 /**

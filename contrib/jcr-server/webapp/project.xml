@@ -55,9 +55,17 @@
             </properties>
         </dependency>
         <dependency>
-            <artifactId>commons-jcr</artifactId>
-            <groupId>jcr-server</groupId>
-            <version>${pom.currentVersion}</version>
+            <groupId>jackrabbit</groupId>
+            <artifactId>jackrabbit-api</artifactId>
+            <version>${jackrabbit.build.version.jackrabbit}</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        <dependency>
+            <groupId>jackrabbit</groupId>
+            <artifactId>jackrabbit-commons</artifactId>
+            <version>${jackrabbit.build.version.jackrabbit}</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
@@ -73,7 +81,8 @@
             </properties>
         </dependency>
         <dependency>
-            <id>jackrabbit</id>
+            <groupId>jackrabbit</groupId>
+            <artifactId>jackrabbit-core</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
             <properties>
                 <war.bundle>true</war.bundle>

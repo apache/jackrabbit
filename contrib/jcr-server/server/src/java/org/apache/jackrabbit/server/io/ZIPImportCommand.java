@@ -104,10 +104,10 @@ public class ZIPImportCommand extends AbstractCommand {
         while ((entry=zin.getNextEntry())!=null) {
             log.info("entry: " + entry.getName() + " size: " + entry.getSize());
             if (entry.isDirectory()) {
-                AbstractImportCommand.mkDirs(context, parentNode, Text.makeValidJCRPath(entry.getName()));
+                AbstractImportCommand.mkDirs(context, parentNode, makeValidJCRPath(entry.getName()));
                 zin.closeEntry();
             } else {
-                String path = Text.makeValidJCRPath(entry.getName());
+                String path = makeValidJCRPath(entry.getName());
                 if (path.charAt(0)!='/') {
                     path  = "/" + path;
                 }
@@ -118,7 +118,7 @@ public class ZIPImportCommand extends AbstractCommand {
 
                 ImportContext subctx = context.createSubContext(parent);
                 subctx.setInputStream(bin);
-                subctx.setSystemId(Text.getLabel(path));
+                subctx.setSystemId(Text.getName(path));
                 subctx.setModificationTime(entry.getTime());
                 ImportResourceChain.getChain().execute(subctx);
                 zin.closeEntry();
@@ -145,4 +145,28 @@ public class ZIPImportCommand extends AbstractCommand {
     public void setRecursive(boolean recursive) {
         this.recursive = recursive;
     }
+
+    /**
+     * Creates a valid jcr label from the given one
+     *
+     * @param label
+     * @return
+     */
+    public static String makeValidJCRPath(String label) {
+        StringBuffer ret = new StringBuffer(label.length());
+        for (int i=0; i<label.length(); i++) {
+            char c = label.charAt(i);
+            if (c=='*' || c=='\'' || c=='\"') {
+                c='_';
+            } else if (c=='[') {
+                c='(';
+            } else if (c==']') {
+                c=')';
+            }
+            ret.append(c);
+        }
+        return ret.toString();
+    }
+
+
 }

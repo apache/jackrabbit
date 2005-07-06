@@ -92,7 +92,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
                             throw new IllegalArgumentException("SearchResultProperty requires a set of 'jcr:name','jcr:value' and 'jcr:type' xml elements.");
                         }
                         colList.add(name);
-                        valList.add((value == null) ? null : ValueHelper.deserialize(fac, value, type, false));
+                        valList.add((value == null) ? null : ValueHelper.deserialize(value, type, false));
                         // reset...
                         name = null;
                         value = null;

@@ -15,38 +15,53 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.lock.LockInfo;
-import org.apache.jackrabbit.webdav.lock.Type;
-import org.apache.jackrabbit.webdav.lock.Scope;
-import org.apache.jackrabbit.webdav.property.*;
-import org.apache.jackrabbit.webdav.transaction.*;
-import org.apache.jackrabbit.webdav.observation.*;
-import org.apache.jackrabbit.webdav.version.*;
-import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-import org.apache.jackrabbit.webdav.ordering.*;
+import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.header.IfHeader;
-import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
+import org.apache.jackrabbit.webdav.lock.LockInfo;
+import org.apache.jackrabbit.webdav.lock.Scope;
+import org.apache.jackrabbit.webdav.lock.Type;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
+import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
+import org.apache.jackrabbit.webdav.ordering.OrderPatch;
+import org.apache.jackrabbit.webdav.ordering.OrderingConstants;
+import org.apache.jackrabbit.webdav.ordering.Position;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
+import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
+import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.version.LabelInfo;
+import org.apache.jackrabbit.webdav.version.MergeInfo;
+import org.apache.jackrabbit.webdav.version.OptionsInfo;
+import org.apache.jackrabbit.webdav.version.UpdateInfo;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.util.Text;
-import org.jdom.input.SAXBuilder;
-import org.jdom.JDOMException;
+import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpSession;
-import javax.servlet.ServletInputStream;
 import javax.servlet.RequestDispatcher;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
-import java.util.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * <code>WebdavRequestImpl</code>...
@@ -79,8 +94,8 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         this.ifHeader = new IfHeader(httpRequest);
 
         String host = getHeader("Host");
-	String scheme = getScheme();
-	hrefPrefix = scheme + "://" + host + getContextPath();
+        String scheme = getScheme();
+        hrefPrefix = scheme + "://" + host + getContextPath();
     }
 
     /**
@@ -101,7 +116,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             // add all token present in the the If header to the session as well.
             Iterator it = ifHeader.getAllTokens();
             while (it.hasNext()) {
-                String ifHeaderToken = (String)it.next();
+                String ifHeaderToken = (String) it.next();
                 session.addLockToken(ifHeaderToken);
             }
         }
@@ -140,27 +155,26 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     public DavResourceLocator getDestinationLocator() {
         String destination = httpRequest.getHeader(HEADER_DESTINATION);
         if (destination != null) {
-	    try {
-		URI uri = new URI(destination);
-		if (uri.getAuthority().equals(httpRequest.getHeader("Host"))) {
-		    destination = Text.unescape(uri.getPath());
-		}
-	    } catch (URISyntaxException e) {
-		log.debug("Destination is path is not a valid URI ("+e.getMessage()+".");
-		int pos = destination.lastIndexOf(":");
-		if (pos > 0) {
-		    destination = destination.substring(destination.indexOf("/",pos));
-		    log.debug("Tried to retrieve resource destination path from invalid URI: "+destination);
-		}
-	    }
-
-	    // cut off the context path
-	    String contextPath = httpRequest.getContextPath();
-	    if (destination.startsWith(contextPath)) {
-		destination = destination.substring(contextPath.length());
-	    }
-	}
-	return factory.createResourceLocator(hrefPrefix, destination);
+            try {
+                URI uri = new URI(destination);
+                if (uri.getAuthority().equals(httpRequest.getHeader("Host"))) {
+                    destination = Text.unescape(uri.getRawPath());
+                }
+            } catch (URISyntaxException e) {
+                log.debug("Destination is path is not a valid URI (" + e.getMessage() + ".");
+                int pos = destination.lastIndexOf(":");
+                if (pos > 0) {
+                    destination = Text.unescape(destination.substring(destination.indexOf("/", pos)));
+                    log.debug("Tried to retrieve resource destination path from invalid URI: " + destination);
+                }
+            }
+            // cut off the context path
+            String contextPath = httpRequest.getContextPath();
+            if (destination.startsWith(contextPath)) {
+                destination = destination.substring(contextPath.length());
+            }
+        }
+        return factory.createResourceLocator(hrefPrefix, destination);
     }
 
     /**
@@ -171,19 +185,19 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * @see DavServletRequest#isOverwrite()
      */
     public boolean isOverwrite() {
-	boolean doOverwrite = true;
-	String overwriteHeader = httpRequest.getHeader(HEADER_OVERWRITE);
-	if (overwriteHeader != null && !overwriteHeader.equalsIgnoreCase(NO_OVERWRITE)){
-	    doOverwrite = false;
-	}
-	return doOverwrite;
+        boolean doOverwrite = true;
+        String overwriteHeader = httpRequest.getHeader(HEADER_OVERWRITE);
+        if (overwriteHeader != null && !overwriteHeader.equalsIgnoreCase(NO_OVERWRITE)) {
+            doOverwrite = false;
+        }
+        return doOverwrite;
     }
 
     /**
      * @see DavServletRequest#getDepth(int)
      */
     public int getDepth(int defaultValue) {
-	return DepthHeader.parse(httpRequest, defaultValue).getDepth();
+        return DepthHeader.parse(httpRequest, defaultValue).getDepth();
     }
 
     /**
@@ -204,27 +218,27 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * @see DavServletRequest#getTimeout()
      */
     public long getTimeout() {
-	String timeoutStr = httpRequest.getHeader(HEADER_TIMEOUT);
-	long timeout = UNDEFINED_TIMEOUT;
-	if (timeoutStr != null && timeoutStr.length() > 0) {
-	    int secondsInd = timeoutStr.indexOf("Second-");
-	    if (secondsInd >= 0) {
-		secondsInd += 7; // read over "Second-"
-		int i = secondsInd;
+        String timeoutStr = httpRequest.getHeader(HEADER_TIMEOUT);
+        long timeout = UNDEFINED_TIMEOUT;
+        if (timeoutStr != null && timeoutStr.length() > 0) {
+            int secondsInd = timeoutStr.indexOf("Second-");
+            if (secondsInd >= 0) {
+                secondsInd += 7; // read over "Second-"
+                int i = secondsInd;
                 while (i < timeoutStr.length() && Character.isDigit(timeoutStr.charAt(i))) {
                     i++;
                 }
-		try {
-		    timeout = 1000L * Long.parseLong(timeoutStr.substring(secondsInd, i));
-		} catch (NumberFormatException ignore) {
-		    // ignore an let the lock define the default timeout
-                    log.error("Invalid timeout format: "+timeoutStr);
-		}
-	    } else if (timeoutStr.equalsIgnoreCase(TIMEOUT_INFINITE)) {
-		timeout = INFINITE_TIMEOUT;
-	    }
-	}
-	return timeout;
+                try {
+                    timeout = 1000L * Long.parseLong(timeoutStr.substring(secondsInd, i));
+                } catch (NumberFormatException ignore) {
+                    // ignore an let the lock define the default timeout
+                    log.error("Invalid timeout format: " + timeoutStr);
+                }
+            } else if (timeoutStr.equalsIgnoreCase(TIMEOUT_INFINITE)) {
+                timeout = INFINITE_TIMEOUT;
+            }
+        }
+        return timeout;
     }
 
     /**
@@ -249,7 +263,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         try {
             InputStream in = httpRequest.getInputStream();
             if (in != null) {
-		SAXBuilder builder = new SAXBuilder(false);
+                SAXBuilder builder = new SAXBuilder(false);
                 requestDocument = builder.build(in);
             }
         } catch (IOException e) {
@@ -299,35 +313,35 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         propfindProps = new DavPropertyNameSet();
         Document requestDocument = getRequestDocument();
 
-	// propfind httpRequest with empty body or invalid Xml >> retrieve all property
-	// TODO: spec requires a 'BAD REQUEST' error code
-	if (requestDocument == null) {
-	    return;
-	}
+        // propfind httpRequest with empty body or invalid Xml >> retrieve all property
+        // TODO: spec requires a 'BAD REQUEST' error code
+        if (requestDocument == null) {
+            return;
+        }
 
-	// propfind httpRequest with invalid body >> treat as if empty body
-	Element root = requestDocument.getRootElement();
-	if (!root.getName().equals(XML_PROPFIND)) {
-	    log.info("PropFind-Request has no <profind> tag.");
-	    return;
-	}
+        // propfind httpRequest with invalid body >> treat as if empty body
+        Element root = requestDocument.getRootElement();
+        if (!root.getName().equals(XML_PROPFIND)) {
+            log.info("PropFind-Request has no <profind> tag.");
+            return;
+        }
 
-	List childList = root.getChildren();
-	for (int i = 0; i < childList.size(); i++) {
-	    Element child = (Element) childList.get(i);
-	    String nodeName = child.getName();
-	    if (XML_PROP.equals(nodeName)) {
-		propfindType = PROPFIND_BY_PROPERTY;
-		propfindProps = new DavPropertyNameSet(child);
+        List childList = root.getChildren();
+        for (int i = 0; i < childList.size(); i++) {
+            Element child = (Element) childList.get(i);
+            String nodeName = child.getName();
+            if (XML_PROP.equals(nodeName)) {
+                propfindType = PROPFIND_BY_PROPERTY;
+                propfindProps = new DavPropertyNameSet(child);
                 break;
-	    } else if (XML_PROPNAME.equals(nodeName)) {
-		propfindType = PROPFIND_PROPERTY_NAMES;
+            } else if (XML_PROPNAME.equals(nodeName)) {
+                propfindType = PROPFIND_PROPERTY_NAMES;
                 break;
-	    } else if (XML_ALLPROP.equals(nodeName)) {
-		propfindType = PROPFIND_ALL_PROP;
+            } else if (XML_ALLPROP.equals(nodeName)) {
+                propfindType = PROPFIND_ALL_PROP;
                 break;
-	    }
-	}
+            }
+        }
     }
 
     /**
@@ -416,23 +430,23 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * {@link org.apache.jackrabbit.webdav.lock.LockInfo#isRefreshLock()}
      *
      * @return lock info object or <code>null</code> if an error occured while
-     * parsing the request body.
+     *         parsing the request body.
      * @see DavServletRequest#getLockInfo()
      */
     public LockInfo getLockInfo() {
         LockInfo lockInfo = null;
         boolean isDeep = (getDepth(DEPTH_INFINITY) == DEPTH_INFINITY);
-	Document requestDocument = getRequestDocument();
+        Document requestDocument = getRequestDocument();
         // check if XML request body is present. It SHOULD have one for
-	// 'create Lock' request and missing for a 'refresh Lock' request
-	if (requestDocument != null) {
-	    Element root = requestDocument.getRootElement();
-	    if (root.getName().equals(XML_LOCKINFO)) {
+        // 'create Lock' request and missing for a 'refresh Lock' request
+        if (requestDocument != null) {
+            Element root = requestDocument.getRootElement();
+            if (root.getName().equals(XML_LOCKINFO)) {
                 lockInfo = new LockInfo(root, getTimeout(), isDeep);
-	    } else {
-		log.debug("Lock-Request has no <lockinfo> tag.");
-	    }
-	} else {
+            } else {
+                log.debug("Lock-Request has no <lockinfo> tag.");
+            }
+        } else {
             lockInfo = new LockInfo(null, getTimeout(), isDeep);
         }
         return lockInfo;
@@ -451,9 +465,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      *
      * @param resource Webdav resources being operated on
      * @return true if the test is successful and the preconditions for the
-     * request processing are fulfilled.
-     * @param resource
-     * @return
+     *         request processing are fulfilled.
      * @see DavServletRequest#matchesIfHeader(DavResource)
      * @see IfHeader#matches(String, String, String)
      * @see DavResource#hasLock(org.apache.jackrabbit.webdav.lock.Type, org.apache.jackrabbit.webdav.lock.Scope)
@@ -483,7 +495,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     public boolean matchesIfHeader(String href, String token, String eTag) {
         return ifHeader.matches(href, token, eTag);
     }
-    
+
     //-----------------------------< TransactionDavServletRequest Interface >---
     /**
      * @see org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest#getTransactionId()
@@ -550,7 +562,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 try {
                     pos = new Position(typeNSegment[0], typeNSegment[1]);
                 } catch (IllegalArgumentException e) {
-                    log.error("Cannot parse Position header: "+e.getMessage());
+                    log.error("Cannot parse Position header: " + e.getMessage());
                 }
             }
         }
@@ -559,7 +571,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
     /**
      * @return <code>OrderPatch</code> object representing the orderpatch request
-     * body or <code>null</code> if the
+     *         body or <code>null</code> if the
      * @see org.apache.jackrabbit.webdav.ordering.OrderingDavServletRequest#getOrderPatch()
      */
     public OrderPatch getOrderPatch() {
@@ -606,7 +618,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             Element root = requestDocument.getRootElement();
             int depth = getDepth(DEPTH_0);
             try {
-               lInfo = new LabelInfo(root, depth);
+                lInfo = new LabelInfo(root, depth);
             } catch (IllegalArgumentException e) {
                 log.error(e.getMessage());
             }
@@ -622,7 +634,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
             try {
-               mInfo = new MergeInfo(requestDocument.getRootElement());
+                mInfo = new MergeInfo(requestDocument.getRootElement());
             } catch (IllegalArgumentException e) {
                 log.error(e.getMessage());
             }
@@ -638,7 +650,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
             try {
-               uInfo = new UpdateInfo(requestDocument.getRootElement());
+                uInfo = new UpdateInfo(requestDocument.getRootElement());
             } catch (IllegalArgumentException e) {
                 log.error(e.getMessage());
             }
@@ -848,7 +860,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     }
 
     public void removeAttribute(String s) {
-       httpRequest.removeAttribute(s);
+        httpRequest.removeAttribute(s);
     }
 
     public Locale getLocale() {
