@@ -42,7 +42,7 @@ import javax.jcr.Value;
  * getters and setters wrapping using the generic methods. Note also that the
  * Value objects must be serializable and implemented using classes
  * available on both the client and server side. The
- * {@link org.apache.jackrabbit.value.SerialValueFactory SerialValueFactory}
+ * {@link org.apache.jackrabbit.rmi.value.SerialValueFactory SerialValueFactory}
  * class provides two convenience methods to satisfy these requirements.
  *
  * @author Jukka Zitting

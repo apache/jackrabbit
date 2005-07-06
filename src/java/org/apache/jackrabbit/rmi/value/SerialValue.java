@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.value;
+package org.apache.jackrabbit.rmi.value;
 
 import java.io.InputStream;
 import java.io.Serializable;
@@ -30,10 +30,10 @@ import javax.jcr.ValueFormatException;
  * states.
  * <p>
  * Instances of this class are issued by the
- * {@link org.apache.jackrabbit.value.SerialValueFactory} and are
+ * {@link org.apache.jackrabbit.rmi.value.SerialValueFactory} and are
  * <code>Serializable</code>.
  *
- * @see org.apache.jackrabbit.value.SerialValueFactory
+ * @see org.apache.jackrabbit.rmi.value.SerialValueFactory
  */
 final class SerialValue implements Value, Serializable {
 

@@ -23,7 +23,7 @@ import javax.jcr.Value;
 import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.rmi.remote.RemoteRow;
-import org.apache.jackrabbit.value.SerialValueFactory;
+import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.query.Row Row} interface.

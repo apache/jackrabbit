@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.value;
+package org.apache.jackrabbit.rmi.value;
 
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -37,7 +37,7 @@ import javax.jcr.ValueFormatException;
  * well as full time zone naming are not supported.
  * 
  * @since 0.16.4.1
- * @see org.apache.jackrabbit.value.SerialValue
+ * @see org.apache.jackrabbit.rmi.value.SerialValue
  */
 public class DateValue extends BaseNonStreamValue
         implements Serializable, StatefulValue {

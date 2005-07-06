@@ -43,7 +43,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.xml.SessionImportContentHandler;
-import org.apache.jackrabbit.value.SerialValueFactory;
+import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
