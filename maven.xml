@@ -52,4 +52,8 @@
             ignoreFailures="false"/>
     </postGoal>
 
+    <goal name="idea">
+	    <attainGoal name="idea:multiproject"/>
+    </goal>
+
 </project>
