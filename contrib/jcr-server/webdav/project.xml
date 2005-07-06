@@ -29,14 +29,16 @@
     <!-- D E P E N D E N C I E S                                                -->
     <!-- ====================================================================== -->
     <dependencies>
-        <!-- internal dependencies -->
         <dependency>
-            <artifactId>commons-jcr</artifactId>
-            <groupId>jcr-server</groupId>
-            <version>${pom.currentVersion}</version>
+            <groupId>jackrabbit</groupId>
+            <artifactId>jackrabbit-api</artifactId>
+            <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
-
-        <!-- external dependencies -->
+        <dependency>
+            <groupId>jackrabbit</groupId>
+            <artifactId>jackrabbit-commons</artifactId>
+            <version>${jackrabbit.build.version.jackrabbit}</version>
+        </dependency>
         <dependency>
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>

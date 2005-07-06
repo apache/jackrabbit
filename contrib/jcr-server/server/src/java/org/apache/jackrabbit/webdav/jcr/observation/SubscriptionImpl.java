@@ -20,7 +20,7 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.observation.*;
 import org.apache.jackrabbit.webdav.util.XmlUtil;
-import org.apache.jackrabbit.util.uuid.UUID;
+import org.apache.jackrabbit.uuid.UUID;
 import org.jdom.Element;
 
 import javax.jcr.observation.*;

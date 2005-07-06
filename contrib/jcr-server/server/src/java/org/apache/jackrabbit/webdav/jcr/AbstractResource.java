@@ -629,7 +629,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         }
 
         // retrieve the last part of the path
-        String name = Text.getLabel(resourceHref);
+        String name = Text.getName(resourceHref);
         // remove index
         if (removeIndex) {
             if (name.endsWith("]")) {

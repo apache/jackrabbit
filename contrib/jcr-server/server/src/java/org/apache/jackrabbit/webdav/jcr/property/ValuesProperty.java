@@ -102,7 +102,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
 	Element[] propValue = (Element[])getValue();
 	Value[] values = new Value[propValue.length];
 	for (int i = 0; i < propValue.length; i++) {
-	    values[i] = ValueHelper.deserialize(fac, propValue[i].getText(), propertyType, false);
+	    values[i] = ValueHelper.deserialize(propValue[i].getText(), propertyType, false);
 	}
 	return values;
     }
