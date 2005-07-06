@@ -357,7 +357,7 @@ public class NodeState extends ItemState {
         ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
         if (oldEntry != null) {
             ChildNodeEntry newEntry =
-                    addChildNodeEntry(newName, oldEntry.getUUID());
+                    childNodeEntries.add(newName, oldEntry.getUUID());
             notifyNodeAdded(newEntry);
             notifyNodeRemoved(oldEntry);
             return true;
