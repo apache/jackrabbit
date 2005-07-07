@@ -555,6 +555,7 @@ public class NodeTest extends AbstractJCRTest {
             // try to remove already deleted node with session 2
             try {
                 defaultTestNodeSession2.remove();
+                testSession.save();
                 fail("Removing a node already deleted by other session should throw an InvalidItemStateException!");
             } catch (InvalidItemStateException e) {
                 //ok, works as expected
