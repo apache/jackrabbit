@@ -38,6 +38,9 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
+import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
+
 /**
  * Shared <code>ItemStateManager</code>. Caches objects returned from a
  * <code>PersistenceManager</code>. Objects returned by this item state
@@ -65,6 +68,11 @@ public class SharedItemStateManager extends ItemStateCache
      * Virtual item state providers
      */
     private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
+
+    /**
+     * Read-/Write-Lock to synchronize access on this item state manager.
+     */
+    private final ReadWriteLock rwLock = new ReentrantWriterPreferenceReadWriteLock();
 
     /**
      * Creates a new <code>SharedItemStateManager</code> instance.
@@ -226,21 +234,28 @@ public class SharedItemStateManager extends ItemStateCache
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
-        // check the virtual root ids (needed for overlay)
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].isVirtualRoot(id)) {
-                return virtualProviders[i].getItemState(id);
+
+        acquireReadLock();
+
+        try {
+            // check the virtual root ids (needed for overlay)
+            for (int i = 0; i < virtualProviders.length; i++) {
+                if (virtualProviders[i].isVirtualRoot(id)) {
+                    return virtualProviders[i].getItemState(id);
+                }
             }
-        }
-        // check internal first
-        if (hasNonVirtualItemState(id)) {
-            return getNonVirtualItemState(id);
-        }
-        // check if there is a virtual state for the specified item
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasItemState(id)) {
-                return virtualProviders[i].getItemState(id);
+            // check internal first
+            if (hasNonVirtualItemState(id)) {
+                return getNonVirtualItemState(id);
             }
+            // check if there is a virtual state for the specified item
+            for (int i = 0; i < virtualProviders.length; i++) {
+                if (virtualProviders[i].hasItemState(id)) {
+                    return virtualProviders[i].getItemState(id);
+                }
+            }
+        } finally {
+            rwLock.readLock().release();
         }
         throw new NoSuchItemStateException(id.toString());
     }
@@ -271,24 +286,36 @@ public class SharedItemStateManager extends ItemStateCache
      * {@inheritDoc}
      */
     public boolean hasItemState(ItemId id) {
-        if (isCached(id)) {
-            return true;
+
+        try {
+            acquireReadLock();
+        } catch (ItemStateException e) {
+            return false;
         }
-        // check the virtual root ids (needed for overlay)
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].isVirtualRoot(id)) {
+
+        try {
+            if (isCached(id)) {
                 return true;
             }
-        }
-        // check if this manager has the item state
-        if (hasNonVirtualItemState(id)) {
-            return true;
-        }
-        // otherwise check virtual ones
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasItemState(id)) {
+
+            // check the virtual root ids (needed for overlay)
+            for (int i = 0; i < virtualProviders.length; i++) {
+                if (virtualProviders[i].isVirtualRoot(id)) {
+                    return true;
+                }
+            }
+            // check if this manager has the item state
+            if (hasNonVirtualItemState(id)) {
                 return true;
             }
+            // otherwise check virtual ones
+            for (int i = 0; i < virtualProviders.length; i++) {
+                if (virtualProviders[i].hasItemState(id)) {
+                    return true;
+                }
+            }
+        } finally {
+            rwLock.readLock().release();
         }
         return false;
     }
@@ -319,19 +346,25 @@ public class SharedItemStateManager extends ItemStateCache
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        // check persistence manager
+        acquireReadLock();
+
         try {
-            return persistMgr.load(id);
-        } catch (NoSuchItemStateException e) {
-            // ignore
-        }
-        // check virtual providers
-        for (int i = 0; i < virtualProviders.length; i++) {
+            // check persistence manager
             try {
-                return virtualProviders[i].getNodeReferences(id);
+                return persistMgr.load(id);
             } catch (NoSuchItemStateException e) {
                 // ignore
             }
+            // check virtual providers
+            for (int i = 0; i < virtualProviders.length; i++) {
+                try {
+                    return virtualProviders[i].getNodeReferences(id);
+                } catch (NoSuchItemStateException e) {
+                    // ignore
+                }
+            }
+        } finally {
+            rwLock.readLock().release();
         }
 
         // throw
@@ -343,19 +376,29 @@ public class SharedItemStateManager extends ItemStateCache
      */
     public boolean hasNodeReferences(NodeReferencesId id) {
 
-        // check persistence manager
         try {
-            if (persistMgr.exists(id)) {
-                return true;
-            }
+            acquireReadLock();
         } catch (ItemStateException e) {
-            // ignore
+            return false;
         }
-        // check virtual providers
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasNodeReferences(id)) {
-                return true;
+
+        try {
+            // check persistence manager
+            try {
+                if (persistMgr.exists(id)) {
+                    return true;
+                }
+            } catch (ItemStateException e) {
+                // ignore
             }
+            // check virtual providers
+            for (int i = 0; i < virtualProviders.length; i++) {
+                if (virtualProviders[i].hasNodeReferences(id)) {
+                    return true;
+                }
+            }
+        } finally {
+            rwLock.readLock().release();
         }
         return false;
     }
@@ -482,136 +525,166 @@ public class SharedItemStateManager extends ItemStateCache
         // todo: remember by provider
         ArrayList virtualRefs = new ArrayList();
 
-        /**
-         * Validate modified references. Target node of references may
-         * have been deleted in the meantime.
-         */
-        Iterator iter = local.modifiedRefs();
-        while (iter.hasNext()) {
-            NodeReferences refs = (NodeReferences) iter.next();
-            NodeId id = new NodeId(refs.getUUID());
-            // if targetid is in virtual provider, transfer to its modified set
-            for (int i = 0; i < virtualProviders.length; i++) {
-                VirtualItemStateProvider provider = virtualProviders[i];
-                if (provider.hasItemState(id)) {
-                    virtualRefs.add(refs);
-                    refs = null;
-                    break;
-                }
-            }
-            if (refs != null) {
-                if (refs.hasReferences()) {
-                    if (!local.has(id) && !hasItemState(id)) {
-                        String msg = "Target node " + id
-                                + " of REFERENCE property does not exist";
-                        throw new ItemStateException(msg);
-                    }
-                }
-                shared.modified(refs);
-            }
-        }
-
-        EventStateCollection events = null;
-        boolean succeeded = false;
+        acquireWriteLock();
 
         try {
             /**
-             * Reconnect all items contained in the change log to their
-             * respective shared item and add the shared items to a
-             * new change log.
+             * Validate modified references. Target node of references may
+             * have been deleted in the meantime.
              */
-            iter = local.modifiedStates();
+            Iterator iter = local.modifiedRefs();
             while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
-                state.connect(getItemState(state.getId()));
-                shared.modified(state.getOverlayedState());
+                NodeReferences refs = (NodeReferences) iter.next();
+                NodeId id = new NodeId(refs.getUUID());
+                // if targetid is in virtual provider, transfer to its modified set
+                for (int i = 0; i < virtualProviders.length; i++) {
+                    VirtualItemStateProvider provider = virtualProviders[i];
+                    if (provider.hasItemState(id)) {
+                        virtualRefs.add(refs);
+                        refs = null;
+                        break;
+                    }
+                }
+                if (refs != null) {
+                    if (refs.hasReferences()) {
+                        if (!local.has(id) && !hasItemState(id)) {
+                            String msg = "Target node " + id
+                                    + " of REFERENCE property does not exist";
+                            throw new ItemStateException(msg);
+                        }
+                    }
+                    shared.modified(refs);
+                }
             }
-            iter = local.deletedStates();
+
+            EventStateCollection events = null;
+            boolean succeeded = false;
+
+            try {
+                /**
+                 * Reconnect all items contained in the change log to their
+                 * respective shared item and add the shared items to a
+                 * new change log.
+                 */
+                iter = local.modifiedStates();
+                while (iter.hasNext()) {
+                    ItemState state = (ItemState) iter.next();
+                    state.connect(getItemState(state.getId()));
+                    shared.modified(state.getOverlayedState());
+                }
+                iter = local.deletedStates();
+                while (iter.hasNext()) {
+                    ItemState state = (ItemState) iter.next();
+                    state.connect(getItemState(state.getId()));
+                    shared.deleted(state.getOverlayedState());
+                }
+                iter = local.addedStates();
+                while (iter.hasNext()) {
+                    ItemState state = (ItemState) iter.next();
+                    state.connect(createInstance(state));
+                    shared.added(state.getOverlayedState());
+                }
+
+                /* prepare the events */
+                if (obsMgr != null) {
+                    events = obsMgr.createEventStateCollection();
+                    events.createEventStates(root.getUUID(), local, this);
+                    events.prepare();
+                }
+
+                /* Push all changes from the local items to the shared items */
+                local.push();
+
+                /* Store items in the underlying persistence manager */
+                long t0 = System.currentTimeMillis();
+                persistMgr.store(shared);
+                succeeded = true;
+                long t1 = System.currentTimeMillis();
+                if (log.isInfoEnabled()) {
+                    log.info("persisting change log " + shared + " took " + (t1 - t0) + "ms");
+                }
+
+            } finally {
+
+                /**
+                 * If some store operation was unsuccessful, we have to reload
+                 * the state of modified and deleted items from persistent
+                 * storage.
+                 */
+                if (!succeeded) {
+                    local.disconnect();
+
+                    iter = shared.modifiedStates();
+                    while (iter.hasNext()) {
+                        ItemState state = (ItemState) iter.next();
+                        try {
+                            state.copy(loadItemState(state.getId()));
+                        } catch (ItemStateException e) {
+                            state.discard();
+                        }
+                    }
+                    iter = shared.deletedStates();
+                    while (iter.hasNext()) {
+                        ItemState state = (ItemState) iter.next();
+                        try {
+                            state.copy(loadItemState(state.getId()));
+                        } catch (ItemStateException e) {
+                            state.discard();
+                        }
+                    }
+                    iter = shared.addedStates();
+                    while (iter.hasNext()) {
+                        ItemState state = (ItemState) iter.next();
+                        state.discard();
+                    }
+                }
+            }
+
+            /* Let the shared item listeners know about the change */
+            shared.persisted();
+
+            /* notify virtual providers about node references */
+            iter = virtualRefs.iterator();
             while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
-                state.connect(getItemState(state.getId()));
-                shared.deleted(state.getOverlayedState());
-            }
-            iter = local.addedStates();
-            while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
-                state.connect(createInstance(state));
-                shared.added(state.getOverlayedState());
+                NodeReferences refs = (NodeReferences) iter.next();
+                // if targetid is in virtual provider, transfer to its modified set
+                for (int i = 0; i < virtualProviders.length; i++) {
+                    if (virtualProviders[i].setNodeReferences(refs)) {
+                        break;
+                    }
+                }
             }
 
-            /* prepare the events */
-            if (obsMgr != null) {
-                events = obsMgr.createEventStateCollection();
-                events.createEventStates(root.getUUID(), local, this);
-                events.prepare();
+            /* dispatch the events */
+            if (events != null) {
+                events.dispatch();
             }
-
-            /* Push all changes from the local items to the shared items */
-            local.push();
-
-            /* Store items in the underlying persistence manager */
-            long t0 = System.currentTimeMillis();
-            persistMgr.store(shared);
-            succeeded = true;
-            long t1 = System.currentTimeMillis();
-            if (log.isInfoEnabled()) {
-                log.info("persisting change log " + shared + " took " + (t1 - t0) + "ms");
-            }
-
         } finally {
-
-            /**
-             * If some store operation was unsuccessful, we have to reload
-             * the state of modified and deleted items from persistent
-             * storage.
-             */
-            if (!succeeded) {
-                local.disconnect();
-
-                iter = shared.modifiedStates();
-                while (iter.hasNext()) {
-                    ItemState state = (ItemState) iter.next();
-                    try {
-                        state.copy(loadItemState(state.getId()));
-                    } catch (ItemStateException e) {
-                        state.discard();
-                    }
-                }
-                iter = shared.deletedStates();
-                while (iter.hasNext()) {
-                    ItemState state = (ItemState) iter.next();
-                    try {
-                        state.copy(loadItemState(state.getId()));
-                    } catch (ItemStateException e) {
-                        state.discard();
-                    }
-                }
-                iter = shared.addedStates();
-                while (iter.hasNext()) {
-                    ItemState state = (ItemState) iter.next();
-                    state.discard();
-                }
-            }
+            rwLock.writeLock().release();
         }
+    }
 
-        /* Let the shared item listeners know about the change */
-        shared.persisted();
-
-        /* notify virtual providers about node references */
-        iter = virtualRefs.iterator();
-        while (iter.hasNext()) {
-            NodeReferences refs = (NodeReferences) iter.next();
-            // if targetid is in virtual provider, transfer to its modified set
-            for (int i = 0; i < virtualProviders.length; i++) {
-                if (virtualProviders[i].setNodeReferences(refs)) {
-                    break;
-                }
-            }
+    /**
+     * Acquires the read lock on this item state manager.
+     * @throws ItemStateException if the read lock cannot be acquired.
+     */
+    private void acquireReadLock() throws ItemStateException {
+        try {
+            rwLock.readLock().acquire();
+        } catch (InterruptedException e) {
+            throw new ItemStateException("Interrupted while acquiring read lock");
         }
+    }
 
-        /* dispatch the events */
-        if (events != null) {
-            events.dispatch();
+    /**
+     * Acquires the write lock on this item state manager.
+     * @throws ItemStateException if the write lock cannot be acquired.
+     */
+    private void acquireWriteLock() throws ItemStateException {
+        try {
+            rwLock.writeLock().acquire();
+        } catch (InterruptedException e) {
+            throw new ItemStateException("Interrupted while acquiring write lock");
         }
     }
 
