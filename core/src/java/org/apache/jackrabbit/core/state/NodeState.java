@@ -105,18 +105,16 @@ public class NodeState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    protected void copy(ItemState state) {
+    protected synchronized void copy(ItemState state) {
         super.copy(state);
 
         NodeState nodeState = (NodeState) state;
         nodeTypeName = nodeState.getNodeTypeName();
-        mixinTypeNames.clear();
-        mixinTypeNames.addAll(nodeState.getMixinTypeNames());
+        mixinTypeNames = new HashSet(nodeState.getMixinTypeNames());
         defId = nodeState.getDefinitionId();
         uuid = nodeState.getUUID();
-        propertyNames.clear();
-        propertyNames.addAll(nodeState.getPropertyNames());
-        childNodeEntries.removeAll();
+        propertyNames = new HashSet(nodeState.getPropertyNames());
+        childNodeEntries = new ChildNodeEntries();
         childNodeEntries.addAll(nodeState.getChildNodeEntries());
     }
 

@@ -83,7 +83,7 @@ public class PropertyState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    protected void copy(ItemState state) {
+    protected synchronized void copy(ItemState state) {
         super.copy(state);
 
         PropertyState propState = (PropertyState) state;
