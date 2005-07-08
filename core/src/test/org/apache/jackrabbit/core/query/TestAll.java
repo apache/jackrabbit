@@ -43,6 +43,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(OrderByTest.class);
         suite.addTestSuite(XPathAxisTest.class);
         suite.addTestSuite(SkipDeletedNodesTest.class);
+        suite.addTestSuite(MassiveRangeTest.class);
 
         return suite;
     }
