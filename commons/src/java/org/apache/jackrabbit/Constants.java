@@ -449,15 +449,4 @@ public interface Constants {
      * nt:childNodeDefinition
      */
     QName NT_CHILDNODEDEFINITION = new QName(NS_NT_URI, "childNodeDefinition");
-
-    //-------------------------------------------< security related constants >
-    /**
-     * Name of the internal <code>SimpleCredentials</code> attribute where
-     * the <code>Subject</code> of the <i>impersonating</i> <code>Session</code>
-     * is stored.
-     *
-     * @see javax.jcr.Session#impersonate(javax.jcr.Credentials)
-     */
-    String IMPERSONATOR_ATTRIBUTE =
-            "org.apache.jackrabbit.core.security.impersonator";
 }
