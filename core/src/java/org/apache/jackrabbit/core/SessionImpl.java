@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.AuthContext;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
@@ -89,7 +90,7 @@ import java.util.Set;
 /**
  * A <code>SessionImpl</code> ...
  */
-public class SessionImpl implements Session, Constants {
+public class SessionImpl implements Session {
 
     private static Logger log = Logger.getLogger(SessionImpl.class);
 
@@ -673,7 +674,7 @@ public class SessionImpl implements Session, Constants {
         // set IMPERSONATOR_ATTRIBUTE attribute of given credentials
         // with subject of current session
         SimpleCredentials creds = (SimpleCredentials) otherCredentials;
-        creds.setAttribute(IMPERSONATOR_ATTRIBUTE, subject);
+        creds.setAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE, subject);
 
         try {
             return rep.login(otherCredentials, getWorkspace().getName());
@@ -684,7 +685,7 @@ public class SessionImpl implements Session, Constants {
             throw new RepositoryException(msg, nswe);
         } finally {
             // make sure IMPERSONATOR_ATTRIBUTE is removed
-            creds.removeAttribute(IMPERSONATOR_ATTRIBUTE);
+            creds.removeAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE);
         }
     }
 
@@ -707,7 +708,7 @@ public class SessionImpl implements Session, Constants {
 
         try {
             NodeImpl node = (NodeImpl) getItemManager().getItem(new NodeId(uuid));
-            if (node.isNodeType(MIX_REFERENCEABLE)) {
+            if (node.isNodeType(Constants.MIX_REFERENCEABLE)) {
                 return node;
             } else {
                 // there is a node with that uuid but the node does not expose it

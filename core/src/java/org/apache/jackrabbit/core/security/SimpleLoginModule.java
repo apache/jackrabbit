@@ -117,7 +117,7 @@ public class SimpleLoginModule implements LoginModule {
                     SimpleCredentials sc = (SimpleCredentials) creds;
                     // authenticate
 
-                    Object attr = sc.getAttribute(Constants.IMPERSONATOR_ATTRIBUTE);
+                    Object attr = sc.getAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE);
                     if (attr != null && attr instanceof Subject) {
                         Subject impersonator = (Subject) attr;
                         // @todo check privileges to 'impersonate' the user represented by the supplied credentials
