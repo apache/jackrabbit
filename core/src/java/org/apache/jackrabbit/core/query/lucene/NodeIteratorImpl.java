@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import java.util.NoSuchElementException;
 
@@ -30,7 +29,7 @@ import java.util.NoSuchElementException;
  * Implements a {@link javax.jcr.NodeIterator} returned by
  * {@link javax.jcr.query.QueryResult#getNodes()}.
  */
-class NodeIteratorImpl implements NodeIterator {
+class NodeIteratorImpl implements ScoreNodeIterator {
 
     /** Logger instance for this class */
     private static final Logger log = Logger.getLogger(NodeIteratorImpl.class);
@@ -45,7 +44,10 @@ class NodeIteratorImpl implements NodeIterator {
     protected final ItemManager itemMgr;
 
     /** Current position in the UUID array */
-    private int pos = 0;
+    protected int pos = 0;
+
+    /** Reference to the next node instance */
+    private NodeImpl next;
 
     /**
      * Creates a new <code>NodeIteratorImpl</code> instance.
@@ -60,6 +62,7 @@ class NodeIteratorImpl implements NodeIterator {
         this.itemMgr = itemMgr;
         this.uuids = uuids;
         this.scores = scores;
+        fetchNext();
     }
 
     /**
@@ -83,6 +86,21 @@ class NodeIteratorImpl implements NodeIterator {
     }
 
     /**
+     * Returns the next <code>Node</code> in the result set.
+     *
+     * @return the next <code>Node</code> in the result set.
+     * @throws NoSuchElementException if iteration has no more <code>Node</code>s.
+     */
+    public NodeImpl nextNodeImpl() throws NoSuchElementException {
+        if (next == null) {
+            throw new NoSuchElementException();
+        }
+        NodeImpl n = next;
+        fetchNext();
+        return n;
+    }
+
+    /**
      * Skip a number of <code>Node</code>s in this iterator.
      * @param skipNum the non-negative number of <code>Node</code>s to skip
      * @throws NoSuchElementException
@@ -99,10 +117,15 @@ class NodeIteratorImpl implements NodeIterator {
     }
 
     /**
-     * Returns the number of <code>Node</code>s in this
-     * <code>NodeIterator</code>.
-     * @return the number of <code>Node</code>s in this
-     *   <code>NodeIterator</code>.
+     * Returns the number of nodes in this iterator.
+     * </p>
+     * Note: The number returned by this method may differ from the number
+     * of nodes actually returned by calls to hasNext() / getNextNode()! This
+     * is because this iterator works on a lazy instantiation basis and while
+     * iterating over the nodes some of them might have been deleted in the
+     * meantime. Those will not be returned by getNextNode().
+     *
+     * @return the number of node in this iterator.
      */
     public long getSize() {
         return uuids.length;
@@ -123,7 +146,7 @@ class NodeIteratorImpl implements NodeIterator {
      *  available; <code>false</code> otherwise.
      */
     public boolean hasNext() {
-        return pos < uuids.length;
+        return next != null;
     }
 
     /**
@@ -139,29 +162,30 @@ class NodeIteratorImpl implements NodeIterator {
      * @return the score of the node returned by {@link #nextNode()}.
      * @throws NoSuchElementException if there is no next node.
      */
-    float getScore() throws NoSuchElementException {
+    public float getScore() throws NoSuchElementException {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        return scores[pos].floatValue();
+        return scores[pos - 1].floatValue();
     }
 
     /**
-     * Returns the next <code>Node</code> in the result set.
-     * @return the next <code>Node</code> in the result set.
-     * @throws NoSuchElementException if iteration has no more
-     *   <code>Node</code>s.
+     * Clears {@link #next} and tries to fetch the next Node instance.
+     * When this method returns {@link #next} refers to the next available
+     * node instance in this iterator. If {@link #next} is null when this
+     * method returns, then there are no more valid element in this iterator.
      */
-    NodeImpl nextNodeImpl() throws NoSuchElementException {
-        if (pos >= uuids.length) {
-            throw new NoSuchElementException();
-        }
-        try {
-            return (NodeImpl) itemMgr.getItem(new NodeId(uuids[pos++]));
-        } catch (RepositoryException e) {
-            log.error("Exception retrieving Node with UUID: "
-                    + uuids[pos - 1] + ": " + e.toString());
-            throw new NoSuchElementException();
+    protected void fetchNext() {
+        // reset
+        next = null;
+        while (next == null && pos < uuids.length) {
+            try {
+                next = (NodeImpl) itemMgr.getItem(new NodeId(uuids[pos++]));
+            } catch (RepositoryException e) {
+                log.error("Exception retrieving Node with UUID: "
+                        + uuids[pos - 1] + ": " + e.toString());
+                // try next
+            }
         }
     }
 }
