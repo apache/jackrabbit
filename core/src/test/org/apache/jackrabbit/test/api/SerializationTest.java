@@ -25,13 +25,26 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.jcr.*;
 import javax.jcr.version.VersionException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.*;
-import java.io.*;
-import java.util.ArrayList;
+import javax.jcr.Workspace;
+import javax.jcr.Session;
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.Repository;
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.InvalidSerializedDataException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.ItemExistsException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.Reader;
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 
 /**
  * <code>SerializationTest</code> contains the test cases for the method
@@ -89,7 +102,11 @@ public class SerializationTest extends AbstractJCRTest {
     protected Node initVersioningException(boolean returnParent) throws RepositoryException, NotExecutableException, IOException {
         Node vNode = testRootNode.addNode(nodeName1, testNodeType);
         if (!vNode.isNodeType(mixVersionable)) {
-            throw new NotExecutableException("NodeType: " + testNodeType + " is not versionable");
+            if (vNode.canAddMixin(mixVersionable)) {
+                vNode.addMixin(mixVersionable);
+            } else {
+                throw new NotExecutableException("NodeType: " + testNodeType + " is not versionable");
+            }
         }
         Node vChild = vNode.addNode(nodeName2, testNodeType);
         session.save();
