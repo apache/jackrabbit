@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -271,7 +272,19 @@ public class WorkspaceImporter implements Importer, Constants {
             PropDef def;
             PropertyState prop;
             SessionImpl session = (SessionImpl) wsp.getSession();
-            VersionHistory hist = session.getVersionManager().createVersionHistory(session, node);
+            VersionManager vMgr = session.getVersionManager();
+            /**
+             * check if there's already a version history for that
+             * node; this would e.g. be the case if a versionable node
+             * had been exported, removed and re-imported with either
+             * IMPORT_UUID_COLLISION_REMOVE_EXISTING or
+             * IMPORT_UUID_COLLISION_REPLACE_EXISTING;
+             * otherwise create a new version history
+             */
+            VersionHistory vh = vMgr.getVersionHistory(session, node);
+            if (vh == null) {
+                vh = vMgr.createVersionHistory(session, node);
+            }
 
             // jcr:versionHistory
             if (!node.hasPropertyName(JCR_VERSIONHISTORY)) {
@@ -279,7 +292,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         PropertyType.REFERENCE, false, node);
                 prop = itemOps.createPropertyState(node, JCR_VERSIONHISTORY,
                         PropertyType.REFERENCE, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(hist.getUUID()))});
+                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getUUID()))});
             }
 
             // jcr:baseVersion
@@ -288,7 +301,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         PropertyType.REFERENCE, false, node);
                 prop = itemOps.createPropertyState(node, JCR_BASEVERSION,
                         PropertyType.REFERENCE, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
             }
 
             // jcr:predecessors
@@ -297,7 +310,7 @@ public class WorkspaceImporter implements Importer, Constants {
                         PropertyType.REFERENCE, true, node);
                 prop = itemOps.createPropertyState(node, JCR_PREDECESSORS,
                         PropertyType.REFERENCE, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
             }
 
             // jcr:isCheckedOut
@@ -308,7 +321,6 @@ public class WorkspaceImporter implements Importer, Constants {
                         PropertyType.BOOLEAN, def);
                 prop.setValues(new InternalValue[]{InternalValue.create(true)});
             }
-
         }
     }
 

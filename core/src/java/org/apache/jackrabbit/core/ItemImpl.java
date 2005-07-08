@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
@@ -897,12 +898,25 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
                 if (node.isNodeType(MIX_VERSIONABLE)) {
                     if (!node.hasProperty(JCR_VERSIONHISTORY)) {
-                        VersionHistory hist = session.getVersionManager().createVersionHistory(session, (NodeState) itemState);
-                        node.internalSetProperty(JCR_VERSIONHISTORY, InternalValue.create(new UUID(hist.getUUID())));
-                        node.internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(hist.getRootVersion().getUUID())));
+                        VersionManager vMgr = session.getVersionManager();
+                        NodeState nodeState = (NodeState) itemState;
+                        /**
+                         * check if there's already a version history for that
+                         * node; this would e.g. be the case if a versionable
+                         * node had been exported, removed and re-imported with
+                         * either IMPORT_UUID_COLLISION_REMOVE_EXISTING or
+                         * IMPORT_UUID_COLLISION_REPLACE_EXISTING;
+                         * otherwise create a new version history
+                         */
+                        VersionHistory vh = vMgr.getVersionHistory(session, nodeState);
+                        if (vh == null) {
+                            vh = vMgr.createVersionHistory(session, nodeState);
+                        }
+                        node.internalSetProperty(JCR_VERSIONHISTORY, InternalValue.create(new UUID(vh.getUUID())));
+                        node.internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(vh.getRootVersion().getUUID())));
                         node.internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(true));
                         node.internalSetProperty(JCR_PREDECESSORS,
-                                new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))});
+                                new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
                         createdTransientState = true;
                     }
                 }

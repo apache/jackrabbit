@@ -204,6 +204,19 @@ public class VersionManagerImpl implements VersionManager,
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public VersionHistory getVersionHistory(Session session, NodeState node)
+            throws RepositoryException {
+
+        String vhId = getVersionHistoryId(node);
+        if (vhId == null) {
+            return null;
+        }
+        return (VersionHistoryImpl) session.getNodeByUUID(vhId);
+    }
+
+    /**
      * Creates a new Version History.
      *
      * @param node the node for which the version history is to be initialized
@@ -257,6 +270,35 @@ public class VersionManagerImpl implements VersionManager,
                 stateMgr.cancel();
             }
         }
+    }
+
+    /**
+     * Returns the id of the version history associated with the given node
+     * or <code>null</code> if that node doesn't have a version history.
+     *
+     * @param node the node whose version history's id is to be returned.
+     * @return the the id of the version history associated with the given node
+     *         or <code>null</code> if that node doesn't have a version history.
+     * @throws RepositoryException if an error occurs
+     */
+    private String getVersionHistoryId(NodeState node)
+            throws RepositoryException {
+
+        // build and traverse path
+        String uuid = node.getUUID();
+        NodeStateEx n = historyRoot;
+        for (int i = 0; i < 3; i++) {
+            QName name = new QName(NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
+            if (!n.hasNode(name)) {
+                return null;
+            }
+            n = n.getNode(name, 1);
+        }
+        QName historyNodeName = new QName(NS_DEFAULT_URI, uuid);
+        if (!n.hasNode(historyNodeName)) {
+            return null;
+        }
+        return n.getNode(historyNodeName, 1).getUUID();
     }
 
     /**
