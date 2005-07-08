@@ -84,7 +84,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
     }
 
     /**
-     * Applies the name pattern against the specified name.
+     * Matches the name pattern against the specified name.
      * <p/>
      * The pattern may be a full name or a partial name with one or more
      * wildcard characters ("*"), or a disjunction (using the "|" character
@@ -95,12 +95,28 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
      * would match
      * <p/>
      * <code>"foo:bar"</code>, but also <code>"jcr:whatever"</code>.
+     * <p/>
+     * <pre>
+     * The EBNF for pattern is:
+     *
+     * namePattern ::= disjunct {'|' disjunct}
+     * disjunct ::= name [':' name]
+     * name ::= '*' |
+     *          ['*'] fragment {'*' fragment}['*']
+     * fragment ::= char {char}
+     * char ::= nonspace | ' '
+     * nonspace ::= (* Any Unicode character except:
+     *               '/', ':', '[', ']', '*',
+     *               ''', '"', '|' or any whitespace
+     *               character *)
+     * </pre>
      *
      * @param name the name to test the pattern with
+     * @param pattern the pattern to be matched against the name
      * @return true if the specified name matches the pattern
+     * @see javax.jcr.Node#getNodes(String)
      */
-    static boolean matches(String name, String pattern) {
-        // @todo check if pattern matching conforms with spec
+    public static boolean matches(String name, String pattern) {
         // split pattern
         StringTokenizer st = new StringTokenizer(pattern, OR, false);
         while (st.hasMoreTokens()) {
@@ -122,7 +138,8 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
      * @param pOff    offset within <code>pattern</code>.
      * @return true if <code>s</code> matched pattern, else false.
      */
-    private static boolean internalMatches(String s, String pattern, int sOff, int pOff) {
+    private static boolean internalMatches(String s, String pattern,
+                                           int sOff, int pOff) {
         int pLen = pattern.length();
         int sLen = s.length();
 
