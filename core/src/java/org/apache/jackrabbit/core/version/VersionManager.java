@@ -48,8 +48,25 @@ public interface VersionManager {
      * @param node
      * @return
      * @throws RepositoryException
+     * @see #getVersionHistory(Session, NodeState) 
      */
     VersionHistory createVersionHistory(Session session, NodeState node)
+            throws RepositoryException;
+
+    /**
+     * Returns the version history of the specified <code>node</code> or
+     * <code>null</code> if the given node doesn't (yet) have an associated
+     * version history.
+     *
+     * @param session
+     * @param node node whose version history should be returned
+     * @return the version history of the specified <code>node</code> or
+     *         <code>null</code> if the given node doesn't (yet) have an
+     *        associated version history.
+     * @throws RepositoryException if an error occurs
+     * @see #createVersionHistory(Session, NodeState)
+     */
+    VersionHistory getVersionHistory(Session session, NodeState node)
             throws RepositoryException;
 
     /**
