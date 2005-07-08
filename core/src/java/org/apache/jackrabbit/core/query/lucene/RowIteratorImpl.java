@@ -48,7 +48,7 @@ class RowIteratorImpl implements RowIterator {
     /**
      * Iterator over nodes, that constitute the result set.
      */
-    private final NodeIteratorImpl nodes;
+    private final ScoreNodeIterator nodes;
 
     /**
      * Array of select property names
@@ -64,13 +64,13 @@ class RowIteratorImpl implements RowIterator {
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
      * nodes.
      *
-     * @param nodes      a <code>NodeIteratorImpl</code> that contains the nodes of
+     * @param nodes      a <code>ScoreNodeIterator</code> that contains the nodes of
      *                   the query result.
      * @param properties <code>QName</code> of the select properties.
      * @param resolver   <code>NamespaceResolver</code> of the user
      *                   <code>Session</code>.
      */
-    RowIteratorImpl(NodeIteratorImpl nodes, QName[] properties, NamespaceResolver resolver) {
+    RowIteratorImpl(ScoreNodeIterator nodes, QName[] properties, NamespaceResolver resolver) {
         this.nodes = nodes;
         this.properties = properties;
         this.resolver = resolver;

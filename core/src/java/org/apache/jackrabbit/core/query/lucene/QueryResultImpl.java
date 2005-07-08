@@ -128,7 +128,7 @@ class QueryResultImpl implements QueryResult {
      * Creates a node iterator over the result nodes.
      * @return a node iterator over the result nodes.
      */
-    private NodeIteratorImpl getNodeIterator() {
+    private ScoreNodeIterator getNodeIterator() {
         if (docOrder) {
             return new DocOrderNodeIteratorImpl(itemMgr, uuids, scores);
         } else {

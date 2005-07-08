@@ -42,6 +42,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SQLTest.class);
         suite.addTestSuite(OrderByTest.class);
         suite.addTestSuite(XPathAxisTest.class);
+        suite.addTestSuite(SkipDeletedNodesTest.class);
 
         return suite;
     }
