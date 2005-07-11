@@ -63,6 +63,8 @@ public class PathTest extends TestCase {
         list.add(new Test("/prefix:name/prefix:name", NOR|VAL));
         list.add(new Test("/name[2]/name[2]", NOR|VAL));
         list.add(new Test("/prefix:name[2]/prefix:name[2]", NOR|VAL));
+        list.add(new Test("a/b/c/", "a/b/c", NOR|VAL));
+        list.add(new Test("/a/b/c/", "/a/b/c", NOR|VAL));
 
         // relative paths
         list.add(new Test("a/b/c", NOR|VAL));
@@ -72,7 +74,6 @@ public class PathTest extends TestCase {
 
         // invalid paths
         list.add(new Test(""));
-        list.add(new Test("/a/b/c/"));
         list.add(new Test(" /a/b/c/"));
         list.add(new Test("/a/b/c/ "));
         list.add(new Test("/:name/prefix:name"));
@@ -82,7 +83,6 @@ public class PathTest extends TestCase {
         list.add(new Test("/prefix : name"));
         list.add(new Test("/name[0]/name[2]"));
         list.add(new Test("/prefix:name[2]foo/prefix:name[2]"));
-        list.add(new Test("a/b/c/"));
         list.add(new Test(":name/prefix:name"));
         list.add(new Test("name[0]/name[2]"));
         list.add(new Test("prefix:name[2]foo/prefix:name[2]"));
