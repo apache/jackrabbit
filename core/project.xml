@@ -127,6 +127,9 @@
             <includes>
                 <include>**/*TestAll.java</include>
             </includes>
+            <excludes>
+                <exclude>**/init/*</exclude>
+            </excludes>
             <resources>
                 <resource>
                     <directory>applications/test</directory>

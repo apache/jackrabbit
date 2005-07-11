@@ -170,4 +170,21 @@
             basedir="target/test-classes"
             includes="org/apache/jackrabbit/core/JackrabbitRepositoryStub.class"/>
     </goal>
+
+    <!--
+        Run Jackrabbit init tests first.
+    -->
+    <preGoal name="test:test">
+        <attainGoal name="jackrabbit:test-init"/>
+    </preGoal>
+
+    <!--
+        Runs the init test cases to fill the repository with data for
+        read-only tests.
+    -->
+    <goal name="jackrabbit:test-init">
+        <j:set var="testcase" value="org.apache.jackrabbit.init.TestAll"/>
+        <attainGoal name="test:single"/>
+    </goal>
+
 </project>
