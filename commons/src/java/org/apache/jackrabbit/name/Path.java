@@ -371,6 +371,10 @@ public final class Path {
                 leadingParent = false;
                 continue;
             }
+            if (elem.length() == 0 && i == elems.length - 1) {
+                // ignore trailing '/'
+                break;
+            }
             Matcher matcher = PATH_ELEMENT_PATTERN.matcher(elem);
             if (matcher.matches()) {
                 if (resolver == null) {
