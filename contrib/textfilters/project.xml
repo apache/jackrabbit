@@ -208,8 +208,14 @@
     </dependency>
     <dependency>
       <groupId>jackrabbit</groupId>
-      <artifactId>jackrabbit</artifactId>
-      <version>0.16.4.1-dev</version>
+      <artifactId>jackrabbit-commons</artifactId>
+      <version>1.0-dev</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+      <version>1.0-dev</version>
       <type>jar</type>
     </dependency>
     <dependency>
@@ -222,9 +228,9 @@
     <dependency>
       <groupId>jsr170</groupId>
       <artifactId>jcr</artifactId>
-      <version>0.16.4.1</version>
+      <version>1.0</version>
       <type>jar</type>
-      <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
+      <url>http://www.day.com/maven/jsr170/jars/jcr-1.0.jar</url>
     </dependency>
   </dependencies>
   <build>
