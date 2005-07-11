@@ -43,30 +43,6 @@
     <!-- B U I L D  D E S C R I P T I O N                                       -->
     <!-- ====================================================================== -->
     <build>
-        <sourceDirectory>src/java</sourceDirectory>
-        <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
-        <unitTest>
-            <includes>
-                <include>**/*TestAll.java</include>
-            </includes>
-            <resources>
-                <resource>
-                    <directory>applications/test</directory>
-                    <includes>
-                        <include>*.properties</include>
-                        <include>*.xml</include>
-                    </includes>
-                </resource>
-                <resource>
-                    <directory>src/test</directory>
-                    <includes>
-                        <include>**/*.xml</include>
-                        <include>**/*.txt</include>
-                    </includes>
-                </resource>
-            </resources>
-        </unitTest>
-        
         <!-- J A R  R E S O U R C E S -->
         <!-- Resources that are packaged up inside the JAR file -->
         <resources>
@@ -75,7 +51,6 @@
                 <includes>
                     <include>**/*.xml</include>
                     <include>**/*.properties</include>
-                    <include>**/*.TextFilterService</include>
                 </includes>
             </resource>
         </resources>
