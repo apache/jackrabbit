@@ -22,7 +22,7 @@ import java.io.Reader;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
