@@ -35,11 +35,17 @@
             <groupId>jackrabbit</groupId>
             <artifactId>jackrabbit-api</artifactId>
             <version>${pom.currentVersion}</version>
+            <properties>
+                <eclipse.dependency>true</eclipse.dependency>
+            </properties>
         </dependency>
         <dependency>
             <groupId>jackrabbit</groupId>
             <artifactId>jackrabbit-commons</artifactId>
             <version>${pom.currentVersion}</version>
+            <properties>
+                <eclipse.dependency>true</eclipse.dependency>
+            </properties>
         </dependency>
 
         <dependency>
