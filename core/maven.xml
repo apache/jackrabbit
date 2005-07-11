@@ -175,7 +175,9 @@
         Run Jackrabbit init tests first.
     -->
     <preGoal name="test:test">
-        <attainGoal name="jackrabbit:test-init"/>
+        <j:if test="${context.getVariable('maven.test.skip') != 'true'}">
+            <attainGoal name="jackrabbit:test-init"/>
+        </j:if>
     </preGoal>
 
     <!--
