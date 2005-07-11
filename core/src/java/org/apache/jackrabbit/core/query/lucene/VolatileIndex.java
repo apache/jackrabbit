@@ -20,18 +20,26 @@ import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.RAMDirectory;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Enumeration;
 
 /**
  * Implements an in-memory index with a redo log.
  */
 class VolatileIndex extends AbstractIndex {
+
+    /**
+     * Logger instance for this class.
+     */
+    private static final Logger log = Logger.getLogger(VolatileIndex.class);
 
     /**
      * Default value for {@link #bufferSize}.
@@ -83,7 +91,10 @@ class VolatileIndex extends AbstractIndex {
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
         }
-        pending.put(doc.get(FieldNames.UUID), doc);
+        Document old = (Document) pending.put(doc.get(FieldNames.UUID), doc);
+        if (old != null) {
+            disposeDocument(old);
+        }
         if (pending.size() >= bufferSize) {
             commitPending();
         }
@@ -106,7 +117,9 @@ class VolatileIndex extends AbstractIndex {
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
         }
-        if (pending.remove(idTerm.text()) != null) {
+        Document doc = (Document) pending.remove(idTerm.text());
+        if (doc != null) {
+            disposeDocument(doc);
             // pending document has been removed
             return 1;
         } else {
@@ -154,6 +167,25 @@ class VolatileIndex extends AbstractIndex {
             Document doc = (Document) it.next();
             super.addDocument(doc);
             it.remove();
+        }
+    }
+
+    /**
+     * Disposes the document <code>old</code>. Closes any potentially open
+     * readers held by the document.
+     *
+     * @param old the document to dispose.
+     */
+    private void disposeDocument(Document old) {
+        for (Enumeration e = old.fields(); e.hasMoreElements(); ) {
+            Field f = (Field) e.nextElement();
+            if (f.readerValue() != null) {
+                try {
+                    f.readerValue().close();
+                } catch (IOException ex) {
+                    log.warn("Exception while disposing index document: " + ex);
+                }
+            }
         }
     }
 }
