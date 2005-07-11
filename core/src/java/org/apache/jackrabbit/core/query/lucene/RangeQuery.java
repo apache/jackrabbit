@@ -22,6 +22,7 @@ import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
@@ -80,6 +81,26 @@ public class RangeQuery extends Query {
 
         this.upperTerm = upperTerm;
         this.inclusive = inclusive;
+    }
+
+    /**
+     * Tries to rewrite this query into a standard lucene RangeQuery.
+     * This rewrite might fail with a TooManyClauses exception. If that
+     * happens, we use our own implementation.
+     *
+     * @param reader the index reader.
+     * @return the rewritten query or this query if rewriting is not possible.
+     * @throws IOException if an error occurs.
+     */
+    public Query rewrite(IndexReader reader) throws IOException {
+        Query stdRangeQueryImpl
+                = new org.apache.lucene.search.RangeQuery(lowerTerm, upperTerm, inclusive);
+        try {
+            return stdRangeQueryImpl.rewrite(reader);
+        } catch (BooleanQuery.TooManyClauses e) {
+            // failed, use own implementation
+            return this;
+        }
     }
 
     /**
