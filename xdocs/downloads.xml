@@ -78,8 +78,11 @@
          </p>
          <source>maven</source>
          <p>
+            By default the command will build all the Jackrabbit main components and
+            install the resulting jar files into your local Maven repository.
             For other build options, please see the
-            <a href="http://maven.apache.org/start/use.html">Maven documentation</a>.
+            <a href="http://maven.apache.org/start/use.html">Maven documentation</a>
+            and the <a href="http://maven.apache.org/reference/plugins/multiproject/goals.html">Maven Multi-Project goals</a>.
          </p>
          <p>
             <strong>NOTE:</strong>
