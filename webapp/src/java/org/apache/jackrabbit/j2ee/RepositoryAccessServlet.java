@@ -24,6 +24,7 @@ import org.apache.jackrabbit.util.Base64;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.ServletException;
+import javax.servlet.ServletContext;
 import javax.jcr.*;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -61,16 +62,9 @@ public class RepositoryAccessServlet extends HttpServlet {
     /** Authorization header name */
     private static final String HEADER_AUTHORIZATION = "Authorization";
 
-    /** the configured repository name */
-    private static String repositoryName;
+    private static final String CTX_ATTR_REPOSITORY = "jcr.repository";
 
-    private static String rmiURI;
-
-    private static InitialContext jndiContext;
-
-    private static Repository repository;
-
-    private static String missingAuthMapping;
+    private String repositoryName;
 
     /**
      * Initializes this servlet
@@ -80,11 +74,33 @@ public class RepositoryAccessServlet extends HttpServlet {
     public void init() throws ServletException {
 	initLog4J();
 	log.info("RepositoryAccessServlet initializing...");
-	initJNDI();
-	initRMI();
-	initRepository();
-        missingAuthMapping = getServletConfig().getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING);
-        log.info("  " + INIT_PARAM_MISSING_AUTH_MAPPING + " = " + missingAuthMapping);
+        repositoryName = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_NAME);
+        if (repositoryName==null) {
+            repositoryName="default";
+        }
+        Repository repository = null;
+
+        // try to retrieve via rmi
+        if (repository == null) {
+            String rmiURI = getRMIUri();
+            if (rmiURI != null) {
+                repository = getRepositoryByRMI(rmiURI);
+            }
+        }
+        // try to retrieve via jndi
+        if (repository == null) {
+            InitialContext context = getInitialContext();
+            if (context != null) {
+                repository = getRepositoryByJNDI(context);
+            }
+        }
+        // error
+        if (repository == null) {
+            log.error("Unable to retrieve repository");
+            throw new ServletException("Unable to retrieve repository");
+        }
+        getServletContext().setAttribute(CTX_ATTR_REPOSITORY, repository);
+        log.info(repository.getDescriptor(Repository.REP_NAME_DESC) + " v" + repository.getDescriptor(Repository.REP_VERSION_DESC));
 
 	log.info("RepositoryAccessServlet initialized.");
     }
@@ -109,14 +125,7 @@ public class RepositoryAccessServlet extends HttpServlet {
 	log = Logger.getLogger(RepositoryAccessServlet.class);
     }
 
-    private void initJNDI() throws ServletException {
-	// setup repository name
-	repositoryName = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_NAME);
-	if (repositoryName==null) {
-	    repositoryName="default";
-	}
-	log.info("  repository-name = " + repositoryName);
-
+    private InitialContext getInitialContext() throws ServletException {
 	// retrieve JNDI Context environment
 	try {
 	    Properties env = new Properties();
@@ -128,78 +137,59 @@ public class RepositoryAccessServlet extends HttpServlet {
 		    log.info("  adding property to JNDI environment: " + name + "=" + env.getProperty(name));
 		}
 	    }
-	    jndiContext = new InitialContext(env);
+	    return new InitialContext(env);
 	} catch (NamingException e) {
 	    log.error("Create initial context: " + e.toString());
 	    throw new ServletException(e);
 	}
     }
 
-    private void initRMI() {
+    private String getRMIUri() {
 	// setup repository name
-	rmiURI = getServletConfig().getInitParameter(INIT_PARAM_RMI_URI);
-	if (rmiURI != null) {
-	    log.info("  rmi-uri = " + rmiURI);
-	}
-    }
-
-    /**
-     * tries to retrieve the repository
-     */
-    private void initRepository() throws ServletException {
-	getRepositoryByRMI();
-	if (repository == null) {
-	    getRepositoryByJNDI();
-	}
-	if (repository == null) {
-	    log.error("Unable to retrieve repository");
-	    throw new ServletException("Unable to retrieve repository");
-	}
-	log.info(repository.getDescriptor(Repository.REP_NAME_DESC) + " v" + repository.getDescriptor(Repository.REP_VERSION_DESC));
+	return getServletConfig().getInitParameter(INIT_PARAM_RMI_URI);
     }
 
     /**
      * tries to retrieve the repository using RMI
      */
-    private void getRepositoryByJNDI() {
-	if (jndiContext != null) {
-	    // acquire via JNDI
-	    try {
-		repository = (Repository) jndiContext.lookup(repositoryName);
-	    } catch (NamingException e) {
-		log.error("Error while retrieving repository using JNDI: " + e);
-		return;
-	    }
-	    log.info("Acquired repository via JNDI.");
-	}
+    private Repository getRepositoryByJNDI(InitialContext jndiContext) {
+        // acquire via JNDI
+        try {
+            Repository r = (Repository) jndiContext.lookup(repositoryName);
+            log.info("Acquired repository via JNDI.");
+            return r;
+        } catch (NamingException e) {
+            log.error("Error while retrieving repository using JNDI (name=" + repositoryName +"): " + e);
+            return null;
+        }
     }
 
     /**
      * tries to retrieve the repository using RMI
      */
-    private void getRepositoryByRMI() {
-	if (rmiURI != null) {
-	    // acquire via RMI
-	    ClientFactoryDelegater cfd = null;
-	    try {
-		Class clazz = Class.forName("org.apache.jackrabbit.j2ee.RMIClientFactoryDelegater");
-		cfd = (ClientFactoryDelegater) clazz.newInstance();
-	    } catch (NoClassDefFoundError e) {
-		log.error("Unable to locate RMI ClientRepositoryFactory. jcr-rmi.jar missing? " + e.toString());
-		return;
-	    } catch (Exception e) {
-		log.error("Unable to locate RMI ClientRepositoryFactory. jcr-rmi.jar missing?" + e.toString());
-		return;
-	    }
+    private Repository getRepositoryByRMI(String rmiURI) {
+        // acquire via RMI
+        log.info("  trying to retrieve repository using rmi. uri=" + rmiURI);
+        ClientFactoryDelegater cfd = null;
+        try {
+            Class clazz = Class.forName("org.apache.jackrabbit.j2ee.RMIClientFactoryDelegater");
+            cfd = (ClientFactoryDelegater) clazz.newInstance();
+        } catch (NoClassDefFoundError e) {
+            log.error("Unable to locate RMI ClientRepositoryFactory. jcr-rmi.jar missing? " + e.toString());
+            return null;
+        } catch (Exception e) {
+            log.error("Unable to locate RMI ClientRepositoryFactory. jcr-rmi.jar missing?" + e.toString());
+            return null;
+        }
 
-	    try {
-		repository = cfd.getRepository(rmiURI);
-	    } catch (Exception e) {
-		log.error("Error while retrieving repository using RMI: " + e);
-		return;
-	    }
-	    log.info("Acquired repository via RMI.");
-	}
+        try {
+            Repository r = cfd.getRepository(rmiURI);
+            log.info("Acquired repository via RMI.");
+            return r;
+        } catch (Exception e) {
+            log.error("Error while retrieving repository using RMI: " + e);
+            return null;
+        }
     }
 
     /**
@@ -207,8 +197,8 @@ public class RepositoryAccessServlet extends HttpServlet {
      *
      * @return a jsr170 repository
      */
-    public static Repository getRepository() {
-	return repository;
+    public static Repository getRepository(ServletContext ctx) {
+	return (Repository) ctx.getAttribute(CTX_ATTR_REPOSITORY);
     }
 
     /**
@@ -234,10 +224,10 @@ public class RepositoryAccessServlet extends HttpServlet {
      * Authorization header.
      * @throws LoginException if no suitable auth header and missing-auth-mapping
      * is not present
-     * @see #getRepository()
-     * @see #login(HttpServletRequest)
+     * @see #getRepository(ServletContext)
      */
-    public static Credentials getCredentialsFromHeader(String authHeader)
+    public static Credentials getCredentialsFromHeader(ServletContext ctx,
+                                                       String authHeader)
 	    throws ServletException, LoginException {
 	try {
 	    if (authHeader != null) {
@@ -253,6 +243,7 @@ public class RepositoryAccessServlet extends HttpServlet {
 		}
 	    }
             // check special handling
+            String missingAuthMapping = ctx.getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING);
             if (missingAuthMapping == null) {
                 throw new LoginException();
             } else if (missingAuthMapping.equals("")) {
@@ -280,21 +271,22 @@ public class RepositoryAccessServlet extends HttpServlet {
      * login ({@link Repository#login(javax.jcr.Credentials)}), thus the default
      * workspace will be selected. In order to provide a specific workspace name,
      * manual {@link Repository#login(Credentials, String) login} is required (see
-     * also {@link #getRepository()}).
+     * also {@link #getRepository(ServletContext)}).
      *
      * @param request
      * @return  Session object obtained upon {@link Repository#login(javax.jcr.Credentials)}.
      * @throws ServletException
      * @throws LoginException if credentials are invalid
-     * @see #getRepository() in order to be able to login to a specific workspace.
-     * @see #getCredentialsFromHeader(String) for a utility method to retrieve
+     * @see #getRepository(ServletContext) in order to be able to login to a specific workspace.
+     * @see #getCredentialsFromHeader(ServletContext, String) for a utility method to retrieve
      * credentials from the Authorization header string.
      */
-    public static Session login(HttpServletRequest request)
+    public static Session login(ServletContext ctx, HttpServletRequest request)
             throws LoginException, ServletException {
         String authHeader = request.getHeader(HEADER_AUTHORIZATION);
 	try {
-	    return repository.login(getCredentialsFromHeader(authHeader));
+            Repository rep = getRepository(ctx);
+	    return rep.login(getCredentialsFromHeader(ctx, authHeader));
         } catch (LoginException e) {
             throw e;
 	} catch (RepositoryException e) {

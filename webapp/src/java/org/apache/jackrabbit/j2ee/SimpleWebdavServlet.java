@@ -43,6 +43,7 @@ import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.servlet.ServletException;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URL;
@@ -79,20 +80,22 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      */
     public static final String INIT_PARAM_AUTHENTICATE_HEADER = "authenticate-header";
 
+    public static final String CTX_ATTR_RESOURCE_PATH_PREFIX = "jcr.webdav.resourcepath";
+
     /**
-     * the repository prefix retrieved from config
+     * the resource path prefix
      */
-    private static String resourcePathPrefix;
+    private String resourcePathPrefix;
 
     /**
      * the chain catalog for i/o operations
      */
-    private static Catalog chainCatalog;
+    private Catalog chainCatalog;
 
     /**
      * Header value as specified in the {@link #INIT_PARAM_AUTHENTICATE_HEADER} parameter.
      */
-    private static String authenticate_header;
+    private String authenticate_header;
 
     /**
      * Map used to remember any webdav lock created without being reflected
@@ -143,6 +146,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
             log.debug("Path prefix ends with '/' > removing trailing slash.");
             resourcePathPrefix = resourcePathPrefix.substring(0, resourcePathPrefix.length() - 1);
         }
+        getServletContext().setAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX, resourcePathPrefix);
         log.info(INIT_PARAM_RESOURCE_PATH_PREFIX + " = '" + resourcePathPrefix + "'");
 
         try {
@@ -261,8 +265,18 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      * @return resourcePathPrefix
      * @see #INIT_PARAM_RESOURCE_PATH_PREFIX
      */
-    public static String getPathPrefix() {
+    public String getPathPrefix() {
         return resourcePathPrefix;
+    }
+
+    /**
+     * Returns the configured path prefix
+     *
+     * @return resourcePathPrefix
+     * @see #INIT_PARAM_RESOURCE_PATH_PREFIX
+     */
+    public static String getPathPrefix(ServletContext ctx) {
+        return (String) ctx.getAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX);
     }
 
     /**
@@ -345,13 +359,13 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      * returned.
      *
      * @return the session provider
-     * @see RepositoryAccessServlet#getCredentialsFromHeader(String)
+     * @see RepositoryAccessServlet#getCredentialsFromHeader(ServletContext, String)
      */
     public synchronized SessionProvider getSessionProvider() {
         if (sessionProvider == null) {
             CredentialsProvider cp = new CredentialsProvider() {
                 public Credentials getCredentials(HttpServletRequest request) throws LoginException, ServletException {
-                    return RepositoryAccessServlet.getCredentialsFromHeader(request.getHeader(DavConstants.HEADER_AUTHORIZATION));
+                    return RepositoryAccessServlet.getCredentialsFromHeader(getServletContext(), request.getHeader(DavConstants.HEADER_AUTHORIZATION));
                 }
             };
             sessionProvider = new SessionProviderImpl(cp);
@@ -413,11 +427,11 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      * is returned.
      *
      * @return repository
-     * @see RepositoryAccessServlet#getRepository()
+     * @see RepositoryAccessServlet#getRepository(ServletContext)
      */
     public Repository getRepository() {
         if (repository == null) {
-            repository = RepositoryAccessServlet.getRepository();
+            repository = RepositoryAccessServlet.getRepository(getServletContext());
             if (repository == null) {
                 throw new IllegalStateException("Repository could not be retrieved. Check config of 'RepositoryAccessServlet'.");
             }

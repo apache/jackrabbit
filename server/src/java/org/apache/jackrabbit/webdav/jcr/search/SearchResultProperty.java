@@ -26,7 +26,6 @@ import org.jdom.Element;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import javax.jcr.ValueFactory;
 import java.util.*;
 
 /**
@@ -62,7 +61,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      * @throws IllegalArgumentException if the specified property does have the
      * required form.
      */
-    public SearchResultProperty(ValueFactory fac, DavProperty property) throws RepositoryException {
+    public SearchResultProperty(DavProperty property) throws RepositoryException {
         super(SEARCH_RESULT_PROPERTY, true);
         if (!SEARCH_RESULT_PROPERTY.equals(property.getName())) {
 	    throw new IllegalArgumentException("SearchResultProperty may only be created with a property that has name="+SEARCH_RESULT_PROPERTY.getName());

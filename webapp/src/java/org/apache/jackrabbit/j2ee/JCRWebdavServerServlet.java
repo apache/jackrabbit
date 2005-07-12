@@ -27,6 +27,7 @@ import org.apache.jackrabbit.server.SessionProviderImpl;
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.jcr.Repository;
 import javax.jcr.Credentials;
@@ -70,13 +71,15 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
 	pathPrefix = getInitParameter(INIT_PARAM_PREFIX);
 	log.debug(INIT_PARAM_PREFIX + " = " + pathPrefix);
 
-	Repository repository = RepositoryAccessServlet.getRepository();
+        final ServletContext ctx = getServletContext();
+
+	Repository repository = RepositoryAccessServlet.getRepository(ctx);
 	if (repository == null) {
 	    throw new ServletException("Repository could not be retrieved. Check config of 'RepositoryAccessServlet'.");
 	}
         CredentialsProvider cp = new CredentialsProvider() {
             public Credentials getCredentials(HttpServletRequest request) throws LoginException, ServletException {
-                return RepositoryAccessServlet.getCredentialsFromHeader(request.getHeader(DavConstants.HEADER_AUTHORIZATION));
+                return RepositoryAccessServlet.getCredentialsFromHeader(ctx, request.getHeader(DavConstants.HEADER_AUTHORIZATION));
             }
         };
 
