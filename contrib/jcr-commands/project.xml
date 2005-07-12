@@ -76,23 +76,10 @@
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>jackrabbit</groupId>
-      <artifactId>jackrabbit</artifactId>
-      <version>0.16.4.1-dev</version>
-      <type>jar</type>
-    </dependency>
-    <dependency>
       <groupId>geronimo-spec</groupId>
       <artifactId>geronimo-spec-jta</artifactId>
       <version>1.0-M1</version>
       <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>jsr170</groupId>
-      <artifactId>jcr</artifactId>
-      <version>0.16.4.1</version>
-      <type>jar</type>
-      <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
     </dependency>
     <dependency>
       <groupId>xerces</groupId>
@@ -111,6 +98,25 @@
       <artifactId>cqfs-jackrabbit</artifactId>
       <version>3.5.6</version>
       <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>jackrabbit</groupId>
+      <artifactId>jackrabbit-commons</artifactId>
+      <version>1.0-dev</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+      <version>1.0-dev</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>jsr170</groupId>
+      <artifactId>jcr</artifactId>
+      <version>1.0</version>
+      <type>jar</type>
+      <url>http://www.day.com/maven/jsr170/jars/jcr-1.0.jar</url>
     </dependency>
   </dependencies>
   <build>
