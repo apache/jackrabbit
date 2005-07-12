@@ -21,7 +21,7 @@
   <pomVersion>3</pomVersion>
   <id>jcr-rmi</id>
   <name>JCR-RMI</name>
-  <currentVersion>1.0-dev</currentVersion>
+  <currentVersion>1.0-SNAPSHOT</currentVersion>
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.rmi.*</package>
   <description>
