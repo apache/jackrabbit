@@ -21,9 +21,9 @@
     <!-- ====================================================================== -->
     <!-- P R O J E C T  D E S C R I P T I O N                                   -->
     <!-- ====================================================================== -->
-    <extend>${basedir}/../project.xml</extend>
     <groupId>jackrabbit</groupId>
     <artifactId>jackrabbit-core</artifactId>
+    <currentVersion>1.0-SNAPSHOT</currentVersion>
     <name>Jackrabbit Core</name>
 
     <!-- ====================================================================== -->
