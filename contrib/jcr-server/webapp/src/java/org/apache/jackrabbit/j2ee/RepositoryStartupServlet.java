@@ -63,16 +63,16 @@ public class RepositoryStartupServlet extends HttpServlet {
     public final static String INIT_PARAM_LOG4J_CONFIG = "log4j-config";
 
     /** the registered repository */
-    private static Repository repository;
+    private Repository repository;
 
     /** the name of the repository as configured */
-    private static String repositoryName;
+    private String repositoryName;
 
     /** the jndi context, created base on configuration */
-    private static InitialContext jndiContext;
+    private InitialContext jndiContext;
 
     /** the rmi uri, in the form of  '//:${rmi-port}/${repository-name}' */
-    private static String rmiURI;
+    private String rmiURI;
 
     /**
      * Initializes the servlet
@@ -115,7 +115,7 @@ public class RepositoryStartupServlet extends HttpServlet {
     private void initLog4J() throws ServletException {
 	// setup log4j
 	String log4jConfig = getServletConfig().getInitParameter(INIT_PARAM_LOG4J_CONFIG);
-	InputStream in =getServletContext().getResourceAsStream(log4jConfig);
+	InputStream in = getServletContext().getResourceAsStream(log4jConfig);
 	if (in==null) {
 	    // try normal init
 	    PropertyConfigurator.configure(log4jConfig);

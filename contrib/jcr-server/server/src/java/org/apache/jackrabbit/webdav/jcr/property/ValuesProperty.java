@@ -24,7 +24,6 @@ import org.jdom.Element;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
 import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -98,7 +97,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      * @return Array of Value objects
      * @throws RepositoryException
      */
-    public Value[] getValues(ValueFactory fac, int propertyType) throws ValueFormatException, RepositoryException {
+    public Value[] getValues(int propertyType) throws ValueFormatException, RepositoryException {
 	Element[] propValue = (Element[])getValue();
 	Value[] values = new Value[propValue.length];
 	for (int i = 0; i < propValue.length; i++) {

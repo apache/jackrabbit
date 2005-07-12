@@ -111,7 +111,7 @@ public class DefaultItemResource extends AbstractItemResource {
                 Value val = ValueHelper.deserialize(strVal, type, false);
                 prop.setValue(val);
             } else if (property.getName().equals(JCR_VALUES)) {
-                prop.setValue(new ValuesProperty(property).getValues(getRepositorySession().getValueFactory(), prop.getType()));
+                prop.setValue(new ValuesProperty(property).getValues(prop.getType()));
             } else {
                 throw new DavException(DavServletResponse.SC_CONFLICT);
             }
