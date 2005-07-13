@@ -28,7 +28,6 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 
 import javax.jcr.Item;
-import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NodeDefinition;
@@ -277,17 +276,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throw new VersionException("Specified version not contained in this history.");
         }
     }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * In addition to the normal behaviour, this method also filters out the
-     * references that do not exist in this workspace.
-     */
-    public PropertyIterator getReferences() throws RepositoryException {
-        return getReferences(true);
-    }
-
 
     /**
      * Returns the internal version history

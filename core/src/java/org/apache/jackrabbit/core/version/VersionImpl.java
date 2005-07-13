@@ -24,7 +24,6 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 
 import javax.jcr.Item;
-import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NodeDefinition;
@@ -139,15 +138,4 @@ public class VersionImpl extends NodeImpl implements Version {
             return false;
         }
     }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * In addition to the normal behaviour, this method also filters out the
-     * references that do not exist in this workspace.
-     */
-    public PropertyIterator getReferences() throws RepositoryException {
-        return getReferences(true);
-    }
-
 }
