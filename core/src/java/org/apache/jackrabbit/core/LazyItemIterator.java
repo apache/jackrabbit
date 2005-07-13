@@ -18,38 +18,46 @@ package org.apache.jackrabbit.core;
 
 import org.apache.log4j.Logger;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
 
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates
  * the <code>Item</code>s only when they are requested.
+ * <p/>
+ * <strong>Important:</strong> <code>Item</code>s that appear to be nonexistent
+ * for some reason (e.g. because of insufficient access rights or because they
+ * have been removed since the iterator has been retrieved) are silently
+ * skipped. As a result the size of the iterator as reported by
+ * {@link #getSize()} might appear to be shrinking while iterating over the
+ * items.
+ * todo should getSize() better always return -1?
+ *
+ * @see #getSize()
  */
 class LazyItemIterator implements NodeIterator, PropertyIterator {
 
+    /** Logger instance for this class */
     private static Logger log = Logger.getLogger(LazyItemIterator.class);
 
-    /**
-     * the item manager that is used to fetch the items
-     */
+    /** the item manager that is used to lazily fetch the items */
     private final ItemManager itemMgr;
 
-    /**
-     * the list of item ids
-     */
+    /** the list of item ids */
     private final List idList;
 
-    /**
-     * the position of the next item
-     */
-    private int pos = 0;
+    /** the position of the next item */
+    private int pos;
+
+    /** prefetched item to be returned on <code>{@link #next()}</code> */
+    private Item next;
 
     /**
      * Creates a new <code>LazyItemIterator</code> instance.
@@ -58,35 +66,40 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
      * @param idList  list of item id's
      */
     public LazyItemIterator(ItemManager itemMgr, List idList) {
-        this(itemMgr, idList, false);
+        this.itemMgr = itemMgr;
+        this.idList = new ArrayList(idList);
+        // prefetch first item
+        pos = 0;
+        prefetchNext();
     }
 
     /**
-     * Creates a new <code>LazyItemIterator</code> instance.
-     *
-     * @param itemMgr        item manager
-     * @param idList         list of item id's
-     * @param skipInexistent if <code>true</code> the id's of those items
-     *                       that appear to be non-existent will be filtered
-     *                       out silently; otherwise such entries will cause
-     *                       a <code>NoSuchElementException</code> on
-     *                       <code>{@link #next()}</code> .
+     * Prefetches next item.
+     * <p/>
+     * {@link #next} is set to the next available item in this iterator or to
+     * <code>null</code> in case there are no more items.
      */
-    public LazyItemIterator(ItemManager itemMgr, List idList,
-                            boolean skipInexistent) {
-        this.itemMgr = itemMgr;
-        if (skipInexistent) {
-            // check existence of all items first
-            this.idList = new ArrayList();
-            Iterator iter = idList.iterator();
-            while (iter.hasNext()) {
-                ItemId id = (ItemId) iter.next();
-                if (itemMgr.itemExists(id)) {
-                    this.idList.add(id);
-                }
+    private void prefetchNext() {
+        // reset
+        next = null;
+        while (next == null && pos < idList.size()) {
+            ItemId id = (ItemId) idList.get(pos);
+            if (!itemMgr.itemExists(id)) {
+                log.debug("ignoring nonexistent item " + id);
+                // remove invalid id
+                idList.remove(pos);
+                // try next
+                continue;
             }
-        } else {
-            this.idList = idList;
+            try {
+                next = itemMgr.getItem(id);
+            } catch (RepositoryException e) {
+                // should never get here since existence has already been checked...
+                log.error("failed to fetch item " + id + ", skipping...", e);
+                // remove invalid id
+                idList.remove(pos);
+                // try next
+            }
         }
     }
 
@@ -106,7 +119,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
         return (Property) next();
     }
 
-    //------------------------------------------------------< RangeIterator >---
+    //--------------------------------------------------------< RangeIterator >
     /**
      * {@inheritDoc}
      */
@@ -116,6 +129,13 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * Note that the size of the iterator as reported by {@link #getSize()}
+     * might appear to be shrinking while iterating because items that for
+     * some reason cannot be retrieved through this iterator are silently
+     * skipped, thus reducing the size of this iterator.
+     *
+     * todo better to always return -1?
      */
     public long getSize() {
         return idList.size();
@@ -126,12 +146,42 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
      */
     public void skip(long skipNum) {
         if (skipNum < 0) {
-            throw new IllegalArgumentException("skipNum must be a positive number");
+            throw new IllegalArgumentException("skipNum must not be negative");
         }
-        if (pos + skipNum > idList.size()) {
-            throw new NoSuchElementException("skipNum + pos greater than size");
+        if (skipNum == 0) {
+            return;
         }
-        pos += skipNum;
+        if (next == null) {
+            throw new NoSuchElementException();
+        }
+
+        // reset
+        next = null;
+        // skip the first (skipNum - 1) items without actually retrieving them
+        while (--skipNum > 0) {
+            pos++;
+            if (pos >= idList.size()) {
+                // skipped past last item
+                throw new NoSuchElementException();
+            }
+            ItemId id = (ItemId) idList.get(pos);
+            // eliminate invalid items from this iterator
+            while (!itemMgr.itemExists(id)) {
+                log.debug("ignoring nonexistent item " + id);
+                // remove invalid id
+                idList.remove(pos);
+                if (pos >= idList.size()) {
+                    // skipped past last item
+                    throw new NoSuchElementException();
+                }
+                id = (ItemId) idList.get(pos);
+                // try next
+                continue;
+            }
+        }
+        // prefetch final item (the one to be returned on next())
+        pos++;
+        prefetchNext();
     }
 
     //-------------------------------------------------------------< Iterator >
@@ -139,23 +189,20 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
      * {@inheritDoc}
      */
     public boolean hasNext() {
-        return pos < idList.size();
+        return next != null;
     }
 
     /**
      * {@inheritDoc}
      */
     public Object next() {
-        if (pos >= idList.size()) {
+        if (next == null) {
             throw new NoSuchElementException();
         }
-        ItemId id = (ItemId) idList.get(pos++);
-        try {
-            return itemMgr.getItem(id);
-        } catch (RepositoryException e) {
-            log.debug("failed to fetch item " + id, e);
-            throw new NoSuchElementException(e.getMessage());
-        }
+        Item item = next;
+        pos++;
+        prefetchNext();
+        return item;
     }
 
     /**
