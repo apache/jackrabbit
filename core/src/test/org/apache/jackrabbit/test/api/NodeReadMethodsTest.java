@@ -771,7 +771,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                     node.hasNode(n.getName()));
             notExistingNodeName.append(n.getName() + "X");
         }
-        if (notExistingNodeName.equals("")) {
+        if (notExistingNodeName.toString().equals("")) {
             throw new NotExecutableException("Workspace does not have sufficient content for this test. " +
                     "Root node must have at least one child node.");
         }
@@ -824,7 +824,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                     node.hasProperty(p.getName()));
             notExistingPropertyName.append(p.getName() + "X");
         }
-        if (notExistingPropertyName.equals("")) {
+        if (notExistingPropertyName.toString().equals("")) {
             fail("Root node must at least have one property: jcr:primaryType");
         }
 
