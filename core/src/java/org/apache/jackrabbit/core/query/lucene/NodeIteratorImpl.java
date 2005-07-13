@@ -44,7 +44,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
     protected final ItemManager itemMgr;
 
     /** Current position in the UUID array */
-    protected int pos = 0;
+    protected int pos = -1;
 
     /** Reference to the next node instance */
     private NodeImpl next;
@@ -113,7 +113,12 @@ class NodeIteratorImpl implements ScoreNodeIterator {
         if ((pos + skipNum) > uuids.length) {
             throw new NoSuchElementException();
         }
-        pos += skipNum;
+        if (skipNum == 0) {
+            // do nothing
+        } else {
+            pos += skipNum - 1;
+            fetchNext();
+        }
     }
 
     /**
@@ -166,7 +171,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        return scores[pos - 1].floatValue();
+        return scores[pos].floatValue();
     }
 
     /**
@@ -178,14 +183,16 @@ class NodeIteratorImpl implements ScoreNodeIterator {
     protected void fetchNext() {
         // reset
         next = null;
-        while (next == null && pos < uuids.length) {
+        while (next == null && (pos + 1) < uuids.length) {
             try {
-                next = (NodeImpl) itemMgr.getItem(new NodeId(uuids[pos++]));
+                next = (NodeImpl) itemMgr.getItem(new NodeId(uuids[pos + 1]));
             } catch (RepositoryException e) {
                 log.error("Exception retrieving Node with UUID: "
-                        + uuids[pos - 1] + ": " + e.toString());
+                        + uuids[pos + 1] + ": " + e.toString());
                 // try next
+                pos++;
             }
         }
+        pos++;
     }
 }

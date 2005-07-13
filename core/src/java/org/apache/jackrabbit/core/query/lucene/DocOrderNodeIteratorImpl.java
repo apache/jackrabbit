@@ -177,7 +177,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
                         ScoreNode n1 = (ScoreNode) o1;
                         ScoreNode n2 = (ScoreNode) o2;
                         try {
-                            NodeImpl node1 = null;
+                            NodeImpl node1;
                             try {
                                 node1 = (NodeImpl) itemMgr.getItem(new NodeId(n1.uuid));
                             } catch (RepositoryException e) {
@@ -186,7 +186,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
                                 invalidUUIDs.add(n1.uuid);
                                 throw new SortFailedException();
                             }
-                            NodeImpl node2 = null;
+                            NodeImpl node2;
                             try {
                                 node2 = (NodeImpl) itemMgr.getItem(new NodeId(n2.uuid));
                             } catch (RepositoryException e) {
