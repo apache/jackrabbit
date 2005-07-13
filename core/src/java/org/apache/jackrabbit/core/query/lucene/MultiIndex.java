@@ -214,9 +214,20 @@ class MultiIndex {
                         deleteNodePersistent(entry.uuid);
                     }
                 }
+                maybeMergeIndexes();
                 log.warn("Redo changes applied.");
                 redoLog.clear();
             }
+
+            // execute integrity check on persistent indexes with locks on startup
+            for (Iterator it = indexes.iterator(); it.hasNext(); ) {
+                PersistentIndex index = (PersistentIndex) it.next();
+                if (index.getLockEncountered()) {
+                    log.info("Running integrity check on index: " + index.getName());
+                    index.integrityCheck(stateMgr);
+                }
+            }
+
             volatileIndex = new VolatileIndex(handler.getAnalyzer(), redoLog);
             volatileIndex.setUseCompoundFile(false);
 
@@ -445,15 +456,23 @@ class MultiIndex {
     /**
      * Adds a node to the persistent index. This method will <b>not</b> aquire a
      * write lock while writing!
+     * <p/>
+     * If an error occurs when reading from the ItemStateManager an error log
+     * message is written and the node is ignored.
      *
      * @param node the node to add.
      * @throws IOException         if an error occurs while writing to the
      *                             index.
-     * @throws RepositoryException if any other error occurs
      */
     private void addNodePersistent(NodeState node)
-            throws IOException, RepositoryException {
-        Document doc = handler.createDocument(node, nsMappings);
+            throws IOException {
+        Document doc;
+        try {
+            doc = handler.createDocument(node, nsMappings);
+        } catch (RepositoryException e) {
+            log.warn("RepositoryException: " + e.getMessage());
+            return;
+        }
         // make sure at least one persistent index exists
         if (indexes.size() == 0) {
             try {
@@ -475,7 +494,6 @@ class MultiIndex {
         // add node to last index
         PersistentIndex last = (PersistentIndex) indexes.get(indexes.size() - 1);
         last.addDocument(doc);
-        maybeMergeIndexes();
     }
 
     /**
