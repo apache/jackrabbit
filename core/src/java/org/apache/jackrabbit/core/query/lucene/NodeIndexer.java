@@ -143,9 +143,9 @@ public class NodeIndexer {
                 doc.add(new Field(FieldNames.LABEL, name, false, true, false));
             }
         } catch (NoSuchItemStateException e) {
-            throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
+            throwRepositoryException(e);
         } catch (ItemStateException e) {
-            throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
+            throwRepositoryException(e);
         } catch (NoPrefixDeclaredException e) {
             // will never happen, because this.mappings will dynamically add
             // unknown uri<->prefix mappings
@@ -166,12 +166,25 @@ public class NodeIndexer {
                     addMVPName(doc, propState.getName());
                 }
             } catch (NoSuchItemStateException e) {
-                throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
+                throwRepositoryException(e);
             } catch (ItemStateException e) {
-                throw new RepositoryException("Error while indexing node: " + node.getUUID(), e);
+                throwRepositoryException(e);
             }
         }
         return doc;
+    }
+
+    /**
+     * Wraps the exception <code>e</code> into a <code>RepositoryException</code>
+     * and throws the created exception.
+     *
+     * @param e the base exception.
+     */
+    private void throwRepositoryException(Exception e)
+            throws RepositoryException {
+        String msg = "Error while indexing node: " + node.getUUID() + " of " +
+                "type: " + node.getNodeTypeName();
+        throw new RepositoryException(msg, e);
     }
 
     /**
