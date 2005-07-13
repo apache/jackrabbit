@@ -58,6 +58,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(GetStatementTest.class);
         suite.addTestSuite(GetSupportedQueryLanguagesTest.class);
 
+        suite.addTestSuite(NodeIteratorTest.class);
         suite.addTestSuite(GetPropertyNamesTest.class);
         suite.addTestSuite(PredicatesTest.class);
         suite.addTestSuite(SimpleSelectionTest.class);
