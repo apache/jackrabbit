@@ -29,11 +29,11 @@ import java.util.NoSuchElementException;
  * {@link javax.jcr.query.QueryResult#getNodes()}.
  *
  * @test
- * @sources NodeIteratorTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.NodeIteratorTest
+ * @sources QueryResultNodeIteratorTest.java
+ * @executeClass org.apache.jackrabbit.test.api.query.QueryResultNodeIteratorTest
  * @keywords level2
  */
-public class NodeIteratorTest extends AbstractQueryTest {
+public class QueryResultNodeIteratorTest extends AbstractQueryTest {
 
     /**
      * Sets up the fixture for test cases.
