@@ -46,6 +46,9 @@ class NodeIteratorImpl implements ScoreNodeIterator {
     /** Current position in the UUID array */
     protected int pos = -1;
 
+    /** Number of invalid nodes */
+    protected int invalid = 0;
+
     /** Reference to the next node instance */
     private NodeImpl next;
 
@@ -128,12 +131,13 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * of nodes actually returned by calls to hasNext() / getNextNode()! This
      * is because this iterator works on a lazy instantiation basis and while
      * iterating over the nodes some of them might have been deleted in the
-     * meantime. Those will not be returned by getNextNode().
+     * meantime. Those will not be returned by getNextNode(). As soon as an
+     * invalid node is detected, the size of this iterator is adjusted.
      *
      * @return the number of node in this iterator.
      */
     public long getSize() {
-        return uuids.length;
+        return uuids.length - invalid;
     }
 
     /**
@@ -141,7 +145,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * @return the current position in this <code>NodeIterator</code>.
      */
     public long getPosition() {
-        return pos;
+        return pos - invalid;
     }
 
     /**
@@ -187,9 +191,10 @@ class NodeIteratorImpl implements ScoreNodeIterator {
             try {
                 next = (NodeImpl) itemMgr.getItem(new NodeId(uuids[pos + 1]));
             } catch (RepositoryException e) {
-                log.error("Exception retrieving Node with UUID: "
+                log.warn("Exception retrieving Node with UUID: "
                         + uuids[pos + 1] + ": " + e.toString());
                 // try next
+                invalid++;
                 pos++;
             }
         }

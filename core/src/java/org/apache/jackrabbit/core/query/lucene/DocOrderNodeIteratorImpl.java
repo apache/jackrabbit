@@ -107,12 +107,17 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
      * of nodes actually returned by calls to hasNext() / getNextNode()! This
      * is because this iterator works on a lazy instantiation basis and while
      * iterating over the nodes some of them might have been deleted in the
-     * meantime. Those will not be returned by getNextNode().
+     * meantime. Those will not be returned by getNextNode(). As soon as an
+     * invalid node is detected, the size of this iterator is adjusted.
      *
      * @return the number of node in this iterator.
      */
     public long getSize() {
-        return uuids.length;
+        if (orderedNodes != null) {
+            return orderedNodes.getSize();
+        } else {
+            return uuids.length;
+        }
     }
 
     /**

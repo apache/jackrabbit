@@ -71,7 +71,9 @@ public class SkipDeletedNodesTest extends AbstractQueryTest {
 
         // iterate over nodes
         log.println("Result nodes:");
+        int count = 0;
         for (NodeIterator it = res.getNodes(); it.hasNext(); ) {
+            assertEquals("Wrong value for getPosition().", count++, it.getPosition());
             try {
                 log.println(it.nextNode().getPath());
             } catch (InvalidItemStateException e) {
@@ -100,8 +102,10 @@ public class SkipDeletedNodesTest extends AbstractQueryTest {
         testRootNode.save();
 
         // iterate over nodes
+        int count = 0;
         log.println("Result nodes:");
         for (NodeIterator it = res.getNodes(); it.hasNext(); ) {
+            assertEquals("Wrong value for getPosition().", count++, it.getPosition());
             try {
                 log.println(it.nextNode().getPath());
             } catch (InvalidItemStateException e) {
@@ -130,8 +134,10 @@ public class SkipDeletedNodesTest extends AbstractQueryTest {
         testRootNode.save();
 
         // iterate over nodes
+        int count = 0;
         log.println("Result nodes:");
         for (NodeIterator it = res.getNodes(); it.hasNext(); ) {
+            assertEquals("Wrong value for getPosition().", count++, it.getPosition());
             try {
                 log.println(it.nextNode().getPath());
             } catch (InvalidItemStateException e) {
@@ -166,8 +172,48 @@ public class SkipDeletedNodesTest extends AbstractQueryTest {
         testRootNode.save();
 
         // iterate over nodes
+        int count = 0;
         log.println("Result nodes:");
         while (it.hasNext()) {
+            assertEquals("Wrong value for getPosition().", count++, it.getPosition());
+            try {
+                log.println(it.nextNode().getPath());
+            } catch (InvalidItemStateException e) {
+                // this is allowed
+                log.println("Invalid: <deleted>");
+            }
+        }
+    }
+
+    /**
+     * Executes a query with one session and removes a node from that query
+     * result with another session.
+     * </p>This test is different from the other tests that it removes the
+     * node after another session has called hasNext() to retrieve the node
+     * that gets deleted.
+     */
+    public void testRemoveSomeNodeAfterHasNext() throws RepositoryException {
+        testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        testRootNode.addNode("node3");
+        testRootNode.save();
+
+        // query the workspace for all three nodes
+        String stmt = testPath + "/*";
+        QueryResult res = qm.createQuery(stmt, Query.XPATH).execute();
+
+        NodeIterator it = res.getNodes();
+        it.hasNext();
+
+        // now remove the second node
+        n2.remove();
+        testRootNode.save();
+
+        // iterate over nodes
+        int count = 0;
+        log.println("Result nodes:");
+        while (it.hasNext()) {
+            assertEquals("Wrong value for getPosition().", count++, it.getPosition());
             try {
                 log.println(it.nextNode().getPath());
             } catch (InvalidItemStateException e) {
