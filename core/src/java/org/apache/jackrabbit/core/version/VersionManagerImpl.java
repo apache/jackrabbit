@@ -197,7 +197,14 @@ public class VersionManagerImpl implements VersionManager,
 
         // generate observation events
         List events = new ArrayList();
-        recursiveAdd(events, (NodeImpl) vh.getParent(), vh);
+        NodeImpl parent = (NodeImpl) vh.getParent();
+        generateAddedEvents(events, parent, vh, true);
+        // in case the history was created 'deep' also add events for its ancestors
+        while (!parent.internalGetUUID().equals(historyRoot.getUUID())) {
+            NodeImpl child = parent;
+            parent = (NodeImpl) parent.getParent();
+            generateAddedEvents(events, parent, child, false);
+        }
         obsMgr.dispatch(events, (SessionImpl) session);
 
         return vh;
@@ -420,7 +427,7 @@ public class VersionManagerImpl implements VersionManager,
 
         // generate observation events
         List events = new ArrayList();
-        recursiveAdd(events, (NodeImpl) v.getParent(), v);
+        generateAddedEvents(events, (NodeImpl) v.getParent(), v, true);
         obsMgr.dispatch(events, session);
 
         return v;
@@ -526,7 +533,7 @@ public class VersionManagerImpl implements VersionManager,
         SessionImpl session = (SessionImpl) history.getSession();
         VersionImpl version = (VersionImpl) ((VersionHistoryImpl) history).getNode(name);
         List events = new ArrayList();
-        recursiveRemove(events, (NodeImpl) history, version);
+        generateRemovedEvents(events, (NodeImpl) history, version, true);
 
         InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
                 ((VersionHistoryImpl) history).getInternalVersionHistory();
@@ -633,7 +640,8 @@ public class VersionManagerImpl implements VersionManager,
      * @param node
      * @throws RepositoryException
      */
-    private void recursiveAdd(List events, NodeImpl parent, NodeImpl node)
+    private void generateAddedEvents(List events, NodeImpl parent, NodeImpl node,
+                                     boolean recursive)
             throws RepositoryException {
 
         events.add(EventState.childNodeAdded(
@@ -656,10 +664,12 @@ public class VersionManagerImpl implements VersionManager,
                     node.getSession()
             ));
         }
-        NodeIterator niter = node.getNodes();
-        while (niter.hasNext()) {
-            NodeImpl n = (NodeImpl) niter.nextNode();
-            recursiveAdd(events, node, n);
+        if (recursive) {
+            NodeIterator niter = node.getNodes();
+            while (niter.hasNext()) {
+                NodeImpl n = (NodeImpl) niter.nextNode();
+                generateAddedEvents(events, node, n, true);
+            }
         }
     }
 
@@ -671,7 +681,8 @@ public class VersionManagerImpl implements VersionManager,
      * @param node
      * @throws RepositoryException
      */
-    private void recursiveRemove(List events, NodeImpl parent, NodeImpl node)
+    private void generateRemovedEvents(List events, NodeImpl parent,
+                                       NodeImpl node, boolean recursive)
             throws RepositoryException {
 
         events.add(EventState.childNodeRemoved(
@@ -682,10 +693,12 @@ public class VersionManagerImpl implements VersionManager,
                 (NodeTypeImpl) parent.getPrimaryNodeType(),
                 node.getSession()
         ));
-        NodeIterator niter = node.getNodes();
-        while (niter.hasNext()) {
-            NodeImpl n = (NodeImpl) niter.nextNode();
-            recursiveRemove(events, node, n);
+        if (recursive) {
+            NodeIterator niter = node.getNodes();
+            while (niter.hasNext()) {
+                NodeImpl n = (NodeImpl) niter.nextNode();
+                generateRemovedEvents(events, node, n, true);
+            }
         }
     }
 
