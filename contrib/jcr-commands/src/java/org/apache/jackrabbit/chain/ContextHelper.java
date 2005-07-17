@@ -17,7 +17,9 @@
 package org.apache.jackrabbit.chain;
 
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.chain.Context;
@@ -39,6 +41,7 @@ public class ContextHelper
 
     /**
      * Sets the current working Node
+     * 
      * @param ctx
      * @param node
      */
@@ -49,6 +52,7 @@ public class ContextHelper
 
     /**
      * Sets the current working Repository
+     * 
      * @param ctx
      * @param repository
      */
@@ -59,6 +63,7 @@ public class ContextHelper
 
     /**
      * Sets the current working Session
+     * 
      * @param ctx
      * @param session
      */
@@ -69,6 +74,7 @@ public class ContextHelper
 
     /**
      * Gets the current working Node
+     * 
      * @param ctx
      * @return
      */
@@ -79,6 +85,7 @@ public class ContextHelper
 
     /**
      * Gets the current working Repository
+     * 
      * @param ctx
      * @return
      */
@@ -89,12 +96,63 @@ public class ContextHelper
 
     /**
      * Gets the current working Session
+     * 
      * @param ctx
      * @return
      */
     public static Session getSession(Context ctx)
     {
         return (Session) ctx.get(SESSION_KEY);
+    }
+
+    /**
+     * Gets node for the given path
+     * 
+     * @param ctx
+     * @return
+     * @throws RepositoryException
+     */
+    public static Node getNode(Context ctx, String path)
+            throws PathNotFoundException, RepositoryException
+    {
+        Node current = (Node) ctx.get(CURRENT_NODE_KEY);
+        Node node = null;
+        if (path.equals("/"))
+        {
+            node = current.getSession().getRootNode();
+        } else if (path.startsWith("/"))
+        {
+            node = current.getSession().getRootNode()
+                .getNode(path.substring(1));
+        } else
+        {
+            node = current.getNode(path);
+        }
+
+        return node;
+    }
+
+    /**
+     * Returns true if the node exists at the given path
+     * 
+     * @param ctx
+     * @return
+     * @throws RepositoryException
+     */
+    public static boolean hasNode(Context ctx, String path)
+            throws RepositoryException
+    {
+        if (path.equals("/"))
+        {
+            return true;
+        } else if (path.startsWith("/"))
+        {
+            return getSession(ctx).getRootNode().hasNode(path.substring(1));
+        } else
+        {
+            Node current = (Node) ctx.get(CURRENT_NODE_KEY);
+            return current.hasNode(path);
+        }
     }
 
 }

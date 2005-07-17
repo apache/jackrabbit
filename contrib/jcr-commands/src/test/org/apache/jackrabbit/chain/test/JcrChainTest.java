@@ -16,49 +16,39 @@
  */
 package org.apache.jackrabbit.chain.test;
 
+import java.util.Iterator;
+
+import javax.jcr.Node;
 import javax.jcr.Repository;
+
+import junit.framework.TestCase;
 
 import org.apache.commons.chain.Context;
 import org.apache.commons.chain.impl.ContextBase;
 import org.apache.jackrabbit.chain.ContextHelper;
 import org.apache.jackrabbit.chain.command.AddNode;
+import org.apache.jackrabbit.chain.command.ClearWorkspace;
+import org.apache.jackrabbit.chain.command.CollectChildren;
 import org.apache.jackrabbit.chain.command.CurrentNode;
 import org.apache.jackrabbit.chain.command.Login;
 import org.apache.jackrabbit.chain.command.Logout;
 import org.apache.jackrabbit.chain.command.RemoveNode;
-import org.apache.jackrabbit.chain.command.Save;
-import org.apache.jackrabbit.chain.command.StopJackrabbit;
+import org.apache.jackrabbit.chain.command.SaveSession;
 import org.apache.jackrabbit.chain.command.StartOrGetJackrabbitSingleton;
-
-import junit.framework.TestCase;
 
 /**
  * Chain testing
  */
 public class JcrChainTest extends TestCase
 {
-    private static String CONFIG = "applications/test/repository.xml";
+    private static String CONFIG = "/temp/repository/repository.xml";
 
-    private static String HOME = "applications/test";
+    private static String HOME = "/temp/repository";
+
+    Context ctx = new ContextBase();
 
     public void testChain() throws Exception
     {
-        Context ctx = new ContextBase();
-
-        // Start
-        StartOrGetJackrabbitSingleton startCmd = new StartOrGetJackrabbitSingleton();
-        startCmd.setConfig(CONFIG);
-        startCmd.setHome(HOME);
-        startCmd.execute(ctx);
-        assertTrue(ContextHelper.getRepository(ctx) instanceof Repository);
-
-        // Login
-        Login loginCmd = new Login();
-        loginCmd.setUser("user");
-        loginCmd.setPassword("password");
-        loginCmd.execute(ctx);
-        assertTrue(ContextHelper.getSession(ctx) != null);
-        assertTrue(ContextHelper.getCurrentNode(ctx).getPath().equals("/"));
 
         String testNodeStr = "test";
 
@@ -76,7 +66,7 @@ public class JcrChainTest extends TestCase
             "/" + testNodeStr));
 
         // Save changes
-        Save saveCmd = new Save() ;
+        SaveSession saveCmd = new SaveSession() ;
         saveCmd.execute(ctx);
         
         // Logout
@@ -84,7 +74,7 @@ public class JcrChainTest extends TestCase
         logoutCmd.execute(ctx);
         
         // See persisted changes
-        loginCmd = new Login();
+        Login loginCmd = new Login();
         loginCmd.setUser("user2");
         loginCmd.setPassword("password");
         loginCmd.execute(ctx);
@@ -98,12 +88,67 @@ public class JcrChainTest extends TestCase
         removeNodeCmd.execute(ctx);
         assertFalse(ContextHelper.getCurrentNode(ctx).hasNode(testNodeStr));
         
-        logoutCmd = new Logout() ;
-        logoutCmd.execute(ctx);
-
-        // Stop
-        StopJackrabbit stopCmd = new StopJackrabbit();
-        stopCmd.execute(ctx);
+        saveCmd.execute(ctx);
     }
 
+    protected void setUp() throws Exception
+    {
+        super.setUp();
+        // Start
+        StartOrGetJackrabbitSingleton startCmd = new StartOrGetJackrabbitSingleton();
+        startCmd.setConfig(CONFIG);
+        startCmd.setHome(HOME);
+        startCmd.execute(ctx);
+        assertTrue(ContextHelper.getRepository(ctx) instanceof Repository);
+
+        // Login
+        Login loginCmd = new Login();
+        loginCmd.setUser("user");
+        loginCmd.setPassword("password");
+        loginCmd.execute(ctx);
+        assertTrue(ContextHelper.getSession(ctx) != null);
+        assertTrue(ContextHelper.getCurrentNode(ctx).getPath().equals("/"));
+        
+    }
+    
+    protected void tearDown() throws Exception
+    {
+        super.tearDown();
+        ClearWorkspace cw = new ClearWorkspace() ;
+        cw.execute(ctx) ;
+        
+        // Logout
+        Logout logoutCmd = new Logout() ;
+        logoutCmd.execute(ctx);
+        
+    }
+    
+    public void testTraverse() throws Exception
+    {
+        String target = "iterator" ;
+        
+        CollectChildren traverse = new CollectChildren() ;
+        traverse.setDepth(-1) ;
+        traverse.setTarget(target);
+        traverse.execute(ctx) ;
+        
+        Iterator iter = (Iterator) ctx.get(target) ;
+        while(iter.hasNext()) {
+            Node node = (Node) iter.next() ;
+            System.out.println(node.getPath()) ;
+        }
+        System.out.println("------------------ ") ;
+        traverse = new CollectChildren() ;
+        traverse.setDepth(2) ;
+        traverse.setTarget(target);
+        traverse.execute(ctx) ;
+        
+        iter = (Iterator) ctx.get(target) ;
+        while(iter.hasNext()) {
+            Node node = (Node) iter.next() ;
+            System.out.println(node.getPath()) ;
+        }
+        
+    }
+    
 }

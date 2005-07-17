@@ -16,24 +16,32 @@
  */
 package org.apache.jackrabbit.chain.command;
 
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Session;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.chain.ContextHelper;
 
 /**
- * Saves the current Session.
+ * Clears the Workspace
  */
-public class Save implements Command {
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
-	 */
-	public boolean execute(Context ctx) throws Exception {
-		Session s = ContextHelper.getSession(ctx);
-		s.save() ;
-		return false;
-	}
+public class ClearWorkspace implements Command
+{
+
+    public boolean execute(Context ctx) throws Exception
+    {
+        Session s = ContextHelper.getSession(ctx) ;
+        NodeIterator iter = s.getRootNode().getNodes() ;
+        while (iter.hasNext())
+        {
+            Node n = (Node) iter.next();
+            if (!n.getName().equals(JcrConstants.JCR_SYSTEM)) {
+                n.remove() ;
+            }
+        }
+        return false;
+    }
 }

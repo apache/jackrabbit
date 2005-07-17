@@ -19,6 +19,10 @@ You will find a plugin for jmeter under "/jmeter-chain" that
 will allow you to add commons chain commands to 
 jmeter in order to prepare custom test plans.
 
+IMPORTANT:
+Jmeter uses an older version of Commons-Collection. 
+Remember to replace it with a 3.x version.
+
 Instructions:
 ------------------
 1 - Install Jmeter.
@@ -28,7 +32,7 @@ Instructions:
 4 - Put jcr jar files under "lib" [2]
 5 - Put your jcr implementation and all its dependencies under "/lib" [2]
 
-You'll find an simple testplan example under 
+You'll find a simple testplan example under 
 "/benchmarking".
 
 [1] See /jmeter-chain/README.txt

@@ -26,54 +26,71 @@ import org.apache.jackrabbit.chain.ContextHelper;
 /**
  * Sets a property to the current working Node
  */
-public class SetProperty implements Command {
-	/** Property name */
-	private String name;
-	
-	/** Propety type */
-	private String type;
+public class SetProperty implements Command
+{
+    /** Property name */
+    private String name;
 
-	/** Property value */
-	private String value;
-	
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
-	 */
-	public boolean execute(Context ctx) throws Exception {
-		Node node = ContextHelper.getCurrentNode(ctx);
-		node.setProperty(name, value, PropertyType.valueFromName(type));
-		return false;
-	}
+    /** Propety type */
+    private String propertyType;
 
-	/**
-	 * @return Returns the name.
-	 */
-	public String getName() {
-		return name;
-	}
+    /** Property value */
+    private String value;
 
-	/**
-	 * @param name
-	 *            The name to set.
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
+     */
+    public boolean execute(Context ctx) throws Exception
+    {
+        Node node = ContextHelper.getCurrentNode(ctx);
+        node.setProperty(name, value, PropertyType.valueFromName(propertyType));
+        return false;
+    }
 
-	/**
-	 * @return Returns the type.
-	 */
-	public String getType() {
-		return type;
-	}
+    /**
+     * @return Returns the name.
+     */
+    public String getName()
+    {
+        return name;
+    }
 
-	/**
-	 * @param type
-	 *            The type to set.
-	 */
-	public void setType(String type) {
-		this.type = type;
-	}
+    /**
+     * @param name
+     *            The name to set.
+     */
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    /**
+     * @return Returns the type.
+     */
+    public String getPropertyType()
+    {
+        return propertyType;
+    }
+
+    /**
+     * @param type
+     *            The type to set.
+     */
+    public void setPropertyType(String type)
+    {
+        this.propertyType = type;
+    }
+
+    public String getValue()
+    {
+        return value;
+    }
+
+    public void setValue(String value)
+    {
+        this.value = value;
+    }
+    
 }
