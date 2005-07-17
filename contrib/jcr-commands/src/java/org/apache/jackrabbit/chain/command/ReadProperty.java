@@ -17,15 +17,18 @@
 package org.apache.jackrabbit.chain.command;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.Value;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.chain.ContextHelper;
 
 /**
- * Removes a property from the current working node.
+ * Retrieves all the <code>Value</doce>s in the
+ * <code>Property</code>
  */
-public class RemoveProperty implements Command {
+public class ReadProperty implements Command {
 	/** proeprty name */
 	private String name;
 
@@ -36,7 +39,17 @@ public class RemoveProperty implements Command {
 	 */
 	public boolean execute(Context ctx) throws Exception {
 		Node node = ContextHelper.getCurrentNode(ctx);
-		node.getProperty(name).remove();
+		Property prop = node.getProperty(name);
+        if (prop.getDefinition().isMultiple()) {
+            Value[] values = prop.getValues() ;
+            for (int i = 0; i < values.length; i++)
+            {
+                Value value = values[i];
+                value.getString() ;
+            }
+        } else {
+            prop.getValue().getString() ;
+        }
 		return false;
 	}
 

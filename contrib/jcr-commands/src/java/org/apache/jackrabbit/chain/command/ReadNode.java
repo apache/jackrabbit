@@ -17,47 +17,31 @@
 package org.apache.jackrabbit.chain.command;
 
 import javax.jcr.Node;
-import javax.jcr.Session;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.chain.ContextHelper;
 
 /**
- * Sets the current working Node
+ * Read all the properties of the current Node
  */
-public class CurrentNode implements Command
+public class ReadNode implements Command
 {
-    /** path to the current node */
-    private String path;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
-     */
     public boolean execute(Context ctx) throws Exception
     {
-        Session s = ContextHelper.getSession(ctx);
-        Node n = ContextHelper.getNode(ctx, path);
-        ContextHelper.setCurrentNode(ctx, n);
+        ReadProperty readProp = new ReadProperty() ;        
+        Node node = ContextHelper.getCurrentNode(ctx) ;
+        PropertyIterator iter= node.getProperties() ;
+        while (iter.hasNext())
+        {
+            Property p = iter.nextProperty();
+            readProp.setName(p.getName()) ;
+            readProp.execute(ctx);
+        }
         return false;
     }
-
-    /**
-     * @return Returns the path.
-     */
-    public String getPath()
-    {
-        return path;
-    }
-
-    /**
-     * @param path
-     *            The path to set.
-     */
-    public void setPath(String path)
-    {
-        this.path = path;
-    }
+    
 }

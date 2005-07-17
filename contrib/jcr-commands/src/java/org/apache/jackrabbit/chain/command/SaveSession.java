@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.chain.command;
 
-import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.commons.chain.Command;
@@ -24,40 +23,17 @@ import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.chain.ContextHelper;
 
 /**
- * Sets the current working Node
+ * Saves the current Session.
  */
-public class CurrentNode implements Command
-{
-    /** path to the current node */
-    private String path;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
-     */
-    public boolean execute(Context ctx) throws Exception
-    {
-        Session s = ContextHelper.getSession(ctx);
-        Node n = ContextHelper.getNode(ctx, path);
-        ContextHelper.setCurrentNode(ctx, n);
-        return false;
-    }
-
-    /**
-     * @return Returns the path.
-     */
-    public String getPath()
-    {
-        return path;
-    }
-
-    /**
-     * @param path
-     *            The path to set.
-     */
-    public void setPath(String path)
-    {
-        this.path = path;
-    }
+public class SaveSession implements Command {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
+	 */
+	public boolean execute(Context ctx) throws Exception {
+		Session s = ContextHelper.getSession(ctx);
+		s.save() ;
+		return false;
+	}
 }
