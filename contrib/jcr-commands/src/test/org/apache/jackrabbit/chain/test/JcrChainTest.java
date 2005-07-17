@@ -41,9 +41,9 @@ import org.apache.jackrabbit.chain.command.StartOrGetJackrabbitSingleton;
  */
 public class JcrChainTest extends TestCase
 {
-    private static String CONFIG = "/temp/repository/repository.xml";
+    private static String CONFIG = "applications/test/repository.xml";
 
-    private static String HOME = "/temp/repository";
+    private static String HOME = "applications/test/repository";
 
     Context ctx = new ContextBase();
 
