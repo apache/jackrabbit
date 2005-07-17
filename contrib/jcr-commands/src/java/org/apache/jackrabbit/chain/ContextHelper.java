@@ -25,8 +25,7 @@ import javax.jcr.Session;
 import org.apache.commons.chain.Context;
 
 /**
- * Context helper to facilitate the Commands to access common context's
- * resources
+ * Context helper
  */
 public class ContextHelper
 {
