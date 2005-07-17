@@ -27,9 +27,6 @@ import org.apache.commons.chain.Context;
 import org.apache.commons.chain.impl.ContextBase;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.engine.event.LoopIterationEvent;
-import org.apache.jmeter.protocol.java.sampler.AbstractJavaSamplerClient;
-import org.apache.jmeter.protocol.java.sampler.JavaSamplerClient;
-import org.apache.jmeter.protocol.java.sampler.JavaSamplerContext;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -39,7 +36,7 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 /**
- * A sampler for executing custom Commons Chain Commands 
+ * A sampler for executing custom Commons Chain Commands
  * 
  * @author Edgar Poce
  */
@@ -154,7 +151,9 @@ public class ChainSampler extends AbstractSampler implements TestListener
             {
                 log.debug(whoAmI() + "Creating Command");
                 createCommand();
-            }
+            } 
+            
+            updateCommand() ;
             results.setSampleLabel("Chain Test = "
                     + command.getClass().getName());
             results.sampleStart();
@@ -184,32 +183,14 @@ public class ChainSampler extends AbstractSampler implements TestListener
     /**
      * Returns reference to <code>Command</code>.
      * 
-     * The <code>createJavaClient()</code> method uses reflection to create
-     * the Command. If the class can not be found, the method returns a
-     * reference to <code>this</code> object.
-     * 
      * @return Command reference.
      */
     private Command createCommand() throws Exception
     {
-        Class javaClass = Class.forName(
-            getClassname().trim(),
-            false,
-            Thread.currentThread().getContextClassLoader());
+        Class javaClass = Class.forName(getClassname().trim(), false, Thread
+            .currentThread().getContextClassLoader());
 
         command = (Command) javaClass.newInstance();
-
-        Map descrip = BeanUtils.describe(command);
-        Iterator iter = descrip.keySet().iterator();
-        while (iter.hasNext())
-        {
-            String key = (String) iter.next();
-            Object value = this.getArguments().getArgumentsAsMap().get(key);
-            if (value != null && value.toString().length()>0)
-            {
-                BeanUtils.setProperty(command, key, value);
-            }
-        }
 
         if (log.isDebugEnabled())
         {
@@ -218,6 +199,24 @@ public class ChainSampler extends AbstractSampler implements TestListener
         }
 
         return command;
+    }
+    
+    /**
+     * Updates the command attributes 
+     * @throws Exception
+     */
+    private void updateCommand() throws Exception {
+        Map descrip = BeanUtils.describe(command);
+        Iterator iter = descrip.keySet().iterator();
+        while (iter.hasNext())
+        {
+            String key = (String) iter.next();
+            Object value = this.getArguments().getArgumentsAsMap().get(key);
+            if (value != null && value.toString().length() > 0)
+            {
+                BeanUtils.setProperty(command, key, value);
+            }
+        }
     }
 
     /**
@@ -259,10 +258,10 @@ public class ChainSampler extends AbstractSampler implements TestListener
 
     /**
      * Method called at the end of the test. This is called only on one instance
-     * of JavaSampler. This method will loop through all of the other
-     * JavaSamplers which have been registered (automatically in the
+     * of ChainSampler. This method will loop through all of the other
+     * samplers which have been registered (automatically in the
      * constructor) and notify them that the test has ended, allowing the
-     * JavaSamplerClients to cleanup.
+     * ChainSamplerClients to cleanup.
      */
     public void testEnded()
     {
@@ -290,29 +289,4 @@ public class ChainSampler extends AbstractSampler implements TestListener
     {
     }
 
-    /**
-     * A {@link JavaSamplerClient}implementation used for error handling. If an
-     * error occurs while creating the real JavaSamplerClient object, it is
-     * replaced with an instance of this class. Each time a sample occurs with
-     * this class, the result is marked as a failure so the user can see that
-     * the test failed.
-     */
-    class ErrorSamplerClient extends AbstractJavaSamplerClient
-    {
-        /**
-         * Return SampleResult with data on error.
-         * 
-         * @see JavaSamplerClient#runTest()
-         */
-        public SampleResult runTest(JavaSamplerContext context)
-        {
-            log.debug(whoAmI() + "\trunTest");
-            Thread.yield();
-            SampleResult results = new SampleResult();
-            results.setSuccessful(false);
-            results.setResponseData(("Class not found: " + getClassname()).getBytes());
-            results.setSampleLabel("ERROR: " + getClassname());
-            return results;
-        }
-    }
 }
