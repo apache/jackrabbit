@@ -1,0 +1,60 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.query.lucene;
+
+import java.io.IOException;
+
+/**
+ * Common base class for errors detected during the consistency check.
+ */
+abstract class ConsistencyCheckError {
+
+    /**
+     * Diagnostic message for this error.
+     */
+    protected final String message;
+
+    /**
+     * The UUID of the affected node.
+     */
+    protected final String uuid;
+
+    ConsistencyCheckError(String message, String uuid) {
+        this.message = message;
+        this.uuid = uuid;
+    }
+
+    /**
+     * Returns the diagnostic message.
+     * @return the diagnostic message.
+     */
+    public String toString() {
+        return message;
+    }
+
+    /**
+     * Returns <code>true</code> if this error can be repaired.
+     * @return <code>true</code> if this error can be repaired.
+     */
+    abstract boolean repairable();
+
+    /**
+     * Executes the repair operation.
+     * @throws IOException if an error occurs while repairing.
+     */
+    abstract void repair() throws IOException;
+}
