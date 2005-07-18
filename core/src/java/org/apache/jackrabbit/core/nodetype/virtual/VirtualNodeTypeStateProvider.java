@@ -58,6 +58,11 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     public VirtualNodeTypeStateProvider(NodeTypeRegistry ntReg, String rootNodeId, String parentId) {
         super(ntReg, new NodeId(rootNodeId));
         this.parentId = parentId;
+        try {
+            getRootState();
+        } catch (ItemStateException e) {
+            // ignore
+        }
     }
 
     /**
