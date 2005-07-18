@@ -224,9 +224,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             query.XPath2().jjtAccept(this, root);
         } catch (ParseException e) {
             throw new InvalidQueryException(e.getMessage(), e);
-        } catch (Exception e) {
+        } catch (Throwable t) {
             // also catch any other exception
-            throw new InvalidQueryException(e.getMessage(), e);
+            throw new InvalidQueryException(t.getMessage(), t);
         }
         if (exceptions.size() > 0) {
             // simply report the first one
