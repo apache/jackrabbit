@@ -62,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.LinkedList;
 
 /**
  * This Class implements a VersionManager.
@@ -189,7 +190,8 @@ public class VersionManagerImpl implements VersionManager,
     public VersionHistory createVersionHistory(Session session, NodeState node)
             throws RepositoryException {
 
-        InternalVersionHistory history = createVersionHistory(node);
+        List created = new LinkedList();
+        InternalVersionHistory history = createVersionHistory(created, node);
         if (history == null) {
             throw new VersionException("History already exists for node " + node.getUUID());
         }
@@ -197,16 +199,13 @@ public class VersionManagerImpl implements VersionManager,
 
         // generate observation events
         List events = new ArrayList();
-        NodeImpl parent = (NodeImpl) vh.getParent();
-        generateAddedEvents(events, parent, vh, true);
-        // in case the history was created 'deep' also add events for its ancestors
-        while (!parent.internalGetUUID().equals(historyRoot.getUUID())) {
-            NodeImpl child = parent;
-            parent = (NodeImpl) parent.getParent();
-            generateAddedEvents(events, parent, child, false);
+        Iterator iter = created.iterator();
+        while (iter.hasNext()) {
+            String uuid = (String) iter.next();
+            NodeImpl child = (NodeImpl) ((SessionImpl) session).getItemManager().getItem(new NodeId(uuid));
+            generateAddedEvents(events, (NodeImpl) child.getParent(), child, false);
         }
         obsMgr.dispatch(events, (SessionImpl) session);
-
         return vh;
     }
 
@@ -226,11 +225,12 @@ public class VersionManagerImpl implements VersionManager,
     /**
      * Creates a new Version History.
      *
+     * @param created a list for adding the uuids of the newly created nodes
      * @param node the node for which the version history is to be initialized
      * @return the newly created version history.
      * @throws RepositoryException
      */
-    private InternalVersionHistory createVersionHistory(NodeState node)
+    private InternalVersionHistory createVersionHistory(List created, NodeState node)
             throws RepositoryException {
 
         try {
@@ -248,7 +248,8 @@ public class VersionManagerImpl implements VersionManager,
             for (int i = 0; i < 3; i++) {
                 QName name = new QName(NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
                 if (!root.hasNode(name)) {
-                    root.addNode(name, REP_VERSIONSTORAGE, null, false);
+                    NodeStateEx n = root.addNode(name, REP_VERSIONSTORAGE, null, false);
+                    created.add(n.getUUID());
                     root.store();
                 }
                 root = root.getNode(name, 1);
@@ -260,7 +261,7 @@ public class VersionManagerImpl implements VersionManager,
             }
 
             // create new history node in the persistent state
-            InternalVersionHistoryImpl hist = InternalVersionHistoryImpl.create(this, root, UUID.randomUUID().toString(), historyNodeName, node);
+            InternalVersionHistoryImpl hist = InternalVersionHistoryImpl.create(this, root, UUID.randomUUID().toString(), historyNodeName, node, created);
 
             // end update
             stateMgr.update();

@@ -426,22 +426,26 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
     static InternalVersionHistoryImpl create(VersionManagerImpl vMgr,
                                              NodeStateEx parent,
                                              String historyId, QName name,
-                                             NodeState nodeState)
+                                             NodeState nodeState,
+                                             List created)
             throws RepositoryException {
 
         // create history node
         NodeStateEx pNode = parent.addNode(name, NT_VERSIONHISTORY, historyId, true);
+        created.add(pNode.getUUID());
 
         // set the versionable uuid
         pNode.setPropertyValue(JCR_VERSIONABLEUUID, InternalValue.create(nodeState.getUUID()));
 
         // create label node
-        pNode.addNode(JCR_VERSIONLABELS, NT_VERSIONLABELS, null, false);
+        NodeStateEx lNode = pNode.addNode(JCR_VERSIONLABELS, NT_VERSIONLABELS, null, false);
+        created.add(lNode.getUUID());
 
         // create root version
         String versionId = UUID.randomUUID().toString();
 
         NodeStateEx vNode = pNode.addNode(JCR_ROOTVERSION, NT_VERSION, versionId, true);
+        created.add(vNode.getUUID());
 
         // initialize 'created' and 'predecessors'
         vNode.setPropertyValue(JCR_CREATED, InternalValue.create(Calendar.getInstance()));
@@ -450,7 +454,8 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // add also an empty frozen node to the root version
         NodeStateEx node = vNode.addNode(JCR_FROZENNODE, NT_FROZENNODE, null, true);
-
+        created.add(node.getUUID());
+        
         // initialize the internal properties
         node.setPropertyValue(JCR_FROZENUUID, InternalValue.create(nodeState.getUUID()));
         node.setPropertyValue(JCR_FROZENPRIMARYTYPE,
