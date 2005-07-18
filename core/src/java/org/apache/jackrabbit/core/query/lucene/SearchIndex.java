@@ -41,6 +41,8 @@ import org.apache.lucene.search.SortField;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Implements a {@link org.apache.jackrabbit.core.query.QueryHandler} using
@@ -67,9 +69,51 @@ public class SearchIndex extends AbstractQueryHandler {
     private final FIFOReadWriteLock readWriteLock = new FIFOReadWriteLock();
 
     /**
+     * minMergeDocs config parameter.
+     */
+    private int minMergeDocs = 1000;
+
+    /**
+     * maxMergeDocs config parameter
+     */
+    private int maxMergeDocs = 100000;
+
+    /**
+     * mergeFactor config parameter
+     */
+    private int mergeFactor = 10;
+
+    /**
+     * Number of documents that are buffered before they are added to the index.
+     */
+    private int bufferSize = 10;
+
+    /**
+     * Compound file flag
+     */
+    private boolean useCompoundFile = true;
+
+    /**
      * Flag indicating whether document order is enable as the default ordering.
      */
     private boolean documentOrder = true;
+
+    /**
+     * If set <code>true</code> the index is checked for consistency on startup.
+     * If <code>false</code> a consistency check is only performed when there
+     * are entries in the redo log on startup.
+     * <p/>
+     * Default value is: <code>false</code>.
+     */
+    private boolean forceConsistencyCheck = false;
+
+    /**
+     * If set <code>true</code> errors detected by the consistency check are
+     * repaired. If <code>false</code> the errors are only reported in the log.
+     * <p/>
+     * Default value is: <code>true</code>.
+     */
+    private boolean autoRepair = true;
 
     /**
      * Default constructor.
@@ -87,6 +131,27 @@ public class SearchIndex extends AbstractQueryHandler {
             QueryHandlerContext context = getContext();
             index = new MultiIndex(context.getFileSystem(), this,
                     context.getItemStateManager(), context.getRootUUID());
+            if (index.getRedoLogApplied() || forceConsistencyCheck) {
+                log.info("Running consistency check...");
+                try {
+                    ConsistencyCheck check = ConsistencyCheck.run(index,
+                            context.getItemStateManager());
+                    if (autoRepair) {
+                        check.repair(true);
+                    } else {
+                        List errors = check.getErrors();
+                        if (errors.size() == 0) {
+                            log.info("No errors detected.");
+                        }
+                        for (Iterator it = errors.iterator(); it.hasNext(); ) {
+                            ConsistencyCheckError err = (ConsistencyCheckError) it.next();
+                            log.info(err.toString());
+                        }
+                    }
+                } catch (IOException e) {
+                    log.warn("Failed to run consistency check on index: " + e);
+                }
+            }
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
         }
@@ -257,34 +322,107 @@ public class SearchIndex extends AbstractQueryHandler {
 
     //--------------------------< properties >----------------------------------
 
+    /**
+     * The lucene index writer property: useCompoundFile
+     */
     public void setUseCompoundFile(boolean b) {
-        index.setUseCompoundFile(b);
-    }
-
-    public void setMinMergeDocs(int minMergeDocs) {
-        index.setMinMergeDocs(minMergeDocs);
-    }
-
-    public void setMaxMergeDocs(int maxMergeDocs) {
-        index.setMaxMergeDocs(maxMergeDocs);
-    }
-
-    public void setMergeFactor(int mergeFactor) {
-        index.setMergeFactor(mergeFactor);
+        useCompoundFile = b;
     }
 
     /**
-     * @deprecated redo size is equivalent to minMergeDocs. Use
-     * {@link #setMinMergeDocs(int)} to set the size of the redo log.
+     * Returns the current value for useCompoundFile.
+     *
+     * @return the current value for useCompoundFile.
      */
-    public void setRedoSize(int size) {
+    public boolean getUseCompoundFile() {
+        return useCompoundFile;
     }
 
+    /**
+     * The lucene index writer property: minMergeDocs
+     */
+    public void setMinMergeDocs(int minMergeDocs) {
+        this.minMergeDocs = minMergeDocs;
+    }
+
+    /**
+     * Returns the current value for minMergeDocs.
+     *
+     * @return the current value for minMergeDocs.
+     */
+    public int getMinMergeDocs() {
+        return minMergeDocs;
+    }
+
+    /**
+     * The lucene index writer property: maxMergeDocs
+     */
+    public void setMaxMergeDocs(int maxMergeDocs) {
+        this.maxMergeDocs = maxMergeDocs;
+    }
+
+    /**
+     * Returns the current value for maxMergeDocs.
+     *
+     * @return the current value for maxMergeDocs.
+     */
+    public int getMaxMergeDocs() {
+        return maxMergeDocs;
+    }
+
+    /**
+     * The lucene index writer property: mergeFactor
+     */
+    public void setMergeFactor(int mergeFactor) {
+        this.mergeFactor = mergeFactor;
+    }
+
+    /**
+     * Returns the current value for the merge factor.
+     *
+     * @return the current value for the merge factor.
+     */
+    public int getMergeFactor() {
+        return mergeFactor;
+    }
+
+    /**
+     * @see VolatileIndex#setBufferSize(int)
+     */
     public void setBufferSize(int size) {
-        index.setBufferSize(size);
+        bufferSize = size;
+    }
+
+    /**
+     * Returns the current value for the buffer size.
+     *
+     * @return the current value for the buffer size.
+     */
+    public int getBufferSize() {
+        return bufferSize;
     }
 
     public void setRespectDocumentOrder(boolean docOrder) {
         documentOrder = docOrder;
+    }
+
+    public boolean getRespectDocumentOrder() {
+        return documentOrder;
+    }
+
+    public void setForceConsistencyCheck(boolean b) {
+        forceConsistencyCheck = b;
+    }
+
+    public boolean getForceConsistencyCheck() {
+        return forceConsistencyCheck;
+    }
+
+    public void setAutoRepair(boolean b) {
+        autoRepair = b;
+    }
+
+    public boolean getAutoRepair() {
+        return autoRepair;
     }
 }

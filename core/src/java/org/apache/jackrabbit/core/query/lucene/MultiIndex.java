@@ -42,7 +42,7 @@ import java.util.Set;
  * A <code>MultiIndex</code> consists of a {@link VolatileIndex} and multiple
  * {@link PersistentIndex}es. The goal is to keep most parts of the index open
  * with index readers and write new index data to the volatile index. When
- * the volatile index reaches a certain size (see {@link #setMinMergeDocs(int)} a
+ * the volatile index reaches a certain size (see {@link SearchIndex#setMinMergeDocs(int)} a
  * new persistent index is created with the index data from the volatile index.
  * the new persistent index is then added to the list of already existing
  * persistent indexes. Furhter operations on the new persistent index will
@@ -50,8 +50,8 @@ import java.util.Set;
  * but also for delete operations on the index.
  * <p/>
  * The persistent indexes are merged from time to time. The merge behaviour
- * is configurable using the methods: {@link #setMaxMergeDocs(int)},
- * {@link #setMergeFactor(int)} and {@link #setMinMergeDocs(int)}. For detailed
+ * is configurable using the methods: {@link SearchIndex#setMaxMergeDocs(int)},
+ * {@link SearchIndex#setMergeFactor(int)} and {@link SearchIndex#setMinMergeDocs(int)}. For detailed
  * description of the configuration parameters see also the lucene
  * <code>IndexWriter</code> class.
  * <p/>
@@ -83,37 +83,6 @@ class MultiIndex {
      * Default name of the redo log file
      */
     private static final String REDO_LOG = "redo.log";
-
-    /**
-     * Compound file flag
-     */
-    private boolean useCompoundFile = true;
-
-    /**
-     * minMergeDocs config parameter
-     */
-    private int minMergeDocs = 1000;
-
-    /**
-     * maxMergeDocs config parameter
-     */
-    private int maxMergeDocs = 100000;
-
-    /**
-     * mergeFactor config parameter
-     */
-    private int mergeFactor = 10;
-
-    /**
-     * Default merge size: 1000
-     */
-    private static final long DEFAULT_MERGE_SIZE = 1000;
-
-    /**
-     * The maximum number of entries in the redo log until the volatile index
-     * is merged into the persistent one.
-     */
-    private long mergeSize = DEFAULT_MERGE_SIZE;
 
     /**
      * Names of active persistent index directories.
@@ -152,6 +121,11 @@ class MultiIndex {
     private IndexReader multiReader;
 
     /**
+     * <code>true</code> if the redo log contained entries on startup.
+     */
+    private boolean redoLogApplied = false;
+
+    /**
      * Creates a new MultiIndex.
      *
      * @param fs the base file system
@@ -186,10 +160,10 @@ class MultiIndex {
                 FileSystem sub = new BasedFileSystem(fs, indexNames.getName(i));
                 sub.init();
                 PersistentIndex index = new PersistentIndex(indexNames.getName(i), sub, false, handler.getAnalyzer());
-                index.setMaxMergeDocs(maxMergeDocs);
-                index.setMergeFactor(mergeFactor);
-                index.setMinMergeDocs(minMergeDocs);
-                index.setUseCompoundFile(useCompoundFile);
+                index.setMaxMergeDocs(handler.getMaxMergeDocs());
+                index.setMergeFactor(handler.getMergeFactor());
+                index.setMinMergeDocs(handler.getMinMergeDocs());
+                index.setUseCompoundFile(handler.getUseCompoundFile());
                 indexes.add(index);
             }
 
@@ -198,6 +172,9 @@ class MultiIndex {
             RedoLog redoLog = new RedoLog(new FileSystemResource(fs, REDO_LOG));
 
             if (redoLog.hasEntries()) {
+                // when we have entries in the redo log there is no need to reindex
+                doInitialIndex = false;
+
                 log.warn("Found uncommitted redo log. Applying changes now...");
                 // apply changes to persistent index
                 Iterator it = redoLog.getEntries().iterator();
@@ -217,19 +194,12 @@ class MultiIndex {
                 maybeMergeIndexes();
                 log.warn("Redo changes applied.");
                 redoLog.clear();
-            }
-
-            // execute integrity check on persistent indexes with locks on startup
-            for (Iterator it = indexes.iterator(); it.hasNext(); ) {
-                PersistentIndex index = (PersistentIndex) it.next();
-                if (index.getLockEncountered()) {
-                    log.info("Running integrity check on index: " + index.getName());
-                    index.integrityCheck(stateMgr);
-                }
+                redoLogApplied = true;
             }
 
             volatileIndex = new VolatileIndex(handler.getAnalyzer(), redoLog);
             volatileIndex.setUseCompoundFile(false);
+            volatileIndex.setBufferSize(handler.getBufferSize());
 
             if (doInitialIndex) {
                 // index root node
@@ -255,7 +225,7 @@ class MultiIndex {
     synchronized void addDocument(Document doc) throws IOException {
         multiReader = null;
         volatileIndex.addDocument(doc);
-        if (volatileIndex.getRedoLog().getSize() >= mergeSize) {
+        if (volatileIndex.getRedoLog().getSize() >= handler.getMinMergeDocs()) {
             log.info("Committing in-memory index");
             commit();
         }
@@ -335,54 +305,24 @@ class MultiIndex {
         return nsMappings;
     }
 
-    //-----------------------< properties >-------------------------------------
-
     /**
-     * The lucene index writer property: useCompoundFile
+     * Returns a lucene Document for the <code>node</code>.
+     * @param node the node to index.
+     * @return the index document.
+     * @throws RepositoryException if an error occurs while reading from the
+     *   workspace.
      */
-    void setUseCompoundFile(boolean b) {
-        useCompoundFile = b;
-        // apply to all persistent indexes
-        for (int i = 0; i < indexes.size(); i++) {
-            ((PersistentIndex) indexes.get(i)).setUseCompoundFile(b);
-        }
+    Document createDocument(NodeState node) throws RepositoryException {
+        return handler.createDocument(node, nsMappings);
     }
 
     /**
-     * The lucene index writer property: minMergeDocs
+     * Returns <code>true</code> if the redo log contained entries while
+     * this index was instantiated; <code>false</code> otherwise.
+     * @return <code>true</code> if the redo log contained entries.
      */
-    void setMinMergeDocs(int minMergeDocs) {
-        this.minMergeDocs = minMergeDocs;
-        // apply to all persistent indexes
-        for (int i = 0; i < indexes.size(); i++) {
-            ((PersistentIndex) indexes.get(i)).setMinMergeDocs(minMergeDocs);
-        }
-    }
-
-    /**
-     * The lucene index writer property: maxMergeDocs
-     */
-    void setMaxMergeDocs(int maxMergeDocs) {
-        this.maxMergeDocs = maxMergeDocs;
-        // apply to all persistent indexes
-        for (int i = 0; i < indexes.size(); i++) {
-            ((PersistentIndex) indexes.get(i)).setMaxMergeDocs(maxMergeDocs);
-        }
-    }
-
-    /**
-     * The lucene index writer property: mergeFactor
-     */
-    void setMergeFactor(int mergeFactor) {
-        this.mergeFactor = mergeFactor;
-        // apply to all persistent indexes
-        for (int i = 0; i < indexes.size(); i++) {
-            ((PersistentIndex) indexes.get(i)).setMergeFactor(mergeFactor);
-        }
-    }
-
-    public void setBufferSize(int size) {
-        volatileIndex.setBufferSize(size);
+    boolean getRedoLogApplied() {
+        return redoLogApplied;
     }
 
     //-------------------------< internal >-------------------------------------
@@ -401,10 +341,10 @@ class MultiIndex {
         try {
             sub.init();
             index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
-            index.setMaxMergeDocs(maxMergeDocs);
-            index.setMergeFactor(mergeFactor);
-            index.setMinMergeDocs(minMergeDocs);
-            index.setUseCompoundFile(useCompoundFile);
+            index.setMaxMergeDocs(handler.getMaxMergeDocs());
+            index.setMergeFactor(handler.getMergeFactor());
+            index.setMinMergeDocs(handler.getMinMergeDocs());
+            index.setUseCompoundFile(handler.getUseCompoundFile());
             indexes.add(index);
             indexNames.addName(name);
             indexNames.write(fs);
@@ -427,6 +367,7 @@ class MultiIndex {
         // create new volatile index
         volatileIndex = new VolatileIndex(handler.getAnalyzer(), volatileIndex.getRedoLog());
         volatileIndex.setUseCompoundFile(false);
+        volatileIndex.setBufferSize(handler.getBufferSize());
 
         maybeMergeIndexes();
     }
@@ -444,7 +385,7 @@ class MultiIndex {
      */
     private void createIndex(NodeState node, ItemStateManager stateMgr)
             throws IOException, ItemStateException, RepositoryException {
-        addDocument(handler.createDocument(node, nsMappings));
+        addDocument(createDocument(node));
         List children = node.getChildNodeEntries();
         for (Iterator it = children.iterator(); it.hasNext();) {
             NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
@@ -468,7 +409,7 @@ class MultiIndex {
             throws IOException {
         Document doc;
         try {
-            doc = handler.createDocument(node, nsMappings);
+            doc = createDocument(node);
         } catch (RepositoryException e) {
             log.warn("RepositoryException: " + e.getMessage());
             return;
@@ -480,10 +421,10 @@ class MultiIndex {
                 FileSystem sub = new BasedFileSystem(fs, name);
                 sub.init();
                 PersistentIndex index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
-                index.setMaxMergeDocs(maxMergeDocs);
-                index.setMergeFactor(mergeFactor);
-                index.setMinMergeDocs(minMergeDocs);
-                index.setUseCompoundFile(useCompoundFile);
+                index.setMaxMergeDocs(handler.getMaxMergeDocs());
+                index.setMergeFactor(handler.getMergeFactor());
+                index.setMinMergeDocs(handler.getMinMergeDocs());
+                index.setUseCompoundFile(handler.getUseCompoundFile());
                 indexes.add(index);
                 indexNames.addName(name);
                 indexNames.write(fs);
@@ -518,8 +459,8 @@ class MultiIndex {
 
     /**
      * Merges multiple persistent index into a single one according to the
-     * properties: {@link #setMaxMergeDocs(int)}, {@link #setMergeFactor(int)}
-     * and {@link #setMinMergeDocs(int)}.
+     * properties: {@link SearchIndex#setMaxMergeDocs(int)}, {@link
+     * SearchIndex#setMergeFactor(int)} and {@link SearchIndex#setMinMergeDocs(int)}.
      *
      * @throws IOException if an error occurs during the merge.
      */
@@ -546,9 +487,9 @@ class MultiIndex {
         }
 
         // only check for merge if there are more than mergeFactor indexes
-        if (indexes.size() >= mergeFactor) {
-            long targetMergeDocs = minMergeDocs;
-            while (targetMergeDocs <= maxMergeDocs) {
+        if (indexes.size() >= handler.getMergeFactor()) {
+            long targetMergeDocs = handler.getMinMergeDocs();
+            while (targetMergeDocs <= handler.getMaxMergeDocs()) {
                 // find index smaller or equal than current target size
                 int minIndex = indexes.size();
                 int mergeDocs = 0;
@@ -561,14 +502,15 @@ class MultiIndex {
                     mergeDocs += numDocs;
                 }
 
-                if (indexes.size() - (minIndex + 1) >= mergeFactor && mergeDocs < maxMergeDocs) {
+                if (indexes.size() - (minIndex + 1) >= handler.getMergeFactor()
+                        && mergeDocs < handler.getMaxMergeDocs()) {
                     // found a merge to do
                     mergeIndex(minIndex + 1);
                 } else {
                     break;
                 }
                 // increase target size
-                targetMergeDocs *= mergeFactor;
+                targetMergeDocs *= handler.getMergeFactor();
             }
         }
     }
@@ -588,10 +530,10 @@ class MultiIndex {
         try {
             sub.init();
             index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
-            index.setMaxMergeDocs(maxMergeDocs);
-            index.setMergeFactor(mergeFactor);
-            index.setMinMergeDocs(minMergeDocs);
-            index.setUseCompoundFile(useCompoundFile);
+            index.setMaxMergeDocs(handler.getMaxMergeDocs());
+            index.setMergeFactor(handler.getMergeFactor());
+            index.setMinMergeDocs(handler.getMinMergeDocs());
+            index.setUseCompoundFile(handler.getUseCompoundFile());
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
         }
@@ -627,7 +569,7 @@ class MultiIndex {
     }
 
     /**
-     * <b>Note: This check will be removed when Jackrabbit 1.0 is final.</b>
+     * <b>todo: This check will be removed when Jackrabbit 1.0 is final.</b>
      * <p/>
      * Checks if an old index format is present and moves it to the new
      * subindex structure.
