@@ -186,7 +186,9 @@ class CachingIndexReader extends FilterIndexReader {
                 if (!in.isDeleted(i)) {
                     Document d = in.document(i);
                     Integer docId = new Integer(i);
-                    ids.put(d.get(FieldNames.UUID), docId);
+                    if (ids.put(d.get(FieldNames.UUID), docId) != null) {
+                        log.warn("Duplicate index entry for node: " + d.get(FieldNames.UUID));
+                    }
                     documents.put(docId, d);
                     String parentUUID = d.get(FieldNames.PARENT);
                     List docIds = (List) parents.get(parentUUID);

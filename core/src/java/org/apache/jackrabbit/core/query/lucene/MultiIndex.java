@@ -232,11 +232,11 @@ class MultiIndex {
     }
 
     /**
-     * Deletes documents that match the <code>idTerm</code>.
+     * Deletes the first document that matches the <code>idTerm</code>.
      *
-     * @param idTerm documents that match this term will be deleted.
+     * @param idTerm document that match this term will be deleted.
      * @return the number of deleted documents.
-     * @throws IOException if an error occurs while deleting documents.
+     * @throws IOException if an error occurs while deleting the document.
      */
     synchronized int removeDocument(Term idTerm) throws IOException {
         // flush multi reader if it does not have deletions yet
@@ -258,6 +258,28 @@ class MultiIndex {
             return num;
         }
         return 0;
+    }
+
+    /**
+     * Deletes all documents that match the <code>idTerm</code> and immediately
+     * commits the changes to the persistent indexes.
+     *
+     * @param idTerm documents that match this term will be deleted.
+     * @return the number of deleted documents.
+     * @throws IOException if an error occurs while deleting documents.
+     */
+    synchronized int removeAllDocuments(Term idTerm) throws IOException {
+        // flush multi reader if it does not have deletions yet
+        if (multiReader != null && !multiReader.hasDeletions()) {
+            multiReader = null;
+        }
+        int num = volatileIndex.removeDocument(idTerm);
+        for (int i = 0; i < indexes.size(); i++) {
+            PersistentIndex index = (PersistentIndex) indexes.get(i);
+            num += index.removeDocument(idTerm);
+            index.commit();
+        }
+        return num;
     }
 
     /**

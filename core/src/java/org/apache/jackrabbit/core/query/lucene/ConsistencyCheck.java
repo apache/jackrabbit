@@ -98,8 +98,8 @@ class ConsistencyCheck {
 
     /**
      * Repairs detected errors during the consistency check.
-     * @param ignoreFailure if <code>true</code> repair failures are ignored
-     *   the the repair continues without throwing an exception. If
+     * @param ignoreFailure if <code>true</code> repair failures are ignored,
+     *   the repair continues without throwing an exception. If
      *   <code>false</code> the repair procedure is aborted on the first
      *   repair failure.
      * @throws IOException if a repair failure occurs.
@@ -320,9 +320,7 @@ class ConsistencyCheck {
         public void repair() throws IOException {
             // first remove all occurrences
             Term id = new Term(FieldNames.UUID, uuid);
-            while (index.removeDocument(id) > 0) {
-                // removed
-            }
+            index.removeAllDocuments(id);
             // then re-index the node
             try {
                 NodeState node = (NodeState) stateMgr.getItemState(new NodeId(uuid));
