@@ -83,6 +83,24 @@ before running one of the maven commands listed at
 
 to build the Jackrabbit project and/or documentation.
 
+The Jackrabbit project currently consist out of
+the three parts "api", "commons" and "core". Because of
+dependencies one needs to build the Jackrabbit project
+in the following order
+
+   cd api
+   maven jar:install
+   cd ../commons
+   maven jar:install
+   cd ../core
+   maven jar:install
+
+The top-level Maven build environment uses the Maven Multi-Project
+plugin to automatically build these three main components. The
+above can thus also be performed by running
+
+  maven
+
 NOTE: JDK 1.5 users need to download xalan.jar and place it in
 $MAVEN_HOME/lib/endorsed to build the Jackrabbit sources. The
 reason for this workaround is explained in
