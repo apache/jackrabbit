@@ -113,4 +113,13 @@ public abstract class QueryNode {
      */
     public abstract int getType();
 
+    /**
+     * Returns <code>true</code> if <code>obj</code> is the same type of
+     * <code>QueryNode</code> as <code>this</code> node and is equal to
+     * <code>this</code> node.
+     * @param obj the reference object with which to compare.
+     * @return <code>true</code> if <code>obj</code> is equal to
+     *   <code>this</code>; <code>false</code> otherwise.
+     */
+    public abstract boolean equals(Object obj);
 }

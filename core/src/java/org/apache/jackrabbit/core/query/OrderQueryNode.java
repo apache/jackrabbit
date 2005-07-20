@@ -30,7 +30,7 @@ public class OrderQueryNode extends QueryNode {
     /**
      * The order spects
      */
-    private List specs = new ArrayList();
+    private final List specs = new ArrayList();
 
     /**
      * Creates a new <code>OrderQueryNode</code> with a reference to a parent
@@ -101,6 +101,17 @@ public class OrderQueryNode extends QueryNode {
         return (OrderSpec[]) specs.toArray(new OrderSpec[specs.size()]);
     }
 
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof OrderQueryNode) {
+            OrderQueryNode other = (OrderQueryNode) obj;
+            return specs.equals(other.specs);
+        }
+        return false;
+    }
+
     //------------------< OrderSpec class >-------------------------------------
 
     /**
@@ -159,6 +170,22 @@ public class OrderQueryNode extends QueryNode {
          */
         public void setAscending(boolean ascending) {
             this.ascending = ascending;
+        }
+
+        /**
+         * Returns <code>true</code> if <code>this</code> order spec is equal
+         * to <code>obj</code>
+         * @param obj the reference object with which to compare.
+         * @return <code>true</code> if <code>this</code> order spec is equal
+         *   to <code>obj</code>; <code>false</code> otherwise.
+         */
+        public boolean equals(Object obj) {
+            if (obj instanceof OrderSpec) {
+                OrderSpec other = (OrderSpec) obj;
+                return (property == null ? other.property == null : property.equals(other.property))
+                        && ascending == other.ascending;
+            }
+            return false;
         }
     }
 }

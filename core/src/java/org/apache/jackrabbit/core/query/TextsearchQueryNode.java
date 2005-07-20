@@ -106,4 +106,16 @@ public class TextsearchQueryNode extends QueryNode {
     public void setPropertyName(QName property) {
         this.propertyName = property;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof TextsearchQueryNode) {
+            TextsearchQueryNode other = (TextsearchQueryNode) obj;
+            return (query == null ? other.query == null : query.equals(other.query))
+                    && (propertyName == null ? other.propertyName == null : propertyName.equals(other.propertyName));
+        }
+        return false;
+    }
 }

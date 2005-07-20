@@ -59,4 +59,14 @@ public class OrQueryNode extends NAryQueryNode {
     public int getType() {
         return QueryNode.TYPE_OR;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof OrQueryNode) {
+            return super.equals(obj);
+        }
+        return false;
+    }
 }

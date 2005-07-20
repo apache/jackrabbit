@@ -301,4 +301,20 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
         return operation;
     }
 
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof RelationQueryNode) {
+            RelationQueryNode other = (RelationQueryNode) obj;
+            return type == other.type
+                    && (valueDate == null ? other.valueDate == null : valueDate.equals(other.valueDate))
+                    && valueDouble == other.valueDouble
+                    && valueLong == other.valueLong
+                    && valuePosition == other.valuePosition
+                    && (valueString == null ? other.valueString == null : valueString.equals(other.valueString))
+                    && (property == null ? other.property == null : property.equals(other.property));
+        }
+        return false;
+    }
 }

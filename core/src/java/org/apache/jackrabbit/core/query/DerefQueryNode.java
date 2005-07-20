@@ -71,4 +71,16 @@ public class DerefQueryNode extends LocationStepQueryNode {
     public Object accept(QueryNodeVisitor visitor, Object data) {
         return visitor.visit(this, data);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof DerefQueryNode) {
+            DerefQueryNode other = (DerefQueryNode) obj;
+            return super.equals(obj)
+                    && refProperty == null ? other.refProperty == null : refProperty.equals(other.refProperty);
+        }
+        return false;
+    }
 }

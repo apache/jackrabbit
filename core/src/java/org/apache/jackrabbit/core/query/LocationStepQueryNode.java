@@ -162,4 +162,18 @@ public class LocationStepQueryNode extends NAryQueryNode {
     public int getType() {
         return QueryNode.TYPE_LOCATION;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof LocationStepQueryNode) {
+            LocationStepQueryNode other = (LocationStepQueryNode) obj;
+            return super.equals(other)
+                    && includeDescendants == other.includeDescendants
+                    && index == other.index
+                    && (nameTest == null ? other.nameTest == null : nameTest.equals(other.nameTest));
+        }
+        return false;
+    }
 }

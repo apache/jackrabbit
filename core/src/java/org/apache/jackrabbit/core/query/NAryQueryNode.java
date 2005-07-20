@@ -135,4 +135,15 @@ public abstract class NAryQueryNode extends QueryNode {
         }
         return result.toArray();
     }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof NAryQueryNode) {
+            NAryQueryNode other = (NAryQueryNode) obj;
+            return operands == null ? other.operands == null : operands.equals(other.operands);
+        }
+        return false;
+    }
 }

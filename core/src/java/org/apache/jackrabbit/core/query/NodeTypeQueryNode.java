@@ -52,4 +52,14 @@ public class NodeTypeQueryNode extends ExactQueryNode {
     public int getType() {
         return QueryNode.TYPE_NODETYPE;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof NodeTypeQueryNode) {
+            return super.equals(obj);
+        }
+        return false;
+    }
 }

@@ -453,9 +453,15 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 if (predicates.length > 0) {
                     // if we have a predicate attached, the condition acts as
                     // the sub query.
-                    Query subQuery = new DescendantSelfAxisQuery(context, andQuery, false);
-                    andQuery = new BooleanQuery();
-                    andQuery.add(subQuery, true, false);
+
+                    // only use descendant axis if path is not //*
+                    // otherwise the query for the predicate can be used itself
+                    PathQueryNode pathNode = (PathQueryNode) node.getParent();
+                    if (pathNode.getPathSteps()[0] != node) {
+                        Query subQuery = new DescendantSelfAxisQuery(context, andQuery, false);
+                        andQuery = new BooleanQuery();
+                        andQuery.add(subQuery, true, false);
+                    }
                 } else {
                     // todo this will traverse the whole index, optimize!
                     Query subQuery = null;
@@ -464,8 +470,14 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                     } catch (NoPrefixDeclaredException e) {
                         // will never happen, prefixes are created when unknown
                     }
-                    context = new DescendantSelfAxisQuery(context, subQuery);
-                    andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), true, false);
+                    // only use descendant axis if path is not //*
+                    PathQueryNode pathNode = (PathQueryNode) node.getParent();
+                    if (pathNode.getPathSteps()[0] != node) {
+                        context = new DescendantSelfAxisQuery(context, subQuery);
+                        andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), true, false);
+                    } else {
+                        andQuery.add(subQuery, true, false);
+                    }
                 }
             }
         } else {
