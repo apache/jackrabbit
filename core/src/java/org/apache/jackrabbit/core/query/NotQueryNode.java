@@ -57,4 +57,14 @@ public class NotQueryNode extends NAryQueryNode {
     public int getType() {
         return QueryNode.TYPE_NOT;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof NotQueryNode) {
+            return super.equals(obj);
+        }
+        return false;
+    }
 }

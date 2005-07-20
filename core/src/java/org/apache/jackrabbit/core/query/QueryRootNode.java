@@ -120,4 +120,17 @@ public class QueryRootNode extends QueryNode {
     public int getType() {
         return QueryNode.TYPE_ROOT;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof QueryRootNode) {
+            QueryRootNode other = (QueryRootNode) obj;
+            return (locationNode == null ? other.locationNode == null : locationNode.equals(other.locationNode))
+                    && selectProperties.equals(other.selectProperties)
+                    && (orderNode == null ? other.orderNode == null : orderNode.equals(other.orderNode));
+        }
+        return false;
+    }
 }

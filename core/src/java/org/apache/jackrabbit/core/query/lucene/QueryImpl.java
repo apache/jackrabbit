@@ -62,6 +62,18 @@ class QueryImpl implements ExecutableQuery {
     private static final Logger log = Logger.getLogger(QueryImpl.class);
 
     /**
+     * Represents a query that selects all nodes. E.g. in XPath: //*
+     */
+    private static final QueryRootNode ALL_NODES = new QueryRootNode();
+
+    static {
+        PathQueryNode pathNode = new PathQueryNode(ALL_NODES);
+        pathNode.addPathStep(new LocationStepQueryNode(pathNode, null, true));
+        pathNode.setAbsolute(true);
+        ALL_NODES.setLocationNode(pathNode);
+    }
+
+    /**
      * The root node of the query tree
      */
     private final QueryRootNode root;
@@ -129,6 +141,14 @@ class QueryImpl implements ExecutableQuery {
         if (log.isDebugEnabled()) {
             log.debug("Executing query: \n" + root.dump());
         }
+
+        // check for special query
+        if (ALL_NODES.equals(root)) {
+            return new WorkspaceTraversalResult(session,
+                    new QName[]{Constants.JCR_PATH},
+                    session.getNamespaceResolver());
+        }
+
         // build lucene query
         Query query = LuceneQueryBuilder.createQuery(root, session,
                 index.getContext().getItemStateManager(), index.getNamespaceMappings(),

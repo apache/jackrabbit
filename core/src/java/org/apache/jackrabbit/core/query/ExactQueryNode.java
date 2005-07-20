@@ -82,4 +82,15 @@ public class ExactQueryNode extends QueryNode {
         return value;
     }
 
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof ExactQueryNode) {
+            ExactQueryNode other = (ExactQueryNode) obj;
+            return (value == null ? other.value == null : value.equals(other.value))
+                    && (property == null ? other.property == null : property.equals(other.property));
+        }
+        return false;
+    }
 }

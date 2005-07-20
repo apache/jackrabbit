@@ -168,7 +168,6 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         PathQueryNode pathNode = root.getLocationNode();
         pathNode.setAbsolute(true);
         if (pathConstraints.size() == 0) {
-            pathNode.addPathStep(new LocationStepQueryNode(pathNode, new QName("", ""), false));
             pathNode.addPathStep(new LocationStepQueryNode(pathNode, null, true));
         } else {
             try {
@@ -503,6 +502,12 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     private void createPathQuery(String path, int operation) {
         MergingPathQueryNode pathNode = new MergingPathQueryNode(operation);
         pathNode.setAbsolute(true);
+
+        if (path.equals("/")) {
+            pathNode.addPathStep(new LocationStepQueryNode(pathNode, new QName("", ""), false));
+            pathConstraints.add(pathNode);
+            return;
+        }
 
         String[] names = path.split("/");
 

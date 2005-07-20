@@ -60,4 +60,14 @@ public class AndQueryNode extends NAryQueryNode {
     public int getType() {
         return QueryNode.TYPE_AND;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof AndQueryNode) {
+            return super.equals(obj);
+        }
+        return false;
+    }
 }

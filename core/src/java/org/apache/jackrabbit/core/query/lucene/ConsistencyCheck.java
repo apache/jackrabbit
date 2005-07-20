@@ -116,6 +116,7 @@ class ConsistencyCheck {
                 if (error.repairable()) {
                     error.repair();
                 } else {
+                    log.warn("Not repairable: " + error);
                     notRepairable++;
                 }
             } catch (IOException e) {

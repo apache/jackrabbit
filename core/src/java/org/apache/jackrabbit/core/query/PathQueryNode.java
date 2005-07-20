@@ -100,4 +100,14 @@ public class PathQueryNode extends NAryQueryNode {
         return absolute;
     }
 
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof PathQueryNode) {
+            PathQueryNode other = (PathQueryNode) obj;
+            return super.equals(obj) && absolute == other.absolute;
+        }
+        return false;
+    }
 }
