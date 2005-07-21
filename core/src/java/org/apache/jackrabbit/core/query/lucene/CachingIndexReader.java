@@ -146,6 +146,28 @@ class CachingIndexReader extends FilterIndexReader {
     }
 
     /**
+     * Provides an efficient lookup of document frequency for terms with field
+     * {@link FieldNames#UUID} and {@link FieldNames#PARENT}. All other calles
+     * are handled by the base class.
+     *
+     * @param t the term to look up the document frequency.
+     * @return the document frequency of term <code>t</code>.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    public int docFreq(Term t) throws IOException {
+        synchronized (this) {
+            cacheInit();
+            if (t.field() == FieldNames.UUID) {
+                return idCache.containsKey(t.text()) ? 1 : 0;
+            } else if (t.field() == FieldNames.PARENT) {
+                List children = (List) parentCache.get(t.text());
+                return children == null ? 0 : children.size();
+            }
+        }
+        return super.docFreq(t);
+    }
+
+    /**
      * Removes the <code>TermEnum</code> from the idCache and calls the base
      * <code>IndexReader</code>.
      * @param n the number of the document to delete.

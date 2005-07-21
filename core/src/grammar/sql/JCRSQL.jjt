@@ -65,7 +65,7 @@ public class JCRSQLParser {
   	return parser.Query();
   }
 
-  private void setNamespaceResolver(NamespaceResolver resolver) {
+  void setNamespaceResolver(NamespaceResolver resolver) {
         this.resolver = resolver;
   }
 
