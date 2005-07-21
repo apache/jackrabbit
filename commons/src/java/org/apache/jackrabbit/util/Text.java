@@ -449,6 +449,43 @@ public class Text {
     }
 
     /**
+     * Returns the namespace prefix of the given <code>qname</code>. If the
+     * prefix is missing, an empty string is returned. Please note, that this
+     * method does not validate the name or prefix.
+     * </p>
+     * the qname has the format: qname := [prefix ':'] local;
+     *
+     * @param qname a qualified name
+     * @return the prefix of the name or "".
+     *
+     * @see #getLocalName(String)
+     *
+     * @throws NullPointerException if <code>qname</code> is <code>null</code>
+     */
+    public static String getNamespacePrefix(String qname) {
+        int pos = qname.indexOf(':');
+        return pos >=0 ? qname.substring(0, pos) : "";
+    }
+
+    /**
+     * Returns the local name of the given <code>qname</code>. Please note, that
+     * this method does not validate the name.
+     * </p>
+     * the qname has the format: qname := [prefix ':'] local;
+     *
+     * @param qname a qualified name
+     * @return the localname
+     *
+     * @see #getNamespacePrefix(String)
+     *
+     * @throws NullPointerException if <code>qname</code> is <code>null</code>
+     */
+    public static String getLocalName(String qname) {
+        int pos = qname.indexOf(':');
+        return pos >=0 ? qname.substring(pos+1) : qname;
+    }
+
+    /**
      * Returns the name part of the path, delimited by the given <code>delim</code>
      *
      * @param path the path
