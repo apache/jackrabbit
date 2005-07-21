@@ -45,6 +45,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Query builder that translates a XPath statement into a query tree structure.
@@ -192,12 +194,17 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     private static final String OP_SIGN_LE = "<=";
 
     /**
+     * Map of reusable XPath parser instances indexed by NamespaceResolver.
+     */
+    private static Map parsers = new WeakHashMap();
+
+    /**
      * The root <code>QueryNode</code>
      */
     private final QueryRootNode root = new QueryRootNode();
 
     /**
-     * The {@link org.apache.jackrabbit.core.NamespaceResolver} in use
+     * The {@link NamespaceResolver} in use
      */
     private final NamespaceResolver resolver;
 
@@ -220,8 +227,23 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             // create an XQuery statement because we're actually using an
             // XQuery parser.
             statement = "for $v in " + statement + " return $v";
-            XPath query = new XPath(new StringReader(statement));
-            query.XPath2().jjtAccept(this, root);
+            // get parser
+            XPath parser;
+            synchronized (parsers) {
+                parser = (XPath) parsers.get(resolver);
+                if (parser == null) {
+                    parser = new XPath(new StringReader(statement));
+                    parsers.put(resolver, parser);
+                }
+            }
+
+            SimpleNode query;
+            // guard against concurrent use within same session
+            synchronized (parser) {
+                parser.ReInit(new StringReader(statement));
+                query = parser.XPath2();
+            }
+            query.jjtAccept(this, root);
         } catch (ParseException e) {
             throw new InvalidQueryException(e.getMessage(), e);
         } catch (Throwable t) {

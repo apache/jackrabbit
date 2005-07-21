@@ -46,6 +46,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.io.StringReader;
 
 /**
  * Implements the query builder for the JCR SQL syntax.
@@ -62,6 +65,12 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      * {@link org.apache.jackrabbit.core.query.QueryConstants.TYPE_DATE}.
      */
     private static final String DATE_PATTERN = "yyyy-MM-dd";
+
+    /**
+     * Map of reusable JCRSQL parser instances indexed by NamespaceResolver.
+     */
+    private static Map parsers = new WeakHashMap();
+
 
     /**
      * The root node of the sql query syntax tree
@@ -111,7 +120,23 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     public static QueryRootNode createQuery(String statement, NamespaceResolver resolver)
             throws InvalidQueryException {
         try {
-            JCRSQLQueryBuilder builder = new JCRSQLQueryBuilder(JCRSQLParser.parse(statement, resolver), resolver);
+            // get parser
+            JCRSQLParser parser;
+            synchronized (parsers) {
+                parser = (JCRSQLParser) parsers.get(resolver);
+                if (parser == null) {
+                    parser = new JCRSQLParser(new StringReader(statement));
+                    parser.setNamespaceResolver(resolver);
+                    parsers.put(resolver, parser);
+                }
+            }
+
+            JCRSQLQueryBuilder builder;
+            // guard against concurrent use within same session
+            synchronized (parser) {
+                parser.ReInit(new StringReader(statement));
+                builder = new JCRSQLQueryBuilder(parser.Query(), resolver);
+            }
             return builder.getRootNode();
         } catch (ParseException e) {
             throw new InvalidQueryException(e.getMessage());
