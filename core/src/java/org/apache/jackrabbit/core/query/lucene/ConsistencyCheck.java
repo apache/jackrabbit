@@ -254,7 +254,7 @@ class ConsistencyCheck {
          */
         public void repair() throws IOException {
             String pUUID = parentUUID;
-            while (!documents.containsKey(pUUID)) {
+            while (pUUID != null && !documents.containsKey(pUUID)) {
                 try {
                     NodeState n = (NodeState) stateMgr.getItemState(new NodeId(pUUID));
                     log.info("Reparing missing node " + getPath(n));
