@@ -102,7 +102,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
     private static Logger log = Logger.getLogger(NodeImpl.class);
 
-    protected final NodeTypeImpl nodeType;
+    /** same as ((NodeState) state).getNodeTypeName(); cached to avoid type casts */
+    protected final QName primaryTypeName;
 
     protected NodeDefinition definition;
 
@@ -118,27 +119,25 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param state      state associated with this <code>Node</code>
      * @param definition definition of <i>this</i> <code>Node</code>
      * @param listeners  listeners on life cylce changes of this <code>NodeImpl</code>
-     * @throws RepositoryException
      */
     protected NodeImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
                        NodeState state, NodeDefinition definition,
-                       ItemLifeCycleListener[] listeners)
-            throws RepositoryException {
+                       ItemLifeCycleListener[] listeners) {
         super(itemMgr, session, id, state, listeners);
         this.definition = definition;
-        NodeTypeImpl nt;
-        try {
-            nt = session.getNodeTypeManager().getNodeType(state.getNodeTypeName());
-        } catch (NoSuchNodeTypeException e) {
+        // paranoid sanity check
+        NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+        if (ntReg.isRegistered(state.getNodeTypeName())) {
+            primaryTypeName = state.getNodeTypeName();
+        } else {
             /**
              * todo need proper way of handling inconsistent/corrupt node type references
              * e.g. 'flag' nodes that refer to non-registered node types
              */
             log.warn("Fallback to nt:unstructured due to unknown node type '"
                     + state.getNodeTypeName() + "' of node " + safeGetJCRPath());
-            nt = session.getNodeTypeManager().getNodeType(NT_UNSTRUCTURED);
+            primaryTypeName = NT_UNSTRUCTURED;
         }
-        this.nodeType = nt;
     }
 
     /**
@@ -371,7 +370,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // nt:base node type
             if (name.equals(JCR_PRIMARYTYPE)) {
                 // jcr:primaryType property
-                genValues = new InternalValue[]{InternalValue.create(nodeType.getQName())};
+                genValues = new InternalValue[]{InternalValue.create(primaryTypeName)};
             } else if (name.equals(JCR_MIXINTYPES)) {
                 // jcr:mixinTypes property
                 Set mixins = thisState.getMixinTypeNames();
@@ -837,7 +836,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // existing mixin's
         HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
         // primary type
-        set.add(nodeType.getQName());
+        set.add(primaryTypeName);
         try {
             return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
@@ -958,7 +957,8 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!mixin.isMixin()) {
             throw new RepositoryException(mixinName + ": not a mixin node type");
         }
-        if (nodeType.isDerivedFrom(mixinName)) {
+        NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
+        if (primaryType.isDerivedFrom(mixinName)) {
             throw new RepositoryException(mixinName + ": already contained in primary node type");
         }
 
@@ -969,7 +969,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // existing mixin's
             HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
             // primary type
-            set.add(nodeType.getQName());
+            set.add(primaryTypeName);
             // build effective node type representing primary type including existing mixin's
             entExisting = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
             if (entExisting.includesNodeType(mixinName)) {
@@ -1078,7 +1078,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // remaining mixin's
             HashSet set = new HashSet(remainingMixins);
             // primary type
-            set.add(nodeType.getQName());
+            set.add(primaryTypeName);
             // build effective node type representing primary type including remaining mixin's
             entRemaining = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
@@ -1163,25 +1163,24 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (ntName.equals(nodeType.getQName())) {
+        if (ntName.equals(primaryTypeName)) {
             return true;
         }
 
-        if (nodeType.isDerivedFrom(ntName)) {
-            return true;
-        }
-
-        // check mixin types
-        Set mixinNames = ((NodeState) state).getMixinTypeNames();
-        if (mixinNames.isEmpty()) {
-            return false;
-        }
+        // build effective node type representing primary type incl. mixin's
+        // and check whether it includes the specified node type
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+        // mixin's
+        HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
+        // primary type
+        set.add(primaryTypeName);
         try {
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType((QName[]) mixinNames.toArray(new QName[mixinNames.size()]));
+            EffectiveNodeType ent =
+                    ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
             return ent.includesNodeType(ntName);
         } catch (NodeTypeConflictException ntce) {
-            String msg = "internal error: invalid mixin node type(s)";
+            String msg = "internal error: failed to build effective node type of "
+                    + set;
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
@@ -1732,7 +1731,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (!nodeType.hasOrderableChildNodes()) {
+        if (!getPrimaryNodeType().hasOrderableChildNodes()) {
             throw new UnsupportedRepositoryOperationException("child node ordering not supported on node " + safeGetJCRPath());
         }
 
@@ -2361,7 +2360,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        return nodeType;
+        return session.getNodeTypeManager().getNodeType(primaryTypeName);
     }
 
     /**
@@ -2459,7 +2458,8 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!mixin.isMixin()) {
             return false;
         }
-        if (nodeType.isDerivedFrom(ntName)) {
+        NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
+        if (primaryType.isDerivedFrom(ntName)) {
             return false;
         }
 
@@ -2471,7 +2471,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // existing mixin's
             HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
             // primary type
-            set.add(nodeType.getQName());
+            set.add(primaryTypeName);
             // build effective node type representing primary type including existing mixin's
             entExisting = ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
             if (entExisting.includesNodeType(ntName)) {
@@ -2568,7 +2568,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        String name = nodeType.getPrimaryItemName();
+        String name = getPrimaryNodeType().getPrimaryItemName();
         if (name == null) {
             throw new ItemNotFoundException();
         }
@@ -3564,7 +3564,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check primary type
-        if (!freeze.getFrozenPrimaryType().equals(nodeType.getQName())) {
+        if (!freeze.getFrozenPrimaryType().equals(primaryTypeName)) {
             // todo: check with spec what should happen here
             throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". PrimaryType changed.");
         }
