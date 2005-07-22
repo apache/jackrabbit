@@ -189,7 +189,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
             Iterator iter = pdCache.values().iterator();
             while (iter.hasNext()) {
                 PropertyDefinitionImpl pd = (PropertyDefinitionImpl) iter.next();
-                if (ntName.equals(pd.getDeclaringNodeType())) {
+                if (ntName.equals(pd.unwrap().getDeclaringNodeType())) {
                     iter.remove();
                 }
             }
@@ -198,7 +198,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
             Iterator iter = ndCache.values().iterator();
             while (iter.hasNext()) {
                 NodeDefinitionImpl nd = (NodeDefinitionImpl) iter.next();
-                if (ntName.equals(nd.getDeclaringNodeType())) {
+                if (ntName.equals(nd.unwrap().getDeclaringNodeType())) {
                     iter.remove();
                 }
             }
@@ -215,7 +215,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
             Iterator iter = pdCache.values().iterator();
             while (iter.hasNext()) {
                 PropertyDefinitionImpl pd = (PropertyDefinitionImpl) iter.next();
-                if (ntName.equals(pd.getDeclaringNodeType())) {
+                if (ntName.equals(pd.unwrap().getDeclaringNodeType())) {
                     iter.remove();
                 }
             }
@@ -224,7 +224,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
             Iterator iter = ndCache.values().iterator();
             while (iter.hasNext()) {
                 NodeDefinitionImpl nd = (NodeDefinitionImpl) iter.next();
-                if (ntName.equals(nd.getDeclaringNodeType())) {
+                if (ntName.equals(nd.unwrap().getDeclaringNodeType())) {
                     iter.remove();
                 }
             }
