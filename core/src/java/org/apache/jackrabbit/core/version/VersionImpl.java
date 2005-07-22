@@ -51,12 +51,11 @@ public class VersionImpl extends NodeImpl implements Version {
      * @param definition
      * @param listeners
      * @param version
-     * @throws RepositoryException
      */
     public VersionImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
                        NodeState state, NodeDefinition definition,
-                       ItemLifeCycleListener[] listeners, InternalVersion version)
-            throws RepositoryException {
+                       ItemLifeCycleListener[] listeners,
+                       InternalVersion version) {
         super(itemMgr, session, id, state, definition, listeners);
         this.version = version;
     }
