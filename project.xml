@@ -273,5 +273,14 @@
             </roles>
             <timezone>+1</timezone>
         </contributor>
+        <contributor>
+            <name>Guillaume Bort</name>
+            <email>guillaume.bort@zenexity.fr</email>
+            <organization>zenexity.fr</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
     </contributors>
 </project>
