@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.Arrays;
 
 /**
  * An <code>EffectiveNodeType</code> represents one or more
@@ -1031,14 +1032,22 @@ public class EffectiveNodeType implements Cloneable {
                         }
                     } else {
                         // child node definition
-                        // conflict
-                        String msg = "A child node definition in node type '"
-                                + def.getDeclaringNodeType()
-                                + "' conflicts with node type '"
-                                + existing.getDeclaringNodeType()
-                                + "': ambiguous residual child node definition";
-                        log.debug(msg);
-                        throw new NodeTypeConflictException(msg);
+                        NodeDef nd = (NodeDef) def;
+                        NodeDef end = (NodeDef) existing;
+                        // compare required & default primary types
+                        if (Arrays.equals(nd.getRequiredPrimaryTypes(), end.getRequiredPrimaryTypes())
+                                && (nd.getDefaultPrimaryType() == null
+                                ? end.getDefaultPrimaryType() == null
+                                : nd.getDefaultPrimaryType().equals(end.getDefaultPrimaryType()))) {
+                            // conflict
+                            String msg = "A child node definition in node type '"
+                                    + def.getDeclaringNodeType()
+                                    + "' conflicts with node type '"
+                                    + existing.getDeclaringNodeType()
+                                    + "': ambiguous residual child node definition";
+                            log.debug(msg);
+                            throw new NodeTypeConflictException(msg);
+                        }
                     }
                 }
             }

@@ -1716,7 +1716,7 @@ public class NodeTypeRegistry implements Constants {
          * be "[a, b, c]").
          *
          * @return string representation of this sorted set
-         * @see AbstractCollection#toString
+         * @see java.util.AbstractCollection#toString
          */
         String getKey() {
             return set.toString();
