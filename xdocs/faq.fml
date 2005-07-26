@@ -141,4 +141,239 @@
     </faq>
   </part>
 
+  <part id="pms">
+    <title>Persistence managers</title>
+
+    <faq id="whats-pm">
+      <question>
+        What is a persistence manager?
+      </question>
+      <answer>
+        <p>
+          A persistence manager (PM) is an <em>internal</em> Jackrabbit
+          component that handles the persistent storage of content nodes
+          and properties. Each workspace of a Jackrabbit content repository
+          uses a separate persistence manager to store the content in that
+          workspace. Also the Jackrabbit version handler uses a separate
+          persistence manager.
+        </p>
+        <p>
+          The persistence manager sits at the very bottom layer of the
+          Jackrabbit system architecture. Reliability, integrity and
+          performance of the PM are <em>crucial</em> to the overall
+          stability and performance of the repository. If e.g. the data
+          that a PM is based upon is allowed to change through external
+          means the integrity of the repository would be at risk
+          (think of referential integrity / node references e.g.).
+        </p>
+        <p>
+          In practice, a persistence manager is any Java class that
+          implements the PersistenceManager <!-- TODO: add JavaDoc link -->
+          interface and the associated behavioural contracts. Jackrabbit
+          contains a set of built-in persistence manager classes that cover
+          most of the deployment needs. There are also a few contributed
+          persistence managers that give additional flexibility.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="whats-fs">
+      <question>
+        What is a Jackrabbit file system?
+      </question>
+      <answer>
+        <p>
+          A Jackrabbbit file system (FS) is an internal component that
+          implements standard file system operations on top of some underlying
+          storage mechanism (a normal file system, a database, a webdav server,
+          or a custom file format). A file system component is any Java class
+          that implements the FileSystem <!-- TODO: add JavaDoc link -->
+          interface and the associated behavioural contracts. File systems
+          are used in Jackrabbit both as subcomponents of the persistence
+          managers and for general storage needs (for example to store the
+          full text indexes).
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="pm-abuse">
+      <question>
+        Can I use a persistence manager to access an existing data source?
+      </question>
+      <answer>
+        <p>
+          No. The persistence manager interface was never intended as being
+          a general SPI that you could implement in order to integrate
+          external data sources with proprietary formats (e.g. a customers
+          database). The reason why we abstracted the PM interface was
+          to leave room for future performance optimizations that would
+          not affect the rest of the implementation (e.g. by storing the
+          raw data in a b-tree based database instead of individual file).
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="pm-smart">
+      <question>
+        How &quot;smart&quot; should a persistence manager be?
+      </question>
+      <answer>
+        <p>
+          A persistence manager should not be <em>intelligent</em>, i.e.
+          it should not <em>interpret</em> the content it is managing.
+          The only thing it should care about is to efficiently,
+          consistently, and reliably store and read the content encapsulated
+          in the passed NodeState and PropertyState objects. Though it
+          might be feasible to write a custom persistence manager to
+          represent existing legacy data in a level-1 (read-only) repository,
+          I don't think the same is possible for a level-2 repository and
+          I certainly would not recommend it.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="pm-available">
+      <question>
+        What persistence managers are available?
+      </question>
+      <answer>
+        <p>
+          The table below lists the currently available persistence managers,
+          along with the status and pros and cons of each PM.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Persistence manager</th>
+              <th>Status</th>
+              <th>Pros</th>
+              <th>Cons</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ObjectPersistenceManager</td>
+              <td>mature</td>
+              <td>
+                <ul>
+                  <li>Simple</li>
+                  <li>Easy to configure</li>
+                  <li>Write operations are synchronized</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>Not human readable</li>
+                  <li>An inconsistency is hard to fix without a tool</li>
+                  <li>If the JVM process is killed the repository might turn inconsistent</li>
+                  <li>Not transactional</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>XMLPersistenceManager</td>
+              <td>mature</td>
+              <td>
+                <ul>
+                  <li>Not so simple but human readable</li>
+                  <li>Easy to configure</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>If the JVM process is killed the repository might turn inconsistent</li>
+                  <li>Not transactional</li>
+                  <li>Write operations are synchronized</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>ORM persistence manager</td>
+              <td>work in progress</td>
+              <td>
+                <ul>
+                  <li>RDBMS referencial integrity (possible, but not implemented yet)</li>
+                  <li>Transactional</li>
+                  <li>Multithreaded friendly. Write operations don't need to be synchronized.</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>Not so simple</li>
+                  <li>Not so easy to configure</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </answer>
+    </faq>
+  
+    <faq id="fs-available">
+      <question>
+        What Jackrabbit file systems are available?
+      </question>
+      <answer>
+        <p>
+          The table below lists the currently available Jackrabbit file systems,
+          along with the status and pros and cons of each FS.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>File system</th>
+              <th>Status</th>
+              <th>Pros</th>
+              <th>Cons</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>LocalFileSystem</td>
+              <td>mature</td>
+              <td></td>
+              <td>
+                <ul>
+                  <li>Slow on Windows boxes</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>CQFS file system</td>
+              <td>mature</td>
+              <td>
+                <ul>
+                  <li>Fast on Windows boxes</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>Undocumented configuration options</li>
+                  <li>Proprietary binary format</li>
+                  <li>Not open source</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </answer>
+    </faq>
+
+    <faq id="which-pm-fs">
+      <question>
+        Which persistence manager and file systems should I use?
+      </question>
+      <answer>
+        <p>
+          The answer depends on your priorities. If you want to store
+          your data in an accessible format (just in case or for manual
+          debugging), you might want to try the XMLPersistenceManager
+          and the LocalFileSystem. If you use Windows and performance is
+          a must, you might want to try the ObjectPersistenceManager and
+          the proprietary CQFS.
+        </p>
+      </answer>
+    </faq>
+  </part>
+
 </faqs>
