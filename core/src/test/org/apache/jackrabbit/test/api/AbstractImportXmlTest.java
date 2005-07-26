@@ -390,7 +390,9 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
     public void serialize(Document document) throws IOException {
         BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
         try {
-            OutputFormat format = new OutputFormat("xml", "UTF-8", true);
+            // disable pretty printing/default line wrapping!
+            boolean indenting = false;
+            OutputFormat format = new OutputFormat("xml", "UTF-8", indenting);
             XMLSerializer serializer = new XMLSerializer(bos, format);
             serializer.serialize(document);
         } finally {
