@@ -984,7 +984,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // do the actual modifications implied by the new mixin;
-        // try to revert the changes in case an excpetion occurs
+        // try to revert the changes in case an exception occurs
         try {
             // modify the state of this node
             NodeState thisState = (NodeState) getOrCreateTransientItemState();
