@@ -264,7 +264,7 @@ class SysViewImportHandler extends TargetImportHandler {
                 }
                 for (int i = 0; i < currentPropValues.size(); i++) {
                     AppendableValue val =
-                            (AppendableValue) currentPropValues.get(0);
+                            (AppendableValue) currentPropValues.get(i);
                     String s = null;
                     try {
                         s = val.retrieve();
