@@ -39,6 +39,7 @@
     <item name="JCR&#xA0;API&#xA0;Documentation" href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/" target="_blank"/>
     <item name="Layout"                 href="/layout.html"/>
     <item name="Downloads"              href="/downloads.html"/>
+    <item name="FAQ"                    href="/faq.html"/>
     <item name="Jackrabbit components"  href="/projects-overview.html"/>
   </menu>
  </body>

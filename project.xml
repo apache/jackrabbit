@@ -283,4 +283,9 @@
             <timezone>+1</timezone>
         </contributor>
     </contributors>
+
+    <reports>
+        <report>maven-faq-plugin</report>
+    </reports>
+
 </project>
