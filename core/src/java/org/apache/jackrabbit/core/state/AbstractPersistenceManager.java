@@ -86,7 +86,9 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
             if (refs.hasReferences()) {
                 store(refs);
             } else {
-                destroy(refs);
+                if (exists(refs.getTargetId())) {
+                    destroy(refs);
+                }
             }
         }
     }
