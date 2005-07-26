@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Copyright 2004-2005 The Apache Software Foundation or its licensors,
+                       as applicable.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<faqs title="Frequently Asked Questions">
+
+  <part id="general">
+    <title>General</title>
+
+    <faq id="whats-jcr">
+      <question>
+        What is JCR?
+      </question>
+      <answer>
+        <p>
+          JCR is the acronym of the
+          <a href="http://jcp.org/en/jsr/detail?id=170">JSR 170: Content
+          Repository for Java&#8482; technology API</a>. The JCR API is
+          a standardized interface for accessing a content repository.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="whats-cr">
+      <question>
+        What is a content repository?
+      </question>
+      <answer>
+        <p>
+          A content repository is an information management system that
+          provides various services for storing, accessing, and managing
+          content. In addition to a hierarchically structured storage system,
+          common services of a content repository are versioning,
+          access control, full text searching, and event monitoring.
+        </p>
+        <p>
+          A content repository is <em>not</em> a content management
+          system (CMS), although most of the existing CMSs contain a
+          more or less featured custom content repository implementation.
+          A CMS uses a content repository as an underlying component
+          for presentation, business logic, and other features.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="whats-jackrabbit">
+      <question>
+        What is Jackrabbit?
+      </question>
+      <answer>
+        <p>
+          The Apache Jackrabbit is a fully featured content repository
+          implementation of the JCR API. The Jackrabbit project was started
+          when the <a href="http://www.day.com/">Day Software</a>, the JSR-170
+          specification lead, licensed their initial implementation of the
+          JCR reference implementation. Since then the Jackrabbit codebase
+          has been used for the official reference implementation (RI) and 
+          technology compatibility kit (TCK) released along with the final
+          JCR API.
+        </p>
+        <p>
+          The Jackrabbit project is currently <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">working towards</a>
+          making the first official release and is aiming to graduate from
+          the <a href="http://incubator.apache.org/">Apache Incubator</a>
+          shortly before or after the first release.
+        </p>
+      </answer>
+    </faq>
+  </part>
+
+  <part id="using">
+    <title>Using Jackrabbit</title>
+
+    <faq id="howto-jcr">
+      <question>
+        How do I do X with JCR/Jackrabbit?
+      </question>
+      <answer>
+        <p>
+          See the <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html">JCR specification</a>,
+          the <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/">JCR API documentation</a>,
+          or the <a href="http://wiki.apache.org/jackrabbit/ExamplesPage">Examples page</a>
+          on the <a href="http://wiki.apache.org/jackrabbit/FrontPage">Jackrabbit wiki</a>
+          for information on how to perform various operation using the JCR API.
+        </p>
+        <p>
+          For Jackrabbit features (like access control and node type management)
+          not covered by the JCR API, see the
+          <a href="http://wiki.apache.org/jackrabbit/ExamplesPage">Examples page</a>
+          on the wiki, the Jackrabbit javadocs (to be published on the web),
+          or contact the <a href="http://incubator.apache.org/jackrabbit/mail-lists.html">Jackrabbit mailing list</a>.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="using-jta">
+      <question>
+        How do I use transactions with JCR?
+      </question>
+      <answer>
+        <p>
+          See the 
+          <a href="http://article.gmane.org/gmane.comp.apache.jackrabbit.devel/446">mailing list announcement</a>
+          for a simple example on using the <a href="http://java.sun.com/products/jta/">JTA</a>
+          support in Jackrabbit.
+        </p>
+        <p>
+          For a more complete explanation of the transaction features, please
+          see section 8.1 Transactions of the
+          <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html">JCR specification</a>.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="create-workspace">
+      <question>
+        How do I create new workspaces in Jackrabbit?
+      </question>
+      <answer>
+        <p>
+          The JCR API does not contain features for creating or managing
+          workspaces, so you need to use Jackrabbit-specific functionality
+          for creating new workspaces. See the related
+          <a href="http://thread.gmane.org/gmane.comp.apache.jackrabbit.devel/2660">mailing list thread</a>
+          for more instructions.
+        </p>
+      </answer>
+    </faq>
+  </part>
+
+</faqs>
