@@ -475,8 +475,10 @@ public class PropertyImpl extends ItemImpl implements Property {
         } catch (RepositoryException e) {
             throw e;
         } catch (Exception e) {
-            //return InternalValue.create(0).toJCRValue(session.getNamespaceResolver());
-            throw new RepositoryException("Unable to get value of " + safeGetJCRPath() + ":" + e);
+            String msg = "Internal error while retrieving value of "
+                    + safeGetJCRPath();
+            log.error(msg, e);
+            throw new RepositoryException(msg, e);
         }
     }
 
