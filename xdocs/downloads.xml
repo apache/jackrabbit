@@ -89,7 +89,8 @@
             JDK 1.5 users need to download the <code>xalan.jar</code> file
             that contains the Xalan Interpretive Processor from
             <a href="http://xml.apache.org/xalan-j/">Xalan-Java</a> and place
-            it in <code>$MAVEN_HOME/lib/endorsed</code> to build the
+            it in <code>$MAVEN_HOME/lib/endorsed</code> (or
+            <code>$JRE/lib/endorsed</code> if using Maven 1.1) to build the
             Jackrabbit sources. The reason for this workaround is explained in
             <a href="http://issues.apache.org/jira/browse/JCR-46">JCR-46</a>.
          </p>
