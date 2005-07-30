@@ -102,8 +102,9 @@ above can thus also be performed by running
   maven
 
 NOTE: JDK 1.5 users need to download xalan.jar and place it in
-$MAVEN_HOME/lib/endorsed to build the Jackrabbit sources. The
-reason for this workaround is explained in
+$MAVEN_HOME/lib/endorsed (or $JRE/lib/endorsed if using Maven 1.1)
+to build the Jackrabbit sources. The reason for this workaround is
+explained in
 
    http://issues.apache.org/jira/browse/JCR-46
 
