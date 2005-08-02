@@ -251,7 +251,8 @@ public class ValueFactoryTest extends AbstractJCRTest {
                     try {
                         value = valueFactory.createValue(dateValueFail,PropertyType.DATE);
                         fail("Conversion from String " + dateValueFail
-                                + " to a Date value should throw ValueFormatException.");
+                                + " to a " + PropertyType.nameFromValue(types[i])
+                                + " value should throw ValueFormatException.");
                     } catch (ValueFormatException vfe) {
                         //ok
                     }
@@ -261,7 +262,8 @@ public class ValueFactoryTest extends AbstractJCRTest {
                     try {
                         value = valueFactory.createValue(doubleValueFail,PropertyType.DOUBLE);
                         fail("Conversion from String " + doubleValueFail
-                            + " to a Date value should throw ValueFormatException.");
+                                + " to a " + PropertyType.nameFromValue(types[i])
+                                + " value should throw ValueFormatException.");
                     } catch (ValueFormatException vfe) {
                         //ok
                     }
@@ -271,7 +273,8 @@ public class ValueFactoryTest extends AbstractJCRTest {
                     try {
                         value = valueFactory.createValue(longValueFail,PropertyType.LONG);
                         fail("Conversion from String " + longValueFail
-                            + " to a Date value should throw ValueFormatException.");
+                                + " to a " + PropertyType.nameFromValue(types[i])
+                                + " value should throw ValueFormatException.");
                     } catch (ValueFormatException vfe) {
                         //ok
                     }
@@ -281,7 +284,8 @@ public class ValueFactoryTest extends AbstractJCRTest {
                     try {
                         value = valueFactory.createValue(nameValueFail,PropertyType.NAME);
                         fail("Conversion from String " + nameValueFail
-                            + " to a Date value should throw ValueFormatException.");
+                                + " to a " + PropertyType.nameFromValue(types[i])
+                                + " value should throw ValueFormatException.");
                     } catch (ValueFormatException vfe) {
                         //ok
                     }
@@ -291,7 +295,8 @@ public class ValueFactoryTest extends AbstractJCRTest {
                     try {
                         value = valueFactory.createValue(pathValueFail,PropertyType.PATH);
                         fail("Conversion from String " + pathValueFail
-                            + " to a Date value should throw ValueFormatException.");
+                                + " to a " + PropertyType.nameFromValue(types[i])
+                                + " value should throw ValueFormatException.");
                     } catch (ValueFormatException vfe) {
                         //ok
                     }
