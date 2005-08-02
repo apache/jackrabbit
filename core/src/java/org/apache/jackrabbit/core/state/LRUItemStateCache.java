@@ -42,7 +42,7 @@ public class LRUItemStateCache implements ItemStateCache {
 
     /**
      * Constructs a new, empty <code>ItemStateCache</code> with a maximum size
-     * of 1000 and a load factor of 0.8.
+     * of 1000.
      */
     public LRUItemStateCache() {
         this(DEFAULT_MAX_SIZE);
