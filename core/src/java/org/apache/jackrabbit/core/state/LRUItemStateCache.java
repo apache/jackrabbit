@@ -33,7 +33,7 @@ public class LRUItemStateCache implements ItemStateCache {
     private static Logger log = Logger.getLogger(LRUItemStateCache.class);
 
     /** default maximum size of this cache */
-    public static final int DEFAULT_MAX_SIZE = 5000;
+    public static final int DEFAULT_MAX_SIZE = 1000;
 
     /**
      * A cache for <code>ItemState</code> instances
