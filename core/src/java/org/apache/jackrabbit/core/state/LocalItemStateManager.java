@@ -25,19 +25,24 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
-import java.io.PrintStream;
 
 /**
  * Local <code>ItemStateManager</code> that isolates changes to
  * persistent states from other clients.
  */
-public class LocalItemStateManager extends ItemStateCache
+public class LocalItemStateManager
         implements UpdatableItemStateManager, ItemStateListener {
 
     /**
      * Logger instance
      */
     private static Logger log = Logger.getLogger(LocalItemStateManager.class);
+
+    /**
+     * cache of weak references to ItemState objects issued by this
+     * ItemStateManager
+     */
+    private final ItemStateReferenceCache cache;
 
     /**
      * Shared item state manager
@@ -70,7 +75,9 @@ public class LocalItemStateManager extends ItemStateCache
      *                       manager. Version item states are not associated with a specific workspace
      *                       instance.
      */
-    public LocalItemStateManager(SharedItemStateManager sharedStateMgr, WorkspaceImpl wspImpl) {
+    public LocalItemStateManager(SharedItemStateManager sharedStateMgr,
+                                 WorkspaceImpl wspImpl) {
+        cache = new ItemStateReferenceCache();
         this.sharedStateMgr = sharedStateMgr;
         this.wspImpl = wspImpl;
     }
@@ -80,7 +87,7 @@ public class LocalItemStateManager extends ItemStateCache
      */
     public void dispose() {
         // clear cache
-        evictAll();
+        cache.evictAll();
     }
 
     /**
@@ -101,7 +108,7 @@ public class LocalItemStateManager extends ItemStateCache
         state = new NodeState(state, state.getStatus(), false);
 
         // put it in cache
-        cache(state);
+        cache.cache(state);
 
         // register as listener
         state.addListener(this);
@@ -126,23 +133,11 @@ public class LocalItemStateManager extends ItemStateCache
         state = new PropertyState(state, state.getStatus(), false);
 
         // put it in cache
-        cache(state);
+        cache.cache(state);
 
         // register as listener
         state.addListener(this);
         return state;
-    }
-
-    /**
-     * Dumps the state of this <code>LocalItemStateManager</code> instance
-     * (used for diagnostic purposes).
-     *
-     * @param ps
-     */
-    public void dump(PrintStream ps) {
-        ps.println("LocalItemStateManager (" + this + ")");
-        ps.println();
-        super.dump(ps);
     }
 
     //-----------------------------------------------------< ItemStateManager >
@@ -159,8 +154,8 @@ public class LocalItemStateManager extends ItemStateCache
         }
 
         // check cache. synchronized to ensure an entry is not created twice.
-        synchronized (cacheMonitor) {
-            state = retrieve(id);
+        synchronized (cache) {
+            state = cache.retrieve(id);
             if (state == null) {
                 // regular behaviour
                 if (id.denotesNode()) {
@@ -189,7 +184,7 @@ public class LocalItemStateManager extends ItemStateCache
         }
 
         // check cache
-        if (isCached(id)) {
+        if (cache.isCached(id)) {
             return true;
         }
 
@@ -375,7 +370,7 @@ public class LocalItemStateManager extends ItemStateCache
     public void stateDestroyed(ItemState destroyed) {
         destroyed.removeListener(this);
 
-        evict(destroyed.getId());
+        cache.evict(destroyed.getId());
     }
 
     /**
@@ -384,6 +379,6 @@ public class LocalItemStateManager extends ItemStateCache
     public void stateDiscarded(ItemState discarded) {
         discarded.removeListener(this);
 
-        evict(discarded.getId());
+        cache.evict(discarded.getId());
     }
 }

@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
@@ -24,24 +23,39 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 /**
  * <code>TransientItemStateManager</code> ...
  */
-class TransientItemStateManager extends ItemStateCache implements ItemStateManager {
+class TransientItemStateManager implements ItemStateManager {
 
     private static Logger log = Logger.getLogger(TransientItemStateManager.class);
 
-    private final Attic attic;
+    /**
+     * map of those states that have been removed transiently
+     */
+    private final ItemStateMap atticMap;
+
+    /**
+     * map of new or modified transient states
+     */
+    private final ItemStateMap transientMap;
+
+    /**
+     * ItemStateManager view of the states in the attic; lazily instantiated
+     * in {@link #getAttic()}
+     */
+    private AtticItemStateManager attic;
 
     /**
      * Creates a new <code>TransientItemStateManager</code> instance.
      */
     TransientItemStateManager() {
-        // we're keeping hard references in the cache
-        super(ReferenceMap.HARD, ReferenceMap.HARD);
-        attic = new Attic();
+        transientMap = new ItemStateMap();
+        atticMap = new ItemStateMap();
     }
 
     /**
@@ -54,10 +68,10 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         ps.println("TransientItemStateManager (" + this + ")");
         ps.println();
         ps.print("[transient] ");
-        super.dump(ps);
+        transientMap.dump(ps);
         ps.println();
         ps.print("[attic]     ");
-        attic.dump(ps);
+        atticMap.dump(ps);
     }
 
     //----------------------------------------------------< ItemStateProvider >
@@ -67,7 +81,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        ItemState state = retrieve(id);
+        ItemState state = transientMap.get(id);
         if (state != null) {
             return state;
         } else {
@@ -79,7 +93,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
      * {@inheritDoc}
      */
     public boolean hasItemState(ItemId id) {
-        return isCached(id);
+        return transientMap.contains(id);
     }
 
     /**
@@ -104,42 +118,42 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
      * @return
      */
     boolean hasAnyItemStates() {
-        return !isEmpty();
+        return !transientMap.isEmpty();
     }
 
     /**
      * @return
      */
     boolean hasAnyItemStatesInAttic() {
-        return !attic.isEmpty();
+        return !atticMap.isEmpty();
     }
 
     /**
      * @return
      */
     int getEntriesCount() {
-        return size();
+        return transientMap.size();
     }
 
     /**
      * @return
      */
     int getEntriesInAtticCount() {
-        return attic.size();
+        return atticMap.size();
     }
 
     /**
      * @return
      */
     Iterator getEntries() {
-        return entries();
+        return transientMap.values().iterator();
     }
 
     /**
      * @return
      */
     Iterator getEntriesInAttic() {
-        return attic.entries();
+        return atticMap.values().iterator();
     }
 
     //----------------< methods for creating & discarding ItemState instances >
@@ -157,9 +171,9 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
 
         NodeId id = new NodeId(uuid);
 
-        // check cache. synchronized to ensure an entry is not created twice.
-        synchronized (cacheMonitor) {
-            if (isCached(id)) {
+        // check map; synchronized to ensure an entry is not created twice.
+        synchronized (transientMap) {
+            if (transientMap.contains(id)) {
                 String msg = "there's already a node state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
@@ -167,8 +181,8 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
 
             NodeState state = new NodeState(uuid, nodeTypeName, parentUUID,
                     initialStatus, true);
-            // put it in cache
-            cache(state);
+            // put transient state in the map
+            transientMap.put(state);
             return state;
         }
     }
@@ -184,17 +198,17 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
 
         ItemId id = overlayedState.getId();
 
-        // check cache. synchronized to ensure an entry is not created twice.
-        synchronized (cacheMonitor) {
-            if (isCached(id)) {
+        // check map; synchronized to ensure an entry is not created twice.
+        synchronized (transientMap) {
+            if (transientMap.contains(id)) {
                 String msg = "there's already a node state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
             }
 
             NodeState state = new NodeState(overlayedState, initialStatus, true);
-            // put it in cache
-            cache(state);
+            // put transient state in the map
+            transientMap.put(state);
             return state;
         }
     }
@@ -211,17 +225,17 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
 
         PropertyId id = new PropertyId(parentUUID, propName);
 
-        // check cache. synchronized to ensure an entry is not created twice.
-        synchronized (cacheMonitor) {
-            if (isCached(id)) {
+        // check map; synchronized to ensure an entry is not created twice.
+        synchronized (transientMap) {
+            if (transientMap.contains(id)) {
                 String msg = "there's already a property state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
             }
 
             PropertyState state = new PropertyState(propName, parentUUID, initialStatus, true);
-            // put it in cache
-            cache(state);
+            // put transient state in the map
+            transientMap.put(state);
             return state;
         }
     }
@@ -238,23 +252,24 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         PropertyId id = new PropertyId(overlayedState.getParentUUID(),
                 overlayedState.getName());
 
-        // check cache. synchronized to ensure an entry is not created twice.
-        synchronized (cacheMonitor) {
-            if (isCached(id)) {
+        // check map; synchronized to ensure an entry is not created twice.
+        synchronized (transientMap) {
+            if (transientMap.contains(id)) {
                 String msg = "there's already a property state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
             }
 
             PropertyState state = new PropertyState(overlayedState, initialStatus, true);
-            // put it in cache
-            cache(state);
+            // put transient state in the map
+            transientMap.put(state);
             return state;
         }
     }
 
     /**
-     * Disposes the specified instance, i.e. discards it and clears it from cache.
+     * Disposes the specified instance, i.e. discards it and removes it from
+     * the map.
      *
      * @param state the <code>ItemState</code> instance that should be disposed
      * @see ItemState#discard()
@@ -263,23 +278,23 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         // discard item state, this will invalidate the wrapping Item
         // instance of the transient state
         state.discard();
-        // remove from cache
-        evict(state.getId());
+        // remove from map
+        transientMap.remove(state.getId());
         // give the instance a chance to prepare to get gc'ed
         state.onDisposed();
     }
 
     /**
-     * Transfers the specified instance from the 'active' cache to the attic.
+     * Transfers the specified instance from the 'active' map to the attic.
      *
      * @param state the <code>ItemState</code> instance that should be moved to
      *              the attic
      */
     void moveItemStateToAttic(ItemState state) {
-        // remove from cache
-        evict(state.getId());
+        // remove from map
+        transientMap.remove(state.getId());
         // add to attic
-        attic.cache(state);
+        atticMap.put(state);
     }
 
     /**
@@ -294,7 +309,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         // instance of the transient state
         state.discard();
         // remove from attic
-        attic.evict(state.getId());
+        atticMap.remove(state.getId());
         // give the instance a chance to prepare to get gc'ed
         state.onDisposed();
     }
@@ -303,14 +318,16 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
      * Disposes all transient item states in the cache and in the attic.
      */
     void disposeAllItemStates() {
-        // dispose item states in cache
-        Iterator iter = entries();
+        // dispose item states in transient map & attic
+        // (use temp collection to avoid ConcurrentModificationException)
+        Collection tmp = new ArrayList(transientMap.values());
+        Iterator iter = tmp.iterator();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             disposeItemState(state);
         }
-        // dispose item states in attic
-        iter = attic.entries();
+        tmp = new ArrayList(atticMap.values());
+        iter = tmp.iterator();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             disposeItemStateInAttic(state);
@@ -324,14 +341,21 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
      * @return attic
      */
     ItemStateManager getAttic() {
+        if (attic == null) {
+            attic = new AtticItemStateManager();
+        }
         return attic;
     }
 
     //--------------------------------------------------------< inner classes >
-    class Attic extends ItemStateCache implements ItemStateManager {
+    /**
+     * ItemStateManager view of the states in the attic
+     *
+     * @see TransientItemStateManager#getAttic
+     */
+    private class AtticItemStateManager implements ItemStateManager {
 
-        Attic() {
-            super(ReferenceMap.HARD, ReferenceMap.HARD);
+        AtticItemStateManager() {
         }
 
         /**
@@ -340,7 +364,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
         public ItemState getItemState(ItemId id)
                 throws NoSuchItemStateException, ItemStateException {
 
-            ItemState state = retrieve(id);
+            ItemState state = atticMap.get(id);
             if (state != null) {
                 return state;
             } else {
@@ -352,7 +376,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
          * {@inheritDoc}
          */
         public boolean hasItemState(ItemId id) {
-            return isCached(id);
+            return atticMap.contains(id);
         }
 
         /**
@@ -360,7 +384,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
          */
         public NodeReferences getNodeReferences(NodeReferencesId id)
                 throws NoSuchItemStateException, ItemStateException {
-
+            // n/a
             throw new ItemStateException("getNodeReferences() not implemented");
         }
 
@@ -368,6 +392,7 @@ class TransientItemStateManager extends ItemStateCache implements ItemStateManag
          * {@inheritDoc}
          */
         public boolean hasNodeReferences(NodeReferencesId id) {
+            // n/a
             return false;
         }
     }
