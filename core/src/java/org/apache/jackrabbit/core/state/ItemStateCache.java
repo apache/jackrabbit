@@ -16,205 +16,88 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.log4j.Logger;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
+import java.util.Set;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * An <code>ItemStateCache</code> maintains a cache of <code>ItemState</code>
  * instances.
  */
-public abstract class ItemStateCache {
-    private static Logger log = Logger.getLogger(ItemStateCache.class);
-
+public interface ItemStateCache {
     /**
-     * A cache for <code>ItemState</code> instances
-     */
-    private final Map cache;
-
-    /**
-     * Monitor for cache object. Derived classes should synchronize on
-     * this monitor when the identity of cached objects is critical, i.e.
-     * when object should not be cached more than once.
-     */
-    protected final Object cacheMonitor = new Object();
-
-    /**
-     * Creates a new <code>ItemStateCache</code> that will use instance
-     * hard references to keys and soft references to values.
-     */
-    protected ItemStateCache() {
-        // setup cache with soft references to ItemState instances
-        this(ReferenceMap.HARD, ReferenceMap.SOFT);
-    }
-
-    /**
-     * Creates a new <code>ItemStateCache</code> instance that will use the
-     * specified types of references.
+     * Returns <code>true</code> if this cache contains an <code>ItemState</code>
+     * object with the specified <code>id</code>.
      *
-     * @param keyType   the type of reference to use for keys (i.e. the item paths)
-     * @param valueType the type of reference to use for values (i.e. the item-datas)
-     * @see ReferenceMap#HARD
-     * @see ReferenceMap#SOFT
-     * @see ReferenceMap#WEAK
+     * @param id id of <code>ItemState</code> object whose presence should be
+     *           tested.
+     * @return <code>true</code> if there's a corresponding cache entry,
+     *         otherwise <code>false</code>.
      */
-    protected ItemStateCache(int keyType, int valueType) {
-        cache = new ReferenceMap(keyType, valueType);
-    }
+    boolean isCached(ItemId id);
 
     /**
-     * Checks if there's already a corresponding cache entry for
-     * <code>id</code>.
+     * Returns the <code>ItemState</code> object with the specified
+     * <code>id</code> if it is present or <code>null</code> if no entry exists
+     * with that <code>id</code>.
      *
-     * @param id id of a <code>ItemState</code> object
-     * @return true if there's a corresponding cache entry, otherwise false.
+     * @param id the id of the <code>ItemState</code> object to be returned.
+     * @return the <code>ItemState</code> object with the specified
+     *         <code>id</code> or or <code>null</code> if no entry exists
+     *         with that <code>id</code>
      */
-    protected boolean isCached(ItemId id) {
-        return cache.containsKey(id);
-    }
+    ItemState retrieve(ItemId id);
 
     /**
-     * Returns an item-state reference from the cache.
-     *
-     * @param id the id of the <code>ItemState</code> object whose
-     *           reference should be retrieved from the cache.
-     * @return the <code>ItemState</code> reference stored in the corresponding
-     *         cache entry or <code>null</code> if there's no corresponding
-     *         cache entry.
-     */
-    protected ItemState retrieve(ItemId id) {
-        return (ItemState) cache.get(id);
-    }
-
-    /**
-     * Puts the reference to an <code>ItemState</code> object in the cache using its path as the key.
+     * Stores the specified <code>ItemState</code> object in the map
+     * using its <code>ItemId</code> as the key.
      *
      * @param state the <code>ItemState</code> object to cache
      */
-    protected void cache(ItemState state) {
-        ItemId id = state.getId();
-        if (cache.containsKey(id)) {
-            log.warn("overwriting cached entry " + id);
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("caching " + id);
-        }
-        cache.put(id, state);
-    }
+    void cache(ItemState state);
 
     /**
-     * Removes a cache entry for a specific id.
+     * Removes the <code>ItemState</code> object with the specified id from
+     * this cache if it is present.
      *
-     * @param id the id of the <code>ItemState</code> object whose
-     *           reference should be removed from the cache.
+     * @param id the id of the <code>ItemState</code> object which should be
+     *           removed from this cache.
      */
-    protected void evict(ItemId id) {
-        if (log.isDebugEnabled()) {
-            log.debug("removing entry " + id + " from cache");
-        }
-        cache.remove(id);
-    }
+    void evict(ItemId id);
 
     /**
-     * Clears all entries from the cache.
+     * Clears all entries from this cache.
      */
-    protected void evictAll() {
-        if (log.isDebugEnabled()) {
-            log.debug("removing all entries from cache");
-        }
-        cache.clear();
-    }
+    void evictAll();
 
     /**
-     * Returns <code>true</code> if the cache contains no entries.
+     * Returns <code>true</code> if this cache contains no entries.
      *
-     * @return <code>true</code> if the cache contains no entries.
+     * @return <code>true</code> if this cache contains no entries.
      */
-    protected boolean isEmpty() {
-        return cache.isEmpty();
-    }
+    boolean isEmpty();
 
     /**
-     * Returns the number of entries in the cache.
+     * Returns the number of entries in this cache.
      *
-     * @return number of entries in the cache.
+     * @return number of entries in this cache.
      */
-    protected int size() {
-        return cache.size();
-    }
+    int size();
 
     /**
-     * Returns an iterator of the keys (i.e. <code>ItemId</code> objects)
-     * of the cached entries.
+     * Returns an unmodifiable set view of the keys (i.e. <code>ItemId</code>
+     * objects) of the cached entries.
      *
-     * @return an iterator of the keys of the cached entries.
+     * @return a set view of the keys of the cached entries.
      */
-    protected Iterator keys() {
-        // use temp collection to avoid ConcurrentModificationException
-        Collection tmp = new ArrayList(cache.keySet());
-        return tmp.iterator();
-    }
+    Set keySet();
 
     /**
-     * Returns an iterator of the entries (i.e. <code>ItemState</code> objects)
-     * in the cache.
+     * Returns an unmodifiable collection view of the values (i.e.
+     * <code>ItemState</code> objects) contained in this cache.
      *
-     * @return an iterator of the entries in the cache.
+     * @return a collection view of the values contained in this cache.
      */
-    protected Iterator entries() {
-        // use temp collection to avoid ConcurrentModificationException
-        Collection tmp = new ArrayList(cache.values());
-        return tmp.iterator();
-    }
-
-    /**
-     * Dumps the state of this <code>ItemStateCache</code> instance
-     * (used for diagnostic purposes).
-     *
-     * @param ps
-     */
-    void dump(PrintStream ps) {
-        ps.println("entries in cache:");
-        ps.println();
-        Iterator iter = keys();
-        while (iter.hasNext()) {
-            ItemId id = (ItemId) iter.next();
-            ItemState state = retrieve(id);
-            dumpItemState(id, state, ps);
-        }
-    }
-
-    private void dumpItemState(ItemId id, ItemState state, PrintStream ps) {
-        ps.print(state.isNode() ? "Node: " : "Prop: ");
-        switch (state.getStatus()) {
-            case ItemState.STATUS_EXISTING:
-                ps.print("[existing]           ");
-                break;
-            case ItemState.STATUS_EXISTING_MODIFIED:
-                ps.print("[existing, modified] ");
-                break;
-            case ItemState.STATUS_EXISTING_REMOVED:
-                ps.print("[existing, removed]  ");
-                break;
-            case ItemState.STATUS_NEW:
-                ps.print("[new]                ");
-                break;
-            case ItemState.STATUS_STALE_DESTROYED:
-                ps.print("[stale, destroyed]   ");
-                break;
-            case ItemState.STATUS_STALE_MODIFIED:
-                ps.print("[stale, modified]    ");
-                break;
-            case ItemState.STATUS_UNDEFINED:
-                ps.print("[undefined]          ");
-                break;
-        }
-        ps.println(id + " (" + state + ")");
-    }
+    Collection values();
 }

@@ -93,11 +93,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     public void dump(PrintStream ps) {
         ps.println("SessionItemStateManager (" + this + ")");
         ps.println();
-        // FIXME hack!
-        if (persistentStateMgr instanceof ItemStateCache) {
-            ((ItemStateCache) persistentStateMgr).dump(ps);
-            ps.println();
-        }
         transientStateMgr.dump(ps);
         ps.println();
     }
@@ -292,7 +287,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
      * @return
      */
     public boolean hasAnyTransientItemStates() {
-        return !transientStateMgr.isEmpty();
+        return transientStateMgr.hasAnyItemStates();
     }
 
     /**

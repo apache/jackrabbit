@@ -34,7 +34,6 @@ import org.apache.log4j.Logger;
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -46,7 +45,7 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
  * <code>PersistenceManager</code>. Objects returned by this item state
  * manager are shared among all sessions.
  */
-public class SharedItemStateManager extends ItemStateCache
+public class SharedItemStateManager
         implements ItemStateManager, ItemStateListener {
 
     /**
@@ -55,9 +54,15 @@ public class SharedItemStateManager extends ItemStateCache
     private static Logger log = Logger.getLogger(SharedItemStateManager.class);
 
     /**
-     * Persistence Manager to use for loading and storing items
+     * cache of weak references to ItemState objects issued by this
+     * ItemStateManager 
      */
-    protected final PersistenceManager persistMgr;
+    private final ItemStateReferenceCache cache;
+
+    /**
+     * Persistence Manager used for loading and storing items
+     */
+    private final PersistenceManager persistMgr;
 
     /**
      * Keep a hard reference to the root node state
@@ -67,12 +72,14 @@ public class SharedItemStateManager extends ItemStateCache
     /**
      * Virtual item state providers
      */
-    private VirtualItemStateProvider[] virtualProviders = new VirtualItemStateProvider[0];
+    private VirtualItemStateProvider[] virtualProviders = new
+            VirtualItemStateProvider[0];
 
     /**
      * Read-/Write-Lock to synchronize access on this item state manager.
      */
-    private final ReadWriteLock rwLock = new ReentrantWriterPreferenceReadWriteLock();
+    private final ReadWriteLock rwLock =
+            new ReentrantWriterPreferenceReadWriteLock();
 
     /**
      * Creates a new <code>SharedItemStateManager</code> instance.
@@ -85,147 +92,15 @@ public class SharedItemStateManager extends ItemStateCache
                                   String rootNodeUUID,
                                   NodeTypeRegistry ntReg)
             throws ItemStateException {
-
+        cache = new ItemStateReferenceCache();
         this.persistMgr = persistMgr;
 
         try {
-            root = getNodeState(new NodeId(rootNodeUUID));
+            root = (NodeState) getNonVirtualItemState(new NodeId(rootNodeUUID));
         } catch (NoSuchItemStateException e) {
             // create root node
             root = createRootNodeState(rootNodeUUID, ntReg);
         }
-    }
-
-    /**
-     * Disposes this <code>SharedItemStateManager</code> and frees resources.
-     */
-    public void dispose() {
-        // clear cache
-        evictAll();
-    }
-
-    /**
-     * Adds a new virtual item state provider.<p/>
-     * NOTE: This method is not synchronized, because it is called right after
-     * creation only by the same thread and therefore concurrency issues
-     * do not occur. Should this ever change, the synchronization status
-     * has to be re-examined.
-     * @param prov
-     */
-    public void addVirtualItemStateProvider(VirtualItemStateProvider prov) {
-        VirtualItemStateProvider[] provs = new VirtualItemStateProvider[virtualProviders.length + 1];
-        System.arraycopy(virtualProviders, 0, provs, 0, virtualProviders.length);
-        provs[virtualProviders.length] = prov;
-        virtualProviders = provs;
-    }
-
-    /**
-     * Create root node state
-     * @param rootNodeUUID root node UUID
-     * @param ntReg node type registry
-     * @return root node state
-     * @throws ItemStateException if an error occurs
-     */
-    private NodeState createRootNodeState(String rootNodeUUID,
-                                          NodeTypeRegistry ntReg)
-            throws ItemStateException {
-
-        NodeState rootState = createInstance(rootNodeUUID, Constants.REP_ROOT, null);
-
-        // FIXME need to manually setup root node by creating mandatory jcr:primaryType property
-        // @todo delegate setup of root node to NodeTypeInstanceHandler
-
-        // id of the root node's definition
-        NodeDefId nodeDefId;
-        // definition of jcr:primaryType property
-        PropDef propDef;
-        try {
-            nodeDefId = ntReg.getRootNodeDef().getId();
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType(Constants.REP_ROOT);
-            propDef = ent.getApplicablePropertyDef(Constants.JCR_PRIMARYTYPE,
-                    PropertyType.NAME, false);
-        } catch (NoSuchNodeTypeException nsnte) {
-            String msg = "internal error: failed to create root node";
-            log.error(msg, nsnte);
-            throw new ItemStateException(msg, nsnte);
-        } catch (ConstraintViolationException cve) {
-            String msg = "internal error: failed to create root node";
-            log.error(msg, cve);
-            throw new ItemStateException(msg, cve);
-        }
-        rootState.setDefinitionId(nodeDefId);
-
-        // create jcr:primaryType property
-        rootState.addPropertyName(propDef.getName());
-
-        PropertyState prop = createInstance(propDef.getName(), rootNodeUUID);
-        prop.setValues(new InternalValue[]{InternalValue.create(Constants.REP_ROOT)});
-        prop.setType(propDef.getRequiredType());
-        prop.setMultiValued(propDef.isMultiple());
-        prop.setDefinitionId(propDef.getId());
-
-        ChangeLog changeLog = new ChangeLog();
-        changeLog.added(rootState);
-        changeLog.added(prop);
-
-        persistMgr.store(changeLog);
-        changeLog.persisted();
-
-        return rootState;
-    }
-
-    /**
-     * Dumps the state of this <code>SharedItemStateManager</code> instance
-     * (used for diagnostic purposes).
-     *
-     * @param ps
-     */
-    public void dump(PrintStream ps) {
-        ps.println("SharedItemStateManager (" + this + ")");
-        ps.println();
-        super.dump(ps);
-    }
-
-    /**
-     * @param id
-     * @return
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
-     */
-    private NodeState getNodeState(NodeId id)
-            throws NoSuchItemStateException, ItemStateException {
-
-        // load from persisted state
-        NodeState state = persistMgr.load(id);
-        state.setStatus(ItemState.STATUS_EXISTING);
-
-        // put it in cache
-        cache(state);
-
-        // register as listener
-        state.addListener(this);
-        return state;
-    }
-
-    /**
-     * @param id
-     * @return
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
-     */
-    private PropertyState getPropertyState(PropertyId id)
-            throws NoSuchItemStateException, ItemStateException {
-
-        // load from persisted state
-        PropertyState state = persistMgr.load(id);
-        state.setStatus(ItemState.STATUS_EXISTING);
-
-        // put it in cache
-        cache(state);
-
-        // register as listener
-        state.addListener(this);
-        return state;
     }
 
     //-----------------------------------------------------< ItemStateManager >
@@ -261,28 +136,6 @@ public class SharedItemStateManager extends ItemStateCache
     }
 
     /**
-     * returns the item state for the given id without considering virtual
-     * item state providers.
-     */
-    private ItemState getNonVirtualItemState(ItemId id)
-            throws NoSuchItemStateException, ItemStateException {
-
-        // check cache. synchronized to ensure an entry is not created twice.
-        synchronized (cacheMonitor) {
-            ItemState state = retrieve(id);
-            if (state == null) {
-                // regular behaviour
-                if (id.denotesNode()) {
-                    state = getNodeState((NodeId) id);
-                } else {
-                    state = getPropertyState((PropertyId) id);
-                }
-            }
-            return state;
-        }
-    }
-
-    /**
      * {@inheritDoc}
      */
     public boolean hasItemState(ItemId id) {
@@ -294,7 +147,7 @@ public class SharedItemStateManager extends ItemStateCache
         }
 
         try {
-            if (isCached(id)) {
+            if (cache.isCached(id)) {
                 return true;
             }
 
@@ -318,26 +171,6 @@ public class SharedItemStateManager extends ItemStateCache
             rwLock.readLock().release();
         }
         return false;
-    }
-
-    /**
-     * Checks if this item state manager has the given item state without
-     * considering the virtual item state managers.
-     */
-    private boolean hasNonVirtualItemState(ItemId id) {
-        if (isCached(id)) {
-            return true;
-        }
-
-        try {
-            if (id.denotesNode()) {
-                return persistMgr.exists((NodeId) id);
-            } else {
-                return persistMgr.exists((PropertyId) id);
-            }
-        } catch (ItemStateException ise) {
-            return false;
-        }
     }
 
     /**
@@ -403,100 +236,60 @@ public class SharedItemStateManager extends ItemStateCache
         return false;
     }
 
-    //-------------------------------------------------------- other operations
-
+    //----------------------------------------------------< ItemStateListener >
     /**
-     * Create a new node state instance
-     *
-     * @param uuid         uuid
-     * @param nodeTypeName node type name
-     * @param parentUUID   parent UUID
-     * @return new node state instance
+     * {@inheritDoc}
      */
-    private NodeState createInstance(String uuid, QName nodeTypeName,
-                                     String parentUUID) {
-
-        NodeState state = persistMgr.createNew(new NodeId(uuid));
-        state.setNodeTypeName(nodeTypeName);
-        state.setParentUUID(parentUUID);
-        state.setStatus(ItemState.STATUS_NEW);
-        state.addListener(this);
-
-        return state;
+    public void stateCreated(ItemState created) {
+        cache.cache(created);
     }
 
     /**
-     * Create a new node state instance
-     *
-     * @param other other state associated with new instance
-     * @return new node state instance
+     * {@inheritDoc}
      */
-    private ItemState createInstance(ItemState other) {
-        if (other.isNode()) {
-            NodeState ns = (NodeState) other;
-            return createInstance(ns.getUUID(), ns.getNodeTypeName(), ns.getParentUUID());
-        } else {
-            PropertyState ps = (PropertyState) other;
-            return createInstance(ps.getName(), ps.getParentUUID());
-        }
+    public void stateModified(ItemState modified) {
+        // not interested
     }
 
     /**
-     * Create a new property state instance
-     *
-     * @param propName   property name
-     * @param parentUUID parent UUID
-     * @return new property state instance
+     * {@inheritDoc}
      */
-    PropertyState createInstance(QName propName, String parentUUID) {
-        PropertyState state = persistMgr.createNew(new PropertyId(parentUUID, propName));
-        state.setStatus(ItemState.STATUS_NEW);
-        state.addListener(this);
-
-        return state;
+    public void stateDestroyed(ItemState destroyed) {
+        destroyed.removeListener(this);
+        cache.evict(destroyed.getId());
     }
 
     /**
-     * Load item state from persistent storage.
-     * @param id item id
-     * @return item state
+     * {@inheritDoc}
      */
-    private ItemState loadItemState(ItemId id)
-            throws NoSuchItemStateException, ItemStateException {
+    public void stateDiscarded(ItemState discarded) {
+        discarded.removeListener(this);
+        cache.evict(discarded.getId());
+    }
 
-        if (id.denotesNode()) {
-            return persistMgr.load((NodeId) id);
-        } else {
-            return persistMgr.load((PropertyId) id);
-        }
+    //-------------------------------------------------< misc. public methods >
+    /**
+     * Disposes this <code>SharedItemStateManager</code> and frees resources.
+     */
+    public void dispose() {
+        // clear cache
+        cache.evictAll();
     }
 
     /**
-     * Check targets of modified node references exist.
-     * @param log change log
-     * @throws ItemStateException if some target was not found
+     * Adds a new virtual item state provider.<p/>
+     * NOTE: This method is not synchronized, because it is called right after
+     * creation only by the same thread and therefore concurrency issues
+     * do not occur. Should this ever change, the synchronization status
+     * has to be re-examined.
+     * @param prov
      */
-    protected void checkTargetsExist(ChangeLog log) throws ItemStateException {
-        Iterator iter = log.modifiedRefs();
-        while (iter.hasNext()) {
-            NodeReferences refs = (NodeReferences) iter.next();
-            NodeId id = new NodeId(refs.getUUID());
-
-            for (int i = 0; i < virtualProviders.length; i++) {
-                VirtualItemStateProvider provider = virtualProviders[i];
-                if (provider.hasItemState(id)) {
-                    refs = null;
-                    break;
-                }
-            }
-            if (refs != null && refs.hasReferences()) {
-                if (!log.has(id) && !hasItemState(id)) {
-                    String msg = "Target node " + id
-                            + " of REFERENCE property does not exist";
-                    throw new ItemStateException(msg);
-                }
-            }
-        }
+    public void addVirtualItemStateProvider(VirtualItemStateProvider prov) {
+        VirtualItemStateProvider[] provs =
+                new VirtualItemStateProvider[virtualProviders.length + 1];
+        System.arraycopy(virtualProviders, 0, provs, 0, virtualProviders.length);
+        provs[virtualProviders.length] = prov;
+        virtualProviders = provs;
     }
 
     /**
@@ -664,6 +457,199 @@ public class SharedItemStateManager extends ItemStateCache
         }
     }
 
+    //-------------------------------------------------------< implementation >
+    /**
+     * Create a new node state instance
+     *
+     * @param uuid         uuid
+     * @param nodeTypeName node type name
+     * @param parentUUID   parent UUID
+     * @return new node state instance
+     */
+    private NodeState createInstance(String uuid, QName nodeTypeName,
+                                     String parentUUID) {
+
+        NodeState state = persistMgr.createNew(new NodeId(uuid));
+        state.setNodeTypeName(nodeTypeName);
+        state.setParentUUID(parentUUID);
+        state.setStatus(ItemState.STATUS_NEW);
+        state.addListener(this);
+
+        return state;
+    }
+
+    /**
+     * Create root node state
+     * @param rootNodeUUID root node UUID
+     * @param ntReg node type registry
+     * @return root node state
+     * @throws ItemStateException if an error occurs
+     */
+    private NodeState createRootNodeState(String rootNodeUUID,
+                                          NodeTypeRegistry ntReg)
+            throws ItemStateException {
+
+        NodeState rootState = createInstance(rootNodeUUID, Constants.REP_ROOT, null);
+
+        // FIXME need to manually setup root node by creating mandatory jcr:primaryType property
+        // @todo delegate setup of root node to NodeTypeInstanceHandler
+
+        // id of the root node's definition
+        NodeDefId nodeDefId;
+        // definition of jcr:primaryType property
+        PropDef propDef;
+        try {
+            nodeDefId = ntReg.getRootNodeDef().getId();
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(Constants.REP_ROOT);
+            propDef = ent.getApplicablePropertyDef(Constants.JCR_PRIMARYTYPE,
+                    PropertyType.NAME, false);
+        } catch (NoSuchNodeTypeException nsnte) {
+            String msg = "internal error: failed to create root node";
+            log.error(msg, nsnte);
+            throw new ItemStateException(msg, nsnte);
+        } catch (ConstraintViolationException cve) {
+            String msg = "internal error: failed to create root node";
+            log.error(msg, cve);
+            throw new ItemStateException(msg, cve);
+        }
+        rootState.setDefinitionId(nodeDefId);
+
+        // create jcr:primaryType property
+        rootState.addPropertyName(propDef.getName());
+
+        PropertyState prop = createInstance(propDef.getName(), rootNodeUUID);
+        prop.setValues(new InternalValue[]{InternalValue.create(Constants.REP_ROOT)});
+        prop.setType(propDef.getRequiredType());
+        prop.setMultiValued(propDef.isMultiple());
+        prop.setDefinitionId(propDef.getId());
+
+        ChangeLog changeLog = new ChangeLog();
+        changeLog.added(rootState);
+        changeLog.added(prop);
+
+        persistMgr.store(changeLog);
+        changeLog.persisted();
+
+        return rootState;
+    }
+
+    /**
+     * Returns the item state for the given id without considering virtual
+     * item state providers.
+     */
+    private ItemState getNonVirtualItemState(ItemId id)
+            throws NoSuchItemStateException, ItemStateException {
+
+        // check cache; synchronized to ensure an entry is not created twice.
+        synchronized (cache) {
+            ItemState state = cache.retrieve(id);
+            if (state == null) {
+                // not found in cache, load from persistent storage
+                state = loadItemState(id);
+                state.setStatus(ItemState.STATUS_EXISTING);
+                // put it in cache
+                cache.cache(state);
+                // register as listener
+                state.addListener(this);
+            }
+            return state;
+        }
+    }
+
+    /**
+     * Checks if this item state manager has the given item state without
+     * considering the virtual item state managers.
+     */
+    private boolean hasNonVirtualItemState(ItemId id) {
+        if (cache.isCached(id)) {
+            return true;
+        }
+
+        try {
+            if (id.denotesNode()) {
+                return persistMgr.exists((NodeId) id);
+            } else {
+                return persistMgr.exists((PropertyId) id);
+            }
+        } catch (ItemStateException ise) {
+            return false;
+        }
+    }
+
+    /**
+     * Create a new node state instance
+     *
+     * @param other other state associated with new instance
+     * @return new node state instance
+     */
+    private ItemState createInstance(ItemState other) {
+        if (other.isNode()) {
+            NodeState ns = (NodeState) other;
+            return createInstance(ns.getUUID(), ns.getNodeTypeName(), ns.getParentUUID());
+        } else {
+            PropertyState ps = (PropertyState) other;
+            return createInstance(ps.getName(), ps.getParentUUID());
+        }
+    }
+
+    /**
+     * Create a new property state instance
+     *
+     * @param propName   property name
+     * @param parentUUID parent UUID
+     * @return new property state instance
+     */
+    private PropertyState createInstance(QName propName, String parentUUID) {
+        PropertyState state = persistMgr.createNew(new PropertyId(parentUUID, propName));
+        state.setStatus(ItemState.STATUS_NEW);
+        state.addListener(this);
+
+        return state;
+    }
+
+    /**
+     * Load item state from persistent storage.
+     * @param id item id
+     * @return item state
+     */
+    private ItemState loadItemState(ItemId id)
+            throws NoSuchItemStateException, ItemStateException {
+
+        if (id.denotesNode()) {
+            return persistMgr.load((NodeId) id);
+        } else {
+            return persistMgr.load((PropertyId) id);
+        }
+    }
+
+    /**
+     * Check targets of modified node references exist.
+     * @param log change log
+     * @throws ItemStateException if some target was not found
+     */
+    void checkTargetsExist(ChangeLog log) throws ItemStateException {
+        Iterator iter = log.modifiedRefs();
+        while (iter.hasNext()) {
+            NodeReferences refs = (NodeReferences) iter.next();
+            NodeId id = new NodeId(refs.getUUID());
+
+            for (int i = 0; i < virtualProviders.length; i++) {
+                VirtualItemStateProvider provider = virtualProviders[i];
+                if (provider.hasItemState(id)) {
+                    refs = null;
+                    break;
+                }
+            }
+            if (refs != null && refs.hasReferences()) {
+                if (!log.has(id) && !hasItemState(id)) {
+                    String msg = "Target node " + id
+                            + " of REFERENCE property does not exist";
+                    throw new ItemStateException(msg);
+                }
+            }
+        }
+    }
+
     /**
      * Acquires the read lock on this item state manager.
      * @throws ItemStateException if the read lock cannot be acquired.
@@ -686,36 +672,5 @@ public class SharedItemStateManager extends ItemStateCache
         } catch (InterruptedException e) {
             throw new ItemStateException("Interrupted while acquiring write lock");
         }
-    }
-
-    //----------------------------------------------------< ItemStateListener >
-    /**
-     * {@inheritDoc}
-     */
-    public void stateCreated(ItemState created) {
-        cache(created);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateModified(ItemState modified) {
-        // not interested
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDestroyed(ItemState destroyed) {
-        destroyed.removeListener(this);
-        evict(destroyed.getId());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDiscarded(ItemState discarded) {
-        discarded.removeListener(this);
-        evict(discarded.getId());
     }
 }

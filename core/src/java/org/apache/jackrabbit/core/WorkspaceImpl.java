@@ -62,7 +62,6 @@ import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -155,19 +154,6 @@ public class WorkspaceImpl implements Workspace, Constants {
      */
     public TransactionalItemStateManager getItemStateManager() {
         return stateMgr;
-    }
-
-    /**
-     * Dumps the state of this <code>WorkspaceImpl</code> instance
-     * (used for diagnostic purposes).
-     *
-     * @param ps
-     * @throws RepositoryException
-     */
-    public void dump(PrintStream ps) throws RepositoryException {
-        ps.println("Workspace: " + wspConfig.getName() + " (" + this + ")");
-        ps.println();
-        stateMgr.dump(ps);
     }
 
     /**
