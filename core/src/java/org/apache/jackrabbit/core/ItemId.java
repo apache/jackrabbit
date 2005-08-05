@@ -21,7 +21,7 @@ import java.io.Serializable;
 /**
  * <code>ItemId</code> serves as the base class for the concrete classes
  * <code>PropertyId</code> and <code>NodeId</code> who uniquely identify
- * nodes and properties in the repository.
+ * nodes and properties in a workspace.
  */
 public abstract class ItemId implements Serializable {
 

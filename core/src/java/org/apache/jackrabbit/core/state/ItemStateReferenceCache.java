@@ -17,11 +17,13 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.log4j.Logger;
 
 import java.util.Set;
 import java.util.Collections;
 import java.util.Collection;
+import java.io.PrintStream;
 
 /**
  * <code>ItemStateReferenceCache</code> internally consists of 2 components:
@@ -40,7 +42,7 @@ import java.util.Collection;
  * </li>
  * </ul>
  */
-public class ItemStateReferenceCache implements ItemStateCache {
+public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
 
     /** Logger instance */
     private static Logger log = Logger.getLogger(LRUItemStateCache.class);
@@ -154,6 +156,7 @@ public class ItemStateReferenceCache implements ItemStateCache {
      * {@inheritDoc}
      */
     public Set keySet() {
+        // keys of primary cache
         return Collections.unmodifiableSet(refs.keySet());
     }
 
@@ -161,6 +164,18 @@ public class ItemStateReferenceCache implements ItemStateCache {
      * {@inheritDoc}
      */
     public Collection values() {
+        // values of primary cache
         return Collections.unmodifiableCollection(refs.values());
+    }
+
+    //-------------------------------------------------------------< Dumpable >
+    /**
+     * {@inheritDoc}
+     */
+    public void dump(PrintStream ps) {
+        ps.println("ItemStateReferenceCache (" + this + ")");
+        ps.println();
+        ps.print("[refs] ");
+        refs.dump(ps);
     }
 }

@@ -28,27 +28,30 @@ public interface NodeStateListener extends ItemStateListener {
 
     /**
      * Called when a child node has been added
+     *
      * @param state node state that changed
-     * @param name name of node that was added
+     * @param name  name of node that was added
      * @param index index of new node
-     * @param uuid uuid of new node
+     * @param uuid  uuid of new node
      */
-    public void nodeAdded(NodeState state,
-                          QName name, int index, String uuid);
+    void nodeAdded(NodeState state,
+                   QName name, int index, String uuid);
 
     /**
      * Called when the children nodes were replaced by other nodes, typically
      * as result of a reorder operation.
+     *
      * @param state node state that changed
      */
-    public void nodesReplaced(NodeState state);
+    void nodesReplaced(NodeState state);
 
     /**
      * Called when a child node has been removed
+     *
      * @param state node state that changed
-     * @param name name of node that was removed
+     * @param name  name of node that was removed
      * @param index index of removed node
-     * @param uuid uuid of removed node
+     * @param uuid  uuid of removed node
      */
     public void nodeRemoved(NodeState state,
                             QName name, int index, String uuid);

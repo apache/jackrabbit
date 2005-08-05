@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -74,7 +75,7 @@ import java.util.Map;
  * If the parent <code>Session</code> is an <code>XASession</code>, there is
  * one <code>ItemManager</code> instance per started global transaction.
  */
-public class ItemManager implements ItemLifeCycleListener, Constants {
+public class ItemManager implements ItemLifeCycleListener, Dumpable, Constants {
 
     private static Logger log = Logger.getLogger(ItemManager.class);
 
@@ -135,36 +136,6 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
             }
         }
         return root;
-    }
-
-    /**
-     * Dumps the state of this <code>ItemManager</code> instance
-     * (used for diagnostic purposes).
-     *
-     * @param ps
-     * @throws RepositoryException
-     */
-    void dump(PrintStream ps) throws RepositoryException {
-        ps.println("ItemManager (" + this + ")");
-        ps.println();
-        ps.println("Items in cache:");
-        ps.println();
-        Iterator iter = itemCache.keySet().iterator();
-        while (iter.hasNext()) {
-            ItemId id = (ItemId) iter.next();
-            ItemImpl item = (ItemImpl) itemCache.get(id);
-            if (item.isNode()) {
-                ps.print("Node: ");
-            } else {
-                ps.print("Property: ");
-            }
-            if (item.isTransient()) {
-                ps.print("transient ");
-            } else {
-                ps.print("          ");
-            }
-            ps.println(id + "\t" + item.getPath() + " (" + item + ")");
-        }
     }
 
     /**
@@ -701,5 +672,32 @@ public class ItemManager implements ItemLifeCycleListener, Constants {
         item.removeLifeCycleListener(this);
         // remove instance from cache
         evictItem(id);
+    }
+
+    //-------------------------------------------------------------< Dumpable >
+    /**
+     * {@inheritDoc}
+     */
+    public void dump(PrintStream ps) {
+        ps.println("ItemManager (" + this + ")");
+        ps.println();
+        ps.println("Items in cache:");
+        ps.println();
+        Iterator iter = itemCache.keySet().iterator();
+        while (iter.hasNext()) {
+            ItemId id = (ItemId) iter.next();
+            ItemImpl item = (ItemImpl) itemCache.get(id);
+            if (item.isNode()) {
+                ps.print("Node: ");
+            } else {
+                ps.print("Property: ");
+            }
+            if (item.isTransient()) {
+                ps.print("transient ");
+            } else {
+                ps.print("          ");
+            }
+            ps.println(id + "\t" + item.safeGetJCRPath() + " (" + item + ")");
+        }
     }
 }

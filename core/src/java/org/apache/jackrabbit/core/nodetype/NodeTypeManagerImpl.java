@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.IteratorHelper;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -39,7 +40,7 @@ import java.util.Map;
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
  * NodeTypeManager.
  */
-public class NodeTypeManagerImpl implements NodeTypeManager,
+public class NodeTypeManagerImpl implements NodeTypeManager, Dumpable,
         NodeTypeRegistryListener {
 
     /**
@@ -288,14 +289,11 @@ public class NodeTypeManagerImpl implements NodeTypeManager,
         }
     }
 
-    //----------------------------------------------------------< diagnostics >
+    //-------------------------------------------------------------< Dumpable >
     /**
-     * Dumps the state of this <code>NodeTypeManagerImpl</code> instance.
-     *
-     * @param ps
-     * @throws RepositoryException
+     * {@inheritDoc}
      */
-    public void dump(PrintStream ps) throws RepositoryException {
+    public void dump(PrintStream ps) {
         ps.println("NodeTypeManager (" + this + ")");
         ps.println();
         ntReg.dump(ps);

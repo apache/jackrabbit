@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
@@ -41,7 +42,8 @@ import java.util.List;
 /**
  * <code>SessionItemStateManager</code> ...
  */
-public class SessionItemStateManager implements UpdatableItemStateManager {
+public class SessionItemStateManager
+        implements UpdatableItemStateManager, Dumpable {
 
     private static Logger log = Logger.getLogger(SessionItemStateManager.class);
 
@@ -85,25 +87,23 @@ public class SessionItemStateManager implements UpdatableItemStateManager {
     }
 
     /**
-     * Dumps the state of this <code>SessionItemStateManager</code> instance
-     * (used for diagnostic purposes).
-     *
-     * @param ps
-     */
-    public void dump(PrintStream ps) {
-        ps.println("SessionItemStateManager (" + this + ")");
-        ps.println();
-        transientStateMgr.dump(ps);
-        ps.println();
-    }
-
-    /**
      * Returns the hierarchy manager
      *
      * @return the hierarchy manager
      */
     public HierarchyManager getHierarchyMgr() {
         return hierMgr;
+    }
+
+    //-------------------------------------------------------------< Dumpable >
+    /**
+     * {@inheritDoc}
+     */
+    public void dump(PrintStream ps) {
+        ps.println("SessionItemStateManager (" + this + ")");
+        ps.println();
+        transientStateMgr.dump(ps);
+        ps.println();
     }
 
     //-----------------------------------------------------< ItemStateManager >

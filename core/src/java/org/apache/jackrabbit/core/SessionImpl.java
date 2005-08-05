@@ -37,6 +37,7 @@ import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
@@ -90,7 +91,7 @@ import java.util.Set;
 /**
  * A <code>SessionImpl</code> ...
  */
-public class SessionImpl implements Session {
+public class SessionImpl implements Session, Dumpable {
 
     private static Logger log = Logger.getLogger(SessionImpl.class);
 
@@ -391,27 +392,6 @@ public class SessionImpl implements Session {
      */
     protected void dispatch(EventStateCollection events) {
         events.dispatch();
-    }
-
-    /**
-     * Dumps the state of this <code>Session</code> instance
-     * (used for diagnostic purposes).
-     *
-     * @param ps
-     * @throws RepositoryException
-     */
-    public void dump(PrintStream ps) throws RepositoryException {
-        ps.print("Session: ");
-        if (userId == null) {
-            ps.print("unknown");
-        } else {
-            ps.print(userId);
-        }
-        ps.println(" (" + this + ")");
-        ps.println();
-        itemMgr.dump(ps);
-        ps.println();
-        itemStateMgr.dump(ps);
     }
 
     /**
@@ -1280,5 +1260,23 @@ public class SessionImpl implements Session {
                 }
             }
         }
+    }
+
+    //-------------------------------------------------------------< Dumpable >
+    /**
+     * {@inheritDoc}
+     */
+    public void dump(PrintStream ps) {
+        ps.print("Session: ");
+        if (userId == null) {
+            ps.print("unknown");
+        } else {
+            ps.print(userId);
+        }
+        ps.println(" (" + this + ")");
+        ps.println();
+        itemMgr.dump(ps);
+        ps.println();
+        itemStateMgr.dump(ps);
     }
 }

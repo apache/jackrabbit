@@ -192,7 +192,8 @@ public class PropertyState extends ItemState {
     private void writeObject(ObjectOutputStream out) throws IOException {
         // important: fields must be written in same order as they are
         // read in readObject(ObjectInputStream)
-        out.writeObject(name);
+        //out.writeObject(name);
+        out.writeUTF(name.toString());
         out.writeInt(type);
         out.writeBoolean(multiValued);
         if (values == null) {
@@ -229,10 +230,12 @@ public class PropertyState extends ItemState {
         }
     }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
         // important: fields must be read in same order as they are
         // written in writeObject(ObjectOutputStream)
-        name = (QName) in.readObject();
+        //name = (QName) in.readObject();
+        name = QName.valueOf(in.readUTF());
         type = in.readInt();
         multiValued = in.readBoolean();
         Object obj = in.readObject();
