@@ -20,6 +20,7 @@ import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -36,6 +37,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.io.PrintStream;
 
 import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
@@ -46,7 +48,7 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
  * manager are shared among all sessions.
  */
 public class SharedItemStateManager
-        implements ItemStateManager, ItemStateListener {
+        implements ItemStateManager, ItemStateListener, Dumpable {
 
     /**
      * Logger instance
@@ -55,7 +57,7 @@ public class SharedItemStateManager
 
     /**
      * cache of weak references to ItemState objects issued by this
-     * ItemStateManager 
+     * ItemStateManager
      */
     private final ItemStateReferenceCache cache;
 
@@ -265,6 +267,17 @@ public class SharedItemStateManager
     public void stateDiscarded(ItemState discarded) {
         discarded.removeListener(this);
         cache.evict(discarded.getId());
+    }
+
+    //-------------------------------------------------------------< Dumpable >
+    /**
+     * {@inheritDoc}
+     */
+    public void dump(PrintStream ps) {
+        ps.println("SharedItemStateManager (" + this + ")");
+        ps.println();
+        ps.print("[referenceCache] ");
+        cache.dump(ps);
     }
 
     //-------------------------------------------------< misc. public methods >

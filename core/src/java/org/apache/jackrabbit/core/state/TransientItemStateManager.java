@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
@@ -30,19 +31,19 @@ import java.util.Iterator;
 /**
  * <code>TransientItemStateManager</code> ...
  */
-class TransientItemStateManager implements ItemStateManager {
+class TransientItemStateManager implements ItemStateManager, Dumpable {
 
     private static Logger log = Logger.getLogger(TransientItemStateManager.class);
 
     /**
      * map of those states that have been removed transiently
      */
-    private final ItemStateMap atticMap;
+    private final ItemStateStore atticStore;
 
     /**
      * map of new or modified transient states
      */
-    private final ItemStateMap transientMap;
+    private final ItemStateStore transientStore;
 
     /**
      * ItemStateManager view of the states in the attic; lazily instantiated
@@ -54,24 +55,30 @@ class TransientItemStateManager implements ItemStateManager {
      * Creates a new <code>TransientItemStateManager</code> instance.
      */
     TransientItemStateManager() {
-        transientMap = new ItemStateMap();
-        atticMap = new ItemStateMap();
+        transientStore = new ItemStateMap();
+        atticStore = new ItemStateMap();
     }
 
+    //-------------------------------------------------------------< Dumpable >
     /**
-     * Dumps the state of this <code>TransientItemStateManager</code> instance
-     * (used for diagnostic purposes).
-     *
-     * @param ps
+     * {@inheritDoc}
      */
-    void dump(PrintStream ps) {
+    public void dump(PrintStream ps) {
         ps.println("TransientItemStateManager (" + this + ")");
         ps.println();
         ps.print("[transient] ");
-        transientMap.dump(ps);
+        if (transientStore instanceof Dumpable) {
+            ((Dumpable) transientStore).dump(ps);
+        } else {
+            ps.println(transientStore.toString());
+        }
         ps.println();
         ps.print("[attic]     ");
-        atticMap.dump(ps);
+        if (atticStore instanceof Dumpable) {
+            ((Dumpable) atticStore).dump(ps);
+        } else {
+            ps.println(atticStore.toString());
+        }
     }
 
     //----------------------------------------------------< ItemStateProvider >
@@ -81,7 +88,7 @@ class TransientItemStateManager implements ItemStateManager {
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        ItemState state = transientMap.get(id);
+        ItemState state = transientStore.get(id);
         if (state != null) {
             return state;
         } else {
@@ -93,7 +100,7 @@ class TransientItemStateManager implements ItemStateManager {
      * {@inheritDoc}
      */
     public boolean hasItemState(ItemId id) {
-        return transientMap.contains(id);
+        return transientStore.contains(id);
     }
 
     /**
@@ -118,42 +125,42 @@ class TransientItemStateManager implements ItemStateManager {
      * @return
      */
     boolean hasAnyItemStates() {
-        return !transientMap.isEmpty();
+        return !transientStore.isEmpty();
     }
 
     /**
      * @return
      */
     boolean hasAnyItemStatesInAttic() {
-        return !atticMap.isEmpty();
+        return !atticStore.isEmpty();
     }
 
     /**
      * @return
      */
     int getEntriesCount() {
-        return transientMap.size();
+        return transientStore.size();
     }
 
     /**
      * @return
      */
     int getEntriesInAtticCount() {
-        return atticMap.size();
+        return atticStore.size();
     }
 
     /**
      * @return
      */
     Iterator getEntries() {
-        return transientMap.values().iterator();
+        return transientStore.values().iterator();
     }
 
     /**
      * @return
      */
     Iterator getEntriesInAttic() {
-        return atticMap.values().iterator();
+        return atticStore.values().iterator();
     }
 
     //----------------< methods for creating & discarding ItemState instances >
@@ -172,8 +179,8 @@ class TransientItemStateManager implements ItemStateManager {
         NodeId id = new NodeId(uuid);
 
         // check map; synchronized to ensure an entry is not created twice.
-        synchronized (transientMap) {
-            if (transientMap.contains(id)) {
+        synchronized (transientStore) {
+            if (transientStore.contains(id)) {
                 String msg = "there's already a node state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
@@ -182,7 +189,7 @@ class TransientItemStateManager implements ItemStateManager {
             NodeState state = new NodeState(uuid, nodeTypeName, parentUUID,
                     initialStatus, true);
             // put transient state in the map
-            transientMap.put(state);
+            transientStore.put(state);
             return state;
         }
     }
@@ -199,8 +206,8 @@ class TransientItemStateManager implements ItemStateManager {
         ItemId id = overlayedState.getId();
 
         // check map; synchronized to ensure an entry is not created twice.
-        synchronized (transientMap) {
-            if (transientMap.contains(id)) {
+        synchronized (transientStore) {
+            if (transientStore.contains(id)) {
                 String msg = "there's already a node state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
@@ -208,7 +215,7 @@ class TransientItemStateManager implements ItemStateManager {
 
             NodeState state = new NodeState(overlayedState, initialStatus, true);
             // put transient state in the map
-            transientMap.put(state);
+            transientStore.put(state);
             return state;
         }
     }
@@ -226,8 +233,8 @@ class TransientItemStateManager implements ItemStateManager {
         PropertyId id = new PropertyId(parentUUID, propName);
 
         // check map; synchronized to ensure an entry is not created twice.
-        synchronized (transientMap) {
-            if (transientMap.contains(id)) {
+        synchronized (transientStore) {
+            if (transientStore.contains(id)) {
                 String msg = "there's already a property state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
@@ -235,7 +242,7 @@ class TransientItemStateManager implements ItemStateManager {
 
             PropertyState state = new PropertyState(propName, parentUUID, initialStatus, true);
             // put transient state in the map
-            transientMap.put(state);
+            transientStore.put(state);
             return state;
         }
     }
@@ -253,8 +260,8 @@ class TransientItemStateManager implements ItemStateManager {
                 overlayedState.getName());
 
         // check map; synchronized to ensure an entry is not created twice.
-        synchronized (transientMap) {
-            if (transientMap.contains(id)) {
+        synchronized (transientStore) {
+            if (transientStore.contains(id)) {
                 String msg = "there's already a property state instance with id " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg);
@@ -262,7 +269,7 @@ class TransientItemStateManager implements ItemStateManager {
 
             PropertyState state = new PropertyState(overlayedState, initialStatus, true);
             // put transient state in the map
-            transientMap.put(state);
+            transientStore.put(state);
             return state;
         }
     }
@@ -279,7 +286,7 @@ class TransientItemStateManager implements ItemStateManager {
         // instance of the transient state
         state.discard();
         // remove from map
-        transientMap.remove(state.getId());
+        transientStore.remove(state.getId());
         // give the instance a chance to prepare to get gc'ed
         state.onDisposed();
     }
@@ -292,9 +299,9 @@ class TransientItemStateManager implements ItemStateManager {
      */
     void moveItemStateToAttic(ItemState state) {
         // remove from map
-        transientMap.remove(state.getId());
+        transientStore.remove(state.getId());
         // add to attic
-        atticMap.put(state);
+        atticStore.put(state);
     }
 
     /**
@@ -309,7 +316,7 @@ class TransientItemStateManager implements ItemStateManager {
         // instance of the transient state
         state.discard();
         // remove from attic
-        atticMap.remove(state.getId());
+        atticStore.remove(state.getId());
         // give the instance a chance to prepare to get gc'ed
         state.onDisposed();
     }
@@ -320,13 +327,13 @@ class TransientItemStateManager implements ItemStateManager {
     void disposeAllItemStates() {
         // dispose item states in transient map & attic
         // (use temp collection to avoid ConcurrentModificationException)
-        Collection tmp = new ArrayList(transientMap.values());
+        Collection tmp = new ArrayList(transientStore.values());
         Iterator iter = tmp.iterator();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             disposeItemState(state);
         }
-        tmp = new ArrayList(atticMap.values());
+        tmp = new ArrayList(atticStore.values());
         iter = tmp.iterator();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
@@ -364,7 +371,7 @@ class TransientItemStateManager implements ItemStateManager {
         public ItemState getItemState(ItemId id)
                 throws NoSuchItemStateException, ItemStateException {
 
-            ItemState state = atticMap.get(id);
+            ItemState state = atticStore.get(id);
             if (state != null) {
                 return state;
             } else {
@@ -376,7 +383,7 @@ class TransientItemStateManager implements ItemStateManager {
          * {@inheritDoc}
          */
         public boolean hasItemState(ItemId id) {
-            return atticMap.contains(id);
+            return atticStore.contains(id);
         }
 
         /**

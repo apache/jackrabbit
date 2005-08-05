@@ -1035,11 +1035,40 @@ public class NodeState extends ItemState {
             throw new UnsupportedOperationException();
         }
 
+        //---------------------------------------------< Serializable support >
+        private void writeObject(ObjectOutputStream out) throws IOException {
+            // important: fields must be written in same order as they are
+            // read in readObject(ObjectInputStream)
+            out.writeInt(size()); // count
+            for (Iterator iter = iterator(); iter.hasNext();) {
+                NodeState.ChildNodeEntry entry =
+                        (NodeState.ChildNodeEntry) iter.next();
+                //out.writeObject(entry.getName());   // name
+                out.writeUTF(entry.getName().toString());   // name
+                out.writeUTF(entry.getUUID());  // uuid
+            }
+        }
+
+        private void readObject(ObjectInputStream in)
+                throws IOException, ClassNotFoundException {
+            entries = new LinkedMap();
+            nameMap = new HashMap();
+            // important: fields must be read in same order as they are
+            // written in writeObject(ObjectOutputStream)
+            int count = in.readInt();   // count
+            for (int i = 0; i < count; i++) {
+                //QName name = (QName) in.readObject();    // name
+                QName name = QName.valueOf(in.readUTF());    // name
+                String s = in.readUTF();   // uuid
+                add(name, s);
+            }
+        }
+
         //----------------------------------------------------< inner classes >
         class OrderedMapIterator implements ListIterator {
 
             final ListIterator keyIter;
-            final Map entries;
+                final Map entries;
 
             OrderedMapIterator(ListIterator keyIter, Map entries) {
                 this.keyIter = keyIter;

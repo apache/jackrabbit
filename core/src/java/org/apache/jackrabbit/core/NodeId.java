@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.core;
 
 /**
- * <code>NodeId</code> uniquely identifies a node in the repository.
+ * Node identifier. An instance of this class identifies a node using its UUID.
+ * Once created a node identifier instance is immutable.
  */
 public class NodeId extends ItemId {
 

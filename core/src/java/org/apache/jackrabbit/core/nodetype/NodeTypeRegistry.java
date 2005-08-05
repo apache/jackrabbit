@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
@@ -49,7 +50,7 @@ import java.util.TreeSet;
 /**
  * A <code>NodeTypeRegistry</code> ...
  */
-public class NodeTypeRegistry implements Constants {
+public class NodeTypeRegistry implements Dumpable, Constants {
 
     private static Logger log = Logger.getLogger(NodeTypeRegistry.class);
 
@@ -1346,14 +1347,11 @@ public class NodeTypeRegistry implements Constants {
         return (PropDef) propDefs.get(id);
     }
 
-    //----------------------------------------------------------< diagnostics >
+    //-------------------------------------------------------------< Dumpable >
     /**
-     * Dumps the state of this <code>NodeTypeRegistry</code> instance.
-     *
-     * @param ps
-     * @throws RepositoryException
+     * {@inheritDoc}
      */
-    void dump(PrintStream ps) throws RepositoryException {
+    public void dump(PrintStream ps) {
         ps.println("NodeTypeRegistry (" + this + ")");
         ps.println();
         ps.println("Registered NodeTypes:");
@@ -1883,14 +1881,11 @@ public class NodeTypeRegistry implements Constants {
             return sortedKeys.iterator();
         }
 
-        //------------------------------------------------------< diagnostics >
+        //---------------------------------------------------------< Dumpable >
         /**
-         * Dumps the state of this <code>EffectiveNodeTypeCache</code> instance.
-         *
-         * @param ps
-         * @throws RepositoryException
+         * {@inheritDoc}
          */
-        void dump(PrintStream ps) throws RepositoryException {
+        public void dump(PrintStream ps) {
             ps.println("EffectiveNodeTypeCache (" + this + ")");
             ps.println();
             ps.println("EffectiveNodeTypes in cache:");
