@@ -30,6 +30,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
@@ -481,11 +482,29 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         boolean isMatching = false;
         String lockToken = resource.getLock(Type.WRITE, Scope.EXCLUSIVE).getToken();
         if (lockToken != null) {
-            // todo: do not ignore etag
-            isMatching = matchesIfHeader(resource.getHref(), lockToken, "");
+            isMatching = matchesIfHeader(resource.getHref(), lockToken, getStrongETag(resource));
         } // else: lockToken is null >> the if-header will not match.
 
         return isMatching;
+    }
+
+    /**
+     * Returns the strong etag present on the given resource or empty string
+     * if either the resource does not provide any etag or if the etag is weak.
+     *
+     * @param resource
+     * @return strong etag or empty string.
+     */
+    private String getStrongETag(DavResource resource) {
+        DavProperty prop = resource.getProperty(DavPropertyName.GETETAG);
+        if (prop != null) {
+            String etag = prop.getValue().toString();
+            if (etag != null && etag.length() > 0 && !etag.startsWith("W\\")) {
+                return etag;
+            }
+        }
+        // no strong etag available
+        return "";
     }
 
     /**

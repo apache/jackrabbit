@@ -69,7 +69,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -485,16 +484,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
 
         // complete any other property setting or removing
-        DavPropertyIterator setIter = setProperties.iterator();
-        while (setIter.hasNext()) {
-            DavProperty prop = setIter.nextProperty();
-            resource.setProperty(prop);
-        }
-        Iterator remNameIter = removeProperties.iterator();
-        while (remNameIter.hasNext()) {
-            DavPropertyName propName = (DavPropertyName) remNameIter.next();
-            resource.removeProperty(propName);
-        }
+        resource.alterProperties(setProperties, removeProperties);
         response.setStatus(DavServletResponse.SC_OK);
 
         // todo return multistatus response in case of failure

@@ -84,8 +84,8 @@ public class HrefProperty extends AbstractDavProperty {
             Iterator it = ((List)val).iterator();
             while (it.hasNext()) {
                 Object o = it.next();
-                if (o instanceof Element) {
-                    String href = ((Element)o).getChildText(XML_HREF, NAMESPACE);
+                if (o instanceof Element && XML_HREF.equals(((Element)o).getName())) {
+                    String href = ((Element)o).getText();
                     if (href != null) {
                         hrefList.add(href);
                     } else {
@@ -95,8 +95,8 @@ public class HrefProperty extends AbstractDavProperty {
                     log.warn("DAV: href element expected in the content of " + getName().toString());
                 }
             }
-        } else if (val instanceof Element) {
-            String href = ((Element)val).getChildText(XML_HREF, NAMESPACE);
+        } else if (val instanceof Element && XML_HREF.equals(((Element)val).getName())) {
+            String href = ((Element)val).getText();
             if (href != null) {
                 hrefList.add(href);
             } else {

@@ -46,7 +46,7 @@
 
         <!--
             if the content type matches 'text/xml' the content of the resource
-            i considered as xml and deserialized into the jcr repository.
+            is considered as xml and deserialized into the jcr repository.
             @return false
         -->
         <command

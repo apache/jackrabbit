@@ -189,6 +189,20 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     /**
      * Throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
      *
+     * @param setProperties
+     * @param removePropertyNames
+     * @throws DavException
+     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet) 
+     */
+    public void alterProperties(DavPropertySet setProperties,
+                                DavPropertyNameSet removePropertyNames)
+        throws DavException {
+        throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+    }
+
+    /**
+     * Throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
+     *
      * @param destination
      * @throws DavException Always throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
      * @see DavResource#move(org.apache.jackrabbit.webdav.DavResource)

@@ -37,6 +37,9 @@ import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
 import org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl;
 import org.apache.jackrabbit.webdav.simple.LocatorFactoryImpl;
 import org.apache.jackrabbit.webdav.simple.ResourceFactoryImpl;
+import org.apache.jackrabbit.webdav.simple.ResourceFilterConfig;
+import org.apache.jackrabbit.webdav.simple.ResourceFilter;
+import org.apache.jackrabbit.webdav.simple.DefaultResourceFilter;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Credentials;
@@ -47,6 +50,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URL;
+import java.net.MalformedURLException;
 
 /**
  * WebdavServlet provides webdav support (level 1 and 2 complient) for repository
@@ -80,7 +84,18 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      */
     public static final String INIT_PARAM_AUTHENTICATE_HEADER = "authenticate-header";
 
-    public static final String CTX_ATTR_RESOURCE_PATH_PREFIX = "jcr.webdav.resourcepath";
+    /**
+     * Name of the init parameter that specify a separate configuration used
+     * for filtering the resources displayed.
+     */
+    public static final String INIT_PARAM_RESOURCE_FILTER = "resource-filter";
+
+    /**
+     * Servlet context attribute used to store the path prefix instead of
+     * having a static field with this servlet. The latter causes problems
+     * when running multiple
+     */
+    public static final String CTX_ATTR_RESOURCE_PATH_PREFIX = "jackrabbit.webdav.simple.resourcepath";
 
     /**
      * the resource path prefix
@@ -131,6 +146,11 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     private SessionProvider sessionProvider;
 
     /**
+     * The resource filter
+     */
+    private ResourceFilter resourceFilter;
+
+    /**
      * Init this servlet
      *
      * @throws ServletException
@@ -165,6 +185,16 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
             authenticate_header = DEFAULT_AUTHENTICATE_HEADER;
         }
         log.info("WWW-Authenticate header = '" + authenticate_header + "'");
+
+        String filterParam = getInitParameter(INIT_PARAM_RESOURCE_FILTER);
+        if (filterParam != null) {
+            try {
+                ResourceFilterConfig config = new ResourceFilterConfig();
+                setResourceFilter(config.parse(getServletContext().getResource(filterParam)));
+            } catch (MalformedURLException e) {
+                log.debug("Unable to build resource filter provider.");
+            }
+        }
     }
 
     /**
@@ -337,7 +367,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      */
     public DavResourceFactory getResourceFactory() {
         if (resourceFactory == null) {
-            resourceFactory = new ResourceFactoryImpl(getLockManager());
+            resourceFactory = new ResourceFactoryImpl(getLockManager(), getResourceFilter());
         }
         return resourceFactory;
     }
@@ -419,6 +449,28 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      */
     public String getAuthenticateHeaderValue() {
         return authenticate_header;
+    }
+
+    /**
+     * Returns the resource filter to be applied
+     *
+     * @return
+     */
+    public ResourceFilter getResourceFilter() {
+        // fallback if no config present or invalid: an empty resource filter
+        if (resourceFilter == null) {
+            resourceFilter = new DefaultResourceFilter();
+        }
+        return resourceFilter;
+    }
+
+    /**
+     * Set the resource filter
+     *
+     * @param resourceFilter
+     */
+    public void setResourceFilter(ResourceFilter resourceFilter) {
+        this.resourceFilter = resourceFilter;
     }
 
     /**

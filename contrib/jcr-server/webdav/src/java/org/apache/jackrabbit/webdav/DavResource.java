@@ -163,6 +163,16 @@ public interface DavResource {
     public void removeProperty(DavPropertyName propertyName) throws DavException;
 
     /**
+     * Set/add the specified properties and remove the properties with the given
+     * names from this resource respectively.
+     *
+     * @param setProperties Set of properties to be added or modified
+     * @param removePropertyNames Set of property names to be removed
+     * @throws DavException if an error occurs
+     */
+    public void alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException;
+
+    /**
      * Retrieve the resource this resource is internal member of.
      *
      * @return resource this resource is an internal member of. In case this resource
