@@ -145,8 +145,8 @@ abstract class AbstractItemResource extends AbstractResource implements
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-        DavResourceLocator destPath = destination.getLocator();
-        if (!getLocator().isSameWorkspace(destPath)) {
+        DavResourceLocator destLocator = destination.getLocator();
+        if (!getLocator().isSameWorkspace(destLocator)) {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
 
@@ -191,19 +191,13 @@ abstract class AbstractItemResource extends AbstractResource implements
             throw new DavException(DavServletResponse.SC_FORBIDDEN, "Unable to perform shallow copy.");
         }
 
-        if (!(destination instanceof AbstractItemResource)) {
-            throw new DavException(DavServletResponse.SC_FORBIDDEN, "Cannot copy a resource that does not represent a repository item.");
-        }
-
         try {
-            AbstractItemResource destResource = (AbstractItemResource) destination;
-            String destResourcePath = destResource.getResourcePath();
             Workspace workspace = getRepositorySession().getWorkspace();
             if (getLocator().isSameWorkspace(destination.getLocator())) {
-                workspace.copy(getResourcePath(), destResourcePath);
+                workspace.copy(getResourcePath(), destination.getResourcePath());
             } else {
-                Workspace destWorkspace = destResource.getRepositorySession().getWorkspace();
-                destWorkspace.copy(workspace.getName(), getResourcePath(), destResourcePath);
+                log.error("Copy between workspaces is not yet implemented (src: '" + getHref() + "', dest: '" + destination.getHref() + "')");
+                throw new DavException(DavServletResponse.SC_NOT_IMPLEMENTED);
             }
         } catch (PathNotFoundException e) {
             // according to RFC 2518, should not occur
@@ -241,7 +235,6 @@ abstract class AbstractItemResource extends AbstractResource implements
             supportedReports = new SupportedReportSetProperty(new ReportType[] {
                 ReportType.EXPAND_PROPERTY,
                 NodeTypesReport.NODETYPES_REPORT,
-                ExportViewReport.EXPORTVIEW_REPORT,
                 LocateByUuidReport.LOCATE_BY_UUID_REPORT,
                 RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT,
                 RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT
@@ -259,10 +252,16 @@ abstract class AbstractItemResource extends AbstractResource implements
                 properties.add(new DefaultDavProperty(JCR_NAME, item.getName()));
                 properties.add(new DefaultDavProperty(JCR_PATH, item.getPath()));
                 properties.add(new DefaultDavProperty(JCR_DEPTH, String.valueOf(item.getDepth())));
+                // add href-property for the items parent unless its the root item
+                if (item.getDepth() > 0) {
+                    String parentHref = getLocatorFromResourcePath(item.getParent().getPath()).getHref(true);
+                    properties.add(new HrefProperty(JCR_PARENT, parentHref, false));
+                }
             } catch (RepositoryException e) {
+                // should not get here
                 log.error("Error while accessing jcr properties: " + e.getMessage());
             }
-
+            
             // transaction resource additional protected properties
             if (item.isNew()) {
                 properties.add(new DefaultDavProperty(JCR_ISNEW, null, true));

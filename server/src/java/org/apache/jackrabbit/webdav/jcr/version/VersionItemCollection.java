@@ -124,13 +124,14 @@ public class VersionItemCollection extends DefaultItemCollection
     }
 
     /**
-     * Return the nearest ancestor of the underlaying repository item.
+     * Return versionhistory that contains this version item
      *
-     * @return nearest ancestor of the underlaying repository item.
+     * @return versionhistory that contains this version item
      * @throws RepositoryException
+     * @see javax.jcr.version.Version#getContainingHistory() 
      */
     private VersionHistory getVersionHistoryItem() throws RepositoryException {
-        return (VersionHistory) item.getParent();
+        return ((Version)item).getContainingHistory();
     }
 
     //--------------------------------------------------------------------------

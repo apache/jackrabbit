@@ -484,7 +484,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
     }
 
     /**
-     * Add a {@link org.apache.jackrabbit.webdav.property.HrefProperty} with the specified property name and values.
+     * Add a {@link org.apache.jackrabbit.webdav.property.HrefProperty} with the
+     * specified property name and values.
      *
      * @param name
      * @param values Array of {@link Value}s.

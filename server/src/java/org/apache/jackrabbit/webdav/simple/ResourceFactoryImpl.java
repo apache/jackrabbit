@@ -28,9 +28,15 @@ import javax.jcr.RepositoryException;
 public class ResourceFactoryImpl implements DavResourceFactory {
 
     private final LockManager lockMgr;
+    private final ResourceFilter resourceFilter;
 
     public ResourceFactoryImpl(LockManager lockMgr) {
+        this(lockMgr, new DefaultResourceFilter());
+    }
+
+    public ResourceFactoryImpl(LockManager lockMgr, ResourceFilter resourceFilter) {
         this.lockMgr = lockMgr;
+        this.resourceFilter = resourceFilter;
     }
 
     public DavResource createResource(DavResourceLocator locator, DavServletRequest request,
@@ -40,7 +46,7 @@ public class ResourceFactoryImpl implements DavResourceFactory {
 
     public DavResource createResource(DavResourceLocator locator, DavSession session) throws DavException {
         try {
-            DavResource res = new DavResourceImpl(locator, this, session);
+            DavResource res = new DavResourceImpl(locator, this, session, resourceFilter);
             res.addLockManager(lockMgr);
             return res;
         } catch (RepositoryException e) {

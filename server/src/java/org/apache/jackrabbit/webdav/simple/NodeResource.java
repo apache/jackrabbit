@@ -59,6 +59,7 @@ public class NodeResource {
     private long modificationTime = new Date().getTime();
     private long contentLength = 0;
     private String contentType = null;
+    private String etag = null;
     private InputStream in = null;
 
     /**
@@ -84,6 +85,7 @@ public class NodeResource {
         this.in = ctx.getInputStream();
         this.creationTime = ctx.getCreationTime();
         this.modificationTime = ctx.getModificationTime();
+        this.etag = ctx.getETag();
     }
 
     /**
@@ -144,21 +146,12 @@ public class NodeResource {
     }
 
     /**
-     * Return the weak ETag
+     * Return the ETag or <code>null</code> if the context does not provide one.
      *
-     * @return weak ETag
+     * @return String representing a strong or weak ETag or <code>null</code>
      */
     public String getETag() {
-	return "W/\"" + this.contentLength + "-" + this.modificationTime + "\"";
-    }
-
-    /**
-     * Return the strong ETag or empty string if it cannot be determined.
-     *
-     * @return strong ETag
-     */
-    public String getStrongETag() {
-	return "";
+        return etag;
     }
 
     /**
