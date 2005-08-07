@@ -20,6 +20,8 @@ import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
+import org.apache.jackrabbit.webdav.jcr.version.report.ExportViewReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.LocateCorrespondingNodeReport;
 import org.apache.jackrabbit.webdav.ordering.*;
 import org.apache.jackrabbit.webdav.lock.*;
 import org.apache.jackrabbit.JcrConstants;
@@ -115,6 +117,19 @@ public class DefaultItemCollection extends AbstractItemResource
      * @todo undo incomplete modifications...
      */
     public void setProperty(DavProperty property) throws DavException {
+        internalSetProperty(property);
+        complete();
+    }
+
+    /**
+     * Internal method used to set or add the given property
+     *
+     * @param property
+     * @throws DavException
+     * @see #setProperty(DavProperty)
+     * @see #alterProperties(DavPropertySet, DavPropertyNameSet)
+     */
+    private void internalSetProperty(DavProperty property) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
@@ -141,8 +156,6 @@ public class DefaultItemCollection extends AbstractItemResource
                 while (it.hasNext()) {
                     n.addMixin((String)it.next());
                 }
-                complete();
-
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }
@@ -163,6 +176,19 @@ public class DefaultItemCollection extends AbstractItemResource
      * @todo undo incomplete modifications...
      */
     public void removeProperty(DavPropertyName propertyName) throws DavException {
+        internalRemoveProperty(propertyName);
+        complete();
+    }
+
+    /**
+     * Internal method used to remove the property with the given name.
+     *
+     * @param propertyName
+     * @throws DavException
+     * @see #removeProperty(DavPropertyName)
+     * @see #alterProperties(DavPropertySet, DavPropertyNameSet)
+     */
+    private void internalRemoveProperty(DavPropertyName propertyName) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
@@ -174,8 +200,6 @@ public class DefaultItemCollection extends AbstractItemResource
                 for (int i = 0; i < mixins.length; i++) {
                     n.removeMixin(mixins[i].getName());
                 }
-                complete();
-
             } catch (RepositoryException e) {
                 // NoSuchNodeTypeException, ConstraintViolationException should never occur...
                 throw new JcrDavException(e);
@@ -184,6 +208,30 @@ public class DefaultItemCollection extends AbstractItemResource
             // all props except for mixinnodetypes are read-only
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
+    }
+
+    /**
+     *
+     * @param setProperties
+     * @param removePropertyNames
+     * @throws DavException
+     * @todo undo incomplete modifications...
+     */
+    public void alterProperties(DavPropertySet setProperties,
+                                DavPropertyNameSet removePropertyNames)
+        throws DavException {
+        DavPropertyIterator setIter = setProperties.iterator();
+        while (setIter.hasNext()) {
+            DavProperty prop = setIter.nextProperty();
+            internalSetProperty(prop);
+        }
+        Iterator remNameIter = removePropertyNames.iterator();
+        while (remNameIter.hasNext()) {
+            DavPropertyName propName = (DavPropertyName) remNameIter.next();
+            internalRemoveProperty(propName);
+        }
+        // save all changes together
+        complete();
     }
 
     /**
@@ -629,6 +677,24 @@ public class DefaultItemCollection extends AbstractItemResource
     }
 
     /**
+     * Defines the additional reports supported by this resource (reports
+     * specific for resources representing a repository {@link Node node}):
+     * <ul>
+     * <li>{@link ExportViewReport export view report}</li>
+     * <li>{@link LocateCorrespondingNodeReport locate corresponding node report}</li>
+     * </ul>
+     * 
+     * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
+     */
+    protected void initSupportedReports() {
+        super.initSupportedReports();
+        if (exists()) {
+            supportedReports.addReportType(ExportViewReport.EXPORTVIEW_REPORT);
+            supportedReports.addReportType(LocateCorrespondingNodeReport.LOCATE_CORRESPONDING_NODE_REPORT);
+        }
+    }
+
+    /**
      * Fill the property set for this resource.
      */
     protected void initProperties() {
@@ -717,7 +783,7 @@ public class DefaultItemCollection extends AbstractItemResource
         try {
             String[] pHref = new String[values.length];
             for (int i = 0; i < values.length; i++) {
-                pHref[i] = this.getLocatorFromResourcePath(values[i].getPath()).getHref(true);
+                pHref[i] = getLocatorFromResourcePath(values[i].getPath()).getHref(true);
             }
             properties.add(new HrefProperty(name, pHref, isProtected));
         } catch (RepositoryException e) {

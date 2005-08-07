@@ -171,6 +171,9 @@ public class DirListingExportCommand extends AbstractCommand {
         context.setContentType("text/html; charset=utf8");
         tmpfile.deleteOnExit();
 
+        // etag
+        context.setETag("");
+
         return true;
     }
 }

@@ -51,6 +51,13 @@ public class FileExportCommand extends AbstractExportCommand {
             context.setContentLength(0);
             context.setInputStream(null);
         }
+
+        String etag = "";
+        if (content.hasProperty(JCR_LASTMODIFIED)) {
+            etag = "\"" + context.getContentLength() + "-" + content.getProperty(JCR_LASTMODIFIED).getLong() + "\"";
+        }
+        context.setETag(etag);
+
         return true;
     }
 

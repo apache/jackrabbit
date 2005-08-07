@@ -100,6 +100,19 @@ public class DefaultItemResource extends AbstractItemResource {
      * todo: undo incomplete modifications...
      */
     public void setProperty(DavProperty property) throws DavException {
+        internalSetProperty(property);
+        complete();
+    }
+
+    /**
+     * Internal method that performs the setting or adding of properties
+     *
+     * @param property
+     * @throws DavException
+     * @see #setProperty(DavProperty)
+     * @see #alterProperties(DavPropertySet, DavPropertyNameSet)
+     */
+    private void internalSetProperty(DavProperty property) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
@@ -115,8 +128,6 @@ public class DefaultItemResource extends AbstractItemResource {
             } else {
                 throw new DavException(DavServletResponse.SC_CONFLICT);
             }
-            complete();
-
         } catch (IllegalArgumentException e) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (RepositoryException e) {
@@ -138,6 +149,34 @@ public class DefaultItemResource extends AbstractItemResource {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
+    }
+
+    /**
+     * Loops over the given <code>Set</code>s and alters the properties accordingly.
+     * Changes are persisted at the end only according to the rules defined with
+     * the {@link #complete()} method.
+     *
+     * @param setProperties
+     * @param removePropertyNames
+     * @throws DavException
+     * @see DavResource#alterProperties(DavPropertySet, DavPropertyNameSet)
+     */
+    public void alterProperties(DavPropertySet setProperties,
+                                DavPropertyNameSet removePropertyNames)
+        throws DavException {
+
+        // altering any properties fails if an attempt is made to remove a property
+        if (removePropertyNames != null && !removePropertyNames.isEmpty()) {
+            throw new DavException(DavServletResponse.SC_FORBIDDEN);
+        }
+
+        // only set/add >> existance of resource is checked inside internal method
+        DavPropertyIterator setIter = setProperties.iterator();
+        while (setIter.hasNext()) {
+            DavProperty prop = setIter.nextProperty();
+            internalSetProperty(prop);
+        }
+        complete();
     }
 
     /**

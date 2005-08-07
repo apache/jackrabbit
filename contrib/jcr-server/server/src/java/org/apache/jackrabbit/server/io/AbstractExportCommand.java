@@ -81,6 +81,7 @@ public abstract class AbstractExportCommand extends AbstractCommand {
         } else {
             context.setContentType(getDefaultContentType());
         }
+
         return exportNode(context, content);
     }
 

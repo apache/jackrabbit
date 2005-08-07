@@ -61,7 +61,7 @@ public interface ItemResourceConstants {
     public static final String XML_EXCLUSIVE_SESSION_SCOPED = "exclusive-session-scoped";
 
     // xml elements used to reflect the workspaces ns-registry
-    // TODO: to be review...
+    // TODO: to be reviewed...
     public static final String XML_NAMESPACE = "namespace";
     public static final String XML_PREFIX = "prefix";
     public static final String XML_URI = "uri";
@@ -105,6 +105,7 @@ public interface ItemResourceConstants {
     public static final DavPropertyName JCR_NAME = DavPropertyName.create("name", NAMESPACE);
     public static final DavPropertyName JCR_PATH = DavPropertyName.create("path", NAMESPACE);
     public static final DavPropertyName JCR_DEPTH = DavPropertyName.create("depth", NAMESPACE);
+    public static final DavPropertyName JCR_PARENT = DavPropertyName.create("parent", NAMESPACE);
     public static final DavPropertyName JCR_ISNEW = DavPropertyName.create("isnew", NAMESPACE);
     public static final DavPropertyName JCR_ISMODIFIED = DavPropertyName.create("ismodified", NAMESPACE);
 
@@ -125,4 +126,7 @@ public interface ItemResourceConstants {
 
     // property names used for resource representing a workspace
     public static final DavPropertyName JCR_NAMESPACES = DavPropertyName.create("namespaces", NAMESPACE);
+
+    // property names used for resource representing a version hisotry
+    public static final DavPropertyName JCR_VERSIONABLEUUID = DavPropertyName.create("versionableuuid", NAMESPACE);
 }

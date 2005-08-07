@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.jcr.version;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.version.*;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.DefaultItemCollection;
@@ -119,6 +120,13 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
 
         // change resourcetype defined by default item collection
         properties.add(new ResourceType(ResourceType.VERSION_HISTORY));
+        
+        // jcr specific property pointing to the node this history belongs to
+        try {
+            properties.add(new DefaultDavProperty(JCR_VERSIONABLEUUID, ((VersionHistory)item).getVersionableUUID()));
+        } catch (RepositoryException e) {
+            log.error(e.getMessage());
+        }
 
         // required root-version property for version-history resource
         try {

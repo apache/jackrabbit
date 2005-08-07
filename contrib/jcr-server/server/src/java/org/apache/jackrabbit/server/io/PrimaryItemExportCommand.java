@@ -81,13 +81,15 @@ public class PrimaryItemExportCommand extends AbstractCommand {
 
             context.setCreationTime(creationTime);
             // check for last modified sibling
+            long lastModified = 0;
             try {
                 if (parent.hasProperty(JCR_LASTMODIFIED)) {
-                    context.setModificationTime(parent.getProperty(JCR_LASTMODIFIED).getLong());
+                    lastModified = parent.getProperty(JCR_LASTMODIFIED).getLong();
                 }
             } catch (RepositoryException e) {
                 // ignore
             }
+            context.setModificationTime(lastModified);
 
             // check for contenttype and encoding sibling of the primary item.
             String contentType="application/octet-stream";
@@ -120,6 +122,14 @@ public class PrimaryItemExportCommand extends AbstractCommand {
                 context.setInputStream(prop.getValue().getStream());
                 context.setContentLength(prop.getLength());
             }
+
+            // build the etag
+            String etag = "";
+            if (lastModified > 0) {
+                etag = "\"" + context.getContentLength() + "-" + lastModified + "\"";
+            }
+            context.setETag(etag);
+
             return true;
         } else {
             /* no primaryItem property could be retrieved, abort command */

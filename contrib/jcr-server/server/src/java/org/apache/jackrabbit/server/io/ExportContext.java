@@ -62,6 +62,11 @@ public class ExportContext extends AbstractContext {
     private String contentType;
 
     /**
+     * the ETag of the resource
+     */
+    private String etag;
+
+    /**
      * Creates a new ExportContext for the given node
      *
      * @param exportRoot
@@ -195,5 +200,24 @@ public class ExportContext extends AbstractContext {
      */
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    /**
+     * Returns the ETag of the resource.
+     *
+     * @return the ETag
+     */
+    public String getETag() {
+        return etag;
+    }
+
+    /**
+     * Sets the ETag of the resource. A successfull export command
+     * may set this member.
+     *
+     * @param etag the ETag
+     */
+    public void setETag(String etag) {
+        this.etag = etag;
     }
 }
