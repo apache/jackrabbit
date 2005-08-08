@@ -83,7 +83,7 @@ public class RegisteredNamespacesReport implements Report, ItemResourceConstants
         try {
             DavSession session = resource.getSession();
             if (session == null || session.getRepositorySession() == null) {
-                throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the jcr:nodetypes report.");
+                throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the registerednamespaces report.");
             }
             nsReg = session.getRepositorySession().getWorkspace().getNamespaceRegistry();
         } catch (RepositoryException e) {
@@ -94,12 +94,12 @@ public class RegisteredNamespacesReport implements Report, ItemResourceConstants
     /**
      * @param info
      * @throws IllegalArgumentException if the specified info does not contain
-     * a jcr:nodetypes element.
+     * a {@link ItemResourceConstants#NAMESPACE dcr}:registerednamespaces element.
      * @see org.apache.jackrabbit.webdav.version.report.Report#setInfo(org.apache.jackrabbit.webdav.version.report.ReportInfo)
      */
     public void setInfo(ReportInfo info) {
         if (info == null || !"registerednamespaces".equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("jcr:registerednamespaces element expected.");
+            throw new IllegalArgumentException("registerednamespaces element expected.");
         }
         this.info = info;
     }
@@ -115,7 +115,7 @@ public class RegisteredNamespacesReport implements Report, ItemResourceConstants
      */
     public Document toXml() throws DavException {
         if (info == null || nsReg == null) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running jcr:registerednamespaces report");
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running registerednamespaces report");
         }
         try {
 	    String[] prefixes = nsReg.getPrefixes();

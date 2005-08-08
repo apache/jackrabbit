@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.lock.*;
+import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.lock.Lock;
 import javax.jcr.Node;
@@ -139,8 +140,8 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
         Node n = lock.getNode();
         try {
             // find out about deepness. if node does not hold the lock its deep anyway
-            if (n.holdsLock() && n.hasProperty("jcr:lockIsDeep")) {
-                isDeep = n.getProperty("jcr:lockIsDeep").getBoolean();
+            if (n.holdsLock() && n.hasProperty(JcrConstants.JCR_LOCKISDEEP)) {
+                isDeep = n.getProperty(JcrConstants.JCR_LOCKISDEEP).getBoolean();
             }
         } catch (RepositoryException e) {
             // ignore and keep default depth settings

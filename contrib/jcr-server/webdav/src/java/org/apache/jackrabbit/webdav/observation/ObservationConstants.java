@@ -29,7 +29,7 @@ public interface ObservationConstants {
     /**
      * The namespace
      */
-    public static final Namespace NAMESPACE = Namespace.getNamespace("jcr", "http://www.day.com/jcr/webdav/1.0");
+    public static final Namespace NAMESPACE = Namespace.getNamespace("dcr", "http://www.day.com/jcr/webdav/1.0");
 
     /**
      * The SubscriptionId request header<br>

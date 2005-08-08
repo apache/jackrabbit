@@ -35,7 +35,7 @@ public class NodeTypeElement extends Element implements NodeTypeConstants {
     public NodeTypeElement(Element ntElement) {
         super(XML_NODETYPE, NodeTypeConstants.NAMESPACE);
         if (!XML_NODETYPE.equals(ntElement.getName())) {
-            throw new IllegalArgumentException("jcr:nodetype element expected.");
+            throw new IllegalArgumentException("dcr:nodetype element expected.");
         }
         addNodeTypeNameElement(ntElement.getChildText(XML_NODETYPENAME, NodeTypeConstants.NAMESPACE));
     }

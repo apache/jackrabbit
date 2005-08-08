@@ -29,8 +29,8 @@ import org.jdom.*;
  *
  * Example of a valid 'searchrequest' body
  * <pre>
- * &lt;d:searchrequest xmlns:d="DAV:" jcr:="http://www.day.com/jcr/webdav/1.0" &gt;
- *    &lt;jcr:xpath>//sv:node[@sv:name='myapp:paragraph'][1]&lt;/jcr:xpath&gt;
+ * &lt;d:searchrequest xmlns:d="DAV:" dcr:="http://www.day.com/jcr/webdav/1.0" &gt;
+ *    &lt;dcr:xpath>//sv:node[@sv:name='myapp:paragraph'][1]&lt;/dcr:xpath&gt;
  * &lt;/d:searchrequest&gt;
  * </pre>
  *

@@ -52,7 +52,7 @@ public class TransactionInfo implements TransactionConstants {
         }
         Element tStatus = transactionInfo.getChild(XML_TRANSACTIONSTATUS, NAMESPACE);
         if (tStatus == null) {
-            throw new IllegalArgumentException("transactionInfo must contain a single 'jcr:transactionstatus' element.");
+            throw new IllegalArgumentException("transactionInfo must contain a single 'transactionstatus' element.");
         }
 
         // retrieve status: commit or rollback

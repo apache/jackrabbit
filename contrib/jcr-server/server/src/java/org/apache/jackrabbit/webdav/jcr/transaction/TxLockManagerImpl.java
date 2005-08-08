@@ -46,7 +46,7 @@ import java.util.Iterator;
 
 /**
  * <code>TxLockManagerImpl</code> manages locks with locktype
- * '{@link TransactionConstants#TRANSACTION jcr:transaction}'.
+ * '{@link TransactionConstants#TRANSACTION dcr:transaction}'.
  * <p/>
  * todo: removing all expired locks
  * todo: 'local' and 'global' are not accurate terms in the given context > replace

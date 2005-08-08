@@ -41,7 +41,8 @@ import java.io.*;
  * and {@link Session#exportSystemView(String, java.io.OutputStream, boolean, boolean) SysView}
  * of the {@link javax.jcr.Item item} represented by the requested resource.
  * <p/>
- * The request body must contain a jcr:exportview element:
+ * The request body must contain a {@link ItemResourceConstants#NAMESPACE dcr}:exportview
+ * element:
  * <pre>
  * &lt;!ELEMENT exportview  ( (sysview | docview)?, skipbinary?, norecurse ) &gt;
  * &lt;!ELEMENT sysview EMPTY &gt;
@@ -91,7 +92,7 @@ public class ExportViewReport implements Report {
         }
         DavSession davSession = resource.getSession();
         if (davSession == null || davSession.getRepositorySession() == null) {
-            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the jcr:nodetypes report.");
+            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the exportview report.");
         }
         session = davSession.getRepositorySession();
         absPath = resource.getResourcePath();
@@ -100,12 +101,12 @@ public class ExportViewReport implements Report {
     /**
      * @param info
      * @throws IllegalArgumentException if the specified {@link ReportInfo info}
-     * object does not contain a jcr:exportview element.
+     * object does not contain a {@link ItemResourceConstants#NAMESPACE dcr}:exportview element.
      * @see Report#setInfo(org.apache.jackrabbit.webdav.version.report.ReportInfo)
      */
     public void setInfo(ReportInfo info) {
         if (info == null || !REPORT_NAME.equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("jcr:exportview element expected.");
+            throw new IllegalArgumentException("dcr:exportview element expected.");
         }
         this.info = info;
     }
