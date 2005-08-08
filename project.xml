@@ -282,6 +282,15 @@
             </roles>
             <timezone>+1</timezone>
         </contributor>
+        <contributor>
+            <name>Sten Roger Sandvik</name>
+            <email>srs@x3m.com</email>
+            <organization>x3m.com</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
     </contributors>
 
     <reports>
