@@ -130,7 +130,7 @@ public class RootItemCollection extends VersionControlledItemCollection {
                     throw new JcrDavException(e);
                 }
             } else {
-                log.warn("Unexpected structure of jcr:namespace property.");
+                log.warn("Unexpected structure of dcr:namespace property.");
                 throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         } else {

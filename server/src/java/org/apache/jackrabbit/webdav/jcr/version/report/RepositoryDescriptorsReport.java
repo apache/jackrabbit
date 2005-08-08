@@ -30,7 +30,7 @@ import java.util.List;
 
 /**
  * <code>RepositoryDescriptorsReport</code> allows to retrieve the repository
- * descriptors. The request body must be an empty 'jcr:repositorydescriptors' element:
+ * descriptors. The request body must be an empty 'dcr:repositorydescriptors' element:
  * <pre>
  * &lt;!ELEMENT repositorydescriptors EMPTY &gt;
  * </pre>
@@ -79,7 +79,7 @@ public class RepositoryDescriptorsReport implements Report, ItemResourceConstant
         }
         DavSession session = resource.getSession();
         if (session == null || session.getRepositorySession() == null) {
-            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the jcr:nodetypes report.");
+            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the repositorydescriptors report.");
         }
         repository = session.getRepositorySession().getRepository();
     }
@@ -87,12 +87,12 @@ public class RepositoryDescriptorsReport implements Report, ItemResourceConstant
     /**
      * @param info
      * @throws IllegalArgumentException if the specified info does not contain
-     * a jcr:nodetypes element.
+     * a {@link ItemResourceConstants#NAMESPACE dcr}:repositorydescriptors element.
      * @see org.apache.jackrabbit.webdav.version.report.Report#setInfo(org.apache.jackrabbit.webdav.version.report.ReportInfo)
      */
     public void setInfo(ReportInfo info) {
         if (info == null || !"repositorydescriptors".equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("jcr:repositorydescriptors element expected.");
+            throw new IllegalArgumentException("repositorydescriptors element expected.");
         }
     }
 

@@ -21,6 +21,8 @@ import java.util.*;
 import java.io.*;
 
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.lock.*;
@@ -40,6 +42,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
     /** the default logger */
     private static final Logger log = Logger.getLogger(DavResourceImpl.class);
+
+    private static final HashMap reservedNamespaces = new HashMap();
+    static {
+        reservedNamespaces.put(DavConstants.NAMESPACE.getPrefix(), DavConstants.NAMESPACE.getURI());
+        reservedNamespaces.put(ObservationConstants.NAMESPACE.getPrefix(), ObservationConstants.NAMESPACE.getURI());
+        reservedNamespaces.put(TransactionConstants.NAMESPACE.getPrefix(), TransactionConstants.NAMESPACE.getURI());
+    }
 
     private DavResourceFactory factory;
     private LockManager lockManager;
@@ -256,10 +265,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                 while (it.hasNext()) {
                     Property p = it.nextProperty();
                     String pName = p.getName();
-                    String prefix = Text.getNamespacePrefix(pName);
-                    String uri = node.getSession().getNamespaceURI(prefix);
-                    Namespace namespace = Namespace.getNamespace(prefix, uri);
-                    DavPropertyName name = DavPropertyName.create(Text.getLocalName(pName), namespace);
+                    DavPropertyName name = getDavName(pName, node.getSession());
                     if (p.getDefinition().isMultiple()) {
                         log.debug("Multivalued property '" + pName + "' not added to webdav property set.");
                     } else {
@@ -761,6 +767,26 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
+     * Builds a webdav property name from the given jcrName. In case the jcrName
+     * contains a namespace prefix that would conflict with any of the predefined
+     * webdav namespaces a new prefix is assigned.
+     *
+     * @param jcrName
+     * @return namespace
+     */
+    private DavPropertyName getDavName(String jcrName, Session session) throws RepositoryException {
+        String prefix = Text.getNamespacePrefix(jcrName);
+        String uri = session.getNamespaceURI(prefix);
+        // check for conflicts with reserved webdav-namespaces
+        if (reservedNamespaces.containsKey(prefix) && !reservedNamespaces.get(prefix).equals(uri)) {
+            prefix = prefix + "0";
+        }
+        Namespace namespace = Namespace.getNamespace(prefix, uri);
+        DavPropertyName name = DavPropertyName.create(Text.getLocalName(jcrName), namespace);
+        return name;
+    }
+
+    /**
      * Build jcr property name from dav property name
      *
      * @param propName
@@ -777,7 +803,11 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         return pName;
     }
 
-
+    /**
+     *
+     * @param property
+     * @throws RepositoryException
+     */
     private void setJcrProperty(DavProperty property) throws RepositoryException {
         // retrieve value
         String value = property.getValue().toString();
@@ -786,6 +816,11 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         node.setProperty(getJcrName(property.getName()), value);
     }
 
+    /**
+     *
+     * @param propertyName
+     * @throws RepositoryException
+     */
     private void removeJcrProperty(DavPropertyName propertyName) throws RepositoryException {
         node.getProperty(getJcrName(propertyName)).remove();
     }
