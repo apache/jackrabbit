@@ -52,7 +52,7 @@ public interface ItemResourceConstants {
     /**
      * The namespace for all jcr specific extensions.
      */
-    public static final Namespace NAMESPACE = Namespace.getNamespace("jcr", "http://www.day.com/jcr/webdav/1.0");
+    public static final Namespace NAMESPACE = Namespace.getNamespace("dcr", "http://www.day.com/jcr/webdav/1.0");
 
     // xml element names
     public static final String XML_PRIMARYNODETYPE = "primarynodetype";

@@ -33,7 +33,7 @@ public interface TransactionConstants {
     /**
      * Namespace for transaction related xml elements
      */
-    public static final Namespace NAMESPACE = Namespace.getNamespace("jcr", "http://www.day.com/jcr/webdav/1.0");
+    public static final Namespace NAMESPACE = Namespace.getNamespace("dcr", "http://www.day.com/jcr/webdav/1.0");
 
     /**
      * TransactionId Header

@@ -37,14 +37,14 @@ import javax.jcr.RepositoryException;
  * represents the corresponding node in another workspace.
  *
  * <p/>
- * The request body must be a 'jcr:locate-corresponding-node' XML element, that
+ * The request body must be a 'dcr:locate-corresponding-node' XML element, that
  * contains the href of the source workspace, where the corresponding node should
  * be searched:
  * <pre>
  * &lt;!ELEMENT locate-corresponding-node ( workspace ) &gt;
  * &lt;!ELEMENT workspace ( href ) &gt;  (as defined by <a href="http://www.webdav.org/specs/rfc3253.html#PROPERTY_workspace">RFC 3253</a>)
  * </pre>
- * The response to a successful report request must be a jcr:locate-corresponding-node-report
+ * The response to a successful report request must be a 'dcr:locate-corresponding-node-report'
  * element that contains the href of the corresponding node in the given source
  * workspace:
  *
@@ -87,7 +87,7 @@ public class LocateCorrespondingNodeReport implements Report {
         }
         DavSession davSession = resource.getSession();
         if (davSession == null || davSession.getRepositorySession() == null) {
-            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the jcr:locate-corresponding-node report.");
+            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the dcr:locate-corresponding-node report.");
         }
         this.resource = resource;
     }
@@ -97,7 +97,7 @@ public class LocateCorrespondingNodeReport implements Report {
      */
     public void setInfo(ReportInfo info) {
         if (info == null || !REPORT_NAME.equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("jcr:locate-corresponding-node expected.");
+            throw new IllegalArgumentException("dcr:locate-corresponding-node expected.");
         }
         Element workspace = info.getReportElement().getChild(DeltaVConstants.WORKSPACE.getName(), DeltaVConstants.WORKSPACE.getNamespace());
         if (workspace != null) {
@@ -110,7 +110,7 @@ public class LocateCorrespondingNodeReport implements Report {
      */
     public Document toXml() throws DavException {
         if (resource == null || workspaceHref == null) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running jcr:locate-corresponding-node report: resource must not be null and request body must define the href of a source workspace");
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running dcr:locate-corresponding-node report: resource must not be null and request body must define the href of a source workspace");
         }
         try {
             Item item = resource.getSession().getRepositorySession().getItem(resource.getResourcePath());
@@ -125,7 +125,7 @@ public class LocateCorrespondingNodeReport implements Report {
                 e.addContent(XmlUtil.hrefToXml(corrLoc.getHref(true)));
                 return new Document(e);
             } else {
-                throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running jcr:locate-corresponding-node report: resource must represent a JCR node.");
+                throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running dcr:locate-corresponding-node report: resource must represent a jcr node.");
             }
         } catch (RepositoryException e) {
             throw new JcrDavException(e);

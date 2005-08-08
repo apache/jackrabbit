@@ -31,7 +31,7 @@ import javax.jcr.RepositoryException;
  * <code>LocateByUuidReport</code> handles REPORT requests for the 'locate-by-uuid'
  * report.
  * <p/>
- * The request body must be a 'jcr:locate-by-uuid' XML element:
+ * The request body must be a 'dcr:locate-by-uuid' XML element:
  * <pre>
  * &lt;!ELEMENT locate-by-uuid ( href , prop? ) &gt;
  * </pre>
@@ -73,7 +73,7 @@ public class LocateByUuidReport implements Report {
         }
         DavSession davSession = resource.getSession();
         if (davSession == null || davSession.getRepositorySession() == null) {
-            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the jcr:nodetypes report.");
+            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the locate-by-uuid report.");
         }
         this.resource = resource;
     }
@@ -81,12 +81,12 @@ public class LocateByUuidReport implements Report {
     /**
      * @param info
      * @throws IllegalArgumentException if the specified {@link ReportInfo info}
-     * object does not contain a jcr:exportview element.
+     * object does not contain a {@link ItemResourceConstants#NAMESPACE dcr}:locate-by-uuid element.
      * @see Report#setInfo(org.apache.jackrabbit.webdav.version.report.ReportInfo)
      */
     public void setInfo(ReportInfo info) {
         if (info == null || !REPORT_NAME.equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("jcr:locate-by-uuid element expected.");
+            throw new IllegalArgumentException("dcr:locate-by-uuid element expected.");
         }
         this.info = info;
     }

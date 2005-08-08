@@ -36,7 +36,7 @@ import java.util.*;
 
 /**
  * <code>NodeTypesReport</code> allows to retrieve the definition of a single
- * or multiple node types. The request body must be a 'jcr:nodetypes' element:
+ * or multiple node types. The request body must be a 'dcr:nodetypes' element:
  * <pre>
  * &lt;!ELEMENT nodetypes ( nodetype+ | all-nodetypes | mixin-nodetypes | primary-nodetypes ) &gt;
  *
@@ -47,6 +47,8 @@ import java.util.*;
  * &lt;!ELEMENT mixin-nodetypes EMPTY &gt;
  * &lt;!ELEMENT primary-nodetypes EMPTY &gt;
  * </pre>
+ *
+ * @see NodeTypeConstants#NAMESPACE
  *
  * @todo currently the nodetype report is not consistent with the general way of representing nodetype names (with NodetypeElement) in order to be compatible with the jackrabbit nodetype registry...
  * @todo for the same reason, not the complete nodetype-definition, but only the nodetype def as stored is represented.
@@ -85,7 +87,7 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
         }
         DavSession session = resource.getSession();
         if (session == null || session.getRepositorySession() == null) {
-            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the jcr:nodetypes report.");
+            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the nodetypes report.");
         }
         this.session = session.getRepositorySession();
     }
@@ -93,12 +95,12 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
     /**
      * @param info
      * @throws IllegalArgumentException if the specified info does not contain
-     * a jcr:nodetypes element.
+     * a {@link org.apache.jackrabbit.webdav.jcr.ItemResourceConstants#NAMESPACE dcr}:{@link NodeTypeConstants#XML_NODETYPES nodetypes} element.
      * @see Report#setInfo(org.apache.jackrabbit.webdav.version.report.ReportInfo)
      */
     public void setInfo(ReportInfo info) {
         if (info == null || !"nodetypes".equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("jcr:nodetypes element expected.");
+            throw new IllegalArgumentException("dcr:nodetypes element expected.");
         }
         this.info = info;
     }
@@ -114,7 +116,7 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
      */
     public Document toXml() throws DavException {
         if (info == null || session == null) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running jcr:nodetypes report");
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running nodetypes report");
         }
         try {
             Element report = new Element(XML_NODETYPES);
@@ -203,7 +205,7 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
             List ntList = new ArrayList();
             List elemList = info.getReportElement().getChildren(XML_NODETYPE, NAMESPACE);
             if (elemList.isEmpty()) {
-                // throw exception if the request body does not contain a single jcr:nodetype element
+                // throw exception if the request body does not contain a single nodetype element
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST, "NodeTypes report: request body has invalid format.");
             }
             Iterator elemIter = elemList.iterator();

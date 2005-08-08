@@ -103,8 +103,8 @@ public class DefaultItemCollection extends AbstractItemResource
 
     /**
      * This implementation of the <code>DavResource</code> does only allow
-     * to set the jcr:mixinnodetypes property. Please note that the existing list of
-     * mixin nodetypes will be completely replaces.<br>
+     * to set the mixinnodetypes property. Please note that the existing list of
+     * mixin nodetypes will be completely replaced.<br>
      * In order to add / set any other repository property on the underlaying
      * {@link javax.jcr.Node} use <code>addMember(DavResource)</code> or
      * <code>addMember(DavResource, InputStream)</code> or modify the value
@@ -167,7 +167,7 @@ public class DefaultItemCollection extends AbstractItemResource
 
     /**
      * This implementation of the <code>DavResource</code> does only allow
-     * to remove the jcr:mixinnodetypes property.
+     * to remove the mixinnodetypes property.
      *
      * @param propertyName
      * @throws org.apache.jackrabbit.webdav.DavException
