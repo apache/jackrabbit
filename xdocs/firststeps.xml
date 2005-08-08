@@ -210,7 +210,7 @@ public class JCRTest {
       if (!rn.hasNode("testnode")) {
         System.out.println("creating testnode");
         Node n=rn.addNode("testnode", "nt:unstructured");
-        n.setProperty("testprop", new StringValue("Hello, World."));
+        n.setProperty("testprop", session.getValueFactory().createValue("Hello, World."));
         session.save();
       }
 
@@ -326,7 +326,7 @@ public class JCRTest {
       if (!rn.hasNode("testnode")) {
         System.out.println("creating testnode");
         Node n=rn.addNode("testnode", "nt:unstructured");
-        n.setProperty("testprop", new StringValue("Hello, World."));
+        n.setProperty("testprop", session.getValueFactory().createValue("Hello, World."));
         session.save();
       }
       
