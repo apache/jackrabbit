@@ -74,6 +74,11 @@ public class SearchIndex extends AbstractQueryHandler {
     private int minMergeDocs = 1000;
 
     /**
+     * volatileIdleTime config parameter.
+     */
+    private int volatileIdleTime = 3;
+
+    /**
      * maxMergeDocs config parameter
      */
     private int maxMergeDocs = 100000;
@@ -352,6 +357,24 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public int getMinMergeDocs() {
         return minMergeDocs;
+    }
+
+    /**
+     * Sets the property: volatileIdleTime
+     *
+     * @param volatileIdleTime idle time in seconds
+     */
+    public void setVolatileIdleTime(int volatileIdleTime) {
+        this.volatileIdleTime = volatileIdleTime;
+    }
+
+    /**
+     * Returns the current value for volatileIdleTime.
+     *
+     * @return the current value for volatileIdleTime.
+     */
+    public int getVolatileIdleTime() {
+        return volatileIdleTime;
     }
 
     /**
