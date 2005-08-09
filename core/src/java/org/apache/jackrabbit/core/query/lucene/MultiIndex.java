@@ -37,15 +37,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * A <code>MultiIndex</code> consists of a {@link VolatileIndex} and multiple
  * {@link PersistentIndex}es. The goal is to keep most parts of the index open
  * with index readers and write new index data to the volatile index. When
- * the volatile index reaches a certain size (see {@link SearchIndex#setMinMergeDocs(int)} a
- * new persistent index is created with the index data from the volatile index.
- * the new persistent index is then added to the list of already existing
- * persistent indexes. Furhter operations on the new persistent index will
+ * the volatile index reaches a certain size (see {@link SearchIndex#setMinMergeDocs(int)})
+ * a new persistent index is created with the index data from the volatile index,
+ * the same happens when the volatile index has been idle for some time (see
+ * {@link SearchIndex#setVolatileIdleTime(int)}).
+ * The new persistent index is then added to the list of already existing
+ * persistent indexes. Further operations on the new persistent index will
  * however only require an <code>IndexReader</code> which serves for queries
  * but also for delete operations on the index.
  * <p/>
@@ -124,6 +128,17 @@ class MultiIndex {
      * <code>true</code> if the redo log contained entries on startup.
      */
     private boolean redoLogApplied = false;
+
+    /**
+     * The last time this index was modified. That is, a document was added
+     * or removed.
+     */
+    private long lastModificationTime;
+
+    /**
+     * Timer to schedule commits of the volatile index after some idle time.
+     */
+    private final Timer commitTimer = new Timer(true);
 
     /**
      * Creates a new MultiIndex.
@@ -213,6 +228,8 @@ class MultiIndex {
         } catch (RepositoryException e) {
             throw new IOException("Error indexing root node: " + e.getMessage());
         }
+        lastModificationTime = System.currentTimeMillis();
+        startCommitTimer();
     }
 
     /**
@@ -223,6 +240,7 @@ class MultiIndex {
      *                     index.
      */
     synchronized void addDocument(Document doc) throws IOException {
+        lastModificationTime = System.currentTimeMillis();
         multiReader = null;
         volatileIndex.addDocument(doc);
         if (volatileIndex.getRedoLog().getSize() >= handler.getMinMergeDocs()) {
@@ -239,6 +257,7 @@ class MultiIndex {
      * @throws IOException if an error occurs while deleting the document.
      */
     synchronized int removeDocument(Term idTerm) throws IOException {
+        lastModificationTime = System.currentTimeMillis();
         // flush multi reader if it does not have deletions yet
         if (multiReader != null && !multiReader.hasDeletions()) {
             multiReader = null;
@@ -269,6 +288,7 @@ class MultiIndex {
      * @throws IOException if an error occurs while deleting documents.
      */
     synchronized int removeAllDocuments(Term idTerm) throws IOException {
+        lastModificationTime = System.currentTimeMillis();
         // flush multi reader if it does not have deletions yet
         if (multiReader != null && !multiReader.hasDeletions()) {
             multiReader = null;
@@ -305,6 +325,10 @@ class MultiIndex {
      * Closes this <code>MultiIndex</code>.
      */
     synchronized void close() {
+        // stop timer
+        commitTimer.cancel();
+
+        // commit / close indexes
         multiReader = null;
         try {
             if (volatileIndex.getRedoLog().hasEntries()) {
@@ -587,6 +611,41 @@ class MultiIndex {
             indexNames.write(fs);
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
+        }
+    }
+
+    /**
+     * Starts the commit timer that periodically checks if the volatile index
+     * should be committed. The timer task will call {@link #checkCommit()}.
+     */
+    private void startCommitTimer() {
+        commitTimer.schedule(new TimerTask() {
+            public void run() {
+                checkCommit();
+            }
+        }, 0, 1000);
+    }
+
+    /**
+     * Checks the duration between the last modification to this index and the
+     * current time and commits the volatile index (if there are changes at all)
+     * if the duration (idle time) is more than {@link SearchIndex#getVolatileIdleTime()}
+     * seconds.
+     */
+    private synchronized void checkCommit() {
+        long idleTime = System.currentTimeMillis() - lastModificationTime;
+        // do not commit if volatileIdleTime is zero or negative
+        if (handler.getVolatileIdleTime() > 0
+                && idleTime > handler.getVolatileIdleTime() * 1000) {
+            try {
+                if (volatileIndex.getRedoLog().hasEntries()) {
+                    log.info("Committing in-memory index after being idle for " +
+                            idleTime + " ms.");
+                    commit();
+                }
+            } catch (IOException e) {
+                log.error("Unable to commit volatile index", e);
+            }
         }
     }
 
