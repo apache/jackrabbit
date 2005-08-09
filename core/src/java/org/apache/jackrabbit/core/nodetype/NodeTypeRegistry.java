@@ -1294,9 +1294,11 @@ public class NodeTypeRegistry implements Dumpable, Constants {
     }
 
     /**
+     * Returns the nodetype definition for the given nodetype name.
+     *
      * @param nodeTypeName
-     * @return
-     * @throws NoSuchNodeTypeException
+     * @return the nodetype defition.
+     * @throws NoSuchNodeTypeException if the nodetype does not exist
      */
     public synchronized NodeTypeDef getNodeTypeDef(QName nodeTypeName)
             throws NoSuchNodeTypeException {
