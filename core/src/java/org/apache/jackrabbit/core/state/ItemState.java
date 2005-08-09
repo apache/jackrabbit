@@ -447,8 +447,8 @@ public abstract class ItemState implements ItemStateListener, Serializable {
             status = STATUS_STALE_DESTROYED;
         } else {
             status = STATUS_EXISTING_REMOVED;
+            notifyStateDestroyed();
         }
-        // @todo propagate event to our listeners too?
     }
 
     /**
@@ -461,8 +461,8 @@ public abstract class ItemState implements ItemStateListener, Serializable {
         } else {
             // this instance represents existing state, update it
             pull();
+            notifyStateUpdated();
         }
-        // @todo propagate event to our listeners too?
     }
 
     /**
