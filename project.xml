@@ -291,6 +291,15 @@
             </roles>
             <timezone>+1</timezone>
         </contributor>
+        <contributor>
+            <name>Brian Moseley</name>
+            <email>bcm@osafoundation.org</email>
+            <organization>Open Source Applications Foundation (OSAF)</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>-8</timezone>
+        </contributor>
     </contributors>
 
     <reports>
