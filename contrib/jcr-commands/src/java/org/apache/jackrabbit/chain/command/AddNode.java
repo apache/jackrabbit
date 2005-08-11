@@ -20,60 +20,118 @@ import javax.jcr.Node;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 
 /**
- * Adds a node to the current working node.
+ * Add a node to the current working node. <br>
+ * The Command attributes are set from the specified literal values, or from the
+ * context attributes stored under the given keys.
  */
-public class AddNode implements Command {
-	/** Node type */
-	private String type;
+public class AddNode implements Command
+{
+    
+    // ---------------------------- < literals >    
+    /** Node type */
+    private String nodeType;
 
-	/** Node name */
-	private String name;
+    /** Node name */
+    private String nodeName;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
-	 */
-	public boolean execute(Context ctx) throws Exception {
-		Node node = ContextHelper.getCurrentNode(ctx);
-		if (this.type == null) {
-			node.addNode(name);
-		} else {
-			node.addNode(type, name);
-		}
-		return false;
-	}
+    // ---------------------------- < keys >    
+    /** Node type key */
+    private String nodeTypeKey;
 
-	/**
-	 * @return Returns the name.
-	 */
-	public String getName() {
-		return name;
-	}
+    /** Node name key */
+    private String nodeNameKey;
 
-	/**
-	 * @param name
-	 *            The name to set.
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+    /**
+     * @inheritDoc
+     */
+    public boolean execute(Context ctx) throws Exception
+    {
+        Node node = CtxHelper.getCurrentNode(ctx);
 
-	/**
-	 * @return Returns the type.
-	 */
-	public String getType() {
-		return type;
-	}
+        String nodeType = CtxHelper.getAttr(this.nodeType,
+            this.nodeTypeKey, ctx);
 
-	/**
-	 * @param type
-	 *            The type to set.
-	 */
-	public void setType(String type) {
-		this.type = type;
-	}
+        String name = CtxHelper.getAttr(this.nodeName, this.nodeNameKey, ctx);
+
+        if (nodeType == null)
+        {
+            node.addNode(name);
+        } else
+        {
+            node.addNode(name, nodeType);
+        }
+        return false;
+    }
+
+    /**
+     * @return Returns the name.
+     */
+    public String getNodeName()
+    {
+        return nodeName;
+    }
+
+    /**
+     * @param name
+     *            The literal name to set.
+     */
+    public void setNodeName(String name)
+    {
+        this.nodeName = name;
+    }
+
+    /**
+     * @return Returns the type.
+     */
+    public String getNodeType()
+    {
+        return nodeType;
+    }
+
+    /**
+     * @param type
+     *            The literal note type to set.
+     */
+    public void setNodeType(String type)
+    {
+        this.nodeType = type;
+    }
+
+    /**
+     * @return Returns the nameKey.
+     */
+    public String getNodeNameKey()
+    {
+        return nodeNameKey;
+    }
+
+    /**
+     * @param nameKey
+     *            Set the context attribute key for the name attribute.
+     */
+    public void setNodeNameKey(String nameKey)
+    {
+        this.nodeNameKey = nameKey;
+    }
+
+    /**
+     * @return Returns the nodeTypeKey.
+     */
+    public String getNodeTypeKey()
+    {
+        return nodeTypeKey;
+    }
+
+    /**
+     * @param nodeTypeKey
+     *            Set the context attribute key for the node type attribute.
+     */
+    public void setNodeTypeKey(String nodeTypeKey)
+    {
+        this.nodeTypeKey = nodeTypeKey;
+    }
+
 }

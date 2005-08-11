@@ -18,11 +18,11 @@ package org.apache.jackrabbit.chain.command;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 import org.apache.jackrabbit.core.RepositoryImpl;
 
 /**
- * Stops Jackrabbit  
+ * Stop Jackrabbit  
  */
 public class StopJackrabbit implements Command {
 
@@ -30,8 +30,15 @@ public class StopJackrabbit implements Command {
 	 * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
 	 */
 	public boolean execute(Context ctx) throws Exception {
-		RepositoryImpl repo = (RepositoryImpl) ContextHelper.getRepository(ctx) ;
-		repo.shutdown() ;
+		RepositoryImpl repo = (RepositoryImpl) CtxHelper.getRepository(ctx) ;
+        if (repo==null) {
+            throw new IllegalStateException("No current working repository") ;
+        }
+        if (!(repo instanceof RepositoryImpl)) {
+            throw new IllegalStateException("Jackrabbit is not the current working repository") ;
+        }
+        repo.shutdown() ;
+        CtxHelper.setRepository(ctx, null);
 		return false;
 	}
 }

@@ -20,7 +20,7 @@ import javax.jcr.Node;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 
 /**
  * Saves the current working node.
@@ -32,7 +32,7 @@ public class SaveNode implements Command {
 	 * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
 	 */
 	public boolean execute(Context ctx) throws Exception {
-		Node node = ContextHelper.getCurrentNode(ctx);
+		Node node = CtxHelper.getCurrentNode(ctx);
 		node.save() ;
 		return false;
 	}

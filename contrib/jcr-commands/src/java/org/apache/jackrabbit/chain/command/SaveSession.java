@@ -20,7 +20,7 @@ import javax.jcr.Session;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 
 /**
  * Saves the current Session.
@@ -32,7 +32,7 @@ public class SaveSession implements Command {
 	 * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
 	 */
 	public boolean execute(Context ctx) throws Exception {
-		Session s = ContextHelper.getSession(ctx);
+		Session s = CtxHelper.getSession(ctx);
 		s.save() ;
 		return false;
 	}

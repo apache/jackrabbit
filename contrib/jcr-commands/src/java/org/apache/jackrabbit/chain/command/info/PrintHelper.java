@@ -1,0 +1,212 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.chain.command.info;
+
+import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.Iterator;
+
+import org.apache.commons.chain.Context;
+import org.apache.jackrabbit.chain.CtxHelper;
+import org.apache.jackrabbit.chain.JcrCommandException;
+
+/**
+ * Helper methods to print
+ */
+class PrintHelper
+{
+
+    /**
+     * 
+     * @param ctx
+     * @param width
+     * @param text
+     */
+    public static void printRow(Context ctx, int[] width, String[] text)
+    {
+        if (width.length != text.length)
+        {
+            throw new IllegalArgumentException(
+                "width[] and text[] haven't the same length");
+        }
+
+        PrintWriter out = CtxHelper.getOutput(ctx);
+
+        int rows = 1;
+
+        // Calculate rows
+        for (int i = 0; i < text.length; i++)
+        {
+            int textLength = text[i].length();
+            if (textLength == 0)
+            {
+                textLength = 1;
+            }
+            int columnWidth = width[i];
+            int neededRows = (int) Math.ceil((double) textLength
+                    / (double) columnWidth);
+            if (neededRows > rows)
+            {
+                rows = neededRows;
+            }
+        }
+
+        // Write table
+        for (int row = 0; row < rows; row++)
+        {
+            for (int column = 0; column < width.length; column++)
+            {
+                for (int pointer = 0; pointer < width[column]; pointer++)
+                {
+                    int pos = row * width[column] + pointer;
+                    if (pos < text[column].length())
+                    {
+                        out.print(text[column].charAt(pos));
+                    } else
+                    {
+                        out.print(' ');
+                    }
+                }
+                out.print(' ');                
+            }
+            out.println();
+        }
+    }
+
+    /**
+     * @param ctx
+     * @param width
+     * @param separator
+     */
+    public static void printSeparatorRow(
+        Context ctx,
+        int[] width,
+        char separator)
+    {
+        PrintWriter out = CtxHelper.getOutput(ctx);
+        for (int i = 0; i < width.length; i++)
+        {
+            for (int j = 0; j <= width[i]; j++)
+            {
+                if (j < width[i])
+                {
+                    out.print(separator);
+                } else
+                {
+                    out.print(' ');
+                }
+            }
+        }
+        out.println();
+    }
+
+    /**
+     * 
+     * @param ctx
+     * @param width
+     * @param texts
+     * @throws JcrCommandException
+     */
+    public static void printRow(Context ctx, int[] width, Collection texts)
+            throws JcrCommandException
+    {
+        String[] text = new String[width.length];
+        Iterator iter = texts.iterator();
+        int column = 0;
+        while (iter.hasNext())
+        {
+            Object o = iter.next();
+            if (o instanceof String)
+            {
+                text[column] = (String) o;
+            } else if (o instanceof Collection)
+            {
+                StringBuffer sb = new StringBuffer() ;
+                Iterator i = ((Collection) o).iterator();
+                while (i.hasNext())
+                {
+                    String str = (String) i.next();
+                    int rows = (int) Math.ceil((double) str.length()
+                            / (double) width[column]);
+                    if (rows == 0)
+                    {
+                        rows = 1;
+                    }
+                    sb.append(str) ;
+                    for (int j = 0; j < rows * width[column] - str.length(); j++)
+                    {
+                        sb.append(' ') ;
+                    }
+                }
+                text[column] = sb.toString() ;
+            } else
+            {
+                throw new JcrCommandException("illegalargument");
+            }
+            column++;
+        }
+        printRow(ctx, width, text);
+    }
+    
+    /**
+     * 
+     * @param ctx
+     * @param widths
+     * @param texts
+     * @throws JcrCommandException
+     */
+    public static void printRow(Context ctx, Collection widths, Collection texts) throws JcrCommandException {
+        printRow(ctx, convertWidth(widths), texts) ;
+    }
+    
+    /**
+     * 
+     * @param ctx
+     * @param widths
+     * @param texts
+     * @throws JcrCommandException
+     */
+    private static int[] convertWidth(Collection widths) throws JcrCommandException {
+        int[] width = new int[widths.size()] ;
+        int index=0 ;
+        Iterator iter = widths.iterator() ;
+        while (iter.hasNext())
+        {
+            Integer i = (Integer) iter.next();
+            width[index]= i.intValue() ;
+            index++ ;
+        }
+        return width ;
+    }
+    
+    /**
+     * 
+     * @param ctx
+     * @param widths
+     * @param separator
+     * @throws JcrCommandException 
+     */
+    public static void printSeparatorRow(
+        Context ctx,
+        Collection widths,
+        char separator) throws JcrCommandException
+    {
+        printSeparatorRow(ctx, convertWidth(widths), separator) ;
+    }
+    
+
+}

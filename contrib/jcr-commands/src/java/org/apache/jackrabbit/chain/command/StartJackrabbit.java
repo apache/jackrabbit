@@ -20,12 +20,12 @@ import javax.jcr.Repository;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 /**
- * Starts Jackrabbit. <br>
+ * Start Jackrabbit. <br>
  * Note that this command doesn't check whether there's a Jackrabbit
  * instance already running with the same configuration. Remember that two
  * jackrabbit instances using the same persistence storage might lead to a
@@ -48,7 +48,7 @@ public class StartJackrabbit implements Command
     {
         RepositoryConfig conf = RepositoryConfig.create(config, home);
         Repository repo = RepositoryImpl.create(conf);
-        ContextHelper.setRepository(ctx, repo);
+        CtxHelper.setRepository(ctx, repo);
         return false;
     }
 
