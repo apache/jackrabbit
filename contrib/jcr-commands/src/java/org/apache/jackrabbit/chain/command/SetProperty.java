@@ -19,23 +19,14 @@ package org.apache.jackrabbit.chain.command;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
 
-import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 
 /**
- * Sets a property to the current working Node
+ * Set a property to the current working Node
  */
-public class SetProperty implements Command
+public class SetProperty extends AbstractSetProperty
 {
-    /** Property name */
-    private String name;
-
-    /** Propety type */
-    private String propertyType;
-
-    /** Property value */
-    private String value;
 
     /*
      * (non-Javadoc)
@@ -44,53 +35,19 @@ public class SetProperty implements Command
      */
     public boolean execute(Context ctx) throws Exception
     {
-        Node node = ContextHelper.getCurrentNode(ctx);
+        String value = CtxHelper.getAttr(this.value, this.valueKey,
+            ctx);
+
+        String name = CtxHelper.getAttr(this.propertyName, this.propertyNameKey, ctx);
+
+        String propertyType = CtxHelper.getAttr(this.propertyType,
+            this.propertyTypeKey, PropertyType.TYPENAME_STRING, ctx);
+
+        Node node = CtxHelper.getCurrentNode(ctx);
+
         node.setProperty(name, value, PropertyType.valueFromName(propertyType));
+
         return false;
     }
 
-    /**
-     * @return Returns the name.
-     */
-    public String getName()
-    {
-        return name;
-    }
-
-    /**
-     * @param name
-     *            The name to set.
-     */
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-
-    /**
-     * @return Returns the type.
-     */
-    public String getPropertyType()
-    {
-        return propertyType;
-    }
-
-    /**
-     * @param type
-     *            The type to set.
-     */
-    public void setPropertyType(String type)
-    {
-        this.propertyType = type;
-    }
-
-    public String getValue()
-    {
-        return value;
-    }
-
-    public void setValue(String value)
-    {
-        this.value = value;
-    }
-    
 }

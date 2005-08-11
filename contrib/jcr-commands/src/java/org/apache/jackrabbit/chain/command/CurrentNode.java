@@ -21,26 +21,34 @@ import javax.jcr.Session;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 
 /**
- * Sets the current working Node
+ * Set the current working Node. <br>
+ * The Command attributes are set from the specified literal values, or from the
+ * context attributes stored under the given keys.
  */
 public class CurrentNode implements Command
 {
+    // ---------------------------- < literals >
+    
     /** path to the current node */
     private String path;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
+    // ---------------------------- < keys >
+    
+    /** context attribute key for the path attribute */
+    private String pathKey;
+
+    /**
+     * @inheritDoc
      */
     public boolean execute(Context ctx) throws Exception
     {
-        Session s = ContextHelper.getSession(ctx);
-        Node n = ContextHelper.getNode(ctx, path);
-        ContextHelper.setCurrentNode(ctx, n);
+        String path = CtxHelper.getAttr(this.path, this.pathKey, ctx);
+        Session s = CtxHelper.getSession(ctx);
+        Node n = CtxHelper.getNode(ctx, path);
+        CtxHelper.setCurrentNode(ctx, n);
         return false;
     }
 
@@ -59,5 +67,22 @@ public class CurrentNode implements Command
     public void setPath(String path)
     {
         this.path = path;
+    }
+
+    /**
+     * @return Returns the pathKey.
+     */
+    public String getPathKey()
+    {
+        return pathKey;
+    }
+
+    /**
+     * @param pathKey
+     *            Set the context attribute key for the path attribute.
+     */
+    public void setPathKey(String pathKey)
+    {
+        this.pathKey = pathKey;
     }
 }

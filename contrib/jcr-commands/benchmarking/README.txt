@@ -1,1 +1,1 @@
-This folder contains JMeter Test plans.
+This folder contains JMeter Test plans examples.

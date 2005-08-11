@@ -20,7 +20,7 @@ import javax.jcr.Session;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 
 /**
  * Logout command
@@ -35,9 +35,10 @@ public class Logout implements Command
      */
     public boolean execute(Context ctx) throws Exception
     {
-        Session session = ContextHelper.getSession(ctx);
+        Session session = CtxHelper.getSession(ctx);
         session.logout();
-        ContextHelper.setSession(ctx, null);
+        CtxHelper.setCurrentNode(ctx, null);
+        CtxHelper.setSession(ctx, null);
         return false;
     }
 }

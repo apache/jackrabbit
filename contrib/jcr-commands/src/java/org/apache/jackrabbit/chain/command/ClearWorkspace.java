@@ -18,28 +18,40 @@ package org.apache.jackrabbit.chain.command;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.Session;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 
 /**
- * Clears the Workspace
+ * Clear the Workspace
  */
 public class ClearWorkspace implements Command
 {
 
     public boolean execute(Context ctx) throws Exception
     {
-        Session s = ContextHelper.getSession(ctx) ;
-        NodeIterator iter = s.getRootNode().getNodes() ;
+        Session s = CtxHelper.getSession(ctx);
+        NodeIterator iter = s.getRootNode().getNodes();
         while (iter.hasNext())
         {
             Node n = (Node) iter.next();
-            if (!n.getName().equals(JcrConstants.JCR_SYSTEM)) {
-                n.remove() ;
+            if (!n.getName().equals(JcrConstants.JCR_SYSTEM))
+            {
+                n.remove();
+            }
+        }
+        PropertyIterator pIter = s.getRootNode().getProperties();
+        while (pIter.hasNext())
+        {
+            Property p = pIter.nextProperty();
+            if (!p.getName().equals(JcrConstants.JCR_PRIMARYTYPE))
+            {
+                p.remove();
             }
         }
         return false;

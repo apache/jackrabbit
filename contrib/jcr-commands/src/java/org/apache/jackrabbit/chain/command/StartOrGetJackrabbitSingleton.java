@@ -22,14 +22,14 @@ import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.chain.ContextHelper;
+import org.apache.jackrabbit.chain.CtxHelper;
 import org.apache.jackrabbit.chain.RepositoryPool;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 /**
  * <p>
- * Gets a Jackrabbit instance from the RepositoryPool and put in the Commons
+ * Get a Jackrabbit instance from the RepositoryPool and put in the Commons
  * Chain Context. If there's no Repository for the given config then it will
  * create a new instance and will add it to the pool.
  * </p>
@@ -72,7 +72,7 @@ public class StartOrGetJackrabbitSingleton implements Command
                     repo = RepositoryImpl.create(conf);
                     pool.put(config, home, repo);
                 }
-                ContextHelper.setRepository(ctx, repo);
+                CtxHelper.setRepository(ctx, repo);
             }
         } catch (Exception e)
         {
