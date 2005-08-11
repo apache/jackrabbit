@@ -24,7 +24,6 @@ import java.util.Set;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.commons.chain.impl.ContextBase;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.engine.event.LoopIterationEvent;
 import org.apache.jmeter.samplers.AbstractSampler;
@@ -136,7 +135,7 @@ public class ChainSampler extends AbstractSampler implements TestListener
      * Performs a test sample.
      * 
      * The <code>sample()</code> method retrieves the reference to the command
-     * and calls its <code>runTest()</code> method.
+     * and calls its <code>execute()</code> method.
      * 
      * @param entry
      *            the Entry for this sample
@@ -151,13 +150,13 @@ public class ChainSampler extends AbstractSampler implements TestListener
             {
                 log.debug(whoAmI() + "Creating Command");
                 createCommand();
-            } 
-            
-            updateCommand() ;
-            results.setSampleLabel("Chain Test = "
-                    + command.getClass().getName());
+            }
+
+            updateCommand();
+            results.setSampleLabel(this.getName());
+            Context ctx = new JMeterContextAdapter(getThreadContext());
             results.sampleStart();
-            command.execute(getContext());
+            command.execute(ctx);
             results.sampleEnd();
             results.setSuccessful(true);
         } catch (Exception e)
@@ -166,18 +165,6 @@ public class ChainSampler extends AbstractSampler implements TestListener
             log.error("Unable to run test", e);
         }
         return results;
-    }
-
-    private Context getContext()
-    {
-        Context ctx = (Context) getThreadContext().getVariables().getObject(
-            CHAINS_CONTEXT);
-        if (ctx == null)
-        {
-            ctx = new ContextBase();
-            getThreadContext().getVariables().putObject(CHAINS_CONTEXT, ctx);
-        }
-        return ctx;
     }
 
     /**
@@ -200,12 +187,14 @@ public class ChainSampler extends AbstractSampler implements TestListener
 
         return command;
     }
-    
+
     /**
-     * Updates the command attributes 
+     * Updates the command attributes
+     * 
      * @throws Exception
      */
-    private void updateCommand() throws Exception {
+    private void updateCommand() throws Exception
+    {
         Map descrip = BeanUtils.describe(command);
         Iterator iter = descrip.keySet().iterator();
         while (iter.hasNext())
@@ -258,10 +247,10 @@ public class ChainSampler extends AbstractSampler implements TestListener
 
     /**
      * Method called at the end of the test. This is called only on one instance
-     * of ChainSampler. This method will loop through all of the other
-     * samplers which have been registered (automatically in the
-     * constructor) and notify them that the test has ended, allowing the
-     * ChainSamplerClients to cleanup.
+     * of ChainSampler. This method will loop through all of the other samplers
+     * which have been registered (automatically in the constructor) and notify
+     * them that the test has ended, allowing the ChainSamplerClients to
+     * cleanup.
      */
     public void testEnded()
     {
@@ -288,5 +277,4 @@ public class ChainSampler extends AbstractSampler implements TestListener
     public void testIterationStart(LoopIterationEvent event)
     {
     }
-
 }
