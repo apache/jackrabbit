@@ -1,16 +1,21 @@
 Overview
 -----------------
-JMeter plugin for running Commons Chain commands.
-It includes the following classes:
- - org.apache.jmeter.protocol.java.config.gui.ChainConfigGui
- - org.apache.jmeter.protocol.java.control.gui.ChainTestSamplerGui
- - org.apache.jmeter.protocol.java.sampler.ChainSampler
- - org.apache.jmeter.protocol.java.test.SleepChainTest
+
+This project contains:
+
+1. JMeter plugin for running Commons Chain commands.
+2. JMeter function backed by Commons Jexl. See javadocs. 
 
 Dependencies not included in JMeter
 -----------------
+Add the following libraries to /lib
+
 - commons-chain 
 - commons-beanutils
+- commons-jexl
+- commons-collections. Jackrabbit uses a newer version of commons Collections.
+  Replace the jar included in JMeter with collections 3.1
+
  
 Installation
 -----------------

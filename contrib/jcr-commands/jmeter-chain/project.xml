@@ -68,6 +68,12 @@
       <type>jar</type>
       <url>http://avalon.apache.org</url>
     </dependency>
+    <dependency>
+      <groupId>commons-jexl</groupId>
+      <artifactId>commons-jexl</artifactId>
+      <version>1.0</version>
+      <type>jar</type>
+    </dependency>
   </dependencies>
   <build>
     <sourceDirectory>src/java</sourceDirectory>
