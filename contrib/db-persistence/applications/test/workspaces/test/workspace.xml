@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<Workspace name="test">
+  <!--
+      virtual file system of the workspace:
+      class: FQN of class implementing FileSystem interface
+  -->
+  <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+    <param name="path" value="${wsp.home}/data" />
+  </FileSystem>
+  <!--
+      persistence of the workspace:
+      class: FQN of class implementing PersistenceManager interface
+  <PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager">
+    <param name="driver" value="com.mysql.jdbc.Driver"/>
+    <param name="url" value="jdbc:mysql:///test"/>
+    <param name="schema" value="mysql"/>
+    <param name="schemaObjectPrefix" value="${wsp.name}_"/>
+  </PersistenceManager>
+  -->
+    <PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager">
+        <param name="driver" value="oracle.jdbc.OracleDriver"/>
+        <!--<param name="url" value="jdbc:oracle:oci:@glamm"/>-->
+        <param name="url" value="jdbc:oracle:thin:@//glamm.corp.day.com:1521/glamm"/>
+        <param name="user" value="crx"/>
+        <param name="password" value="crx"/>
+        <param name="schema" value="oracle"/>
+        <param name="schemaObjectPrefix" value="${wsp.name}_"/>
+    </PersistenceManager>
+  <!--
+      Search index and the file system it uses.
+  -->
+  <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
+    <param name="useCompoundFile" value="true" />
+    <param name="minMergeDocs" value="1000" />
+    <param name="maxMergeDocs" value="100000" />
+    <param name="mergeFactor" value="10" />
+    <param name="bufferSize" value="10"/>
+    <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+      <param name="path" value="${wsp.home}/index" />
+    </FileSystem>
+  </SearchIndex>
+</Workspace>
+
