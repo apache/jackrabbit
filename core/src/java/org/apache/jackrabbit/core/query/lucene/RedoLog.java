@@ -212,7 +212,7 @@ class RedoLog {
     private void read(EntryCollector collector) throws FileSystemException {
         InputStream in = logFile.getInputStream();
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(logFile.getInputStream()));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             String line = null;
             while ((line = reader.readLine()) != null) {
                 try {

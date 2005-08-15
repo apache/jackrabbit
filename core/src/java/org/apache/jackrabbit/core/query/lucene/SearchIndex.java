@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import EDU.oswego.cs.dl.util.concurrent.FIFOReadWriteLock;
 import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -32,11 +31,13 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
@@ -62,11 +63,6 @@ public class SearchIndex extends AbstractQueryHandler {
      * The analyzer we use for indexing.
      */
     private final Analyzer analyzer;
-
-    /**
-     * Read-write lock to synchronize access on the index.
-     */
-    private final FIFOReadWriteLock readWriteLock = new FIFOReadWriteLock();
 
     /**
      * minMergeDocs config parameter.
@@ -153,7 +149,7 @@ public class SearchIndex extends AbstractQueryHandler {
                             log.info(err.toString());
                         }
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     log.warn("Failed to run consistency check on index: " + e);
                 }
             }
@@ -169,18 +165,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @throws IOException if an error occurs while adding the node to the index.
      */
     public void addNode(NodeState node) throws RepositoryException, IOException {
-        Document doc = createDocument(node, getNamespaceMappings());
-        try {
-            readWriteLock.writeLock().acquire();
-        } catch (InterruptedException e) {
-            throw new RepositoryException("Failed to aquire write lock.");
-        }
-
-        try {
-            index.addDocument(doc);
-        } finally {
-            readWriteLock.writeLock().release();
-        }
+        throw new UnsupportedOperationException("addNode");
     }
 
     /**
@@ -190,19 +175,44 @@ public class SearchIndex extends AbstractQueryHandler {
      * the index.
      */
     public void deleteNode(String uuid) throws IOException {
-        Term idTerm = new Term(FieldNames.UUID, uuid);
-        try {
-            readWriteLock.writeLock().acquire();
-        } catch (InterruptedException e) {
-            throw new IOException("Failed to aquire write lock.");
-        }
+        throw new UnsupportedOperationException("deleteNode");
+    }
 
-        try {
-            index.removeDocument(idTerm);
-        } finally {
-            readWriteLock.writeLock().release();
-        }
-
+    /**
+     * This implementation forwards the call to
+     * {@link MultiIndex#update(java.util.Iterator, java.util.Iterator)} and
+     * transforms the two iterators to the required types.
+     *
+     * @param remove uuids of nodes to remove.
+     * @param add    NodeStates to add. Calls to <code>next()</code> on this
+     *               iterator may return <code>null</code>, to indicate that a
+     *               node could not be indexed successfully.
+     * @throws RepositoryException if an error occurs while indexing a node.
+     * @throws IOException         if an error occurs while updating the index.
+     */
+    public void updateNodes(Iterator remove, Iterator add)
+            throws RepositoryException, IOException {
+        index.update(new AbstractIteratorDecorator(remove) {
+            public Object next() {
+                String uuid = (String) super.next();
+                return new Term(FieldNames.UUID, uuid);
+            }
+        }, new AbstractIteratorDecorator(add) {
+            public Object next() {
+                NodeState state = (NodeState) super.next();
+                if (state == null) {
+                    return null;
+                }
+                Document doc = null;
+                try {
+                    doc = createDocument(state, getNamespaceMappings());
+                } catch (RepositoryException e) {
+                    log.error("Exception while creating document for node: " +
+                            state.getUUID() + ": " + e.toString());
+                }
+                return doc;
+            }
+        });
     }
 
     /**
@@ -251,46 +261,37 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return the lucene Hits object.
      * @throws IOException if an error occurs while searching the index.
      */
-    Hits executeQuery(Query query,
+    QueryHits executeQuery(Query query,
                              QName[] orderProps,
                              boolean[] orderSpecs) throws IOException {
-        try {
-            readWriteLock.readLock().acquire();
-        } catch (InterruptedException e) {
-            throw new IOException("Unable to obtain read lock on search index.");
-        }
-
-        Hits hits = null;
-        try {
-            SortField[] sortFields = new SortField[orderProps.length];
-            for (int i = 0; i < orderProps.length; i++) {
-                String prop = null;
-                if (Constants.JCR_SCORE.equals(orderProps[i])) {
-                    // order on jcr:score does not use the natural order as
-                    // implemented in lucene. score ascending in lucene means that
-                    // higher scores are first. JCR specs that lower score values
-                    // are first.
-                    sortFields[i] = new SortField(null, SortField.SCORE, orderSpecs[i]);
-                } else {
-                    try {
-                        prop = orderProps[i].toJCRName(getNamespaceMappings());
-                    } catch (NoPrefixDeclaredException e) {
-                        // will never happen
-                    }
-                    sortFields[i] = new SortField(prop, SharedFieldSortComparator.PROPERTIES, !orderSpecs[i]);
-                }
-            }
-
-            if (sortFields.length > 0) {
-                hits = new IndexSearcher(index.getIndexReader()).search(query, new Sort(sortFields));
+        SortField[] sortFields = new SortField[orderProps.length];
+        for (int i = 0; i < orderProps.length; i++) {
+            String prop = null;
+            if (Constants.JCR_SCORE.equals(orderProps[i])) {
+                // order on jcr:score does not use the natural order as
+                // implemented in lucene. score ascending in lucene means that
+                // higher scores are first. JCR specs that lower score values
+                // are first.
+                sortFields[i] = new SortField(null, SortField.SCORE, orderSpecs[i]);
             } else {
-                hits = new IndexSearcher(index.getIndexReader()).search(query);
+                try {
+                    prop = orderProps[i].toJCRName(getNamespaceMappings());
+                } catch (NoPrefixDeclaredException e) {
+                    // will never happen
+                }
+                sortFields[i] = new SortField(prop, SharedFieldSortComparator.PROPERTIES, !orderSpecs[i]);
             }
-        } finally {
-            readWriteLock.readLock().release();
         }
 
-        return hits;
+        IndexReader reader = index.getIndexReader();
+        IndexSearcher searcher = new IndexSearcher(reader);
+        Hits hits;
+        if (sortFields.length > 0) {
+            hits = searcher.search(query, new Sort(sortFields));
+        } else {
+            hits = searcher.search(query);
+        }
+        return new QueryHits(hits, reader);
     }
 
     /**

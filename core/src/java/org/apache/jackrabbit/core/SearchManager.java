@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.BeanMap;
+import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 import org.apache.jackrabbit.core.config.SearchConfig;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -29,6 +30,7 @@ import org.apache.jackrabbit.core.query.QueryImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.name.Path;
 import org.apache.log4j.Logger;
 
@@ -135,28 +137,6 @@ public class SearchManager implements SynchronousEventListener {
     }
 
     /**
-     * Adds a <code>Node</code> to the search index.
-     *
-     * @param node the NodeState to add.
-     * @throws RepositoryException if an error occurs while indexing the node.
-     * @throws IOException         if an error occurs while adding the node to the index.
-     */
-    public void addNode(NodeState node)
-            throws RepositoryException, IOException {
-        handler.addNode(node);
-    }
-
-    /**
-     * Deletes the Node with <code>UUID</code> from the search index.
-     *
-     * @param uuid the <code>UUID</code> of the node to delete.
-     * @throws IOException if an error occurs while deleting the node.
-     */
-    public void deleteNode(String uuid) throws IOException {
-        handler.deleteNode(uuid);
-    }
-
-    /**
      * Closes this <code>SearchManager</code> and also closes the
      * {@link FileSystem} configured in {@link SearchConfig}.
      */
@@ -259,24 +239,26 @@ public class SearchManager implements SynchronousEventListener {
             }
         }
 
-        for (Iterator it = removedNodes.iterator(); it.hasNext();) {
-            try {
-                deleteNode((String) it.next());
-            } catch (IOException e) {
-                log.error("Error deleting node from index.", e);
+        Iterator addedStates = new AbstractIteratorDecorator(addedNodes.iterator()) {
+            public Object next() {
+                ItemState item = null;
+                String uuid = (String) super.next();
+                try {
+                    item = itemMgr.getItemState(new NodeId(uuid));
+                } catch (ItemStateException e) {
+                    log.error("Unable to index node " + uuid + ": does not exist");
+                }
+                return item;
             }
+        };
+        try {
+            handler.updateNodes(removedNodes.iterator(), addedStates);
+        } catch (RepositoryException e) {
+            log.error("Error indexing node.", e);
+        } catch (IOException e) {
+            log.error("Error indexing node.", e);
         }
-        for (Iterator it = addedNodes.iterator(); it.hasNext();) {
-            try {
-                addNode((NodeState) itemMgr.getItemState(new NodeId((String) it.next())));
-            } catch (ItemStateException e) {
-                log.error("Error indexing node.", e);
-            } catch (RepositoryException e) {
-                log.error("Error indexing node.", e);
-            } catch (IOException e) {
-                log.error("Error indexing node.", e);
-            }
-        }
+
         if (log.isDebugEnabled()) {
             log.debug("onEvent: indexing finished in "
                     + String.valueOf(System.currentTimeMillis() - time)

@@ -26,6 +26,7 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
+import org.apache.lucene.document.Document;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -248,13 +249,15 @@ class DescendantSelfAxisQuery extends Query {
                 }
 
                 // check if nextDoc is a descendant of one of the context nodes
-                String parentUUID = reader.document(nextDoc).get(FieldNames.PARENT);
+                Document d = reader.document(nextDoc);
+                String parentUUID = d.get(FieldNames.PARENT);
                 while (parentUUID != null && !contextUUIDs.contains(parentUUID)) {
                     // traverse
                     TermDocs ancestor = reader.termDocs(new Term(FieldNames.UUID, parentUUID));
                     try {
                         if (ancestor.next()) {
-                            parentUUID = reader.document(ancestor.doc()).get(FieldNames.PARENT);
+                            d = reader.document(ancestor.doc());
+                            parentUUID = d.get(FieldNames.PARENT);
                             if (parentUUID.length() == 0) {
                                 parentUUID = null;
                             }
@@ -266,6 +269,9 @@ class DescendantSelfAxisQuery extends Query {
                     }
                 }
                 if (parentUUID != null) {
+                    // since current doc is a descendant of one of the context
+                    // docs we can promote uuid of doc to the context uuids
+                    contextUUIDs.add(d.get(FieldNames.UUID));
                     return true;
                 }
                 // try next

@@ -119,11 +119,14 @@ class ConsistencyCheck {
                     log.warn("Not repairable: " + error);
                     notRepairable++;
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 if (ignoreFailure) {
                     log.warn("Exception while reparing: " + e);
                 } else {
-                    throw e;
+                    if (!(e instanceof IOException)) {
+                        e = new IOException(e.getMessage());
+                    }
+                    throw (IOException) e;
                 }
             }
         }
@@ -151,20 +154,24 @@ class ConsistencyCheck {
         // collect all documents
         documents = new HashMap();
         IndexReader reader = index.getIndexReader();
-        for (int i = 0; i < reader.maxDoc(); i++) {
-            if (reader.isDeleted(i)) {
-                continue;
-            }
-            Document d = reader.document(i);
-            String uuid = d.get(FieldNames.UUID);
-            if (stateMgr.hasItemState(new NodeId(uuid))) {
-                Document old = (Document) documents.put(uuid, d);
-                if (old != null) {
-                    multipleEntries.add(uuid);
+        try {
+            for (int i = 0; i < reader.maxDoc(); i++) {
+                if (reader.isDeleted(i)) {
+                    continue;
                 }
-            } else {
-                errors.add(new NodeDeleted(uuid));
+                Document d = reader.document(i);
+                String uuid = d.get(FieldNames.UUID);
+                if (stateMgr.hasItemState(new NodeId(uuid))) {
+                    Document old = (Document) documents.put(uuid, d);
+                    if (old != null) {
+                        multipleEntries.add(uuid);
+                    }
+                } else {
+                    errors.add(new NodeDeleted(uuid));
+                }
             }
+        } finally {
+            reader.close();
         }
 
         // create multiple entries errors

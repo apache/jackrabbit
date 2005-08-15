@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * Defines an interface for the actual node indexing and query execution.
@@ -55,6 +56,20 @@ public interface QueryHandler {
      * @throws IOException if an error occurs while deleting the node.
      */
     void deleteNode(String uuid) throws IOException;
+
+    /**
+     * Updates the index in an atomic operation. Some nodes may be removed and
+     * added again in the same updateNodes() call, which is equivalent to an
+     * node update.
+     *
+     * @param remove Iterator of uuid <code>String</code>s of nodes to delete
+     * @param add    Iterator of <code>NodeState</code> instance to add to the
+     *               index.
+     * @throws RepositoryException if an error occurs while indexing a node.
+     * @throws IOException if an error occurs while updating the index.
+     */
+    void updateNodes(Iterator remove, Iterator add)
+            throws RepositoryException, IOException;
 
     /**
      * Closes this <code>QueryHandler</code> and frees resources attached

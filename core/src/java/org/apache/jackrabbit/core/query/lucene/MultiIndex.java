@@ -29,16 +29,16 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.commons.collections.iterators.EmptyIterator;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Arrays;
 
 /**
  * A <code>MultiIndex</code> consists of a {@link VolatileIndex} and multiple
@@ -58,18 +58,6 @@ import java.util.TimerTask;
  * {@link SearchIndex#setMergeFactor(int)} and {@link SearchIndex#setMinMergeDocs(int)}. For detailed
  * description of the configuration parameters see also the lucene
  * <code>IndexWriter</code> class.
- * <p/>
- * This class is not thread-safe. Clients of this class must ensure
- * synchronization of multiple threads. The following conditions must hold true:
- * <ul>
- * <li>Only one thread may use {@link #addDocument(org.apache.lucene.document.Document)}
- * or {@link #removeDocument(org.apache.lucene.index.Term)} at a time.</li>
- * <li>While a thread uses the <code>IndexReader</code> returned by
- * {@link #getIndexReader()} other threads must not call {@link #addDocument(org.apache.lucene.document.Document)}
- * or {@link #removeDocument(org.apache.lucene.index.Term)}</li>
- * <li>Multiple threads may use the <code>IndexReader</code> returned by
- * {@link #getIndexReader()}</li>
- * </ul>
  */
 class MultiIndex {
 
@@ -91,7 +79,12 @@ class MultiIndex {
     /**
      * Names of active persistent index directories.
      */
-    private final IndexInfos indexNames = new IndexInfos();
+    private final IndexInfos indexNames = new IndexInfos("indexes");
+
+    /**
+     * Names of index directories that can be deleted.
+     */
+    private final IndexInfos deletable = new IndexInfos("deletable");
 
     /**
      * List of persistent indexes.
@@ -119,10 +112,21 @@ class MultiIndex {
     private VolatileIndex volatileIndex;
 
     /**
+     * Flag indicating whether an update operation is in progress.
+     */
+    private boolean updateInProgress = false;
+
+    /**
      * If not <code>null</code> points to a valid <code>IndexReader</code> that
      * reads from all indexes, including volatile and persistent indexes.
      */
-    private IndexReader multiReader;
+    private CachingMultiReader multiReader;
+
+    /**
+     * Monitor to use to synchronize access to {@link #multiReader} and
+     * {@link #updateInProgress}.
+     */
+    private final Object updateMonitor = new Object();
 
     /**
      * <code>true</code> if the redo log contained entries on startup.
@@ -157,13 +161,17 @@ class MultiIndex {
 
         this.fs = fs;
         this.handler = handler;
-        migrationCheck();
         boolean doInitialIndex = false;
-        if (fs.exists("indexes")) {
+        if (fs.exists(indexNames.getFileName())) {
             indexNames.read(fs);
         } else {
             doInitialIndex = true;
         }
+        if (fs.exists(deletable.getFileName())) {
+            deletable.read(fs);
+        }
+        // try to remove deletable files if there are any
+        attemptDelete();
 
         // read namespace mappings
         FileSystemResource mapFile = new FileSystemResource(fs, NS_MAPPING_FILE);
@@ -201,6 +209,8 @@ class MultiIndex {
                             addNodePersistent(state);
                         } catch (NoSuchItemStateException e) {
                             // item does not exist anymore
+                        } catch (Exception e) {
+                            log.warn("Unable to add node to index: ", e);
                         }
                     } else {
                         deleteNodePersistent(entry.uuid);
@@ -233,50 +243,67 @@ class MultiIndex {
     }
 
     /**
+     * Update the index by removing some documents and adding others.
+     *
+     * @param remove Iterator of <code>Term</code>s that identify documents to
+     *               remove
+     * @param add    Iterator of <code>Document</code>s to add. Calls to
+     *               <code>next()</code> on this iterator may return
+     *               <code>null</code>, to indicate that a node could not be
+     *               indexed successfully.
+     */
+    synchronized void update(Iterator remove, Iterator add) throws IOException {
+        synchronized (updateMonitor) {
+            updateInProgress = true;
+        }
+        boolean hasAdditions = add.hasNext();
+        try {
+            // todo block with remove & add is not atomic
+            while (remove.hasNext()) {
+                internalRemoveDocument((Term) remove.next());
+            }
+            while (add.hasNext()) {
+                Document doc = (Document) add.next();
+                if (doc != null) {
+                    internalAddDocument(doc);
+                }
+            }
+        } finally {
+            synchronized (updateMonitor) {
+                if (hasAdditions) {
+                    lastModificationTime = System.currentTimeMillis();
+                }
+                updateInProgress = false;
+                updateMonitor.notifyAll();
+                if (multiReader != null) {
+                    multiReader.close();
+                    multiReader = null;
+                }
+            }
+        }
+    }
+
+    /**
      * Adds a document to the index.
      *
      * @param doc the document to add.
      * @throws IOException if an error occurs while adding the document to the
      *                     index.
      */
-    synchronized void addDocument(Document doc) throws IOException {
-        lastModificationTime = System.currentTimeMillis();
-        multiReader = null;
-        volatileIndex.addDocument(doc);
-        if (volatileIndex.getRedoLog().getSize() >= handler.getMinMergeDocs()) {
-            log.info("Committing in-memory index");
-            commit();
-        }
+    void addDocument(Document doc) throws IOException {
+        List add = Arrays.asList(new Document[]{doc});
+        update(EmptyIterator.INSTANCE, add.iterator());
     }
 
     /**
      * Deletes the first document that matches the <code>idTerm</code>.
      *
      * @param idTerm document that match this term will be deleted.
-     * @return the number of deleted documents.
      * @throws IOException if an error occurs while deleting the document.
      */
-    synchronized int removeDocument(Term idTerm) throws IOException {
-        lastModificationTime = System.currentTimeMillis();
-        // flush multi reader if it does not have deletions yet
-        if (multiReader != null && !multiReader.hasDeletions()) {
-            multiReader = null;
-        }
-        // if the document cannot be deleted from the volatile index
-        // delete it from one of the persistent indexes.
-        int num = volatileIndex.removeDocument(idTerm);
-        if (num == 0) {
-            for (int i = indexes.size() - 1; i >= 0; i--) {
-                PersistentIndex index = (PersistentIndex) indexes.get(i);
-                num = index.removeDocument(idTerm);
-                if (num > 0) {
-                    return num;
-                }
-            }
-        } else {
-            return num;
-        }
-        return 0;
+    void removeDocument(Term idTerm) throws IOException {
+        List remove = Arrays.asList(new Term[]{idTerm});
+        update(remove.iterator(), EmptyIterator.INSTANCE);
     }
 
     /**
@@ -288,37 +315,65 @@ class MultiIndex {
      * @throws IOException if an error occurs while deleting documents.
      */
     synchronized int removeAllDocuments(Term idTerm) throws IOException {
-        lastModificationTime = System.currentTimeMillis();
-        // flush multi reader if it does not have deletions yet
-        if (multiReader != null && !multiReader.hasDeletions()) {
-            multiReader = null;
+        synchronized (updateMonitor) {
+            updateInProgress = true;
         }
-        int num = volatileIndex.removeDocument(idTerm);
-        for (int i = 0; i < indexes.size(); i++) {
-            PersistentIndex index = (PersistentIndex) indexes.get(i);
-            num += index.removeDocument(idTerm);
-            index.commit();
+        int num;
+        try {
+            num = volatileIndex.removeDocument(idTerm);
+            for (int i = 0; i < indexes.size(); i++) {
+                PersistentIndex index = (PersistentIndex) indexes.get(i);
+                num += index.removeDocument(idTerm);
+                index.commit();
+            }
+        } finally {
+            synchronized (updateMonitor) {
+                updateInProgress = false;
+                updateMonitor.notifyAll();
+                if (multiReader != null) {
+                    multiReader.close();
+                    multiReader = null;
+                }
+            }
         }
         return num;
     }
 
     /**
-     * Returns an <code>IndexReader</code> that spans alls indexes of this
+     * Returns an read-only <code>IndexReader</code> that spans alls indexes of this
      * <code>MultiIndex</code>.
      *
      * @return an <code>IndexReader</code>.
      * @throws IOException if an error occurs constructing the <code>IndexReader</code>.
      */
-    synchronized IndexReader getIndexReader() throws IOException {
-        if (multiReader == null) {
-            IndexReader[] readers = new IndexReader[indexes.size() + 1];
-            for (int i = 0; i < indexes.size(); i++) {
-                readers[i] = ((PersistentIndex) indexes.get(i)).getIndexReader();
+    IndexReader getIndexReader() throws IOException {
+        synchronized (updateMonitor) {
+            if (multiReader != null) {
+                multiReader.incrementRefCount();
+                return multiReader;
             }
-            readers[readers.length - 1] = volatileIndex.getIndexReader();
-            multiReader = new CachingMultiReader(readers);
+            // no reader available
+            // wait until no update is in progress
+            while (updateInProgress) {
+                try {
+                    updateMonitor.wait();
+                } catch (InterruptedException e) {
+                    throw new IOException("Interrupted while waiting to aquire reader");
+                }
+            }
+            // some other read thread might have created the reader in the
+            // meantime -> check again
+            if (multiReader == null) {
+                IndexReader[] readers = new IndexReader[indexes.size() + 1];
+                for (int i = 0; i < indexes.size(); i++) {
+                    readers[i] = ((PersistentIndex) indexes.get(i)).getReadOnlyIndexReader();
+                }
+                readers[readers.length - 1] = volatileIndex.getReadOnlyIndexReader();
+                multiReader = new CachingMultiReader(readers);
+            }
+            multiReader.incrementRefCount();
+            return multiReader;
         }
-        return multiReader;
     }
 
     /**
@@ -329,7 +384,14 @@ class MultiIndex {
         commitTimer.cancel();
 
         // commit / close indexes
-        multiReader = null;
+        if (multiReader != null) {
+            try {
+                multiReader.close();
+            } catch (IOException e) {
+                log.error("Exception while closing search index.", e);
+            }
+            multiReader = null;
+        }
         try {
             if (volatileIndex.getRedoLog().hasEntries()) {
                 commit();
@@ -374,30 +436,86 @@ class MultiIndex {
     //-------------------------< internal >-------------------------------------
 
     /**
+     * Unsynchronized implementation to remove a document from the index. Note:
+     * this method will at most remove 1 (one) document from the index. This
+     * method assumes <code>idTerm</code> is unique.
+     *
+     * @param idTerm term that identifies the document to remove.
+     * @return number of documents to remove.
+     * @throws IOException if an error occurs while updating the index.
+     */
+    private int internalRemoveDocument(Term idTerm) throws IOException {
+        // if the document cannot be deleted from the volatile index
+        // delete it from one of the persistent indexes.
+        int num = volatileIndex.removeDocument(idTerm);
+        if (num == 0) {
+            for (int i = indexes.size() - 1; i >= 0; i--) {
+                PersistentIndex index = (PersistentIndex) indexes.get(i);
+                num = index.removeDocument(idTerm);
+                if (num > 0) {
+                    return num;
+                }
+            }
+        } else {
+            return num;
+        }
+        return 0;
+    }
+
+    /**
+     * Unsynchronized implementation to add a document to the index.
+     *
+     * @param doc the document to add.
+     * @throws IOException if an error occurs while adding the document to the
+     *                     index.
+     */
+    private void internalAddDocument(Document doc) throws IOException {
+        volatileIndex.addDocument(doc);
+        if (volatileIndex.getRedoLog().getSize() >= handler.getMinMergeDocs()) {
+            log.info("Committing in-memory index");
+            commit();
+        }
+    }
+
+    /**
      * Commits the volatile index to a persistent index, commits persistent
      * indexes (persist deletions) and finally merges indexes if necessary.
      *
      * @throws IOException if an error occurs.
      */
     private void commit() throws IOException {
-        // create new index folder
-        String name = indexNames.newName();
-        FileSystem sub = new BasedFileSystem(fs, name);
-        PersistentIndex index;
-        try {
-            sub.init();
-            index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
-            index.setMaxMergeDocs(handler.getMaxMergeDocs());
-            index.setMergeFactor(handler.getMergeFactor());
-            index.setMinMergeDocs(handler.getMinMergeDocs());
-            index.setUseCompoundFile(handler.getUseCompoundFile());
-            indexes.add(index);
-            indexNames.addName(name);
-            indexNames.write(fs);
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
+
+        // check if volatile index contains documents at all
+        if (volatileIndex.getIndexReader().numDocs() > 0) {
+            // create new index folder
+            String name = indexNames.newName();
+            FileSystem sub = new BasedFileSystem(fs, name);
+            PersistentIndex index;
+            try {
+                sub.init();
+                index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
+                index.setMaxMergeDocs(handler.getMaxMergeDocs());
+                index.setMergeFactor(handler.getMergeFactor());
+                index.setMinMergeDocs(handler.getMinMergeDocs());
+                index.setUseCompoundFile(handler.getUseCompoundFile());
+            } catch (FileSystemException e) {
+                throw new IOException(e.getMessage());
+            }
+            index.mergeIndex(volatileIndex);
+
+            // if merge has been successful add index
+            try {
+                indexes.add(index);
+                indexNames.addName(name);
+                indexNames.write(fs);
+            } catch (FileSystemException e) {
+                throw new IOException(e.getMessage());
+            }
+
+            // check if obsolete indexes can be deleted
+            // todo move to other place?
+            attemptDelete();
         }
-        index.mergeIndex(volatileIndex);
 
         // commit persistent indexes
         for (int i = 0; i < indexes.size(); i++) {
@@ -521,8 +639,13 @@ class MultiIndex {
                 try {
                     fs.deleteFolder(index.getName());
                 } catch (FileSystemException e) {
-                    log.warn("Unable to delete obsolete index: " + index.getName());
-                    log.error(e.toString());
+                    // try again later
+                    deletable.addName(index.getName());
+                    try {
+                        deletable.write(fs);
+                    } catch (FileSystemException e1) {
+                        throw new IOException(e.getMessage());
+                    }
                 }
             }
         }
@@ -599,8 +722,13 @@ class MultiIndex {
             try {
                 fs.deleteFolder(pi.getName());
             } catch (FileSystemException e) {
-                log.warn("Unable to delete obsolete index: " + name);
-                log.error(e.toString());
+                // try again later
+                deletable.addName(pi.getName());
+                try {
+                    deletable.write(fs);
+                } catch (FileSystemException e1) {
+                    throw new IOException(e.getMessage());
+                }
             }
             indexNames.removeName(pi.getName());
             indexes.remove(i);
@@ -611,6 +739,27 @@ class MultiIndex {
             indexNames.write(fs);
         } catch (FileSystemException e) {
             throw new IOException(e.getMessage());
+        }
+    }
+
+    /**
+     * Attempts to delete all files recorded in {@link #deletable}.
+     */
+    private void attemptDelete() {
+        for (int i = deletable.size() - 1; i >= 0; i--) {
+            String indexName = deletable.getName(i);
+            try {
+                fs.deleteFolder(indexName);
+                deletable.removeName(i);
+            } catch (FileSystemException e) {
+                log.info("Unable to delete obsolete index: " + indexName);
+            }
+        }
+        try {
+            deletable.write(fs);
+        } catch (Exception e) {
+            // catches IOException and FileSystemException
+            log.warn("Exception while writing deletable indexes: " + e);
         }
     }
 
@@ -641,40 +790,25 @@ class MultiIndex {
                 if (volatileIndex.getRedoLog().hasEntries()) {
                     log.info("Committing in-memory index after being idle for " +
                             idleTime + " ms.");
-                    commit();
+                    synchronized (updateMonitor) {
+                        updateInProgress = true;
+                    }
+                    try {
+                        commit();
+                    } finally {
+                        synchronized (updateMonitor) {
+                            lastModificationTime = System.currentTimeMillis();
+                            updateMonitor.notifyAll();
+                            if (multiReader != null) {
+                                multiReader.close();
+                                multiReader = null;
+                            }
+                        }
+                    }
                 }
             } catch (IOException e) {
                 log.error("Unable to commit volatile index", e);
             }
-        }
-    }
-
-    /**
-     * <b>todo: This check will be removed when Jackrabbit 1.0 is final.</b>
-     * <p/>
-     * Checks if an old index format is present and moves it to the new
-     * subindex structure.
-     * @throws FileSystemException if an error occurs.
-     * @throws IOException if an error occurs.
-     */
-    private void migrationCheck() throws FileSystemException, IOException {
-        if (fs.exists("segments")) {
-            // move to a sub folder
-            String name = indexNames.newName();
-            fs.createFolder(name);
-            // move all files except: redo-log and ns-mappings
-            Set exclude = new HashSet();
-            exclude.add(REDO_LOG);
-            exclude.add(NS_MAPPING_FILE);
-            String[] files = fs.listFiles("/");
-            for (int i = 0; i < files.length; i++) {
-                if (exclude.contains(files[i])) {
-                    continue;
-                }
-                fs.move(files[i], name + FileSystem.SEPARATOR + files[i]);
-            }
-            indexNames.addName(name);
-            indexNames.write(fs);
         }
     }
 }

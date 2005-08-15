@@ -38,7 +38,6 @@ import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
-import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.Query;
 
 import javax.jcr.RepositoryException;
@@ -175,8 +174,9 @@ class QueryImpl implements ExecutableQuery {
         AccessManager accessMgr = session.getAccessManager();
 
         // execute it
+        QueryHits result = null;
         try {
-            Hits result = index.executeQuery(query, orderProperties, ascSpecs);
+            result = index.executeQuery(query, orderProperties, ascSpecs);
             uuids = new ArrayList(result.length());
             scores = new ArrayList(result.length());
 
@@ -192,6 +192,14 @@ class QueryImpl implements ExecutableQuery {
             log.error("Exception while executing query: ", e);
             uuids = Collections.EMPTY_LIST;
             scores = Collections.EMPTY_LIST;
+        } finally {
+            if (result != null) {
+                try {
+                    result.close();
+                } catch (IOException e) {
+                    log.warn("Unable to close query result: " + e);
+                }
+            }
         }
 
         // get select properties
