@@ -18,19 +18,13 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.document.Document;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * Implements a lucene index which is based on a
@@ -122,6 +116,7 @@ class PersistentIndex extends AbstractIndex {
         getIndexWriter().addIndexes(new Directory[]{
             index.getDirectory()
         });
+        invalidateSharedReader();
     }
 
     /**
@@ -159,61 +154,5 @@ class PersistentIndex extends AbstractIndex {
      */
     String getName() {
         return name;
-    }
-
-    /**
-     * Checks if the nodes in this index still exist in the ItemStateManager
-     * <code>mgr</code>. Nodes that do not exist in <code>mgr</code> will
-     * be deleted from the index.
-     *
-     * @param mgr the ItemStateManager.
-     */
-    void integrityCheck(ItemStateManager mgr) {
-        // List<Integer> of document numbers to delete
-        List deleted = new ArrayList();
-        IndexReader reader;
-        try {
-            reader = getIndexReader();
-            int maxDoc = reader.maxDoc();
-            for (int i = 0; i < maxDoc; i++) {
-                if (!reader.isDeleted(i)) {
-                    Document d = reader.document(i);
-                    NodeId id = new NodeId(d.get(FieldNames.UUID));
-                    if (!mgr.hasItemState(id)) {
-                        // not known to ItemStateManager
-                        deleted.add(new Integer(i));
-                        log.warn("Node " + id.getUUID() + " does not exist anymore. Will be removed from index.");
-                    }
-                }
-            }
-        } catch (IOException e) {
-            log.error("Unable to read from index: " + e);
-            return;
-        }
-
-        // now delete them
-        for (Iterator it = deleted.iterator(); it.hasNext(); ) {
-            int docNum = ((Integer) it.next()).intValue();
-            try {
-                reader.delete(docNum);
-            } catch (IOException e) {
-                log.error("Unable to delete inexistent node from index: " + e);
-            }
-        }
-
-        // commit changes on reader
-        try {
-            commit();
-        } catch (IOException e) {
-            log.error("Unable to commit index: " + e);
-        }
-    }
-
-    /**
-     * Always returns <code>true</code>.
-     * @return <code>true</code>.
-     */
-    protected boolean useCachingReader() {
-        return true;
     }
 }

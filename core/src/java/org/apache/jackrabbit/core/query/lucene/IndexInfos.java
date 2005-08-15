@@ -45,13 +45,36 @@ class IndexInfos {
     private List indexes = new ArrayList();
 
     /**
+     * Name of the file where the infos are stored.
+     */
+    private final String name;
+
+    /**
+     * Creates a new IndexInfos using <code>fileName</code>.
+     *
+     * @param fileName the name of the file where infos are stored.
+     */
+    IndexInfos(String fileName) {
+        this.name = fileName;
+    }
+
+    /**
+     * Returns the name of the file where infos are stored.
+     * 
+     * @return the name of the file where infos are stored.
+     */
+    String getFileName() {
+        return name;
+    }
+
+    /**
      * Reads the index infos.
      * @param fs the base file system
      * @throws FileSystemException if an error occurs.
      * @throws IOException if an error occurs.
      */
     void read(FileSystem fs) throws FileSystemException, IOException {
-        DataInputStream input = new DataInputStream(fs.getInputStream("indexes"));
+        DataInputStream input = new DataInputStream(fs.getInputStream(name));
         try {
             counter = input.readInt();
             for (int i = input.readInt(); i > 0; i--) {
@@ -74,7 +97,7 @@ class IndexInfos {
             return;
         }
 
-        DataOutputStream output = new DataOutputStream(fs.getOutputStream("indexes.new"));
+        DataOutputStream output = new DataOutputStream(fs.getOutputStream(name + ".new"));
         try {
             output.writeInt(counter);
             output.writeInt(indexes.size());
@@ -84,7 +107,7 @@ class IndexInfos {
         } finally {
             output.close();
         }
-        fs.move("indexes.new", "indexes");
+        fs.move(name + ".new", name);
         dirty = false;
     }
 

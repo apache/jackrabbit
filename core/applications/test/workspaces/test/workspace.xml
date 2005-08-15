@@ -20,7 +20,7 @@
   -->
   <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
     <param name="useCompoundFile" value="true" />
-    <param name="minMergeDocs" value="1000" />
+    <param name="minMergeDocs" value="100" />
     <param name="maxMergeDocs" value="100000" />
     <param name="mergeFactor" value="10" />
     <param name="bufferSize" value="10"/>

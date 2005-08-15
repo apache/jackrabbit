@@ -41,12 +41,18 @@ class CachingMultiReader extends MultiReader {
     private int[] starts;
 
     /**
+     * Reference count. Every time close is called refCount is decremented. If
+     * refCount drops to zero the underlying readers are closed as well.
+     */
+    private int refCount = 1;
+
+    /**
      * Creates a new <code>CachingMultiReader</code> based on sub readers.
      * <p/>
      * This <code>CachingMultiReader</code> poses type requirements on the
      * <code>subReaders</code>: all but one sub readers must be a
-     * {@link CachingIndexReader}. The single allowed sub reader not of type
-     * {@link CachingIndexReader} must be the last reader in
+     * {@link ReadOnlyIndexReader}. The single allowed sub reader not of type
+     * {@link ReadOnlyIndexReader} must be the last reader in
      * <code>subReaders</code>! Otherwise this constructor will throw an
      * {@link IllegalArgumentException}.
      *
@@ -58,10 +64,10 @@ class CachingMultiReader extends MultiReader {
     public CachingMultiReader(IndexReader[] subReaders)
             throws IOException, IllegalArgumentException {
         super(subReaders);
-        // check readers, all but last must be a CachingIndexReader
+        // check readers, all but last must be a ReadOnlyIndexReader
         for (int i = 0; i < subReaders.length - 1; i++) {
-            if (!(subReaders[i] instanceof CachingIndexReader)) {
-                throw new IllegalArgumentException("subReader " + i + " must be of type CachingIndexReader");
+            if (!(subReaders[i] instanceof ReadOnlyIndexReader)) {
+                throw new IllegalArgumentException("subReader " + i + " must be of type ReadOnlyIndexReader");
             }
         }
         this.subReaders = subReaders;
@@ -94,6 +100,25 @@ class CachingMultiReader extends MultiReader {
             return new MultiTermDocs(termDocs, starts);
         }
         return super.termDocs(term);
+    }
+
+    /**
+     * Increments the reference count of this reader. Each call to this method
+     * must later be acknowledged by a call to {@link #close()}
+     */
+    synchronized void incrementRefCount() {
+        refCount++;
+    }
+
+    /**
+     * Decrements the reference count and closes the underlying readers if this
+     * reader is not in use anymore.
+     * @throws IOException if an error occurs while closing this reader.
+     */
+    protected synchronized void doClose() throws IOException {
+        if (--refCount == 0) {
+            super.doClose();
+        }
     }
 
     /**

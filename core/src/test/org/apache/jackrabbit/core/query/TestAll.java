@@ -44,6 +44,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(XPathAxisTest.class);
         suite.addTestSuite(SkipDeletedNodesTest.class);
         suite.addTestSuite(MassiveRangeTest.class);
+        suite.addTestSuite(ConcurrentQueryTest.class);
 
         return suite;
     }

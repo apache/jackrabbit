@@ -98,6 +98,7 @@ class VolatileIndex extends AbstractIndex {
         if (pending.size() >= bufferSize) {
             commitPending();
         }
+        invalidateSharedReader();
     }
 
     /**
@@ -125,8 +126,8 @@ class VolatileIndex extends AbstractIndex {
         } else {
             // remove document from index
             return super.getIndexReader().delete(idTerm);
+            }
         }
-    }
 
     /**
      * Overwrites the implementation in {@link AbstractIndex} to trigger
