@@ -244,7 +244,7 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
             } catch (Exception e) {
                 exceptions.add(e);
             }
-            System.out.println("Executed " + count + " queries");
+            log.println("Executed " + count + " queries");
         }
 
         public synchronized void finish() {
