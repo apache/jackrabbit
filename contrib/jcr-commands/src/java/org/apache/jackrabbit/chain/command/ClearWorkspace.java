@@ -36,6 +36,8 @@ public class ClearWorkspace implements Command
     public boolean execute(Context ctx) throws Exception
     {
         Session s = CtxHelper.getSession(ctx);
+        // Set current node to root
+        CtxHelper.setCurrentNode(ctx, s.getRootNode()) ;
         NodeIterator iter = s.getRootNode().getNodes();
         while (iter.hasNext())
         {
