@@ -310,19 +310,19 @@
 			name="maxitems" 
 			arg-name="int" 
 			description="show.max.items"/>
-		<flag name="path"/>
-		<flag name="uuid" />
-		<flag name="m"/>
-		<flag name="nsize"/>
-		<flag name="psize"/>
-		<flag name="rsize"/>
-		<flag name="v"/>
-		<flag name="l"/>
-		<flag name="r"/>
-		<flag name="locked"/>
-		<flag name="hasLock"/>
-		<flag name="new"/>
-		<flag name="mod"/>
+		<flag name="path" description="lsnodes.path"/>
+		<flag name="uuid" description="lsnodes.uuid"/>
+		<flag name="m" description="lsnodes.m"/>
+		<flag name="nsize" description="lsnodes.nsize"/>
+		<flag name="psize" description="lsnodes.psize"/>
+		<flag name="rsize" description="lsnodes.rsize"/>
+		<flag name="v" description="lsnodes.v"/>
+		<flag name="l" description="lsnodes.l"/>
+		<flag name="r" description="lsnodes.r"/>
+		<flag name="locked" description="lsnodes.locked"/>
+		<flag name="hasLock" description="lsnodes.hasLock"/>
+		<flag name="new" description="lsnodes.new"/>
+		<flag name="mod" description="lsnodes.mod"/>
 	</command>	
 
 	<command name="lscollectnodes">
