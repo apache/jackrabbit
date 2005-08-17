@@ -25,7 +25,7 @@ import java.util.Properties;
  * is used to create configured search index objects.
  * <p>
  * In addition to generic bean configuration information, this
- * class also contains a configured file system implementation
+ * class also contains an optionally configured file system implementation
  * used by the search index.
  *
  * @see WorkspaceConfig#getSearchConfig()
@@ -33,7 +33,8 @@ import java.util.Properties;
 public class SearchConfig extends BeanConfig {
 
     /**
-     * The search index file system configuration.
+     * The search index file system configuration, or <code>null</code> if
+     * none is provided.
      */
     private final FileSystemConfig fsc;
 
@@ -42,7 +43,8 @@ public class SearchConfig extends BeanConfig {
      *
      * @param className search index implementation class
      * @param properties search index properties
-     * @param fsc search index file system configuration
+     * @param fsc search index file system configuration, or <code>null</code>
+     *   if none is configured.
      */
     SearchConfig(
             String className, Properties properties, FileSystemConfig fsc) {
@@ -51,12 +53,14 @@ public class SearchConfig extends BeanConfig {
     }
 
     /**
-     * Initializes the search index file system.
+     * Initializes the search index file system if one is configured.
      *
      * @throws ConfigurationException on file system configuration errors
      */
     public void init() throws ConfigurationException {
-        fsc.init();
+        if (fsc != null) {
+            fsc.init();
+        }
     }
 
     /**
@@ -69,11 +73,15 @@ public class SearchConfig extends BeanConfig {
     }
 
     /**
-     * Returns the search index file system.
+     * Returns the search index file system, or <code>null</code> if none is
+     * configured.
      *
      * @return search index file system
      */
     public FileSystem getFileSystem() {
+        if (fsc == null) {
+            return null;
+        }
         return fsc.getFileSystem();
     }
 

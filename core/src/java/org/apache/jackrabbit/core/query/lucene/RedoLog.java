@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.apache.jackrabbit.uuid.Constants;
 import org.apache.log4j.Logger;
 
@@ -29,6 +26,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -57,7 +58,7 @@ class RedoLog {
     };
 
     /** The log file */
-    private final FileSystemResource logFile;
+    private final File logFile;
 
     /** The number of log enties in the log file */
     private int entryCount = 0;
@@ -70,16 +71,12 @@ class RedoLog {
      * <code>logFile</code>
      * @param log the redo log file.
      */
-    RedoLog(FileSystemResource log) throws FileSystemException {
+    RedoLog(File log) throws IOException {
         this.logFile = log;
         // create the log file if not there
         if (!log.exists()) {
-            log.makeParentDirs();
-            try {
-                log.getOutputStream().close();
-            } catch (IOException e) {
-                throw new FileSystemException("Unable to create redo log file:", e);
-            }
+            log.getParentFile().mkdirs();
+            log.createNewFile();
         }
         read(DUMMY_COLLECTOR);
     }
@@ -105,10 +102,10 @@ class RedoLog {
     /**
      * Returns a collection with all {@link Entry} instances in the redo log.
      * @return an collection with all {@link Entry} instances in the redo log.
-     * @throws FileSystemException if an error occurs while reading from the
+     * @throws IOException if an error occurs while reading from the
      * redo log.
      */
-    Collection getEntries() throws FileSystemException {
+    Collection getEntries() throws IOException {
         final List entries = new ArrayList();
         read(new EntryCollector() {
             public void collect(Entry entry) {
@@ -121,84 +118,60 @@ class RedoLog {
     /**
      * Informs this redo log that a node has been added.
      * @param uuid the uuid of the node.
-     * @throws FileSystemException if the node cannot be written to the redo
+     * @throws IOException if the node cannot be written to the redo
      * log.
      */
-    void nodeAdded(String uuid) throws FileSystemException {
+    void nodeAdded(String uuid) throws IOException {
         initOut();
-        try {
-            out.write(new Entry(uuid, Entry.NODE_ADDED).toString());
-            out.write('\n');
-            entryCount++;
-        } catch (IOException e) {
-            throw new FileSystemException(e.getMessage(), e);
-        }
+        out.write(new Entry(uuid, Entry.NODE_ADDED).toString() + "\n");
+        entryCount++;
     }
 
     /**
      * Informs this redo log that a node has been removed.
      * @param uuid the uuid of the node.
-     * @throws FileSystemException if the node cannot be written to the redo
+     * @throws IOException if the node cannot be written to the redo
      * log.
      */
-    void nodeRemoved(String uuid) throws FileSystemException {
+    void nodeRemoved(String uuid) throws IOException {
         initOut();
-        try {
-            out.write(new Entry(uuid, Entry.NODE_REMOVED).toString());
-            out.write('\n');
-            entryCount++;
-        } catch (IOException e) {
-            throw new FileSystemException(e.getMessage(), e);
-        }
+        out.write(new Entry(uuid, Entry.NODE_REMOVED).toString() + "\n");
+        entryCount++;
     }
 
     /**
      * Flushes all pending writes to the underlying file.
-     * @throws FileSystemException if an error occurs while writing.
+     * @throws IOException if an error occurs while writing.
      */
-    void flush() throws FileSystemException {
-        try {
-            if (out != null) {
-                out.flush();
-            }
-        } catch (IOException e) {
-            throw new FileSystemException(e.getMessage(), e);
+    void flush() throws IOException {
+        if (out != null) {
+            out.flush();
         }
     }
 
     /**
      * Clears the redo log.
-     * @throws FileSystemException if the redo log cannot be cleared.
+     * @throws IOException if the redo log cannot be cleared.
      */
-    void clear() throws FileSystemException {
-        try {
-            if (out != null) {
-                out.close();
-                out = null;
-            }
-            // truncate file
-            logFile.getOutputStream().close();
-            entryCount = 0;
-        } catch (IOException e) {
-            throw new FileSystemException(e.getMessage(), e);
+    void clear() throws IOException {
+        if (out != null) {
+            out.close();
+            out = null;
         }
+        // truncate file
+        new FileOutputStream(logFile).close();
+        entryCount = 0;
     }
 
     /**
      * Initializes the {@link #out} stream if it is not yet set.
-     * @throws FileSystemException if an error occurs while creating the
+     * @throws IOException if an error occurs while creating the
      * output stream.
      */
-    private void initOut() throws FileSystemException {
+    private void initOut() throws IOException {
         if (out == null) {
-            RandomAccessOutputStream raf = logFile.getRandomAccessOutputStream();
-            // seek to the end of the file
-            try {
-                raf.seek(logFile.length());
-            } catch (IOException e) {
-                throw new FileSystemException(e.getMessage(), e);
-            }
-            out = new BufferedWriter(new OutputStreamWriter(raf));
+            OutputStream os = new FileOutputStream(logFile, true);
+            out = new BufferedWriter(new OutputStreamWriter(os));
         }
     }
 
@@ -206,14 +179,14 @@ class RedoLog {
      * Reads the log file and sets the {@link #entryCount} with the number
      * of entries read.
      * @param collector called back for each {@link Entry} read.
-     * @throws FileSystemException if an error occurs while reading from the
+     * @throws IOException if an error occurs while reading from the
      * log file.
      */
-    private void read(EntryCollector collector) throws FileSystemException {
-        InputStream in = logFile.getInputStream();
+    private void read(EntryCollector collector) throws IOException {
+        InputStream in = new FileInputStream(logFile);
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null) {
                 try {
                     Entry e = Entry.fromString(line);
@@ -223,8 +196,6 @@ class RedoLog {
                     log.warn("Malformed redo entry: " + e.getMessage());
                 }
             }
-        } catch (IOException e) {
-            throw new FileSystemException(e.getMessage(), e);
         } finally {
             if (in != null) {
                 try {

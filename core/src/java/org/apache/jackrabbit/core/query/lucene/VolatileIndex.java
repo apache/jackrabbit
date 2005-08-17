@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -85,12 +84,9 @@ class VolatileIndex extends AbstractIndex {
      * or the index.
      */
     void addDocument(Document doc) throws IOException {
-        try {
-            redoLog.nodeAdded(doc.get(FieldNames.UUID));
-            redoLog.flush();
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
-        }
+        redoLog.nodeAdded(doc.get(FieldNames.UUID));
+        redoLog.flush();
+
         Document old = (Document) pending.put(doc.get(FieldNames.UUID), doc);
         if (old != null) {
             disposeDocument(old);
@@ -112,12 +108,9 @@ class VolatileIndex extends AbstractIndex {
      * @return the number of deleted documents
      */
     int removeDocument(Term idTerm) throws IOException {
-        try {
-            redoLog.nodeRemoved(idTerm.text());
-            redoLog.flush();
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
-        }
+        redoLog.nodeRemoved(idTerm.text());
+        redoLog.flush();
+
         Document doc = (Document) pending.remove(idTerm.text());
         if (doc != null) {
             disposeDocument(doc);

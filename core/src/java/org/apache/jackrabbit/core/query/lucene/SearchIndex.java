@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
@@ -42,6 +41,7 @@ import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import java.io.IOException;
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 
@@ -65,9 +65,16 @@ public class SearchIndex extends AbstractQueryHandler {
     private final Analyzer analyzer;
 
     /**
+     * The location of the search index.
+     * <p/>
+     * Note: This is a <b>mandatory</b> parameter!
+     */
+    private String path;
+
+    /**
      * minMergeDocs config parameter.
      */
-    private int minMergeDocs = 1000;
+    private int minMergeDocs = 100;
 
     /**
      * volatileIdleTime config parameter.
@@ -124,37 +131,39 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Initializes this <code>QueryHandler</code>.
+     * Initializes this <code>QueryHandler</code>. This implementation requires
+     * that a path parameter is set in the configuration. If this condition
+     * is not met, a <code>IOException</code> is thrown.
+     *
      * @throws IOException if an error occurs while initializing this handler.
      */
     protected void doInit() throws IOException {
-        try {
-            QueryHandlerContext context = getContext();
-            index = new MultiIndex(context.getFileSystem(), this,
-                    context.getItemStateManager(), context.getRootUUID());
-            if (index.getRedoLogApplied() || forceConsistencyCheck) {
-                log.info("Running consistency check...");
-                try {
-                    ConsistencyCheck check = ConsistencyCheck.run(index,
-                            context.getItemStateManager());
-                    if (autoRepair) {
-                        check.repair(true);
-                    } else {
-                        List errors = check.getErrors();
-                        if (errors.size() == 0) {
-                            log.info("No errors detected.");
-                        }
-                        for (Iterator it = errors.iterator(); it.hasNext(); ) {
-                            ConsistencyCheckError err = (ConsistencyCheckError) it.next();
-                            log.info(err.toString());
-                        }
+        QueryHandlerContext context = getContext();
+        if (path == null) {
+            throw new IOException("SearchIndex requires 'path' parameter in configuration!");
+        }
+        index = new MultiIndex(new File(path), this,
+                context.getItemStateManager(), context.getRootUUID());
+        if (index.getRedoLogApplied() || forceConsistencyCheck) {
+            log.info("Running consistency check...");
+            try {
+                ConsistencyCheck check = ConsistencyCheck.run(index,
+                        context.getItemStateManager());
+                if (autoRepair) {
+                    check.repair(true);
+                } else {
+                    List errors = check.getErrors();
+                    if (errors.size() == 0) {
+                        log.info("No errors detected.");
                     }
-                } catch (Exception e) {
-                    log.warn("Failed to run consistency check on index: " + e);
+                    for (Iterator it = errors.iterator(); it.hasNext(); ) {
+                        ConsistencyCheckError err = (ConsistencyCheckError) it.next();
+                        log.info(err.toString());
+                    }
                 }
+            } catch (Exception e) {
+                log.warn("Failed to run consistency check on index: " + e);
             }
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
         }
     }
 
@@ -327,6 +336,25 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     //--------------------------< properties >----------------------------------
+
+    /**
+     * Sets the location of the search index.
+     *
+     * @param path the location of the search index.
+     */
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    /**
+     * Returns the location of the search index. Returns <code>null</code> if
+     * not set.
+     *
+     * @return the location of the search index.
+     */
+    public String getPath() {
+        return path;
+    }
 
     /**
      * The lucene index writer property: useCompoundFile

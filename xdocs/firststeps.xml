@@ -93,9 +93,7 @@ public class JCRTest {
         &lt;/FileSystem&gt;
         &lt;PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" /&gt;
         &lt;SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex"&gt;
-            &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
-                &lt;param name="path" value="${wsp.home}/index"/&gt;
-            &lt;/FileSystem&gt;
+            &lt;param name="path" value="${wsp.home}/index"/&gt;
         &lt;/SearchIndex&gt;
     &lt;/Workspace&gt;
     &lt;Versioning rootPath="${rep.home}/versions"&gt;

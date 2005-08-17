@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 
 import java.io.IOException;
+import java.io.File;
 
 /**
  * Implements a lucene index which is based on a
@@ -41,9 +41,6 @@ class PersistentIndex extends AbstractIndex {
     /** Name of the commit lock file */
     private static final String COMMIT_LOCK = IndexWriter.COMMIT_LOCK_NAME;
 
-    /** The underlying filesystem to store the index */
-    private final FileSystem fs;
-
     /** The name of this persistent index */
     private final String name;
 
@@ -52,39 +49,36 @@ class PersistentIndex extends AbstractIndex {
 
     /**
      * Creates a new <code>PersistentIndex</code> based on the file system
-     * <code>fs</code>.
+     * <code>indexDir</code>.
      * @param name the name of this index.
-     * @param fs the underlying file system.
+     * @param indexDir the directory to store the index.
      * @param create if <code>true</code> an existing index is deleted.
      * @param analyzer the analyzer for text tokenizing.
      * @throws IOException if an error occurs while opening / creating the
      *  index.
-     * @throws FileSystemException if an error occurs while opening / creating
+     * @throws IOException if an error occurs while opening / creating
      *  the index.
      */
-    PersistentIndex(String name, FileSystem fs, boolean create, Analyzer analyzer)
-            throws FileSystemException, IOException {
-        super(analyzer, FileSystemDirectory.getDirectory(fs, create));
+    PersistentIndex(String name, File indexDir, boolean create, Analyzer analyzer)
+            throws IOException {
+        super(analyzer, FSDirectory.getDirectory(indexDir, create));
         this.name = name;
-        this.fs = fs;
 
         // check if index is locked, probably from an unclean repository
         // shutdown
-        if (fs.exists(WRITE_LOCK)) {
+        File writeLock = new File(indexDir, WRITE_LOCK);
+        if (writeLock.exists()) {
             lockEncountered = true;
             log.warn("Removing write lock on search index.");
-            try {
-                fs.deleteFile(WRITE_LOCK);
-            } catch (FileSystemException e) {
+            if (!writeLock.delete()) {
                 log.error("Unable to remove write lock on search index.");
             }
         }
-        if (fs.exists(COMMIT_LOCK)) {
+        File commitLock = new File(indexDir, COMMIT_LOCK);
+        if (commitLock.exists()) {
             lockEncountered = true;
             log.warn("Removing commit lock on search index.");
-            try {
-                fs.deleteFile(COMMIT_LOCK);
-            } catch (FileSystemException e) {
+            if (!commitLock.delete()) {
                 log.error("Unable to remove write lock on search index.");
             }
         }
@@ -117,15 +111,6 @@ class PersistentIndex extends AbstractIndex {
             index.getDirectory()
         });
         invalidateSharedReader();
-    }
-
-    /**
-     * Returns the underlying directory.
-     * @return the directory.
-     * @throws IOException if an error occurs.
-     */
-    Directory getDirectory() throws IOException {
-        return FileSystemDirectory.getDirectory(fs, false);
     }
 
     /**

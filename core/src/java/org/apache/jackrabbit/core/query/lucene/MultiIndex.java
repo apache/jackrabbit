@@ -17,10 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.fs.BasedFileSystem;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -33,6 +29,7 @@ import org.apache.commons.collections.iterators.EmptyIterator;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -99,7 +96,7 @@ class MultiIndex {
     /**
      * The base filesystem to store the index.
      */
-    private final FileSystem fs;
+    private final File indexDir;
 
     /**
      * The query handler
@@ -147,41 +144,42 @@ class MultiIndex {
     /**
      * Creates a new MultiIndex.
      *
-     * @param fs the base file system
+     * @param indexDir the base file system
      * @param handler the search handler
      * @param stateMgr shared item state manager
      * @param rootUUID uuid of the root node
-     * @throws FileSystemException if an error occurs
      * @throws IOException if an error occurs
      */
-    MultiIndex(FileSystem fs,
+    MultiIndex(File indexDir,
                SearchIndex handler,
                ItemStateManager stateMgr,
-               String rootUUID) throws FileSystemException, IOException {
+               String rootUUID) throws IOException {
 
-        this.fs = fs;
+        this.indexDir = indexDir;
         this.handler = handler;
         boolean doInitialIndex = false;
-        if (fs.exists(indexNames.getFileName())) {
-            indexNames.read(fs);
+        if (indexNames.exists(indexDir)) {
+            indexNames.read(indexDir);
         } else {
             doInitialIndex = true;
         }
-        if (fs.exists(deletable.getFileName())) {
-            deletable.read(fs);
+        if (deletable.exists(indexDir)) {
+            deletable.read(indexDir);
         }
         // try to remove deletable files if there are any
         attemptDelete();
 
         // read namespace mappings
-        FileSystemResource mapFile = new FileSystemResource(fs, NS_MAPPING_FILE);
+        File mapFile = new File(indexDir, NS_MAPPING_FILE);
         nsMappings = new NamespaceMappings(mapFile);
 
         try {
             // open persistent indexes
             for (int i = 0; i < indexNames.size(); i++) {
-                FileSystem sub = new BasedFileSystem(fs, indexNames.getName(i));
-                sub.init();
+                File sub = new File(indexDir, indexNames.getName(i));
+                if (!sub.exists() && !sub.mkdir()) {
+                    throw new IOException("Unable to create directory: " + sub.getAbsolutePath());
+                }
                 PersistentIndex index = new PersistentIndex(indexNames.getName(i), sub, false, handler.getAnalyzer());
                 index.setMaxMergeDocs(handler.getMaxMergeDocs());
                 index.setMergeFactor(handler.getMergeFactor());
@@ -192,7 +190,7 @@ class MultiIndex {
 
             // create volatile index and check / apply redo log
             // init volatile index
-            RedoLog redoLog = new RedoLog(new FileSystemResource(fs, REDO_LOG));
+            RedoLog redoLog = new RedoLog(new File(indexDir, REDO_LOG));
 
             if (redoLog.hasEntries()) {
                 // when we have entries in the redo log there is no need to reindex
@@ -233,8 +231,6 @@ class MultiIndex {
             }
         } catch (ItemStateException e) {
             throw new IOException("Error indexing root node: " + e.getMessage());
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
         } catch (RepositoryException e) {
             throw new IOException("Error indexing root node: " + e.getMessage());
         }
@@ -487,30 +483,20 @@ class MultiIndex {
 
         // check if volatile index contains documents at all
         if (volatileIndex.getIndexReader().numDocs() > 0) {
-            // create new index folder
-            String name = indexNames.newName();
-            FileSystem sub = new BasedFileSystem(fs, name);
-            PersistentIndex index;
-            try {
-                sub.init();
-                index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
-                index.setMaxMergeDocs(handler.getMaxMergeDocs());
-                index.setMergeFactor(handler.getMergeFactor());
-                index.setMinMergeDocs(handler.getMinMergeDocs());
-                index.setUseCompoundFile(handler.getUseCompoundFile());
-            } catch (FileSystemException e) {
-                throw new IOException(e.getMessage());
-            }
+
+            File sub = newIndexFolder();
+            String name = sub.getName();
+            PersistentIndex index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
+            index.setMaxMergeDocs(handler.getMaxMergeDocs());
+            index.setMergeFactor(handler.getMergeFactor());
+            index.setMinMergeDocs(handler.getMinMergeDocs());
+            index.setUseCompoundFile(handler.getUseCompoundFile());
             index.mergeIndex(volatileIndex);
 
             // if merge has been successful add index
-            try {
-                indexes.add(index);
-                indexNames.addName(name);
-                indexNames.write(fs);
-            } catch (FileSystemException e) {
-                throw new IOException(e.getMessage());
-            }
+            indexes.add(index);
+            indexNames.addName(name);
+            indexNames.write(indexDir);
 
             // check if obsolete indexes can be deleted
             // todo move to other place?
@@ -523,11 +509,8 @@ class MultiIndex {
         }
 
         // reset redo log
-        try {
-            volatileIndex.getRedoLog().clear();
-        } catch (FileSystemException e) {
-            log.error("Internal error: Unable to clear redo log.", e);
-        }
+        volatileIndex.getRedoLog().clear();
+
         // create new volatile index
         volatileIndex = new VolatileIndex(handler.getAnalyzer(), volatileIndex.getRedoLog());
         volatileIndex.setUseCompoundFile(false);
@@ -580,21 +563,16 @@ class MultiIndex {
         }
         // make sure at least one persistent index exists
         if (indexes.size() == 0) {
-            try {
-                String name = indexNames.newName();
-                FileSystem sub = new BasedFileSystem(fs, name);
-                sub.init();
-                PersistentIndex index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
-                index.setMaxMergeDocs(handler.getMaxMergeDocs());
-                index.setMergeFactor(handler.getMergeFactor());
-                index.setMinMergeDocs(handler.getMinMergeDocs());
-                index.setUseCompoundFile(handler.getUseCompoundFile());
-                indexes.add(index);
-                indexNames.addName(name);
-                indexNames.write(fs);
-            } catch (FileSystemException e) {
-                throw new IOException(e.getMessage());
-            }
+            File sub = newIndexFolder();
+            String name = sub.getName();
+            PersistentIndex index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
+            index.setMaxMergeDocs(handler.getMaxMergeDocs());
+            index.setMergeFactor(handler.getMergeFactor());
+            index.setMinMergeDocs(handler.getMinMergeDocs());
+            index.setUseCompoundFile(handler.getUseCompoundFile());
+            indexes.add(index);
+            indexNames.addName(name);
+            indexNames.write(indexDir);
         }
         // add node to last index
         PersistentIndex last = (PersistentIndex) indexes.get(indexes.size() - 1);
@@ -635,24 +613,15 @@ class MultiIndex {
             if (!index.hasDocuments()) {
                 indexes.remove(i);
                 indexNames.removeName(index.getName());
+                indexNames.write(indexDir);
                 index.close();
-                try {
-                    fs.deleteFolder(index.getName());
-                } catch (FileSystemException e) {
+                File dir = new File(indexDir, index.getName());
+                if (!deleteIndex(dir)) {
                     // try again later
                     deletable.addName(index.getName());
-                    try {
-                        deletable.write(fs);
-                    } catch (FileSystemException e1) {
-                        throw new IOException(e.getMessage());
-                    }
+                    deletable.write(indexDir);
                 }
             }
-        }
-        try {
-            indexNames.write(fs);
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
         }
 
         // only check for merge if there are more than mergeFactor indexes
@@ -693,19 +662,14 @@ class MultiIndex {
      */
     private void mergeIndex(int min) throws IOException {
         // create new index
-        String name = indexNames.newName();
-        FileSystem sub = new BasedFileSystem(fs, name);
-        PersistentIndex index;
-        try {
-            sub.init();
-            index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
-            index.setMaxMergeDocs(handler.getMaxMergeDocs());
-            index.setMergeFactor(handler.getMergeFactor());
-            index.setMinMergeDocs(handler.getMinMergeDocs());
-            index.setUseCompoundFile(handler.getUseCompoundFile());
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
-        }
+        File sub = newIndexFolder();
+        String name = sub.getName();
+        PersistentIndex index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
+        index.setMaxMergeDocs(handler.getMaxMergeDocs());
+        index.setMergeFactor(handler.getMergeFactor());
+        index.setMinMergeDocs(handler.getMinMergeDocs());
+        index.setUseCompoundFile(handler.getUseCompoundFile());
+
         // the indexes to merge
         List toMerge = indexes.subList(min, indexes.size());
         IndexReader[] readers = new IndexReader[toMerge.size()];
@@ -716,30 +680,22 @@ class MultiIndex {
         index.getIndexWriter().addIndexes(readers);
         index.getIndexWriter().optimize();
         // close and remove obsolete indexes
+
         for (int i = indexes.size() - 1; i >= min; i--) {
             PersistentIndex pi = (PersistentIndex) indexes.get(i);
             pi.close();
-            try {
-                fs.deleteFolder(pi.getName());
-            } catch (FileSystemException e) {
+            File dir = new File(indexDir, pi.getName());
+            if (!deleteIndex(dir)) {
                 // try again later
                 deletable.addName(pi.getName());
-                try {
-                    deletable.write(fs);
-                } catch (FileSystemException e1) {
-                    throw new IOException(e.getMessage());
-                }
             }
             indexNames.removeName(pi.getName());
             indexes.remove(i);
         }
         indexNames.addName(name);
         indexes.add(index);
-        try {
-            indexNames.write(fs);
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
-        }
+        indexNames.write(indexDir);
+        deletable.write(indexDir);
     }
 
     /**
@@ -748,19 +704,60 @@ class MultiIndex {
     private void attemptDelete() {
         for (int i = deletable.size() - 1; i >= 0; i--) {
             String indexName = deletable.getName(i);
-            try {
-                fs.deleteFolder(indexName);
+            File dir = new File(indexDir, indexName);
+            if (deleteIndex(dir)) {
                 deletable.removeName(i);
-            } catch (FileSystemException e) {
+            } else {
                 log.info("Unable to delete obsolete index: " + indexName);
             }
         }
         try {
-            deletable.write(fs);
-        } catch (Exception e) {
-            // catches IOException and FileSystemException
+            deletable.write(indexDir);
+        } catch (IOException e) {
             log.warn("Exception while writing deletable indexes: " + e);
         }
+    }
+
+    /**
+     * Deletes the index <code>directory</code>.
+     *
+     * @param directory the index directory to delete.
+     * @return <code>true</code> if the delete was successful,
+     *         <code>false</code> otherwise.
+     */
+    private boolean deleteIndex(File directory) {
+        // trivial if it does not exist anymore
+        if (!directory.exists()) {
+            return true;
+        }
+        // delete files first
+        File[] files = directory.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            if (!files[i].delete()) {
+                return false;
+            }
+        }
+        // now delete directory itself
+        return directory.delete();
+    }
+
+    /**
+     * Returns an new index folder which is empty.
+     *
+     * @return the new index folder.
+     * @throws IOException if the folder cannot be created.
+     */
+    private File newIndexFolder() throws IOException {
+        // create new index folder. make sure it does not exist
+        File sub;
+        do {
+            sub = new File(indexDir, indexNames.newName());
+        } while (sub.exists());
+
+        if (!sub.mkdir()) {
+            throw new IOException("Unable to create directory: " + sub.getAbsolutePath());
+        }
+        return sub;
     }
 
     /**

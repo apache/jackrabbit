@@ -16,16 +16,19 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Stores a sequence of index names.
  */
 class IndexInfos {
 
@@ -59,6 +62,17 @@ class IndexInfos {
     }
 
     /**
+     * Returns <code>true</code> if this index infos exists in
+     * <code>dir</code>.
+     *
+     * @param dir the directory where to look for the index infos.
+     * @return <code>true</code> if it exists; <code>false</code> otherwise.
+     */
+    boolean exists(File dir) {
+        return new File(dir, name).exists();
+    }
+
+    /**
      * Returns the name of the file where infos are stored.
      * 
      * @return the name of the file where infos are stored.
@@ -69,45 +83,55 @@ class IndexInfos {
 
     /**
      * Reads the index infos.
-     * @param fs the base file system
-     * @throws FileSystemException if an error occurs.
+     *
+     * @param dir the directory from where to read the index infos.
      * @throws IOException if an error occurs.
      */
-    void read(FileSystem fs) throws FileSystemException, IOException {
-        DataInputStream input = new DataInputStream(fs.getInputStream(name));
+    void read(File dir) throws IOException {
+        InputStream in = new FileInputStream(new File(dir, name));
         try {
-            counter = input.readInt();
-            for (int i = input.readInt(); i > 0; i--) {
-                indexes.add(input.readUTF());
+            DataInputStream di = new DataInputStream(in);
+            counter = di.readInt();
+            for (int i = di.readInt(); i > 0; i--) {
+                indexes.add(di.readUTF());
             }
         } finally {
-            input.close();
+            in.close();
         }
     }
 
     /**
      * Writes the index infos to disk if they are dirty.
-     * @param fs the base file system
-     * @throws FileSystemException if an error occurs.
+     *
+     * @param dir the directory where to write the index infos.
      * @throws IOException if an error occurs.
      */
-    void write(FileSystem fs) throws FileSystemException, IOException {
+    void write(File dir) throws IOException {
         // do not write if not dirty
         if (!dirty) {
             return;
         }
 
-        DataOutputStream output = new DataOutputStream(fs.getOutputStream(name + ".new"));
+        File nu = new File(dir, name + ".new");
+        OutputStream out = new FileOutputStream(nu);
         try {
-            output.writeInt(counter);
-            output.writeInt(indexes.size());
+            DataOutputStream dataOut = new DataOutputStream(out);
+            dataOut.writeInt(counter);
+            dataOut.writeInt(indexes.size());
             for (int i = 0; i < indexes.size(); i++) {
-                output.writeUTF(getName(i));
+                dataOut.writeUTF(getName(i));
             }
         } finally {
-            output.close();
+            out.close();
         }
-        fs.move(name + ".new", name);
+        // delete old
+        File old = new File(dir, name);
+        if (old.exists() && !old.delete()) {
+            throw new IOException("Unable to delete file: " + old.getAbsolutePath());
+        }
+        if (!nu.renameTo(old)) {
+            throw new IOException("Unable to rename file: " + nu.getAbsolutePath());
+        }
         dirty = false;
     }
 

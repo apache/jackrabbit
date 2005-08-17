@@ -40,7 +40,7 @@
         </dependency>
         <dependency>
             <id>commons-collections</id>
-            <version>2.1</version>
+            <version>3.1</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
@@ -70,8 +70,25 @@
         </dependency>
         <!-- dependencies from jcr that we want to bundle -->
         <dependency>
-            <id>jackrabbit</id>
-            <version>0.16.4.1-dev</version>
+            <groupId>jackrabbit</groupId>
+            <artifactId>jackrabbit-api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        <dependency>
+            <groupId>jackrabbit</groupId>
+            <artifactId>jackrabbit-commons</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        <dependency>
+            <groupId>jackrabbit</groupId>
+            <artifactId>jackrabbit-core</artifactId>
+            <version>1.0-SNAPSHOT</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>

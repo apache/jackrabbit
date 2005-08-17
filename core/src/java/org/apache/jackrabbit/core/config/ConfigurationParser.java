@@ -306,15 +306,18 @@ public class ConfigurationParser {
      *     &lt;FileSystem ...&gt;
      *   &lt;/Search&gt;
      * </pre>
-     * <p>
+     * <p/>
      * Both the <code>SearchIndex</code> and <code>FileSystem</code>
      * elements are {@link #parseBeanConfig(Element,String) bean configuration}
      * elements. If the search implementation class is not given, then
      * a default implementation is used.
-     * <p>
+     * <p/>
      * The search index is an optional feature of workspace configuration.
      * If the search configuration element is not found, then this method
      * returns <code>null</code>.
+     * <p/>
+     * The FileSystem element in a search index configuration is optional.
+     * However some implementations may require a FileSystem.
      *
      * @param parent parent of the <code>SearchIndex</code> element
      * @return search configuration, or <code>null</code>
@@ -336,9 +339,12 @@ public class ConfigurationParser {
                 // Search parameters
                 Properties parameters = parseParameters(element);
 
-                // File system implementation
-                FileSystemConfig fsc = new FileSystemConfig(
-                        parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
+                // Optional file system implementation
+                FileSystemConfig fsc = null;
+                if (getElement(element, FILE_SYSTEM_ELEMENT, false) != null) {
+                    fsc = new FileSystemConfig(
+                            parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
+                }
 
                 return new SearchConfig(className, parameters, fsc);
             }
