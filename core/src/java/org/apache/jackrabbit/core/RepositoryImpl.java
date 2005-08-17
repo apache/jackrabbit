@@ -944,7 +944,9 @@ public class RepositoryImpl implements Repository, SessionListener,
      * user authenticated by the <code>loginContext</code> instance attached
      * to the workspace configured by the <code>wspConfig</code>.
      *
-     * @throws AccessDeniedException when ??
+     * @throws AccessDeniedException if the subject of the given login context
+     *                               is not granted access to the specified
+     *                               workspace
      * @throws RepositoryException   If any other error occurrs creating the
      *                               session.
      */
@@ -960,7 +962,9 @@ public class RepositoryImpl implements Repository, SessionListener,
      * user represented by the <code>subject</code> instance attached
      * to the workspace configured by the <code>wspConfig</code>.
      *
-     * @throws AccessDeniedException when ??
+     * @throws AccessDeniedException if the subject of the given login context
+     *                               is not granted access to the specified
+     *                               workspace
      * @throws RepositoryException   If any other error occurrs creating the
      *                               session.
      */
