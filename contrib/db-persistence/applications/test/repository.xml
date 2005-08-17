@@ -111,7 +111,7 @@
         (used by the QueryHandler); the class attribute specifies the
         FQN of the class implementing the QueryHandler interface.
     -->
-    <!ELEMENT SearchIndex (param*,FileSystem)>
+    <!ELEMENT SearchIndex (param*,FileSystem?)>
     <!ATTLIST SearchIndex
       class CDATA #REQUIRED>
 
@@ -181,31 +181,9 @@
         <!--
             Search index and the file system it uses.
             class: FQN of class implementing the QueryHandler interface
-
-            Supported parameters for lucene search index:
-            - useCompoundFile: advises lucene to use compound files for the index files
-            - minMergeDocs: minimum number of nodes in an index until segments are merged
-            - maxMergeDocs: maximum number of nodes in segments that will be merged
-            - mergeFactor: determines how often segment indices are merged
-            - bufferSize: maximum number of documents that are held in a pending
-              queue until added to the index
-            - forceConsistencyCheck: runs a consistency check on every startup. If
-              false, a consistency check is only performed when the search index
-              detects a prior forced shutdown.
-            - autoRepair: errors detected by a consistency check are automatically
-              repaired. If false, errors are only written to the log.
         -->
         <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
-            <param name="useCompoundFile" value="true"/>
-            <param name="minMergeDocs" value="1000"/>
-            <param name="maxMergeDocs" value="100000"/>
-            <param name="mergeFactor" value="10"/>
-            <param name="bufferSize" value="10"/>
-            <param name="forceConsistencyCheck" value="false"/>
-            <param name="autoRepair" value="true"/>
-            <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-                <param name="path" value="${wsp.home}/index"/>
-            </FileSystem>
+            <param name="path" value="${wsp.home}/index"/>
         </SearchIndex>
     </Workspace>
 

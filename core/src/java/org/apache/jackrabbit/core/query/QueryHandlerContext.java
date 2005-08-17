@@ -56,7 +56,9 @@ public class QueryHandlerContext {
      * Creates a new context instance.
      *
      * @param fs         a {@link FileSystem} this <code>QueryHandler</code> may
-     *                   use to store its index.
+     *                   use to store its index. If no <code>FileSystem</code>
+     *                   has been configured <code>fs</code> is
+     *                   <code>null</code>.
      * @param stateMgr   provides persistent item states.
      * @param rootUUID   the uuid of the root node.
      * @param ntRegistry the node type registry.
@@ -85,8 +87,9 @@ public class QueryHandlerContext {
     }
 
     /**
-     * Returns the {@link org.apache.jackrabbit.core.fs.FileSystem} instance
-     * this <code>QueryHandler</code> may use to store its index.
+     * Returns the {@link FileSystem} instance this <code>QueryHandler</code>
+     * may use to store its index. If no <code>FileSystem</code> has been
+     * configured this method returns <code>null</code>.
      *
      * @return the <code>FileSystem</code> instance for this
      *         <code>QueryHandler</code>.

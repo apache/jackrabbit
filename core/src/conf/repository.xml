@@ -111,7 +111,7 @@
         (used by the QueryHandler); the class attribute specifies the
         FQN of the class implementing the QueryHandler interface.
     -->
-    <!ELEMENT SearchIndex (param*,FileSystem)>
+    <!ELEMENT SearchIndex (param*,FileSystem?)>
     <!ATTLIST SearchIndex
       class CDATA #REQUIRED>
 
@@ -195,7 +195,11 @@
             Search index and the file system it uses.
             class: FQN of class implementing the QueryHandler interface
 
+            If required by the QueryHandler implementation, one may configure
+            a FileSystem that the handler may use.
+
             Supported parameters for lucene search index:
+            - path: location of the index. This parameter is mandatory!
             - useCompoundFile: advises lucene to use compound files for the index files
             - minMergeDocs: minimum number of nodes in an index until segments are merged
             - volatileIdleTime: idle time in seconds until the volatile index is
@@ -209,19 +213,20 @@
               detects a prior forced shutdown.
             - autoRepair: errors detected by a consistency check are automatically
               repaired. If false, errors are only written to the log.
+              
+            Note: all parameters (except path) in this SearchIndex config are default
+            values and can be omitted.
         -->
         <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
+            <param name="path" value="${wsp.home}/index"/>
             <param name="useCompoundFile" value="true"/>
-            <param name="minMergeDocs" value="1000"/>
+            <param name="minMergeDocs" value="100"/>
             <param name="volatileIdleTime" value="3"/>
             <param name="maxMergeDocs" value="100000"/>
             <param name="mergeFactor" value="10"/>
             <param name="bufferSize" value="10"/>
             <param name="forceConsistencyCheck" value="false"/>
             <param name="autoRepair" value="true"/>
-            <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-                <param name="path" value="${wsp.home}/index"/>
-            </FileSystem>
         </SearchIndex>
     </Workspace>
 

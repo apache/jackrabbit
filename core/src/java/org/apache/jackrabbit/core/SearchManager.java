@@ -29,7 +29,6 @@ import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.name.Path;
 import org.apache.log4j.Logger;
@@ -101,6 +100,7 @@ public class SearchManager implements SynchronousEventListener {
                          ItemStateManager itemMgr) throws RepositoryException {
         this.fs = config.getFileSystem();
         this.itemMgr = itemMgr;
+
         // register namespaces
         NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
         try {
@@ -143,7 +143,9 @@ public class SearchManager implements SynchronousEventListener {
     public void close() {
         try {
             handler.close();
-            fs.close();
+            if (fs != null) {
+                fs.close();
+            }
         } catch (IOException e) {
             log.error("Exception closing QueryHandler.", e);
         } catch (FileSystemException e) {

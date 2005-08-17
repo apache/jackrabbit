@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
@@ -30,6 +28,9 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -55,7 +56,7 @@ public class NamespaceMappings implements NamespaceResolver {
     /**
      * Location of the file that persists the uri / prefix mappings
      */
-    private final FileSystemResource storage;
+    private final File storage;
 
     /**
      * Map of uris indexed by prefixes
@@ -80,7 +81,7 @@ public class NamespaceMappings implements NamespaceResolver {
      * @throws IOException if an error occurs while reading initial namespace
      *                     mappings from <code>file</code>.
      */
-    public NamespaceMappings(FileSystemResource file) throws IOException {
+    public NamespaceMappings(File file) throws IOException {
         storage = file;
         load();
     }
@@ -158,31 +159,27 @@ public class NamespaceMappings implements NamespaceResolver {
      * @throws IOException if an error occurs while reading from the file.
      */
     private void load() throws IOException {
-        try {
-            if (storage.exists()) {
-                InputStream in = storage.getInputStream();
-                try {
-                    Properties props = new Properties();
-                    log.debug("loading namespace mappings...");
-                    props.load(in);
+        if (storage.exists()) {
+            InputStream in = new FileInputStream(storage);
+            try {
+                Properties props = new Properties();
+                log.debug("loading namespace mappings...");
+                props.load(in);
 
-                    // read mappings from properties
-                    Iterator iter = props.keySet().iterator();
-                    while (iter.hasNext()) {
-                        String prefix = (String) iter.next();
-                        String uri = props.getProperty(prefix);
-                        log.debug(prefix + " -> " + uri);
-                        prefixToURI.put(prefix, uri);
-                        uriToPrefix.put(uri, prefix);
-                    }
-                    prefixCount = props.size();
-                    log.debug("namespace mappings loaded.");
-                } finally {
-                    in.close();
+                // read mappings from properties
+                Iterator iter = props.keySet().iterator();
+                while (iter.hasNext()) {
+                    String prefix = (String) iter.next();
+                    String uri = props.getProperty(prefix);
+                    log.debug(prefix + " -> " + uri);
+                    prefixToURI.put(prefix, uri);
+                    uriToPrefix.put(uri, prefix);
                 }
+                prefixCount = props.size();
+                log.debug("namespace mappings loaded.");
+            } finally {
+                in.close();
             }
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
         }
     }
 
@@ -202,13 +199,10 @@ public class NamespaceMappings implements NamespaceResolver {
             props.setProperty(prefix, uri);
         }
 
-        OutputStream out = null;
+        OutputStream out = new FileOutputStream(storage);
         try {
-            storage.makeParentDirs();
-            out = new BufferedOutputStream(storage.getOutputStream());
+            out = new BufferedOutputStream(out);
             props.store(out, null);
-        } catch (FileSystemException e) {
-            throw new IOException(e.getMessage());
         } finally {
             // make sure stream is closed
             out.close();
