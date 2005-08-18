@@ -41,6 +41,11 @@ public class RepositoryPool
         super();
     }
 
+    public synchronized Repository get(String key)
+    {
+        return (Repository) cache.get(key);
+    }
+
     public synchronized Repository get(String conf, String home)
     {
         return (Repository) cache.get(getKey(conf, home));
@@ -54,6 +59,16 @@ public class RepositoryPool
                 "There's already a repository for the given key. Remove it first.");
         }
         cache.put(getKey(conf, home), repo);
+    }
+
+    public synchronized void put(String key, Repository repo)
+    {
+        if (cache.containsKey(key))
+        {
+            throw new IllegalArgumentException(
+                "There's already a repository for the given key. Remove it first.");
+        }
+        cache.put(key, repo);
     }
 
     private String getKey(String conf, String home)

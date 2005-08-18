@@ -110,6 +110,14 @@
 			description="copy.to"
 			required="true"/>
 	</command>
+	
+	<command name="connect" impl="org.apache.jackrabbit.chain.command.ConnectToRmiServer">
+		<argument 
+			name="url" 
+			position="0" 
+			arg-name="url" 
+			required="true"/>
+	</command>
 		
 	<command name="currentnode" impl="org.apache.jackrabbit.chain.command.CurrentNode">
 		<alias name="cd"/>

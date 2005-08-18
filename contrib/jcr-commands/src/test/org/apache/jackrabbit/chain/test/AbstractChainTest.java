@@ -38,34 +38,34 @@ import org.apache.jackrabbit.chain.command.StartOrGetJackrabbitSingleton;
 /**
  * Commands Test superclass
  */
-public abstract class AbstractCommandTest extends TestCase
+public abstract class AbstractChainTest extends TestCase
 {
     /** config */
-    private static String CONFIG = "applications/test/repository.xml";
+    protected static String CONFIG = "applications/test/repository.xml";
 
     /** home */
-    private static String HOME = "applications/test/repository";
+    protected static String HOME = "applications/test/repository";
 
     static
     {
         try
         {
             ConfigParser parser = new ConfigParser();
-            parser.parse(AbstractCommandTest.class.getResource("chains.xml"));
+            parser.parse(AbstractChainTest.class.getResource("chains.xml"));
         } catch (Exception e)
         {
             e.printStackTrace();
         }
     }
 
-    /** clear workspace */
-    private ClearWorkspace cw = new ClearWorkspace();
-
     /** Context */
     protected Context ctx = new ContextBase();
 
     /** catalog */
     protected Catalog catalog = CatalogFactoryBase.getInstance().getCatalog("test");
+
+    /** clear workspace */
+    private ClearWorkspace cw = new ClearWorkspace();
 
     protected void setUp() throws Exception
     {
@@ -90,12 +90,6 @@ public abstract class AbstractCommandTest extends TestCase
         cw.execute(ctx);
 
     }
-    
-
-    protected void addTestNode() throws Exception
-    {
-        catalog.getCommand("addTestNode").execute(ctx);
-    }    
 
     protected void tearDown() throws Exception
     {
@@ -110,6 +104,11 @@ public abstract class AbstractCommandTest extends TestCase
         ctx.clear();
     }
     
+    protected void addTestNode() throws Exception
+    {
+        catalog.getCommand("addTestNode").execute(ctx);
+    }    
+
     protected Node getRoot() throws PathNotFoundException, JcrCommandException, RepositoryException {
         return CtxHelper.getNode(ctx, "/") ;
     }

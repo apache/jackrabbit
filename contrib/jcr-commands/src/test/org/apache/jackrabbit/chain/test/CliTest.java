@@ -24,7 +24,7 @@ import org.apache.jackrabbit.chain.cli.JcrParser;
 /**
  * Command line interfaces tests
  */
-public class CliTest extends AbstractCommandTest
+public class CliTest extends AbstractChainTest
 {
     JcrParser parser = new JcrParser();
 

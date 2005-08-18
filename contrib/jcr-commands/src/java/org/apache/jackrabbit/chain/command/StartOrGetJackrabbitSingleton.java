@@ -66,7 +66,6 @@ public class StartOrGetJackrabbitSingleton implements Command
                 if (repo == null)
                 {
                     String msg = "Starting Jakrabbit instance";
-                    System.out.println(msg);
                     log.info(msg);
                     RepositoryConfig conf = RepositoryConfig.create(config, home);
                     repo = RepositoryImpl.create(conf);
