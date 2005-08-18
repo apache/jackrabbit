@@ -300,10 +300,15 @@ class CachingMultiReader extends MultiReader {
         }
 
         /**
-         * @throws UnsupportedOperationException always
+         * {@inheritDoc}
          */
-        public boolean skipTo(int target) {
-            throw new UnsupportedOperationException();
+        public boolean skipTo(int target) throws IOException {
+            do {
+                if (!next()) {
+                    return false;
+                }
+            } while (target > doc());
+            return true;
         }
 
         /**
