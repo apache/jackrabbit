@@ -136,6 +136,12 @@
       <type>jar</type>
       <url>http://www.day.com/maven/jsr170/jars/jcr-1.0.jar</url>
     </dependency>
+    <dependency>
+      <groupId>jcr-rmi</groupId>
+      <artifactId>jcr-rmi</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <type>jar</type>
+    </dependency>
   </dependencies>
   <build>
     <sourceDirectory>src/java</sourceDirectory>
@@ -170,3 +176,4 @@
     </resources>
   </build>
 </project>
+

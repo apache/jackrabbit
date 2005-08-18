@@ -28,7 +28,7 @@ import org.apache.jackrabbit.chain.CtxHelper;
 /**
  * Commands tests
  */
-public class CommandsTest extends AbstractCommandTest
+public class CommandsTest extends AbstractChainTest
 {
 
     /**
