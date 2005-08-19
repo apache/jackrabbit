@@ -19,7 +19,8 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.ItemId;
 
 /**
- * The <code>ItemStateManager</code> interface...
+ * The <code>ItemStateManager</code> interface provides methods for retrieving
+ * <code>ItemState</code> and <code>NodeReferences</code> instances by id.
  */
 public interface ItemStateManager {
 
