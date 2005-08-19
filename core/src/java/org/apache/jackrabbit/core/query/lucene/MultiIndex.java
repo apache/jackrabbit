@@ -795,6 +795,7 @@ class MultiIndex {
                     } finally {
                         synchronized (updateMonitor) {
                             lastModificationTime = System.currentTimeMillis();
+                            updateInProgress = false;
                             updateMonitor.notifyAll();
                             if (multiReader != null) {
                                 multiReader.close();
