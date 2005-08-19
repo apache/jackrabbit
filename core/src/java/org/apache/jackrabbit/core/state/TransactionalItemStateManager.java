@@ -257,7 +257,8 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
      * the ones already known (removing items that were first added and
      * then again deleted).
      */
-    protected void update(ChangeLog changeLog) throws ItemStateException {
+    protected void update(ChangeLog changeLog)
+            throws StaleItemStateException, ItemStateException {
         if (txLog != null) {
             txLog.merge(changeLog);
         } else {

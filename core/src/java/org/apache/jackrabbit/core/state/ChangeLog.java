@@ -232,6 +232,10 @@ public class ChangeLog {
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             state.setStatus(ItemState.STATUS_EXISTING);
+            if (!state.hasOverlayedState()) {
+                // update modification count
+                state.touch();
+            }
             state.notifyStateUpdated();
         }
         iter = deletedStates();

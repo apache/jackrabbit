@@ -38,6 +38,8 @@ public abstract class ItemState implements ItemStateListener, Serializable {
 
     private static Logger log = Logger.getLogger(ItemState.class);
 
+    private static long LAST_MOD_COUNT = 1;
+
     /**
      * flags defining the current status of this <code>ItemState</code> instance
      */
@@ -78,8 +80,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected String parentUUID;
 
-    protected long lastModified;
-
+    private transient long modCount;
 
     protected ItemId id;
 
@@ -92,7 +93,8 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * Listeners (weak references)
      */
     private final transient Map listeners =
-            Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+            Collections.synchronizedMap(
+                    new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     // the backing persistent item state (may be null)
     protected transient ItemState overlayedState;
@@ -119,8 +121,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
         }
         this.id = id;
         this.parentUUID = parentUUID;
-        // @todo use modification count instead of ms (not precise enough)
-        lastModified = System.currentTimeMillis();
+        modCount = 0;
         overlayedState = null;
         this.isTransient = isTransient;
     }
@@ -128,7 +129,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     /**
      * Protected constructor
      *
-     * @param initialStatus  the initial status of the new <code>ItemState</code> instance
+     * @param initialStatus the initial status of the new <code>ItemState</code> instance
      * @param isTransient   flag indicating whether this state is transient or not
      */
     protected ItemState(int initialStatus, boolean isTransient) {
@@ -152,8 +153,22 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected void copy(ItemState state) {
         parentUUID = state.getParentUUID();
-        lastModified = state.getLastModified();
         id = state.getId();
+    }
+
+    /**
+     * Returns the modification count.
+     * @return the modification count.
+     */
+    long getModCount() {
+        return modCount;
+    }
+
+    /**
+     * Updates the modification count.
+     */
+    synchronized void touch() {
+        modCount = LAST_MOD_COUNT++;
     }
 
     /**
@@ -162,6 +177,8 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     void pull() {
         if (overlayedState != null) {
             copy(overlayedState);
+            // sync modification count
+            modCount = overlayedState.getModCount();
         }
     }
 
@@ -175,8 +192,16 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Called by <code>TransientItemStateManager</code> when this item state
-     * is disposed.
+     * Determines whether this item state has become stale.
+     * @return true if this item state has become stale, false otherwise.
+     */
+    boolean isStale() {
+        return overlayedState != null && modCount != overlayedState.getModCount();
+    }
+
+    /**
+     * Called by <code>TransientItemStateManager</code> and
+     * <code>LocalItemStateManager</code> when this item state has been disposed.
      */
     void onDisposed() {
         // prepare this instance so it can be gc'ed
@@ -401,15 +426,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Returns the timestamp when this item state was last modified.
-     *
-     * @return the timestamp when this item state was last modified.
-     */
-    public long getLastModified() {
-        return lastModified;
-    }
-
-    /**
      * Add an <code>ItemStateListener</code>
      *
      * @param listener the new listener to be informed on modifications
@@ -436,6 +452,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     public void stateCreated(ItemState created) {
         // underlying state has been permanently created
         status = STATUS_EXISTING;
+        pull();
     }
 
     /**
@@ -443,7 +460,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     public void stateDestroyed(ItemState destroyed) {
         // underlying state has been permanently destroyed
-        if (isTransient || status != STATUS_EXISTING) {
+        if (isTransient) {
             status = STATUS_STALE_DESTROYED;
         } else {
             status = STATUS_EXISTING_REMOVED;
@@ -456,7 +473,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     public void stateModified(ItemState modified) {
         // underlying state has been modified
-        if (isTransient || status != STATUS_EXISTING) {
+        if (isTransient) {
             status = STATUS_STALE_MODIFIED;
         } else {
             // this instance represents existing state, update it

@@ -1099,14 +1099,12 @@ public class SessionImpl implements Session, Dumpable {
         // notify listeners that session is about to be closed
         notifyLoggingOut();
 
-        // discard all transient changes
-        itemStateMgr.disposeAllTransientItemStates();
+        // dispose session item state manager
+        itemStateMgr.dispose();
         // dispose item manager
         itemMgr.dispose();
         // dispose workspace
         wsp.dispose();
-
-        // @todo release session-scoped locks, free resources, prepare to get gc'ed etc.
 
         // invalidate session
         alive = false;

@@ -35,6 +35,8 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("Core tests");
 
+        //suite.addTestSuite(ConcurrencyTest.class);
+        //suite.addTestSuite(ConcurrentSaveTest.class);
         suite.addTestSuite(XATest.class);
 
         return suite;

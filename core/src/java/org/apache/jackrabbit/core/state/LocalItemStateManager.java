@@ -306,7 +306,9 @@ public class LocalItemStateManager
     /**
      * {@inheritDoc}
      */
-    public void update() throws ItemStateException, IllegalStateException {
+    public void update()
+            throws StaleItemStateException, ItemStateException,
+            IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
@@ -323,9 +325,12 @@ public class LocalItemStateManager
      * items with our copies.
      *
      * @param changeLog change log containing local states and references
+     * @throws StaleItemStateException if at least one of the affected item
+     *                                 states has become stale in the meantime
+     * @throws ItemStateException if an error occurs
      */
     protected void update(ChangeLog changeLog)
-            throws ItemStateException {
+            throws StaleItemStateException, ItemStateException {
 
         ObservationManagerImpl obsMgr = null;
 
