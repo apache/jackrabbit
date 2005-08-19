@@ -50,11 +50,6 @@ public class ClientRepositoryFactory implements ObjectFactory {
     public static final String URL_PARAMETER = "url";
 
     /**
-     * Cache for repository references.
-     */
-    private Map repositories;
-
-    /**
      * Local adapter factory.
      */
     private LocalAdapterFactory factory;
@@ -72,7 +67,6 @@ public class ClientRepositoryFactory implements ObjectFactory {
      * @param factory local adapter factory
      */
     public ClientRepositoryFactory(LocalAdapterFactory factory) {
-        this.repositories = new HashMap();
         this.factory = factory;
     }
 
@@ -80,9 +74,6 @@ public class ClientRepositoryFactory implements ObjectFactory {
      * Returns a client wrapper for a remote content repository. The remote
      * repository is looked up from the RMI registry using the given URL and
      * wrapped into a {@link ClientRepository ClientRepository} adapter.
-     * <p>
-     * The repository references are cached so that only one client instance
-     * (per factory) exists for each remote repository.
      *
      * @param url the RMI URL of the remote repository
      * @return repository client
@@ -94,13 +85,8 @@ public class ClientRepositoryFactory implements ObjectFactory {
     public synchronized Repository getRepository(String url) throws
             ClassCastException, MalformedURLException,
             NotBoundException, RemoteException {
-        Repository repository = (Repository) repositories.get(url);
-        if (repository == null) {
-            RemoteRepository remote = (RemoteRepository) Naming.lookup(url);
-            repository = factory.getRepository(remote);
-            repositories.put(url, repository);
-        }
-        return repository;
+        RemoteRepository remote = (RemoteRepository) Naming.lookup(url);
+        return factory.getRepository(remote);
     }
 
     /**
