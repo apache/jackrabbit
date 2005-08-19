@@ -21,7 +21,7 @@
   <groupId>jackrabbit</groupId>
   <id>jackrabbit</id>
   <name>Jackrabbit - Text filters</name>
-  <currentVersion>1.0-dev</currentVersion>
+  <currentVersion>1.0-SNAPSHOT</currentVersion>
   <organization>
     <name>The Apache Software Foundation</name>
     <url>http://incubator.apache.org/projects/jackrabbit.html</url>
@@ -209,13 +209,13 @@
     <dependency>
       <groupId>jackrabbit</groupId>
       <artifactId>jackrabbit-commons</artifactId>
-      <version>1.0-dev</version>
+      <version>1.0-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
     <dependency>
       <groupId>jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
-      <version>1.0-dev</version>
+      <version>1.0-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
     <dependency>
