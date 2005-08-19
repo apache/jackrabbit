@@ -113,4 +113,9 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * @throws IllegalStateException if the manager is not in edit mode.
      */
     void update() throws ItemStateException, IllegalStateException;
+
+    /**
+     * Disposes this <code>UpdatableItemStateManager</code> and frees resources.
+     */
+    void dispose();
 }

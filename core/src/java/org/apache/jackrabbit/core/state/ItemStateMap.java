@@ -32,6 +32,8 @@ import java.util.Set;
  * A {@link java.util.Map} based <code>ItemStateStore</code> implementation.
  */
 public class ItemStateMap implements ItemStateStore, Dumpable {
+
+    /** Logger instance */
     private static Logger log = Logger.getLogger(ItemStateMap.class);
 
     /**

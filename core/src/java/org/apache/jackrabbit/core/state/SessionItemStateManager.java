@@ -48,11 +48,6 @@ public class SessionItemStateManager
     private static Logger log = Logger.getLogger(SessionItemStateManager.class);
 
     /**
-     * Root node id
-     */
-    private final NodeId rootNodeId;
-
-    /**
      * State manager that allows updates
      */
     private final UpdatableItemStateManager persistentStateMgr;
@@ -78,7 +73,6 @@ public class SessionItemStateManager
                                    UpdatableItemStateManager persistentStateMgr,
                                    NamespaceResolver nsResolver) {
 
-        rootNodeId = new NodeId(rootNodeUUID);
         this.persistentStateMgr = persistentStateMgr;
         // create transient item state manager
         transientStateMgr = new TransientItemStateManager();
@@ -268,6 +262,16 @@ public class SessionItemStateManager
      */
     public void update() throws ItemStateException, IllegalStateException {
         persistentStateMgr.update();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void dispose() {
+        // discard all transient changes
+        transientStateMgr.disposeAllItemStates();
+        // dispose our (i.e. 'local') state manager 
+        persistentStateMgr.dispose();
     }
 
     //< more methods for listing and retrieving transient ItemState instances >

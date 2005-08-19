@@ -25,6 +25,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
+import java.util.Iterator;
 
 /**
  * Local <code>ItemStateManager</code> that isolates changes to
@@ -80,14 +81,6 @@ public class LocalItemStateManager
         cache = new ItemStateReferenceCache();
         this.sharedStateMgr = sharedStateMgr;
         this.wspImpl = wspImpl;
-    }
-
-    /**
-     * Disposes this <code>LocalItemStateManager</code> and frees resources.
-     */
-    public void dispose() {
-        // clear cache
-        cache.evictAll();
     }
 
     /**
@@ -349,6 +342,27 @@ public class LocalItemStateManager
 
         sharedStateMgr.store(changeLog, obsMgr);
         changeLog.persisted();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void dispose() {
+        // this LocalItemStateManager instance is no longer needed;
+        // cached item states can now be safely discarded
+        Iterator iter = cache.values().iterator();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            // we're no longer interested in status changes of this item state
+            state.removeListener(this);
+            // discard item state; any remaining listeners will be informed
+            // about this status change
+            state.discard();
+            // let the item state know that it has been disposed
+            state.onDisposed();
+        }
+        // clear cache
+        cache.evictAll();
     }
 
     //----------------------------------------------------< ItemStateListener >
