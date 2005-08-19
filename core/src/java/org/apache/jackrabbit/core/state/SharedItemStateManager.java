@@ -74,8 +74,8 @@ public class SharedItemStateManager
     /**
      * Virtual item state providers
      */
-    private VirtualItemStateProvider[] virtualProviders = new
-            VirtualItemStateProvider[0];
+    private VirtualItemStateProvider[] virtualProviders =
+            new VirtualItemStateProvider[0];
 
     /**
      * Read-/Write-Lock to synchronize access on this item state manager.
@@ -320,10 +320,12 @@ public class SharedItemStateManager
      * @param local  change log containing local items
      * @param obsMgr the observation manager to inform, or <code>null</code> if
      *               no observation manager should be informed.
-     * @throws ItemStateException if an error occurs
+     * @throws StaleItemStateException if at least one of the affected item
+     *                                 states has become stale
+     * @throws ItemStateException if another error occurs
      */
     public void store(ChangeLog local, ObservationManagerImpl obsMgr)
-            throws ItemStateException {
+            throws StaleItemStateException, ItemStateException {
 
         ChangeLog shared = new ChangeLog();
 
@@ -376,12 +378,22 @@ public class SharedItemStateManager
                 while (iter.hasNext()) {
                     ItemState state = (ItemState) iter.next();
                     state.connect(getItemState(state.getId()));
+                    if (state.isStale()) {
+                        String msg = state.getId() + " has been modified externally";
+                        log.debug(msg);
+                        throw new StaleItemStateException(msg);
+                    }
                     shared.modified(state.getOverlayedState());
                 }
                 iter = local.deletedStates();
                 while (iter.hasNext()) {
                     ItemState state = (ItemState) iter.next();
                     state.connect(getItemState(state.getId()));
+                    if (state.isStale()) {
+                        String msg = state.getId() + " has been modified externally";
+                        log.debug(msg);
+                        throw new StaleItemStateException(msg);
+                    }
                     shared.deleted(state.getOverlayedState());
                 }
                 iter = local.addedStates();
@@ -628,11 +640,15 @@ public class SharedItemStateManager
     private ItemState loadItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
+        ItemState state;
         if (id.denotesNode()) {
-            return persistMgr.load((NodeId) id);
+            state = persistMgr.load((NodeId) id);
         } else {
-            return persistMgr.load((PropertyId) id);
+            state = persistMgr.load((PropertyId) id);
         }
+        // init modification counter
+        state.touch();
+        return state;
     }
 
     /**

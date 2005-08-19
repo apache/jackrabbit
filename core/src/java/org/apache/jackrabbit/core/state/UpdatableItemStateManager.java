@@ -109,10 +109,13 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * added to this update operation in a single step.
      * If this operation fails, no item will have been saved.
      *
-     * @throws ItemStateException    if the operation failed
-     * @throws IllegalStateException if the manager is not in edit mode.
+     * @throws StaleItemStateException if at least one of the affected items
+     *                                 has become stale in the meantime 
+     * @throws ItemStateException      if the operation failed for another reason
+     * @throws IllegalStateException   if the manager is not in edit mode.
      */
-    void update() throws ItemStateException, IllegalStateException;
+    void update() throws StaleItemStateException, ItemStateException,
+            IllegalStateException;
 
     /**
      * Disposes this <code>UpdatableItemStateManager</code> and frees resources.

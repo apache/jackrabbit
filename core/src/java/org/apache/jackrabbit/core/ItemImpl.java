@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.StaleItemStateException;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -1306,7 +1307,6 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             Collection dirtyRefs =
                     checkReferences(dirty.iterator(), removed.iterator());
 
-
             // start the update operation
             try {
                 stateMgr.edit();
@@ -1358,6 +1358,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 stateMgr.update();
                 // update operation succeeded
                 succeeded = true;
+            } catch (StaleItemStateException e) {
+                throw new InvalidItemStateException(e.getMessage());
             } catch (ItemStateException e) {
                 String msg = safeGetJCRPath() + ": unable to update item.";
                 log.debug(msg);
