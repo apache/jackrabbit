@@ -167,8 +167,10 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     /**
      * Updates the modification count.
      */
-    synchronized void touch() {
-        modCount = LAST_MOD_COUNT++;
+    void touch() {
+        synchronized (ItemState.class) {
+            modCount = LAST_MOD_COUNT++;
+        }
     }
 
     /**
