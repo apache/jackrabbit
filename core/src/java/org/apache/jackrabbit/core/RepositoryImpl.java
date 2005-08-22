@@ -422,13 +422,6 @@ public class RepositoryImpl implements Repository, SessionListener,
         delegatingDispatcher.addDispatcher(getObservationManagerFactory(wspName));
     }
 
-    RepositoryConfig getConfig() {
-        // check sanity of this instance
-        sanityCheck();
-
-        return repConfig;
-    }
-
     NamespaceRegistryImpl getNamespaceRegistry() {
         // check sanity of this instance
         sanityCheck();
@@ -499,9 +492,11 @@ public class RepositoryImpl implements Repository, SessionListener,
      *                             already exists or if another error occurs
      * @see SessionImpl#createWorkspace(String)
      */
-    synchronized void createWorkspace(String workspaceName) throws RepositoryException {
+    protected synchronized void createWorkspace(String workspaceName)
+            throws RepositoryException {
         if (wspInfos.containsKey(workspaceName)) {
-            throw new RepositoryException("workspace '" + workspaceName + "' already exists.");
+            throw new RepositoryException("workspace '"
+                    + workspaceName + "' already exists.");
         }
 
         // create the workspace configuration
@@ -582,10 +577,14 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * Creates a new session on the specified workspace for the
-     * authenticated subject of the given login context.
+     * Creates a new repository session on the specified workspace for the
+     * <b><i>authenticated</i></b> subject of the given login context and
+     * adds it to the <i>active</i> sessions.
+     * <p/>
+     * Calls {@link #createSessionInstance(AuthContext, WorkspaceConfig)} to
+     * create the actual <code>SessionImpl</code> instance.
      *
-     * @param loginContext  login context with authenticated subject
+    * @param loginContext  login context with authenticated subject
      * @param workspaceName workspace name
      * @return a new session
      * @throws NoSuchWorkspaceException if the specified workspace does not exist
@@ -594,7 +593,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    SessionImpl createSession(AuthContext loginContext,
+    protected final SessionImpl createSession(AuthContext loginContext,
                               String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
@@ -606,8 +605,12 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * Creates a new session on the specified workspace for the given
-     * authenticated subject.
+     * Creates a new repository session on the specified workspace for the given
+     * <b><i>authenticated</i></b> subject and adds it to the <i>active</i>
+     * sessions.
+     * <p/>
+     * Calls {@link #createSessionInstance(Subject, WorkspaceConfig)} to
+     * create the actual <code>SessionImpl</code> instance.
      *
      * @param subject       authenticated subject
      * @param workspaceName workspace name
@@ -618,7 +621,8 @@ public class RepositoryImpl implements Repository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    SessionImpl createSession(Subject subject, String workspaceName)
+    protected final SessionImpl createSession(Subject subject,
+                                              String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
         WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
@@ -655,9 +659,6 @@ public class RepositoryImpl implements Repository, SessionListener,
             wspInfo.dispose();
         }
 
-        /**
-         * todo further cleanup tasks, free resources, etc.
-         */
         try {
             vMgr.close();
         } catch (Exception e) {
@@ -687,6 +688,14 @@ public class RepositoryImpl implements Repository, SessionListener,
 
         // make sure this instance is not used anymore
         disposed = true;
+    }
+
+    /**
+     * Returns the configuration of this repository.
+     * @return repository configuration
+     */
+    public RepositoryConfig getConfig() {
+        return repConfig;
     }
 
     /**
@@ -829,7 +838,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         // login either using JAAS or our own LoginModule
         AuthContext authCtx;
         try {
-            LoginModuleConfig lmc = this.repConfig.getLoginModuleConfig();
+            LoginModuleConfig lmc = repConfig.getLoginModuleConfig();
             if (lmc == null) {
                 authCtx = new AuthContext.JAAS(repConfig.getAppName(), credentials);
             } else {
@@ -982,7 +991,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      * representing the same named workspace, i.e. the same physical
      * storage.
      */
-    class WorkspaceInfo {
+    protected class WorkspaceInfo {
 
         /**
          * workspace configuration
@@ -1052,7 +1061,7 @@ public class RepositoryImpl implements Repository, SessionListener,
          *
          * @return the workspace configuration
          */
-        WorkspaceConfig getConfig() {
+        public WorkspaceConfig getConfig() {
             return config;
         }
 
@@ -1092,7 +1101,8 @@ public class RepositoryImpl implements Repository, SessionListener,
          * Returns the workspace item state provider
          *
          * @return the workspace item state provider
-         * @throws RepositoryException if the workspace item state provider could not be created
+         * @throws RepositoryException if the workspace item state provider
+         *                             could not be created
          */
         synchronized SharedItemStateManager getItemStateProvider()
                 throws RepositoryException {
@@ -1198,7 +1208,8 @@ public class RepositoryImpl implements Repository, SessionListener,
                 try {
                     persistMgr.close();
                 } catch (Exception e) {
-                    log.error("error while closing persistence manager of workspace " + config.getName(), e);
+                    log.error("error while closing persistence manager of workspace "
+                            + config.getName(), e);
                 }
                 persistMgr = null;
             }
@@ -1212,7 +1223,8 @@ public class RepositoryImpl implements Repository, SessionListener,
                 // close workspace file system
                 config.getFileSystem().close();
             } catch (FileSystemException e) {
-                log.error("error while closing filesystem of workspace " + config.getName(), e);
+                log.error("error while closing filesystem of workspace "
+                        + config.getName(), e);
             }
         }
     }

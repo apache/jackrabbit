@@ -196,6 +196,14 @@ public class WorkspaceImpl implements Workspace, Constants {
     }
 
     /**
+     * Returns the configuration of this workspace.
+     * @return the workspace configuration
+     */
+    public WorkspaceConfig getConfig() {
+        return wspConfig;
+    }
+
+    /**
      * @param srcAbsPath
      * @param srcWsp
      * @param destAbsPath

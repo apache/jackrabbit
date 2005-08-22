@@ -297,7 +297,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
      *
      * @return the id of this <code>Item</code>
      */
-    ItemId getId() {
+    public ItemId getId() {
         return id;
     }
 
