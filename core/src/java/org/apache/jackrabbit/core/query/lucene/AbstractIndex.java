@@ -75,19 +75,30 @@ abstract class AbstractIndex {
     /** mergeFactor config parameter */
     private int mergeFactor = 10;
 
+    /**
+     * The document number cache if this index may use one.
+     */
+    private DocNumberCache cache;
+
     /** The shared IndexReader for all read-only IndexReaders */
     private SharedIndexReader sharedReader;
 
     /**
      * Constructs an index with an <code>analyzer</code> and a
      * <code>directory</code>.
-     * @param analyzer the analyzer for text tokenizing.
+     *
+     * @param analyzer  the analyzer for text tokenizing.
      * @param directory the underlying directory.
+     * @param cache     the document number cache if this index should use one;
+     *                  otherwise <code>cache</code> is <code>null</code>.
      * @throws IOException if the index cannot be initialized.
      */
-    AbstractIndex(Analyzer analyzer, Directory directory) throws IOException {
+    AbstractIndex(Analyzer analyzer,
+                  Directory directory,
+                  DocNumberCache cache) throws IOException {
         this.analyzer = analyzer;
         this.directory = directory;
+        this.cache = cache;
 
         if (!IndexReader.indexExists(directory)) {
             indexWriter = new IndexWriter(directory, analyzer, true);
@@ -173,7 +184,8 @@ abstract class AbstractIndex {
         }
         if (sharedReader == null) {
             // create new shared reader
-            sharedReader = new SharedIndexReader(new CachingIndexReader(IndexReader.open(getDirectory())));
+            CachingIndexReader cr = new CachingIndexReader(IndexReader.open(getDirectory()), cache);
+            sharedReader = new SharedIndexReader(cr);
         }
         return new ReadOnlyIndexReader(sharedReader, deleted);
     }

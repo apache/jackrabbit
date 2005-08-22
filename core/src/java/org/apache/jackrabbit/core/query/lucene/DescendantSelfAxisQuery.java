@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.search.Query;
@@ -26,12 +24,9 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
-import org.apache.lucene.document.Document;
 
 import java.io.IOException;
 import java.util.BitSet;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Implements a lucene <code>Query</code> which filters a sub query by checking
@@ -175,7 +170,8 @@ class DescendantSelfAxisQuery extends Query {
         public Scorer scorer(IndexReader reader) throws IOException {
             contextScorer = contextQuery.weight(searcher).scorer(reader);
             subScorer = subQuery.weight(searcher).scorer(reader);
-            return new DescendantSelfAxisScorer(searcher.getSimilarity(), reader);
+            CachingMultiReader index = (CachingMultiReader) reader;
+            return new DescendantSelfAxisScorer(searcher.getSimilarity(), index);
         }
 
         /**
@@ -196,12 +192,12 @@ class DescendantSelfAxisQuery extends Query {
         /**
          * An <code>IndexReader</code> to access the index.
          */
-        private final IndexReader reader;
+        private final CachingMultiReader reader;
 
         /**
          * BitSet storing the id's of selected documents
          */
-        private final BitSet hits;
+        private final BitSet contextHits;
 
         /**
          * BitSet storing the id's of selected documents from the sub query
@@ -209,14 +205,14 @@ class DescendantSelfAxisQuery extends Query {
         private final BitSet subHits;
 
         /**
-         * List of UUIDs of selected nodes by the context query
-         */
-        private Set contextUUIDs = null;
-
-        /**
          * The next document id to return
          */
         private int nextDoc = -1;
+
+        /**
+         * Set <code>true</code> once the sub contextHits have been calculated.
+         */
+        private boolean subHitsCalculated = false;
 
         /**
          * Creates a new <code>DescendantSelfAxisScorer</code>.
@@ -224,10 +220,11 @@ class DescendantSelfAxisQuery extends Query {
          * @param similarity the <code>Similarity</code> instance to use.
          * @param reader     for index access.
          */
-        protected DescendantSelfAxisScorer(Similarity similarity, IndexReader reader) {
+        protected DescendantSelfAxisScorer(Similarity similarity, CachingMultiReader reader) {
             super(similarity);
             this.reader = reader;
-            this.hits = new BitSet(reader.maxDoc());
+            // todo reuse BitSets?
+            this.contextHits = new BitSet(reader.maxDoc());
             this.subHits = new BitSet(reader.maxDoc());
         }
 
@@ -242,38 +239,25 @@ class DescendantSelfAxisQuery extends Query {
 
                 // check self if necessary
                 if (includeSelf) {
-                    String uuid = reader.document(nextDoc).get(FieldNames.UUID);
-                    if (contextUUIDs.contains(uuid)) {
+                    if (contextHits.get(nextDoc)) {
                         return true;
                     }
                 }
 
                 // check if nextDoc is a descendant of one of the context nodes
-                Document d = reader.document(nextDoc);
-                String parentUUID = d.get(FieldNames.PARENT);
-                while (parentUUID != null && !contextUUIDs.contains(parentUUID)) {
+                int parentDoc = reader.getParent(nextDoc);
+                while (parentDoc != -1 && !contextHits.get(parentDoc)) {
                     // traverse
-                    TermDocs ancestor = reader.termDocs(new Term(FieldNames.UUID, parentUUID));
-                    try {
-                        if (ancestor.next()) {
-                            d = reader.document(ancestor.doc());
-                            parentUUID = d.get(FieldNames.PARENT);
-                            if (parentUUID.length() == 0) {
-                                parentUUID = null;
-                            }
-                        } else {
-                            parentUUID = null;
-                        }
-                    } finally {
-                        ancestor.close();
-                    }
+                    parentDoc = reader.getParent(parentDoc);
                 }
-                if (parentUUID != null) {
-                    // since current doc is a descendant of one of the context
-                    // docs we can promote uuid of doc to the context uuids
-                    contextUUIDs.add(d.get(FieldNames.UUID));
+
+                if (parentDoc != -1) {
+                    // since current parentDoc is a descendant of one of the context
+                    // docs we can promote parentDoc to the context hits
+                    contextHits.set(parentDoc);
                     return true;
                 }
+
                 // try next
                 nextDoc = subHits.nextSetBit(nextDoc + 1);
             }
@@ -303,26 +287,25 @@ class DescendantSelfAxisQuery extends Query {
         }
 
         private void calculateSubHits() throws IOException {
-            if (contextUUIDs == null) {
-                contextUUIDs = new HashSet();
+            if (!subHitsCalculated) {
+
                 contextScorer.score(new HitCollector() {
                     public void collect(int doc, float score) {
-                        // @todo maintain cache of doc id hierarchy
-                        hits.set(doc);
+                        contextHits.set(doc);
                     }
                 }); // find all
-                for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
-                    contextUUIDs.add(reader.document(i).get(FieldNames.UUID));
+
+                if (contextHits.isEmpty()) {
+                    // no need to execute sub scorer, context is empty
+                } else {
+                    subScorer.score(new HitCollector() {
+                        public void collect(int doc, float score) {
+                            subHits.set(doc);
+                        }
+                    });
                 }
 
-                // reuse for final hits
-                hits.clear();
-
-                subScorer.score(new HitCollector() {
-                    public void collect(int doc, float score) {
-                        subHits.set(doc);
-                    }
-                });
+                subHitsCalculated = true;
             }
         }
 

@@ -124,6 +124,13 @@ public class SearchIndex extends AbstractQueryHandler {
     private boolean autoRepair = true;
 
     /**
+     * The uuid resolver cache size.
+     * <p/>
+     * Default value is: <code>1000</code>.
+     */
+    private int cacheSize = 1000;
+
+    /**
      * Default constructor.
      */
     public SearchIndex() {
@@ -476,5 +483,13 @@ public class SearchIndex extends AbstractQueryHandler {
 
     public boolean getAutoRepair() {
         return autoRepair;
+    }
+
+    public void setCacheSize(int size) {
+        cacheSize = size;
+    }
+
+    public int getCacheSize() {
+        return cacheSize;
     }
 }

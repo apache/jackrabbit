@@ -64,7 +64,7 @@ class VolatileIndex extends AbstractIndex {
      * @throws IOException if an error occurs while opening the index.
      */
     VolatileIndex(Analyzer analyzer, RedoLog log) throws IOException {
-        super(analyzer, new RAMDirectory());
+        super(analyzer, new RAMDirectory(), null);
         redoLog = log;
     }
 

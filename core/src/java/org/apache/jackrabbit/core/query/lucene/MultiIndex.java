@@ -120,6 +120,11 @@ class MultiIndex {
     private CachingMultiReader multiReader;
 
     /**
+     * Shared document number cache across all persistent indexes.
+     */
+    private final DocNumberCache cache;
+
+    /**
      * Monitor to use to synchronize access to {@link #multiReader} and
      * {@link #updateInProgress}.
      */
@@ -157,6 +162,8 @@ class MultiIndex {
 
         this.indexDir = indexDir;
         this.handler = handler;
+        this.cache = new DocNumberCache(handler.getCacheSize());
+
         boolean doInitialIndex = false;
         if (indexNames.exists(indexDir)) {
             indexNames.read(indexDir);
@@ -180,7 +187,8 @@ class MultiIndex {
                 if (!sub.exists() && !sub.mkdir()) {
                     throw new IOException("Unable to create directory: " + sub.getAbsolutePath());
                 }
-                PersistentIndex index = new PersistentIndex(indexNames.getName(i), sub, false, handler.getAnalyzer());
+                PersistentIndex index = new PersistentIndex(indexNames.getName(i),
+                        sub, false, handler.getAnalyzer(), cache);
                 index.setMaxMergeDocs(handler.getMaxMergeDocs());
                 index.setMergeFactor(handler.getMergeFactor());
                 index.setMinMergeDocs(handler.getMinMergeDocs());
@@ -360,12 +368,12 @@ class MultiIndex {
             // some other read thread might have created the reader in the
             // meantime -> check again
             if (multiReader == null) {
-                IndexReader[] readers = new IndexReader[indexes.size() + 1];
+                ReadOnlyIndexReader[] readers = new ReadOnlyIndexReader[indexes.size() + 1];
                 for (int i = 0; i < indexes.size(); i++) {
                     readers[i] = ((PersistentIndex) indexes.get(i)).getReadOnlyIndexReader();
                 }
                 readers[readers.length - 1] = volatileIndex.getReadOnlyIndexReader();
-                multiReader = new CachingMultiReader(readers);
+                multiReader = new CachingMultiReader(readers, cache);
             }
             multiReader.incrementRefCount();
             return multiReader;
@@ -468,8 +476,10 @@ class MultiIndex {
     private void internalAddDocument(Document doc) throws IOException {
         volatileIndex.addDocument(doc);
         if (volatileIndex.getRedoLog().getSize() >= handler.getMinMergeDocs()) {
-            log.info("Committing in-memory index");
+            long time = System.currentTimeMillis();
             commit();
+            time = System.currentTimeMillis() - time;
+            log.info("Committed in-memory index in " + time + "ms.");
         }
     }
 
@@ -486,7 +496,8 @@ class MultiIndex {
 
             File sub = newIndexFolder();
             String name = sub.getName();
-            PersistentIndex index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
+            PersistentIndex index = new PersistentIndex(name, sub, true,
+                    handler.getAnalyzer(), cache);
             index.setMaxMergeDocs(handler.getMaxMergeDocs());
             index.setMergeFactor(handler.getMergeFactor());
             index.setMinMergeDocs(handler.getMinMergeDocs());
@@ -565,7 +576,8 @@ class MultiIndex {
         if (indexes.size() == 0) {
             File sub = newIndexFolder();
             String name = sub.getName();
-            PersistentIndex index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
+            PersistentIndex index = new PersistentIndex(name, sub, true,
+                    handler.getAnalyzer(), cache);
             index.setMaxMergeDocs(handler.getMaxMergeDocs());
             index.setMergeFactor(handler.getMergeFactor());
             index.setMinMergeDocs(handler.getMinMergeDocs());
@@ -664,7 +676,8 @@ class MultiIndex {
         // create new index
         File sub = newIndexFolder();
         String name = sub.getName();
-        PersistentIndex index = new PersistentIndex(name, sub, true, handler.getAnalyzer());
+        PersistentIndex index = new PersistentIndex(name, sub, true,
+                handler.getAnalyzer(), cache);
         index.setMaxMergeDocs(handler.getMaxMergeDocs());
         index.setMergeFactor(handler.getMergeFactor());
         index.setMinMergeDocs(handler.getMinMergeDocs());

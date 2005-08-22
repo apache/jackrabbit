@@ -58,6 +58,28 @@ class ReadOnlyIndexReader extends FilterIndexReader {
         reader.addClient(this);
     }
 
+    /**
+     * Returns the <code>DocId</code> of the parent of <code>n</code> or
+     * {@link DocId#NULL} if <code>n</code> does not have a parent
+     * (<code>n</code> is the root node).
+     *
+     * @param n the document number.
+     * @return the <code>DocId</code> of <code>n</code>'s parent.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    public DocId getParent(int n) throws IOException {
+        return getBase().getParent(n, deleted);
+    }
+
+    /**
+     * Returns the {@link SharedIndexReader} this reader is based on.
+     *
+     * @return the {@link SharedIndexReader} this reader is based on.
+     */
+    public SharedIndexReader getBase() {
+        return (SharedIndexReader) in;
+    }
+
     //---------------------< IndexReader overwrites >---------------------------
 
     /**

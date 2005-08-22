@@ -25,23 +25,12 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.BitSet;
 
 /**
  * Implements an <code>IndexReader</code> that maintains caches to resolve
- * {@link IndexReader#termDocs(Term)} calls efficiently.
+ * {@link #getParent(int, BitSet)} calls efficiently.
  * <p/>
- * The caches are:
- * <ul>
- * <li>idCache: maps UUID to document number</li>
- * <li>documentCache: maps document number to {@link Document} instance</li>
- * <li>parentCache: maps parentUUID to List of document numbers</li>
- * </ul>
  */
 class CachingIndexReader extends FilterIndexReader {
 
@@ -51,28 +40,118 @@ class CachingIndexReader extends FilterIndexReader {
     private static final Logger log = Logger.getLogger(CachingIndexReader.class);
 
     /**
-     * The document idCache. Maps UUIDs to document number.
+     * The current value of the global creation tick counter.
      */
-    private Map idCache;
+    private static long currentTick;
 
     /**
-     * The document cache. Maps document number to Document instance.
+     * Cache of nodes parent relation. If an entry in the array is not null,
+     * that means the node with the document number = array-index has the node
+     * with <code>DocId</code> as parent.
      */
-    private Map documentCache;
+    private final DocId[] parents;
 
     /**
-     * The parent id cache. Maps parent UUID to List of document numbers.
+     * Tick when this index reader was created.
      */
-    private Map parentCache;
+    private final long creationTick = getNextCreationTick();
+
+    /**
+     * Document number cache if available. May be <code>null</code>.
+     */
+    private final DocNumberCache cache;
 
     /**
      * Creates a new <code>CachingIndexReader</code> based on
      * <code>delegatee</code>
+     *
      * @param delegatee the base <code>IndexReader</code>.
+     * @param cache     a document number cache, or <code>null</code> if not
+     *                  available to this reader.
      */
-    CachingIndexReader(IndexReader delegatee) {
+    CachingIndexReader(IndexReader delegatee, DocNumberCache cache) {
         super(delegatee);
+        this.cache = cache;
+        parents = new DocId[delegatee.maxDoc()];
     }
+
+    /**
+     * Returns the <code>DocId</code> of the parent of <code>n</code> or
+     * {@link DocId#NULL} if <code>n</code> does not have a parent
+     * (<code>n</code> is the root node).
+     *
+     * @param n the document number.
+     * @param deleted the documents that should be regarded as deleted.
+     * @return the <code>DocId</code> of <code>n</code>'s parent.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    DocId getParent(int n, BitSet deleted) throws IOException {
+        DocId parent;
+        boolean existing = false;
+        synchronized (parents) {
+            parent = parents[n];
+        }
+
+        if (parent != null) {
+            existing = true;
+
+            // check if valid and reset if necessary
+            if (!parent.isValid(deleted)) {
+                if (log.isDebugEnabled()) {
+                    log.debug(parent + " not valid anymore.");
+                }
+                parent = null;
+            }
+        }
+
+        if (parent == null) {
+            Document doc = document(n);
+            String parentUUID = doc.get(FieldNames.PARENT);
+            if (parentUUID == null || parentUUID.length() == 0) {
+                parent = DocId.NULL;
+            } else {
+                // only create a DocId from document number if there is no
+                // existing DocId
+                if (!existing) {
+                    Term id = new Term(FieldNames.UUID, parentUUID);
+                    TermDocs docs = termDocs(id);
+                    try {
+                        while (docs.next()) {
+                            if (!deleted.get(docs.doc())) {
+                                parent = DocId.create(docs.doc());
+                                break;
+                            }
+                        }
+                    } finally {
+                        docs.close();
+                    }
+                }
+
+                // if still null, then parent is not in this index, or existing
+                // DocId was invalid. thus, only allowed to create DocId from uuid
+                if (parent == null) {
+                    parent = DocId.create(parentUUID);
+                }
+            }
+
+            // finally put to cache
+            synchronized (parents) {
+                parents[n] = parent;
+            }
+        }
+        return parent;
+    }
+
+    /**
+     * Returns the tick value when this reader was created.
+     *
+     * @return the creation tick for this reader.
+     */
+    public long getCreationTick() {
+        return creationTick;
+    }
+
+    //--------------------< FilterIndexReader overwrites >----------------------
 
     /**
      * If the field of <code>term</code> is {@link FieldNames#UUID} this
@@ -89,143 +168,52 @@ class CachingIndexReader extends FilterIndexReader {
      */
     public TermDocs termDocs(Term term) throws IOException {
         if (term.field() == FieldNames.UUID) {
-            synchronized (this) {
-                cacheInit();
-                Integer docNo = (Integer) idCache.get(term.text());
-                if (docNo == null) {
-                    return EMPTY;
-                } else {
-                    return new CachingTermDocs(docNo);
-                }
-            }
-        } else if (term.field() == FieldNames.PARENT) {
-            synchronized (this) {
-                cacheInit();
-                List idList = (List) parentCache.get(term.text());
-                if (idList == null) {
-                    return EMPTY;
-                } else {
-                    return new CachingTermDocs(idList.iterator());
-                }
-            }
-        } else {
-            return super.termDocs(term);
-        }
-    }
-
-    /**
-     * Returns the stored fields of the <code>n</code><sup>th</sup>
-     * <code>Document</code> in this index. This implementation returns cached
-     * versions of <code>Document</code> instance. Thus, the returned document
-     * must not be modified!
-     *
-     * @param n the document number.
-     * @return the <code>n</code><sup>th</sup> <code>Document</code> in this
-     *         index
-     * @throws IOException              if an error occurs while reading from
-     *                                  the index.
-     * @throws IllegalArgumentException if the document with number
-     *                                  <code>n</code> is deleted.
-     */
-    public Document document(int n) throws IOException, IllegalArgumentException {
-        if (isDeleted(n)) {
-            throw new IllegalArgumentException("attempt to access a deleted document");
-        }
-        synchronized (this) {
-            cacheInit();
-            return (Document) documentCache.get(new Integer(n));
-        }
-    }
-
-    /**
-     * Commits pending changes to disc.
-     * @throws IOException if an error occurs while writing changes.
-     */
-    public void commitDeleted() throws IOException {
-        commit();
-    }
-
-    /**
-     * Provides an efficient lookup of document frequency for terms with field
-     * {@link FieldNames#UUID} and {@link FieldNames#PARENT}. All other calles
-     * are handled by the base class.
-     *
-     * @param t the term to look up the document frequency.
-     * @return the document frequency of term <code>t</code>.
-     * @throws IOException if an error occurs while reading from the index.
-     */
-    public int docFreq(Term t) throws IOException {
-        synchronized (this) {
-            cacheInit();
-            if (t.field() == FieldNames.UUID) {
-                return idCache.containsKey(t.text()) ? 1 : 0;
-            } else if (t.field() == FieldNames.PARENT) {
-                List children = (List) parentCache.get(t.text());
-                return children == null ? 0 : children.size();
-            }
-        }
-        return super.docFreq(t);
-    }
-
-    /**
-     * Removes the <code>TermEnum</code> from the idCache and calls the base
-     * <code>IndexReader</code>.
-     * @param n the number of the document to delete.
-     * @throws IOException if an error occurs while deleting the document.
-     */
-    protected synchronized void doDelete(int n) throws IOException {
-        if (idCache != null) {
-            Document d = (Document) documentCache.remove(new Integer(n));
-            if (d != null) {
-                idCache.remove(d.get(FieldNames.UUID));
-                String parentUUID = d.get(FieldNames.PARENT);
-                List parents = (List) parentCache.get(parentUUID);
-                if (parents.size() == 1) {
-                    parentCache.remove(parentUUID);
-                } else {
-                    // replace existing list, other threads might use iterator
-                    // on existing list
-                    List repl = new ArrayList(parents);
-                    repl.remove(new Integer(n));
-                    parentCache.put(parentUUID, repl);
-                }
-            }
-        }
-        super.doDelete(n);
-    }
-
-    /**
-     * Initially fills the caches: idCache, documentCache, parentCache.
-     * @throws IOException if an error occurs while reading from the index.
-     */
-    private void cacheInit() throws IOException {
-        if (idCache == null) {
-            long time = System.currentTimeMillis();
-            Map ids = new HashMap(in.numDocs());
-            Map documents = new HashMap(in.numDocs());
-            Map parents = new HashMap(in.numDocs());
-            for (int i = 0; i < in.maxDoc(); i++) {
-                if (!in.isDeleted(i)) {
-                    Document d = in.document(i);
-                    Integer docId = new Integer(i);
-                    if (ids.put(d.get(FieldNames.UUID), docId) != null) {
-                        log.warn("Duplicate index entry for node: " + d.get(FieldNames.UUID));
+            // check cache if we have one
+            if (cache != null) {
+                DocNumberCache.Entry e = cache.get(term.text());
+                if (e != null) {
+                    // check if valid
+                    // the cache may contain entries from a different reader
+                    // with the same uuid. that happens when a node is updated
+                    // and is reindexed. the node 'travels' from an older index
+                    // to a newer one. the cache will still contain a cache
+                    // entry from the old until it is overwritten by the
+                    // newer index.
+                    if (e.reader == this && !isDeleted(e.doc)) {
+                        return new SingleTermDocs(e.doc);
                     }
-                    documents.put(docId, d);
-                    String parentUUID = d.get(FieldNames.PARENT);
-                    List docIds = (List) parents.get(parentUUID);
-                    if (docIds == null) {
-                        docIds = new ArrayList();
-                        parents.put(parentUUID, docIds);
+                }
+
+                // not in cache or invalid
+                TermDocs docs = in.termDocs(term);
+                try {
+                    if (docs.next()) {
+                        // put to cache
+                        cache.put(term.text(), this, docs.doc());
+                        // and return
+                        return new SingleTermDocs(docs.doc());
+                    } else {
+                        return EMPTY;
                     }
-                    docIds.add(docId);
+                } finally {
+                    docs.close();
                 }
             }
-            idCache = ids;
-            documentCache = documents;
-            parentCache = parents;
-            time = System.currentTimeMillis() - time;
-            log.debug("IndexReader cache populated in: " + time + " ms.");
+        }
+        return super.termDocs(term);
+    }
+
+
+    //----------------------< internal >----------------------------------------
+
+    /**
+     * Returns the next creation tick value.
+     *
+     * @return the next creation tick value.
+     */
+    private static long getNextCreationTick() {
+        synchronized (CachingIndexReader.class) {
+            return currentTick++;
         }
     }
 
@@ -263,99 +251,4 @@ class CachingIndexReader extends FilterIndexReader {
         public void close() {
         }
     };
-
-    /**
-     * Implements a <code>TermDocs</code> that takes a list of document
-     * ids.
-     */
-    private static final class CachingTermDocs implements TermDocs {
-
-        /**
-         * The current document number.
-         */
-        private int current = -1;
-
-        /**
-         * Iterator over document numbers as <code>Integer</code> values.
-         */
-        private final Iterator docIds;
-
-        /**
-         * Creates a new <code>CachingTermDocs</code> instance with a single
-         * document id.
-         * @param docId the single document id.
-         */
-        CachingTermDocs(Integer docId) {
-            this(Arrays.asList(new Integer[]{docId}).iterator());
-        }
-
-        /**
-         * Creates a new <code>CachingTermDocs</code> instance that iterates
-         * over the <code>docIds</code>.
-         * @param docIds the actual document numbers / ids.
-         */
-        CachingTermDocs(Iterator docIds) {
-            this.docIds = docIds;
-        }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public void seek(Term term) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public void seek(TermEnum termEnum) {
-            throw new UnsupportedOperationException();
-        }
-
-
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
-            return current;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int freq() {
-            return 1;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() {
-            boolean next = docIds.hasNext();
-            if (next) {
-                current = ((Integer) docIds.next()).intValue();
-            }
-            return next;
-        }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public int read(int[] docs, int[] freqs) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public boolean skipTo(int target) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void close() {
-        }
-    }
 }
