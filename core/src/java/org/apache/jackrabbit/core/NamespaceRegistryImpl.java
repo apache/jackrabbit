@@ -75,12 +75,12 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
     private final FileSystem nsRegStore;
 
     /**
-     * Package private constructor: Constructs a new instance of this class.
+     * Protected constructor: Constructs a new instance of this class.
      *
      * @param nsRegStore
      * @throws RepositoryException
      */
-    NamespaceRegistryImpl(FileSystem nsRegStore) throws RepositoryException {
+    protected NamespaceRegistryImpl(FileSystem nsRegStore) throws RepositoryException {
         this.nsRegStore = nsRegStore;
         load();
     }

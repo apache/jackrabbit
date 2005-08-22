@@ -317,7 +317,7 @@ public class SessionImpl implements Session, Dumpable {
      *
      * @return the <code>Subject</code> associated with this session
      */
-    Subject getSubject() {
+    protected Subject getSubject() {
         return subject;
     }
 
@@ -371,7 +371,7 @@ public class SessionImpl implements Session, Dumpable {
      *
      * @return the <code>HierarchyManager</code> associated with this session
      */
-    protected HierarchyManager getHierarchyManager() {
+    public HierarchyManager getHierarchyManager() {
         return hierMgr;
     }
 
