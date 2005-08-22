@@ -16,24 +16,34 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.TermEnum;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.IdentityHashMap;
 
 /**
  * Extends a <code>MultiReader</code> with support for cached <code>TermDocs</code>
  * on {@link FieldNames#UUID} field.
  */
-class CachingMultiReader extends MultiReader {
+final class CachingMultiReader extends MultiReader {
 
     /**
      * The sub readers.
      */
-    private IndexReader[] subReaders;
+    private ReadOnlyIndexReader[] subReaders;
+
+    /**
+     * Map of OffsetReaders, identified by caching reader they are based on.
+     */
+    private final Map readersByBase = new IdentityHashMap();
+
+    /**
+     * Document number cache if available. May be <code>null</code>.
+     */
+    private final DocNumberCache cache;
 
     /**
      * Doc number starts for each sub reader
@@ -48,36 +58,42 @@ class CachingMultiReader extends MultiReader {
 
     /**
      * Creates a new <code>CachingMultiReader</code> based on sub readers.
-     * <p/>
-     * This <code>CachingMultiReader</code> poses type requirements on the
-     * <code>subReaders</code>: all but one sub readers must be a
-     * {@link ReadOnlyIndexReader}. The single allowed sub reader not of type
-     * {@link ReadOnlyIndexReader} must be the last reader in
-     * <code>subReaders</code>! Otherwise this constructor will throw an
-     * {@link IllegalArgumentException}.
      *
      * @param subReaders the sub readers.
+     * @param cache the document number cache.
      * @throws IOException if an error occurs while reading from the indexes.
-     * @exception IllegalArgumentException if <code>subReaders</code> does
-     * not comply to the above type requirements.
      */
-    public CachingMultiReader(IndexReader[] subReaders)
-            throws IOException, IllegalArgumentException {
+    public CachingMultiReader(ReadOnlyIndexReader[] subReaders,
+                              DocNumberCache cache)
+            throws IOException {
         super(subReaders);
-        // check readers, all but last must be a ReadOnlyIndexReader
-        for (int i = 0; i < subReaders.length - 1; i++) {
-            if (!(subReaders[i] instanceof ReadOnlyIndexReader)) {
-                throw new IllegalArgumentException("subReader " + i + " must be of type ReadOnlyIndexReader");
-            }
-        }
+        this.cache = cache;
         this.subReaders = subReaders;
         starts = new int[subReaders.length + 1];
         int maxDoc = 0;
         for (int i = 0; i < subReaders.length; i++) {
             starts[i] = maxDoc;
             maxDoc += subReaders[i].maxDoc();
+            OffsetReader offsetReader = new OffsetReader(subReaders[i], starts[i]);
+            readersByBase.put(subReaders[i].getBase().getBase(), offsetReader);
         }
         starts[subReaders.length] = maxDoc;
+    }
+
+    /**
+     * Returns the document number of the parent of <code>n</code> or
+     * <code>-1</code> if <code>n</code> does not have a parent (<code>n</code>
+     * is the root node).
+     *
+     * @param n the document number.
+     * @return the document number of <code>n</code>'s parent.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    final public int getParent(int n) throws IOException {
+        int i = readerIndex(n);
+        DocId id = subReaders[i].getParent(n - starts[i]);
+        id = id.applyOffset(starts[i]);
+        return id.getDocumentNumber(this);
     }
 
     /**
@@ -85,20 +101,32 @@ class CachingMultiReader extends MultiReader {
      */
     public TermDocs termDocs(Term term) throws IOException {
         if (term.field() == FieldNames.UUID) {
-            for (int i = 0; i < subReaders.length; i++) {
-                TermDocs docs = subReaders[i].termDocs(term);
-                if (docs != CachingIndexReader.EMPTY) {
-                    // apply offset
-                    return new OffsetTermDocs(docs, starts[i]);
+            // check cache
+            DocNumberCache.Entry e = cache.get(term.text());
+            if (e != null) {
+                // check if valid:
+                // 1) reader must be in the set of readers
+                // 2) doc must not be deleted
+                OffsetReader offsetReader = (OffsetReader) readersByBase.get(e.reader);
+                if (offsetReader != null && !offsetReader.reader.isDeleted(e.doc)) {
+                    return new SingleTermDocs(e.doc + offsetReader.offset);
                 }
             }
-        } else if (term.field() == FieldNames.PARENT) {
-            TermDocs[] termDocs = new TermDocs[subReaders.length];
+
+            // if we get here, entry is either invalid or did not exist
+            // search through readers
             for (int i = 0; i < subReaders.length; i++) {
-                termDocs[i] = subReaders[i].termDocs(term);
+                TermDocs docs = subReaders[i].termDocs(term);
+                try {
+                    if (docs.next()) {
+                        return new SingleTermDocs(docs.doc() + starts[i]);
+                    }
+                } finally {
+                    docs.close();
+                }
             }
-            return new MultiTermDocs(termDocs, starts);
         }
+
         return super.termDocs(term);
     }
 
@@ -121,203 +149,62 @@ class CachingMultiReader extends MultiReader {
         }
     }
 
+    //------------------------< internal >--------------------------------------
+
     /**
-     * Partial <code>TermDocs</code> implementation that applies an offset
-     * to a base <code>TermDocs</code> instance.
+     * Returns the reader index for document <code>n</code>.
+     * Implementation copied from lucene MultiReader class.
+     *
+     * @param n document number.
+     * @return the reader index.
      */
-    private static final class OffsetTermDocs implements TermDocs {
+    final private int readerIndex(int n) {
+        int lo = 0;                                      // search starts array
+        int hi = subReaders.length - 1;                  // for first element less
 
-        /**
-         * The base <code>TermDocs</code> instance.
-         */
-        private final TermDocs base;
-
-        /**
-         * The offset to apply
-         */
-        private final int offset;
-
-        /**
-         * Creates a new <code>OffsetTermDocs</code> instance.
-         * @param base the base <code>TermDocs</code>.
-         * @param offset the offset to apply.
-         */
-        OffsetTermDocs(TermDocs base, int offset) {
-            this.base = base;
-            this.offset = offset;
+        while (hi >= lo) {
+            int mid = (lo + hi) >> 1;
+            int midValue = starts[mid];
+            if (n < midValue) {
+                hi = mid - 1;
+            } else if (n > midValue) {
+                lo = mid + 1;
+            } else {                                      // found a match
+                while (mid + 1 < subReaders.length && starts[mid + 1] == midValue) {
+                    mid++;                                  // scan to last match
+                }
+                return mid;
+            }
         }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public void seek(Term term) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public void seek(TermEnum termEnum) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
-            return base.doc() + offset;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int freq() {
-            return base.freq();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() throws IOException {
-            return base.next();
-        }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public int read(int[] docs, int[] freqs) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public boolean skipTo(int target) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void close() throws IOException {
-            base.close();
-        }
+        return hi;
     }
 
+    //-----------------------< OffsetTermDocs >---------------------------------
+
     /**
-     * Implements a <code>TermDocs</code> which spans multiple other
-     * <code>TermDocs</code>.
+     * Simple helper struct that associates an offset with an IndexReader.
      */
-    private static final class MultiTermDocs implements TermDocs {
+    private static final class OffsetReader {
 
         /**
-         * The actual <code>TermDocs</code>.
+         * The index reader.
          */
-        private final TermDocs[] termDocs;
+        final ReadOnlyIndexReader reader;
 
         /**
-         * The document number offsets for each <code>TermDocs</code>.
+         * The reader offset in this multi reader instance.
          */
-        private final int[] starts;
+        final int offset;
 
         /**
-         * The current <code>TermDocs</code> instance. If <code>null</code>
-         * there are no more documents.
+         * Creates a new <code>OffsetReader</code>.
+         *
+         * @param reader the index reader.
+         * @param offset the reader offset in a multi reader.
          */
-        private TermDocs current;
-
-        /**
-         * The current index into {@link #termDocs} and {@link #starts}.
-         */
-        private int idx = 0;
-
-        /**
-         * Creates a new <code>MultiTermDocs</code> instance.
-         * @param termDocs the actual <code>TermDocs</code>.
-         * @param starts the document number offsets for each
-         *  <code>TermDocs</code>
-         */
-        MultiTermDocs(TermDocs[] termDocs, int[] starts) {
-            this.termDocs = termDocs;
-            this.starts = starts;
-            current = termDocs[idx];
-        }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public void seek(Term term) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public void seek(TermEnum termEnum) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
-            return starts[idx] + current.doc();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int freq() {
-            return current.freq();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() throws IOException {
-            while (current != null && !current.next()) {
-                if (++idx >= termDocs.length) {
-                    // no more TermDocs
-                    current = null;
-                } else {
-                    // move to next TermDocs
-                    current = termDocs[idx];
-                }
-            }
-            return current != null;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int read(int[] docs, int[] freqs) throws IOException {
-            int count = 0;
-            for (int i = 0; i < docs.length && next(); i++, count++) {
-                docs[i] = doc();
-                freqs[i] = freq();
-            }
-            return count;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public boolean skipTo(int target) throws IOException {
-            do {
-                if (!next()) {
-                    return false;
-                }
-            } while (target > doc());
-            return true;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public void close() throws IOException {
-            for (int i = 0; i < termDocs.length; i++) {
-                termDocs[i].close();
-            }
+        OffsetReader(ReadOnlyIndexReader reader, int offset) {
+            this.reader = reader;
+            this.offset = offset;
         }
     }
 }

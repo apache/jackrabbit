@@ -22,6 +22,7 @@ import org.apache.lucene.index.Term;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.BitSet;
 import java.io.IOException;
 
 /**
@@ -51,6 +52,20 @@ class SharedIndexReader extends FilterIndexReader {
      */
     public SharedIndexReader(CachingIndexReader in) {
         super(in);
+    }
+
+    /**
+     * Returns the <code>DocId</code> of the parent of <code>n</code> or
+     * {@link DocId#NULL} if <code>n</code> does not have a parent
+     * (<code>n</code> is the root node).
+     *
+     * @param n the document number.
+     * @param deleted the documents that should be regarded as deleted.
+     * @return the <code>DocId</code> of <code>n</code>'s parent.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    public DocId getParent(int n, BitSet deleted) throws IOException {
+        return getBase().getParent(n, deleted);
     }
 
     /**
@@ -106,4 +121,14 @@ class SharedIndexReader extends FilterIndexReader {
     public TermDocs termDocs(Term term) throws IOException {
         return in.termDocs(term);
     }
+
+    /**
+     * Returns the {@link CachingIndexReader} this reader is based on.
+     *
+     * @return the {@link CachingIndexReader} this reader is based on.
+     */
+    public CachingIndexReader getBase() {
+        return (CachingIndexReader) in;
+    }
+
 }
