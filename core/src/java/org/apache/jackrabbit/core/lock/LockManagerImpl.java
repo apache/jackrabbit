@@ -74,6 +74,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     private final File locksFile;
 
     /**
+     * Monitor used when modifying content, too, in order to make modifications
+     * in the lock map and modifications in the content atomic.
+     */
+    private final Object contentMonitor = new Object();
+
+    /**
      * Name space resolver
      */
     private final NamespaceResolver nsResolver;
@@ -221,42 +227,44 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
         Lock lock;
 
-        synchronized (lockMap) {
-            // check whether node is already locked
-            Path path = node.getPrimaryPath();
-            PathMap.Element element = lockMap.map(path, false);
+        synchronized (contentMonitor) {
+            synchronized (lockMap) {
+                // check whether node is already locked
+                Path path = node.getPrimaryPath();
+                PathMap.Element element = lockMap.map(path, false);
 
-            LockInfo other = (LockInfo) element.get();
-            if (other != null) {
-                if (element.hasPath(path)) {
-                    throw new LockException("Node already locked: " + node.safeGetJCRPath());
-                } else if (other.deep) {
-                    throw new LockException("Parent node has deep lock.");
+                LockInfo other = (LockInfo) element.get();
+                if (other != null) {
+                    if (element.hasPath(path)) {
+                        throw new LockException("Node already locked: " + node.safeGetJCRPath());
+                    } else if (other.deep) {
+                        throw new LockException("Parent node has deep lock.");
+                    }
                 }
-            }
-            if (info.deep && element.hasPath(path) &&
-                    element.getChildrenCount() > 0) {
-                throw new LockException("Some child node is locked.");
+                if (info.deep && element.hasPath(path) &&
+                        element.getChildrenCount() > 0) {
+                    throw new LockException("Some child node is locked.");
+                }
+
+                // create lock token
+                SessionImpl session = (SessionImpl) node.getSession();
+                info.setLockHolder(session);
+                info.setLive(true);
+                session.addListener(info);
+                session.addLockToken(info.lockToken.toString(), false);
+                lockMap.put(path, info);
+                lock = new LockImpl(info, node);
             }
 
-            // create lock token
-            SessionImpl session = (SessionImpl) node.getSession();
-            info.setLockHolder(session);
-            info.setLive(true);
-            session.addListener(info);
-            session.addLockToken(info.lockToken.toString(), false);
-            lockMap.put(path, info);
-            lock = new LockImpl(info, node);
+            // add properties to content
+            node.internalSetProperty(Constants.JCR_LOCKOWNER,
+                    InternalValue.create(node.getSession().getUserID()));
+            node.internalSetProperty(Constants.JCR_LOCKISDEEP,
+                    InternalValue.create(info.deep));
+            node.save();
+
+            return lock;
         }
-
-        // add properties to content
-        node.internalSetProperty(Constants.JCR_LOCKOWNER,
-                InternalValue.create(node.getSession().getUserID()));
-        node.internalSetProperty(Constants.JCR_LOCKISDEEP,
-                InternalValue.create(info.deep));
-        node.save();
-
-        return lock;
     }
 
     /**
@@ -275,25 +283,27 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         }
 
         try {
-            // get node's path and remove child in path map
-            NodeImpl node = (NodeImpl) session.getItemManager().getItem(
-                    new NodeId(info.getUUID()));
-            Path path = node.getPrimaryPath();
+            synchronized (contentMonitor) {
+                // get node's path and remove child in path map
+                NodeImpl node = (NodeImpl) session.getItemManager().getItem(
+                        new NodeId(info.getUUID()));
+                Path path = node.getPrimaryPath();
 
-            synchronized (lockMap) {
-                PathMap.Element element = lockMap.map(path, true);
-                if (element != null) {
-                    element.set(null);
+                synchronized (lockMap) {
+                    PathMap.Element element = lockMap.map(path, true);
+                    if (element != null) {
+                        element.set(null);
+                    }
+
+                    // set live flag to false
+                    info.setLive(false);
                 }
+
+                // remove properties in content
+                node.internalSetProperty(Constants.JCR_LOCKOWNER, (InternalValue) null);
+                node.internalSetProperty(Constants.JCR_LOCKISDEEP, (InternalValue) null);
+                node.save();
             }
-
-            // set live flag to false
-            info.setLive(false);
-
-            // remove properties in content
-            node.internalSetProperty(Constants.JCR_LOCKOWNER, (InternalValue) null);
-            node.internalSetProperty(Constants.JCR_LOCKISDEEP, (InternalValue) null);
-            node.save();
 
         } catch (RepositoryException e) {
             log.warn("Unable to unlock session-scoped lock on node '"
@@ -352,32 +362,34 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     public void unlock(NodeImpl node)
             throws LockException, RepositoryException {
 
-        synchronized (lockMap) {
-            // check whether node is locked by this session
-            Path path = node.getPrimaryPath();
+        synchronized (contentMonitor) {
+            synchronized (lockMap) {
+                // check whether node is locked by this session
+                Path path = node.getPrimaryPath();
 
-            PathMap.Element element = lockMap.map(path, true);
-            if (element == null) {
-                throw new LockException("Node not locked: " + node.safeGetJCRPath());
+                PathMap.Element element = lockMap.map(path, true);
+                if (element == null) {
+                    throw new LockException("Node not locked: " + node.safeGetJCRPath());
+                }
+
+                LockInfo info = (LockInfo) element.get();
+                if (info == null) {
+                    throw new LockException("Node not locked: " + node.safeGetJCRPath());
+                }
+                if (!node.getSession().equals(info.getLockHolder())) {
+                    throw new LockException("Node not locked by session: " + node.safeGetJCRPath());
+                }
+
+                // remove lock in path map
+                element.set(null);
+                info.setLive(false);
             }
 
-            LockInfo info = (LockInfo) element.get();
-            if (info == null) {
-                throw new LockException("Node not locked: " + node.safeGetJCRPath());
-            }
-            if (!node.getSession().equals(info.getLockHolder())) {
-                throw new LockException("Node not locked by session: " + node.safeGetJCRPath());
-            }
-
-            // remove lock in path map
-            element.set(null);
-            info.setLive(false);
+            // remove properties in content
+            node.internalSetProperty(Constants.JCR_LOCKOWNER, (InternalValue) null);
+            node.internalSetProperty(Constants.JCR_LOCKISDEEP, (InternalValue) null);
+            node.save();
         }
-
-        // remove properties in content
-        node.internalSetProperty(Constants.JCR_LOCKOWNER, (InternalValue) null);
-        node.internalSetProperty(Constants.JCR_LOCKISDEEP, (InternalValue) null);
-        node.save();
     }
 
     /**
