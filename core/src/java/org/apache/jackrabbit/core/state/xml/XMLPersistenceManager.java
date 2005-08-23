@@ -291,12 +291,18 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             while (walker.iterateElements(VALUE_ELEMENT)) {
                 // read serialized value
                 String content = walker.getContent();
-                if (content.length() > 0) {
+                if (PropertyType.STRING == type) {
+                    // STRING value can be empty; ignore length
+                    values.add(InternalValue.valueOf(content, type));
+                } else if (content.length() > 0) {
+                    // non-empty non-STRING value
                     if (type == PropertyType.BINARY) {
                         // special handling required for binary value:
-                        // the value stores the path to the actual binary file in the blob store
+                        // the value stores the path to the actual binary file
+                        // in the blob store
                         try {
-                            values.add(InternalValue.create(new FileSystemResource(blobStore, content)));
+                            values.add(InternalValue.create(
+                                    new FileSystemResource(blobStore, content)));
                         } catch (IOException ioe) {
                             String msg = "error while reading serialized binary value";
                             log.debug(msg);
@@ -305,6 +311,10 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                     } else {
                         values.add(InternalValue.valueOf(content, type));
                     }
+                } else {
+                    // empty non-STRING value
+                    log.warn(state.getId() + ": ignoring empty value of type "
+                            + PropertyType.nameFromValue(type));
                 }
             }
             walker.leaveElement();
