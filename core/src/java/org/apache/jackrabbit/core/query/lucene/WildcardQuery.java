@@ -312,17 +312,17 @@ class WildcardQuery extends Query {
             if (hitsCalculated) {
                 return;
             }
-            TermEnum enum = new WildcardTermEnum(reader, field, propName, pattern);
+            TermEnum terms = new WildcardTermEnum(reader, field, propName, pattern);
             try {
                 // use unpositioned TermDocs
                 TermDocs docs = reader.termDocs();
                 try {
-                    while (enum.term() != null) {
-                        docs.seek(enum);
+                    while (terms.term() != null) {
+                        docs.seek(terms);
                         while (docs.next()) {
                             hits.set(docs.doc());
                         }
-                        if (!enum.next()) {
+                        if (!terms.next()) {
                             break;
                         }
                     }
@@ -330,7 +330,7 @@ class WildcardQuery extends Query {
                     docs.close();
                 }
             } finally {
-                enum.close();
+                terms.close();
             }
             hitsCalculated = true;
             // put to cache
