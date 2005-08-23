@@ -614,8 +614,7 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 if (stringValues[0].equals("%")) {
                     query = new MatchAllQuery(field);
                 } else {
-                    Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[0]));
-                    query = new WildcardQuery(t);
+                    query = new WildcardQuery(FieldNames.PROPERTIES, field, stringValues[0]);
                 }
                 break;
             case QueryConstants.OPERATION_LT_VALUE:      // <
