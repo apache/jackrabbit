@@ -334,6 +334,7 @@ public class SharedItemStateManager
         ArrayList virtualRefs = new ArrayList();
 
         acquireWriteLock();
+        boolean holdingWriteLock = true;
 
         try {
             /**
@@ -473,12 +474,22 @@ public class SharedItemStateManager
                 }
             }
 
+            // downgrade to read lock
+            acquireReadLock();
+            rwLock.writeLock().release();
+            holdingWriteLock = false;
+
             /* dispatch the events */
             if (events != null) {
                 events.dispatch();
             }
         } finally {
-            rwLock.writeLock().release();
+            if (holdingWriteLock) {
+                // exception occured before downgrading lock
+                rwLock.writeLock().release();
+            } else {
+                rwLock.readLock().release();
+            }
         }
     }
 
