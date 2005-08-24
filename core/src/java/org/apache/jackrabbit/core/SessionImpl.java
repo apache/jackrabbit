@@ -270,7 +270,7 @@ public class SessionImpl implements Session, Dumpable {
                                                     SharedItemStateManager stateMgr,
                                                     RepositoryImpl rep,
                                                     SessionImpl session) {
-        return new WorkspaceImpl(wspConfig, stateMgr, rep, this);
+        return new WorkspaceImpl(wspConfig, stateMgr, rep, session);
     }
 
     /**

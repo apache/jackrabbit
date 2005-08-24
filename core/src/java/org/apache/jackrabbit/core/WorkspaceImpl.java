@@ -116,14 +116,14 @@ public class WorkspaceImpl implements Workspace, Constants {
     protected LockManager lockMgr;
 
     /**
-     * Package private constructor.
+     * Protected constructor.
      *
-     * @param wspConfig
-     * @param stateMgr
-     * @param rep
-     * @param session
+     * @param wspConfig The workspace configuration
+     * @param stateMgr  The shared item state manager
+     * @param rep       The repository
+     * @param session   The session
      */
-    WorkspaceImpl(WorkspaceConfig wspConfig,
+    protected WorkspaceImpl(WorkspaceConfig wspConfig,
                   SharedItemStateManager stateMgr,
                   RepositoryImpl rep,
                   SessionImpl session) {
