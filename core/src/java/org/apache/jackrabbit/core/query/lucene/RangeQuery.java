@@ -27,9 +27,13 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermDocs;
+import org.apache.log4j.Logger;
+import org.apache.commons.collections.map.LRUMap;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Implements a variant of the lucene class {@link org.apache.lucene.search.RangeQuery}.
@@ -38,6 +42,17 @@ import java.util.BitSet;
  * <code>TooManyClauses</code> can be avoided.
  */
 public class RangeQuery extends Query {
+
+    /**
+     * Logger instance for this class.
+     */
+    private static final Logger log = Logger.getLogger(RangeQuery.class);
+
+    /**
+     * Simple result cache for previously calculated hits.
+     * key=IndexReader value=Map{key=String:range,value=BitSet:hits}
+     */
+    private static final Map cache = new WeakHashMap();
 
     /**
      * The lower term. May be <code>null</code> if <code>upperTerm</code> is not
@@ -98,6 +113,7 @@ public class RangeQuery extends Query {
         try {
             return stdRangeQueryImpl.rewrite(reader);
         } catch (BooleanQuery.TooManyClauses e) {
+            log.debug("Too many terms to enumerate, using custom RangeQuery");
             // failed, use own implementation
             return this;
         }
@@ -241,6 +257,16 @@ public class RangeQuery extends Query {
         private int nextDoc = -1;
 
         /**
+         * The cache key to use to store the results.
+         */
+        private final String cacheKey;
+
+        /**
+         * The map to store the results.
+         */
+        private final Map resultMap;
+
+        /**
          * Creates a new RangeQueryScorer.
          * @param similarity the similarity implementation.
          * @param reader the index reader to use.
@@ -248,7 +274,33 @@ public class RangeQuery extends Query {
         RangeQueryScorer(Similarity similarity, IndexReader reader) {
             super(similarity);
             this.reader = reader;
-            hits = new BitSet(reader.maxDoc());
+            StringBuffer key = new StringBuffer();
+            key.append(lowerTerm != null ? lowerTerm.field() : upperTerm.field());
+            key.append('\uFFFF');
+            key.append(lowerTerm != null ? lowerTerm.text() : "");
+            key.append('\uFFFF');
+            key.append(upperTerm != null ? upperTerm.text() : "");
+            key.append('\uFFFF');
+            key.append(inclusive);
+            this.cacheKey = key.toString();
+            // check cache
+            synchronized (cache) {
+                Map m = (Map) cache.get(reader);
+                if (m == null) {
+                    m = new LRUMap(10);
+                    cache.put(reader, m);
+                }
+                resultMap = m;
+            }
+            synchronized (resultMap) {
+                BitSet result = (BitSet) resultMap.get(cacheKey);
+                if (result == null) {
+                    result = new BitSet(reader.maxDoc());
+                } else {
+                    hitsCalculated = true;
+                }
+                hits = result;
+            }
         }
 
         /**
@@ -310,37 +362,42 @@ public class RangeQuery extends Query {
 
                 String testField = getField();
 
-                do {
-                    Term term = enumerator.term();
-                    if (term != null && term.field() == testField) {
-                        if (!checkLower || term.text().compareTo(lowerTerm.text()) > 0) {
-                            checkLower = false;
-                            if (upperTerm != null) {
-                                int compare = upperTerm.text().compareTo(term.text());
-                                // if beyond the upper term, or is exclusive and
-                                // this is equal to the upper term, break out
-                                if ((compare < 0) || (!inclusive && compare == 0)) {
-                                    break;
+                TermDocs docs = reader.termDocs();
+                try {
+                    do {
+                        Term term = enumerator.term();
+                        if (term != null && term.field() == testField) {
+                            if (!checkLower || term.text().compareTo(lowerTerm.text()) > 0) {
+                                checkLower = false;
+                                if (upperTerm != null) {
+                                    int compare = upperTerm.text().compareTo(term.text());
+                                    // if beyond the upper term, or is exclusive and
+                                    // this is equal to the upper term, break out
+                                    if ((compare < 0) || (!inclusive && compare == 0)) {
+                                        break;
+                                    }
                                 }
-                            }
 
-                            TermDocs td = reader.termDocs(term);
-                            try {
-                                while (td.next()) {
-                                    hits.set(td.doc());
+                                docs.seek(enumerator);
+                                while (docs.next()) {
+                                    hits.set(docs.doc());
                                 }
-                            } finally {
-                                td.close();
                             }
+                        } else {
+                            break;
                         }
-                    } else {
-                        break;
-                    }
-                } while (enumerator.next());
+                    } while (enumerator.next());
+                } finally {
+                    docs.close();
+                }
             } finally {
                 enumerator.close();
             }
             hitsCalculated = true;
+            // put to cache
+            synchronized (resultMap) {
+                resultMap.put(cacheKey, hits);
+            }
         }
     }
 }
