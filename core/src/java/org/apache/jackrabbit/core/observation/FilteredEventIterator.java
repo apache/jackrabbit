@@ -45,6 +45,9 @@ class FilteredEventIterator implements EventIterator {
      */
     private final EventFilter filter;
 
+    /**
+     * Set of <code>ItemId</code>s of denied <code>ItemState</code>s.
+     */
     private final Set denied;
 
     /**
@@ -63,9 +66,9 @@ class FilteredEventIterator implements EventIterator {
      * @param c      an unmodifiable Collection of {@link javax.jcr.observation.Event}s.
      * @param filter only event that pass the filter will be dispatched to the
      *               event listener.
-     * @param denied <code>Set</code> of denied <code>EventState</code>s
+     * @param denied <code>Set</code> of <code>ItemId</code>s of denied <code>ItemState</code>s
      *               rejected by the <code>AccessManager</code>. If
-     *               <code>null</code> no <code>EventState</code> is denied.
+     *               <code>null</code> no <code>ItemState</code> is denied.
      */
     public FilteredEventIterator(EventStateCollection c,
                                  EventFilter filter,
@@ -151,11 +154,9 @@ class FilteredEventIterator implements EventIterator {
         while (next == null && actualEvents.hasNext()) {
             state = (EventState) actualEvents.next();
             // check denied set
-            if (denied == null || !denied.contains(state)) {
+            if (denied == null || !denied.contains(state.getId())) {
                 try {
-                    next = filter.blocks(state) ? null : new EventImpl(filter.getSession(),
-                            /* filter.getItemManager(), */
-                            state);
+                    next = filter.blocks(state) ? null : new EventImpl(filter.getSession(), state);
                 } catch (RepositoryException e) {
                     log.error("Exception while applying filter.", e);
                 }

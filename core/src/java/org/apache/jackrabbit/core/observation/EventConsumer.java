@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.log4j.Logger;
 
@@ -29,11 +30,11 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 /**
  * The <code>EventConsumer</code> class combines the {@link
@@ -66,11 +67,11 @@ class EventConsumer {
     private final EventFilter filter;
 
     /**
-     * A map of <code>Set</code> objects that hold references to denied
-     * <code>EventState</code>s. The map uses the <code>EventStateCollection</code>
-     * as the key to reference a deny Set.
+     * A map of <code>Set</code> objects that hold references to
+     * <code>ItemId</code>s of denied <code>ItemState</code>s. The map uses the
+     * <code>EventStateCollection</code> as the key to reference a deny Set.
      */
-    private final Map accessDenied = Collections.synchronizedMap(new HashMap());
+    private final Map accessDenied = Collections.synchronizedMap(new WeakHashMap());
 
     /**
      * cached hash code value
@@ -165,8 +166,38 @@ class EventConsumer {
                     if (denied == null) {
                         denied = new HashSet();
                     }
-                    denied.add(state);
+                    denied.add(state.getId());
                 }
+            }
+        }
+        if (denied != null) {
+            accessDenied.put(events, denied);
+        }
+    }
+
+    /**
+     * Checks for which deleted <code>ItemStates</code> this
+     * <code>EventConsumer</code> has enough access rights to see the event.
+     *
+     * @param events       the collection of {@link EventState}s.
+     * @param deletedItems Iterator of deleted <code>ItemState</code>s.
+     */
+    void prepareDeleted(EventStateCollection events, Iterator deletedItems) {
+        Set denied = null;
+        while (deletedItems.hasNext()) {
+            ItemState item = (ItemState) deletedItems.next();
+            // check read permission
+            boolean granted = false;
+            try {
+                granted = session.getAccessManager().isGranted(item.getId(), AccessManager.READ);
+            } catch (RepositoryException e) {
+                log.warn("Unable to check access rights for item: " + item.getId());
+            }
+            if (!granted) {
+                if (denied == null) {
+                    denied = new HashSet();
+                }
+                denied.add(item.getId());
             }
         }
         if (denied != null) {
@@ -181,6 +212,7 @@ class EventConsumer {
      *               to dispatch.
      */
     void consumeEvents(EventStateCollection events) throws RepositoryException {
+        // Set of ItemIds of denied ItemStates
         Set denied = (Set) accessDenied.remove(events);
         // check permissions
         for (Iterator it = events.iterator(); it.hasNext();) {
@@ -200,7 +232,7 @@ class EventConsumer {
                     if (denied == null) {
                         denied = new HashSet();
                     }
-                    denied.add(state);
+                    denied.add(state.getId());
                 }
             }
         }

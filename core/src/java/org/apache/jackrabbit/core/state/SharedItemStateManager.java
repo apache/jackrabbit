@@ -333,6 +333,12 @@ public class SharedItemStateManager
         // todo: remember by provider
         ArrayList virtualRefs = new ArrayList();
 
+        EventStateCollection events = null;
+        if (obsMgr != null) {
+            events = obsMgr.createEventStateCollection();
+            events.prepareDeleted(local);
+        }
+
         acquireWriteLock();
         boolean holdingWriteLock = true;
 
@@ -366,7 +372,6 @@ public class SharedItemStateManager
                 }
             }
 
-            EventStateCollection events = null;
             boolean succeeded = false;
 
             try {
@@ -404,11 +409,9 @@ public class SharedItemStateManager
                     shared.added(state.getOverlayedState());
                 }
 
-                /* prepare the events */
-                if (obsMgr != null) {
-                    events = obsMgr.createEventStateCollection();
+                /* create event states */
+                if (events != null) {
                     events.createEventStates(root.getUUID(), local, this);
-                    events.prepare();
                 }
 
                 /* Push all changes from the local items to the shared items */
