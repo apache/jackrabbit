@@ -146,29 +146,24 @@ class MatchAllScorer extends Scorer {
     private void calculateDocFilter() throws IOException {
         docFilter = new BitSet(reader.maxDoc());
         // we match all terms
-        TermEnum terms = null;
+        TermEnum terms = reader.terms(new Term(FieldNames.PROPERTIES, field));
         try {
-            terms = reader.terms(new Term(FieldNames.PROPERTIES, field));
-            while (terms.term() != null
-                    && terms.term().field() == FieldNames.PROPERTIES
-                    && terms.term().text().startsWith(field)) {
-                TermDocs termDocs = null;
-                try {
-                    termDocs = reader.termDocs(terms.term());
-                    while (termDocs.next()) {
-                        docFilter.set(termDocs.doc());
+            TermDocs docs = reader.termDocs();
+            try {
+                while (terms.term() != null
+                        && terms.term().field() == FieldNames.PROPERTIES
+                        && terms.term().text().startsWith(field)) {
+                    docs.seek(terms);
+                    while (docs.next()) {
+                        docFilter.set(docs.doc());
                     }
-                } finally {
-                    if (termDocs != null) {
-                        termDocs.close();
-                    }
+                    terms.next();
                 }
-                terms.next();
+            } finally {
+                docs.close();
             }
         } finally {
-            if (terms != null) {
-                terms.close();
-            }
+            terms.close();
         }
     }
 }

@@ -313,15 +313,16 @@ class ChildAxisQuery extends Query {
                 // collect the doc ids of all child nodes. we reuse the existing
                 // bitset.
                 hits.clear();
-                for (Iterator it = uuids.iterator(); it.hasNext();) {
-                    TermDocs children = reader.termDocs(new Term(FieldNames.PARENT, (String) it.next()));
-                    try {
-                        while (children.next()) {
-                            hits.set(children.doc());
+                TermDocs docs = reader.termDocs();
+                try {
+                    for (Iterator it = uuids.iterator(); it.hasNext();) {
+                        docs.seek(new Term(FieldNames.PARENT, (String) it.next()));
+                        while (docs.next()) {
+                            hits.set(docs.doc());
                         }
-                    } finally {
-                        children.close();
                     }
+                } finally {
+                    docs.close();
                 }
                 // filter out the child nodes that do not match the name test
                 // if there is any name test at all.
