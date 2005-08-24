@@ -45,6 +45,16 @@ import java.util.List;
  * The <code>EventStateCollection</code> class implements how {@link EventState}
  * objects are created based on the {@link org.apache.jackrabbit.core.state.ItemState}s
  * passed to the {@link #createEventStates} method.
+ * <p/>
+ * The basic sequence of method calls is:
+ * <ul>
+ * <li>{@link #createEventStates} or {@link #addAll} to create or add event
+ * states to the collection</li>
+ * <li>{@link #prepare} or {@link #prepareDeleted} to prepare the events. If
+ * this step is omitted, EventListeners might see events of deleted item
+ * they are not allowed to see.</li>
+ * <li>{@link #dispatch()} to dispatch the events to the EventListeners.</li>
+ * </ul>
  */
 public final class EventStateCollection {
 
@@ -343,10 +353,19 @@ public final class EventStateCollection {
     }
 
     /**
-     * Prepares the events for dispatching.
+     * Prepares already added events for dispatching.
      */
     public void prepare() {
         dispatcher.prepareEvents(this);
+    }
+
+    /**
+     * Prepares deleted items from <code>changes</code>.
+     *
+     * @param changes the changes to prepare.
+     */
+    public void prepareDeleted(ChangeLog changes) {
+        dispatcher.prepareDeleted(this, changes);
     }
 
     /**

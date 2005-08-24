@@ -17,6 +17,9 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.Path;
 
 import javax.jcr.Session;
@@ -331,6 +334,21 @@ public class EventState {
      */
     Session getSession() {
         return session;
+    }
+
+    /**
+     * Returns the id of the associated item of this <code>EventState</code>.
+     *
+     * @return the <code>ItemId</code>.
+     */
+    ItemId getId() {
+        if (childUUID == null) {
+            // property event
+            return new PropertyId(parentUUID, childRelPath.getName());
+        } else {
+            // node event
+            return new NodeId(childUUID);
+        }
     }
 
     /**

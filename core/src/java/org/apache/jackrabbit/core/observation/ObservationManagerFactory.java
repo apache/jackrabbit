@@ -21,6 +21,7 @@ import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.log4j.Logger;
 
 import java.util.Collections;
@@ -182,6 +183,22 @@ public final class ObservationManagerFactory implements Runnable {
         for (Iterator it = consumers.iterator(); it.hasNext();) {
             EventConsumer c = (EventConsumer) it.next();
             c.prepareEvents(events);
+        }
+    }
+
+    /**
+     * Prepares changes that involve deleted item states.
+     *
+     * @param events the event state collection.
+     * @param changes the changes.
+     */
+    void prepareDeleted(EventStateCollection events, ChangeLog changes) {
+        Set consumers = new HashSet();
+        consumers.addAll(getSynchronousConsumers());
+        consumers.addAll(getAsynchronousConsumers());
+        for (Iterator it = consumers.iterator(); it.hasNext();) {
+            EventConsumer c = (EventConsumer) it.next();
+            c.prepareDeleted(events, changes.deletedStates());
         }
     }
 
