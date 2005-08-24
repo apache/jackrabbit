@@ -31,6 +31,7 @@ import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
@@ -236,8 +237,8 @@ public class SessionImpl implements Session, Dumpable {
         nsMappings = new LocalNamespaceMappings(rep.getNamespaceRegistry());
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), getNamespaceResolver());
         String wspName = wspConfig.getName();
-        wsp = new WorkspaceImpl(wspConfig, rep.getWorkspaceStateManager(wspName),
-                rep, this);
+        wsp = createWorkspaceInstance(wspConfig,
+                rep.getWorkspaceStateManager(wspName), rep, this);
         itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
@@ -253,6 +254,23 @@ public class SessionImpl implements Session, Dumpable {
     protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager manager) {
         return new SessionItemStateManager(rep.getRootNodeUUID(),
                 manager, getNamespaceResolver());
+    }
+
+    /**
+     * Creates the workspace instance backing this session.
+     *
+     * @param wspConfig The workspace configuration
+     * @param stateMgr  The shared item state manager
+     * @param rep       The repository
+     * @param session   The session
+     * @return An instance of the {@link WorkspaceImpl} class or an extension
+     *         thereof.
+     */
+    protected WorkspaceImpl createWorkspaceInstance(WorkspaceConfig wspConfig,
+                                                    SharedItemStateManager stateMgr,
+                                                    RepositoryImpl rep,
+                                                    SessionImpl session) {
+        return new WorkspaceImpl(wspConfig, stateMgr, rep, this);
     }
 
     /**
