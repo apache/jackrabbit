@@ -319,7 +319,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized ItemId resolvePath(Path path)
+    public ItemId resolvePath(Path path)
             throws PathNotFoundException, RepositoryException {
         // shortcut
         if (path.denotesRoot()) {
@@ -338,7 +338,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized Path getPath(ItemId id)
+    public Path getPath(ItemId id)
             throws ItemNotFoundException, RepositoryException {
         // shortcut
         if (id.equals(rootNodeId)) {
