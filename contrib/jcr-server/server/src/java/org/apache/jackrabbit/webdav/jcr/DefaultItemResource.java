@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.jcr;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.jcr.property.LengthsProperty;
 import org.apache.jackrabbit.webdav.lock.*;
@@ -184,7 +185,7 @@ public class DefaultItemResource extends AbstractItemResource {
      *
      * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource, InputStream)
      */
-    public void addMember(DavResource resource, InputStream in) throws DavException {
+    public void addMember(DavResource resource, InputContext inputCxt) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED, "Cannot add members to a non-collection resource");
     }
 

@@ -62,6 +62,11 @@ public class ExportContext extends AbstractContext {
     private String contentType;
 
     /**
+     * The content language of the resource
+     */
+    private String contentLanguage;
+
+    /**
      * the ETag of the resource
      */
     private String etag;
@@ -200,6 +205,24 @@ public class ExportContext extends AbstractContext {
      */
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    /**
+     * Returns the content language or <code>null</code>
+     *
+     * @return contentLanguage
+     */
+    public String getContentLanguage() {
+        return contentLanguage;
+    }
+
+    /**
+     * Sets the content language.
+     *
+     * @param contentLanguage
+     */
+    public void setContentLanguage(String contentLanguage) {
+        this.contentLanguage = contentLanguage;
     }
 
     /**

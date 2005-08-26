@@ -60,7 +60,7 @@ public class DavMethods {
      * The webdav POST method and public constant
      */
     public static final int DAV_POST = DAV_HEAD + 1;
-    private static final String METHOD_POST = "POST";
+    public static final String METHOD_POST = "POST";
 
 
     /** The webdav DELETE method and public constant */

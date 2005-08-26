@@ -35,6 +35,11 @@ public interface DavConstants {
     public static final String HEADER_DESTINATION = "Destination";
     public static final String HEADER_IF = "If";
     public static final String HEADER_AUTHORIZATION = "Authorization";
+    public static final String HEADER_CONTENT_TYPE = "Content-Type";
+    public static final String HEADER_CONTENT_LENGTH = "Content-Length";
+    public static final String HEADER_CONTENT_LANGUAGE = "Content-Language";
+    public static final String HEADER_ETAG = "ETag";
+    public static final String HEADER_LAST_MODIFIED = "Last-Modified";
 
     //---------------------------------------------------- Lock-Token header ---
     public static final String HEADER_LOCK_TOKEN = "Lock-Token";

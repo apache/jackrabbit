@@ -17,6 +17,7 @@ package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
@@ -121,7 +122,7 @@ public class RootCollection extends AbstractResource implements DavResource {
      * Throws exception: 403 Forbidden.
      * @see DavResource#addMember(DavResource, InputStream)
      */
-    public void addMember(DavResource resource, InputStream in) throws DavException {
+    public void addMember(DavResource resource, InputContext inputCxt) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
 
