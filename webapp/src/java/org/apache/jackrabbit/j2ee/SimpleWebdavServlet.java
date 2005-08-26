@@ -28,7 +28,6 @@ import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
-import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.WebdavResponse;
@@ -272,21 +271,6 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     protected boolean isPreconditionValid(WebdavRequest request,
                                           DavResource resource) {
         return !resource.exists() || request.matchesIfHeader(resource);
-    }
-
-    /**
-     * The MKCOL method
-     *
-     * @throws IOException
-     */
-    protected void doMkCol(WebdavRequest request, WebdavResponse response,
-                           DavResource resource) throws IOException, DavException {
-        // mkcol request with request.body is not supported.
-        if (request.getContentLength() > 0 || request.getHeader("Transfer-Encoding") != null) {
-            response.sendError(DavServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
-            return;
-        }
-        super.doMkCol(request, response, resource);
     }
 
     /**

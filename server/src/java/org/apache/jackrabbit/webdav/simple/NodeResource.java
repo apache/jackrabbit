@@ -59,6 +59,7 @@ public class NodeResource {
     private long modificationTime = new Date().getTime();
     private long contentLength = 0;
     private String contentType = null;
+    private String contentLanguage = null;
     private String etag = null;
     private InputStream in = null;
 
@@ -82,6 +83,7 @@ public class NodeResource {
         }
         this.contentLength = ctx.getContentLength();
         this.contentType = ctx.getContentType();
+        this.contentLanguage = ctx.getContentLanguage();
         this.in = ctx.getInputStream();
         this.creationTime = ctx.getCreationTime();
         this.modificationTime = ctx.getModificationTime();
@@ -161,6 +163,15 @@ public class NodeResource {
      */
     public String getContentType() {
 	return contentType;
+    }
+
+    /**
+     * Return the content language or <code>null</code> if it could not be determined.
+     *
+     * @return content language
+     */
+    public String getContentLanguage() {
+        return contentLanguage;
     }
 
     /**

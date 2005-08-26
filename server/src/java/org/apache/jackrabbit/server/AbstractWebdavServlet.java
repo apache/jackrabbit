@@ -28,6 +28,7 @@ import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.WebdavRequestImpl;
 import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.WebdavResponseImpl;
+import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
@@ -37,7 +38,6 @@ import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.ordering.OrderPatch;
 import org.apache.jackrabbit.webdav.ordering.OrderingResource;
 import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
@@ -381,17 +381,17 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         DavProperty lastMod = resource.getProperty(DavPropertyName.GETLASTMODIFIED);
         if (lastMod != null) {
-            response.setHeader("Last-Modified", String.valueOf(lastMod.getValue()));
+            response.setHeader(HEADER_LAST_MODIFIED, String.valueOf(lastMod.getValue()));
         }
 
         DavProperty etag = resource.getProperty(DavPropertyName.GETETAG);
         if (etag != null) {
-            response.setHeader("ETag", String.valueOf(etag.getValue()));
+            response.setHeader(HEADER_ETAG, String.valueOf(etag.getValue()));
         }
 
         DavProperty contentType = resource.getProperty(DavPropertyName.GETCONTENTTYPE);
         if (contentType != null) {
-            response.setHeader("Content-Type", String.valueOf(contentType.getValue()));
+            response.setHeader(HEADER_CONTENT_TYPE, String.valueOf(contentType.getValue()));
         }
 
         DavProperty contentLength = resource.getProperty(DavPropertyName.GETCONTENTLENGTH);
@@ -399,11 +399,16 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             try {
                 int length = Integer.parseInt(contentLength.getValue() + "");
                 if (length > 0) {
-                    response.setIntHeader("Content-Length", length);
+                    response.setIntHeader(HEADER_CONTENT_LENGTH, length);
                 }
             } catch (NumberFormatException e) {
                 log.error("Could not build content length from property value '" + contentLength.getValue() + "'");
             }
+        }
+
+        DavProperty contentLanguage = resource.getProperty(DavPropertyName.GETCONTENTLANGUAGE);
+        if (contentLanguage != null) {
+            response.setHeader(HEADER_CONTENT_LANGUAGE, contentLanguage.getValue().toString());
         }
 
         // spool content in case of 'GET' request
@@ -531,7 +536,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             status = DavServletResponse.SC_CREATED;
         }
 
-        parentResource.addMember(resource, request.getInputStream());
+        parentResource.addMember(resource, getInputContext(request));
         response.setStatus(status);
     }
 
@@ -555,11 +560,26 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
 
         if (request.getContentLength() > 0 || request.getHeader("Transfer-Encoding") != null) {
-            parentResource.addMember(resource, request.getInputStream());
+            parentResource.addMember(resource, getInputContext(request));
         } else {
             parentResource.addMember(resource);
         }
         response.setStatus(DavServletResponse.SC_CREATED);
+    }
+
+    /**
+     * Build an InputContext for the given request
+     * 
+     * @param request
+     * @return
+     * @throws IOException
+     */
+    protected InputContext getInputContext(WebdavRequest request) throws IOException {
+        InputContext cxt = new InputContext();
+        cxt.setContentType(request.getHeader(DavConstants.HEADER_CONTENT_TYPE));
+        cxt.setContentLanguage(request.getHeader(DavConstants.HEADER_CONTENT_LANGUAGE));
+        cxt.setInputStream(request.getInputStream());
+        return cxt;
     }
 
     /**

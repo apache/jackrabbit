@@ -5,6 +5,23 @@
     <display-name>Jackrabbit JCR Server</display-name>
 
     <!-- ====================================================================== -->
+    <!-- L O G G I N G   S E R V L E T                                          -->
+    <!-- ====================================================================== -->
+    <servlet>
+        <servlet-name>Logging</servlet-name>
+        <description>The logging servlet configures the Log4J logging facility.</description>
+        <servlet-class>org.apache.jackrabbit.j2ee.LoggingServlet</servlet-class>
+
+        <init-param>
+            <param-name>log4j-config</param-name>
+            <param-value>/WEB-INF/log4j.xml</param-value>
+            <description>initial log4j configuration</description>
+        </init-param>
+
+        <load-on-startup>0</load-on-startup>
+    </servlet>
+
+    <!-- ====================================================================== -->
     <!-- R E P O S I T O R Y   S T A R T U P  S E R V L E T                     -->
     <!-- ====================================================================== -->
     <servlet>
@@ -15,12 +32,6 @@
             or if its accessible via RMI, you do not need to use this servlet.
         </description>
         <servlet-class>org.apache.jackrabbit.j2ee.RepositoryStartupServlet</servlet-class>
-
-        <init-param>
-            <param-name>log4j-config</param-name>
-            <param-value>/WEB-INF/repository/log4j.properties</param-value>
-            <description>initial log4j configuration</description>
-        </init-param>
 
         <init-param>
             <param-name>repository-config</param-name>
@@ -78,12 +89,6 @@
             the repository. The repository can be accessed via JNDI, RMI or Webdav.
         </description>
         <servlet-class>org.apache.jackrabbit.j2ee.RepositoryAccessServlet</servlet-class>
-
-        <init-param>
-            <param-name>log4j-config</param-name>
-            <param-value>/WEB-INF/repository/log4j.properties</param-value>
-            <description>initial log4j configuration</description>
-        </init-param>
 
         <init-param>
             <param-name>repository-name</param-name>
@@ -173,7 +178,7 @@
                 the defines the commons-chain catalog for server tasks.
             </description>
         </init-param>
-        !--
+        <!--
             Optional parameter defining namespaces (or uri or prefixes) and/or
             nodetype names that mark hidden resources.
             If omitted not resources will be filtered out.

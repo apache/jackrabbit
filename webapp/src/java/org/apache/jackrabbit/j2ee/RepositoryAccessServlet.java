@@ -16,27 +16,29 @@
  */
 package org.apache.jackrabbit.j2ee;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
 import org.apache.jackrabbit.util.Base64;
+import org.apache.log4j.Logger;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.ServletException;
-import javax.servlet.ServletContext;
-import javax.jcr.*;
+import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
-import java.util.Properties;
-import java.util.Enumeration;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
-import java.rmi.RemoteException;
-import java.rmi.NotBoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.Enumeration;
+import java.util.Properties;
 
 /**
  * This Class implements a servlet that is used as unified mechanism to retrieve
@@ -45,7 +47,7 @@ import java.net.MalformedURLException;
 public class RepositoryAccessServlet extends HttpServlet {
 
     /** default logger */
-    private static Logger log;
+    private static final Logger log = Logger.getLogger(RepositoryAccessServlet.class);
 
     // todo: implement correctly
     public final static String INIT_PARAM_LOG4J_CONFIG = "log4j-config";
@@ -72,7 +74,6 @@ public class RepositoryAccessServlet extends HttpServlet {
      * @throws javax.servlet.ServletException
      */
     public void init() throws ServletException {
-	initLog4J();
 	log.info("RepositoryAccessServlet initializing...");
         repositoryName = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_NAME);
         if (repositoryName==null) {
@@ -103,26 +104,6 @@ public class RepositoryAccessServlet extends HttpServlet {
         log.info(repository.getDescriptor(Repository.REP_NAME_DESC) + " v" + repository.getDescriptor(Repository.REP_VERSION_DESC));
 
 	log.info("RepositoryAccessServlet initialized.");
-    }
-
-    private void initLog4J() throws ServletException {
-	// setup log4j
-	String log4jConfig = getServletConfig().getInitParameter(INIT_PARAM_LOG4J_CONFIG);
-	InputStream in =getServletContext().getResourceAsStream(log4jConfig);
-	if (in==null) {
-	    // try normal init
-	    PropertyConfigurator.configure(log4jConfig);
-	} else {
-	    try {
-		Properties log4jProperties = new Properties();
-		log4jProperties.load(in);
-		in.close();
-		PropertyConfigurator.configure(log4jProperties);
-	    } catch (IOException e) {
-		throw new ServletException("Unable to load log4jProperties: " + e.toString());
-	    }
-	}
-	log = Logger.getLogger(RepositoryAccessServlet.class);
     }
 
     private InitialContext getInitialContext() throws ServletException {
@@ -170,7 +151,7 @@ public class RepositoryAccessServlet extends HttpServlet {
     private Repository getRepositoryByRMI(String rmiURI) {
         // acquire via RMI
         log.info("  trying to retrieve repository using rmi. uri=" + rmiURI);
-        ClientFactoryDelegater cfd = null;
+        ClientFactoryDelegater cfd;
         try {
             Class clazz = Class.forName("org.apache.jackrabbit.j2ee.RMIClientFactoryDelegater");
             cfd = (ClientFactoryDelegater) clazz.newInstance();

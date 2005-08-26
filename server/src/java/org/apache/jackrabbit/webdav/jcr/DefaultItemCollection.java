@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.jcr;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
 import org.apache.jackrabbit.webdav.jcr.version.report.ExportViewReport;
@@ -250,13 +251,13 @@ public class DefaultItemCollection extends AbstractItemResource
      * changed/set to type {@link PropertyType#BINARY binary}.
      *
      * @param resource
-     * @param in
+     * @param inputCxt
      * @throws org.apache.jackrabbit.webdav.DavException
-     * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource, java.io.InputStream)
+     * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource, InputContext)
      * @see Node#addNode(String)
      * @see Node#setProperty(String, java.io.InputStream)
      */
-    public void addMember(DavResource resource, InputStream in)
+    public void addMember(DavResource resource, InputContext inputCxt)
             throws DavException {
 
         /* RFC 2815 states that all 'parents' must exist in order all addition of members */
@@ -266,6 +267,7 @@ public class DefaultItemCollection extends AbstractItemResource
 
         try {
             Node n = (Node) item;
+            InputStream in = (inputCxt != null) ? inputCxt.getInputStream() : null;
             if (resource.isCollection()) {
                 if (in == null) {
                     // MKCOL without a request body, try if a default-primary-type is defined.
@@ -308,7 +310,9 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource)
      */
     public void addMember(DavResource resource) throws DavException {
-        addMember(resource, resource.getStream());
+        InputContext ctx = new InputContext();
+        ctx.setInputStream(resource.getStream());
+        addMember(resource, ctx);
     }
 
     /**

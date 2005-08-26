@@ -30,20 +30,61 @@ public class ResourceFactoryImpl implements DavResourceFactory {
     private final LockManager lockMgr;
     private final ResourceFilter resourceFilter;
 
+    /**
+     * Create a new <code>ResourceFactory</code> that uses the given lock manager
+     * and the default {@link DefaultResourceFilter resource filter}.
+     *
+     * @param lockMgr
+     */
     public ResourceFactoryImpl(LockManager lockMgr) {
         this(lockMgr, new DefaultResourceFilter());
     }
 
+    /**
+     * Create a new <code>ResourceFactory</code> that uses the given lock manager
+     * and resource filter.
+     *
+     * @param lockMgr
+     * @param resourceFilter
+     */
     public ResourceFactoryImpl(LockManager lockMgr, ResourceFilter resourceFilter) {
         this.lockMgr = lockMgr;
         this.resourceFilter = resourceFilter;
     }
 
+    /**
+     * Create a new <code>DavResource</code> from the given locator and request.
+     *
+     * @param locator
+     * @param request
+     * @param response
+     * @return
+     * @throws DavException
+     * @see DavResourceFactory#createResource(DavResourceLocator, DavServletRequest, DavServletResponse)
+     */
     public DavResource createResource(DavResourceLocator locator, DavServletRequest request,
                                       DavServletResponse response) throws DavException {
-        return createResource(locator, request.getDavSession());
+        DavResourceImpl resource = (DavResourceImpl)createResource(locator, request.getDavSession());
+        int methodCode = DavMethods.getMethodCode(request.getMethod());
+        if (methodCode == DavMethods.DAV_MKCOL || methodCode == DavMethods.DAV_PUT || methodCode == DavMethods.DAV_POST) {
+            if (!resource.exists()) {
+                boolean isCollection = DavMethods.getMethodCode(request.getMethod()) == DavMethods.DAV_MKCOL;
+                resource.setIsCollection(isCollection);
+            }
+        }
+        return resource;
     }
 
+    /**
+     * Create a new <code>DavResource</code> from the given locator and webdav
+     * session.
+     *
+     * @param locator
+     * @param session
+     * @return
+     * @throws DavException
+     * @see DavResourceFactory#createResource(DavResourceLocator, DavSession)
+     */
     public DavResource createResource(DavResourceLocator locator, DavSession session) throws DavException {
         try {
             DavResource res = new DavResourceImpl(locator, this, session, resourceFilter);
