@@ -151,9 +151,11 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * Copy state information from a state into this state
      * @param state source state information
      */
-    protected void copy(ItemState state) {
-        parentUUID = state.getParentUUID();
-        id = state.getId();
+    protected synchronized void copy(ItemState state) {
+        synchronized (state) {
+            parentUUID = state.getParentUUID();
+            id = state.getId();
+        }
     }
 
     /**
@@ -478,9 +480,11 @@ public abstract class ItemState implements ItemStateListener, Serializable {
         if (isTransient) {
             status = STATUS_STALE_MODIFIED;
         } else {
-            // this instance represents existing state, update it
-            pull();
-            notifyStateUpdated();
+            synchronized (this) {
+                // this instance represents existing state, update it
+                pull();
+                notifyStateUpdated();
+            }
         }
     }
 

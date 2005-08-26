@@ -897,20 +897,24 @@ public class NodeImpl extends ItemImpl implements Node {
             // this node is 'new'
             persistentState = stateMgr.createNew(transientState);
         }
-        // copy state from transient state:
-        // parent uuid's
-        persistentState.setParentUUID(transientState.getParentUUID());
-        // mixin types
-        persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
-        // id of definition
-        persistentState.setDefinitionId(transientState.getDefinitionId());
-        // child node entries
-        persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
-        // property entries
-        persistentState.setPropertyNames(transientState.getPropertyNames());
 
-        // make state persistent
-        stateMgr.store(persistentState);
+        synchronized (persistentState) {
+            // copy state from transient state:
+            // parent uuid's
+            persistentState.setParentUUID(transientState.getParentUUID());
+            // mixin types
+            persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
+            // id of definition
+            persistentState.setDefinitionId(transientState.getDefinitionId());
+            // child node entries
+            persistentState.setChildNodeEntries(transientState.getChildNodeEntries());
+            // property entries
+            persistentState.setPropertyNames(transientState.getPropertyNames());
+
+            // make state persistent
+            stateMgr.store(persistentState);
+        }
+
         // remove listener from transient state
         transientState.removeListener(this);
         // add listener to persistent state
