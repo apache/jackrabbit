@@ -193,7 +193,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * Overridden method simply checks whether we have an item matching the id
      * and returns its path, otherwise calls base implementation.
      */
-    public synchronized Path getPath(ItemId id)
+    public Path getPath(ItemId id)
             throws ItemNotFoundException, RepositoryException {
 
         if (id.denotesNode()) {
