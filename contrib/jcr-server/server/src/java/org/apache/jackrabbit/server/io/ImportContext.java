@@ -60,12 +60,18 @@ public class ImportContext extends AbstractContext {
     private String contentType;
 
     /**
+     * The content language of the resource to be imported.
+     */
+    private String contentLanguage;
+
+    /**
      * The modification time of the resource, if known
      */
     private long modificationTime;
 
     /**
      * Creates a new import context with the given root node
+     *
      * @param importRoot the import root node
      */
     public ImportContext(Node importRoot) {
@@ -74,6 +80,7 @@ public class ImportContext extends AbstractContext {
 
     /**
      * Creats a new import context with the given root node and property defaults.
+     *
      * @param base
      * @param importRoot
      */
@@ -87,6 +94,7 @@ public class ImportContext extends AbstractContext {
 
     /**
      * Creates a new sub context which bases on this contexts properties
+     *
      * @param importRoot
      * @return
      */
@@ -96,6 +104,7 @@ public class ImportContext extends AbstractContext {
 
     /**
      * Retruns the input stream of the resource to import.
+     *
      * @return the input stream.
      */
     public InputStream getInputStream() {
@@ -105,6 +114,7 @@ public class ImportContext extends AbstractContext {
     /**
      * Sets the inpurt stream of the resource to import. A import command that
      * consumed the input stream should set this member to <code>null</code>.
+     *
      * @param inputStream the input stream
      */
     public void setInputStream(InputStream inputStream) {
@@ -113,6 +123,7 @@ public class ImportContext extends AbstractContext {
 
     /**
      * Returns the import root of the resource to import.
+     *
      * @return the import root of the resource to import.
      */
     public Node getImportRoot() {
@@ -122,6 +133,7 @@ public class ImportContext extends AbstractContext {
     /**
      * Returns the current parent node of the resource to import. If no current
      * parent node is defined, the import root is returned.
+     *
      * @return the parent node.
      */
     public Node getNode() {
@@ -131,6 +143,7 @@ public class ImportContext extends AbstractContext {
     /**
      * Sets the current parent node of the resource to import. A command can
      * set this member in order to generate recursive structured.
+     *
      * @param node
      */
     public void setNode(Node node) {
@@ -141,6 +154,7 @@ public class ImportContext extends AbstractContext {
      * Returns the system id of the resource to be imported. This id depends on
      * the system the resource is comming from. it can be a filename, a
      * display name of a webdav resource, an URI, etc.
+     *
      * @return the system id of the resource to import
      */
     public String getSystemId() {
@@ -149,6 +163,7 @@ public class ImportContext extends AbstractContext {
 
     /**
      * sets the system id of this resource.
+     *
      * @param systemId
      */
     public void setSystemId(String systemId) {
@@ -158,6 +173,7 @@ public class ImportContext extends AbstractContext {
     /**
      * Returns the content type of the resource to be imported or null, if
      * no contenttype was defined.
+     *
      * @return the content type of the resource
      */
     public String getContentType() {
@@ -166,6 +182,7 @@ public class ImportContext extends AbstractContext {
 
     /**
      * Sets the content type of the resource.
+     *
      * @param contentType the content type.
      */
     public void setContentType(String contentType) {
@@ -173,7 +190,26 @@ public class ImportContext extends AbstractContext {
     }
 
     /**
+     * Returns the content language or <code>null</code>
+     *
+     * @return contentLanguage
+     */
+    public String getContentLanguage() {
+        return contentLanguage;
+    }
+
+    /**
+     * Sets the content language.
+     *
+     * @param contentLanguage
+     */
+    public void setContentLanguage(String contentLanguage) {
+        this.contentLanguage = contentLanguage;
+    }
+
+    /**
      * Returns the modification time of the resource
+     *
      * @return the modification time.
      */
     public long getModificationTime() {
@@ -182,10 +218,10 @@ public class ImportContext extends AbstractContext {
 
     /**
      * Sets the modification time of the resource
+     *
      * @param modificationTime the modification time
      */
     public void setModificationTime(long modificationTime) {
         this.modificationTime = modificationTime;
     }
-
 }

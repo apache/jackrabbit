@@ -47,7 +47,7 @@ public class SetContentTypeCommand extends AbstractCommand {
 
     /**
      * Executes this command. It resolves the content type in the import context
-     * if it is not alerady set.
+     * if it is not already set.
      *
      * @param context the import context
      * @return false

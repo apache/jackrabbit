@@ -17,6 +17,7 @@ package org.apache.jackrabbit.webdav;
 
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.lock.*;
+import org.apache.jackrabbit.webdav.io.InputContext;
 
 import java.io.InputStream;
 
@@ -184,12 +185,10 @@ public interface DavResource {
      * Add the given resource as an internal member to this resource.
      *
      * @param resource {@link DavResource} to be added as internal member.
-     * @param in {@link java.io.InputStream} providing the content for the
-     * internal member.
+     * @param inputCxt Context providing the content for the internal member.
      * @throws DavException
      */
-    public void addMember(DavResource resource, InputStream in)
-            throws DavException;
+    public void addMember(DavResource resource, InputContext inputCxt) throws DavException;
 
     /**
      * Add the given resource as an internal member to this resource.

@@ -15,28 +15,32 @@
  */
 package org.apache.jackrabbit.j2ee;
 
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
+import org.apache.log4j.Logger;
 import org.xml.sax.InputSource;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.ServletException;
-import javax.jcr.*;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import java.io.*;
-import java.util.Properties;
-import java.util.Enumeration;
-import java.rmi.registry.Registry;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.Naming;
-import java.rmi.RemoteException;
-import java.rmi.AlreadyBoundException;
-import java.rmi.Remote;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Naming;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.Enumeration;
+import java.util.Properties;
 
 /**
  * The RepositoryStartupServlet starts a jackrabbit repository and registers it
@@ -45,7 +49,7 @@ import java.net.MalformedURLException;
 public class RepositoryStartupServlet extends HttpServlet {
 
     /** the default logger */
-    private static Logger log;
+    private static final Logger log = Logger.getLogger(RepositoryStartupServlet.class);
 
     /** initial param name for the repository config location */
     public final static String INIT_PARAM_REPOSITORY_CONFIG = "repository-config";
@@ -80,7 +84,6 @@ public class RepositoryStartupServlet extends HttpServlet {
      */
     public void init() throws ServletException {
 	super.init();
-	initLog4J();
 	log.info("RepositoryStartupServlet initializing...");
 	initRepository();
 	registerJNDI();
@@ -106,30 +109,6 @@ public class RepositoryStartupServlet extends HttpServlet {
         } else {
             log.info("RepositoryStartupServlet shut down.");
         }
-    }
-
-    /**
-     * Initializes Log4J
-     * @throws ServletException
-     */
-    private void initLog4J() throws ServletException {
-	// setup log4j
-	String log4jConfig = getServletConfig().getInitParameter(INIT_PARAM_LOG4J_CONFIG);
-	InputStream in = getServletContext().getResourceAsStream(log4jConfig);
-	if (in==null) {
-	    // try normal init
-	    PropertyConfigurator.configure(log4jConfig);
-	} else {
-	    try {
-		Properties log4jProperties = new Properties();
-		log4jProperties.load(in);
-		in.close();
-		PropertyConfigurator.configure(log4jProperties);
-	    } catch (IOException e) {
-		throw new ServletException("Unable to load log4jProperties: " + e.toString());
-	    }
-	}
-	log = Logger.getLogger(RepositoryStartupServlet.class);
     }
 
     /**
