@@ -84,14 +84,16 @@ public class PropertyState extends ItemState {
      * {@inheritDoc}
      */
     protected synchronized void copy(ItemState state) {
-        super.copy(state);
+        synchronized (state) {
+            super.copy(state);
 
-        PropertyState propState = (PropertyState) state;
-        name = propState.getName();
-        type = propState.getType();
-        defId = propState.getDefinitionId();
-        values = propState.getValues();
-        multiValued = propState.isMultiValued();
+            PropertyState propState = (PropertyState) state;
+            name = propState.getName();
+            type = propState.getType();
+            defId = propState.getDefinitionId();
+            values = propState.getValues();
+            multiValued = propState.isMultiValued();
+        }
     }
 
     //-------------------------------------------------------< public methods >

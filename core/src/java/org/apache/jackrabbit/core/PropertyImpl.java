@@ -110,13 +110,17 @@ public class PropertyImpl extends ItemImpl implements Property {
             // this property is 'new'
             persistentState = stateMgr.createNew(transientState);
         }
-        // copy state from transient state
-        persistentState.setDefinitionId(transientState.getDefinitionId());
-        persistentState.setType(transientState.getType());
-        persistentState.setMultiValued(transientState.isMultiValued());
-        persistentState.setValues(transientState.getValues());
-        // make state persistent
-        stateMgr.store(persistentState);
+
+        synchronized (persistentState) {
+            // copy state from transient state
+            persistentState.setDefinitionId(transientState.getDefinitionId());
+            persistentState.setType(transientState.getType());
+            persistentState.setMultiValued(transientState.isMultiValued());
+            persistentState.setValues(transientState.getValues());
+            // make state persistent
+            stateMgr.store(persistentState);
+        }
+
         // remove listener from transient state
         transientState.removeListener(this);
         // add listener to persistent state
