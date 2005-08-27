@@ -16,8 +16,18 @@
    limitations under the License.
 -->
 <project default="jar">
-
-    <goal name="server-dist">
+    <!--
+        build the jar and intall it to the local repository
+    -->
+    <goal name="multiproject:artifact">
         <attainGoal name="jar:install" />
     </goal>
+    <!--
+        the 'clean' goal is already redefined in the maven.xml
+        of the parent project. we need to redefine it here
+        again to 'maven clean' works.
+    -->
+    <goal name="clean">
+  	    <attainGoal name="clean:clean"/>
+  	</goal>
 </project>

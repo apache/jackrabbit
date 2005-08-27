@@ -16,26 +16,18 @@
    limitations under the License.
 -->
 <project
-    default="all"
+    default="multiproject:artifact"
     xmlns:ant="jelly:ant"
     xmlns:m="jelly:maven"
 >
-
-	<goal name="all">
-      	<m:reactor 
-            basedir="${basedir}"
-            includes="*/project.xml"
-            goals="server-dist"
-            banner="Building"
-            ignoreFailures="false"
-        />
-	</goal>
-	
-	<goal name="clean">
-	    <attainGoal name="multiproject:clean"/>
-	</goal>
-
+    <!--
+        redefine some common goals
+    -->
+    <goal name="clean">
+        <attainGoal name="multiproject:clean"/>
+    </goal>
+    
     <goal name="idea">
-	    <attainGoal name="idea:multiproject"/>
+        <attainGoal name="idea:multiproject"/>
     </goal>
 </project>
