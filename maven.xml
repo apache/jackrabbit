@@ -16,7 +16,7 @@
    limitations under the License.
 -->
 <project
-    default="multiproject:artifact"
+    default="multiproject:install"
     xmlns:ant="jelly:ant"
     xmlns:m="jelly:maven"
 >

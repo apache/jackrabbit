@@ -17,12 +17,6 @@
 -->
 <project default="war">
     <!--
-        build the war and install it to the local repository
-    -->
-    <goal name="multiproject:artifact">
-        <attainGoal name="war:install" />
-    </goal>
-    <!--
         the 'clean' goal is already redefined in the maven.xml
         of the parent project. we need to redefine it here
         again to 'maven clean' works.
