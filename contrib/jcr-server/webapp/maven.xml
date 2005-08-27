@@ -15,13 +15,19 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<project
-    default="war"
-    xmlns:ant="jelly:ant"
-    xmlns:m="jelly:maven"
->
-
-    <goal name="server-dist">
-        <attainGoal name="war"/>
+<project default="war">
+    <!--
+        build the war and intall it to the local repository
+    -->
+    <goal name="multiproject:artifact">
+        <attainGoal name="war:install" />
     </goal>
+    <!--
+        the 'clean' goal is already redefined in the maven.xml
+        of the parent project. we need to redefine it here
+        again to 'maven clean' works.
+    -->
+    <goal name="clean">
+  	    <attainGoal name="clean:clean"/>
+  	</goal>
 </project>
