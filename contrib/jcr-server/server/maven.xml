@@ -17,7 +17,7 @@
 -->
 <project default="jar">
     <!--
-        build the jar and intall it to the local repository
+        build the jar and install it to the local repository
     -->
     <goal name="multiproject:artifact">
         <attainGoal name="jar:install" />
