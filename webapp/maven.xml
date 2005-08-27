@@ -17,7 +17,7 @@
 -->
 <project default="war">
     <!--
-        build the war and intall it to the local repository
+        build the war and install it to the local repository
     -->
     <goal name="multiproject:artifact">
         <attainGoal name="war:install" />
