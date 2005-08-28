@@ -71,7 +71,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         // prepare the db directory
         File envDir = new File(context.getHomeDir(), "db");
         if (!envDir.exists())
-            envDir.mkdir();
+            envDir.mkdirs();
 
         log.debug("init berkeleyDb environment at " + envDir.getAbsolutePath());
 
