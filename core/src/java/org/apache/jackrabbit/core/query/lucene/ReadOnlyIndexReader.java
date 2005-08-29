@@ -92,6 +92,24 @@ class ReadOnlyIndexReader extends FilterIndexReader {
     }
 
     /**
+     * Returns <code>true</code> if any documents have been deleted.
+     *
+     * @return <code>true</code> if any documents have been deleted.
+     */
+    public boolean hasDeletions() {
+        return !deleted.isEmpty();
+    }
+
+    /**
+     * Returns the number of documents in this index reader.
+     *
+     * @return the number of documents in this index reader.
+     */
+    public int numDocs() {
+        return maxDoc() - deleted.cardinality();
+    }
+
+    /**
      * @exception UnsupportedOperationException always
      */
     final protected void doDelete(int docNum) {

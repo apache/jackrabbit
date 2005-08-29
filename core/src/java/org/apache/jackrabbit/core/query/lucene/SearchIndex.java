@@ -55,6 +55,21 @@ public class SearchIndex extends AbstractQueryHandler {
     private static final Logger log = Logger.getLogger(SearchIndex.class);
 
     /**
+     * The default value for property {@link #minMergeDocs}.
+     */
+    public static final int DEFAULT_MIN_MERGE_DOCS = 100;
+
+    /**
+     * The default value for property {@link #maxMergeDocs}.
+     */
+    public static final int DEFAULT_MAX_MERGE_DOCS = 100000;
+
+    /**
+     * the default value for property {@link #mergeFactor}.
+     */
+    public static final int DEFAULT_MERGE_FACTOR = 10;
+
+    /**
      * The actual index
      */
     private MultiIndex index;
@@ -74,7 +89,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * minMergeDocs config parameter.
      */
-    private int minMergeDocs = 100;
+    private int minMergeDocs = DEFAULT_MIN_MERGE_DOCS;
 
     /**
      * volatileIdleTime config parameter.
@@ -84,12 +99,12 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * maxMergeDocs config parameter
      */
-    private int maxMergeDocs = 100000;
+    private int maxMergeDocs = DEFAULT_MAX_MERGE_DOCS;
 
     /**
      * mergeFactor config parameter
      */
-    private int mergeFactor = 10;
+    private int mergeFactor = DEFAULT_MERGE_FACTOR;
 
     /**
      * Number of documents that are buffered before they are added to the index.
@@ -262,9 +277,9 @@ public class SearchIndex extends AbstractQueryHandler {
      * to this handler.
      */
     public void close() {
-        log.info("Closing search index.");
         index.close();
         getContext().destroy();
+        log.info("Search index closed.");
     }
 
     /**

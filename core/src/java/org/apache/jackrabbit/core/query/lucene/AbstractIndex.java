@@ -171,7 +171,7 @@ abstract class AbstractIndex {
      * @return a read-only index reader.
      * @throws IOException if an error occurs while obtaining the index reader.
      */
-    protected synchronized ReadOnlyIndexReader getReadOnlyIndexReader()
+    synchronized ReadOnlyIndexReader getReadOnlyIndexReader()
             throws IOException {
         // get current modifiable index reader
         IndexReader modifiableReader = getIndexReader();
@@ -189,7 +189,6 @@ abstract class AbstractIndex {
         }
         return new ReadOnlyIndexReader(sharedReader, deleted);
     }
-
 
     /**
      * Returns an <code>IndexWriter</code> on this index.
@@ -217,7 +216,18 @@ abstract class AbstractIndex {
      * Commits all pending changes to the underlying <code>Directory</code>.
      * @throws IOException if an error occurs while commiting changes.
      */
-    protected synchronized void commit() throws IOException {
+    protected void commit() throws IOException {
+        commit(false);
+    }
+
+    /**
+     * Commits all pending changes to the underlying <code>Directory</code>.
+     *
+     * @param optimize if <code>true</code> the index is optimized after after
+     *                 the commit.
+     * @throws IOException if an error occurs while commiting changes.
+     */
+    protected synchronized void commit(boolean optimize) throws IOException {
         // if index is not locked there are no pending changes
         if (!IndexReader.isLocked(getDirectory())) {
             return;
@@ -230,6 +240,11 @@ abstract class AbstractIndex {
             log.debug("committing IndexWriter.");
             indexWriter.close();
             indexWriter = null;
+        }
+        // optimize if requested
+        if (optimize) {
+            IndexWriter writer = getIndexWriter();
+            writer.optimize();
         }
     }
 

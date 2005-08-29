@@ -36,6 +36,11 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Collection;
 
 /**
  * A <code>MultiIndex</code> consists of a {@link VolatileIndex} and multiple
@@ -55,6 +60,13 @@ import java.util.Arrays;
  * {@link SearchIndex#setMergeFactor(int)} and {@link SearchIndex#setMinMergeDocs(int)}. For detailed
  * description of the configuration parameters see also the lucene
  * <code>IndexWriter</code> class.
+ * <p/>
+ * This class is thread-safe.
+ * <p/>
+ * Note on implementation: Multiple modifying threads are synchronized on a
+ * <code>MultiIndex</code> instance itself. Sychronization between a modifying
+ * thread and reader threads is done using {@link #updateMonitor} and
+ * {@link #updateInProgress}.
  */
 class MultiIndex {
 
@@ -136,10 +148,14 @@ class MultiIndex {
     private boolean redoLogApplied = false;
 
     /**
-     * The last time this index was modified. That is, a document was added
-     * or removed.
+     * The last time this index was modified. That is, a document was added.
      */
     private long lastModificationTime;
+
+    /**
+     * The <code>IndexMerger</code> for this <code>MultiIndex</code>.
+     */
+    private final IndexMerger merger;
 
     /**
      * Timer to schedule commits of the volatile index after some idle time.
@@ -180,6 +196,12 @@ class MultiIndex {
         File mapFile = new File(indexDir, NS_MAPPING_FILE);
         nsMappings = new NamespaceMappings(mapFile);
 
+        // initialize IndexMerger
+        merger = new IndexMerger(this);
+        merger.setMaxMergeDocs(handler.getMaxMergeDocs());
+        merger.setMergeFactor(handler.getMergeFactor());
+        merger.setMinMergeDocs(handler.getMinMergeDocs());
+
         try {
             // open persistent indexes
             for (int i = 0; i < indexNames.size(); i++) {
@@ -194,6 +216,7 @@ class MultiIndex {
                 index.setMinMergeDocs(handler.getMinMergeDocs());
                 index.setUseCompoundFile(handler.getUseCompoundFile());
                 indexes.add(index);
+                merger.indexAdded(index.getName(), index.getNumDocuments());
             }
 
             // create volatile index and check / apply redo log
@@ -222,15 +245,17 @@ class MultiIndex {
                         deleteNodePersistent(entry.uuid);
                     }
                 }
-                maybeMergeIndexes();
                 log.warn("Redo changes applied.");
                 redoLog.clear();
                 redoLogApplied = true;
             }
 
             volatileIndex = new VolatileIndex(handler.getAnalyzer(), redoLog);
-            volatileIndex.setUseCompoundFile(false);
+            volatileIndex.setUseCompoundFile(handler.getUseCompoundFile());
             volatileIndex.setBufferSize(handler.getBufferSize());
+
+            // now that we are ready, start index merger
+            merger.start();
 
             if (doInitialIndex) {
                 // index root node
@@ -344,6 +369,125 @@ class MultiIndex {
     }
 
     /**
+     * Returns <code>IndexReader</code>s for the indexes named
+     * <code>indexNames</code>. An <code>IndexListener</code> is registered and
+     * notified when documents are deleted from one of the indexes in
+     * <code>indexNames</code>.
+     * <p/>
+     * Note: the number of <code>IndexReaders</code> returned by this method is
+     * not necessarily the same as the number of index names passed. An index
+     * might have been deleted and is not reachable anymore.
+     *
+     * @param indexNames the names of the indexes for which to obtain readers.
+     * @param listener   the listener to notify when documents are deleted.
+     * @return the <code>IndexReaders</code>.
+     * @throws IOException if an error occurs acquiring the index readers.
+     */
+    synchronized IndexReader[] getIndexReaders(String[] indexNames, IndexListener listener)
+            throws IOException {
+        Set names = new HashSet(Arrays.asList(indexNames));
+        Map indexReaders = new HashMap();
+
+        try {
+            for (Iterator it = indexes.iterator(); it.hasNext(); ) {
+                PersistentIndex index = (PersistentIndex) it.next();
+                if (names.contains(index.getName())) {
+                    indexReaders.put(index.getReadOnlyIndexReader(listener), index);
+                }
+            }
+        } catch (IOException e) {
+            // close readers obtained so far
+            for (Iterator it = indexReaders.keySet().iterator(); it.hasNext(); ) {
+                ReadOnlyIndexReader reader = (ReadOnlyIndexReader) it.next();
+                try {
+                    reader.close();
+                } catch (IOException ex) {
+                    log.warn("Exception closing index reader: " + ex);
+                }
+                ((PersistentIndex) indexReaders.get(reader)).resetListener();
+            }
+            throw e;
+        }
+
+        return (IndexReader[]) indexReaders.keySet().toArray(new IndexReader[indexReaders.size()]);
+    }
+
+    /**
+     * Creates a new Persistent index. The new index is not registered with this
+     * <code>MultiIndex</code>.
+     *
+     * @return a new <code>PersistentIndex</code>.
+     * @throws IOException if a new index cannot be created.
+     */
+    synchronized PersistentIndex createIndex() throws IOException {
+        File sub = newIndexFolder();
+        String name = sub.getName();
+        PersistentIndex index = new PersistentIndex(name, sub, true,
+                handler.getAnalyzer(), cache);
+        index.setMaxMergeDocs(handler.getMaxMergeDocs());
+        index.setMergeFactor(handler.getMergeFactor());
+        index.setMinMergeDocs(handler.getMinMergeDocs());
+        index.setUseCompoundFile(handler.getUseCompoundFile());
+        return index;
+    }
+
+    /**
+     * Replaces the indexes with names <code>obsoleteIndexes</code> with
+     * <code>index</code>. Documents that must be deleted in <code>index</code>
+     * can be identified with <code>Term</code>s in <code>deleted</code>.
+     *
+     * @param obsoleteIndexes the names of the indexes to replace.
+     * @param index      the new index that is the result of a merge of the
+     *                   indexes to replace.
+     * @param deleted    <code>Term</code>s that identify documents that must be
+     *                   deleted in <code>index</code>.
+     * @throws IOException if an exception occurs while replacing the indexes.
+     */
+    synchronized void replaceIndexes(String[] obsoleteIndexes,
+                                     PersistentIndex index,
+                                     Collection deleted)
+            throws IOException {
+        Set names = new HashSet(Arrays.asList(obsoleteIndexes));
+        // delete documents in index
+        for (Iterator it = deleted.iterator(); it.hasNext(); ) {
+            Term id = (Term) it.next();
+            int del = index.removeDocument(id);
+            log.error("deleted " + del + " document for id: " + id.text());
+        }
+        index.commit();
+
+        // now replace indexes
+        synchronized (updateMonitor) {
+            updateInProgress = true;
+        }
+        try {
+            for (Iterator it = indexes.iterator(); it.hasNext(); ) {
+                PersistentIndex idx = (PersistentIndex) it.next();
+                if (names.contains(idx.getName())) {
+                    it.remove();
+                    indexNames.removeName(idx.getName());
+                    idx.close();
+                    deleteIndex(idx);
+                }
+            }
+            // add new
+            indexes.add(index);
+            indexNames.addName(index.getName());
+            merger.indexAdded(index.getName(), index.getNumDocuments());
+            indexNames.write(indexDir);
+        } finally {
+            synchronized (updateMonitor) {
+                updateInProgress = false;
+                updateMonitor.notifyAll();
+                if (multiReader != null) {
+                    multiReader.close();
+                    multiReader = null;
+                }
+            }
+        }
+    }
+
+    /**
      * Returns an read-only <code>IndexReader</code> that spans alls indexes of this
      * <code>MultiIndex</code>.
      *
@@ -383,29 +527,37 @@ class MultiIndex {
     /**
      * Closes this <code>MultiIndex</code>.
      */
-    synchronized void close() {
-        // stop timer
-        commitTimer.cancel();
+    void close() {
 
-        // commit / close indexes
-        if (multiReader != null) {
+        // stop index merger
+        // when calling this method we must not lock this MultiIndex, otherwise
+        // a deadlock might occur
+        merger.dispose();
+
+        synchronized (this) {
+            // stop timer
+            commitTimer.cancel();
+
+            // commit / close indexes
+            if (multiReader != null) {
+                try {
+                    multiReader.close();
+                } catch (IOException e) {
+                    log.error("Exception while closing search index.", e);
+                }
+                multiReader = null;
+            }
             try {
-                multiReader.close();
+                if (volatileIndex.getRedoLog().hasEntries()) {
+                    commit();
+                }
             } catch (IOException e) {
                 log.error("Exception while closing search index.", e);
             }
-            multiReader = null;
-        }
-        try {
-            if (volatileIndex.getRedoLog().hasEntries()) {
-                commit();
+            volatileIndex.close();
+            for (int i = 0; i < indexes.size(); i++) {
+                ((PersistentIndex) indexes.get(i)).close();
             }
-        } catch (IOException e) {
-            log.error("Exception while closing search index.", e);
-        }
-        volatileIndex.close();
-        for (int i = 0; i < indexes.size(); i++) {
-            ((PersistentIndex) indexes.get(i)).close();
         }
     }
 
@@ -435,6 +587,29 @@ class MultiIndex {
      */
     boolean getRedoLogApplied() {
         return redoLogApplied;
+    }
+
+    /**
+     * Deletes the <code>index</code>. If the index directory cannot be removed
+     * because (windows) file handles are still open, the directory is marked
+     * for future deletion.
+     * <p/>
+     * This method does not close the index, but rather expects that the index
+     * has already been closed.
+     *
+     * @param index the index to delete.
+     */
+    void deleteIndex(PersistentIndex index) {
+        File dir = new File(indexDir, index.getName());
+        if (!deleteIndex(dir)) {
+            // try again later
+            deletable.addName(index.getName());
+        }
+        try {
+            deletable.write(indexDir);
+        } catch (IOException e) {
+            log.warn("Exception while writing deletable indexes: " + e);
+        }
     }
 
     //-------------------------< internal >-------------------------------------
@@ -502,12 +677,14 @@ class MultiIndex {
             index.setMergeFactor(handler.getMergeFactor());
             index.setMinMergeDocs(handler.getMinMergeDocs());
             index.setUseCompoundFile(handler.getUseCompoundFile());
-            index.mergeIndex(volatileIndex);
+            index.copyIndex(volatileIndex);
 
             // if merge has been successful add index
             indexes.add(index);
             indexNames.addName(name);
             indexNames.write(indexDir);
+
+            merger.indexAdded(index.getName(), index.getNumDocuments());
 
             // check if obsolete indexes can be deleted
             // todo move to other place?
@@ -515,8 +692,17 @@ class MultiIndex {
         }
 
         // commit persistent indexes
-        for (int i = 0; i < indexes.size(); i++) {
-            ((PersistentIndex) indexes.get(i)).commit();
+        for (int i = indexes.size() - 1; i >= 0; i--) {
+            PersistentIndex index = (PersistentIndex) indexes.get(i);
+            index.commit();
+            // check if index still contains documents
+            if (index.getNumDocuments() == 0) {
+                indexes.remove(i);
+                indexNames.removeName(index.getName());
+                indexNames.write(indexDir);
+                index.close();
+                deleteIndex(index);
+            }
         }
 
         // reset redo log
@@ -524,10 +710,9 @@ class MultiIndex {
 
         // create new volatile index
         volatileIndex = new VolatileIndex(handler.getAnalyzer(), volatileIndex.getRedoLog());
-        volatileIndex.setUseCompoundFile(false);
+        volatileIndex.setUseCompoundFile(handler.getUseCompoundFile());
         volatileIndex.setBufferSize(handler.getBufferSize());
 
-        maybeMergeIndexes();
     }
 
     /**
@@ -609,106 +794,6 @@ class MultiIndex {
                 break;
             }
         }
-    }
-
-    /**
-     * Merges multiple persistent index into a single one according to the
-     * properties: {@link SearchIndex#setMaxMergeDocs(int)}, {@link
-     * SearchIndex#setMergeFactor(int)} and {@link SearchIndex#setMinMergeDocs(int)}.
-     *
-     * @throws IOException if an error occurs during the merge.
-     */
-    private void maybeMergeIndexes() throws IOException {
-        // remove unused indexes
-        for (int i = indexes.size() - 1; i >= 0; i--) {
-            PersistentIndex index = (PersistentIndex) indexes.get(i);
-            if (!index.hasDocuments()) {
-                indexes.remove(i);
-                indexNames.removeName(index.getName());
-                indexNames.write(indexDir);
-                index.close();
-                File dir = new File(indexDir, index.getName());
-                if (!deleteIndex(dir)) {
-                    // try again later
-                    deletable.addName(index.getName());
-                    deletable.write(indexDir);
-                }
-            }
-        }
-
-        // only check for merge if there are more than mergeFactor indexes
-        if (indexes.size() >= handler.getMergeFactor()) {
-            long targetMergeDocs = handler.getMinMergeDocs();
-            while (targetMergeDocs <= handler.getMaxMergeDocs()) {
-                // find index smaller or equal than current target size
-                int minIndex = indexes.size();
-                int mergeDocs = 0;
-                while (--minIndex >= 0) {
-                    PersistentIndex index = (PersistentIndex) indexes.get(minIndex);
-                    int numDocs = index.getIndexReader().numDocs();
-                    if (numDocs > targetMergeDocs) {
-                        break;
-                    }
-                    mergeDocs += numDocs;
-                }
-
-                if (indexes.size() - (minIndex + 1) >= handler.getMergeFactor()
-                        && mergeDocs < handler.getMaxMergeDocs()) {
-                    // found a merge to do
-                    mergeIndex(minIndex + 1);
-                } else {
-                    break;
-                }
-                // increase target size
-                targetMergeDocs *= handler.getMergeFactor();
-            }
-        }
-    }
-
-    /**
-     * Merges indexes <code>indexes.get(i)</code> to <code>indexes.get(indexes.size()
-     * - 1)</code> into a new persistent index.
-     *
-     * @param min the min position inside the indexes list.
-     * @throws IOException if an error occurs while merging.
-     */
-    private void mergeIndex(int min) throws IOException {
-        // create new index
-        File sub = newIndexFolder();
-        String name = sub.getName();
-        PersistentIndex index = new PersistentIndex(name, sub, true,
-                handler.getAnalyzer(), cache);
-        index.setMaxMergeDocs(handler.getMaxMergeDocs());
-        index.setMergeFactor(handler.getMergeFactor());
-        index.setMinMergeDocs(handler.getMinMergeDocs());
-        index.setUseCompoundFile(handler.getUseCompoundFile());
-
-        // the indexes to merge
-        List toMerge = indexes.subList(min, indexes.size());
-        IndexReader[] readers = new IndexReader[toMerge.size()];
-        for (int i = 0; i < toMerge.size(); i++) {
-            readers[i] = ((PersistentIndex) toMerge.get(i)).getIndexReader();
-        }
-        // do the merge
-        index.getIndexWriter().addIndexes(readers);
-        index.getIndexWriter().optimize();
-        // close and remove obsolete indexes
-
-        for (int i = indexes.size() - 1; i >= min; i--) {
-            PersistentIndex pi = (PersistentIndex) indexes.get(i);
-            pi.close();
-            File dir = new File(indexDir, pi.getName());
-            if (!deleteIndex(dir)) {
-                // try again later
-                deletable.addName(pi.getName());
-            }
-            indexNames.removeName(pi.getName());
-            indexes.remove(i);
-        }
-        indexNames.addName(name);
-        indexes.add(index);
-        indexNames.write(indexDir);
-        deletable.write(indexDir);
     }
 
     /**
