@@ -20,7 +20,10 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.InputStream;
+import org.apache.lucene.store.OutputStream;
 
 import java.io.IOException;
 import java.io.File;
@@ -45,6 +48,12 @@ class PersistentIndex extends AbstractIndex {
 
     /** Set to <code>true</code> if this index encountered locks on startup */
     private boolean lockEncountered = false;
+
+    /**
+     * If non <code>null</code>, <code>listener</code> needs to be informed
+     * when a document is deleted.
+     */
+    private IndexListener listener;
 
     /**
      * Creates a new <code>PersistentIndex</code> based on the file system
@@ -86,6 +95,17 @@ class PersistentIndex extends AbstractIndex {
     }
 
     /**
+     * @inheritDoc
+     */
+    int removeDocument(Term idTerm) throws IOException {
+        int num = super.removeDocument(idTerm);
+        if (num > 0 && listener != null) {
+            listener.documentDeleted(idTerm);
+        }
+        return num;
+    }
+
+    /**
      * Returns <code>true</code> if this index encountered a lock on the file
      * system during startup. This indicates a unclean shutdown.
      *
@@ -115,23 +135,87 @@ class PersistentIndex extends AbstractIndex {
     }
 
     /**
-     * Returns <code>true</code> if this index has valid documents. Returns
-     * <code>false</code> if all documents are deleted, or the index does not
-     * contain any documents.
-     * @return
-     * @throws IOException
+     * Merges the provided indexes into this index. After this completes, the
+     * index is optimized.
+     * <p/>
+     * The provided IndexReaders are not closed.
+     *
+     * @param readers the readers of indexes to add.
+     * @throws IOException if an error occurs while adding indexes.
      */
-    boolean hasDocuments() throws IOException {
-        if (getIndexReader().numDocs() == 0) {
-            return false;
-        }
-        IndexReader reader = getIndexReader();
-        for (int i = 0; i < reader.maxDoc(); i++) {
-            if (!reader.isDeleted(i)) {
-                return true;
+    void addIndexes(IndexReader[] readers) throws IOException {
+        getIndexWriter().addIndexes(readers);
+        getIndexWriter().optimize();
     }
+
+    /**
+     * Copies <code>index</code> into this persistent index. This method should
+     * only be called when <code>this</code> index is empty otherwise the
+     * behaviour is undefined.
+     *
+     * @param index the index to copy from.
+     * @throws IOException if an error occurs while copying.
+     */
+    void copyIndex(AbstractIndex index) throws IOException {
+        // commit changes to directory on other index.
+        index.commit(true);
+        // simply copy over the files
+        byte[] buffer = new byte[1024];
+        Directory dir = index.getDirectory();
+        Directory dest = getDirectory();
+        String[] files = dir.list();
+        for (int i = 0; i < files.length; i++) {
+            InputStream in = dir.openFile(files[i]);
+            try {
+                OutputStream out = dest.createFile(files[i]);
+                try {
+                    long remaining = in.length();
+                    while (remaining > 0) {
+                        int num = (int) Math.min(remaining, buffer.length);
+                        in.readBytes(buffer, 0, num);
+                        out.writeBytes(buffer, num);
+                        remaining -= num;
+                    }
+                } finally {
+                    out.close();
+                }
+            } finally {
+                in.close();
+            }
         }
-        return false;
+    }
+
+    /**
+     * Returns a <code>ReadOnlyIndexReader</code> and registeres
+     * <code>listener</code> to send notifications when documents are deleted on
+     * <code>this</code> index.
+     *
+     * @param listener the listener to notify when documents are deleted.
+     * @return a <code>ReadOnlyIndexReader</code>.
+     * @throws IOException if the reader cannot be obtained.
+     */
+    synchronized ReadOnlyIndexReader getReadOnlyIndexReader(IndexListener listener)
+            throws IOException {
+        ReadOnlyIndexReader reader = getReadOnlyIndexReader();
+        this.listener = listener;
+        return reader;
+    }
+
+    /**
+     * Removes a potentially registered {@link IndexListener}.
+     */
+    synchronized void resetListener() {
+        this.listener = null;
+    }
+
+    /**
+     * Returns the number of documents in this persistent index.
+     *
+     * @return the number of documents in this persistent index.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    int getNumDocuments() throws IOException {
+        return getIndexReader().numDocs();
     }
 
     /**
