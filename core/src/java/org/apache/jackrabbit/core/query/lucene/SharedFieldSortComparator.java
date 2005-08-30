@@ -12,6 +12,13 @@ import java.io.IOException;
 /**
  * Implements a <code>SortComparator</code> which knows how to sort on a lucene
  * field that contains values for multiple properties.
+ * <p/>
+ * <b>Important:</b> The ScoreDocComparator returned by {@link #newComparator}
+ * does not implement the contract for {@link ScoreDocComparator#sortValue(ScoreDoc)}
+ * properly. The method will always return an empty String to save memory consumption
+ * on large property ranges. Those values are only of relevance when queries
+ * are executed with a <code>MultiSearcher</code>, which is currently not the
+ * case in Jackrabbit.
  */
 class SharedFieldSortComparator extends SortComparator {
 
@@ -43,7 +50,7 @@ class SharedFieldSortComparator extends SortComparator {
      * @return a <code>ScoreDocComparator</code> for the
      * @throws IOException
      */
-    public ScoreDocComparator newComparator(IndexReader reader, String propertyName)
+    public ScoreDocComparator newComparator(final IndexReader reader, String propertyName)
             throws IOException {
         // get the StringIndex for propertyName
         final FieldCache.StringIndex index
@@ -51,20 +58,26 @@ class SharedFieldSortComparator extends SortComparator {
                         propertyName, SharedFieldSortComparator.this);
 
         return new ScoreDocComparator() {
-            public final int compare (final ScoreDoc i, final ScoreDoc j) {
-              final int fi = index.order[i.doc];
-              final int fj = index.order[j.doc];
-              if (fi < fj) {
-                  return -1;
-              } else if  (fi > fj) {
-                  return 1;
-              } else {
-                  return 0;
-              }
+            public final int compare(final ScoreDoc i, final ScoreDoc j) {
+                final int fi = index.order[i.doc];
+                final int fj = index.order[j.doc];
+                if (fi < fj) {
+                    return -1;
+                } else if (fi > fj) {
+                    return 1;
+                } else {
+                    return 0;
+                }
             }
 
-            public Comparable sortValue (final ScoreDoc i) {
-              return index.lookup[index.order[i.doc]];
+            /**
+             * Always returns an empty String.
+             * @param i the score doc.
+             * @return an empty String.
+             */
+            public Comparable sortValue(final ScoreDoc i) {
+                // return dummy value
+                return "";
             }
 
             public int sortType() {
