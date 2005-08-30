@@ -884,7 +884,7 @@ public class NodeImpl extends ItemImpl implements Node {
         return session.getNodeTypeManager().getPropertyDefinition(pd.getId());
     }
 
-    protected void makePersistent() {
+    protected void makePersistent() throws InvalidItemStateException {
         if (!isTransient()) {
             log.debug(safeGetJCRPath() + " (" + id + "): there's no transient state to persist");
             return;
@@ -899,6 +899,13 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         synchronized (persistentState) {
+            // check staleness of transient state first
+            if (transientState.isStale()) {
+                String msg = safeGetJCRPath()
+                        + ": the node cannot be saved because it has been modified externally.";
+                log.debug(msg);
+                throw new InvalidItemStateException(msg);
+            }
             // copy state from transient state:
             // parent uuid's
             persistentState.setParentUUID(transientState.getParentUUID());

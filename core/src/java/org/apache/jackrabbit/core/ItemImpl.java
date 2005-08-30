@@ -170,7 +170,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
 
     protected abstract ItemState getOrCreateTransientItemState() throws RepositoryException;
 
-    protected abstract void makePersistent();
+    protected abstract void makePersistent() throws InvalidItemStateException;
 
     /**
      * Marks this instance as 'removed' and notifies its listeners.
@@ -324,7 +324,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
         ArrayList dirty = new ArrayList();
         ItemState transientState;
 
-        // check status of this item's state
+        // fail-fast test: check status of this item's state
         if (isTransient()) {
             switch (state.getStatus()) {
                 case ItemState.STATUS_EXISTING_MODIFIED:
@@ -376,6 +376,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
+                // fail-fast test: check status of transient state
                 switch (transientState.getStatus()) {
                     case ItemState.STATUS_NEW:
                     case ItemState.STATUS_EXISTING_MODIFIED:

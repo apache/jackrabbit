@@ -196,14 +196,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Determines whether this item state has become stale.
-     * @return true if this item state has become stale, false otherwise.
-     */
-    boolean isStale() {
-        return overlayedState != null && modCount != overlayedState.getModCount();
-    }
-
-    /**
      * Called by <code>TransientItemStateManager</code> and
      * <code>LocalItemStateManager</code> when this item state has been disposed.
      */
@@ -339,6 +331,20 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     public boolean isTransient() {
         return isTransient;
 
+    }
+
+    /**
+     * Determines whether this item state has become stale.
+     * @return true if this item state has become stale, false otherwise.
+     */
+    public boolean isStale() {
+        if (isTransient) {
+            return status == STATUS_STALE_MODIFIED
+                    || status == STATUS_STALE_DESTROYED;
+        } else {
+            return overlayedState != null
+                    && modCount != overlayedState.getModCount();
+        }
     }
 
     /**
