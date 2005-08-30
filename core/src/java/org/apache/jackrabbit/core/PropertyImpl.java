@@ -40,6 +40,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
@@ -98,7 +99,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         return state;
     }
 
-    protected void makePersistent() {
+    protected void makePersistent() throws InvalidItemStateException {
         if (!isTransient()) {
             log.debug(safeGetJCRPath() + " (" + id + "): there's no transient state to persist");
             return;
@@ -112,6 +113,13 @@ public class PropertyImpl extends ItemImpl implements Property {
         }
 
         synchronized (persistentState) {
+            // check staleness of transient state first
+            if (transientState.isStale()) {
+                String msg = safeGetJCRPath()
+                        + ": the property cannot be saved because it has been modified externally.";
+                log.debug(msg);
+                throw new InvalidItemStateException(msg);
+            }
             // copy state from transient state
             persistentState.setDefinitionId(transientState.getDefinitionId());
             persistentState.setType(transientState.getType());
