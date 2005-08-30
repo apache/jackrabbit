@@ -223,8 +223,8 @@ abstract class AbstractIndex {
     /**
      * Commits all pending changes to the underlying <code>Directory</code>.
      *
-     * @param optimize if <code>true</code> the index is optimized after after
-     *                 the commit.
+     * @param optimize if <code>true</code> the index is optimized after the
+     *                 commit.
      * @throws IOException if an error occurs while commiting changes.
      */
     protected synchronized void commit(boolean optimize) throws IOException {
