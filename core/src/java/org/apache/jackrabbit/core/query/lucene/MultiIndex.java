@@ -452,7 +452,7 @@ class MultiIndex {
         for (Iterator it = deleted.iterator(); it.hasNext(); ) {
             Term id = (Term) it.next();
             int del = index.removeDocument(id);
-            log.error("deleted " + del + " document for id: " + id.text());
+            log.debug("deleted " + del + " document for id: " + id.text());
         }
         index.commit();
 
