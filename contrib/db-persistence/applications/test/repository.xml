@@ -166,16 +166,14 @@
             class: FQN of class implementing the FileSystem interface
         -->
         <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-            <param name="path" value="${wsp.home}/data"/>
+            <param name="path" value="${wsp.home}"/>
         </FileSystem>
         <!--
             persistence manager of the workspace:
             class: FQN of class implementing the PersistenceManager interface
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager">
-          <param name="driver" value="com.mysql.jdbc.Driver"/>
-          <param name="url" value="jdbc:mysql:///test"/>
-          <param name="schema" value="mysql"/>
+        <PersistenceManager class="org.apache.jackrabbit.core.state.db.DerbyPersistenceManager">
+          <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
           <param name="schemaObjectPrefix" value="${wsp.name}_"/>
         </PersistenceManager>
         <!--
@@ -205,10 +203,8 @@
             a 'normal' persistence manager, but this could change in future
             implementations.
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager">
-          <param name="driver" value="com.mysql.jdbc.Driver"/>
-          <param name="url" value="jdbc:mysql:///test"/>
-          <param name="schema" value="mysql"/>
+        <PersistenceManager class="org.apache.jackrabbit.core.state.db.DerbyPersistenceManager">
+          <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
           <param name="schemaObjectPrefix" value="version_"/>
         </PersistenceManager>
 
