@@ -136,10 +136,12 @@ class VolatileIndex extends AbstractIndex {
     /**
      * Overwrites the implementation in {@link AbstractIndex} to commit
      * pending documents.
+     * @param optimize if <code>true</code> the index is optimized after the
+     *                 commit.
      */
-    protected synchronized void commit() throws IOException {
+    protected synchronized void commit(boolean optimize) throws IOException {
         commitPending();
-        super.commit();
+        super.commit(optimize);
     }
 
     /**
