@@ -67,13 +67,13 @@ abstract class AbstractIndex {
     private boolean useCompoundFile = true;
 
     /** minMergeDocs config parameter */
-    private int minMergeDocs = 1000;
+    private int minMergeDocs = SearchIndex.DEFAULT_MIN_MERGE_DOCS;
 
     /** maxMergeDocs config parameter */
-    private int maxMergeDocs = 10000;
+    private int maxMergeDocs = SearchIndex.DEFAULT_MAX_MERGE_DOCS;
 
     /** mergeFactor config parameter */
-    private int mergeFactor = 10;
+    private int mergeFactor = SearchIndex.DEFAULT_MERGE_FACTOR;
 
     /**
      * The document number cache if this index may use one.
@@ -245,6 +245,8 @@ abstract class AbstractIndex {
         if (optimize) {
             IndexWriter writer = getIndexWriter();
             writer.optimize();
+            writer.close();
+            indexWriter = null;
         }
     }
 
