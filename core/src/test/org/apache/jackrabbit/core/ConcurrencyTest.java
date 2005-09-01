@@ -28,7 +28,7 @@ import java.util.Iterator;
 public class ConcurrencyTest extends AbstractJCRTest {
 
     private static final int NUM_ITERATIONS = 2;
-    private static final int NUM_SESSIONS = 5;
+    private static final int NUM_SESSIONS = 100;
     private static final int NUM_NODES = 100;
 
     final ArrayList exceptions = new ArrayList();
@@ -145,6 +145,7 @@ public class ConcurrencyTest extends AbstractJCRTest {
                 session.save();
             } catch (Exception e) {
                 log.println("Exception while " + state + ": " + e.getMessage());
+                //e.printStackTrace();
                 exceptions.add(e);
             } finally {
                 session.logout();

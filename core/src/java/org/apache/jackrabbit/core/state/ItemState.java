@@ -203,6 +203,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
         // prepare this instance so it can be gc'ed
         listeners.clear();
         disconnect();
+        overlayedState = null;
         status = STATUS_UNDEFINED;
     }
 
@@ -211,9 +212,22 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected void connect(ItemState overlayedState) {
         if (this.overlayedState != null) {
-            throw new IllegalStateException("Item state already connected: " + this);
+            if (this.overlayedState != overlayedState) {
+                throw new IllegalStateException("Item state already connected to another underlying state: " + this);
+            }
         }
         this.overlayedState = overlayedState;
+        this.overlayedState.addListener(this);
+    }
+
+    /**
+     * Reconnect this state to the overlayed state that it has been
+     * disconnected from earlier.
+     */
+    protected void reconnect() {
+        if (this.overlayedState == null) {
+            throw new IllegalStateException("Item state cannot be reconnected because there's no underlying state to reconnect to: " + this);
+        }
         this.overlayedState.addListener(this);
     }
 
@@ -222,8 +236,12 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected void disconnect() {
         if (overlayedState != null) {
+            // de-register listener on overlayed state...
             overlayedState.removeListener(this);
-            overlayedState = null;
+            // ...but still keep reference to overlayed state to allow
+            // reconnecting at a later stage and to make sure
+            // it is not accidentally collected by the gc
+            //overlayedState = null;
         }
     }
 
