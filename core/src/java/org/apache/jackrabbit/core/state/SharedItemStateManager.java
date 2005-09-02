@@ -35,7 +35,6 @@ import org.apache.log4j.Logger;
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.io.PrintStream;
 
@@ -329,10 +328,6 @@ public class SharedItemStateManager
 
         ChangeLog shared = new ChangeLog();
 
-        // set of virtual node references
-        // todo: remember by provider
-        ArrayList virtualRefs = new ArrayList();
-
         EventStateCollection events = null;
         if (obsMgr != null) {
             events = obsMgr.createEventStateCollection();
@@ -351,25 +346,14 @@ public class SharedItemStateManager
             while (iter.hasNext()) {
                 NodeReferences refs = (NodeReferences) iter.next();
                 NodeId id = new NodeId(refs.getUUID());
-                // if targetid is in virtual provider, transfer to its modified set
-                for (int i = 0; i < virtualProviders.length; i++) {
-                    VirtualItemStateProvider provider = virtualProviders[i];
-                    if (provider.hasItemState(id)) {
-                        virtualRefs.add(refs);
-                        refs = null;
-                        break;
+                if (refs.hasReferences()) {
+                    if (!local.has(id) && !hasItemState(id)) {
+                        String msg = "Target node " + id
+                                + " of REFERENCE property does not exist";
+                        throw new ItemStateException(msg);
                     }
                 }
-                if (refs != null) {
-                    if (refs.hasReferences()) {
-                        if (!local.has(id) && !hasItemState(id)) {
-                            String msg = "Target node " + id
-                                    + " of REFERENCE property does not exist";
-                            throw new ItemStateException(msg);
-                        }
-                    }
-                    shared.modified(refs);
-                }
+                shared.modified(refs);
             }
 
             boolean succeeded = false;
@@ -464,18 +448,6 @@ public class SharedItemStateManager
 
             /* Let the shared item listeners know about the change */
             shared.persisted();
-
-            /* notify virtual providers about node references */
-            iter = virtualRefs.iterator();
-            while (iter.hasNext()) {
-                NodeReferences refs = (NodeReferences) iter.next();
-                // if targetid is in virtual provider, transfer to its modified set
-                for (int i = 0; i < virtualProviders.length; i++) {
-                    if (virtualProviders[i].setNodeReferences(refs)) {
-                        break;
-                    }
-                }
-            }
 
             // downgrade to read lock
             acquireReadLock();

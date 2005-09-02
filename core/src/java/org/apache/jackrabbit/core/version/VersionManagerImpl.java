@@ -67,8 +67,7 @@ import java.util.LinkedList;
 /**
  * This Class implements a VersionManager.
  */
-public class VersionManagerImpl implements VersionManager,
-        VirtualItemStateProvider, Constants {
+public class VersionManagerImpl implements VersionManager, Constants {
 
     /**
      * the default logger
@@ -89,6 +88,11 @@ public class VersionManagerImpl implements VersionManager,
      * the state manager for the version storage
      */
     private LocalItemStateManager stateMgr;
+
+    /**
+     * the virtual item state provider that exposes the version storage
+     */
+    private final VersionItemStateProvider versProvider;
 
     /**
      * the persistent root node of the version histories
@@ -151,20 +155,20 @@ public class VersionManagerImpl implements VersionManager,
             stateMgr = new LocalItemStateManager(sharedStateMgr, null);
             NodeState nodeState = (NodeState) stateMgr.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID));
             historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, JCR_VERSIONSTORAGE);
+
+            // create the virtual item state provider
+            versProvider = new VersionItemStateProvider(this, sharedStateMgr);
+
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
     }
 
     /**
-     * returns the virtual item state provider that exposes the internal versions
-     * as items.
-     *
-     * @param base
-     * @return
+     * {@inheritDoc}
      */
-    public synchronized ItemStateManager getItemStateProvider(ItemStateManager base) {
-        return stateMgr;
+    public VirtualItemStateProvider getVirtualItemStateProvider() {
+        return versProvider;
     }
 
     /**
@@ -748,13 +752,6 @@ public class VersionManagerImpl implements VersionManager,
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public VirtualItemStateProvider getVirtualItemStateProvider() {
-        return this;
-    }
-
-    /**
      * invalidates the item
      *
      * @param id
@@ -780,94 +777,13 @@ public class VersionManagerImpl implements VersionManager,
     }
 
 
-    //--------------------------------------------------------------------------
-    //--------------------------------------------------------------------------
-
-    public boolean isVirtualRoot(ItemId id) {
-        return id.equals(historyRoot.getState().getId());
-    }
-
-    public NodeId getVirtualRootId() {
+    /**
+     * returns the id of the version history root node
+     *
+     * @return the id of the version history root node
+     */
+    NodeId getHistoryRootId() {
         return (NodeId) historyRoot.getState().getId();
     }
 
-    public VirtualPropertyState createPropertyState(VirtualNodeState parent, QName name, int type, boolean multiValued) throws RepositoryException {
-        throw new IllegalStateException("VersionManager should never create a VirtualPropertyState");
-    }
-
-    public VirtualNodeState createNodeState(VirtualNodeState parent, QName name, String uuid, QName nodeTypeName) throws RepositoryException {
-        throw new IllegalStateException("VersionManager should never create a VirtualNodeState");
-    }
-
-    public boolean setNodeReferences(NodeReferences refs) {
-        try {
-            InternalVersionItem item = getItem(refs.getTargetId().getUUID());
-            setItemReferences(item, refs.getReferences());
-            return true;
-        } catch (RepositoryException e) {
-            log.error("Error while setting references: " + e.toString());
-            return false;
-        }
-    }
-
-    public synchronized ItemState getItemState(ItemId id)
-            throws NoSuchItemStateException, ItemStateException {
-        ItemState item = (ItemState) items.get(id);
-        if (item == null) {
-            item = stateMgr.getItemState(id);
-            items.put(id, item);
-
-            // special check for successors
-            if (item instanceof PropertyState) {
-                PropertyState prop = (PropertyState) item;
-                if (prop.getName().equals(JCR_SUCCESSORS)) {
-                    try {
-                        InternalVersion v = getVersion(prop.getParentUUID());
-                        if (v != null) {
-                            InternalVersion[] succs = v.getSuccessors();
-                            InternalValue[] succV = new InternalValue[succs.length];
-                            for (int i = 0; i < succs.length; i++) {
-                                succV[i] = InternalValue.create(new UUID(succs[i].getId()));
-                            }
-                            prop.setValues(succV);
-                        }
-                    } catch (RepositoryException e) {
-                        log.warn("Unable to resolve jcr:successors property for " + id);
-                    }
-                }
-            }
-        }
-        return item;
-    }
-
-    public boolean hasItemState(ItemId id) {
-        return stateMgr.hasItemState(id);
-    }
-
-    public NodeReferences getNodeReferences(NodeReferencesId id)
-            throws NoSuchItemStateException, ItemStateException {
-        return stateMgr.getNodeReferences(id);
-    }
-
-    public boolean hasNodeReferences(NodeReferencesId id) {
-        return stateMgr.hasNodeReferences(id);
-    }
-
-    public void stateCreated(ItemState created) {
-        stateMgr.stateCreated(created);
-    }
-
-    public void stateModified(ItemState modified) {
-        stateMgr.stateModified(modified);
-    }
-
-    public void stateDestroyed(ItemState destroyed) {
-        items.remove(destroyed.getId());
-        stateMgr.stateDestroyed(destroyed);
-    }
-
-    public void stateDiscarded(ItemState discarded) {
-        items.remove(discarded.getId());
-        stateMgr.stateDiscarded(discarded);
-    }
 }
