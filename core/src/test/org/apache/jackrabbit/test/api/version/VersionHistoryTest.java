@@ -29,7 +29,6 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
@@ -602,13 +601,20 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.merge(String, boolean)</code> works as
-     * expected (do nothing and return quietly)
+     * Tests if <code>VersionHistory.merge(String)</code> throws an
+     * {@link javax.jcr.nodetype.ConstraintViolationException}
      */
     public void testMerge() throws Exception {
-        // should do nothing and return quietly
-        vHistory.merge(workspaceName, true);
-        vHistory.merge(workspaceName, false);
+        try {
+            vHistory.merge(workspaceName, true);
+            fail("VersionHistory.merge(String, true) did not throw an ConstraintViolationException");
+        } catch (ConstraintViolationException success) {
+        }
+        try {
+            vHistory.merge(workspaceName, false);
+            fail("VersionHistory.merge(String, false) did not throw an ConstraintViolationException");
+        } catch (ConstraintViolationException success) {
+        }
     }
 
     /**
@@ -617,9 +623,10 @@ public class VersionHistoryTest extends AbstractVersionTest {
      */
     public void testOrderBefore() throws Exception {
         try {
-            vHistory.orderBefore(version.getName(), null);
-            fail("VersionHistory.orderBefore(String,String) did not throw an UnsupportedRepositoryOperationException");
+            vHistory.orderBefore(jcrFrozenNode, null);
+            fail("VersionHistory.orderBefore(String,String) did not throw an UnsupportedRepositoryOperationException or a ConstraintViolationException");
         } catch (UnsupportedRepositoryOperationException success) {
+        } catch (ConstraintViolationException success) {
         }
     }
 
@@ -813,11 +820,15 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>VersionHistory.update(String)</code> works as expected (do
-     * nothing and return quietly)
+     * Tests if <code>VersionHistory.update(String)</code> throws an
+     * {@link javax.jcr.nodetype.ConstraintViolationException}
      */
     public void testUpdate() throws Exception {
-        // should do nothing and return quietly
-        vHistory.update(workspaceName);
+        try {
+            vHistory.update(workspaceName);
+            fail("VersionHistory.update(String) did not throw an ConstraintViolationException");
+        } catch (ConstraintViolationException success) {
+        }
     }
+
 }

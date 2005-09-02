@@ -478,13 +478,20 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.merge(String, boolean)</code> works as expected
-     * (do nothing and return quietly)
+     * Tests if <code>Version.merge(String)</code> throws an
+     * {@link javax.jcr.nodetype.ConstraintViolationException}
      */
     public void testMerge() throws Exception {
-        // should do nothing and return quietly
-        version.merge(workspaceName, true);
-        version.merge(workspaceName, false);
+        try {
+            version.merge(workspaceName, true);
+            fail("Version.merge(String, true) did not throw an ConstraintViolationException");
+        } catch (ConstraintViolationException success) {
+        }
+        try {
+            version.merge(workspaceName, false);
+            fail("Version.merge(String, false) did not throw an ConstraintViolationException");
+        } catch (ConstraintViolationException success) {
+        }
     }
 
     /**
@@ -494,8 +501,9 @@ public class VersionTest extends AbstractVersionTest {
     public void testOrderBefore() throws Exception {
         try {
             version.orderBefore(jcrFrozenNode, null);
-            fail("Version.orderBefore(String,String) did not throw an UnsupportedRepositoryOperationException");
+            fail("Version.orderBefore(String,String) did not throw an UnsupportedRepositoryOperationException or a ConstraintViolationException");
         } catch (UnsupportedRepositoryOperationException success) {
+        } catch (ConstraintViolationException success) {
         }
     }
 
@@ -690,11 +698,14 @@ public class VersionTest extends AbstractVersionTest {
     }
 
     /**
-     * Tests if <code>Version.update(String)</code> works as expected (do
-     * nothing and return quietly)
+     * Tests if <code>VersionHistory.update(String)</code> throws an
+     * {@link javax.jcr.nodetype.ConstraintViolationException}
      */
     public void testUpdate() throws Exception {
-        // should do nothing and return quietly
-        version.update(workspaceName);
+        try {
+            version.update(workspaceName);
+            fail("VersionHistory.update(String) did not throw an ConstraintViolationException");
+        } catch (ConstraintViolationException success) {
+        }
     }
 }

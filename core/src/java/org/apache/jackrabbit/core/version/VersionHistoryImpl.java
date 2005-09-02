@@ -19,18 +19,21 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.ItemLifeCycleListener;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.log4j.Logger;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.NodeIterator;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
@@ -40,6 +43,11 @@ import javax.jcr.version.VersionIterator;
  * This Class implements a version history that extends a node.
  */
 public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
+
+    /**
+     * the default logger.
+     */
+    private static Logger log = Logger.getLogger(VersionHistoryImpl.class);
 
     /**
      * the internal version history
@@ -283,5 +291,33 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public InternalVersionHistory getInternalVersionHistory() {
         return history;
+    }
+
+    //--------------------------------------< Overwrite "protected" methods >---
+
+
+    /**
+     * Always throws a {@link javax.jcr.nodetype.ConstraintViolationException} since this node
+     * is protected.
+     *
+     * @throws javax.jcr.nodetype.ConstraintViolationException
+     */
+    public void update(String srcWorkspaceName) throws ConstraintViolationException {
+        String msg = "update operation not allowed on a version history node: " + safeGetJCRPath();
+        log.debug(msg);
+        throw new ConstraintViolationException(msg);
+    }
+
+    /**
+     * Always throws a {@link javax.jcr.nodetype.ConstraintViolationException} since this node
+     * is protected.
+     *
+     * @throws javax.jcr.nodetype.ConstraintViolationException
+     */
+    public NodeIterator merge(String srcWorkspace, boolean bestEffort)
+            throws ConstraintViolationException {
+        String msg = "merge operation not allowed on a version history node: " + safeGetJCRPath();
+        log.debug(msg);
+        throw new ConstraintViolationException(msg);
     }
 }
