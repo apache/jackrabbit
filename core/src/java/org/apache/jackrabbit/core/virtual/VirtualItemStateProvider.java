@@ -74,14 +74,4 @@ public interface VirtualItemStateProvider extends ItemStateManager, ItemStateLis
                                             String uuid, QName nodeTypeName)
             throws RepositoryException;
 
-    /**
-     * Informs this provider that the node references to one of its states has
-     * changed.
-     *
-     * @param refs
-     * @return <code>true</code> if the reference target is one of its items.
-     */
-    boolean setNodeReferences(NodeReferences refs);
-
-
 }

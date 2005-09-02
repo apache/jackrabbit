@@ -393,13 +393,6 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, C
     /**
      * {@inheritDoc}
      */
-    public boolean setNodeReferences(NodeReferences refs) {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public void stateCreated(ItemState created) {
     }
 
