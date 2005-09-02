@@ -105,8 +105,29 @@ public class EffectiveNodeType implements Cloneable {
         ent.mergedNodeTypes.add(ntName);
         ent.allNodeTypes.add(ntName);
 
+        // map of all item definitions (maps id to definition)
+        // used to effectively detect ambiguous child definitions where
+        // ambiguity is defined in terms of definition identity
+        HashMap itemDefIds = new HashMap();
+
         NodeDef[] cnda = ntd.getChildNodeDefs();
         for (int i = 0; i < cnda.length; i++) {
+            // check if child node definition would be ambiguous within
+            // this node type definition
+            if (itemDefIds.containsKey(cnda[i].getId())) {
+                // conflict
+                String msg;
+                if (cnda[i].definesResidual()) {
+                    msg = ntName + " contains ambiguous residual child node definitions";
+                } else {
+                    msg = ntName + " contains ambiguous definitions for child node named "
+                            + cnda[i].getName();
+                }
+                log.debug(msg);
+                throw new NodeTypeConflictException(msg);
+            } else {
+                itemDefIds.put(cnda[i].getId(), cnda[i]);
+            }
             if (cnda[i].definesResidual()) {
                 // residual node definition
                 ent.unnamedItemDefs.add(cnda[i]);
@@ -139,6 +160,22 @@ public class EffectiveNodeType implements Cloneable {
         }
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
+            // check if property definition would be ambiguous within
+            // this node type definition
+            if (itemDefIds.containsKey(pda[i].getId())) {
+                // conflict
+                String msg;
+                if (pda[i].definesResidual()) {
+                    msg = ntName + " contains ambiguous residual property definitions";
+                } else {
+                    msg = ntName + " contains ambiguous definitions for property named "
+                            + pda[i].getName();
+                }
+                log.debug(msg);
+                throw new NodeTypeConflictException(msg);
+            } else {
+                itemDefIds.put(pda[i].getId(), pda[i]);
+            }
             if (pda[i].definesResidual()) {
                 // residual property definition
                 ent.unnamedItemDefs.add(pda[i]);
@@ -1051,11 +1088,8 @@ public class EffectiveNodeType implements Cloneable {
                     }
                 }
             }
-            // @todo do further checks for ambiguous definitions & other conflicts
             unnamedItemDefs.add(def);
         }
-        // @todo implement further validations
-
         for (int i = 0; i < nta.length; i++) {
             allNodeTypes.add(nta[i]);
         }
