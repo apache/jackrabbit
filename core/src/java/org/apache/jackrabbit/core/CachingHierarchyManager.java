@@ -119,7 +119,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                     builder.addLast(elements[i]);
                 }
                 Path parentPath = builder.getPath();
-                cache(state, parentPath);
+                cache((NodeState) state, parentPath);
             } catch (MalformedPathException mpe) {
                 log.warn("Failed to build path of " + state.getId(), mpe);
             }
@@ -159,7 +159,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
         if (state.isNode()) {
             try {
-                cache(state, builder.getPath());
+                cache((NodeState) state, builder.getPath());
             } catch (MalformedPathException mpe) {
                 log.warn("Failed to build path of " + state.getId());
             }
@@ -271,6 +271,42 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
+        stateModified((NodeState) modified);
+    }
+
+    /**
+     * Evict moved or renamed items from the cache.
+     */
+    private void stateModified(NodeState modified) {
+        synchronized (cacheMonitor) {
+            LRUEntry entry = (LRUEntry) idCache.get(modified.getId());
+            if (entry == null) {
+                // Item not cached, ignore
+                return;
+            }
+
+            PathMap.Element element = entry.getElement();
+
+            Iterator iter = element.getChildren();
+            while (iter.hasNext()) {
+                PathMap.Element child = (PathMap.Element) iter.next();
+                NodeState.ChildNodeEntry cne = modified.getChildNodeEntry(
+                        child.getName(), child.getIndex() + 1);
+                if (cne == null) {
+                    // Item does not exist, remove
+                    child.remove();
+                    evict(child);
+                    return;
+                }
+
+                LRUEntry childEntry = (LRUEntry) child.get();
+                if (childEntry != null && !cne.getUUID().equals(childEntry.getUUID())) {
+                    // Different child item, remove
+                    child.remove();
+                    evict(child);
+                }
+            }
+        }
     }
 
     /**
@@ -430,11 +466,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * Cache an item in the hierarchy given its id and path. Adds a listener
      * for this item state to get notified about changes.
      *
-     * @param state item state, may be <code>null</code>
+     * @param state node state
      * @param path  path to item
      */
-    private void cache(ItemState state, Path path) {
-        ItemId id = state.getId();
+    private void cache(NodeState state, Path path) {
+        NodeId id = (NodeId) state.getId();
 
         synchronized (cacheMonitor) {
             if (idCache.get(id) != null) {
@@ -602,9 +638,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         private LRUEntry next;
 
         /**
-         * Item id
+         * Node id
          */
-        private final ItemId id;
+        private final NodeId id;
 
         /**
          * Element in path map
@@ -614,9 +650,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         /**
          * Create a new instance of this class
          *
-         * @param id item id
+         * @param id node id
          */
-        public LRUEntry(ItemId id, PathMap.Element element) {
+        public LRUEntry(NodeId id, PathMap.Element element) {
             this.id = id;
             this.element = element;
 
@@ -683,12 +719,21 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         }
 
         /**
-         * Return item ID
+         * Return node ID
          *
-         * @return item ID
+         * @return node ID
          */
-        public ItemId getId() {
+        public NodeId getId() {
             return id;
+        }
+
+        /**
+         * Return node UUID.
+         *
+         * @return node UUID
+         */
+        public String getUUID() {
+            return id.getUUID();
         }
 
         /**

@@ -479,6 +479,28 @@ public class PathMap {
         public int getChildrenCount() {
             return childrenCount;
         }
+
+        /**
+         * Return an iterator over all of this element's children. Every
+         * element returned by this iterator is of type {@link #Element}.
+         */
+        public Iterator getChildren() {
+            ArrayList result = new ArrayList();
+
+            if (children != null) {
+                Iterator iter = children.values().iterator();
+                while (iter.hasNext()) {
+                    ArrayList list = (ArrayList) iter.next();
+                    for (int i = 0; i < list.size(); i++) {
+                        Element element = (Element) list.get(i);
+                        if (element != null) {
+                            result.add(element);
+                        }
+                    }
+                }
+            }
+            return result.iterator();
+        }
     }
 
     /**

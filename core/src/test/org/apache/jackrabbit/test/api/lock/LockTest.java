@@ -609,6 +609,39 @@ public class LockTest extends AbstractJCRTest {
     }
 
     /**
+     * Tests if move preserves lock state (JIRA issue JCR-207). A node that has
+     * been locked must still appear locked when it has been moved or renamed,
+     * regardless whether the changes have already been made persistent.
+     */
+    public void testMoveLocked() throws Exception {
+        Session session = testRootNode.getSession();
+
+        // create two nodes, parent and child
+        Node testNode1 = testRootNode.addNode(nodeName1);
+        testNode1.addMixin(mixLockable);
+        Node testNode2 = testNode1.addNode(nodeName2);
+        testNode2.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock child node
+        testNode2.lock(false, true);
+
+        // assert: child node locked
+        assertTrue("Child node locked", testNode2.isLocked());
+
+        // move child node up
+        String newPath = testRootNode.getPath() + "/" + testNode2.getName();
+        session.move(testNode2.getPath(), newPath);
+
+        // assert: child node locked, before save
+        assertTrue("Child node locked before save", testNode2.isLocked());
+        session.save();
+
+        // assert: child node locked, after save
+        assertTrue("Child node locked after save", testNode2.isLocked());
+    }
+
+    /**
      * Return a flag indicating whether the indicated session contains
      * a specific lock token
      */

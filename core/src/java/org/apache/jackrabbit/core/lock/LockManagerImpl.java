@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PathMap;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -34,6 +35,8 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.observation.Event;
@@ -160,7 +163,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             NodeId id = new NodeId(lockToken.uuid);
 
             NodeImpl node = (NodeImpl) session.getItemManager().getItem(id);
-            Path path = node.getPrimaryPath();
+            Path path = getPath(node.getId());
 
             LockInfo info = new LockInfo(this, lockToken, false,
                     node.getProperty(Constants.JCR_LOCKISDEEP).getBoolean(),
@@ -230,7 +233,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         synchronized (contentMonitor) {
             synchronized (lockMap) {
                 // check whether node is already locked
-                Path path = node.getPrimaryPath();
+                Path path = getPath(node.getId());
                 PathMap.Element element = lockMap.map(path, false);
 
                 LockInfo other = (LockInfo) element.get();
@@ -287,7 +290,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                 // get node's path and remove child in path map
                 NodeImpl node = (NodeImpl) session.getItemManager().getItem(
                         new NodeId(info.getUUID()));
-                Path path = node.getPrimaryPath();
+                Path path = getPath(node.getId());
 
                 synchronized (lockMap) {
                     PathMap.Element element = lockMap.map(path, true);
@@ -334,7 +337,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             throws LockException, RepositoryException {
 
         synchronized (lockMap) {
-            Path path = node.getPrimaryPath();
+            Path path = getPath(node.getId());
 
             PathMap.Element element = lockMap.map(path, false);
             LockInfo info = (LockInfo) element.get();
@@ -365,9 +368,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         synchronized (contentMonitor) {
             synchronized (lockMap) {
                 // check whether node is locked by this session
-                Path path = node.getPrimaryPath();
-
-                PathMap.Element element = lockMap.map(path, true);
+                PathMap.Element element = lockMap.map(getPath(node.getId()), true);
                 if (element == null) {
                     throw new LockException("Node not locked: " + node.safeGetJCRPath());
                 }
@@ -397,7 +398,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      */
     public boolean holdsLock(NodeImpl node) throws RepositoryException {
         synchronized (lockMap) {
-            PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
+            PathMap.Element element = lockMap.map(getPath(node.getId()), true);
             if (element == null) {
                 return false;
             }
@@ -409,9 +410,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * {@inheritDoc}
      */
     public boolean isLocked(NodeImpl node) throws RepositoryException {
-        Path path = node.getPrimaryPath();
-
         synchronized (lockMap) {
+            Path path = getPath(node.getId());
+
             PathMap.Element element = lockMap.map(path, false);
             LockInfo info = (LockInfo) element.get();
             if (info == null) {
@@ -431,7 +432,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     public void checkLock(NodeImpl node)
             throws LockException, RepositoryException {
 
-        checkLock(node.getPrimaryPath(), node.getSession());
+        checkLock(getPath(node.getId()), node.getSession());
     }
 
     /**
@@ -458,7 +459,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         try {
             LockToken lockToken = LockToken.parse(lt);
 
-            NodeImpl node = (NodeImpl) session.getItemManager().
+            NodeImpl node = (NodeImpl) this.session.getItemManager().
                     getItem(new NodeId(lockToken.uuid));
             PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
@@ -487,7 +488,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         try {
             LockToken lockToken = LockToken.parse(lt);
 
-            NodeImpl node = (NodeImpl) session.getItemManager().
+            NodeImpl node = (NodeImpl) this.session.getItemManager().
                     getItem(new NodeId(lockToken.uuid));
             PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
@@ -509,6 +510,18 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         }
     }
 
+    /**
+     * Return the path of an item given its id. This method will lookup the
+     * item inside the system session and will therefore not find transiently
+     * created but not yet saved items
+     */
+    private Path getPath(ItemId id)
+            throws ItemNotFoundException, AccessDeniedException,
+                   RepositoryException {
+
+        return session.getHierarchyManager().getPath(id);
+    }
+    
     //----------------------------------------------< SynchronousEventListener >
 
     /**
