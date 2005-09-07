@@ -3746,6 +3746,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
+        if (isNew()) {
+            throw new LockException("Node not locked: " + safeGetJCRPath());
+        }
+
         LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.getLock(this);
     }
@@ -3780,8 +3784,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (!isNodeType(MIX_LOCKABLE)) {
-            // a node that is not lockable never holds a lock
+        if (!isNodeType(MIX_LOCKABLE) || isNew()) {
+            // a node that is new or not lockable never holds a lock
             return false;
         }
 
@@ -3795,6 +3799,10 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean isLocked() throws RepositoryException {
         // check state of this instance
         sanityCheck();
+
+        if (isNew()) {
+            return false;
+        }
 
         LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.isLocked(this);
@@ -3822,6 +3830,11 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException if some other error occurs
      */
     protected void checkLock() throws LockException, RepositoryException {
+        if (isNew()) {
+            // a new node must not be checked
+            return;
+        }
+
         LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         lockMgr.checkLock(this);
     }
