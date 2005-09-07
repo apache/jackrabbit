@@ -82,12 +82,23 @@ import java.sql.Statement;
  * the string <code>"${schemaObjectPrefix}"</code> has been replaced with the
  * value of the property <code>schemaObjectPrefix</code>.
  * <p/>
- * The following is a fragment from a sample configuration:
+ * The following is a fragment from a sample configuration using MySQL:
  * <pre>
  *   &lt;PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager"&gt;
  *       &lt;param name="driver" value="com.mysql.jdbc.Driver"/&gt;
  *       &lt;param name="url" value="jdbc:mysql:///test"/&gt;
  *       &lt;param name="schema" value="mysql"/&gt;
+ *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
+ *  &lt;/PersistenceManager&gt;
+ * </pre>
+ * The following is a fragment from a sample configuration using Daffodil One$DB Embedded:
+ * <pre>
+ *   &lt;PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager"&gt;
+ *       &lt;param name="driver" value="in.co.daffodil.db.jdbc.DaffodilDBDriver"/&gt;
+ *       &lt;param name="url" value="jdbc:daffodilDB_embedded:itemState;path=${wsp.home}/db;create=true"/&gt;
+ *       &lt;param name="user" value="user1"/&gt;
+ *       &lt;param name="password" value="password1"/&gt;
+ *       &lt;param name="schema" value="daffodil"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
  *  &lt;/PersistenceManager&gt;
  * </pre>
