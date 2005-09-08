@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,16 +41,26 @@ import javax.jcr.version.VersionException;
 import org.xml.sax.ContentHandler;
 
 /**
- * TODO
+ * Simple workspace decorator.
  */
 public class WorkspaceDecorator implements Workspace {
 
-    private DecoratorFactory factory;
-    
-    private Session session;
-    
-    private Workspace workspace;
-    
+    /** The decorator factory. */
+    private final DecoratorFactory factory;
+
+    /** The session (decorator) instance. */
+    private final Session session;
+
+    /** The underlying workspace instance. */
+    private final Workspace workspace;
+
+    /**
+     * Creates a workspace decorator.
+     *
+     * @param factory
+     * @param session
+     * @param workspace
+     */
     public WorkspaceDecorator(
             DecoratorFactory factory, Session session, Workspace workspace) {
         this.factory = factory;
@@ -58,7 +68,6 @@ public class WorkspaceDecorator implements Workspace {
         this.workspace = workspace;
     }
 
-    
     /** {@inheritDoc} */
     public Session getSession() {
         return session;
