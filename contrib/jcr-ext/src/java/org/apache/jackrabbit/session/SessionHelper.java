@@ -61,7 +61,7 @@ public final class SessionHelper {
                 return name.getLocalPart();
             }
         } catch (NamespaceException e) {
-            throw new IllegalStateException("Expected namespace not found", e);
+            throw new IllegalStateException("Expected namespace not found. " + e.getMessage());
         } catch (RepositoryException e) {
             throw new RuntimeException("Unexpected repository error", e);
         }
@@ -102,7 +102,7 @@ public final class SessionHelper {
             return
                 session.getWorkspace().getNodeTypeManager().getNodeType(name);
         } catch (NoSuchNodeTypeException e) {
-            throw new IllegalStateException("Expected node type not found", e);
+            throw new IllegalStateException("Expected node type not found" + e.getMessage());
         } catch (RepositoryException e) {
             throw new RuntimeException("Unexpected repository error", e);
         }
