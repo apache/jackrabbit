@@ -217,7 +217,6 @@ public class BaseNode extends BaseItem implements Node {
     public Property setProperty(String name, Value[] values, int type)
             throws ValueFormatException, VersionException, LockException,
             RepositoryException {
-        ValueFactory factory = getSession().getValueFactory();
         Value[] convertedValues = new Value[values.length];
         for (int i = 0; i < values.length; i++) {
             convertedValues[i] = convert(values[i], type);
