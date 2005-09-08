@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,22 +22,23 @@ import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
+import javax.jcr.lock.Lock;
 
 /**
  * Factory interface for creating decorator instances. The decorator
  * classes create new decorator instances using a factory to make it
- * easier to customize the behaviour of a decorator layer. 
+ * easier to customize the behaviour of a decorator layer.
  */
 public interface DecoratorFactory {
 
     /**
      * Creates a repository decorator.
-     *  
+     *
      * @param repository the underlying repository instance
      * @return decorator for the given repository
      */
-    public Repository getRepositoryDecorator(Repository repository);
-    
+    Repository getRepositoryDecorator(Repository repository);
+
     /**
      * Creates a session decorator. The created session decorator will
      * return the given repository (decorator) instance from the
@@ -57,7 +58,7 @@ public interface DecoratorFactory {
      * @param session    the underlying session instance
      * @return decorator for the given session
      */
-    public Session getSessionDecorator(Repository repository, Session session);
+    Session getSessionDecorator(Repository repository, Session session);
 
     /**
      * Creates a workspace decorator.
@@ -67,8 +68,8 @@ public interface DecoratorFactory {
      * @param workspace the underlying workspace instance
      * @return workspace decorator
      */
-    public Workspace getWorkspaceDecorator(Session session, Workspace workspace);
-    
+    Workspace getWorkspaceDecorator(Session session, Workspace workspace);
+
     /**
      * Creates a node decorator.
      *
@@ -77,8 +78,8 @@ public interface DecoratorFactory {
      * @param node    the underlying node instance
      * @return node decorator
      */
-    public Node getNodeDecorator(Session session, Node node);
-    
+    Node getNodeDecorator(Session session, Node node);
+
     /**
      * Creates a property decorator.
      *
@@ -87,8 +88,8 @@ public interface DecoratorFactory {
      * @param property the underlying property instance
      * @return property decorator
      */
-    public Property getPropertyDecorator(Session session, Property property);
-    
+    Property getPropertyDecorator(Session session, Property property);
+
     /**
      * Creates an item decorator.
      *
@@ -97,6 +98,15 @@ public interface DecoratorFactory {
      * @param item    the underlying item instance
      * @return item decorator
      */
-    public Item getItemDecorator(Session session, Item item);
-    
+    Item getItemDecorator(Session session, Item item);
+
+    /**
+     * Creates a lock decorator.
+     *
+     * @param node the node (decorator) instance to which the lock is bound
+     * @param lock the underlying lock instance
+     * @return lock decorator
+     */
+    Lock getLockDecorator(Node node, Lock lock);
+
 }
