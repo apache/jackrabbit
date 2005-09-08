@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
+import javax.jcr.lock.Lock;
 
 /**
  * TODO
@@ -30,25 +31,21 @@ public class SimpleDecoratorFactory implements DecoratorFactory {
 
     /** {@inheritDoc} */
     public Repository getRepositoryDecorator(Repository repository) {
-        // TODO Auto-generated method stub
-        return null;
+        return new RepositoryDecorator(this, repository);
     }
 
     /** {@inheritDoc} */
     public Session getSessionDecorator(Repository repository, Session session) {
-        // TODO Auto-generated method stub
-        return null;
+        return new SessionDecorator(this, repository, session);
     }
 
     /** {@inheritDoc} */
     public Workspace getWorkspaceDecorator(Session session, Workspace workspace) {
-        // TODO Auto-generated method stub
-        return null;
+        return new WorkspaceDecorator(this, session, workspace);
     }
 
     /** {@inheritDoc} */
     public Node getNodeDecorator(Session session, Node node) {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -60,8 +57,17 @@ public class SimpleDecoratorFactory implements DecoratorFactory {
 
     /** {@inheritDoc} */
     public Item getItemDecorator(Session session, Item item) {
-        // TODO Auto-generated method stub
-        return null;
+        if (item instanceof Node) {
+            return getNodeDecorator(session, (Node) item);
+        } else if (item instanceof Property) {
+            return getPropertyDecorator(session, (Property) item);
+        } else {
+            return new ItemDecorator(this, session, item);
+        }
+    }
+
+    public Lock getLockDecorator(Node node, Lock lock) {
+        return new LockDecorator(node, lock);
     }
 
 }
