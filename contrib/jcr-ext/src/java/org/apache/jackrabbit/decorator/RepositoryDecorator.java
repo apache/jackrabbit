@@ -29,15 +29,15 @@ import javax.jcr.Session;
 public class RepositoryDecorator implements Repository {
 
     private DecoratorFactory factory;
-    
+
     private Repository repository;
-    
+
     public RepositoryDecorator(
             DecoratorFactory factory, Repository repository) {
         this.factory = factory;
         this.repository = repository;
     }
-    
+
     /**
      * Forwards the method call to the underlying repository.
      */
@@ -55,7 +55,7 @@ public class RepositoryDecorator implements Repository {
     /**
      * Forwards the method call to the underlying repository. The returned
      * session is wrapped into a session decorator using the decorator factory.
-     * 
+     *
      * @return decorated session
      */
     public Session login(Credentials credentials, String workspaceName) throws
@@ -66,7 +66,7 @@ public class RepositoryDecorator implements Repository {
 
     /**
      * Calls <code>login(credentials, null)</code>.
-     * 
+     *
      * @return decorated session
      * @see #login(Credentials, String)
      */
@@ -77,7 +77,7 @@ public class RepositoryDecorator implements Repository {
 
     /**
      * Calls <code>login(null, workspaceName)</code>.
-     * 
+     *
      * @return decorated session
      * @see #login(Credentials, String)
      */
@@ -88,7 +88,7 @@ public class RepositoryDecorator implements Repository {
 
     /**
      * Calls <code>login(null, null)</code>.
-     * 
+     *
      * @return decorated session
      * @see #login(Credentials, String)
      */

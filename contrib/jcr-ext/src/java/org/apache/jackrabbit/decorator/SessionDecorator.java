@@ -52,18 +52,18 @@ import org.xml.sax.SAXException;
 public class SessionDecorator implements Session {
 
     private DecoratorFactory factory;
-    
+
     private Repository repository;
-    
+
     private Session session;
-    
+
     public SessionDecorator(
             DecoratorFactory factory, Repository repository, Session session) {
         this.factory = factory;
         this.repository = repository;
         this.session = session;
     }
-    
+
     /** {@inheritDoc} */
     public Repository getRepository() {
         return repository;
@@ -94,7 +94,7 @@ public class SessionDecorator implements Session {
      * Forwards the method call to the underlying session. The returned
      * workspace is wrapped into a workspace decorator using the decorator
      * factory.
-     * 
+     *
      * @return decorated workspace
      */
     public Workspace getWorkspace() {
@@ -104,7 +104,7 @@ public class SessionDecorator implements Session {
     /**
      * Forwards the method call to the underlying session. The returned
      * session is wrapped into a session decorator using the decorator factory.
-     * 
+     *
      * @return decorated session
      */
     public Session impersonate(Credentials credentials) throws LoginException,
@@ -116,7 +116,7 @@ public class SessionDecorator implements Session {
     /**
      * Forwards the method call to the underlying session. The returned
      * node is wrapped into a node decorator using the decorator factory.
-     * 
+     *
      * @return decorated node
      */
     public Node getRootNode() throws RepositoryException {
@@ -127,7 +127,7 @@ public class SessionDecorator implements Session {
     /**
      * Forwards the method call to the underlying session. The returned
      * node is wrapped into a node decorator using the decorator factory.
-     * 
+     *
      * @return decorated node
      */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException,
@@ -141,7 +141,7 @@ public class SessionDecorator implements Session {
      * item is wrapped into a node, property, or item decorator using
      * the decorator factory. The decorator type depends on the type
      * of the underlying item.
-     * 
+     *
      * @return decorated item, property, or node
      */
     public Item getItem(String absPath) throws PathNotFoundException,
