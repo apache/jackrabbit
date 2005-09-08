@@ -24,7 +24,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 /**
- * Simple {@link Repository Repository} decorator. This class 
+ * Simple {@link Repository Repository} decorator.
  */
 public class RepositoryDecorator implements Repository {
 
@@ -65,39 +65,36 @@ public class RepositoryDecorator implements Repository {
     }
 
     /**
-     * Forwards the method call to the underlying repository. The returned
-     * session is wrapped into a session decorator using the decorator factory.
+     * Calls <code>login(credentials, null)</code>.
      * 
      * @return decorated session
+     * @see #login(Credentials, String)
      */
     public Session login(Credentials credentials) throws LoginException,
             NoSuchWorkspaceException, RepositoryException {
-        Session session = repository.login(credentials);
-        return factory.getSessionDecorator(this, session); 
+        return login(credentials, null);
     }
 
     /**
-     * Forwards the method call to the underlying repository. The returned
-     * session is wrapped into a session decorator using the decorator factory.
+     * Calls <code>login(null, workspaceName)</code>.
      * 
      * @return decorated session
+     * @see #login(Credentials, String)
      */
     public Session login(String workspaceName) throws LoginException,
             NoSuchWorkspaceException, RepositoryException {
-        Session session = repository.login(workspaceName);
-        return factory.getSessionDecorator(this, session); 
+        return login(null, workspaceName);
     }
 
     /**
-     * Forwards the method call to the underlying repository. The returned
-     * session is wrapped into a session decorator using the decorator factory.
+     * Calls <code>login(null, null)</code>.
      * 
      * @return decorated session
+     * @see #login(Credentials, String)
      */
     public Session login() throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
-        Session session = repository.login();
-        return factory.getSessionDecorator(this, session); 
+        return login(null, null);
     }
 
 }
