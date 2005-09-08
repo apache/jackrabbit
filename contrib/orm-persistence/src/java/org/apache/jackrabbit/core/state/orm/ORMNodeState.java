@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeState.ChildNodeEntry;

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state.orm;
 
 import java.io.Serializable;
-import org.apache.jackrabbit.core.QName;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * <p>This class represents a single entry of a property in a node. This
