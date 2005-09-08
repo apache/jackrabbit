@@ -32,83 +32,69 @@ import javax.jcr.version.VersionException;
 /**
  * TODO
  */
-public class ItemDecorator implements Item {
+public class ChainedItemDecorator implements Item {
 
-    private DecoratorFactory factory;
+    private ItemDecorator decorator;
 
-    private Session session;
-
-    private Item item;
-
-    public ItemDecorator(DecoratorFactory factory, Session session, Item item) {
-        this.factory = factory;
-        this.session = session;
-        this.item = item;
+    public ChainedItemDecorator(ItemDecorator decorator) {
+        this.decorator = decorator;
     }
 
-    /**
-     * Returns the decorated session through which this item decorator
-     * was acquired.
-     *
-     * @return decorated session
-     */
+    /** {@inheritDoc} */
     public Session getSession() throws RepositoryException {
-        return session;
+        return decorator.getSession();
     }
 
     /** {@inheritDoc} */
     public String getPath() throws RepositoryException {
-        return item.getPath();
+        return decorator.getPath();
     }
 
     /** {@inheritDoc} */
     public String getName() throws RepositoryException {
-        return item.getName();
+        return decorator.getName();
     }
 
     /** {@inheritDoc} */
     public Item getAncestor(int depth) throws ItemNotFoundException,
             AccessDeniedException, RepositoryException {
-        Item ancestor = item.getAncestor(depth);
-        return factory.getItemDecorator(session, ancestor);
+        return decorator.getAncestor(depth);
     }
 
     /** {@inheritDoc} */
     public Node getParent() throws ItemNotFoundException,
             AccessDeniedException, RepositoryException {
-        Node parent = item.getParent();
-        return factory.getNodeDecorator(session, parent);
+        return decorator.getParent();
     }
 
     /** {@inheritDoc} */
     public int getDepth() throws RepositoryException {
-        return item.getDepth();
+        return decorator.getDepth();
     }
 
     /** {@inheritDoc} */
     public boolean isNode() {
-        return item.isNode();
+        return decorator.isNode();
     }
 
     /** {@inheritDoc} */
     public boolean isNew() {
-        return item.isNew();
+        return decorator.isNew();
     }
 
     /** {@inheritDoc} */
     public boolean isModified() {
-        return item.isModified();
+        return decorator.isModified();
     }
 
     /** {@inheritDoc} */
     public boolean isSame(Item otherItem) {
-        // TODO Auto-generated method stub
-        return false;
+        return decorator.isSame(otherItem);
     }
 
     /** {@inheritDoc} */
     public void accept(ItemVisitor visitor) throws RepositoryException {
-        item.accept(visitor);
+        decorator.accept(visitor);
     }
 
     /** {@inheritDoc} */
@@ -116,19 +102,19 @@ public class ItemDecorator implements Item {
             ConstraintViolationException, InvalidItemStateException,
             ReferentialIntegrityException, VersionException, LockException,
             RepositoryException {
-        item.save();
+        decorator.save();
     }
 
     /** {@inheritDoc} */
     public void refresh(boolean keepChanges) throws InvalidItemStateException,
             RepositoryException {
-        item.refresh(keepChanges);
+        decorator.refresh(keepChanges);
     }
 
     /** {@inheritDoc} */
     public void remove() throws VersionException, LockException,
             RepositoryException {
-        item.remove();
+        decorator.remove();
     }
 
 }
