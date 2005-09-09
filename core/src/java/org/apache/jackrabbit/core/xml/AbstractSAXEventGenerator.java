@@ -18,12 +18,12 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.BaseException;
 import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.util.SessionNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.log4j.Logger;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -111,7 +111,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
             throws RepositoryException {
         startNode = node;
         session = node.getSession();
-        nsResolver = new SessionNamespaceResolver();
+        nsResolver = new SessionNamespaceResolver(session);
 
         this.contentHandler = contentHandler;
         this.skipBinary = skipBinary;
@@ -322,39 +322,4 @@ abstract class AbstractSAXEventGenerator implements Constants {
     protected abstract void leaving(Property prop, int level)
             throws RepositoryException, SAXException;
 
-    //--------------------------------------------------------< inner classes >
-    /**
-     * internal helper class that exposes the <code>NamespaceResolver</code>
-     * interface on a <code>Session</code>
-     */
-    private class SessionNamespaceResolver implements NamespaceResolver {
-
-        /**
-         * {@inheritDoc}
-         */
-        public String getPrefix(String uri) throws NamespaceException {
-            try {
-                return session.getNamespacePrefix(uri);
-            } catch (RepositoryException re) {
-                // should never get here...
-                String msg = "internal error: failed to resolve namespace uri";
-                log.error(msg, re);
-                throw new NamespaceException(msg, re);
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public String getURI(String prefix) throws NamespaceException {
-            try {
-                return session.getNamespaceURI(prefix);
-            } catch (RepositoryException re) {
-                // should never get here...
-                String msg = "internal error: failed to resolve namespace prefix";
-                log.error(msg, re);
-                throw new NamespaceException(msg, re);
-            }
-        }
-    }
 }
