@@ -78,6 +78,11 @@ public class RepositoryImpl implements Repository, SessionListener,
     private static Logger log = Logger.getLogger(RepositoryImpl.class);
 
     /**
+     * repository home lock
+     */
+    private static final String REPOSITORY_LOCK = ".lock";
+
+    /**
      * hardcoded uuid of the repository root node
      */
     private static final String ROOT_NODE_UUID = "cafebabe-cafe-babe-cafe-babecafebabe";
@@ -144,7 +149,10 @@ public class RepositoryImpl implements Repository, SessionListener,
      * @param repConfig
      */
     protected RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
+
         this.repConfig = repConfig;
+
+        this.acquireRepositoryLock() ;
 
         // setup file systems
         repStore = repConfig.getFileSystem();
@@ -220,6 +228,37 @@ public class RepositoryImpl implements Repository, SessionListener,
                 shutdown();
             }
         });
+    }
+    
+    /**
+     * Lock the repository home.
+     * @throws RepositoryException
+     *         if the repository lock can not be acquired
+     */
+    private void acquireRepositoryLock() throws RepositoryException {
+        File home = new File(this.repConfig.getHomeDir());
+        File lock  = new File(home, REPOSITORY_LOCK) ;
+        if (lock.exists()) {
+            throw new RepositoryException("The repository home at " + home.getAbsolutePath() + 
+                " appears to be in use. If you are sure it's not in use please delete the file at " + 
+                lock.getAbsolutePath() + ". Probably the repository was not shutdown properly.");
+        }
+        try {
+            lock.createNewFile() ;
+        } catch (IOException e) {
+            throw new RepositoryException("Unable to create lock file at " + lock.getAbsolutePath());
+        }
+    }
+
+    /**
+     * Release repository lock
+     */
+    private void releaseRepositoryLock() {
+        File home = new File(this.repConfig.getHomeDir());
+        File lock  = new File(home, REPOSITORY_LOCK) ;
+        if (!lock.delete()) {
+            log.error("Unable to release repository lock") ;
+        }
     }
 
     /**
@@ -688,6 +727,9 @@ public class RepositoryImpl implements Repository, SessionListener,
 
         // make sure this instance is not used anymore
         disposed = true;
+
+        this.releaseRepositoryLock() ;
+        
     }
 
     /**
