@@ -18,27 +18,11 @@
     <dependencies>
 	<dependency>
 	    <groupId>jackrabbit</groupId>
-	    <artifactId>jackrabbit-api</artifactId>
+	    <artifactId>jackrabbit</artifactId>
 	    <version>${pom.currentVersion}</version>
 	    <properties>
 		<rar.bundle>true</rar.bundle>
-	    </properties>	    
-	</dependency>
-	<dependency>
-	    <groupId>jackrabbit</groupId>
-	    <artifactId>jackrabbit-commons</artifactId>
-	    <version>${pom.currentVersion}</version>
-	    <properties>
-		<rar.bundle>true</rar.bundle>
-	    </properties>	    
-	</dependency>
-	<dependency>
-	    <groupId>jackrabbit</groupId>
-	    <artifactId>jackrabbit-core</artifactId>
-	    <version>${pom.currentVersion}</version>
-	    <properties>
-		<rar.bundle>true</rar.bundle>
-	    </properties>	    
+	    </properties>
 	</dependency>
 	<dependency>
 	    <id>concurrent</id>

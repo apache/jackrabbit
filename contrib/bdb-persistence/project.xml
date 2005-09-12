@@ -79,13 +79,7 @@
 		</dependency>
 		<dependency>
 			<groupId>jackrabbit</groupId>
-			<artifactId>jackrabbit-core</artifactId>
-			<version>${pom.currentVersion}</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>jackrabbit</groupId>
-			<artifactId>jackrabbit-commons</artifactId>
+			<artifactId>jackrabbit</artifactId>
 			<version>${pom.currentVersion}</version>
 			<type>jar</type>
 		</dependency>
