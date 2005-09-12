@@ -62,6 +62,7 @@
         </ant:delete>
         <ant:delete dir="applications/test/tx"/>
         <ant:delete dir="applications/test/version"/>
+        <ant:delete file="applications/test/.lock"/>
     </goal>
 
     <!-- Generates the SQL / XPath parsers if necessary -->
