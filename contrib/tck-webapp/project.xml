@@ -71,23 +71,7 @@
         <!-- dependencies from jcr that we want to bundle -->
         <dependency>
             <groupId>jackrabbit</groupId>
-            <artifactId>jackrabbit-api</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
-        <dependency>
-            <groupId>jackrabbit</groupId>
-            <artifactId>jackrabbit-commons</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
-        <dependency>
-            <groupId>jackrabbit</groupId>
-            <artifactId>jackrabbit-core</artifactId>
+            <artifactId>jackrabbit</artifactId>
             <version>1.0-SNAPSHOT</version>
             <properties>
                 <war.bundle>true</war.bundle>
