@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Credentials;

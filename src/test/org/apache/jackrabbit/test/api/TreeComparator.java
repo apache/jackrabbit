@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.log4j.Level;
 
 import javax.jcr.Session;
 import javax.jcr.Workspace;

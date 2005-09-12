@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.config;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Properties;
 
 import org.xml.sax.InputSource;
 
