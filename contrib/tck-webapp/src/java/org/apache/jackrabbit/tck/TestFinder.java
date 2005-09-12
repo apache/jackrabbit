@@ -80,10 +80,10 @@ public class TestFinder {
             jarFile = new JarFile(tmpFile);
 
             // go through all jar file entries and take the one we are interessted in.
-            Enumeration enum = jarFile.entries();
+            Enumeration en = jarFile.entries();
 
-            while (enum.hasMoreElements()) {
-                JarEntry entry = (JarEntry) enum.nextElement();
+            while (en.hasMoreElements()) {
+                JarEntry entry = (JarEntry) en.nextElement();
                 String name = entry.getName();
 
                 if (!entry.isDirectory() && name.endsWith(".java")) {

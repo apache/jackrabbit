@@ -32,7 +32,7 @@
         <m:reactor 
             basedir="../.."
             includes="project.xml"
-            goals="jar:install"
+            goals="multiproject:install"
             banner="Building"
             ignoreFailures="false"/>
      </goal>
