@@ -20,7 +20,6 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.RepositoryException;

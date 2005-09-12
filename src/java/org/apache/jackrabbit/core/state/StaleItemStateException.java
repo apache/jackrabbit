@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * Signals that an item has been modified externally and that the item state
  * representing it has thus become stale.

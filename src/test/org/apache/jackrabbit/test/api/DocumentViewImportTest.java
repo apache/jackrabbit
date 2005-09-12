@@ -30,12 +30,6 @@ import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 /**
  * <code>DocumentViewImportTest</code> Tests importXML and

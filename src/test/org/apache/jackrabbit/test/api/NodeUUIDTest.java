@@ -23,7 +23,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 /**

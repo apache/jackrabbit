@@ -28,12 +28,7 @@ import javax.jcr.Session;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Value;
 import javax.jcr.Repository;
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.lock.LockException;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Arrays;
-import java.util.Hashtable;
 
 /**
  * <code>SessionTest</code> contains all test cases for the

@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.File;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Collections;
 
 /**
  * This is a wrapper class to provide lock creation in the index directory.
