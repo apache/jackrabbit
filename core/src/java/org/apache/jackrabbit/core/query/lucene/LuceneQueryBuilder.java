@@ -548,6 +548,11 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                         + node.getValueType());
         }
 
+        if (node.getProperty() == null) {
+            exceptions.add(new InvalidQueryException("@* not supported in predicate"));
+            return data;
+        }
+
         String field = "";
         try {
             field = node.getProperty().toJCRName(nsMappings);
