@@ -51,7 +51,7 @@
 
         <!--
           compile-time dependencies of the jUnit test-cases 
-          in the core subproject	
+          in the core project	
         -->
         <dependency>
             <id>concurrent</id>
@@ -106,7 +106,7 @@
     <!-- ====================================================================== -->
     <build>
         <sourceDirectory>src/java</sourceDirectory>
-        <unitTestSourceDirectory>../../core/src/test</unitTestSourceDirectory>
+        <unitTestSourceDirectory>../../src/test</unitTestSourceDirectory>
         <unitTest>
             <includes>
                 <include>**/*TestAll.java</include>
@@ -123,7 +123,7 @@
                     </includes>
                 </resource>
                 <resource>
-                    <directory>../../core/src/test</directory>
+                    <directory>../../src/test</directory>
                     <includes>
                         <include>**/*.xml</include>
                         <include>**/*.txt</include>
