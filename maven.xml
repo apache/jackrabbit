@@ -190,4 +190,31 @@
         <attainGoal name="test:single"/>
     </goal>
 
+    <postGoal name="jar:jar">
+        <attainGoal name="commons:jar" />
+    </postGoal>
+    
+    <postGoal name="jar:install">
+        <attainGoal name="commons:install" />
+    </postGoal>
+    
+    
+    <!-- generate the commons jar -->
+    <goal name="commons:jar">
+        <ant:jar
+            jarfile="${maven.build.dir}/jackrabbit-commons-${pom.currentVersion}.jar"
+            basedir="${maven.build.dest}"
+            excludes="org/apache/jackrabbit/core/**, META-INF/**" />
+    </goal>
+
+    <!-- install the commons jar -->
+    <goal name="commons:install">
+        <!-- actually, we would like to use artifact:install, but loading the
+             pom does not work in maven 1.0.2
+        -->
+        <ant:mkdir dir="${maven.repo.local}/jackrabbit/jars" />
+        <ant:copy 
+          file="${maven.build.dir}/jackrabbit-commons-${pom.currentVersion}.jar"
+          todir="${maven.repo.local}/jackrabbit/jars" />
+    </goal>
 </project>
