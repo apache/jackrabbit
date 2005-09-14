@@ -104,6 +104,11 @@ abstract class AbstractWorkspaceCopyBetweenTest extends AbstractWorkspaceCopyTes
         // testroot
         if (superuserW2.getRootNode().hasNode(testPath)) {
             testRootNodeW2 = superuserW2.getRootNode().getNode(testPath);
+            // clean test root
+            for (NodeIterator it = testRootNodeW2.getNodes(); it.hasNext(); ) {
+                it.nextNode().remove();
+            }
+            testRootNodeW2.save();
         } else {
             testRootNodeW2 = superuserW2.getRootNode().addNode(testPath, testNodeType);
             superuserW2.save();
@@ -115,7 +120,5 @@ abstract class AbstractWorkspaceCopyBetweenTest extends AbstractWorkspaceCopyTes
 
         superuserW2.getWorkspace().copy(workspace.getName(), node2.getPath(), node2.getPath());
         node2W2 = testRootNodeW2.getNode(node2.getName());
-
-        testRootNodeW2.save();
     }
 }
