@@ -191,30 +191,31 @@
     </goal>
 
     <postGoal name="jar:jar">
-        <attainGoal name="commons:jar" />
+        <attainGoal name="jackrabbit:modules-jar" />
     </postGoal>
-    
     <postGoal name="jar:install">
-        <attainGoal name="commons:install" />
+        <attainGoal name="jackrabbit:modules-install" />
     </postGoal>
     
+    <goal name="jackrabbit:modules-jar">
+        <maven:reactor 
+            basedir="${basedir}/modules"
+            includes="*/project.xml"                
+            goals="jar:jar"
+            banner="Bulding Module"
+            ignoreFailures="false"  
+        /> 
+    </goal>
     
-    <!-- generate the commons jar -->
-    <goal name="commons:jar">
-        <ant:jar
-            jarfile="${maven.build.dir}/jackrabbit-commons-${pom.currentVersion}.jar"
-            basedir="${maven.build.dest}"
-            excludes="org/apache/jackrabbit/core/**, META-INF/**" />
+    <goal name="jackrabbit:modules-install">
+        <maven:reactor 
+            basedir="${basedir}/modules"
+            includes="*/project.xml"                
+            goals="jar:install"
+            banner="Installing Module"
+            ignoreFailures="false"  
+        /> 
     </goal>
-
-    <!-- install the commons jar -->
-    <goal name="commons:install">
-        <!-- actually, we would like to use artifact:install, but loading the
-             pom does not work in maven 1.0.2
-        -->
-        <ant:mkdir dir="${maven.repo.local}/jackrabbit/jars" />
-        <ant:copy 
-          file="${maven.build.dir}/jackrabbit-commons-${pom.currentVersion}.jar"
-          todir="${maven.repo.local}/jackrabbit/jars" />
-    </goal>
+    
+    
 </project>
