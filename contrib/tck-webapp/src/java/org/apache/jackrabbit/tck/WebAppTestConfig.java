@@ -22,6 +22,7 @@ import org.apache.jackrabbit.test.RepositoryStub;
 
 import javax.jcr.*;
 import javax.servlet.http.HttpServletRequest;
+import javax.naming.Context;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.Map;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.Iterator;
 import java.util.Enumeration;
+import java.util.Set;
 
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
@@ -38,11 +40,14 @@ import junit.framework.TestCase;
  * The <code>WebAppTestConfig</code> class reads and saves the config in the tck web app specific way.
  */
 public class WebAppTestConfig {
+
+
+
     /** default property names */
     public final static String[] propNames = {JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_WORKSPACE_NAME,
                                               JNDIRepositoryStub.REPOSITORY_LOOKUP_PROP,
-                                              "java.naming.provider.url",
-                                              "java.naming.factory.initial",
+                                              Context.PROVIDER_URL,
+                                              Context.INITIAL_CONTEXT_FACTORY,
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_SUPERUSER_NAME,
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_SUPERUSER_PWD,
                                               JNDIRepositoryStub.PROP_PREFIX + "." + JNDIRepositoryStub.PROP_READWRITE_NAME,
@@ -98,9 +103,16 @@ public class WebAppTestConfig {
         }
 
         // add additional props
-        props.put(JNDIRepositoryStub.REPOSITORY_LOOKUP_PROP, "");
-        props.put("java.naming.provider.url", "");
-        props.put("java.naming.factory.initial", "");
+        Set keys = props.keySet();
+        if (!keys.contains(JNDIRepositoryStub.REPOSITORY_LOOKUP_PROP)) {
+            props.put(JNDIRepositoryStub.REPOSITORY_LOOKUP_PROP, "");
+        }
+        if (!keys.contains(Context.PROVIDER_URL)) {
+            props.put(Context.PROVIDER_URL, "");
+        }
+        if (!keys.contains(Context.INITIAL_CONTEXT_FACTORY)) {
+            props.put(Context.INITIAL_CONTEXT_FACTORY, "");
+        }
 
         return props;
     }
