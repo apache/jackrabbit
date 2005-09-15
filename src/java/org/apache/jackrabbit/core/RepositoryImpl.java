@@ -185,7 +185,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         Iterator iter = repConfig.getWorkspaceConfigs().iterator();
         while (iter.hasNext()) {
             WorkspaceConfig config = (WorkspaceConfig) iter.next();
-            WorkspaceInfo info = new WorkspaceInfo(config);
+            WorkspaceInfo info = createWorkspaceInfo(config);
             wspInfos.put(config.getName(), info);
         }
 
@@ -229,7 +229,7 @@ public class RepositoryImpl implements Repository, SessionListener,
             }
         });
     }
-    
+
     /**
      * Lock the repository home.
      * @throws RepositoryException
@@ -540,7 +540,7 @@ public class RepositoryImpl implements Repository, SessionListener,
 
         // create the workspace configuration
         WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName);
-        WorkspaceInfo info = new WorkspaceInfo(config);
+        WorkspaceInfo info = createWorkspaceInfo(config);
         wspInfos.put(workspaceName, info);
 
         // setup/initialize new workspace
@@ -1026,6 +1026,17 @@ public class RepositoryImpl implements Repository, SessionListener,
         return new XASessionImpl(this, subject, wspConfig);
     }
 
+    /**
+     * Creates a new {@link RepositoryImpl.WorkspaceInfo} instance for
+     * <code>wspConfig</code>.
+     *
+     * @param wspConfig the workspace configuration.
+     * @return a new <code>WorkspaceInfo</code> instance.
+     */
+    protected WorkspaceInfo createWorkspaceInfo(WorkspaceConfig wspConfig) {
+        return new WorkspaceInfo(wspConfig);
+    }
+
     //--------------------------------------------------------< inner classes >
     /**
      * <code>WorkspaceInfo</code> holds the objects that are shared
@@ -1076,7 +1087,7 @@ public class RepositoryImpl implements Repository, SessionListener,
          *
          * @param config workspace configuration
          */
-        WorkspaceInfo(WorkspaceConfig config) {
+        protected WorkspaceInfo(WorkspaceConfig config) {
             this.config = config;
         }
 

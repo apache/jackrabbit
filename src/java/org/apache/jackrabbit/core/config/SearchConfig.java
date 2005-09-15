@@ -46,7 +46,7 @@ public class SearchConfig extends BeanConfig {
      * @param fsc search index file system configuration, or <code>null</code>
      *   if none is configured.
      */
-    SearchConfig(
+    public SearchConfig(
             String className, Properties properties, FileSystemConfig fsc) {
         super(className, properties);
         this.fsc = fsc;
@@ -83,6 +83,16 @@ public class SearchConfig extends BeanConfig {
             return null;
         }
         return fsc.getFileSystem();
+    }
+
+    /**
+     * Returns the configuration for the <code>FileSystem</code> or
+     * <code>null</code> if none is configured in this <code>SearchConfig</code>.
+     *
+     * @return the <code>FileSystemConfig</code> for this <code>SearchConfig</code>.
+     */
+    public FileSystemConfig getFileSystemConfig() {
+        return fsc;
     }
 
 }

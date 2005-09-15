@@ -63,7 +63,7 @@ public class WorkspaceConfig {
      * @param pmc persistence manager configuration
      * @param sc search index configuration
      */
-    WorkspaceConfig(String home, String name, FileSystemConfig fsc,
+    public WorkspaceConfig(String home, String name, FileSystemConfig fsc,
             PersistenceManagerConfig pmc, SearchConfig sc) {
         this.home = home;
         this.name = name;
@@ -109,6 +109,15 @@ public class WorkspaceConfig {
      */
     public FileSystem getFileSystem() {
         return fsc.getFileSystem();
+    }
+
+    /**
+     * Returns the file system configuration.
+     *
+     * @return file system configuration
+     */
+    public FileSystemConfig getFileSystemConfig() {
+        return fsc;
     }
 
     /**
