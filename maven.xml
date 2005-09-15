@@ -44,6 +44,7 @@
     <!-- Additionally cleans the test data created -->
     <postGoal name="clean">
         <attainGoal name="test:clean"/>
+        <attainGoal name="jackrabbit:modules-clean"/>
     </postGoal>
 
     <!-- deletes the test data -->
@@ -213,6 +214,16 @@
             includes="*/project.xml"                
             goals="jar:install"
             banner="Installing Module"
+            ignoreFailures="false"  
+        /> 
+    </goal>
+    
+    <goal name="jackrabbit:modules-clean">
+        <maven:reactor 
+            basedir="${basedir}/modules"
+            includes="*/project.xml"                
+            goals="clean"
+            banner="Cleaning Module"
             ignoreFailures="false"  
         /> 
     </goal>
