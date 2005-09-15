@@ -26,6 +26,8 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Stores a sequence of index names.
@@ -46,6 +48,11 @@ class IndexInfos {
      * List of index names
      */
     private List indexes = new ArrayList();
+
+    /**
+     * Set of names for quick lookup.
+     */
+    private Set names = new HashSet();
 
     /**
      * Name of the file where the infos are stored.
@@ -93,7 +100,9 @@ class IndexInfos {
             DataInputStream di = new DataInputStream(in);
             counter = di.readInt();
             for (int i = di.readInt(); i > 0; i--) {
-                indexes.add(di.readUTF());
+                String indexName = di.readUTF();
+                indexes.add(indexName);
+                names.add(indexName);
             }
         } finally {
             in.close();
@@ -157,7 +166,11 @@ class IndexInfos {
      * @param name the name to add.
      */
     void addName(String name) {
+        if (names.contains(name)) {
+            throw new IllegalArgumentException("already contains: " + name);
+        }
         indexes.add(name);
+        names.add(name);
         dirty = true;
     }
 
@@ -167,6 +180,7 @@ class IndexInfos {
      */
     void removeName(String name) {
         indexes.remove(name);
+        names.remove(name);
         dirty = true;
     }
 
@@ -175,8 +189,20 @@ class IndexInfos {
      * @param i the position.
      */
     void removeName(int i) {
-        indexes.remove(i);
+        Object name = indexes.remove(i);
+        names.remove(name);
         dirty = true;
+    }
+
+    /**
+     * Returns <code>true</code> if <code>name</code> exists in this
+     * <code>IndexInfos</code>; <code>false</code> otherwise.
+     *
+     * @param name the name to test existence.
+     * @return <code>true</code> it is exists in this <code>IndexInfos</code>.
+     */
+    boolean contains(String name) {
+        return names.contains(name);
     }
 
     /**

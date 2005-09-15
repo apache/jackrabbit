@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.uuid.Constants;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -31,39 +30,47 @@ import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
- * Implements a redo log for the {@link VolatileIndex}. While nodes are added to
- * and removed from the volatile index (held in memory) a redo log is written to
- * keep track of the changes. In case the Jackrabbit process terminates
- * unexpected the redo log is applied when Jackrabbit is restarted the next
- * time.<br/>
- * When the {@link VolatileIndex} is merged with the peristent index the, redo
- * log is cleared.
+ * Implements a redo log for changes that have not been committed to disk. While
+ * nodes are added to and removed from the volatile index (held in memory) a
+ * redo log is written to keep track of the changes. In case the Jackrabbit
+ * process terminates unexpected the redo log is applied when Jackrabbit is
+ * restarted the next time.
  * <p/>
  * This class is not thread-safe.
  */
 class RedoLog {
 
-    /** Logger instance for this class */
+    /**
+     * Logger instance for this class
+     */
     private static final Logger log = Logger.getLogger(RedoLog.class);
 
-    /** Implements a {@link EntryCollector} with an empty collect method */
-    private static final EntryCollector DUMMY_COLLECTOR = new EntryCollector() {
-        public void collect(Entry entry) {
-            // do nothing
+    /**
+     * Implements a {@link ActionCollector} that counts all entries and sets
+     * {@link #entryCount}.
+     */
+    private final ActionCollector ENTRY_COUNTER = new ActionCollector() {
+        public void collect(MultiIndex.Action a) {
+            entryCount++;
         }
     };
 
-    /** The log file */
+    /**
+     * The log file
+     */
     private final File logFile;
 
-    /** The number of log enties in the log file */
+    /**
+     * The number of log entries in the log file
+     */
     private int entryCount = 0;
 
-    /** Writer to the log file */
+    /**
+     * Writer to the log file
+     */
     private Writer out;
 
     /**
@@ -78,7 +85,7 @@ class RedoLog {
             log.getParentFile().mkdirs();
             log.createNewFile();
         }
-        read(DUMMY_COLLECTOR);
+        read(ENTRY_COUNTER);
     }
 
     /**
@@ -100,42 +107,33 @@ class RedoLog {
     }
 
     /**
-     * Returns a collection with all {@link Entry} instances in the redo log.
-     * @return an collection with all {@link Entry} instances in the redo log.
-     * @throws IOException if an error occurs while reading from the
+     * Returns a List with all {@link MultiIndex.Action} instances in the
      * redo log.
+     *
+     * @return an List with all {@link MultiIndex.Action} instances in the
+     *         redo log.
+     * @throws IOException if an error occurs while reading from the redo log.
      */
-    Collection getEntries() throws IOException {
-        final List entries = new ArrayList();
-        read(new EntryCollector() {
-            public void collect(Entry entry) {
-                entries.add(entry);
+    List getActions() throws IOException {
+        final List actions = new ArrayList();
+        read(new ActionCollector() {
+            public void collect(MultiIndex.Action a) {
+                actions.add(a);
             }
         });
-        return entries;
+        return actions;
     }
 
     /**
-     * Informs this redo log that a node has been added.
-     * @param uuid the uuid of the node.
+     * Appends an action to the log.
+     *
+     * @param action the action to append.
      * @throws IOException if the node cannot be written to the redo
      * log.
      */
-    void nodeAdded(String uuid) throws IOException {
+    void append(MultiIndex.Action action) throws IOException {
         initOut();
-        out.write(new Entry(uuid, Entry.NODE_ADDED).toString() + "\n");
-        entryCount++;
-    }
-
-    /**
-     * Informs this redo log that a node has been removed.
-     * @param uuid the uuid of the node.
-     * @throws IOException if the node cannot be written to the redo
-     * log.
-     */
-    void nodeRemoved(String uuid) throws IOException {
-        initOut();
-        out.write(new Entry(uuid, Entry.NODE_REMOVED).toString() + "\n");
+        out.write(action.toString() + "\n");
         entryCount++;
     }
 
@@ -176,22 +174,20 @@ class RedoLog {
     }
 
     /**
-     * Reads the log file and sets the {@link #entryCount} with the number
-     * of entries read.
-     * @param collector called back for each {@link Entry} read.
+     * Reads the log file and calls back {@link RedoLog.ActionCollector}.
+     *
+     * @param collector called back for each {@link MultiIndex.Action} read.
      * @throws IOException if an error occurs while reading from the
      * log file.
      */
-    private void read(EntryCollector collector) throws IOException {
+    private void read(ActionCollector collector) throws IOException {
         InputStream in = new FileInputStream(logFile);
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             String line;
             while ((line = reader.readLine()) != null) {
                 try {
-                    Entry e = Entry.fromString(line);
-                    collector.collect(e);
-                    entryCount++;
+                    collector.collect(MultiIndex.Action.fromString(line));
                 } catch (IllegalArgumentException e) {
                     log.warn("Malformed redo entry: " + e.getMessage());
                 }
@@ -207,96 +203,14 @@ class RedoLog {
         }
     }
 
-    /**
-     * Helper class that represents an entry in the redo log.
-     */
-    public static class Entry {
-
-        /** The length of a log entry: UUID + &lt;space> + (ADD | REM) */
-        private static final int ENTRY_LENGTH = Constants.UUID_FORMATTED_LENGTH + 4;
-
-        /** Type constant for node added entry */
-        static final int NODE_ADDED = 1;
-
-        /** Type constant for node removed entry */
-        static final int NODE_REMOVED = 2;
-
-        /** Type string for node added */
-        private static final String ADD = "ADD";
-
-        /** Type string for node removed */
-        private static final String REM = "REM";
-
-        /** The uuid of the node */
-        public final String uuid;
-
-        /** The type of event */
-        public final int type;
-
-        /**
-         * Creates a new log entry.
-         * @param uuid the uuid of the node
-         * @param type the event type.
-         */
-        private Entry(String uuid, int type) {
-            this.uuid = uuid;
-            this.type = type;
-        }
-
-        /**
-         * Parses an line in the redo log and created a {@link Entry}.
-         * @param logLine the line from the redo log.
-         * @return a log <code>Entry</code>.
-         * @throws IllegalArgumentException if the line is malformed.
-         */
-        static Entry fromString(String logLine) throws IllegalArgumentException {
-            if (logLine.length() != ENTRY_LENGTH) {
-                throw new IllegalArgumentException("Malformed log entry: " + logLine);
-            }
-            String uuid = logLine.substring(0, Constants.UUID_FORMATTED_LENGTH);
-            String typeString = logLine.substring(Constants.UUID_FORMATTED_LENGTH + 1);
-            if (ADD.equals(typeString)) {
-                return new Entry(uuid, NODE_ADDED);
-            } else if (REM.equals(typeString)) {
-                return new Entry(uuid, NODE_REMOVED);
-            } else {
-                throw new IllegalArgumentException("Unrecognized type string in log entry: " + logLine);
-            }
-        }
-
-        /**
-         * Returns the string representation of this <code>Entry</code>:<br/>
-         * UUID &lt;space> (ADD | REM)
-         * @return the string representation of this <code>Entry</code>.
-         */
-        public String toString() {
-            return uuid + " " + getStringForType(type);
-        }
-
-        /**
-         * Returns the string representation for an entry <code>type</code>. If
-         * <code>type</code> is {@link #NODE_ADDED}, <code>ADD</code> is
-         * returned, otherwise <code>REM</code> is returned.
-         * @param type the entry type.
-         * @return the string representation for an entry <code>type</code>.
-         */
-        private static String getStringForType(int type) {
-            if (type == NODE_ADDED) {
-                return ADD;
-            } else {
-                return REM;
-            }
-        }
-    }
-
     //-----------------------< internal >---------------------------------------
 
     /**
-     * Helper interface to collect Entries read from the redo log.
+     * Helper interface to collect Actions read from the redo log.
      */
-    interface EntryCollector {
+    interface ActionCollector {
 
-        /** Called when an entry is created */
-        void collect(Entry entry);
+        /** Called when an action is created */
+        void collect(MultiIndex.Action action);
     }
 }
