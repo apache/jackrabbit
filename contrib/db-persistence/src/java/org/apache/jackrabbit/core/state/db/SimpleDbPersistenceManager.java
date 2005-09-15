@@ -95,9 +95,9 @@ import java.sql.Statement;
  * <pre>
  *   &lt;PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager"&gt;
  *       &lt;param name="driver" value="in.co.daffodil.db.jdbc.DaffodilDBDriver"/&gt;
- *       &lt;param name="url" value="jdbc:daffodilDB_embedded:itemState;path=${wsp.home}/db;create=true"/&gt;
- *       &lt;param name="user" value="user1"/&gt;
- *       &lt;param name="password" value="password1"/&gt;
+ *       &lt;param name="url" value="jdbc:daffodilDB_embedded:${wsp.name};path=${wsp.home}/../../databases;create=true"/&gt;
+ *       &lt;param name="user" value="daffodil"/&gt;
+ *       &lt;param name="password" value="daffodil"/&gt;
  *       &lt;param name="schema" value="daffodil"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
  *  &lt;/PersistenceManager&gt;
