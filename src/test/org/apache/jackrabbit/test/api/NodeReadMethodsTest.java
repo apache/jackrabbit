@@ -1010,7 +1010,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                 return n;
             } else {
                 Node returnedNode = locateNodeWithSameNameSiblings(n);
-                if (n != null) {
+                if (returnedNode != null) {
                     return returnedNode;
                 }
             }
