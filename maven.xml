@@ -14,23 +14,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-
-<project
-    default="jar:jar"
-    xmlns:deploy="deploy"
-    xmlns:j="jelly:core"
-    xmlns:ant="jelly:ant"
-    xmlns:maven="jelly:maven">
-
-    <!-- overwrite goals from jackrabbit -->
-    <goal name="jackrabbit:post-javadoc" />
-    <goal name="test:clean" />
-    <goal name="jackrabbit:generate-sql-parser" />
-    <goal name="jackrabbit:generate-xpath-parser" />
-    <goal name="copy-deps" />
-    <goal name="jackrabbit:test-stub" />
-    <goal name="jackrabbit:test-init" />
-    <goal name="jackrabbit:modules-jar" />
-    <goal name="jackrabbit:modules-install" />
-
+<project default="jar:jar">
+  <!-- 
+      override compile goal, since we just need the jar from the
+      compiled classes of jackrabbit
+  -->
+  <goal name="java:compile" />
 </project>
