@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Enumeration;
 
 /**
- * Implements an in-memory index with a redo log.
+ * Implements an in-memory index with a pending buffer.
  */
 class VolatileIndex extends AbstractIndex {
 
@@ -45,10 +45,9 @@ class VolatileIndex extends AbstractIndex {
      */
     private static final int DEFAULT_BUFFER_SIZE = 10;
 
-    /** The redo log */
-    private final RedoLog redoLog;
-
-    /** Map of pending documents to add to the index */
+    /**
+     * Map of pending documents to add to the index
+     */
     private final Map pending = new LinkedMap();
 
     /**
@@ -57,36 +56,28 @@ class VolatileIndex extends AbstractIndex {
     private int bufferSize = DEFAULT_BUFFER_SIZE;
 
     /**
-     * Creates a new <code>VolatileIndex</code> using an <code>analyzer</code>
-     * and a redo <code>log</code>.
+     * The number of documents in this index.
+     */
+    private int numDocs = 0;
+
+    /**
+     * Creates a new <code>VolatileIndex</code> using an <code>analyzer</code>.
+     *
      * @param analyzer the analyzer to use.
-     * @param log the redo log.
      * @throws IOException if an error occurs while opening the index.
      */
-    VolatileIndex(Analyzer analyzer, RedoLog log) throws IOException {
+    VolatileIndex(Analyzer analyzer) throws IOException {
         super(analyzer, new RAMDirectory(), null);
-        redoLog = log;
     }
 
     /**
-     * Returns the redo log of this volatile index.
-     * @return the redo log of this volatile index.
-     */
-    RedoLog getRedoLog() {
-        return redoLog;
-    }
-
-    /**
-     * Overwrites the default implementation by writing an entry to the
-     * redo log and then adds it to the pending list.
+     * Overwrites the default implementation by adding the document to a pending
+     * list and commits the pending list if needed.
+     *
      * @param doc the document to add to the index.
-     * @throws IOException if an error occurs while writing to the redo log
-     * or the index.
+     * @throws IOException if an error occurs while writing to the index.
      */
     void addDocument(Document doc) throws IOException {
-        redoLog.nodeAdded(doc.get(FieldNames.UUID));
-        redoLog.flush();
-
         Document old = (Document) pending.put(doc.get(FieldNames.UUID), doc);
         if (old != null) {
             disposeDocument(old);
@@ -95,32 +86,41 @@ class VolatileIndex extends AbstractIndex {
             commitPending();
         }
         invalidateSharedReader();
+        numDocs++;
     }
 
     /**
-     * Overwrites the default implementation by writing an entry to the redo
-     * log and then calling the <code>super.removeDocument()</code> method or
-     * if the document is in the pending list, removes it from there.
+     * Overwrites the default implementation to remove the document from the
+     * pending list if it is present or simply calls <code>super.removeDocument()</code>.
      *
      * @param idTerm the uuid term of the document to remove.
-     * @throws IOException if an error occurs while writing to the redo log
-     * or the index.
      * @return the number of deleted documents
+     * @throws IOException if an error occurs while removing the document from
+     *                     the index.
      */
     int removeDocument(Term idTerm) throws IOException {
-        redoLog.nodeRemoved(idTerm.text());
-        redoLog.flush();
-
         Document doc = (Document) pending.remove(idTerm.text());
+        int num;
         if (doc != null) {
             disposeDocument(doc);
             // pending document has been removed
-            return 1;
+            num = 1;
         } else {
             // remove document from index
-            return super.getIndexReader().delete(idTerm);
-            }
+            num = super.getIndexReader().delete(idTerm);
         }
+        numDocs -= num;
+        return num;
+    }
+
+    /**
+     * Returns the number of valid documents in this index.
+     *
+     * @return the number of valid documents in this index.
+     */
+    int getNumDocuments() throws IOException {
+        return numDocs;
+    }
 
     /**
      * Overwrites the implementation in {@link AbstractIndex} to trigger
