@@ -17,11 +17,14 @@
 package org.apache.jackrabbit.rmi.value;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
@@ -178,50 +181,70 @@ public class BinaryValue implements Serializable, StatefulValue {
 
     /**
      * Writes the contents of the underlying stream to the
-     * <code>ObjectOutputStream</code> by first copying to an internal byte
-     * array.
+     * <code>ObjectOutputStream</code>.
      *
      * @param out The <code>ObjectOutputStream</code> to where the binary
      *      data is copied.
-     *
      * @throws IOException If an error occurrs writing the binary data.
-     * @throws OutOfMemoryError If not enough memory is available to store the
-     *      binary data in the internal byte array.
      */
     private void writeObject(ObjectOutputStream out)
             throws IOException, OutOfMemoryError {
-        // read the input into a byte array - limited by memory available !!
-        ByteArrayOutputStream bos =
-            new ByteArrayOutputStream(stream.available());
-        byte[] buf = new byte[2048];
-        int rd = 0;
-        while ((rd = stream.read(buf)) >= 0) {
-            bos.write(buf, 0, rd);
+        byte[] buffer = new byte[4096];
+        int bytes = 0;
+        while ((bytes = stream.read(buffer)) >= 0) {
+            // Write a segment of the input stream
+            out.writeInt(bytes);
+            out.write(buffer, 0, bytes);
         }
-
-        // stream the data to the object output
-        out.writeInt(bos.size());
-        out.write(bos.toByteArray());
+        // Write the end of stream marker
+        out.writeInt(0);
     }
 
     /**
-     * Reads the binary data from the <code>ObjectInputStream</code> into an
-     * internal byte array, which is then provided through a
-     * <code>ByteArrayInputStream</code>.
+     * Reads the binary data from the <code>ObjectInputStream</code> into
+     * a temporary file that is used to back up the binary stream contents
+     * of the constructed value instance. The temporary file gets deleted
+     * when the binary stream is closed or garbage collected.
      *
      * @param in The <code>ObjectInputStream</code> from where to get the
      *      binary data.
-     *
      * @throws IOException If an error occurrs reading the binary data.
-     * @throws OutOfMemoryError If not enouhg memory is available to store the
-     *      binary data in the internal byte array.
      */
     private void readObject(ObjectInputStream in)
             throws IOException, OutOfMemoryError {
-        int size = in.readInt();
-        byte[] buf = new byte[size];
-        in.readFully(buf);
-        stream = new ByteArrayInputStream(buf);
+        final File file = File.createTempFile("jcr-value", "bin");
+
+        OutputStream out = new FileOutputStream(file);
+        byte[] buffer = new byte[4096];
+        for (int bytes = in.readInt(); bytes > 0; bytes = in.readInt()) {
+            if (buffer.length < bytes) {
+                buffer = new byte[bytes];
+            }
+            in.readFully(buffer, 0, bytes);
+            out.write(buffer, 0, bytes);
+        }
+        out.close();
+
+        stream = new FileInputStream(file) {
+
+            private boolean closed = false;
+
+            public void close() throws IOException {
+                super.close();
+                closed = true;
+                file.delete();
+            }
+
+            protected void finalize() throws IOException {
+                try {
+                    if (!closed) {
+                        file.delete();
+                    }
+                } finally {
+                    super.finalize();
+                }
+            }
+        };
     }
 
 }
