@@ -158,21 +158,15 @@ public class ClientItem extends ClientObject implements Item {
      *
      * @see Item#getPath()
      */
-    public boolean isSame(Item item) {
+    public boolean isSame(Item item) throws RepositoryException {
         if (item == null) {
             return false;
         } else if (equals(item)) {
             return true;
-        } else if ((item instanceof Property) && !(this instanceof Property)) {
-            return false;
-        } else if ((item instanceof Node) && !(this instanceof Node)) {
-            return false;
+        } else if (isNode() == item.isNode()){
+            return getPath().equals(item.getPath());
         } else {
-            try {
-                return getPath().equals(item.getPath());
-            } catch (RepositoryException ex) {
-                throw new RuntimeException(ex);
-            }
+            return false;
         }
     }
 
