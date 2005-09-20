@@ -36,13 +36,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Properties;
 import java.util.Vector;
 
 /**
  * Node type definition reader. This class is used to read the
  * persistent node type definition files used by Jackrabbit.
  */
-public final class NodeTypeReader {
+public class NodeTypeReader {
 
     /**
      * Reads a node type definition file. The file contents are read from
@@ -73,6 +74,9 @@ public final class NodeTypeReader {
     /** The node type document walker. */
     private final DOMWalker walker;
 
+    /** The namespaces associated with the node type XML document. */
+    private final Properties namespaces;
+
     /** The namespace resolver. */
     private final NamespaceResolver resolver;
 
@@ -82,9 +86,18 @@ public final class NodeTypeReader {
      * @param xml node type definition file
      * @throws IOException if the node type definition file cannot be read
      */
-    private NodeTypeReader(InputStream xml) throws IOException {
+    public NodeTypeReader(InputStream xml) throws IOException {
         walker = new DOMWalker(xml);
-        resolver = new AdditionalNamespaceResolver(walker.getNamespaces());
+        namespaces = walker.getNamespaces();
+        resolver = new AdditionalNamespaceResolver(namespaces);
+    }
+
+    /**
+     * Returns the namespaces declared in the node type definition
+     * file.
+     */
+    public Properties getNamespaces() {
+        return namespaces;
     }
 
     /**
@@ -98,7 +111,7 @@ public final class NodeTypeReader {
      * @throws UnknownPrefixException      if a definition contains an
      *                                     unknown namespace prefix
      */
-    private NodeTypeDef[] getNodeTypeDefs()
+    public NodeTypeDef[] getNodeTypeDefs()
             throws InvalidNodeTypeDefException, IllegalNameException,
             UnknownPrefixException {
         Vector defs = new Vector();
