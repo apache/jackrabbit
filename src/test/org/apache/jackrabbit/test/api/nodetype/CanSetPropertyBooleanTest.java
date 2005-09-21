@@ -35,7 +35,7 @@ import java.text.ParseException;
  * @test
  * @sources CanSetPropertyBooleanTest.java
  * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyBooleanTest
- * @keywords level1
+ * @keywords level2
  */
 public class CanSetPropertyBooleanTest extends AbstractJCRTest {
     /**
