@@ -164,14 +164,13 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
         do {
             if (invalidUUIDs.size() > 0) {
                 // previous sort run was not successful -> remove failed uuids
-                ScoreNode[] tmp = new ScoreNode[nodes.length - invalidUUIDs.size()];
-                int newIdx = 0;
+                List tmp = new ArrayList();
                 for (int i = 0; i < nodes.length; i++) {
                     if (!invalidUUIDs.contains(nodes[i].uuid)) {
-                        tmp[newIdx++] = nodes[i];
+                        tmp.add(nodes[i]);
                     }
                 }
-                nodes = tmp;
+                nodes = (ScoreNode[]) tmp.toArray(new ScoreNode[tmp.size()]);
                 invalidUUIDs.clear();
             }
 
