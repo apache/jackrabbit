@@ -35,7 +35,7 @@ import java.text.ParseException;
  * @test
  * @sources CanSetPropertyStringTest.java
  * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyStringTest
- * @keywords level1
+ * @keywords level2
  */
 public class CanSetPropertyStringTest extends AbstractJCRTest {
     /**
