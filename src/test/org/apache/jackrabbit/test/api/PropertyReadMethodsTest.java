@@ -295,15 +295,13 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
         if (values.length == 0) {
             throw new NotExecutableException("No testable propery found.");
         }
-        values[0] = session.getValueFactory().createValue(values[0].getString() + "abc");
+        values[0] = null;
 
-        // re-acquire the values and compare the zeroth values
+        // re-acquire the values and check if nulled value still exists
         Value[] values2 = prop.getValues();
-        String s1 = values[0].getString();
-        String s2 = values2[0].getString();
-        assertFalse("Changes on the array returned by Property.getNodes() must " +
+        assertNotNull("Changes on the array returned by Property.getValues() must " +
                 "not be reflected in the internal storage.",
-                s1.equals(s2));
+                values2[0]);
     }
 
     /**
