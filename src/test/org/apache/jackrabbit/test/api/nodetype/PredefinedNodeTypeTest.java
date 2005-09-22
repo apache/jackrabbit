@@ -34,13 +34,15 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
- * <code>PredefinedNodeTypeTest</code> tests if the implemented predefined node
- * types implemented correctly.
+ * <code>PredefinedNodeTypeTest</code> tests if the predefined node types are
+ * implemented correctly.
  *
  * @test
  * @sources PredefinedNodeTypeTest.java
@@ -95,97 +97,97 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
     }
 
     /** Test for the predefined mix:lockable node type. */
-    public void testLockable() {
+    public void testLockable() throws NotExecutableException {
         testPredefinedNodeType("mix:lockable");
     }
 
     /** Test for the predefined mix:referenceable node type. */
-    public void testReferenceable() {
+    public void testReferenceable() throws NotExecutableException {
         testPredefinedNodeType("mix:referenceable");
     }
 
     /** Test for the predefined mix:versionable node type. */
-    public void testVersionable() {
+    public void testVersionable() throws NotExecutableException {
         testPredefinedNodeType("mix:versionable");
     }
 
     /** Test for the predefined nt:base node type. */
-    public void testBase() {
+    public void testBase() throws NotExecutableException {
         testPredefinedNodeType("nt:base");
     }
 
     /** Test for the predefined nt:unstructured node type. */
-    public void testUnstructured() {
+    public void testUnstructured() throws NotExecutableException {
         testPredefinedNodeType("nt:unstructured");
     }
 
     /** Test for the predefined nt:hierarchyNode node type. */
-    public void testHierarchyNode() {
+    public void testHierarchyNode() throws NotExecutableException {
         testPredefinedNodeType("nt:hierarchyNode");
     }
 
     /** Test for the predefined nt:file node type. */
-    public void testFile() {
+    public void testFile() throws NotExecutableException {
         testPredefinedNodeType("nt:file");
     }
 
     /** Test for the predefined nt:linkedFile node type. */
-    public void testLinkedFile() {
+    public void testLinkedFile() throws NotExecutableException {
         testPredefinedNodeType("nt:linkedFile");
     }
 
     /** Test for the predefined nt:folder node type. */
-    public void testFolder() {
+    public void testFolder() throws NotExecutableException {
         testPredefinedNodeType("nt:folder");
     }
 
     /** Test for the predefined nt:nodeType node type. */
-    public void testNodeType() {
+    public void testNodeType() throws NotExecutableException {
         testPredefinedNodeType("nt:nodeType");
     }
 
     /** Test for the predefined nt:propertyDef node type. */
-    public void testPropertyDef() {
+    public void testPropertyDef() throws NotExecutableException {
         testPredefinedNodeType("nt:propertyDefinition");
     }
 
     /** Test for the predefined nt:childNodeDef node type. */
-    public void testChildNodeDef() {
+    public void testChildNodeDef() throws NotExecutableException {
         testPredefinedNodeType("nt:childNodeDefinition");
     }
 
     /** Test for the predefined nt:versionHistory node type. */
-    public void testVersionHistory() {
+    public void testVersionHistory() throws NotExecutableException {
         testPredefinedNodeType("nt:versionHistory");
     }
 
     /** Test for the predefined nt:versionLabels node type. */
-    public void testVersionLabels() {
+    public void testVersionLabels() throws NotExecutableException {
         testPredefinedNodeType("nt:versionLabels");
     }
 
     /** Test for the predefined nt:version node type. */
-    public void testVersion()  {
+    public void testVersion() throws NotExecutableException {
         testPredefinedNodeType("nt:version");
     }
 
     /** Test for the predefined nt:frozenNode node type. */
-    public void testFrozenNode() {
+    public void testFrozenNode() throws NotExecutableException {
         testPredefinedNodeType("nt:frozenNode");
     }
 
     /** Test for the predefined nt:versionedChild node type. */
-    public void testVersionedChild() {
+    public void testVersionedChild() throws NotExecutableException {
         testPredefinedNodeType("nt:versionedChild");
     }
 
     /** Test for the predefined nt:query node type. */
-    public void testQuery() {
+    public void testQuery() throws NotExecutableException {
         testPredefinedNodeType("nt:query");
     }
 
     /** Test for the predefined nt:resource node type. */
-    public void testResource() {
+    public void testResource() throws NotExecutableException {
         testPredefinedNodeType("nt:resource");
     }
 
@@ -202,8 +204,11 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      * semantics remain the same.
      *
      * @param name node type name
+     * @throws NotExecutableException if the node type is not supported by
+     *   this repository implementation.
      */
-    private void testPredefinedNodeType(String name) {
+    private void testPredefinedNodeType(String name)
+            throws NotExecutableException {
         try {
             StringBuffer spec = new StringBuffer();
             String resource =
@@ -222,6 +227,14 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
                     getNodeTypeSpec(type));
         } catch (IOException e) {
             fail(e.getMessage());
+        } catch (NoSuchNodeTypeException e) {
+            // only nt:base is strictly required
+            if ("nt:base".equals(name)) {
+                fail(e.getMessage());
+            } else {
+                throw new NotExecutableException("NodeType " + name +
+                        " not supported by this repository implementation.");
+            }
         } catch (RepositoryException e) {
             fail(e.getMessage());
         }
