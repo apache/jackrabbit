@@ -380,17 +380,19 @@ public class NodeTypeUtil {
         NodeTypeIterator types = manager.getAllNodeTypes();
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            NodeType superTypes[] = type.getSupertypes();
-            boolean isSubType = false;
-            for (int i = 0; i < superTypes.length; i++) {
-                String name = superTypes[i].getName();
-                if (name.equals(legalType)) {
-                    isSubType = true;
-                    break;
+            if (!type.getName().equals(legalType)) {
+                NodeType superTypes[] = type.getSupertypes();
+                boolean isSubType = false;
+                for (int i = 0; i < superTypes.length; i++) {
+                    String name = superTypes[i].getName();
+                    if (name.equals(legalType)) {
+                        isSubType = true;
+                        break;
+                    }
                 }
-            }
-            if (!isSubType) {
-                return type.getName();
+                if (!isSubType) {
+                    return type.getName();
+                }
             }
         }
         return null;
