@@ -31,7 +31,7 @@
     <dependencies>
         <dependency>
             <groupId>jackrabbit</groupId>
-            <artifactId>jackrabbit</artifactId>
+            <artifactId>jackrabbit-commons</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
         <dependency>
