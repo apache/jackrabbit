@@ -44,7 +44,7 @@
         </dependency>
         <dependency>
             <groupId>jackrabbit</groupId>
-            <artifactId>jackrabbit-core</artifactId>
+            <artifactId>jackrabbit</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
         
