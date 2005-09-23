@@ -56,14 +56,6 @@
         </dependency>
         <dependency>
             <groupId>jackrabbit</groupId>
-            <artifactId>jackrabbit-api</artifactId>
-            <version>${jackrabbit.build.version.jackrabbit}</version>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
-        <dependency>
-            <groupId>jackrabbit</groupId>
             <artifactId>jackrabbit-commons</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
             <properties>
@@ -82,7 +74,7 @@
         </dependency>
         <dependency>
             <groupId>jackrabbit</groupId>
-            <artifactId>jackrabbit-core</artifactId>
+            <artifactId>jackrabbit</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
             <properties>
                 <war.bundle>true</war.bundle>
