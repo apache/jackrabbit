@@ -88,11 +88,11 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
         addMixinReferenceableToNode(node1);
 
         // clone a node from default workspace to have the same uuid on second workspace
-        workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName2, false);
+        workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName3, false);
 
         // clone node1 from default workspace to second workspace
         try {
-            workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName3, false);
+            workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName4, false);
             fail("If removeExisting is false then a UUID collision should throw a ItemExistsException");
         } catch (ItemExistsException e) {
             // successful
@@ -108,7 +108,7 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
         // add mixin referenceable to node1
         addMixinReferenceableToNode(node1);
         if (node1.isNodeType(mixReferenceable)) {
-            workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName2, false);
+            workspaceW2.clone(workspace.getName(), node1.getPath(), testRootNodeW2.getPath() + "/" + nodeName3, false);
         } else {
             fail("Node should be referenceable.");
         }
@@ -117,8 +117,8 @@ public class WorkspaceCloneReferenceableTest extends AbstractWorkspaceReferencea
         if (node2.isNodeType(mixReferenceable)) {
             fail("Node should not be referenceable.");
         } else {
-            workspaceW2.clone(workspace.getName(), node2.getPath(), testRootNodeW2.getPath() + "/" + nodeName2, false);
-            assertTrue(testRootNodeW2.hasNode(nodeName2));
+            workspaceW2.clone(workspace.getName(), node2.getPath(), testRootNodeW2.getPath() + "/" + nodeName4, false);
+            assertTrue(testRootNodeW2.hasNode(nodeName4));
         }
     }
 
