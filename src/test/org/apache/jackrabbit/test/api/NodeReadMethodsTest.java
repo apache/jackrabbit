@@ -497,7 +497,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
 
         // test that an empty NodeIterator is returned
         // when the pattern is not matching any child node
-        String pattern0 = notExistingPropertyName.toString();
+        String pattern0 = notExistingPropertyName.toString().replaceAll(":", "");
         NodeIterator properties0 = node.getNodes(pattern0);
         try {
             properties0.nextNode();
@@ -778,7 +778,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
 
         assertFalse("hasNode(String relPath) returns true although " +
                 "node at relPath is not existing",
-                node.hasNode(notExistingNodeName.toString()));
+                node.hasNode(notExistingNodeName.toString().replaceAll(":", "")));
     }
 
     /**
@@ -830,7 +830,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
 
         assertFalse("node.hasProperty(\"relPath\") returns true " +
                 "although property at relPath is not existing",
-                node.hasProperty(notExistingPropertyName.toString()));
+                node.hasProperty(notExistingPropertyName.toString().replaceAll(":", "")));
     }
 
     /**
