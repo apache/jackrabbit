@@ -309,8 +309,10 @@ public class RepositoryConfig {
             TransformerFactory factory = TransformerFactory.newInstance();
             Transformer transformer = factory.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            // NOTE: The StreamResult instance below is constructed using the
+            // file path instead of the file object. See JCR-222 for details.
             transformer.transform(
-                    new DOMSource(template), new StreamResult(xml));
+                    new DOMSource(template), new StreamResult(xml.getPath()));
         } catch (TransformerConfigurationException e) {
             throw new ConfigurationException(
                     "Cannot create a workspace configuration writer", e);
