@@ -296,9 +296,13 @@ public class RepositoryConfig {
 
         // Create the directory, fail if it exists or cannot be created
         if (!directory.mkdir()) {
-            throw new ConfigurationException(
-                    "Failed to create configuration directory for workspace "
-                    + name + ".");
+            if (directory.exists()) {
+                throw new ConfigurationException(
+                        "Workspace directory already exists: " + name);
+            } else {
+                throw new ConfigurationException(
+                        "Failed to create workspace directory: " + name);
+            }
         }
 
         // Create the workspace.xml file using the configuration template.
