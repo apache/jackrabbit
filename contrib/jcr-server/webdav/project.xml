@@ -42,15 +42,18 @@
         
         <!-- non-jackrabbit dependencies -->
         <dependency>
-            <id>jdom</id>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
             <version>1.0</version>
         </dependency>
         <dependency>
-            <id>log4j</id>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
             <version>1.2.8</version>
         </dependency>
         <dependency>
-            <id>servletapi</id>
+            <groupId>servletapi</groupId>
+            <artifactId>servletapi</artifactId>
             <version>2.3</version>
         </dependency>
     </dependencies>

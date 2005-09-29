@@ -32,14 +32,16 @@
 
         <!-- dependencies from jackrabbit that we want to bundle -->
         <dependency>
-            <id>concurrent</id>
+            <groupId>concurrent</groupId>
+            <artifactId>concurrent</artifactId>
             <version>1.3.4</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
         <dependency>
-            <id>commons-collections</id>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
             <version>3.1</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -79,7 +81,8 @@
         </dependency>
 
         <dependency>
-            <id>commons-logging</id>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
             <version>1.0</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -89,21 +92,24 @@
 
     <!-- own dependencies -->    
         <dependency>
-            <id>jdom</id>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
             <version>1.0</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
         <dependency>
-            <id>log4j</id>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
             <version>1.2.8</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
         <dependency>
-            <id>commons-fileupload</id>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
             <version>1.0</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -113,11 +119,13 @@
     
     <!-- own dependencies (build only) -->
         <dependency>
-            <id>servletapi</id>
+            <groupId>servletapi</groupId>
+            <artifactId>servletapi</artifactId>
             <version>2.3</version>
         </dependency>
         <dependency>
-            <id>junit</id>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
             <version>3.8.1</version>
             <properties>
                 <war.bundle>true</war.bundle>

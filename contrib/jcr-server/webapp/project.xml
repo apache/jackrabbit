@@ -91,39 +91,45 @@
         
         <!-- non-jackrabbit dependencies -->
         <dependency>
-            <id>jdom</id>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
             <version>1.0</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
         <dependency>
-            <id>log4j</id>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
             <version>1.2.8</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
         <dependency>
-            <id>junit</id>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
             <version>3.8.1</version>
         </dependency>
         <dependency>
-            <id>commons-chain</id>
+            <groupId>commons-chain</groupId>
+            <artifactId>commons-chain</artifactId>
             <version>1.0</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
         <dependency>
-            <id>commons-digester</id>
+            <groupId>commons-digester</groupId>
+            <artifactId>commons-digester</artifactId>
             <version>1.6</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
         <dependency>
-            <id>commons-beanutils</id>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
             <version>1.7.0</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -132,14 +138,16 @@
 
         <!-- dependencies of jackrabbit -->
         <dependency>
-          <id>concurrent</id>
+          <groupId>concurrent</groupId>
+          <artifactId>concurrent</artifactId>
           <version>1.3.4</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
         <dependency>
-          <id>commons-collections</id>
+          <groupId>commons-collections</groupId>
+          <artifactId>commons-collections</artifactId>
           <version>3.1</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -194,7 +202,8 @@
             </properties>
         </dependency>
         <dependency>
-          <id>commons-logging</id>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
           <version>1.0</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -202,7 +211,8 @@
         </dependency>
         <!-- used for eventual compiling -->
         <dependency>
-            <id>servletapi</id>
+            <groupId>servletapi</groupId>
+            <artifactId>servletapi</artifactId>
             <version>2.3</version>
         </dependency>
         
