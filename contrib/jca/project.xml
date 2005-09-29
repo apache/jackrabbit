@@ -25,14 +25,16 @@
 	    </properties>
 	</dependency>
 	<dependency>
-	    <id>concurrent</id>
+	    <groupId>concurrent</groupId>
+	    <artifactId>concurrent</artifactId>
 	    <version>1.3.4</version>
 	    <properties>
 		<rar.bundle>true</rar.bundle>
 	    </properties>	    
 	</dependency>  
 	<dependency>
-	    <id>commons-collections</id>
+	    <groupId>commons-collections</groupId>
+	    <artifactId>commons-collections</artifactId>
 	    <version>3.1</version>
 	    <properties>
 		<rar.bundle>true</rar.bundle>
@@ -48,7 +50,8 @@
 	    </properties>	    
 	</dependency> 
 	<dependency>
-	    <id>log4j</id>
+	    <artifactId>log4j</artifactId>
+	    <groupId>log4j</groupId>
 	    <version>1.2.8</version>
 	    <properties>
 		<rar.bundle>true</rar.bundle>
@@ -79,7 +82,8 @@
 	    </properties>	    
 	</dependency> 
 	<dependency>
-	    <id>commons-logging</id>
+	    <groupId>commons-logging</groupId>
+	    <artifactId>commons-logging</artifactId>
 	    <version>1.0</version>
 	    <properties>
 		<rar.bundle>true</rar.bundle>

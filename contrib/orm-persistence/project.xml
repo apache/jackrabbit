@@ -55,19 +55,23 @@
         <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <id>concurrent</id>
+      <groupId>concurrent</groupId>
+      <artifactId>concurrent</artifactId>
       <version>1.3.4</version>
     </dependency>
     <dependency>
-      <id>junit</id>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <version>3.8.1</version>
     </dependency>
     <dependency>
-      <id>commons-collections</id>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
       <version>3.1</version>
     </dependency>
     <dependency>
-      <id>jdom</id>
+      <groupId>jdom</groupId>
+      <artifactId>jdom</artifactId>
       <version>1.0</version>
     </dependency>
     <dependency>
@@ -82,7 +86,8 @@
       <url>http://www.day.com/maven/jsr170/jars/jcr-0.16.4.1.jar</url>
     </dependency>
     <dependency>
-      <id>log4j</id>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
       <version>1.2.8</version>
     </dependency>
     <dependency>
@@ -101,7 +106,8 @@
       <version>2.6.2</version>
     </dependency>
     <dependency>
-      <id>commons-logging</id>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
       <version>1.0</version>
     </dependency>
     
