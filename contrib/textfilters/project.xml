@@ -34,8 +34,8 @@
   <distributionSite>incubator.apache.org</distributionSite>
   <distributionDirectory>/www/www.apache.org/dist/java-repository/</distributionDirectory>
   <repository>
-    <connection>scm:subversion:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</connection>
-    <developerConnection>scm:subversion:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</developerConnection>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</developerConnection>
     <url>http://svn.apache.org/viewcvs</url>
   </repository>
   <mailingLists>
