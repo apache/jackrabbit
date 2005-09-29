@@ -19,7 +19,8 @@
 
 <project>
   <pomVersion>3</pomVersion>
-  <id>jcr-rmi</id>
+  <groupId>org.apache.jackrabbit</groupId>
+  <artifactId>jcr-rmi</artifactId>
   <name>JCR-RMI</name>
   <currentVersion>1.0-SNAPSHOT</currentVersion>
   <inceptionYear>2004</inceptionYear>
