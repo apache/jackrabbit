@@ -85,10 +85,10 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
     }
 
     /** {@inheritDoc} */
-    public void copy(String from, String to, String workspace)
+    public void copy(String workspace, String from, String to)
             throws RepositoryException, RemoteException {
         try {
-            this.workspace.copy(from, to, workspace);
+            this.workspace.copy(workspace, from, to);
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

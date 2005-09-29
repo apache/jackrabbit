@@ -109,7 +109,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     }
 
     /** {@inheritDoc} */
-    public void copy(String workspace, String to, String from)
+    public void copy(String workspace, String from, String to)
             throws RepositoryException {
         try {
             remote.copy(workspace, from, to);
