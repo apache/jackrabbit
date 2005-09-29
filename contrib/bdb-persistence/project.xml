@@ -18,7 +18,7 @@
 <project>
 	<pomVersion>3</pomVersion>
 	<artifactId>jackrabbit-bdb</artifactId>
-	<groupId>jackrabbit</groupId>
+	<groupId>org.apache.jackrabbit</groupId>
 	<name>Jackrabbit BerkeleyDB Persistence Manager</name>
 	<currentVersion>1.0-SNAPSHOT</currentVersion>
 	<organization>
@@ -78,7 +78,7 @@
 			<url>http://www.day.com/maven/jsr170/jars/jcr-1.0.jar</url>
 		</dependency>
 		<dependency>
-			<groupId>jackrabbit</groupId>
+			<groupId>org.apache.jackrabbit</groupId>
 			<artifactId>jackrabbit</artifactId>
 			<version>${pom.currentVersion}</version>
 			<type>jar</type>
