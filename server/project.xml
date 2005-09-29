@@ -36,7 +36,7 @@
             <version>${pom.currentVersion}</version>
         </dependency>
         <dependency>
-            <groupId>jackrabbit</groupId>
+            <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-commons</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
