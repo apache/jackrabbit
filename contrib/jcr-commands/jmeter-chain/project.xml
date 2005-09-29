@@ -3,7 +3,7 @@
   <pomVersion>3</pomVersion>
   <artifactId>jmeter-chain</artifactId>
   <name>JMeter chain</name>
-  <groupId>jackrabbit</groupId>
+  <groupId>org.apache.jackrabbit</groupId>
   <currentVersion>1.0-dev</currentVersion>
   <organization />
   <inceptionYear>2005</inceptionYear>
