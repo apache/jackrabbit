@@ -1174,7 +1174,12 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
+        // first do trivial checks without using type hierarchy
         if (ntName.equals(primaryTypeName)) {
+            return true;
+        }
+
+        if (((NodeState) state).getMixinTypeNames().contains(ntName)) {
             return true;
         }
 
