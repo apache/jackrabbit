@@ -14,8 +14,9 @@
 # limitations under the License.
 
 #
-# This file lists all available TextFilter implementations that are shipped
+# This file lists all available query language implementations that are shipped
 # with Jackrabbit.
 #
 
-org.apache.jackrabbit.core.query.lucene.TextPlainTextFilter
+org.apache.jackrabbit.core.query.xpath.QueryBuilder
+org.apache.jackrabbit.core.query.sql.QueryBuilder

@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query;
+package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.query.lucene.FieldNames;
+import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Implements a {@link TextFilter} that handles binary properties of mime-type
+ * Implements a {@link org.apache.jackrabbit.core.query.TextFilter} that handles binary properties of mime-type
  * text/plain.
  */
 public class TextPlainTextFilter implements TextFilter {

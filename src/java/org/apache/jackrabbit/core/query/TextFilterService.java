@@ -32,7 +32,7 @@ import java.util.ArrayList;
  * are registered in a jar file as providers for
  * <code>META-INF/services/org.apache.jackrabbit.core.query.TextFilterService</code>
  * E.g. the jackrabbit jar file contains entries for some {@link TextFilter}
- * implementations such as {@link TextPlainTextFilter}. Custom
+ * implementations such as {@link org.apache.jackrabbit.core.query.lucene.TextPlainTextFilter}. Custom
  * {@link TextFilter} implementations may be added to Jackrabbit by packaging
  * them into a jar file together with a
  * <code>META-INF/services/org.apache.jackrabbit.core.query.TextFilterService</code>
