@@ -128,6 +128,15 @@ public final class Path {
             + "(\\[([1-9]\\d*)\\])?");
 
     /**
+     * Matcher instance as thread-local.
+     */
+    private static final ThreadLocal PATH_ELEMENT_MATCHER = new ThreadLocal() {
+        protected Object initialValue() {
+            return PATH_ELEMENT_PATTERN.matcher("dummy");
+        }
+    };
+
+    /**
      * the elements of this path
      */
     private final PathElement[] elements;
@@ -375,7 +384,8 @@ public final class Path {
                 // ignore trailing '/'
                 break;
             }
-            Matcher matcher = PATH_ELEMENT_PATTERN.matcher(elem);
+            Matcher matcher = (Matcher) PATH_ELEMENT_MATCHER.get();
+            matcher.reset(elem);
             if (matcher.matches()) {
                 if (resolver == null) {
                     // check only
