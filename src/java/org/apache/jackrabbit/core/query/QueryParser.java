@@ -16,12 +16,9 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.query.sql.JCRSQLQueryBuilder;
-import org.apache.jackrabbit.core.query.xpath.XPathQueryBuilder;
 import org.apache.jackrabbit.name.NamespaceResolver;
 
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.Query;
 
 /**
  * This class acts as the central entry point for parsing query statements from
@@ -53,13 +50,8 @@ public class QueryParser {
                                       NamespaceResolver resolver)
             throws InvalidQueryException {
 
-        if (Query.XPATH.equals(language)) {
-            return XPathQueryBuilder.createQuery(statement, resolver);
-        } else if (Query.SQL.equals(language)) {
-            return JCRSQLQueryBuilder.createQuery(statement, resolver);
-        } else {
-            throw new InvalidQueryException("Unsupported language: " + language);
-        }
+        QueryTreeBuilder builder = QueryTreeBuilderRegistry.getQueryTreeBuilder(language);
+        return builder.createQueryTree(statement, resolver);
     }
 
     /**
@@ -86,13 +78,8 @@ public class QueryParser {
                                   NamespaceResolver resolver)
             throws InvalidQueryException {
 
-        if (Query.XPATH.equals(language)) {
-            return XPathQueryBuilder.toString(root, resolver);
-        } else if (Query.SQL.equals(language)) {
-            return JCRSQLQueryBuilder.toString(root, resolver);
-        } else {
-            throw new InvalidQueryException("Unsupported language: " + language);
-        }
+        QueryTreeBuilder builder = QueryTreeBuilderRegistry.getQueryTreeBuilder(language);
+        return builder.toString(root, resolver);
     }
 
 }
