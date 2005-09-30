@@ -90,6 +90,15 @@ public class QName implements Cloneable, Comparable, Serializable {
             "(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
             + "([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)");
 
+    /**
+     * Matcher instance as thread-local.
+     */
+    private static final ThreadLocal NAME_MATCHER = new ThreadLocal() {
+        protected Object initialValue() {
+            return NAME_PATTERN.matcher("dummy");
+        }
+    };
+
     /** The memorized hash code of this qualified name. */
     private transient int hash;
 
@@ -235,7 +244,9 @@ public class QName implements Cloneable, Comparable, Serializable {
         String prefix;
         String localName;
 
-        Matcher matcher = NAME_PATTERN.matcher(jcrName);
+
+        Matcher matcher = (Matcher) NAME_MATCHER.get();
+        matcher.reset(jcrName);
         if (matcher.matches()) {
             // check for prefix (group 1)
             if (matcher.group(1) != null) {
@@ -412,6 +423,8 @@ public class QName implements Cloneable, Comparable, Serializable {
      * @see Comparable#compareTo(Object)
      */
     public int compareTo(Object o) throws ClassCastException {
-        return toString().compareTo(((QName) o).toString());
+        QName other = (QName) o;
+        int result = namespaceURI.compareTo(other.namespaceURI);
+        return (result != 0) ? result : localName.compareTo(other.localName);
     }
 }
