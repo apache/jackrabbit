@@ -22,19 +22,15 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.NodeTypeQueryNode;
-import org.apache.jackrabbit.core.query.NotQueryNode;
-import org.apache.jackrabbit.core.query.OrQueryNode;
 import org.apache.jackrabbit.core.query.OrderQueryNode;
 import org.apache.jackrabbit.core.query.PathQueryNode;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryParser;
 import org.apache.jackrabbit.core.query.QueryRootNode;
-import org.apache.jackrabbit.core.query.TextsearchQueryNode;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
@@ -227,11 +223,11 @@ class QueryImpl implements ExecutableQuery {
             }
         }
 
-        // add jcr:path
-        selectProps.add(Constants.JCR_PATH);
-
-        // add jcr:score if necessary
-        if (hasTextsearchNode(root.getLocationNode())) {
+        // add jcr:path and jcr:score if not selected already
+        if (!selectProps.contains(Constants.JCR_PATH)) {
+            selectProps.add(Constants.JCR_PATH);
+        }
+        if (!selectProps.contains(Constants.JCR_SCORE)) {
             selectProps.add(Constants.JCR_SCORE);
         }
 
@@ -269,42 +265,5 @@ class QueryImpl implements ExecutableQuery {
      */
     public void setRespectDocumentOrder(boolean documentOrder) {
         this.documentOrder = documentOrder;
-    }
-
-    //-----------------------------< internal >---------------------------------
-
-    /**
-     * Returns <code>true</code> if <code>node</code> has a
-     * {@link org.apache.jackrabbit.core.query.TextsearchQueryNode} somewhere
-     * down the query tree; <code>false</code> otherwise.
-     * @param node the path node.
-     * @return <code>true</code> if the query tree contains a textsearch
-     *  node, <code>false</code> otherwise.
-     */
-    private static boolean hasTextsearchNode(PathQueryNode node) {
-        final boolean[] textsearch = new boolean[1];
-        node.acceptOperands(new DefaultQueryNodeVisitor() {
-            public Object visit(OrQueryNode node, Object data) {
-                return node.acceptOperands(this, data);
-            }
-
-            public Object visit(AndQueryNode node, Object data) {
-                return node.acceptOperands(this, data);
-            }
-
-            public Object visit(NotQueryNode node, Object data) {
-                return node.acceptOperands(this, data);
-            }
-
-            public Object visit(TextsearchQueryNode node, Object data) {
-                textsearch[0] = true;
-                return data;
-            }
-
-            public Object visit(LocationStepQueryNode node, Object data) {
-                return node.acceptOperands(this, data);
-            }
-        }, null);
-        return textsearch[0];
     }
 }

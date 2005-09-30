@@ -82,6 +82,7 @@ public class GetPropertyNamesTest extends AbstractQueryTest {
         }
         // add jcr:path
         singleValPropNames.add(jcrPath);
+        singleValPropNames.add(jcrScore);
 
         String[] foundPropertyNames = result.getColumnNames();
         Object[] realPropertyNames = singleValPropNames.toArray();
