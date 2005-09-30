@@ -212,16 +212,16 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         // need to re-aquire rows, {@link #getSize} may consume elements.
         rows = queryResult.getRows();
         int changeCnt = 0;
-        String last = "";
+        String last = descending ? "\uFFFF" : "";
         while (rows.hasNext()) {
             String value = rows.nextRow().getValue(propName).getString();
             int cp = value.compareTo(last);
             // if value changed evaluate if the ordering is correct
             if (cp != 0) {
                 changeCnt++;
-                if (cp == 1 && descending) {
+                if (cp > 0 && descending) {
                     fail("Repository doesn't order properly descending");
-                } else if (cp == -1 && !descending) {
+                } else if (cp < 0 && !descending) {
                     fail("Repository doesn't order properly ascending");
                 }
             }
