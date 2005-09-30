@@ -1182,16 +1182,19 @@ public class NodeImpl extends ItemImpl implements Node {
         // and check whether it includes the specified node type
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
         // mixin's
-        HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
+        Set typeSet = ((NodeState) state).getMixinTypeNames();
+        QName[] types = new QName[typeSet.size() + 1];
+        typeSet.toArray(types);
         // primary type
-        set.add(primaryTypeName);
+        types[types.length - 1] = primaryTypeName;
+
         try {
             EffectiveNodeType ent =
-                    ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+                    ntReg.getEffectiveNodeType(types);
             return ent.includesNodeType(ntName);
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type of "
-                    + set;
+                    + Arrays.asList(types);
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
