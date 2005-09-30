@@ -21,7 +21,7 @@
     <!-- ====================================================================== -->
     <extend>${basedir}/../project.xml</extend>
     <id>jcr-client</id>
-    <groupId>jcr-server</groupId>
+    <groupId>org.apache.jackrabbit</groupId>
     <type>jar</type>
     <name>JCRWebdavServer Client Library</name>
 
@@ -32,7 +32,7 @@
         <!-- internal dependencies -->
         <dependency>
             <artifactId>jcr-webdav</artifactId>
-            <groupId>jcr-server</groupId>
+            <groupId>org.apache.jackrabbit</groupId>
             <version>${pom.currentVersion}</version>
         </dependency>
         
@@ -50,8 +50,14 @@
         
         <!-- non-jackrabbit dependencies -->
         <dependency>
-            <id>jdom</id>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.8</version>
         </dependency>
         <dependency>
             <groupId>xerces</groupId>
@@ -59,29 +65,29 @@
             <version>2.6.2</version>
         </dependency>
         <dependency>
-            <id>log4j</id>
-            <version>1.2.8</version>
-        </dependency>
-        <dependency>
-            <id>servletapi</id>
+            <groupId>servletapi</groupId>
+            <artifactId>servletapi</artifactId>
             <version>2.3</version>
         </dependency>
         <dependency>
-          <id>commons-httpclient</id>
-          <version>2.0.2</version>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>2.0.2</version>
         </dependency>
         <dependency>
-          <id>commons-collections</id>
-          <version>3.1</version>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.1</version>
         </dependency>
         <dependency>
-          <id>commons-logging</id>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
           <version>1.0</version>
         </dependency>
         <dependency>
-          <groupId>xml-apis</groupId>
-          <artifactId>xmlParserAPIs</artifactId>
-          <version>2.0.2</version>
+            <groupId>xml-apis</groupId>
+            <artifactId>xmlParserAPIs</artifactId>
+            <version>2.0.2</version>
         </dependency>
     </dependencies>
 

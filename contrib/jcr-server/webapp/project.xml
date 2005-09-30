@@ -21,7 +21,7 @@
     <!-- ====================================================================== -->
     <extend>${basedir}/../project.xml</extend>
     <id>jackrabbit-server</id>
-    <groupId>jcr-server</groupId>
+    <groupId>org.apache.jackrabbit</groupId>
     <type>war</type>
     <name>JCRWebdavServer WebApplication</name>
     
@@ -32,7 +32,7 @@
         <!-- internal dependencies -->
         <dependency>
             <artifactId>jcr-server</artifactId>
-            <groupId>jcr-server</groupId>
+            <groupId>org.apache.jackrabbit</groupId>
             <version>${pom.currentVersion}</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -40,7 +40,7 @@
         </dependency>
         <dependency>
             <artifactId>jcr-webdav</artifactId>
-            <groupId>jcr-server</groupId>
+            <groupId>org.apache.jackrabbit</groupId>
             <version>${pom.currentVersion}</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -48,7 +48,7 @@
         </dependency>
         <dependency>
             <artifactId>jcr-client</artifactId>
-            <groupId>jcr-server</groupId>
+            <groupId>org.apache.jackrabbit</groupId>
             <version>${pom.currentVersion}</version>
             <properties>
                 <war.bundle>true</war.bundle>

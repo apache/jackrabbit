@@ -21,7 +21,7 @@
     <!-- ====================================================================== -->
     <extend>${basedir}/../project.xml</extend>
     <id>jcr-webdav</id>
-    <groupId>jcr-server</groupId>
+    <groupId>org.apache.jackrabbit</groupId>
     <type>jar</type>
     <name>JCRWebdavServer Webdav Library</name>
 
