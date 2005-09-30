@@ -373,11 +373,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
         if (itemId.denotesNode()) {
             NodeId nodeId = (NodeId) itemId;
             NodeState parentState;
-            if (!hasItemState(nodeId)) {
-                String msg = "failed to resolve name of " + nodeId;
-                log.debug(msg);
-                throw new ItemNotFoundException(nodeId.toString());
-            }
             try {
                 NodeState nodeState = (NodeState) getItemState(nodeId);
                 String parentUUID = getParentUUID(nodeState);
@@ -387,6 +382,10 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     return new QName(Constants.NS_DEFAULT_URI, "");
                 }
                 parentState = (NodeState) getItemState(new NodeId(parentUUID));
+            } catch (NoSuchItemStateException nsis) {
+                String msg = "failed to resolve name of " + nodeId;
+                log.debug(msg);
+                throw new ItemNotFoundException(nodeId.toString());
             } catch (ItemStateException ise) {
                 String msg = "failed to resolve name of " + nodeId;
                 log.debug(msg);
