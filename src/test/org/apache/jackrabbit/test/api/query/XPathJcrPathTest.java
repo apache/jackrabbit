@@ -22,10 +22,10 @@ import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
+import java.util.Arrays;
 
 /**
- * Tests if the jcr:path property is returned at the correct position in the
- * query result.
+ * Tests if the jcr:path property is returned in the query result.
  *
  * @test
  * @sources XPathJcrPathTest.java
@@ -58,8 +58,7 @@ public class XPathJcrPathTest extends AbstractQueryTest {
     }
 
     /**
-     * Verify that the jcr:path is the last property from the found property
-     * names when the query statement does not use a contains function.
+     * Verify that the jcr:path is present in the query result.
      */
     public void testJcrPath() throws RepositoryException, NotExecutableException {
         String nodeTypeName = session.getRootNode().getPrimaryNodeType().getName();
@@ -69,10 +68,7 @@ public class XPathJcrPathTest extends AbstractQueryTest {
         Query query = session.getWorkspace().getQueryManager().createQuery(queryStatement, Query.XPATH);
         QueryResult result = query.execute();
 
-        String[] propNames = result.getColumnNames();
-        if (propNames.length > 0) {
-            // jcr:path should be the last column
-            assertEquals(jcrPath + " should be the last property", jcrPath, propNames[propNames.length - 1]);
-        }
+        assertTrue("jcr:path must be present in query result row",
+                Arrays.asList(result.getColumnNames()).contains(jcrPath));
     }
 }
