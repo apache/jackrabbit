@@ -67,7 +67,7 @@ public class RepositoryConfigTest extends TestCase {
         assertEquals("default", config.getDefaultWorkspaceName());
         assertEquals(
                 new File(REPOSITORY_HOME, "workspaces").getPath(),
-                config.getWorkspacesConfigRootDir());
+                new File(config.getWorkspacesConfigRootDir()).getPath());
         assertEquals("Jackrabbit", config.getAppName());
 
         AccessManagerConfig amc = config.getAccessManagerConfig();
