@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -111,11 +111,11 @@ public class QueryImpl implements Query {
         this.node = node;
 
         try {
-            if (!node.isNodeType(Constants.NT_QUERY.toJCRName(session.getNamespaceResolver()))) {
+            if (!node.isNodeType(QName.NT_QUERY.toJCRName(session.getNamespaceResolver()))) {
                 throw new InvalidQueryException("node is not of type nt:query");
             }
-            statement = node.getProperty(Constants.JCR_STATEMENT.toJCRName(session.getNamespaceResolver())).getString();
-            language = node.getProperty(Constants.JCR_LANGUAGE.toJCRName(session.getNamespaceResolver())).getString();
+            statement = node.getProperty(QName.JCR_STATEMENT.toJCRName(session.getNamespaceResolver())).getString();
+            language = node.getProperty(QName.JCR_LANGUAGE.toJCRName(session.getNamespaceResolver())).getString();
             query = handler.createExecutableQuery(session, itemMgr, statement, language);
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);
@@ -182,10 +182,10 @@ public class QueryImpl implements Query {
             }
             String relPath = p.toJCRPath(resolver).substring(1);
             Node queryNode = session.getRootNode().addNode(relPath,
-                    Constants.NT_QUERY.toJCRName(resolver));
+                    QName.NT_QUERY.toJCRName(resolver));
             // set properties
-            queryNode.setProperty(Constants.JCR_LANGUAGE.toJCRName(resolver), language);
-            queryNode.setProperty(Constants.JCR_STATEMENT.toJCRName(resolver), statement);
+            queryNode.setProperty(QName.JCR_LANGUAGE.toJCRName(resolver), language);
+            queryNode.setProperty(QName.JCR_STATEMENT.toJCRName(resolver), statement);
             node = queryNode;
             return node;
         } catch (MalformedPathException e) {

@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.xpath;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.ExactQueryNode;
@@ -198,7 +197,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         try {
             sb.append("@");
-            sb.append(Constants.JCR_PRIMARYTYPE.toJCRName(resolver));
+            sb.append(QName.JCR_PRIMARYTYPE.toJCRName(resolver));
             sb.append("='").append(node.getValue().toJCRName(resolver));
             sb.append("'");
         } catch (NoPrefixDeclaredException e) {

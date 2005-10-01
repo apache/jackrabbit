@@ -889,7 +889,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (reqType == PropertyType.REFERENCE) {
             if (target instanceof NodeImpl) {
                 NodeImpl targetNode = (NodeImpl) target;
-                if (targetNode.isNodeType(MIX_REFERENCEABLE)) {
+                if (targetNode.isNodeType(QName.MIX_REFERENCEABLE)) {
                     InternalValue value = InternalValue.create(new UUID(targetNode.getUUID()));
                     internalSetValue(new InternalValue[]{value}, reqType);
                 } else {

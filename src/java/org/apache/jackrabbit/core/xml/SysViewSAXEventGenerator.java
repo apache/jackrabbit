@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -40,23 +41,23 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      */
     public static final String NODE_ELEMENT = "node";
     public static final String PREFIXED_NODE_ELEMENT =
-            NS_SV_PREFIX + ":" + NODE_ELEMENT;
+        QName.NS_SV_PREFIX + ":" + NODE_ELEMENT;
 
     public static final String PROPERTY_ELEMENT = "property";
     public static final String PREFIXED_PROPERTY_ELEMENT =
-            NS_SV_PREFIX + ":" + PROPERTY_ELEMENT;;
+        QName.NS_SV_PREFIX + ":" + PROPERTY_ELEMENT;;
 
     public static final String VALUE_ELEMENT = "value";
     public static final String PREFIXED_VALUE_ELEMENT =
-            NS_SV_PREFIX + ":" + VALUE_ELEMENT;;
+        QName.NS_SV_PREFIX + ":" + VALUE_ELEMENT;;
 
     public static final String NAME_ATTRIBUTE = "name";
     public static final String PREFIXED_NAME_ATTRIBUTE =
-            NS_SV_PREFIX + ":" + NAME_ATTRIBUTE;
+        QName.NS_SV_PREFIX + ":" + NAME_ATTRIBUTE;
 
     public static final String TYPE_ATTRIBUTE = "type";
     public static final String PREFIXED_TYPE_ATTRIBUTE =
-            NS_SV_PREFIX + ":" + TYPE_ATTRIBUTE;
+        QName.NS_SV_PREFIX + ":" + TYPE_ATTRIBUTE;
 
     public static final String CDATA_TYPE = "CDATA";
     public static final String ENUMERATION_TYPE = "ENUMERATION";
@@ -95,10 +96,10 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             nodeName = node.getName();
         }
 
-        attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
+        attrs.addAttribute(QName.NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
                 CDATA_TYPE, nodeName);
         // start node element
-        contentHandler.startElement(NS_SV_URI, NODE_ELEMENT,
+        contentHandler.startElement(QName.NS_SV_URI, NODE_ELEMENT,
                 PREFIXED_NODE_ELEMENT, attrs);
     }
 
@@ -124,7 +125,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     protected void leaving(Node node, int level)
             throws RepositoryException, SAXException {
         // end node element
-        contentHandler.endElement(NS_SV_URI, NODE_ELEMENT, PREFIXED_NODE_ELEMENT);
+        contentHandler.endElement(QName.NS_SV_URI, NODE_ELEMENT, PREFIXED_NODE_ELEMENT);
     }
 
     /**
@@ -135,7 +136,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
         String propName = prop.getName();
         AttributesImpl attrs = new AttributesImpl();
         // name attribute
-        attrs.addAttribute(NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
+        attrs.addAttribute(QName.NS_SV_URI, NAME_ATTRIBUTE, PREFIXED_NAME_ATTRIBUTE,
                 CDATA_TYPE, propName);
         // type attribute
         int type = prop.getType();
@@ -147,19 +148,19 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
             throw new RepositoryException("unexpected property-type ordinal: "
                     + type, iae);
         }
-        attrs.addAttribute(NS_SV_URI, TYPE_ATTRIBUTE, PREFIXED_TYPE_ATTRIBUTE,
+        attrs.addAttribute(QName.NS_SV_URI, TYPE_ATTRIBUTE, PREFIXED_TYPE_ATTRIBUTE,
                 ENUMERATION_TYPE, typeName);
 
         // start property element
-        contentHandler.startElement(NS_SV_URI, PROPERTY_ELEMENT,
+        contentHandler.startElement(QName.NS_SV_URI, PROPERTY_ELEMENT,
                 PREFIXED_PROPERTY_ELEMENT, attrs);
 
         // values
         if (prop.getType() == PropertyType.BINARY && skipBinary) {
             // empty value element
-            contentHandler.startElement(NS_SV_URI, VALUE_ELEMENT,
+            contentHandler.startElement(QName.NS_SV_URI, VALUE_ELEMENT,
                     PREFIXED_VALUE_ELEMENT, new AttributesImpl());
-            contentHandler.endElement(NS_SV_URI, VALUE_ELEMENT,
+            contentHandler.endElement(QName.NS_SV_URI, VALUE_ELEMENT,
                     PREFIXED_VALUE_ELEMENT);
         } else {
             boolean multiValued = prop.getDefinition().isMultiple();
@@ -173,7 +174,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 Value val = vals[i];
 
                 // start value element
-                contentHandler.startElement(NS_SV_URI, VALUE_ELEMENT,
+                contentHandler.startElement(QName.NS_SV_URI, VALUE_ELEMENT,
                         PREFIXED_VALUE_ELEMENT, new AttributesImpl());
 
                 // characters
@@ -208,7 +209,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
                 }
 
                 // end value element
-                contentHandler.endElement(NS_SV_URI, VALUE_ELEMENT,
+                contentHandler.endElement(QName.NS_SV_URI, VALUE_ELEMENT,
                         PREFIXED_VALUE_ELEMENT);
             }
         }
@@ -219,7 +220,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
      */
     protected void leaving(Property prop, int level)
             throws RepositoryException, SAXException {
-        contentHandler.endElement(NS_SV_URI, PROPERTY_ELEMENT,
+        contentHandler.endElement(QName.NS_SV_URI, PROPERTY_ELEMENT,
                 PREFIXED_PROPERTY_ELEMENT);
     }
 }

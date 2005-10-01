@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -41,7 +40,7 @@ import java.util.Set;
  * Implements a <code>InternalVersionHistory</code>
  */
 public class InternalVersionHistoryImpl extends InternalVersionItemImpl
-        implements InternalVersionHistory, Constants {
+        implements InternalVersionHistory {
 
     /**
      * default logger
@@ -110,13 +109,13 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
         historyId = node.getUUID();
 
         // get versionable id
-        versionableId = (String) node.getPropertyValue(JCR_VERSIONABLEUUID).internalValue();
+        versionableId = (String) node.getPropertyValue(QName.JCR_VERSIONABLEUUID).internalValue();
 
         // get entries
         NodeStateEx[] children = node.getChildNodes();
         for (int i = 0; i < children.length; i++) {
             NodeStateEx child = children[i];
-            if (child.getName().equals(JCR_VERSIONLABELS)) {
+            if (child.getName().equals(QName.JCR_VERSIONLABELS)) {
                 labelNode = child;
                 continue;
             }
@@ -377,7 +376,7 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throws RepositoryException {
 
         // copy predecessors from src node
-        Value[] preds = src.getProperty(JCR_PREDECESSORS).getValues();
+        Value[] preds = src.getProperty(QName.JCR_PREDECESSORS).getValues();
         InternalValue[] predecessors = new InternalValue[preds.length];
         for (int i = 0; i < preds.length; i++) {
             String predId = preds[i].getString();
@@ -389,17 +388,17 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
 
         String versionId = UUID.randomUUID().toString();
-        NodeStateEx vNode = node.addNode(name, NT_VERSION, versionId, true);
+        NodeStateEx vNode = node.addNode(name, QName.NT_VERSION, versionId, true);
 
         // initialize 'created' and 'predecessors'
-        vNode.setPropertyValue(JCR_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, predecessors);
+        vNode.setPropertyValue(QName.JCR_CREATED, InternalValue.create(Calendar.getInstance()));
+        vNode.setPropertyValues(QName.JCR_PREDECESSORS, PropertyType.REFERENCE, predecessors);
 
         // initialize 'empty' successors; their values are dynamically resolved
-        vNode.setPropertyValues(JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
+        vNode.setPropertyValues(QName.JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 
         // checkin source node
-        InternalFrozenNodeImpl.checkin(vNode, JCR_FROZENNODE, src);
+        InternalFrozenNodeImpl.checkin(vNode, QName.JCR_FROZENNODE, src);
 
         // update version graph
         InternalVersionImpl version = new InternalVersionImpl(this, vNode, name);
@@ -431,34 +430,34 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throws RepositoryException {
 
         // create history node
-        NodeStateEx pNode = parent.addNode(name, NT_VERSIONHISTORY, historyId, true);
+        NodeStateEx pNode = parent.addNode(name, QName.NT_VERSIONHISTORY, historyId, true);
         created.add(pNode.getUUID());
 
         // set the versionable uuid
-        pNode.setPropertyValue(JCR_VERSIONABLEUUID, InternalValue.create(nodeState.getUUID()));
+        pNode.setPropertyValue(QName.JCR_VERSIONABLEUUID, InternalValue.create(nodeState.getUUID()));
 
         // create label node
-        NodeStateEx lNode = pNode.addNode(JCR_VERSIONLABELS, NT_VERSIONLABELS, null, false);
+        NodeStateEx lNode = pNode.addNode(QName.JCR_VERSIONLABELS, QName.NT_VERSIONLABELS, null, false);
         created.add(lNode.getUUID());
 
         // create root version
         String versionId = UUID.randomUUID().toString();
 
-        NodeStateEx vNode = pNode.addNode(JCR_ROOTVERSION, NT_VERSION, versionId, true);
+        NodeStateEx vNode = pNode.addNode(QName.JCR_ROOTVERSION, QName.NT_VERSION, versionId, true);
         created.add(vNode.getUUID());
 
         // initialize 'created' and 'predecessors'
-        vNode.setPropertyValue(JCR_CREATED, InternalValue.create(Calendar.getInstance()));
-        vNode.setPropertyValues(JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
-        vNode.setPropertyValues(JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
+        vNode.setPropertyValue(QName.JCR_CREATED, InternalValue.create(Calendar.getInstance()));
+        vNode.setPropertyValues(QName.JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
+        vNode.setPropertyValues(QName.JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 
         // add also an empty frozen node to the root version
-        NodeStateEx node = vNode.addNode(JCR_FROZENNODE, NT_FROZENNODE, null, true);
+        NodeStateEx node = vNode.addNode(QName.JCR_FROZENNODE, QName.NT_FROZENNODE, null, true);
         created.add(node.getUUID());
         
         // initialize the internal properties
-        node.setPropertyValue(JCR_FROZENUUID, InternalValue.create(nodeState.getUUID()));
-        node.setPropertyValue(JCR_FROZENPRIMARYTYPE,
+        node.setPropertyValue(QName.JCR_FROZENUUID, InternalValue.create(nodeState.getUUID()));
+        node.setPropertyValue(QName.JCR_FROZENPRIMARYTYPE,
                 InternalValue.create(nodeState.getNodeTypeName()));
 
         Set mixins = nodeState.getMixinTypeNames();
@@ -468,7 +467,7 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
             for (int i = 0; i < mixins.size(); i++) {
                 ivalues[i] = InternalValue.create((QName) iter.next());
             }
-            node.setPropertyValues(JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
+            node.setPropertyValues(QName.JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
         }
 
         parent.store();

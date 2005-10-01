@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -31,7 +30,7 @@ import java.util.HashSet;
 /**
  * This Class implements a virtual node state
  */
-public class VirtualNodeState extends NodeState implements Constants {
+public class VirtualNodeState extends NodeState {
 
     /**
      * The virtual item state provide that created this node state
@@ -67,7 +66,7 @@ public class VirtualNodeState extends NodeState implements Constants {
         this.stateMgr = stateMgr;
         addListener(stateMgr);
         // add default properties
-        setPropertyValue(JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
+        setPropertyValue(QName.JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
         setMixinNodeTypes(mixins);
     }
 
@@ -197,7 +196,7 @@ public class VirtualNodeState extends NodeState implements Constants {
                 values[i] = InternalValue.create(mixins[i]);
             }
             setMixinTypeNames(set);
-            setPropertyValues(JCR_MIXINTYPES, PropertyType.NAME, values);
+            setPropertyValues(QName.JCR_MIXINTYPES, PropertyType.NAME, values);
         }
     }
 

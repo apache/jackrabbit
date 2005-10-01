@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
@@ -33,7 +32,7 @@ import java.util.HashSet;
  * Implements a <code>InternalVersion</code>
  */
 public class InternalVersionImpl extends InternalVersionItemImpl
-        implements InternalVersion, Constants {
+        implements InternalVersion {
 
     /**
      * the list/cache of predecessors (values == InternalVersion)
@@ -89,11 +88,11 @@ public class InternalVersionImpl extends InternalVersionItemImpl
         this.name = name;
 
         // init internal values
-        InternalValue[] values = node.getPropertyValues(JCR_CREATED);
+        InternalValue[] values = node.getPropertyValues(QName.JCR_CREATED);
         if (values != null) {
             created = (Calendar) values[0].internalValue();
         }
-        isRoot = name.equals(JCR_ROOTVERSION);
+        isRoot = name.equals(QName.JCR_ROOTVERSION);
     }
 
     /**
@@ -123,7 +122,7 @@ public class InternalVersionImpl extends InternalVersionItemImpl
     public InternalFrozenNode getFrozenNode() {
         // get frozen node
         try {
-            NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(JCR_FROZENNODE, 1);
+            NodeState.ChildNodeEntry entry = node.getState().getChildNodeEntry(QName.JCR_FROZENNODE, 1);
             if (entry == null) {
                 throw new InternalError("version has no frozen node: " + getId());
             }
@@ -200,7 +199,7 @@ public class InternalVersionImpl extends InternalVersionItemImpl
      * successor list.
      */
     void resolvePredecessors() {
-        InternalValue[] values = node.getPropertyValues(JCR_PREDECESSORS);
+        InternalValue[] values = node.getPropertyValues(QName.JCR_PREDECESSORS);
         if (values != null) {
             for (int i = 0; i < values.length; i++) {
                 InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(values[i].internalValue().toString());
@@ -229,7 +228,7 @@ public class InternalVersionImpl extends InternalVersionItemImpl
         for (int i = 0; i < values.length; i++) {
             values[i] = InternalValue.create(new UUID(((InternalVersion) predecessors.get(i)).getId()));
         }
-        node.setPropertyValues(JCR_PREDECESSORS, PropertyType.STRING, values);
+        node.setPropertyValues(QName.JCR_PREDECESSORS, PropertyType.STRING, values);
     }
 
     /**

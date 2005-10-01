@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
@@ -41,6 +40,7 @@ import org.apache.jackrabbit.core.state.PersistenceManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
@@ -73,7 +73,7 @@ import java.util.Properties;
  * A <code>RepositoryImpl</code> ...
  */
 public class RepositoryImpl implements Repository, SessionListener,
-        EventListener, Constants {
+        EventListener {
 
     private static Logger log = Logger.getLogger(RepositoryImpl.class);
 
@@ -429,15 +429,15 @@ public class RepositoryImpl implements Repository, SessionListener,
          * for now, we just create a /jcr:system node in every workspace
          */
         NodeImpl rootNode = (NodeImpl) sysSession.getRootNode();
-        if (!rootNode.hasNode(JCR_SYSTEM)) {
-            NodeTypeImpl nt = sysSession.getNodeTypeManager().getNodeType(REP_SYSTEM);
-            NodeImpl sysRoot = rootNode.internalAddChildNode(JCR_SYSTEM, nt, SYSTEM_ROOT_NODE_UUID);
+        if (!rootNode.hasNode(QName.JCR_SYSTEM)) {
+            NodeTypeImpl nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_SYSTEM);
+            NodeImpl sysRoot = rootNode.internalAddChildNode(QName.JCR_SYSTEM, nt, SYSTEM_ROOT_NODE_UUID);
             // add version storage
-            nt = sysSession.getNodeTypeManager().getNodeType(REP_VERSIONSTORAGE);
-            sysRoot.internalAddChildNode(JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_UUID);
+            nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_VERSIONSTORAGE);
+            sysRoot.internalAddChildNode(QName.JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_UUID);
             // add nodetypes
-            nt = sysSession.getNodeTypeManager().getNodeType(REP_NODETYPES);
-            sysRoot.internalAddChildNode(JCR_NODETYPES, nt, NODETYPES_NODE_UUID);
+            nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_NODETYPES);
+            sysRoot.internalAddChildNode(QName.JCR_NODETYPES, nt, NODETYPES_NODE_UUID);
             rootNode.save();
         }
 

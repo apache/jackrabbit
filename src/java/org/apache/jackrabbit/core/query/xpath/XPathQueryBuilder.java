@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.xpath;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
@@ -91,7 +90,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * QName for jcr:xmltext
      */
-    static final QName JCR_XMLTEXT = new QName(Constants.NS_JCR_URI, "xmltext");
+    static final QName JCR_XMLTEXT = new QName(QName.NS_JCR_URI, "xmltext");
 
     /**
      * QName for last function.
@@ -111,27 +110,27 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * QName for jcr:like
      */
-    static final QName JCR_LIKE = new QName(Constants.NS_JCR_URI, "like");
+    static final QName JCR_LIKE = new QName(QName.NS_JCR_URI, "like");
 
     /**
      * QName for jcr:deref
      */
-    static final QName JCR_DEREF = new QName(Constants.NS_JCR_URI, "deref");
+    static final QName JCR_DEREF = new QName(QName.NS_JCR_URI, "deref");
 
     /**
      * QName for jcr:contains
      */
-    static final QName JCR_CONTAINS = new QName(Constants.NS_JCR_URI, "contains");
+    static final QName JCR_CONTAINS = new QName(QName.NS_JCR_URI, "contains");
 
     /**
      * QName for jcr:root
      */
-    static final QName JCR_ROOT = new QName(Constants.NS_JCR_URI, "root");
+    static final QName JCR_ROOT = new QName(QName.NS_JCR_URI, "root");
 
     /**
      * QName for jcr:score
      */
-    static final QName JCR_SCORE = new QName(Constants.NS_JCR_URI, "score");
+    static final QName JCR_SCORE = new QName(QName.NS_JCR_URI, "score");
 
     /**
      * String constant for operator 'eq'
@@ -586,7 +585,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         node.childrenAccept(this, rqn);
 
         // if property name is jcr:primaryType treat special
-        if (Constants.JCR_PRIMARYTYPE.equals(rqn.getProperty())) {
+        if (QName.JCR_PRIMARYTYPE.equals(rqn.getProperty())) {
             if (rqn.getValueType() == RelationQueryNode.TYPE_STRING) {
                 try {
                     QName ntName = QName.fromJCRName(rqn.getStringValue(), resolver);

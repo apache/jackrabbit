@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -140,7 +139,7 @@ class QueryImpl implements ExecutableQuery {
         // check for special query
         if (ALL_NODES.equals(root)) {
             return new WorkspaceTraversalResult(session,
-                    new QName[]{Constants.JCR_PATH},
+                    new QName[] { QName.JCR_PATH },
                     session.getNamespaceResolver());
         }
 
@@ -212,7 +211,7 @@ class QueryImpl implements ExecutableQuery {
                 }
             }, null);
             if (ntName[0] == null) {
-                ntName[0] = Constants.NT_BASE;
+                ntName[0] = QName.NT_BASE;
             }
             NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
             PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
@@ -224,11 +223,11 @@ class QueryImpl implements ExecutableQuery {
         }
 
         // add jcr:path and jcr:score if not selected already
-        if (!selectProps.contains(Constants.JCR_PATH)) {
-            selectProps.add(Constants.JCR_PATH);
+        if (!selectProps.contains(QName.JCR_PATH)) {
+            selectProps.add(QName.JCR_PATH);
         }
-        if (!selectProps.contains(Constants.JCR_SCORE)) {
-            selectProps.add(Constants.JCR_SCORE);
+        if (!selectProps.contains(QName.JCR_SCORE)) {
+            selectProps.add(QName.JCR_SCORE);
         }
 
         // return QueryResult

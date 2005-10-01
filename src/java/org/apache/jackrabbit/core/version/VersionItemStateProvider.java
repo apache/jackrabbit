@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -40,8 +39,7 @@ import javax.jcr.RepositoryException;
 /**
  * This Class implements a virtual item state provider.
  */
-public class VersionItemStateProvider implements VirtualItemStateProvider,
-        Constants {
+public class VersionItemStateProvider implements VirtualItemStateProvider {
 
     /**
      * the default logger
@@ -127,7 +125,7 @@ public class VersionItemStateProvider implements VirtualItemStateProvider,
             // special check for successors
             if (item instanceof PropertyState) {
                 PropertyState prop = (PropertyState) item;
-                if (prop.getName().equals(JCR_SUCCESSORS)) {
+                if (prop.getName().equals(QName.JCR_SUCCESSORS)) {
                     try {
                         InternalVersion v = vMgr.getVersion(prop.getParentUUID());
                         if (v != null) {

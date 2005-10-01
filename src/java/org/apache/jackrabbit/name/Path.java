@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.util.Text;
 import org.apache.xerces.util.XMLChar;
 
@@ -1107,7 +1106,7 @@ public final class Path {
         static final String LITERAL = "*";
 
         private RootElement() {
-            super(Constants.NS_DEFAULT_URI, "");
+            super(QName.NS_DEFAULT_URI, "");
         }
 
         // PathElement override
@@ -1146,7 +1145,7 @@ public final class Path {
         static final String LITERAL = ".";
 
         private CurrentElement() {
-            super(Constants.NS_DEFAULT_URI, LITERAL);
+            super(QName.NS_DEFAULT_URI, LITERAL);
         }
 
         // PathElement override
@@ -1185,7 +1184,7 @@ public final class Path {
         static final String LITERAL = "..";
 
         private ParentElement() {
-            super(Constants.NS_DEFAULT_URI, LITERAL);
+            super(QName.NS_DEFAULT_URI, LITERAL);
         }
 
         // PathElement override

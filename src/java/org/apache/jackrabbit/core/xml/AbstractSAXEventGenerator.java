@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.BaseException;
-import org.apache.jackrabbit.Constants;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.SessionNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.log4j.Logger;
@@ -47,7 +47,7 @@ import javax.jcr.Session;
  * </ul>
  * for every item it encounters.
  */
-abstract class AbstractSAXEventGenerator implements Constants {
+abstract class AbstractSAXEventGenerator {
 
     private static Logger log = Logger.getLogger(AbstractSAXEventGenerator.class);
 
@@ -120,12 +120,12 @@ abstract class AbstractSAXEventGenerator implements Constants {
         // resolve the names of some wellknown properties
         // allowing for session-local prefix mappings
         try {
-            jcrPrimaryType = JCR_PRIMARYTYPE.toJCRName(nsResolver);
-            jcrMixinTypes = JCR_MIXINTYPES.toJCRName(nsResolver);
-            jcrUUID = JCR_UUID.toJCRName(nsResolver);
-            jcrRoot = JCR_ROOT.toJCRName(nsResolver);
-            jcrXMLText = JCR_XMLTEXT.toJCRName(nsResolver);
-            jcrXMLCharacters = JCR_XMLCHARACTERS.toJCRName(nsResolver);
+            jcrPrimaryType = QName.JCR_PRIMARYTYPE.toJCRName(nsResolver);
+            jcrMixinTypes = QName.JCR_MIXINTYPES.toJCRName(nsResolver);
+            jcrUUID = QName.JCR_UUID.toJCRName(nsResolver);
+            jcrRoot = QName.JCR_ROOT.toJCRName(nsResolver);
+            jcrXMLText = QName.JCR_XMLTEXT.toJCRName(nsResolver);
+            jcrXMLCharacters = QName.JCR_XMLCHARACTERS.toJCRName(nsResolver);
         } catch (BaseException e) {
             // should never get here...
             String msg = "internal error: failed to resolve namespace mappings";
@@ -164,7 +164,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
         String[] prefixes = session.getNamespacePrefixes();
         for (int i = 0; i < prefixes.length; i++) {
             String prefix = prefixes[i];
-            if (NS_XML_PREFIX.equals(prefix)) {
+            if (QName.NS_XML_PREFIX.equals(prefix)) {
                 // skip 'xml' prefix as this would be an illegal namespace declaration
                 continue;
             }
@@ -183,7 +183,7 @@ abstract class AbstractSAXEventGenerator implements Constants {
         String[] prefixes = session.getNamespacePrefixes();
         for (int i = 0; i < prefixes.length; i++) {
             String prefix = prefixes[i];
-            if (NS_XML_PREFIX.equals(prefix)) {
+            if (QName.NS_XML_PREFIX.equals(prefix)) {
                 // skip 'xml' prefix as this would be an illegal namespace declaration
                 continue;
             }

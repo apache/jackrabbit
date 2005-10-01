@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
@@ -75,7 +74,7 @@ import java.util.Map;
  * If the parent <code>Session</code> is an <code>XASession</code>, there is
  * one <code>ItemManager</code> instance per started global transaction.
  */
-public class ItemManager implements ItemLifeCycleListener, Dumpable, Constants {
+public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
     private static Logger log = Logger.getLogger(ItemManager.class);
 
@@ -518,12 +517,12 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, Constants {
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
         // check special nodes
-        if (state.getNodeTypeName().equals(NT_VERSION)) {
+        if (state.getNodeTypeName().equals(QName.NT_VERSION)) {
             InternalVersion version =
                     session.getVersionManager().getVersion(state.getUUID());
             return new VersionImpl(this, session, id, state, def, listeners, version);
 
-        } else if (state.getNodeTypeName().equals(NT_VERSIONHISTORY)) {
+        } else if (state.getNodeTypeName().equals(QName.NT_VERSIONHISTORY)) {
             InternalVersionHistory history =
                     session.getVersionManager().getVersionHistory(state.getUUID());
             return new VersionHistoryImpl(this, session, id, state, def, listeners, history);

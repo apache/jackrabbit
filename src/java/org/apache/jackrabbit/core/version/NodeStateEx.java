@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.PropertyImpl;
@@ -45,7 +44,7 @@ import java.util.Set;
 /**
  * This Class provides some basic node operations directly on the node state.
  */
-class NodeStateEx implements Constants {
+class NodeStateEx {
 
     /**
      * the underlying persistent state
@@ -406,7 +405,7 @@ class NodeStateEx implements Constants {
 
         NodeStateEx node = createChildNode(nodeName, nodeTypeName, uuid);
         if (referenceable) {
-            node.setPropertyValue(JCR_UUID, InternalValue.create(node.getUUID()));
+            node.setPropertyValue(QName.JCR_UUID, InternalValue.create(node.getUUID()));
         }
         return node;
     }
@@ -432,7 +431,7 @@ class NodeStateEx implements Constants {
 
         // create Node instance wrapping new node state
         NodeStateEx node = new NodeStateEx(stateMgr, ntReg, state, name);
-        node.setPropertyValue(JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
+        node.setPropertyValue(QName.JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
 
         // add new child node entryn
         nodeState.addChildNodeEntry(name, state.getUUID());

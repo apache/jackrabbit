@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
@@ -68,7 +67,7 @@ import java.util.Iterator;
 /**
  * A <code>WorkspaceImpl</code> ...
  */
-public class WorkspaceImpl implements Workspace, Constants {
+public class WorkspaceImpl implements Workspace {
 
     private static Logger log = Logger.getLogger(WorkspaceImpl.class);
 

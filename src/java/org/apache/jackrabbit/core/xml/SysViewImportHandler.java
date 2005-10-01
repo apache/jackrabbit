@@ -114,7 +114,7 @@ class SysViewImportHandler extends TargetImportHandler {
                              String qName, Attributes atts)
             throws SAXException {
         // check namespace
-        if (!NS_SV_URI.equals(namespaceURI)) {
+        if (!QName.NS_SV_URI.equals(namespaceURI)) {
             throw new SAXException(new InvalidSerializedDataException("invalid namespace for element in system view xml document: "
                     + namespaceURI));
         }
@@ -245,7 +245,7 @@ class SysViewImportHandler extends TargetImportHandler {
 
             // check if all system properties (jcr:primaryType, jcr:uuid etc.)
             // have been collected and create node as necessary
-            if (currentPropName.equals(JCR_PRIMARYTYPE)) {
+            if (currentPropName.equals(QName.JCR_PRIMARYTYPE)) {
                 AppendableValue val = (AppendableValue) currentPropValues.get(0);
                 String s = null;
                 try {
@@ -258,7 +258,7 @@ class SysViewImportHandler extends TargetImportHandler {
                 } catch (UnknownPrefixException upe) {
                     throw new SAXException(new InvalidSerializedDataException("illegal node type name: " + s, upe));
                 }
-            } else if (currentPropName.equals(JCR_MIXINTYPES)) {
+            } else if (currentPropName.equals(QName.JCR_MIXINTYPES)) {
                 if (state.mixinNames == null) {
                     state.mixinNames = new ArrayList(currentPropValues.size());
                 }
@@ -278,7 +278,7 @@ class SysViewImportHandler extends TargetImportHandler {
                         throw new SAXException(new InvalidSerializedDataException("illegal mixin type name: " + s, upe));
                     }
                 }
-            } else if (currentPropName.equals(JCR_UUID)) {
+            } else if (currentPropName.equals(QName.JCR_UUID)) {
                 AppendableValue val = (AppendableValue) currentPropValues.get(0);
                 try {
                     state.uuid = val.retrieve();

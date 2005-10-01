@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.NodeId;
@@ -61,7 +60,7 @@ import java.util.Stack;
 /**
  * <code>WorkspaceImporter</code> ...
  */
-public class WorkspaceImporter implements Importer, Constants {
+public class WorkspaceImporter implements Importer {
 
     private static Logger log = Logger.getLogger(WorkspaceImporter.class);
 
@@ -157,7 +156,7 @@ public class WorkspaceImporter implements Importer, Constants {
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
             // remember uuid mapping
             EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
-            if (ent.includesNodeType(MIX_REFERENCEABLE)) {
+            if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
                 refTracker.mappedUUID(nodeInfo.getUUID(), node.getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
@@ -268,7 +267,7 @@ public class WorkspaceImporter implements Importer, Constants {
          * todo FIXME delegate to 'node type instance handler'
          */
         EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
-        if (ent.includesNodeType(MIX_VERSIONABLE)) {
+        if (ent.includesNodeType(QName.MIX_VERSIONABLE)) {
             PropDef def;
             PropertyState prop;
             SessionImpl session = (SessionImpl) wsp.getSession();
@@ -287,37 +286,37 @@ public class WorkspaceImporter implements Importer, Constants {
             }
 
             // jcr:versionHistory
-            if (!node.hasPropertyName(JCR_VERSIONHISTORY)) {
-                def = itemOps.findApplicablePropertyDefinition(JCR_VERSIONHISTORY,
+            if (!node.hasPropertyName(QName.JCR_VERSIONHISTORY)) {
+                def = itemOps.findApplicablePropertyDefinition(QName.JCR_VERSIONHISTORY,
                         PropertyType.REFERENCE, false, node);
-                prop = itemOps.createPropertyState(node, JCR_VERSIONHISTORY,
+                prop = itemOps.createPropertyState(node, QName.JCR_VERSIONHISTORY,
                         PropertyType.REFERENCE, def);
                 prop.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getUUID()))});
             }
 
             // jcr:baseVersion
-            if (!node.hasPropertyName(JCR_BASEVERSION)) {
-                def = itemOps.findApplicablePropertyDefinition(JCR_BASEVERSION,
+            if (!node.hasPropertyName(QName.JCR_BASEVERSION)) {
+                def = itemOps.findApplicablePropertyDefinition(QName.JCR_BASEVERSION,
                         PropertyType.REFERENCE, false, node);
-                prop = itemOps.createPropertyState(node, JCR_BASEVERSION,
+                prop = itemOps.createPropertyState(node, QName.JCR_BASEVERSION,
                         PropertyType.REFERENCE, def);
                 prop.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
             }
 
             // jcr:predecessors
-            if (!node.hasPropertyName(JCR_PREDECESSORS)) {
-                def = itemOps.findApplicablePropertyDefinition(JCR_PREDECESSORS,
+            if (!node.hasPropertyName(QName.JCR_PREDECESSORS)) {
+                def = itemOps.findApplicablePropertyDefinition(QName.JCR_PREDECESSORS,
                         PropertyType.REFERENCE, true, node);
-                prop = itemOps.createPropertyState(node, JCR_PREDECESSORS,
+                prop = itemOps.createPropertyState(node, QName.JCR_PREDECESSORS,
                         PropertyType.REFERENCE, def);
                 prop.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
             }
 
             // jcr:isCheckedOut
-            if (!node.hasPropertyName(JCR_ISCHECKEDOUT)) {
-                def = itemOps.findApplicablePropertyDefinition(JCR_ISCHECKEDOUT,
+            if (!node.hasPropertyName(QName.JCR_ISCHECKEDOUT)) {
+                def = itemOps.findApplicablePropertyDefinition(QName.JCR_ISCHECKEDOUT,
                         PropertyType.BOOLEAN, false, node);
-                prop = itemOps.createPropertyState(node, JCR_ISCHECKEDOUT,
+                prop = itemOps.createPropertyState(node, QName.JCR_ISCHECKEDOUT,
                         PropertyType.BOOLEAN, def);
                 prop.setValues(new InternalValue[]{InternalValue.create(true)});
             }

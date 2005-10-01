@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -379,7 +378,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 if (parentUUID == null) {
                     // this is the root or an orphaned node
                     // FIXME
-                    return new QName(Constants.NS_DEFAULT_URI, "");
+                    return QName.EMPTY;
                 }
                 parentState = (NodeState) getItemState(new NodeId(parentUUID));
             } catch (NoSuchItemStateException nsis) {

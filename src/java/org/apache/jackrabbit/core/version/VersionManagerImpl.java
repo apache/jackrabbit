@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -63,7 +62,7 @@ import java.util.LinkedList;
 /**
  * This Class implements a VersionManager.
  */
-public class VersionManagerImpl implements VersionManager, Constants {
+public class VersionManagerImpl implements VersionManager {
 
     /**
      * the default logger
@@ -132,15 +131,15 @@ public class VersionManagerImpl implements VersionManager, Constants {
             if (!pMgr.exists(new NodeId(rootUUID))) {
                 NodeState root = pMgr.createNew(new NodeId(rootUUID));
                 root.setParentUUID(rootParentUUID);
-                root.setDefinitionId(ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicableChildNodeDef(
-                        JCR_VERSIONSTORAGE, REP_VERSIONSTORAGE).getId());
-                root.setNodeTypeName(REP_VERSIONSTORAGE);
-                PropertyState pt = pMgr.createNew(new PropertyId(rootUUID, JCR_PRIMARYTYPE));
-                pt.setDefinitionId(ntReg.getEffectiveNodeType(REP_SYSTEM).getApplicablePropertyDef(
-                        JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
+                root.setDefinitionId(ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicableChildNodeDef(
+                        QName.JCR_VERSIONSTORAGE, QName.REP_VERSIONSTORAGE).getId());
+                root.setNodeTypeName(QName.REP_VERSIONSTORAGE);
+                PropertyState pt = pMgr.createNew(new PropertyId(rootUUID, QName.JCR_PRIMARYTYPE));
+                pt.setDefinitionId(ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicablePropertyDef(
+                        QName.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
                 pt.setMultiValued(false);
                 pt.setType(PropertyType.NAME);
-                pt.setValues(new InternalValue[]{InternalValue.create(REP_VERSIONSTORAGE)});
+                pt.setValues(new InternalValue[]{InternalValue.create(QName.REP_VERSIONSTORAGE)});
                 root.addPropertyName(pt.getName());
                 ChangeLog cl = new ChangeLog();
                 cl.added(root);
@@ -150,7 +149,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
             SharedItemStateManager sharedStateMgr = new SharedItemStateManager(pMgr, VERSION_STORAGE_NODE_UUID, ntReg);
             stateMgr = new LocalItemStateManager(sharedStateMgr, null);
             NodeState nodeState = (NodeState) stateMgr.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID));
-            historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, JCR_VERSIONSTORAGE);
+            historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, QName.JCR_VERSIONSTORAGE);
 
             // create the virtual item state provider
             versProvider = new VersionItemStateProvider(this, sharedStateMgr);
@@ -246,15 +245,15 @@ public class VersionManagerImpl implements VersionManager, Constants {
             String uuid = node.getUUID();
             NodeStateEx root = historyRoot;
             for (int i = 0; i < 3; i++) {
-                QName name = new QName(NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
+                QName name = new QName(QName.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
                 if (!root.hasNode(name)) {
-                    NodeStateEx n = root.addNode(name, REP_VERSIONSTORAGE, null, false);
+                    NodeStateEx n = root.addNode(name, QName.REP_VERSIONSTORAGE, null, false);
                     created.add(n.getUUID());
                     root.store();
                 }
                 root = root.getNode(name, 1);
             }
-            QName historyNodeName = new QName(NS_DEFAULT_URI, uuid);
+            QName historyNodeName = new QName(QName.NS_DEFAULT_URI, uuid);
             if (root.hasNode(historyNodeName)) {
                 // already exists
                 return null;
@@ -296,13 +295,13 @@ public class VersionManagerImpl implements VersionManager, Constants {
         String uuid = node.getUUID();
         NodeStateEx n = historyRoot;
         for (int i = 0; i < 3; i++) {
-            QName name = new QName(NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
+            QName name = new QName(QName.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
             if (!n.hasNode(name)) {
                 return null;
             }
             n = n.getNode(name, 1);
         }
-        QName historyNodeName = new QName(NS_DEFAULT_URI, uuid);
+        QName historyNodeName = new QName(QName.NS_DEFAULT_URI, uuid);
         if (!n.hasNode(historyNodeName)) {
             return null;
         }
@@ -382,13 +381,13 @@ public class VersionManagerImpl implements VersionManager, Constants {
                     InternalVersionItem parent =
                             (parentUUID != null) ? getItem(parentUUID) : null;
                     QName ntName = state.getNodeTypeName();
-                    if (ntName.equals(NT_FROZENNODE)) {
+                    if (ntName.equals(QName.NT_FROZENNODE)) {
                         item = new InternalFrozenNodeImpl(this, pNode, parent);
-                    } else if (ntName.equals(NT_VERSIONEDCHILD)) {
+                    } else if (ntName.equals(QName.NT_VERSIONEDCHILD)) {
                         item = new InternalFrozenVHImpl(this, pNode, parent);
-                    } else if (ntName.equals(NT_VERSION)) {
+                    } else if (ntName.equals(QName.NT_VERSION)) {
                         item = ((InternalVersionHistory) parent).getVersion(uuid);
-                    } else if (ntName.equals(NT_VERSIONHISTORY)) {
+                    } else if (ntName.equals(QName.NT_VERSIONHISTORY)) {
                         item = new InternalVersionHistoryImpl(this, pNode);
                     } else {
                         //return null;
@@ -418,7 +417,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
         // need to recalc successor prop
         InternalVersion[] preds = version.getPredecessors();
         for (int i=0; i<preds.length; i++) {
-            ItemState state = (ItemState) items.remove(new PropertyId(preds[i].getId(), JCR_SUCCESSORS));
+            ItemState state = (ItemState) items.remove(new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS));
             if (state != null) {
                 state.discard();
             }
@@ -446,11 +445,11 @@ public class VersionManagerImpl implements VersionManager, Constants {
         // assuming node is versionable and checkout (check in nodeimpl)
         // To create a new version of a versionable node N, the client calls N.checkin.
         // This causes the following series of events:
-        String histUUID = node.getProperty(Constants.JCR_VERSIONHISTORY).getString();
+        String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
         InternalVersionHistoryImpl history = (InternalVersionHistoryImpl) getVersionHistory(histUUID);
 
         // 0. resolve the predecessors
-        Value[] values = node.getProperty(Constants.JCR_PREDECESSORS).getValues();
+        Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
         InternalVersion[] preds = new InternalVersion[values.length];
         for (int i = 0; i < values.length; i++) {
             preds[i] = history.getVersion(values[i].getString());
@@ -572,7 +571,7 @@ public class VersionManagerImpl implements VersionManager, Constants {
 
         InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
                 ((VersionHistoryImpl) history).getInternalVersionHistory();
-        NodeImpl labelNode = ((VersionHistoryImpl) history).getNode(JCR_VERSIONLABELS);
+        NodeImpl labelNode = ((VersionHistoryImpl) history).getNode(QName.JCR_VERSIONLABELS);
 
         try {
             stateMgr.edit();
