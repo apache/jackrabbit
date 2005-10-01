@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.name.IllegalNameException;
@@ -215,9 +214,9 @@ class RowIteratorImpl implements RowIterator {
                         }
                     } else {
                         // property not set or jcr:path / jcr:score
-                        if (Constants.JCR_PATH.equals(properties[i])) {
+                        if (QName.JCR_PATH.equals(properties[i])) {
                             tmp[i] = PathValue.valueOf(node.getPath());
-                        } else if (Constants.JCR_SCORE.equals(properties[i])) {
+                        } else if (QName.JCR_SCORE.equals(properties[i])) {
                             tmp[i] = new LongValue((int) (score * 1000f));
                         } else {
                             tmp[i] = null;
@@ -265,9 +264,9 @@ class RowIteratorImpl implements RowIterator {
                     }
                 } else {
                     // either jcr:score, jcr:path or not set
-                    if (Constants.JCR_PATH.equals(prop)) {
+                    if (QName.JCR_PATH.equals(prop)) {
                         return PathValue.valueOf(node.getPath());
-                    } else if (Constants.JCR_SCORE.equals(prop)) {
+                    } else if (QName.JCR_SCORE.equals(prop)) {
                         return new LongValue((int) (score * 1000f));
                     } else {
                         return null;

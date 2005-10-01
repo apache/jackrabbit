@@ -110,12 +110,12 @@ class DocViewImportHandler extends TargetImportHandler {
                 }
 
                 Importer.NodeInfo node =
-                        new Importer.NodeInfo(JCR_XMLTEXT, null, null, null);
+                        new Importer.NodeInfo(QName.JCR_XMLTEXT, null, null, null);
                 Importer.TextValue[] values =
                         new Importer.TextValue[]{textHandler};
                 ArrayList props = new ArrayList();
                 Importer.PropInfo prop =
-                        new Importer.PropInfo(JCR_XMLCHARACTERS,
+                        new Importer.PropInfo(QName.JCR_XMLCHARACTERS,
                                 PropertyType.STRING, values);
                 props.add(prop);
                 // call Importer
@@ -185,7 +185,7 @@ class DocViewImportHandler extends TargetImportHandler {
                     propValues[j] = InternalValue.create(strings[j]);
                 }
 */
-                if (propName.equals(JCR_PRIMARYTYPE)) {
+                if (propName.equals(QName.JCR_PRIMARYTYPE)) {
                     // jcr:primaryType
                     if (attrValue.length() > 0) {
                         try {
@@ -195,7 +195,7 @@ class DocViewImportHandler extends TargetImportHandler {
                                     + attrValue, be);
                         }
                     }
-                } else if (propName.equals(JCR_MIXINTYPES)) {
+                } else if (propName.equals(QName.JCR_MIXINTYPES)) {
                     // jcr:mixinTypes
                     if (attrValue.length() > 0) {
                         try {
@@ -206,7 +206,7 @@ class DocViewImportHandler extends TargetImportHandler {
                                     + attrValue, be);
                         }
                     }
-                } else if (propName.equals(JCR_UUID)) {
+                } else if (propName.equals(QName.JCR_UUID)) {
                     // jcr:uuid
                     if (attrValue.length() > 0) {
                         uuid = attrValue;

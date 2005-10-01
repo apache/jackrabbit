@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.name.QName;
 
 /**
@@ -34,7 +33,7 @@ public class NodeTypeQueryNode extends ExactQueryNode {
         // we only use the jcr primary type as a dummy value
         // the property name is actually replaced in the query builder
         // when the runtime query is created to search the index.
-        super(parent, Constants.JCR_PRIMARYTYPE, nodeType);
+        super(parent, QName.JCR_PRIMARYTYPE, nodeType);
     }
 
     /**

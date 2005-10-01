@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
@@ -42,9 +41,6 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
 
     /** The logger instance for this class */
     private static final Logger log = Logger.getLogger(PropertyTypeRegistry.class);
-
-    /** '*' denoting residual child item definition */
-    protected static final QName ANY_NAME = new QName(Constants.NS_DEFAULT_URI, "*");
 
     /**
      * Empty <code>TypeMapping</code> array as return value if no type is
@@ -95,7 +91,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
                 for (int i = 0; i < propDefs.length; i++) {
                     QName name = propDefs[i].getName();
                     int type = propDefs[i].getRequiredType();
-                    if (!ANY_NAME.equals(name) && type != PropertyType.UNDEFINED) {
+                    if (!QName.WILDCARD.equals(name) && type != PropertyType.UNDEFINED) {
                         // only remember defined property types
                         TypeMapping[] types = (TypeMapping[]) typeMapping.get(name);
                         if (types == null) {

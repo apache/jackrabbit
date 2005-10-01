@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
@@ -64,7 +63,7 @@ import java.util.Set;
  * provides both high- and low-level operations directly on the
  * <code>ItemState</code> level.
  */
-public class BatchedItemOperations extends ItemValidator implements Constants {
+public class BatchedItemOperations extends ItemValidator {
 
     private static Logger log = Logger.getLogger(BatchedItemOperations.class);
 
@@ -761,7 +760,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
 
         if ((options & CHECK_REFERENCES) == CHECK_REFERENCES) {
             EffectiveNodeType ent = getEffectiveNodeType(targetState);
-            if (ent.includesNodeType(MIX_REFERENCEABLE)) {
+            if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
                 NodeReferencesId refsId = new NodeReferencesId(targetState.getUUID());
                 if (stateMgr.hasNodeReferences(refsId)) {
                     try {
@@ -1046,7 +1045,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
 
         if (!node.getMixinTypeNames().isEmpty()) {
             // create jcr:mixinTypes property
-            PropDef pd = ent.getApplicablePropertyDef(JCR_MIXINTYPES,
+            PropDef pd = ent.getApplicablePropertyDef(QName.JCR_MIXINTYPES,
                     PropertyType.NAME, true);
             createPropertyState(node, pd.getName(), pd.getRequiredType(), pd);
         }
@@ -1305,7 +1304,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
          * this would have a negative impact on performance though...
          */
         NodeState nodeState = getNodeState(nodePath);
-        while (!nodeState.hasPropertyName(JCR_ISCHECKEDOUT)) {
+        while (!nodeState.hasPropertyName(QName.JCR_ISCHECKEDOUT)) {
             if (nodePath.denotesRoot()) {
                 return;
             }
@@ -1313,7 +1312,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
             nodeState = getNodeState(nodePath);
         }
         PropertyId propId =
-                new PropertyId(nodeState.getUUID(), JCR_ISCHECKEDOUT);
+                new PropertyId(nodeState.getUUID(), QName.JCR_ISCHECKEDOUT);
         PropertyState propState;
         try {
             propState = (PropertyState) stateMgr.getItemState(propId);
@@ -1439,18 +1438,18 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
         // compute system generated values
         QName declaringNT = def.getDeclaringNodeType();
         QName name = def.getName();
-        if (MIX_REFERENCEABLE.equals(declaringNT)) {
+        if (QName.MIX_REFERENCEABLE.equals(declaringNT)) {
             // mix:referenceable node type
-            if (JCR_UUID.equals(name)) {
+            if (QName.JCR_UUID.equals(name)) {
                 // jcr:uuid property
                 genValues = new InternalValue[]{InternalValue.create(parent.getUUID())};
             }
-        } else if (NT_BASE.equals(declaringNT)) {
+        } else if (QName.NT_BASE.equals(declaringNT)) {
             // nt:base node type
-            if (JCR_PRIMARYTYPE.equals(name)) {
+            if (QName.JCR_PRIMARYTYPE.equals(name)) {
                 // jcr:primaryType property
                 genValues = new InternalValue[]{InternalValue.create(parent.getNodeTypeName())};
-            } else if (JCR_MIXINTYPES.equals(name)) {
+            } else if (QName.JCR_MIXINTYPES.equals(name)) {
                 // jcr:mixinTypes property
                 Set mixins = parent.getMixinTypeNames();
                 ArrayList values = new ArrayList(mixins.size());
@@ -1460,21 +1459,21 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                 }
                 genValues = (InternalValue[]) values.toArray(new InternalValue[values.size()]);
             }
-        } else if (NT_HIERARCHYNODE.equals(declaringNT)) {
+        } else if (QName.NT_HIERARCHYNODE.equals(declaringNT)) {
             // nt:hierarchyNode node type
-            if (JCR_CREATED.equals(name)) {
+            if (QName.JCR_CREATED.equals(name)) {
                 // jcr:created property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
-        } else if (NT_RESOURCE.equals(declaringNT)) {
+        } else if (QName.NT_RESOURCE.equals(declaringNT)) {
             // nt:resource node type
-            if (JCR_LASTMODIFIED.equals(name)) {
+            if (QName.JCR_LASTMODIFIED.equals(name)) {
                 // jcr:lastModified property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
-        } else if (NT_VERSION.equals(declaringNT)) {
+        } else if (QName.NT_VERSION.equals(declaringNT)) {
             // nt:version node type
-            if (JCR_CREATED.equals(name)) {
+            if (QName.JCR_CREATED.equals(name)) {
                 // jcr:created property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
@@ -1592,7 +1591,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
             String uuid;
             NodeId id;
             EffectiveNodeType ent = getEffectiveNodeType(srcState);
-            boolean referenceable = ent.includesNodeType(MIX_REFERENCEABLE);
+            boolean referenceable = ent.includesNodeType(QName.MIX_REFERENCEABLE);
             switch (flag) {
                 case COPY:
                     // always create new uuid
@@ -1709,7 +1708,7 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
                  */
                 PropDefId defId = srcChildState.getDefinitionId();
                 PropDef def = ntReg.getPropDef(defId);
-                if (def.getDeclaringNodeType().equals(MIX_LOCKABLE)) {
+                if (def.getDeclaringNodeType().equals(QName.MIX_LOCKABLE)) {
                     // skip properties defined by mix:lockable
                     continue;
                 }
@@ -1763,8 +1762,8 @@ public class BatchedItemOperations extends ItemValidator implements Constants {
              *
              * todo FIXME delegate to 'node type instance handler'
              */
-            if (def.getDeclaringNodeType().equals(MIX_REFERENCEABLE)
-                    && propName.equals(JCR_UUID)) {
+            if (def.getDeclaringNodeType().equals(QName.MIX_REFERENCEABLE)
+                    && propName.equals(QName.JCR_UUID)) {
                 // set correct value of jcr:uuid property
                 newState.setValues(new InternalValue[]{InternalValue.create(parentUUID)});
             } else {

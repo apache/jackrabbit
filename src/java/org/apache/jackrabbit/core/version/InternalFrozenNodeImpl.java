@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
@@ -42,7 +41,7 @@ import java.util.List;
  * Implements a <code>InternalFrozenNode</code>
  */
 public class InternalFrozenNodeImpl extends InternalFreezeImpl
-        implements InternalFrozenNode, Constants {
+        implements InternalFrozenNode {
 
     /**
      * checkin mode version.
@@ -108,15 +107,15 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
 
         for (int i = 0; i < props.length; i++) {
             PropertyState prop = props[i];
-            if (prop.getName().equals(JCR_FROZENUUID)) {
+            if (prop.getName().equals(QName.JCR_FROZENUUID)) {
                 // special property
-                frozenUUID = node.getPropertyValue(JCR_FROZENUUID).internalValue().toString();
-            } else if (prop.getName().equals(JCR_FROZENPRIMARYTYPE)) {
+                frozenUUID = node.getPropertyValue(QName.JCR_FROZENUUID).internalValue().toString();
+            } else if (prop.getName().equals(QName.JCR_FROZENPRIMARYTYPE)) {
                 // special property
-                frozenPrimaryType = (QName) node.getPropertyValue(JCR_FROZENPRIMARYTYPE).internalValue();
-            } else if (prop.getName().equals(JCR_FROZENMIXINTYPES)) {
+                frozenPrimaryType = (QName) node.getPropertyValue(QName.JCR_FROZENPRIMARYTYPE).internalValue();
+            } else if (prop.getName().equals(QName.JCR_FROZENMIXINTYPES)) {
                 // special property
-                InternalValue[] values = node.getPropertyValues(JCR_FROZENMIXINTYPES);
+                InternalValue[] values = node.getPropertyValues(QName.JCR_FROZENMIXINTYPES);
                 if (values == null) {
                     frozenMixinTypes = new QName[0];
                 } else {
@@ -125,9 +124,9 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
                         frozenMixinTypes[j] = (QName) values[j].internalValue();
                     }
                 }
-            } else if (prop.getName().equals(JCR_PRIMARYTYPE)) {
+            } else if (prop.getName().equals(QName.JCR_PRIMARYTYPE)) {
                 // ignore
-            } else if (prop.getName().equals(JCR_UUID)) {
+            } else if (prop.getName().equals(QName.JCR_UUID)) {
                 // ignore
             } else {
                 propList.add(prop);
@@ -258,21 +257,21 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
             throws RepositoryException {
 
         // create new node
-        NodeStateEx node = parent.addNode(name, NT_FROZENNODE, null, true);
+        NodeStateEx node = parent.addNode(name, QName.NT_FROZENNODE, null, true);
 
         // initialize the internal properties
-        if (src.isNodeType(MIX_REFERENCEABLE)) {
-            node.setPropertyValue(JCR_FROZENUUID, InternalValue.create(src.getUUID()));
+        if (src.isNodeType(QName.MIX_REFERENCEABLE)) {
+            node.setPropertyValue(QName.JCR_FROZENUUID, InternalValue.create(src.getUUID()));
         }
-        node.setPropertyValue(JCR_FROZENPRIMARYTYPE,
+        node.setPropertyValue(QName.JCR_FROZENPRIMARYTYPE,
                 InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
-        if (src.hasProperty(NodeImpl.JCR_MIXINTYPES)) {
+        if (src.hasProperty(QName.JCR_MIXINTYPES)) {
             NodeType[] mixins = src.getMixinNodeTypes();
             InternalValue[] ivalues = new InternalValue[mixins.length];
             for (int i = 0; i < mixins.length; i++) {
                 ivalues[i] = InternalValue.create(((NodeTypeImpl) mixins[i]).getQName());
             }
-            node.setPropertyValues(JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
+            node.setPropertyValues(QName.JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
         }
 
         // add the properties
@@ -318,10 +317,10 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
                 case OnParentVersionAction.INITIALIZE:
                     break;
                 case OnParentVersionAction.VERSION:
-                    if (child.isNodeType(MIX_VERSIONABLE)) {
+                    if (child.isNodeType(QName.MIX_VERSIONABLE)) {
                         // create frozen versionable child
-                        NodeStateEx newChild = node.addNode(child.getQName(), NT_VERSIONEDCHILD, null, false);
-                        newChild.setPropertyValue(JCR_CHILDVERSIONHISTORY,
+                        NodeStateEx newChild = node.addNode(child.getQName(), QName.NT_VERSIONEDCHILD, null, false);
+                        newChild.setPropertyValue(QName.JCR_CHILDVERSIONHISTORY,
                                 InternalValue.create(new UUID(child.getVersionHistory().getUUID())));
                         /*
                         newChild.setPropertyValue(JCR_BASEVERSION,

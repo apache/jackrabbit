@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
@@ -500,7 +499,7 @@ public class SharedItemStateManager
                                           NodeTypeRegistry ntReg)
             throws ItemStateException {
 
-        NodeState rootState = createInstance(rootNodeUUID, Constants.REP_ROOT, null);
+        NodeState rootState = createInstance(rootNodeUUID, QName.REP_ROOT, null);
 
         // FIXME need to manually setup root node by creating mandatory jcr:primaryType property
         // @todo delegate setup of root node to NodeTypeInstanceHandler
@@ -511,8 +510,8 @@ public class SharedItemStateManager
         PropDef propDef;
         try {
             nodeDefId = ntReg.getRootNodeDef().getId();
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType(Constants.REP_ROOT);
-            propDef = ent.getApplicablePropertyDef(Constants.JCR_PRIMARYTYPE,
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(QName.REP_ROOT);
+            propDef = ent.getApplicablePropertyDef(QName.JCR_PRIMARYTYPE,
                     PropertyType.NAME, false);
         } catch (NoSuchNodeTypeException nsnte) {
             String msg = "internal error: failed to create root node";
@@ -529,7 +528,7 @@ public class SharedItemStateManager
         rootState.addPropertyName(propDef.getName());
 
         PropertyState prop = createInstance(propDef.getName(), rootNodeUUID);
-        prop.setValues(new InternalValue[]{InternalValue.create(Constants.REP_ROOT)});
+        prop.setValues(new InternalValue[]{InternalValue.create(QName.REP_ROOT)});
         prop.setType(propDef.getRequiredType());
         prop.setMultiValued(propDef.isMultiple());
         prop.setDefinitionId(propDef.getId());

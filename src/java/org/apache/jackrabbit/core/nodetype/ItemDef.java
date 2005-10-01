@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.name.QName;
 
 /**
@@ -29,11 +28,6 @@ import org.apache.jackrabbit.name.QName;
 public interface ItemDef {
 
     public static final ItemDef[] EMPTY_ARRAY = new ItemDef[0];
-
-    /**
-     * '*' denoting residual child item definition
-     */
-    QName ANY_NAME = new QName(Constants.NS_DEFAULT_URI, "*");
 
     /**
      * Gets the name of the child item.

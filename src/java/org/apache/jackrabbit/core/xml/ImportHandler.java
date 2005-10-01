@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -218,7 +218,7 @@ public class ImportHandler extends DefaultHandler {
         if (!initialized) {
             // the namespace of the first element determines the type of XML
             // (system view/document view)
-            systemViewXML = Constants.NS_SV_URI.equals(namespaceURI);
+            systemViewXML = QName.NS_SV_URI.equals(namespaceURI);
 
             if (systemViewXML) {
                 targetHandler = new SysViewImportHandler(importer, nsContext);
@@ -273,9 +273,6 @@ public class ImportHandler extends DefaultHandler {
          * internally we're using " " instead
          */
         private static final String DUMMY_DEFAULT_URI = " ";
-        private static final String DEFAULT_URI = Constants.NS_DEFAULT_URI;
-
-        private static final String EMPTY_PREFIX = "";
 
         NamespaceContext() {
             nsContext = new NamespaceSupport();
@@ -306,7 +303,7 @@ public class ImportHandler extends DefaultHandler {
          * {@inheritDoc}
          */
         boolean declarePrefix(String prefix, String uri) {
-            if (DEFAULT_URI.equals(uri)) {
+            if (QName.NS_DEFAULT_URI.equals(uri)) {
                 uri = DUMMY_DEFAULT_URI;
             }
             return nsContext.declarePrefix(prefix, uri);
@@ -321,7 +318,7 @@ public class ImportHandler extends DefaultHandler {
             if (uri == null) {
                 throw new NamespaceException("unknown prefix");
             } else if (DUMMY_DEFAULT_URI.equals(uri)) {
-                return DEFAULT_URI;
+                return QName.NS_DEFAULT_URI;
             } else {
                 return uri;
             }
@@ -331,7 +328,7 @@ public class ImportHandler extends DefaultHandler {
          * {@inheritDoc}
          */
         public String getPrefix(String uri) throws NamespaceException {
-            if (DEFAULT_URI.equals(uri)) {
+            if (QName.NS_DEFAULT_URI.equals(uri)) {
                 uri = DUMMY_DEFAULT_URI;
             }
             String prefix = nsContext.getPrefix(uri);
@@ -341,8 +338,8 @@ public class ImportHandler extends DefaultHandler {
                  * (default) prefix; we have to do a reverse-lookup to check
                  * whether it's the current default namespace
                  */
-                if (uri.equals(nsContext.getURI(EMPTY_PREFIX))) {
-                    return EMPTY_PREFIX;
+                if (uri.equals(nsContext.getURI(QName.NS_EMPTY_PREFIX))) {
+                    return QName.NS_EMPTY_PREFIX;
                 }
                 throw new NamespaceException("unknown uri");
             }

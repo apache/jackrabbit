@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
 import org.apache.xerces.util.XMLChar;
 
 import javax.jcr.NamespaceException;
@@ -77,12 +77,12 @@ class LocalNamespaceMappings implements NamespaceResolver {
         if (prefix == null || uri == null) {
             throw new IllegalArgumentException("prefix/uri can not be null");
         }
-        if (Constants.NS_EMPTY_PREFIX.equals(prefix)
-                || Constants.NS_DEFAULT_URI.equals(uri)) {
+        if (QName.NS_EMPTY_PREFIX.equals(prefix)
+                || QName.NS_DEFAULT_URI.equals(uri)) {
             throw new NamespaceException("default namespace is reserved and can not be changed");
         }
         // special case: prefixes xml*
-        if (prefix.toLowerCase().startsWith(Constants.NS_XML_PREFIX)) {
+        if (prefix.toLowerCase().startsWith(QName.NS_XML_PREFIX)) {
             throw new NamespaceException("reserved prefix: " + prefix);
         }
         // check if the prefix is a valid XML prefix

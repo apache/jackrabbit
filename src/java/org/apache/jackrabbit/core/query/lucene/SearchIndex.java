@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
@@ -298,7 +297,7 @@ public class SearchIndex extends AbstractQueryHandler {
         SortField[] sortFields = new SortField[orderProps.length];
         for (int i = 0; i < orderProps.length; i++) {
             String prop = null;
-            if (Constants.JCR_SCORE.equals(orderProps[i])) {
+            if (QName.JCR_SCORE.equals(orderProps[i])) {
                 // order on jcr:score does not use the natural order as
                 // implemented in lucene. score ascending in lucene means that
                 // higher scores are first. JCR specs that lower score values

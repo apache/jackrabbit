@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
@@ -42,6 +41,7 @@ import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
@@ -706,7 +706,7 @@ public class SessionImpl implements Session, Dumpable {
 
         try {
             NodeImpl node = (NodeImpl) getItemManager().getItem(new NodeId(uuid));
-            if (node.isNodeType(Constants.MIX_REFERENCEABLE)) {
+            if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
                 return node;
             } else {
                 // there is a node with that uuid but the node does not expose it

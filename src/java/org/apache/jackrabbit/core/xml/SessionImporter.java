@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
@@ -142,7 +141,7 @@ public class SessionImporter implements Importer {
             node = createNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
             // remember uuid mapping
-            if (node.isNodeType(Constants.MIX_REFERENCEABLE)) {
+            if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
                 refTracker.mappedUUID(nodeInfo.getUUID(), node.getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {

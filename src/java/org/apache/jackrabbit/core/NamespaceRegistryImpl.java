@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 import org.apache.xerces.util.XMLChar;
 
@@ -39,7 +39,7 @@ import java.util.Properties;
  * A <code>NamespaceRegistryImpl</code> ...
  */
 public class NamespaceRegistryImpl implements NamespaceRegistry,
-        NamespaceResolver, Constants {
+        NamespaceResolver {
 
     private static Logger log = Logger.getLogger(NamespaceRegistryImpl.class);
 
@@ -50,23 +50,23 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
 
     static {
         // reserved prefixes
-        reservedPrefixes.add(NS_XML_PREFIX);
-        reservedPrefixes.add(NS_XMLNS_PREFIX);
+        reservedPrefixes.add(QName.NS_XML_PREFIX);
+        reservedPrefixes.add(QName.NS_XMLNS_PREFIX);
         // predefined (e.g. built-in) prefixes
-        reservedPrefixes.add(NS_REP_PREFIX);
-        reservedPrefixes.add(NS_JCR_PREFIX);
-        reservedPrefixes.add(NS_NT_PREFIX);
-        reservedPrefixes.add(NS_MIX_PREFIX);
-        reservedPrefixes.add(NS_SV_PREFIX);
+        reservedPrefixes.add(QName.NS_REP_PREFIX);
+        reservedPrefixes.add(QName.NS_JCR_PREFIX);
+        reservedPrefixes.add(QName.NS_NT_PREFIX);
+        reservedPrefixes.add(QName.NS_MIX_PREFIX);
+        reservedPrefixes.add(QName.NS_SV_PREFIX);
         // reserved namespace URI's
-        reservedURIs.add(NS_XML_URI);
-        reservedURIs.add(NS_XMLNS_URI);
+        reservedURIs.add(QName.NS_XML_URI);
+        reservedURIs.add(QName.NS_XMLNS_URI);
         // predefined (e.g. built-in) namespace URI's
-        reservedURIs.add(NS_REP_URI);
-        reservedURIs.add(NS_JCR_URI);
-        reservedURIs.add(NS_NT_URI);
-        reservedURIs.add(NS_MIX_URI);
-        reservedURIs.add(NS_SV_URI);
+        reservedURIs.add(QName.NS_REP_URI);
+        reservedURIs.add(QName.NS_JCR_URI);
+        reservedURIs.add(QName.NS_NT_URI);
+        reservedURIs.add(QName.NS_MIX_URI);
+        reservedURIs.add(QName.NS_SV_URI);
     }
 
     private HashMap prefixToURI = new HashMap();
@@ -94,27 +94,27 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
                 uriToPrefix.clear();
 
                 // default namespace (if no prefix is specified)
-                prefixToURI.put(NS_EMPTY_PREFIX, NS_DEFAULT_URI);
-                uriToPrefix.put(NS_DEFAULT_URI, NS_EMPTY_PREFIX);
+                prefixToURI.put(QName.NS_EMPTY_PREFIX, QName.NS_DEFAULT_URI);
+                uriToPrefix.put(QName.NS_DEFAULT_URI, QName.NS_EMPTY_PREFIX);
                 // declare the predefined mappings
                 // rep:
-                prefixToURI.put(NS_REP_PREFIX, NS_REP_URI);
-                uriToPrefix.put(NS_REP_URI, NS_REP_PREFIX);
+                prefixToURI.put(QName.NS_REP_PREFIX, QName.NS_REP_URI);
+                uriToPrefix.put(QName.NS_REP_URI, QName.NS_REP_PREFIX);
                 // jcr:
-                prefixToURI.put(NS_JCR_PREFIX, NS_JCR_URI);
-                uriToPrefix.put(NS_JCR_URI, NS_JCR_PREFIX);
+                prefixToURI.put(QName.NS_JCR_PREFIX, QName.NS_JCR_URI);
+                uriToPrefix.put(QName.NS_JCR_URI, QName.NS_JCR_PREFIX);
                 // nt:
-                prefixToURI.put(NS_NT_PREFIX, NS_NT_URI);
-                uriToPrefix.put(NS_NT_URI, NS_NT_PREFIX);
+                prefixToURI.put(QName.NS_NT_PREFIX, QName.NS_NT_URI);
+                uriToPrefix.put(QName.NS_NT_URI, QName.NS_NT_PREFIX);
                 // mix:
-                prefixToURI.put(NS_MIX_PREFIX, NS_MIX_URI);
-                uriToPrefix.put(NS_MIX_URI, NS_MIX_PREFIX);
+                prefixToURI.put(QName.NS_MIX_PREFIX, QName.NS_MIX_URI);
+                uriToPrefix.put(QName.NS_MIX_URI, QName.NS_MIX_PREFIX);
                 // sv:
-                prefixToURI.put(NS_SV_PREFIX, NS_SV_URI);
-                uriToPrefix.put(NS_SV_URI, NS_SV_PREFIX);
+                prefixToURI.put(QName.NS_SV_PREFIX, QName.NS_SV_URI);
+                uriToPrefix.put(QName.NS_SV_URI, QName.NS_SV_PREFIX);
                 // xml:
-                prefixToURI.put(NS_XML_PREFIX, NS_XML_URI);
-                uriToPrefix.put(NS_XML_URI, NS_XML_PREFIX);
+                prefixToURI.put(QName.NS_XML_PREFIX, QName.NS_XML_URI);
+                uriToPrefix.put(QName.NS_XML_URI, QName.NS_XML_PREFIX);
 
                 // persist mappings
                 store();
@@ -207,7 +207,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
         if (prefix == null || uri == null) {
             throw new IllegalArgumentException("prefix/uri can not be null");
         }
-        if (NS_EMPTY_PREFIX.equals(prefix) || NS_DEFAULT_URI.equals(uri)) {
+        if (QName.NS_EMPTY_PREFIX.equals(prefix) || QName.NS_DEFAULT_URI.equals(uri)) {
             throw new NamespaceException("default namespace is reserved and can not be changed");
         }
         if (reservedURIs.contains(uri)) {
@@ -219,7 +219,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
                     + prefix + " -> " + uri + ": reserved prefix");
         }
         // special case: prefixes xml*
-        if (prefix.toLowerCase().startsWith(NS_XML_PREFIX)) {
+        if (prefix.toLowerCase().startsWith(QName.NS_XML_PREFIX)) {
             throw new NamespaceException("failed to register namespace "
                     + prefix + " -> " + uri + ": reserved prefix");
         }

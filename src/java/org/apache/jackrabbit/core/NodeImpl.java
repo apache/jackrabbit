@@ -136,7 +136,7 @@ public class NodeImpl extends ItemImpl implements Node {
              */
             log.warn("Fallback to nt:unstructured due to unknown node type '"
                     + state.getNodeTypeName() + "' of node " + safeGetJCRPath());
-            primaryTypeName = NT_UNSTRUCTURED;
+            primaryTypeName = QName.NT_UNSTRUCTURED;
         }
     }
 
@@ -323,9 +323,9 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // compute system generated values
         NodeTypeImpl nt = (NodeTypeImpl) def.getDeclaringNodeType();
-        if (nt.getQName().equals(MIX_REFERENCEABLE)) {
+        if (nt.getQName().equals(QName.MIX_REFERENCEABLE)) {
             // mix:referenceable node type
-            if (name.equals(JCR_UUID)) {
+            if (name.equals(QName.JCR_UUID)) {
                 // jcr:uuid property
                 genValues = new InternalValue[]{InternalValue.create(thisState.getUUID())};
             }
@@ -348,30 +348,30 @@ public class NodeImpl extends ItemImpl implements Node {
                genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
            }
 */
-        } else if (nt.getQName().equals(NT_HIERARCHYNODE)) {
+        } else if (nt.getQName().equals(QName.NT_HIERARCHYNODE)) {
             // nt:hierarchyNode node type
-            if (name.equals(JCR_CREATED)) {
+            if (name.equals(QName.JCR_CREATED)) {
                 // jcr:created property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
-        } else if (nt.getQName().equals(NT_RESOURCE)) {
+        } else if (nt.getQName().equals(QName.NT_RESOURCE)) {
             // nt:resource node type
-            if (name.equals(JCR_LASTMODIFIED)) {
+            if (name.equals(QName.JCR_LASTMODIFIED)) {
                 // jcr:lastModified property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
-        } else if (nt.getQName().equals(NT_VERSION)) {
+        } else if (nt.getQName().equals(QName.NT_VERSION)) {
             // nt:version node type
-            if (name.equals(JCR_CREATED)) {
+            if (name.equals(QName.JCR_CREATED)) {
                 // jcr:created property
                 genValues = new InternalValue[]{InternalValue.create(Calendar.getInstance())};
             }
-        } else if (nt.getQName().equals(NT_BASE)) {
+        } else if (nt.getQName().equals(QName.NT_BASE)) {
             // nt:base node type
-            if (name.equals(JCR_PRIMARYTYPE)) {
+            if (name.equals(QName.JCR_PRIMARYTYPE)) {
                 // jcr:primaryType property
                 genValues = new InternalValue[]{InternalValue.create(primaryTypeName)};
-            } else if (name.equals(JCR_MIXINTYPES)) {
+            } else if (name.equals(QName.JCR_MIXINTYPES)) {
                 // jcr:mixinTypes property
                 Set mixins = thisState.getMixinTypeNames();
                 ArrayList values = new ArrayList(mixins.size());
@@ -798,17 +798,17 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState thisState = (NodeState) state;
         // get or create jcr:mixinTypes property
         PropertyImpl prop;
-        if (thisState.hasPropertyName(JCR_MIXINTYPES)) {
-            prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), JCR_MIXINTYPES));
+        if (thisState.hasPropertyName(QName.JCR_MIXINTYPES)) {
+            prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), QName.JCR_MIXINTYPES));
         } else {
             // find definition for the jcr:mixinTypes property and create property
-            PropertyDefinitionImpl def = getApplicablePropertyDefinition(JCR_MIXINTYPES, PropertyType.NAME, true);
-            prop = createChildProperty(JCR_MIXINTYPES, PropertyType.NAME, def);
+            PropertyDefinitionImpl def = getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
+            prop = createChildProperty(QName.JCR_MIXINTYPES, PropertyType.NAME, def);
         }
 
         if (mixinNames.isEmpty()) {
             // purge empty jcr:mixinTypes property
-            removeChildProperty(JCR_MIXINTYPES);
+            removeChildProperty(QName.JCR_MIXINTYPES);
             return;
         }
 
@@ -1102,9 +1102,9 @@ public class NodeImpl extends ItemImpl implements Node {
          * it can only be removed if there no more references to this node
          */
         NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
-        if ((MIX_REFERENCEABLE.equals(mixinName)
-                || mixin.isDerivedFrom(MIX_REFERENCEABLE))
-                && !entRemaining.includesNodeType(MIX_REFERENCEABLE)) {
+        if ((QName.MIX_REFERENCEABLE.equals(mixinName)
+                || mixin.isDerivedFrom(QName.MIX_REFERENCEABLE))
+                && !entRemaining.includesNodeType(QName.MIX_REFERENCEABLE)) {
             // removing this mixin would effectively remove mix:referenceable:
             // make sure no references exist
             PropertyIterator iter = getReferences();
@@ -2608,7 +2608,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (!isNodeType(MIX_REFERENCEABLE)) {
+        if (!isNodeType(QName.MIX_REFERENCEABLE)) {
             throw new UnsupportedRepositoryOperationException();
         }
 
@@ -2632,7 +2632,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
             // search nearest ancestor that is referenceable
             NodeImpl m1 = this;
-            while (m1.getDepth() != 0 && !m1.isNodeType(MIX_REFERENCEABLE)) {
+            while (m1.getDepth() != 0 && !m1.isNodeType(QName.MIX_REFERENCEABLE)) {
                 m1 = (NodeImpl) m1.getParent();
             }
 
@@ -2737,11 +2737,11 @@ public class NodeImpl extends ItemImpl implements Node {
         checkLock();
 
         Version v = session.getVersionManager().checkin(this);
-        Property prop = internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(false));
+        Property prop = internalSetProperty(QName.JCR_ISCHECKEDOUT, InternalValue.create(false));
         prop.save();
-        prop = internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
+        prop = internalSetProperty(QName.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
         prop.save();
-        prop = internalSetProperty(JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+        prop = internalSetProperty(QName.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
         prop.save();
         return v;
     }
@@ -2768,9 +2768,9 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        Property prop = internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(true));
+        Property prop = internalSetProperty(QName.JCR_ISCHECKEDOUT, InternalValue.create(true));
         prop.save();
-        prop = internalSetProperty(JCR_PREDECESSORS,
+        prop = internalSetProperty(QName.JCR_PREDECESSORS,
                 new InternalValue[]{
                     InternalValue.create(new UUID(getBaseVersion().getUUID()))
                 });
@@ -2945,7 +2945,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         checkVersionable();
-        return (VersionHistory) getProperty(JCR_VERSIONHISTORY).getNode();
+        return (VersionHistory) getProperty(QName.JCR_VERSIONHISTORY).getNode();
     }
 
     /**
@@ -2957,7 +2957,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         checkVersionable();
-        return (Version) getProperty(JCR_BASEVERSION).getNode();
+        return (Version) getProperty(QName.JCR_BASEVERSION).getNode();
     }
 
     //-----------------------------------< versioning support: implementation >
@@ -2969,7 +2969,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private void checkVersionable()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        if (!isNodeType(MIX_VERSIONABLE)) {
+        if (!isNodeType(QName.MIX_VERSIONABLE)) {
             String msg = "Unable to perform versioning operation on non versionable node: " + safeGetJCRPath();
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
@@ -3020,7 +3020,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // search nearest ancestor that is referenceable
         NodeImpl m1 = this;
-        while (!m1.isNodeType(MIX_REFERENCEABLE)) {
+        while (!m1.isNodeType(QName.MIX_REFERENCEABLE)) {
             if (m1.getDepth() == 0) {
                 // root node
                 try {
@@ -3085,11 +3085,11 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // if not versionable, update
-        if (!isNodeType(MIX_VERSIONABLE) || failedIds == null) {
+        if (!isNodeType(QName.MIX_VERSIONABLE) || failedIds == null) {
             return srcNode;
         }
         // if source node is not versionable, leave
-        if (!srcNode.isNodeType(MIX_VERSIONABLE)) {
+        if (!srcNode.isNodeType(QName.MIX_VERSIONABLE)) {
             return null;
         }
         // test versions
@@ -3168,13 +3168,13 @@ public class NodeImpl extends ItemImpl implements Node {
 
         if (!cancel) {
             // add version to jcr:predecessors list
-            Value[] vals = getProperty(JCR_PREDECESSORS).getValues();
+            Value[] vals = getProperty(QName.JCR_PREDECESSORS).getValues();
             InternalValue[] v = new InternalValue[vals.length + 1];
             for (int i = 0; i < vals.length; i++) {
                 v[i] = InternalValue.create(UUID.fromString(vals[i].getString()));
             }
             v[vals.length] = InternalValue.create(UUID.fromString(version.getUUID()));
-            internalSetProperty(JCR_PREDECESSORS, v);
+            internalSetProperty(QName.JCR_PREDECESSORS, v);
         }
 
         // save
@@ -3187,8 +3187,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private Set internalGetMergeFailed() throws RepositoryException {
         HashSet set = new HashSet();
-        if (hasProperty(JCR_MERGEFAILED)) {
-            Value[] vals = getProperty(JCR_MERGEFAILED).getValues();
+        if (hasProperty(QName.JCR_MERGEFAILED)) {
+            Value[] vals = getProperty(QName.JCR_MERGEFAILED).getValues();
             for (int i = 0; i < vals.length; i++) {
                 set.add(vals[i].getString());
             }
@@ -3202,7 +3202,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private void internalSetMergeFailed(Set set) throws RepositoryException {
         if (set.isEmpty()) {
-            internalSetProperty(JCR_MERGEFAILED, (InternalValue[]) null);
+            internalSetProperty(QName.JCR_MERGEFAILED, (InternalValue[]) null);
         } else {
             InternalValue[] vals = new InternalValue[set.size()];
             Iterator iter = set.iterator();
@@ -3211,7 +3211,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 String uuid = (String) iter.next();
                 vals[i++] = InternalValue.create(UUID.fromString(uuid));
             }
-            internalSetProperty(JCR_MERGEFAILED, vals);
+            internalSetProperty(QName.JCR_MERGEFAILED, vals);
         }
     }
 
@@ -3244,13 +3244,13 @@ public class NodeImpl extends ItemImpl implements Node {
          * this would have a negative impact on performance though...
          */
         NodeImpl node = this;
-        while (!node.hasProperty(JCR_ISCHECKEDOUT)) {
+        while (!node.hasProperty(QName.JCR_ISCHECKEDOUT)) {
             if (node.getDepth() == 0) {
                 return true;
             }
             node = (NodeImpl) node.getParent();
         }
-        return node.getProperty(JCR_ISCHECKEDOUT).getBoolean();
+        return node.getProperty(QName.JCR_ISCHECKEDOUT).getBoolean();
     }
 
     /**
@@ -3427,9 +3427,9 @@ public class NodeImpl extends ItemImpl implements Node {
         while (iter.hasNext()) {
             PropertyImpl p = (PropertyImpl) iter.nextProperty();
             // ignore system types
-            if (p.getQName().equals(JCR_PRIMARYTYPE)
-                    || p.getQName().equals(JCR_MIXINTYPES)
-                    || p.getQName().equals(JCR_UUID)) {
+            if (p.getQName().equals(QName.JCR_PRIMARYTYPE)
+                    || p.getQName().equals(QName.JCR_MIXINTYPES)
+                    || p.getQName().equals(QName.JCR_UUID)) {
                 continue;
             }
             if (p.getDefinition().isMultiple()) {
@@ -3459,7 +3459,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (hasNode(child.getQName())) {
                 // todo: does not work properly for samename siblings
                 dstNode = getNode(child.getQName());
-            } else if (child.isNodeType(MIX_REFERENCEABLE)) {
+            } else if (child.isNodeType(QName.MIX_REFERENCEABLE)) {
                 // if child is referenceable, check if correspondance exist in this workspace
                 try {
                     dstNode = (NodeImpl) session.getNodeByUUID(uuid);
@@ -3539,7 +3539,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // set jcr:isCheckedOut property to true, in order to avoid any conflicts
-        internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(true));
+        internalSetProperty(QName.JCR_ISCHECKEDOUT, InternalValue.create(true));
 
         // 1. The child node and properties of N will be changed, removed or
         //    added to, depending on their corresponding copies in V and their
@@ -3549,16 +3549,16 @@ public class NodeImpl extends ItemImpl implements Node {
         restored.add(version);
 
         // 2. N's jcr:baseVersion property will be changed to point to V.
-        internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(version.getId())));
+        internalSetProperty(QName.JCR_BASEVERSION, InternalValue.create(new UUID(version.getId())));
 
         // 4. N's jcr:predecessor property is set to null
-        internalSetProperty(JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+        internalSetProperty(QName.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
 
         // also clear mergeFailed
-        internalSetProperty(JCR_MERGEFAILED, (InternalValue[]) null);
+        internalSetProperty(QName.JCR_MERGEFAILED, (InternalValue[]) null);
 
         // 3. N's jcr:isCheckedOut property is set to false.
-        internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(false));
+        internalSetProperty(QName.JCR_ISCHECKEDOUT, InternalValue.create(false));
 
         return (InternalVersion[]) restored.toArray(new InternalVersion[restored.size()]);
     }
@@ -3575,7 +3575,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws RepositoryException {
 
         // check uuid
-        if (isNodeType(MIX_REFERENCEABLE)) {
+        if (isNodeType(QName.MIX_REFERENCEABLE)) {
             String uuid = freeze.getFrozenUUID();
             if (uuid != null && !uuid.equals(getUUID())) {
                 throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". UUID changed.");
@@ -3609,9 +3609,9 @@ public class NodeImpl extends ItemImpl implements Node {
         while (piter.hasNext()) {
             PropertyImpl prop = (PropertyImpl) piter.nextProperty();
             // ignore some props that are not well guarded by the OPV
-            if (prop.getQName().equals(JCR_VERSIONHISTORY)) {
+            if (prop.getQName().equals(QName.JCR_VERSIONHISTORY)) {
                 continue;
-            } else if (prop.getQName().equals(JCR_PREDECESSORS)) {
+            } else if (prop.getQName().equals(QName.JCR_PREDECESSORS)) {
                 continue;
             }
             if (prop.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY
@@ -3792,7 +3792,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (!isNodeType(MIX_LOCKABLE) || isNew()) {
+        if (!isNodeType(QName.MIX_LOCKABLE) || isNew()) {
             // a node that is new or not lockable never holds a lock
             return false;
         }
@@ -3823,7 +3823,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException if another error occurs
      */
     private void checkLockable() throws LockException, RepositoryException {
-        if (!isNodeType(MIX_LOCKABLE)) {
+        if (!isNodeType(QName.MIX_LOCKABLE)) {
             String msg = "Unable to perform locking operation on non-lockable node: "
                     + safeGetJCRPath();
             log.debug(msg);

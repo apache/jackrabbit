@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.log4j.Logger;
 import org.xml.sax.helpers.DefaultHandler;
@@ -34,7 +33,7 @@ import java.io.Writer;
  * classes <code>{@link DocViewImportHandler}</code> and
  * <code>{@link SysViewImportHandler}</code>.
  */
-abstract class TargetImportHandler extends DefaultHandler implements Constants {
+abstract class TargetImportHandler extends DefaultHandler {
 
     private static Logger log = Logger.getLogger(TargetImportHandler.class);
 

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -50,7 +49,7 @@ import java.util.TreeSet;
 /**
  * A <code>NodeTypeRegistry</code> ...
  */
-public class NodeTypeRegistry implements Dumpable, Constants {
+public class NodeTypeRegistry implements Dumpable {
 
     private static Logger log = Logger.getLogger(NodeTypeRegistry.class);
 
@@ -205,9 +204,9 @@ public class NodeTypeRegistry implements Dumpable, Constants {
         NodeDefImpl def = new NodeDefImpl();
 
         // FIXME need a fake declaring node type
-        def.setDeclaringNodeType(new QName(NS_DEFAULT_URI, ""));
-        def.setRequiredPrimaryTypes(new QName[]{REP_ROOT});
-        def.setDefaultPrimaryType(REP_ROOT);
+        def.setDeclaringNodeType(QName.EMPTY);
+        def.setRequiredPrimaryTypes(new QName[] { QName.REP_ROOT });
+        def.setDefaultPrimaryType(QName.REP_ROOT);
         def.setMandatory(true);
         def.setProtected(false);
         def.setOnParentVersion(OnParentVersionAction.VERSION);
@@ -488,8 +487,8 @@ public class NodeTypeRegistry implements Dumpable, Constants {
             try {
                 EffectiveNodeType est = getEffectiveNodeType(supertypes);
                 // make sure that all primary types except nt:base extend from nt:base
-                if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName())
-                        && !est.includesNodeType(NT_BASE)) {
+                if (!ntd.isMixin() && !QName.NT_BASE.equals(ntd.getName())
+                        && !est.includesNodeType(QName.NT_BASE)) {
                     String msg = "[" + name + "] all primary node types except"
                         + " nt:base itself must be (directly or indirectly) derived from nt:base";
                     log.debug(msg);
@@ -506,7 +505,7 @@ public class NodeTypeRegistry implements Dumpable, Constants {
             }
         } else {
             // no supertypes specified: has to be either a mixin type or nt:base
-            if (!ntd.isMixin() && !NT_BASE.equals(ntd.getName())) {
+            if (!ntd.isMixin() && !QName.NT_BASE.equals(ntd.getName())) {
                 String msg = "[" + name
                         + "] all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
                 log.debug(msg);

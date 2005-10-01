@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.sql;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.NAryQueryNode;
@@ -256,7 +255,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
         return node.childrenAccept(new DefaultParserVisitor() {
             public Object visit(ASTIdentifier node, Object data) {
-                if (!node.getName().equals(Constants.NT_BASE)) {
+                if (!node.getName().equals(QName.NT_BASE)) {
                     // node is either primary or mixin node type
                     NodeTypeQueryNode nodeType
                             = new NodeTypeQueryNode(constraintNode, node.getName());
@@ -297,7 +296,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             }, data);
             QName identifier = tmp[0];
 
-            if (identifier.equals(Constants.JCR_PATH)) {
+            if (identifier.equals(QName.JCR_PATH)) {
                 if (tmp[1] != null) {
                     // simply ignore, this is a join of a mixin node type
                 } else {

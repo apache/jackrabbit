@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.lock;
 
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PathMap;
@@ -29,6 +28,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Node;
@@ -166,8 +166,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             Path path = getPath(node.getId());
 
             LockInfo info = new LockInfo(this, lockToken, false,
-                    node.getProperty(Constants.JCR_LOCKISDEEP).getBoolean(),
-                    node.getProperty(Constants.JCR_LOCKOWNER).getString());
+                    node.getProperty(QName.JCR_LOCKISDEEP).getBoolean(),
+                    node.getProperty(QName.JCR_LOCKOWNER).getString());
             info.setLive(true);
             lockMap.put(path, info);
         } catch (RepositoryException e) {
@@ -260,9 +260,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             }
 
             // add properties to content
-            node.internalSetProperty(Constants.JCR_LOCKOWNER,
+            node.internalSetProperty(QName.JCR_LOCKOWNER,
                     InternalValue.create(node.getSession().getUserID()));
-            node.internalSetProperty(Constants.JCR_LOCKISDEEP,
+            node.internalSetProperty(QName.JCR_LOCKISDEEP,
                     InternalValue.create(info.deep));
             node.save();
 
@@ -303,8 +303,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                 }
 
                 // remove properties in content
-                node.internalSetProperty(Constants.JCR_LOCKOWNER, (InternalValue) null);
-                node.internalSetProperty(Constants.JCR_LOCKISDEEP, (InternalValue) null);
+                node.internalSetProperty(QName.JCR_LOCKOWNER, (InternalValue) null);
+                node.internalSetProperty(QName.JCR_LOCKISDEEP, (InternalValue) null);
                 node.save();
             }
 
@@ -387,8 +387,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             }
 
             // remove properties in content
-            node.internalSetProperty(Constants.JCR_LOCKOWNER, (InternalValue) null);
-            node.internalSetProperty(Constants.JCR_LOCKISDEEP, (InternalValue) null);
+            node.internalSetProperty(QName.JCR_LOCKOWNER, (InternalValue) null);
+            node.internalSetProperty(QName.JCR_LOCKISDEEP, (InternalValue) null);
             node.save();
         }
     }

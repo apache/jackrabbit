@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
@@ -45,7 +44,7 @@ import java.util.Iterator;
  * This Class implements a virtual item state provider, in order to expose the
  * versions to the version storage.
  */
-public abstract class AbstractVISProvider implements VirtualItemStateProvider, Constants {
+public abstract class AbstractVISProvider implements VirtualItemStateProvider {
     /**
      * the default logger
      */
@@ -267,7 +266,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, C
         } catch (RepositoryException re) {
             // hack, use nt:unstructured as parent
             NodeTypeRegistry ntReg = getNodeTypeRegistry();
-            EffectiveNodeType ent = ntReg.getEffectiveNodeType(NT_UNSTRUCTURED);
+            EffectiveNodeType ent = ntReg.getEffectiveNodeType(QName.NT_UNSTRUCTURED);
             NodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
             ntReg.getNodeDef(cnd.getId());
             def = cnd.getId();

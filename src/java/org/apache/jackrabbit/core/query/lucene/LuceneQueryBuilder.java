@@ -79,12 +79,12 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * QName for jcr:primaryType
      */
-    private static QName primaryType = org.apache.jackrabbit.Constants.JCR_PRIMARYTYPE;
+    private static QName primaryType = QName.JCR_PRIMARYTYPE;
 
     /**
      * QName for jcr:mixinTypes
      */
-    private static QName mixinTypes = org.apache.jackrabbit.Constants.JCR_MIXINTYPES;
+    private static QName mixinTypes = QName.JCR_MIXINTYPES;
 
     /**
      * Root node of the abstract query tree

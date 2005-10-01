@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.name.QName;
 
 import java.util.Arrays;
@@ -35,7 +34,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * The names of the required primary types.
      */
-    private QName[] requiredPrimaryTypes = new QName[]{Constants.NT_BASE};
+    private QName[] requiredPrimaryTypes = new QName[] { QName.NT_BASE };
 
     /**
      * The 'allowsSameNameSiblings' flag.

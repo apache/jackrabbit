@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
@@ -75,7 +74,7 @@ import java.util.Set;
 /**
  * <code>ItemImpl</code> implements the <code>Item</code> interface.
  */
-public abstract class ItemImpl implements Item, ItemStateListener, Constants {
+public abstract class ItemImpl implements Item, ItemStateListener {
 
     private static Logger log = Logger.getLogger(ItemImpl.class);
 
@@ -534,7 +533,7 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                 PropDef[] pda = ent.getMandatoryPropDefs();
                 for (int i = 0; i < pda.length; i++) {
                     PropDef pd = pda[i];
-                    if (pd.getDeclaringNodeType().equals(MIX_VERSIONABLE)) {
+                    if (pd.getDeclaringNodeType().equals(QName.MIX_VERSIONABLE)) {
                         /**
                          * todo FIXME workaround for mix:versionable:
                          * the mandatory properties are initialized at a
@@ -898,8 +897,8 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
             ItemState itemState = (ItemState) iter.next();
             if (itemState.isNode()) {
                 NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
-                if (node.isNodeType(MIX_VERSIONABLE)) {
-                    if (!node.hasProperty(JCR_VERSIONHISTORY)) {
+                if (node.isNodeType(QName.MIX_VERSIONABLE)) {
+                    if (!node.hasProperty(QName.JCR_VERSIONHISTORY)) {
                         VersionManager vMgr = session.getVersionManager();
                         NodeState nodeState = (NodeState) itemState;
                         /**
@@ -914,10 +913,10 @@ public abstract class ItemImpl implements Item, ItemStateListener, Constants {
                         if (vh == null) {
                             vh = vMgr.createVersionHistory(session, nodeState);
                         }
-                        node.internalSetProperty(JCR_VERSIONHISTORY, InternalValue.create(new UUID(vh.getUUID())));
-                        node.internalSetProperty(JCR_BASEVERSION, InternalValue.create(new UUID(vh.getRootVersion().getUUID())));
-                        node.internalSetProperty(JCR_ISCHECKEDOUT, InternalValue.create(true));
-                        node.internalSetProperty(JCR_PREDECESSORS,
+                        node.internalSetProperty(QName.JCR_VERSIONHISTORY, InternalValue.create(new UUID(vh.getUUID())));
+                        node.internalSetProperty(QName.JCR_BASEVERSION, InternalValue.create(new UUID(vh.getRootVersion().getUUID())));
+                        node.internalSetProperty(QName.JCR_ISCHECKEDOUT, InternalValue.create(true));
+                        node.internalSetProperty(QName.JCR_PREDECESSORS,
                                 new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
                         createdTransientState = true;
                     }

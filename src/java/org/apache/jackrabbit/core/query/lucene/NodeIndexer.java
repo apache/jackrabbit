@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.Constants;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.query.TextFilterService;
@@ -51,21 +50,6 @@ public class NodeIndexer {
      * The logger instance for this class.
      */
     private static final Logger log = Logger.getLogger(NodeIndexer.class);
-
-    /**
-     * QName for jcr:encoding
-     */
-    private static final QName JCR_ENCODING = new QName(Constants.NS_JCR_URI, "encoding");
-
-    /**
-     * QName for jcr:mimeType
-     */
-    private static final QName JCR_MIMETYPE = new QName(Constants.NS_JCR_URI, "mimeType");
-
-    /**
-     * QName for jcr:data
-     */
-    private static final QName JCR_DATA = new QName(Constants.NS_JCR_URI, "data");
 
     /**
      * The <code>NodeState</code> of the node to index
@@ -266,21 +250,21 @@ public class NodeIndexer {
     protected void addBinaryValue(Document doc, String fieldName, Object internalValue) {
         // 'check' if node is of type nt:resource
         try {
-            String jcrData = mappings.getPrefix(Constants.NS_JCR_URI) + ":data";
+            String jcrData = mappings.getPrefix(QName.NS_JCR_URI) + ":data";
             if (!jcrData.equals(fieldName)) {
                 // don't know how to index
                 return;
             }
-            if (node.hasPropertyName(JCR_MIMETYPE)) {
-                PropertyState dataProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_DATA));
+            if (node.hasPropertyName(QName.JCR_MIMETYPE)) {
+                PropertyState dataProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), QName.JCR_DATA));
                 PropertyState mimeTypeProp =
-                        (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_MIMETYPE));
+                        (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), QName.JCR_MIMETYPE));
 
                 // jcr:encoding is not mandatory
                 String encoding = null;
-                if (node.hasPropertyName(JCR_ENCODING)) {
+                if (node.hasPropertyName(QName.JCR_ENCODING)) {
                     PropertyState encodingProp =
-                            (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), JCR_ENCODING));
+                            (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), QName.JCR_ENCODING));
                     encodingProp.getValues()[0].internalValue().toString();
                 }
 

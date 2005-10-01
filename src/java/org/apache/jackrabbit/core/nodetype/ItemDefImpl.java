@@ -30,7 +30,7 @@ public abstract class ItemDefImpl implements ItemDef {
     /**
      * The name of the child item.
      */
-    private QName name = ANY_NAME;
+    private QName name = QName.WILDCARD;
 
     /**
      * The name of the declaring node type.
@@ -179,7 +179,7 @@ public abstract class ItemDefImpl implements ItemDef {
      * {@inheritDoc}
      */
     public boolean definesResidual() {
-        return name.equals(ANY_NAME);
+        return name.equals(QName.WILDCARD);
     }
 
     //-------------------------------------------< java.lang.Object overrides >
