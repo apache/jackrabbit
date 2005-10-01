@@ -503,7 +503,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
                         QName name = ISO9075.decode(QName.fromJCRName(child.getValue(), resolver));
                         if (name.equals(JCR_ROOT)) {
-                            name = new QName("", "");
+                            name = QName.EMPTY;
                         }
                         ((LocationStepQueryNode) queryNode).setNameTest(name);
                     } else if (queryNode.getType() == QueryNode.TYPE_DEREF) {

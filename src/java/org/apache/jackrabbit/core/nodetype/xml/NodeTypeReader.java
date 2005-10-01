@@ -202,7 +202,7 @@ public class NodeTypeReader {
         PropDefImpl def = new PropDefImpl();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
-            def.setName(new QName("", "*"));
+            def.setName(QName.WILDCARD);
         } else {
             def.setName(QName.fromJCRName(name, resolver));
         }
@@ -281,7 +281,7 @@ public class NodeTypeReader {
         NodeDefImpl def = new NodeDefImpl();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
-            def.setName(new QName("", "*"));
+            def.setName(QName.WILDCARD);
         } else {
             def.setName(QName.fromJCRName(name, resolver));
         }
