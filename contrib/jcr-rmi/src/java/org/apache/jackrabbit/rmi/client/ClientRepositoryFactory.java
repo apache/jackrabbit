@@ -20,9 +20,7 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 
 import javax.jcr.Repository;
 import javax.naming.Context;
