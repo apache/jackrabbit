@@ -18,10 +18,8 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
-import javax.jcr.query.RowIterator;
 
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
@@ -64,30 +62,12 @@ public class ServerQueryResult extends ServerObject
 
     /** {@inheritDoc} */
     public RemoteRow[] getRows() throws RepositoryException, RemoteException {
-        RowIterator iterator = result.getRows();
-        if (iterator != null) {
-            RemoteRow[] remotes = new RemoteRow[(int) iterator.getSize()];
-            for (int i = 0; iterator.hasNext(); i++) {
-                remotes[i] = getFactory().getRemoteRow(iterator.nextRow());
-            }
-            return remotes;
-        } else {
-            return new RemoteRow[0]; // for safety
-        }
+        return getRemoteRowArray(result.getRows());
     }
 
     /** {@inheritDoc} */
     public RemoteNode[] getNodes() throws RepositoryException, RemoteException {
-        NodeIterator iterator = result.getNodes();
-        if (iterator != null) {
-            RemoteNode[] remotes = new RemoteNode[(int) iterator.getSize()];
-            for (int i = 0; iterator.hasNext(); i++) {
-                remotes[i] = getRemoteNode(iterator.nextNode());
-            }
-            return remotes;
-        } else {
-            return new RemoteNode[0]; // for safety
-        }
+        return getRemoteNodeArray(result.getNodes());
     }
 
 }
