@@ -19,46 +19,35 @@ package org.apache.jackrabbit.name;
 import org.apache.jackrabbit.BaseException;
 
 /**
- * <code>IllegalNameException</code> ...
+ * Thrown when an illegal JCR name string is encountered. This exception is
+ * thrown when attempting to parse a JCR name string that does not match the
+ * JCR name syntax, or is otherwise not a legal name. Note that an
+ * {@link UnknownPrefixException} is thrown if the prefix of the JCR name
+ * string is syntactically valid but not bound to any namespace. 
+ * <p>
+ * See the section 4.6 of the JCR 1.0 specification for details of the
+ * JCR name syntax.
  */
 public class IllegalNameException extends BaseException {
-    /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public IllegalNameException() {
-        super();
-    }
 
     /**
-     * Constructs a new instance of this class with the specified detail
-     * message.
+     * Creates an IllegalNameException with the given error message.
      *
-     * @param message the detail message. The detail message is saved for
-     *                later retrieval by the {@link #getMessage()} method.
+     * @param message error message
      */
     public IllegalNameException(String message) {
         super(message);
     }
 
     /**
-     * Constructs a new instance of this class with the specified detail
-     * message and root cause.
+     * Creates an IllegalNameException with the given error message and
+     * root cause exception.
      *
-     * @param message   the detail message. The detail message is saved for
-     *                  later retrieval by the {@link #getMessage()} method.
-     * @param rootCause root failure cause
+     * @param message error message
+     * @param rootCause root cause exception
      */
     public IllegalNameException(String message, Throwable rootCause) {
         super(message, rootCause);
     }
 
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public IllegalNameException(Throwable rootCause) {
-        super(rootCause);
-    }
 }

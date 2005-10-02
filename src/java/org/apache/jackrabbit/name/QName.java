@@ -25,50 +25,52 @@ import java.util.regex.Pattern;
 
 /**
  * Qualified name. A qualified name is a combination of a namespace URI
- * and a local part. Instances of this class are used by Jackrabbit to
- * represent the names of JCR content items and other objects.
- * <p/>
+ * and a local part. Instances of this class are used to internally represent
+ * the names of JCR content items and other objects within a content repository.
+ * <p>
  * A qualified name is immutable once created, although the prefixed JCR
  * name representation of the qualified name can change depending on the
  * namespace mappings in effect.
+ * <p>
+ * This class also contains a number of common namespace and qualified name
+ * constants for the namespaces and names specified by the JCR specification.
  *
  * <h2>String representations</h2>
  * <p>
  * The prefixed JCR name format of a qualified name is specified by
- * JSR 170 as follows:
+ * section 4.6 of the the JCR 1.0 specification (JSR 170) as follows:
  * <pre>
- *
- *  name ::= simplename | prefixedname
- *  simplename ::= onecharsimplename |
- *                 twocharsimplename |
- *                 threeormorecharname
- *  prefixedname ::= prefix ':' localname
- *  localname ::= onecharlocalname |
- *                twocharlocalname |
- *                threeormorecharname
- *  onecharsimplename ::= (* Any Unicode character except:
- *                     '.', '/', ':', '[', ']', '*',
- *                     ''', '"', '|' or any whitespace
- *                     character *)
- *  twocharsimplename ::= '.' onecharsimplename |
- *                        onecharsimplename '.' |
- *                        onecharsimplename onecharsimplename
- *  onecharlocalname ::= nonspace
- *  twocharlocalname ::= nonspace nonspace
- *  threeormorecharname ::= nonspace string nonspace
- *  prefix ::= (* Any valid XML Name *)
- *  string ::= char | string char
- *  char ::= nonspace | ' '
- *  nonspace ::= (* Any Unicode character except:
- *                  '/', ':', '[', ']', '*',
- *                  ''', '"', '|' or any whitespace
- *                  character *)
+ * name                ::= simplename | prefixedname
+ * simplename          ::= onecharsimplename |
+ *                         twocharsimplename |
+ *                         threeormorecharname
+ * prefixedname        ::= prefix ':' localname
+ * localname           ::= onecharlocalname |
+ *                         twocharlocalname |
+ *                         threeormorecharname
+ * onecharsimplename   ::= (* Any Unicode character except:
+ *                            '.', '/', ':', '[', ']', '*',
+ *                            ''', '"', '|' or any whitespace
+ *                            character *)
+ * twocharsimplename   ::= '.' onecharsimplename |
+ *                         onecharsimplename '.' |
+ *                         onecharsimplename onecharsimplename
+ * onecharlocalname    ::= nonspace
+ * twocharlocalname    ::= nonspace nonspace
+ * threeormorecharname ::= nonspace string nonspace
+ * prefix              ::= (* Any valid XML Name *)
+ * string              ::= char | string char
+ * char                ::= nonspace | ' '
+ * nonspace            ::= (* Any Unicode character except:
+ *                            '/', ':', '[', ']', '*',
+ *                            ''', '"', '|' or any whitespace
+ *                            character *)
  * </pre>
  * <p>
  * In addition to the prefixed JCR name format, a qualified name can also
  * be represented using the format "<code>{namespaceURI}localPart</code>".
  */
-public class QName implements Cloneable, Comparable, Serializable {
+public final class QName implements Cloneable, Comparable, Serializable {
 
     //------------------------------------------< namespace related constants >
 
@@ -542,10 +544,10 @@ public class QName implements Cloneable, Comparable, Serializable {
     private transient String string;
 
     /** The internalized namespace URI of this qualified name. */
-    protected final String namespaceURI;
+    private final String namespaceURI;
 
     /** The internalized local part of this qualified name. */
-    protected final String localName;
+    private final String localName;
 
     /**
      * Creates a new qualified name with the given namespace URI and

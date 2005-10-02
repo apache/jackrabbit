@@ -19,46 +19,31 @@ package org.apache.jackrabbit.name;
 import org.apache.jackrabbit.BaseException;
 
 /**
- * The <code>NoPrefixDeclaredException</code> ...
+ * Thrown when the namespace prefix of a qualified name is not found. This
+ * exception is thrown when trying to convert a qualified name whose namespace
+ * prefix is not found into a JCR name string. The JCR name string can not be
+ * created without the namespace prefix.
  */
 public class NoPrefixDeclaredException extends BaseException {
-    /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public NoPrefixDeclaredException() {
-        super();
-    }
 
     /**
-     * Constructs a new instance of this class with the specified detail
-     * message.
+     * Creates a NoPrefixDeclaredException with the given error message.
      *
-     * @param message the detail message. The detail message is saved for
-     *                later retrieval by the {@link #getMessage()} method.
+     * @param message error message
      */
     public NoPrefixDeclaredException(String message) {
         super(message);
     }
 
     /**
-     * Constructs a new instance of this class with the specified detail
-     * message and root cause.
+     * Creates a NoPrefixDeclaredException with the given error message and
+     * root cause exception.
      *
-     * @param message   the detail message. The detail message is saved for
-     *                  later retrieval by the {@link #getMessage()} method.
-     * @param rootCause root failure cause
+     * @param message error message
+     * @param rootCause root cause exception
      */
     public NoPrefixDeclaredException(String message, Throwable rootCause) {
         super(message, rootCause);
     }
 
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public NoPrefixDeclaredException(Throwable rootCause) {
-        super(rootCause);
-    }
 }
