@@ -19,25 +19,31 @@ package org.apache.jackrabbit.name;
 import javax.jcr.NamespaceException;
 
 /**
- * The <code>NamespaceResolver</code> interface ...
+ * Interface for resolving namespace URIs and prefixes. Unlike the JCR
+ * {@link javax.jcr.NamespaceRegistry} interface, this interface contains
+ * no functionality other than the basic namespace URI and prefix resolution
+ * methods. This interface is therefore used internally in many places where
+ * the full namespace registry is either not available or some other mechanism
+ * is used for resolving namespaces.
  */
 public interface NamespaceResolver {
 
     /**
      * Returns the URI to which the given prefix is mapped.
      *
-     * @param prefix a string
+     * @param prefix namespace prefix
      * @return the namespace URI to which the given prefix is mapped.
-     * @throws javax.jcr.NamespaceException if the prefix is unknown.
+     * @throws NamespaceException if the prefix is unknown.
      */
     String getURI(String prefix) throws NamespaceException;
 
     /**
      * Returns the prefix which is mapped to the given URI.
      *
-     * @param uri a string
+     * @param uri namespace URI
      * @return the prefix mapped to the given URI.
-     * @throws javax.jcr.NamespaceException if the URI is unknown.
+     * @throws NamespaceException if the URI is unknown.
      */
     String getPrefix(String uri) throws NamespaceException;
+
 }

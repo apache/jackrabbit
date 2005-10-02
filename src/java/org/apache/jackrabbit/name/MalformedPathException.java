@@ -19,46 +19,34 @@ package org.apache.jackrabbit.name;
 import org.apache.jackrabbit.BaseException;
 
 /**
- * <code>MalformedPathException</code> ...
+ * Thrown when a malformed JCR path string is encountered. This exception is
+ * thrown when attempting to parse a JCR path string that does not match the
+ * JCR patch syntax, contains an invalid path elements, or is otherwise not
+ * well formed.
+ * <p>
+ * See the section 4.6 of the JCR 1.0 specification for details of the
+ * JCR path syntax.
  */
 public class MalformedPathException extends BaseException {
-    /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public MalformedPathException() {
-        super();
-    }
 
     /**
-     * Constructs a new instance of this class with the specified detail
-     * message.
+     * Creates a MalformedPathException with the given error message.
      *
-     * @param message the detail message. The detail message is saved for
-     *                later retrieval by the {@link #getMessage()} method.
+     * @param message error message
      */
     public MalformedPathException(String message) {
         super(message);
     }
 
     /**
-     * Constructs a new instance of this class with the specified detail
-     * message and root cause.
+     * Creates a MalformedPathException with the given error message
+     * and root cause exception.
      *
-     * @param message   the detail message. The detail message is saved for
-     *                  later retrieval by the {@link #getMessage()} method.
-     * @param rootCause root failure cause
+     * @param message error message
+     * @param rootCause root cause exception
      */
     public MalformedPathException(String message, Throwable rootCause) {
         super(message, rootCause);
     }
 
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public MalformedPathException(Throwable rootCause) {
-        super(rootCause);
-    }
 }

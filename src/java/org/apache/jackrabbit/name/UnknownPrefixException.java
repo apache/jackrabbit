@@ -19,46 +19,30 @@ package org.apache.jackrabbit.name;
 import org.apache.jackrabbit.BaseException;
 
 /**
- * The <code>UnknownPrefixException</code> ...
+ * Thrown when a JCR name string with an unknown prefix is encountered.
+ * This exception is thrown when attempting to parse a JCR name string
+ * whose prefix is not bound to any namespace.
  */
 public class UnknownPrefixException extends BaseException {
-    /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public UnknownPrefixException() {
-        super();
-    }
 
     /**
-     * Constructs a new instance of this class with the specified detail
-     * message.
+     * Creates an UnknownPrefixException with the given error message.
      *
-     * @param message the detail message. The detail message is saved for
-     *                later retrieval by the {@link #getMessage()} method.
+     * @param message error message
      */
     public UnknownPrefixException(String message) {
         super(message);
     }
 
     /**
-     * Constructs a new instance of this class with the specified detail
-     * message and root cause.
+     * Creates an IllegalNameException with the given error message and
+     * root cause exception.
      *
-     * @param message   the detail message. The detail message is saved for
-     *                  later retrieval by the {@link #getMessage()} method.
-     * @param rootCause root failure cause
+     * @param message error message
+     * @param rootCause root cause exception
      */
     public UnknownPrefixException(String message, Throwable rootCause) {
         super(message, rootCause);
     }
 
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public UnknownPrefixException(Throwable rootCause) {
-        super(rootCause);
-    }
 }

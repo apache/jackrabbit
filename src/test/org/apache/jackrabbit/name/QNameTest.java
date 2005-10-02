@@ -86,8 +86,8 @@ public class QNameTest extends TestCase {
                     if (!t.isValid()) {
                         fail("Should throw IllegalNameException: " + t.jcrName);
                     }
-                    assertEquals("\"" + t.jcrName + "\".uri", t.prefix, n.namespaceURI);
-                    assertEquals("\"" + t.jcrName + "\".localName", t.name, n.localName);
+                    assertEquals("\"" + t.jcrName + "\".uri", t.prefix, n.getNamespaceURI());
+                    assertEquals("\"" + t.jcrName + "\".localName", t.name, n.getLocalName());
                 } catch (IllegalNameException e) {
                     if (t.isValid()) {
                         throw e;
