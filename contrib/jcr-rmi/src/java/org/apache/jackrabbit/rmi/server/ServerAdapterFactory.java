@@ -265,17 +265,17 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
         RemoteEventCollection.RemoteEvent[] remoteEvents;
         if (events != null) {
             List eventList = new ArrayList();
-            for (int i = 0; events.hasNext(); i++) {
-                Event event = events.nextEvent();
+            while (events.hasNext()) {
                 try {
-                    eventList.add(new ServerEventCollection.ServerEvent(event.getType(),
-                        event.getPath(), event.getUserID()));
+                    Event event = events.nextEvent();
+                    eventList.add(new ServerEventCollection.ServerEvent(
+                            event.getType(), event.getPath(), event.getUserID()));
                 } catch (RepositoryException re) {
                     throw new RemoteException(re.getMessage(), re);
                 }
             }
-            remoteEvents = new RemoteEventCollection.RemoteEvent[eventList.size()];
-            eventList.toArray(remoteEvents);
+            remoteEvents = (RemoteEventCollection.RemoteEvent[])
+                eventList.toArray(new RemoteEventCollection.RemoteEvent[eventList.size()]);
         } else {
             remoteEvents = new RemoteEventCollection.RemoteEvent[0]; // for safety
         }

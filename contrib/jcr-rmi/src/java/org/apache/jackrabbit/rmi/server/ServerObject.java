@@ -18,6 +18,7 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -46,6 +47,7 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
@@ -57,6 +59,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
+import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 
 /**
@@ -207,15 +210,15 @@ public class ServerObject extends UnicastRemoteObject {
      */
     protected RemoteProperty[] getRemotePropertyArray(PropertyIterator iterator)
             throws RemoteException {
-        if (iterator == null) {
+        if (iterator != null) {
+            ArrayList remotes = new ArrayList();
+            while (iterator.hasNext()) {
+                remotes.add(factory.getRemoteProperty(iterator.nextProperty()));
+            }
+            return (RemoteProperty[]) remotes.toArray(new RemoteProperty[remotes.size()]);
+        } else {
             return new RemoteProperty[0]; // for safety
         }
-
-        RemoteProperty[] remotes = new RemoteProperty[(int) iterator.getSize()];
-        for (int i = 0; iterator.hasNext(); i++) {
-            remotes[i] = factory.getRemoteProperty(iterator.nextProperty());
-        }
-        return remotes;
     }
 
     /**
@@ -232,11 +235,11 @@ public class ServerObject extends UnicastRemoteObject {
     protected RemoteNode[] getRemoteNodeArray(NodeIterator iterator)
             throws RemoteException {
         if (iterator != null) {
-            RemoteNode[] remotes = new RemoteNode[(int) iterator.getSize()];
-            for (int i = 0; iterator.hasNext(); i++) {
-                remotes[i] = getRemoteNode(iterator.nextNode());
+            ArrayList remotes = new ArrayList();
+            while (iterator.hasNext()) {
+                remotes.add(getRemoteNode(iterator.nextNode()));
             }
-            return remotes;
+            return (RemoteNode[]) remotes.toArray(new RemoteNode[remotes.size()]);
         } else {
             return new RemoteNode[0]; // for safety
         }
@@ -280,11 +283,11 @@ public class ServerObject extends UnicastRemoteObject {
     protected RemoteVersion[] getRemoteVersionArray(VersionIterator iterator)
             throws RemoteException {
         if (iterator != null) {
-            RemoteVersion[] remotes = new RemoteVersion[(int) iterator.getSize()];
-            for (int i = 0; iterator.hasNext(); i++) {
-                remotes[i] = factory.getRemoteVersion(iterator.nextVersion());
+            ArrayList remotes = new ArrayList();
+            while (iterator.hasNext()) {
+                remotes.add(factory.getRemoteVersion(iterator.nextVersion()));
             }
-            return remotes;
+            return (RemoteVersion[]) remotes.toArray(new RemoteVersion[remotes.size()]);
         } else {
             return new RemoteVersion[0]; // for safety
         }
@@ -328,12 +331,11 @@ public class ServerObject extends UnicastRemoteObject {
     protected RemoteNodeType[] getRemoteNodeTypeArray(NodeTypeIterator iterator)
             throws RemoteException {
         if (iterator != null) {
-            RemoteNodeType[] remotes =
-                new RemoteNodeType[(int) iterator.getSize()];
-            for (int i = 0; iterator.hasNext(); i++) {
-                remotes[i] = factory.getRemoteNodeType(iterator.nextNodeType());
+            ArrayList remotes = new ArrayList();
+            while (iterator.hasNext()) {
+                remotes.add(factory.getRemoteNodeType(iterator.nextNodeType()));
             }
-            return remotes;
+            return (RemoteNodeType[]) remotes.toArray(new RemoteNodeType[remotes.size()]);
         } else {
             return new RemoteNodeType[0]; // for safety
         }
@@ -384,6 +386,30 @@ public class ServerObject extends UnicastRemoteObject {
             return remotes;
         } else {
             return new RemotePropertyDefinition[0]; // for safety
+        }
+    }
+
+    /**
+     * Utility method for creating an array of remote references for
+     * local query result rows. The remote references are created using the
+     * remote adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty iterator.
+     *
+     * @param iterator local query result row iterator
+     * @return remote query result row array
+     * @throws RemoteException on RMI errors
+     */
+    protected RemoteRow[] getRemoteRowArray(RowIterator iterator)
+            throws RemoteException {
+        if (iterator != null) {
+            ArrayList remotes = new ArrayList();
+            while (iterator.hasNext()) {
+                remotes.add(getFactory().getRemoteRow(iterator.nextRow()));
+            }
+            return (RemoteRow[]) remotes.toArray(new RemoteRow[remotes.size()]);
+        } else {
+            return new RemoteRow[0]; // for safety
         }
     }
 
