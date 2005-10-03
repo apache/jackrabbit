@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyId;
@@ -28,7 +27,6 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
@@ -107,7 +105,7 @@ public class VersionManagerImpl implements VersionManager {
     /**
      * Map of returned items. this is kept for invalidating
      */
-    private ReferenceMap items = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+    //private ReferenceMap items = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
 
     /**
      * Map of returned items. this is kept for invalidating
@@ -414,20 +412,20 @@ public class VersionManagerImpl implements VersionManager {
     public synchronized Version checkin(NodeImpl node) throws RepositoryException {
         SessionImpl session = (SessionImpl) node.getSession();
         InternalVersion version = internalCheckin(node);
-        // need to recalc successor prop
-        InternalVersion[] preds = version.getPredecessors();
-        for (int i=0; i<preds.length; i++) {
-            ItemState state = (ItemState) items.remove(new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS));
-            if (state != null) {
-                state.discard();
-            }
-        }
-        invalidateItem(new NodeId(version.getVersionHistory().getId()), true);
+
         VersionImpl v = (VersionImpl) session.getNodeByUUID(version.getId());
 
         // generate observation events
         List events = new ArrayList();
+
         generateAddedEvents(events, (NodeImpl) v.getParent(), v, true);
+
+        // invalidate predecessors successor property
+        InternalVersion[] preds = version.getPredecessors();
+        for (int i=0; i<preds.length; i++) {
+            PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
+            versProvider.onPropertyChanged(propId);
+        }
         obsMgr.dispatch(events, session);
 
         return v;
@@ -557,7 +555,12 @@ public class VersionManagerImpl implements VersionManager {
             }
         }
 
-        invalidateItem(new NodeId(vh.getId()), true);
+        // invalidate predecessors successor properties
+        InternalVersion preds[] = version.getInternalVersion().getPredecessors();
+        for (int i=0; i<preds.length; i++) {
+            PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
+            versProvider.onPropertyChanged(propId);
+        }
         obsMgr.dispatch(events, session);
     }
 
@@ -623,7 +626,6 @@ public class VersionManagerImpl implements VersionManager {
                     labelNode.getSession()
             ));
         }
-        invalidateItem(new NodeId(labelNode.internalGetUUID()), true);
         obsMgr.dispatch(events, session);
         if (v == null) {
             return null;
@@ -702,6 +704,17 @@ public class VersionManagerImpl implements VersionManager {
         }
     }
 
+    public boolean setNodeReferences(NodeReferences refs) {
+        try {
+            InternalVersionItem item = getItem(refs.getTargetId().getUUID());
+            setItemReferences(item, refs.getReferences());
+            return true;
+        } catch (RepositoryException e) {
+            log.error("Error while setting references: " + e.toString());
+            return false;
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -745,32 +758,6 @@ public class VersionManagerImpl implements VersionManager {
             log.error("Error while storing", e);
         }
     }
-
-    /**
-     * invalidates the item
-     *
-     * @param id
-     */
-    private void invalidateItem(ItemId id, boolean recursive) {
-        ItemState state = (ItemState) items.get(id);
-        if (state != null) {
-            if (recursive && state instanceof NodeState) {
-                NodeState nState = (NodeState) state;
-                Iterator iter = nState.getPropertyNames().iterator();
-                while (iter.hasNext()) {
-                    QName propName = (QName) iter.next();
-                    invalidateItem(new PropertyId(nState.getUUID(), propName), false);
-                }
-                iter = nState.getChildNodeEntries().iterator();
-                while (iter.hasNext()) {
-                    NodeState.ChildNodeEntry pe = (NodeState.ChildNodeEntry) iter.next();
-                    invalidateItem(new NodeId(pe.getUUID()), true);
-                }
-            }
-            state.notifyStateUpdated();
-        }
-    }
-
 
     /**
      * returns the id of the version history root node

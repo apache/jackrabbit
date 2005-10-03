@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.version;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -146,10 +147,30 @@ public class VersionItemStateProvider implements VirtualItemStateProvider {
     }
 
     /**
+     * called by the version manager when a dynamic property needs to be
+     * invalidated.
+     *
+     * @param id
+     */
+    synchronized void onPropertyChanged(PropertyId id) {
+        ItemState item = (ItemState) items.get(id);
+        if (item != null) {
+            item.discard();
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */ 
+    public boolean setNodeReferences(NodeReferences refs) {
+        return vMgr.setNodeReferences(refs);
+    }
+
+    /**
      * @inheritDoc
      */
     public boolean hasItemState(ItemId id) {
-        return stateMgr.hasItemState(id);
+        return items.get(id) != null || stateMgr.hasItemState(id);
     }
 
     /**
