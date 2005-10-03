@@ -78,30 +78,18 @@ abstract class AbstractItemResource extends AbstractResource implements
     }
 
     /**
+     * Retrieves the last segment of the item path (or the resource path if
+     * this resource does not exist). An item path is in addition first translated
+     * to the corresponding resource path.<br>
+     * NOTE: the displayname is not equivalent to {@link Item#getName() item name}
+     * which is exposed with the {@link #JCR_NAME &#123;http://www.day.com/jcr/webdav/1.0&#125;name}
+     * property.
+     *
      * @see DavResource#getDisplayName() )
      */
     public String getDisplayName() {
-        String name = null;
-        if (exists()) {
-            try {
-                name = item.getName();
-            } catch (RepositoryException e) {
-                // ignore: should not occure
-                log.warn(e.getMessage());
-            }
-        }
         String resPath = getResourcePath();
-        if (name == null && resPath != null) {
-            int pos = resPath.lastIndexOf('/');
-            if (pos>=0) {
-                name = resPath.substring(pos+1);
-            } else {
-                name = resPath;
-            }
-            // note: since index info is present only with existing resources
-            // there is no need to check for any '[index]' suffix.
-        }
-        return name;
+        return (resPath != null) ? Text.getName(resPath) : resPath;
     }
 
     /**
@@ -151,12 +139,14 @@ abstract class AbstractItemResource extends AbstractResource implements
         }
 
         try {
+            String itemPath = getLocator().getJcrPath();
+            String destItemPath = destination.getLocator().getJcrPath();
             if (getTransactionId() == null) {
                 // if not part of a transaction directely import on workspace
-                getRepositorySession().getWorkspace().move(getResourcePath(), destination.getResourcePath());
+                getRepositorySession().getWorkspace().move(itemPath, destItemPath);
             } else {
                 // changes will not be persisted unless the tx is completed.
-                getRepositorySession().move(getResourcePath(), destination.getResourcePath());
+                getRepositorySession().move(itemPath, destItemPath);
             }
             // no use in calling 'complete' that would fail for a moved item anyway.
         } catch (PathNotFoundException e) {
@@ -192,9 +182,11 @@ abstract class AbstractItemResource extends AbstractResource implements
         }
 
         try {
+            String itemPath = getLocator().getJcrPath();
+            String destItemPath = destination.getLocator().getJcrPath();
             Workspace workspace = getRepositorySession().getWorkspace();
             if (getLocator().isSameWorkspace(destination.getLocator())) {
-                workspace.copy(getResourcePath(), destination.getResourcePath());
+                workspace.copy(itemPath, destItemPath);
             } else {
                 log.error("Copy between workspaces is not yet implemented (src: '" + getHref() + "', dest: '" + destination.getHref() + "')");
                 throw new DavException(DavServletResponse.SC_NOT_IMPLEMENTED);
@@ -254,7 +246,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                 properties.add(new DefaultDavProperty(JCR_DEPTH, String.valueOf(item.getDepth())));
                 // add href-property for the items parent unless its the root item
                 if (item.getDepth() > 0) {
-                    String parentHref = getLocatorFromResourcePath(item.getParent().getPath()).getHref(true);
+                    String parentHref = getLocatorFromItem(item.getParent()).getHref(true);
                     properties.add(new HrefProperty(JCR_PARENT, parentHref, false));
                 }
             } catch (RepositoryException e) {
@@ -281,10 +273,8 @@ abstract class AbstractItemResource extends AbstractResource implements
         String workspaceHref = null;
 	DavResourceLocator locator = getLocator();
         if (locator != null && locator.getWorkspaceName() != null) {
-            workspaceHref = locator.getHref(isCollection());
-            if (locator.getResourcePath() != null) {
-                workspaceHref = workspaceHref.substring(workspaceHref.indexOf(locator.getResourcePath()));
-            }
+            DavResourceLocator wspLocator = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), ItemResourceConstants.ROOT_ITEM_PATH);
+            workspaceHref = wspLocator.getHref(true);
         }
 	log.info(workspaceHref);
         return workspaceHref;
@@ -292,8 +282,8 @@ abstract class AbstractItemResource extends AbstractResource implements
 
     /**
      * If this resource exists but does not contain a transaction id, complete
-     * will try to persist any modifications prsent on the underlaying repository
-     * item.
+     * will try to persist any modifications present on the underlaying
+     * repository item.
      *
      * @throws DavException if calling {@link Item#save()} fails
      */
@@ -317,22 +307,22 @@ abstract class AbstractItemResource extends AbstractResource implements
     }
 
     /**
-     * Build a new {@link DavResourceLocator} from the given repository item.
+     * Retrieves the last segment of the given path and removes the index if
+     * present.
      *
-     * @param repositoryItem
-     * @return a new locator for the specified item.
-     * @see #getLocatorFromResourcePath(String)
+     * @param itemPath
+     * @return valid jcr item name
      */
-    protected DavResourceLocator getLocatorFromItem(Item repositoryItem) {
-        String itemPath = null;
-        try {
-            if (repositoryItem != null) {
-                itemPath = repositoryItem.getPath();
-            }
-        } catch (RepositoryException e) {
-            // ignore: should not occur
-            log.warn(e.getMessage());
+    protected static String getItemName(String itemPath) {
+        if (itemPath == null) {
+            throw new IllegalArgumentException("Cannot retrieve name from a 'null' item path.");
         }
-        return getLocatorFromResourcePath(itemPath);
+        // retrieve the last part of the path
+        String name = Text.getName(itemPath);
+        // remove index
+        if (name.endsWith("]")) {
+            name = name.substring(0, name.lastIndexOf('['));
+        }
+        return name;
     }
 }

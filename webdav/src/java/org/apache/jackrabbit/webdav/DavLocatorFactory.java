@@ -23,19 +23,45 @@ public interface DavLocatorFactory {
     /**
      * Create a new <code>DavResourceLocator</code>.
      *
-     * @param prefix
-     * @param requestHandle
+     * @param prefix String consisting of  [scheme:][//authority][path] where
+     * path defines the (imaginary) path to the {@link DavResourceLocator#isRootLocation root location}.
+     * @param href of the resource to be created. The given string may start with
+     * the 'prefix'. Please note, that in contrast to
+     * {@link DavLocatorFactory#createResourceLocator(String, String, String)} the
+     * href is expected to be URL encoded.
      * @return
      */
-    public DavResourceLocator createResourceLocator(String prefix, String requestHandle);
+    public DavResourceLocator createResourceLocator(String prefix, String href);
 
     /**
-     * Create a new <code>DavResourceLocator</code>.
-     * 
-     * @param prefix
-     * @param workspacePath
-     * @param resourcePath
+     * Create a new <code>DavResourceLocator</code>. This methods corresponds to
+     * {@link DavLocatorFactory#createResourceLocator(String, String, String, boolean)}
+     * with the flag set to true.
+     *
+     * @param prefix String consisting of  [scheme:][//authority][path] where
+     * path defines the path to the {@link DavResourceLocator#isRootLocation root location}.
+     * @param workspacePath the first segment of the URIs path indicating the
+     * workspace. The implementation may allow a empty String if workspaces
+     * are not supported.
+     * @param resourcePath the URL decoded resource path
      * @return
      */
     public DavResourceLocator createResourceLocator(String prefix, String workspacePath, String resourcePath);
+
+    /**
+     *
+     * @param prefix
+     * @param workspacePath
+     * @param path
+     * @param isResourcePath If true this method returns the same as
+     * {@link DavLocatorFactory#createResourceLocator(String, String, String)},
+     * otherwise the given path is treated as {@link javax.jcr.Item#getPath JCR path}.
+     * The implementation may choose to modify the given item path if it contains
+     * escaped characters due to incompatibility of the JCR path with the URI
+     * definition. I.e. it would undo the modification that was applied when
+     * calling {@link DavResourceLocator#getJcrPath()}.
+     * @return
+     * @see DavResourceLocator#getJcrPath()
+     */
+    public DavResourceLocator createResourceLocator(String prefix, String workspacePath, String path, boolean isResourcePath);
 }

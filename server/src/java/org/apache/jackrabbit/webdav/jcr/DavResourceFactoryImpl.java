@@ -73,7 +73,6 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
                                       DavServletResponse response) throws DavException {
 
         DavSession session = request.getDavSession();
-
         DavResource resource;
         if (locator.isRootLocation()) {
             resource = new RootCollection(locator, session, this);
@@ -87,9 +86,9 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
                 if (request instanceof DeltaVServletRequest && isVersionControlled(resource)) {
                     String labelHeader = ((DeltaVServletRequest)request).getLabel();
                     if (labelHeader != null && DavMethods.isMethodAffectedByLabel(request.getMethod())) {
-                        Item item = session.getRepositorySession().getItem(locator.getResourcePath());
+                        Item item = getItem(session, locator);
                         Version v = ((Node)item).getVersionHistory().getVersionByLabel(labelHeader);
-                        DavResourceLocator vloc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), v.getPath());
+                        DavResourceLocator vloc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), v.getPath(), false);
                         resource =  new VersionItemCollection(vloc, session, this, v);
                     }
                 }
@@ -157,14 +156,14 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
      */
     private DavResource createResourceForItem(DavResourceLocator locator, DavSession session) throws RepositoryException {
         DavResource resource;
-        Item item = session.getRepositorySession().getItem(locator.getResourcePath());
+        Item item = getItem(session, locator);
         if (item.isNode()) {
             // create special resources for Version and VersionHistory
             if (item instanceof Version) {
                 resource = new VersionItemCollection(locator, session, this, item);
             } else if (item instanceof VersionHistory) {
                 resource = new VersionHistoryItemCollection(locator, session, this, item);
-            } else if (ItemResourceConstants.ROOT_ITEM_PATH.equals(locator.getResourcePath())) {
+            } else if (ItemResourceConstants.ROOT_ITEM_PATH.equals(item.getPath())) {
                 resource =  new RootItemCollection(locator, session, this, item);
             }  else{
                 resource = new VersionControlledItemCollection(locator, session, this, item);
@@ -173,6 +172,11 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
             resource = new DefaultItemResource(locator, session, this, item);
         }
         return resource;
+    }
+
+    private Item getItem(DavSession davSession, DavResourceLocator locator) throws PathNotFoundException, RepositoryException {
+        Session s = davSession.getRepositorySession();
+        return s.getItem(locator.getJcrPath());
     }
 
     /**

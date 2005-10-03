@@ -31,6 +31,7 @@ import org.jdom.Element;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 /**
  * <code>LocateCorrespondingNodeReport</code> is used to identify the resource that
@@ -113,13 +114,14 @@ public class LocateCorrespondingNodeReport implements Report {
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running dcr:locate-corresponding-node report: resource must not be null and request body must define the href of a source workspace");
         }
         try {
-            Item item = resource.getSession().getRepositorySession().getItem(resource.getResourcePath());
+            DavResourceLocator rLoc = resource.getLocator();
+            String itemPath = rLoc.getJcrPath();
+            Session s = resource.getSession().getRepositorySession();
+            Item item = s.getItem(itemPath);
             if (item.isNode()) {
-                DavResourceLocator rLoc = resource.getLocator();
                 String workspaceName = rLoc.getFactory().createResourceLocator(rLoc.getPrefix(), workspaceHref).getWorkspaceName();
-
                 String corrPath = ((Node)item).getCorrespondingNodePath(workspaceName);
-                DavResourceLocator corrLoc = rLoc.getFactory().createResourceLocator(rLoc.getPrefix(), workspaceName + "/", corrPath);
+                DavResourceLocator corrLoc = rLoc.getFactory().createResourceLocator(rLoc.getPrefix(), "/" + workspaceName, corrPath, false);
 
                 Element e = new Element("locate-corresponding-node-report", ItemResourceConstants.NAMESPACE);
                 e.addContent(XmlUtil.hrefToXml(corrLoc.getHref(true)));

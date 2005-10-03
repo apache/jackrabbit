@@ -150,6 +150,15 @@ public class IfHeader {
     }
 
     /**
+     * Returns true if an If header was present in the given request. False otherwise.
+     *
+     * @return  true if an If header was present.
+     */
+    public boolean hasValue() {
+        return ifHeader != null;
+    }
+
+    /**
      * Tries to match the contents of the <em>If</em> header with the given
      * token and etag values with the restriction to only check for the tag.
      * <p>

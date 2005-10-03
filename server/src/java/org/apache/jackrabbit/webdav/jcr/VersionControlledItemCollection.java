@@ -80,6 +80,112 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         return sb.toString();
     }
 
+    /**
+     *
+     * @param setProperties
+     * @param removePropertyNames
+     * @throws DavException
+     * @see DefaultItemCollection#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
+     * for additional description of non-compliant behaviour.
+     */
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException {
+        /* first resolve merge conflict since they cannot be handled by
+           setting property values in jcr (and are persisted immediately).
+           NOTE: this violates RFC 2518 that requires that proppatch
+           is processed in the order entries are present in the xml and that
+           required that no changes must be persisted if any set/remove fails.
+        */
+        // TODO: solve violation of RFC 2518
+        resolveMergeConflict(setProperties, removePropertyNames);
+        // alter other properties only if merge-conflicts could be handled
+        return super.alterProperties(setProperties, removePropertyNames);
+    }
+
+    /**
+     * Resolve one or multiple merge conflicts present on this resource. Please
+     * note that the 'setProperties' or 'removeProperties' set my contain additional
+     * resource properties, that need to be changed. Those properties are left
+     * untouched, whereas the {@link #AUTO_MERGE_SET DAV:auto-merge-set}, is
+     * removed from the list upon successful resolution of a merge conflict.<br>
+     * If the removeProperties or setProperties set do not contain the mentioned
+     * merge conflict resource properties or if the value of those properties do
+     * not allow for a resolution of an existing merge conflict, this method
+     * returns silently.
+     *
+     * @param setProperties
+     * @param removePropertyNames
+     * @throws org.apache.jackrabbit.webdav.DavException
+     * @see Node#doneMerge(Version)
+     * @see Node#cancelMerge(Version)
+     */
+    private void resolveMergeConflict(DavPropertySet setProperties,
+                                     DavPropertyNameSet removePropertyNames)
+        throws DavException {
+
+        if (!exists()) {
+            throw new DavException(DavServletResponse.SC_NOT_FOUND);
+        }
+
+        try {
+            Node n = (Node)item;
+            if (removePropertyNames.contains(AUTO_MERGE_SET)) {
+                // retrieve the current jcr:mergeFailed property values
+                if (!n.hasProperty(JcrConstants.JCR_MERGEFAILED)) {
+                    throw new DavException(DavServletResponse.SC_CONFLICT, "Attempt to resolve non-existing merge conflicts.");
+                }
+                Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
+
+                // resolve all remaining merge conflicts with 'cancel'
+                for (int i = 0; i < mergeFailed.length; i++) {
+                    n.cancelMerge((Version)getRepositorySession().getNodeByUUID(mergeFailed[i].getString()));
+                }
+                // adjust removeProperty set
+                removePropertyNames.remove(AUTO_MERGE_SET);
+
+            } else if (setProperties.contains(AUTO_MERGE_SET) && setProperties.contains(PREDECESSOR_SET)){
+                // retrieve the current jcr:mergeFailed property values
+                if (!n.hasProperty(JcrConstants.JCR_MERGEFAILED)) {
+                    throw new DavException(DavServletResponse.SC_CONFLICT, "Attempt to resolve non-existing merge conflicts.");
+                }
+                Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
+
+
+                // check which mergeFailed entries have been removed from the
+                // auto-merge-set (cancelMerge) and have been moved over to the
+                // predecessor set (doneMerge)
+                List mergeset = new HrefProperty(setProperties.get(AUTO_MERGE_SET)).getHrefs();
+                List predecSet = new HrefProperty(setProperties.get(PREDECESSOR_SET)).getHrefs();
+
+                Session session = getRepositorySession();
+                for (int i = 0; i < mergeFailed.length; i++) {
+                    // build version-href from each entry in the jcr:mergeFailed property
+                    Version version = (Version) session.getNodeByUUID(mergeFailed[i].getString());
+                    String href = getLocatorFromItem(version).getHref(true);
+
+                    // Test if that version has been removed from the merge-set.
+                    // thus indicating that the merge-conflict needs to be resolved.
+                    if (!mergeset.contains(href)) {
+                        // Test if the 'href' has been moved over to the
+                        // predecessor-set (thus 'doneMerge' is appropriate) or
+                        // if it is not present in the predecessor set and the
+                        // the conflict is resolved by 'cancelMerge'.
+                        if (predecSet.contains(href)) {
+                            n.doneMerge(version);
+                        } else {
+                            n.cancelMerge(version);
+                        }
+                    }
+                }
+                // adjust setProperty set
+                setProperties.remove(AUTO_MERGE_SET);
+                setProperties.remove(PREDECESSOR_SET);
+            }
+            /* else: no (valid) attempt to resolve merge conflict > return silently */
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
+    }
+
     //--------------------------------< VersionControlledResource interface >---
     /**
      * Adds version control to this resource. If the resource is already under
@@ -118,8 +224,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         }
         try {
             Version v = ((Node) item).checkin();
-            DavResourceLocator loc = getLocator();
-            String versionHref = loc.getFactory().createResourceLocator(loc.getPrefix(), loc.getWorkspacePath(), v.getPath()).getHref(true);
+            String versionHref = getLocatorFromItem(v).getHref(true);
             return versionHref;
         } catch (RepositoryException e) {
             // UnsupportedRepositoryException should not occur
@@ -177,8 +282,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @return
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#update(org.apache.jackrabbit.webdav.version.UpdateInfo)
-     * @todo with jcr the node must not be versionable in order to perform Node.update.
      */
+    //TODO: with jcr the node must not be versionable in order to perform Node.update.
     public MultiStatus update(UpdateInfo updateInfo) throws DavException {
         if (updateInfo == null) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Valid update request body required.");
@@ -202,7 +307,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                 String[] hrefs = updateInfo.getVersionHref();
                 Version[] versions = new Version[hrefs.length];
                 for (int  i = 0; i < hrefs.length; i++) {
-                    versions[i] = vh.getVersion(getResourceName(hrefs[i], true));
+                    String itemPath = getLocatorFromHref(hrefs[i]).getJcrPath();
+                    versions[i] = vh.getVersion(getItemName(itemPath));
                 }
                 if (versions.length == 1) {
                     String relPath = updateInfo.getUpdateElement().getChildText(XML_RELPATH, NAMESPACE);
@@ -227,7 +333,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                     getRepositorySession().getWorkspace().restore(vs, removeExisting);
                 }
             } else if (updateInfo.getWorkspaceHref() != null) {
-                String workspaceName = getResourceName(updateInfo.getWorkspaceHref(), true);
+                String workspaceName = getLocatorFromHref(updateInfo.getWorkspaceHref()).getWorkspaceName();
                 node.update(workspaceName);
             } else {
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Invalid update request body.");
@@ -247,13 +353,14 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * information present in the given {@link MergeInfo} object.
      *
      * @param mergeInfo
-     * @return <code>MultiStatus</code> reccording all repository items affected
-     * by this merge call.
+     * @return <code>MultiStatus</code> recording all repository items modified
+     * by this merge call as well as the resources that a client must modify to
+     * complete the merge (see <a href="http://www.webdav.org/specs/rfc3253.html#METHOD_MERGE">RFC 3253</a>)
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#merge(org.apache.jackrabbit.webdav.version.MergeInfo)
      * @see Node#merge(String, boolean)
      */
-    //todo with jcr the node must not be versionable in order to perform Node.merge
+    //TODO: with jcr the node must not be versionable in order to perform Node.merge
     public MultiStatus merge(MergeInfo mergeInfo) throws DavException {
         if (mergeInfo == null) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
@@ -266,104 +373,30 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         try {
             Node node = (Node)item;
 
-            // register eventListener in order to be able to report the modifications.
+            // register eventListener in order to be able to report all
+            // modified resources.
             EventListener el = new EListener(mergeInfo.getPropertyNameSet(), ms);
             registerEventListener(el, node.getPath());
 
-            String workspaceName = getResourceName(mergeInfo.getSourceHref(), true);
-            node.merge(workspaceName, !mergeInfo.isNoAutoMerge());
+            String workspaceName = getLocatorFromHref(mergeInfo.getSourceHref()).getWorkspaceName();
+            NodeIterator failed = node.merge(workspaceName, !mergeInfo.isNoAutoMerge());
 
             // unregister the event listener again
             unregisterEventListener(el);
+
+            // add resources to the multistatus, that failed to be merged
+            while (failed.hasNext()) {
+                Node failedNode = failed.nextNode();
+                DavResourceLocator loc = getLocatorFromItem(failedNode);
+                DavResource res = createResourceFromLocator(loc);
+                ms.addResponse(new MultiStatusResponse(res, mergeInfo.getPropertyNameSet()));
+            }
 
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
 
         return ms;
-    }
-
-    /**
-     * Resolve the merge conflicts according to the value of the {@link #AUTO_MERGE_SET DAV:auto-merge-set}
-     * property present in the specified <code>DavPropertySet</code>s.
-     *
-     * @param setProperties
-     * @param removePropertyNames
-     * @throws org.apache.jackrabbit.webdav.DavException
-     * @see VersionControlledResource#resolveMergeConflict(DavPropertySet, DavPropertyNameSet)
-     * @see Node#doneMerge(Version)
-     * @see Node#cancelMerge(Version)
-     */
-    public void resolveMergeConflict(DavPropertySet setProperties,
-                                     DavPropertyNameSet removePropertyNames) throws DavException {
-
-        if (!exists()) {
-            throw new DavException(DavServletResponse.SC_NOT_FOUND);
-        }
-        if (!isVersionControlled()) {
-            throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
-        }
-
-        try {
-            Node n = (Node)item;
-            if (removePropertyNames.contains(AUTO_MERGE_SET)) {
-                // retrieve the current jcr:mergeFailed property values
-                if (!((Node)item).hasProperty(JcrConstants.JCR_MERGEFAILED)) {
-                    throw new DavException(DavServletResponse.SC_CONFLICT, "Attempt to resolve non-existing merge conflicts.");
-                }
-                Value[] mergeFailed = ((Node)item).getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
-
-                // resolve all remaining merge conflicts with 'cancel'
-                for (int i = 0; i < mergeFailed.length; i++) {
-                    n.cancelMerge((Version)getRepositorySession().getNodeByUUID(mergeFailed[i].getString()));
-                }
-                // adjust removeProperty set
-                removePropertyNames.remove(AUTO_MERGE_SET);
-
-            } else if (setProperties.contains(AUTO_MERGE_SET) && setProperties.contains(PREDECESSOR_SET)){
-                // retrieve the current jcr:mergeFailed property values
-                if (!((Node)item).hasProperty(JcrConstants.JCR_MERGEFAILED)) {
-                    throw new DavException(DavServletResponse.SC_CONFLICT, "Attempt to resolve non-existing merge conflicts.");
-                }
-                Value[] mergeFailed = ((Node)item).getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
-
-
-                // check which mergeFailed entries have been removed from the
-                // auto-merge-set (cancelMerge) and have been moved over to the
-                // predecessor set (doneMerge)
-                List mergeset = new HrefProperty(setProperties.get(AUTO_MERGE_SET)).getHrefs();
-                List predecSet = new HrefProperty(setProperties.get(PREDECESSOR_SET)).getHrefs();
-
-                Session session = getRepositorySession();
-                for (int i = 0; i < mergeFailed.length; i++) {
-                    // build version-href from each entry in the jcr:mergeFailed property
-                    Version version = (Version) session.getNodeByUUID(mergeFailed[i].getString());
-                    String href = this.getLocatorFromItem(version).getHref(true);
-
-                    // Test if that version has been removed from the merge-set.
-                    // thus indicating that the merge-conflict needs to be resolved.
-                    if (!mergeset.contains(href)) {
-                        // Test if the 'href' has been moved over to the
-                        // predecessor-set (thus 'doneMerge' is appropriate) or
-                        // if it is not present in the predecessor set and the
-                        // the conflict is resolved by 'cancelMerge'.
-                        if (predecSet.contains(href)) {
-                            n.doneMerge(version);
-                        } else {
-                            n.cancelMerge(version);
-                        }
-                    }
-                }
-                // adjust setProperty set
-                setProperties.remove(AUTO_MERGE_SET);
-                setProperties.remove(PREDECESSOR_SET);
-            } else {
-                // setPropertySet and removePropertySet do not ask for resolving merge conflicts */
-                log.debug("setProperties and removeProperties sets do not request for merge conflict resolution.");
-            }
-        } catch (RepositoryException e) {
-            throw new JcrDavException(e);
-        }
     }
 
     /**
@@ -448,13 +481,13 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                 // workspace property already set in AbstractResource.initProperties()
                 try {
                     // DAV:version-history (computed)
-                    String vhHref = getLocatorFromResourcePath(n.getVersionHistory().getPath()).getHref(true);
+                    String vhHref = getLocatorFromItem(n.getVersionHistory()).getHref(true);
                     properties.add(new HrefProperty(VERSION_HISTORY, vhHref, true));
 
                     // DAV:auto-version property: there is no auto version, explicit CHECKOUT is required.
                     properties.add(new DefaultDavProperty(AUTO_VERSION, null, false));
 
-                    String baseVHref = getLocatorFromResourcePath(n.getBaseVersion().getPath()).getHref(true);
+                    String baseVHref = getLocatorFromItem(n.getBaseVersion()).getHref(true);
                     if (n.isCheckedOut()) {
                         // DAV:checked-out property (protected)
                         properties.add(new HrefProperty(CHECKED_OUT, baseVHref, true));
@@ -521,6 +554,18 @@ public class VersionControlledItemCollection extends DefaultItemCollection
     }
 
     /**
+     * Build a new locator for the given href.
+     * 
+     * @param href
+     * @return
+     */
+    private DavResourceLocator getLocatorFromHref(String href) {
+        DavLocatorFactory f = getLocator().getFactory();
+        String prefix = getLocator().getPrefix();
+        return f.createResourceLocator(prefix, href);
+    }
+
+    /**
      * Register the specified event listener with the observation manager present
      * the repository session.
      *
@@ -567,8 +612,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
             while (events.hasNext()) {
                 try {
                     Event e = events.nextEvent();
-                    String itemPath = e.getPath();
-                    DavResourceLocator loc = getLocatorFromResourcePath(itemPath);
+                    DavResourceLocator loc = getLocatorFromItemPath(e.getPath());
                     DavResource res = createResourceFromLocator(loc);
                     ms.addResponse(new MultiStatusResponse(res, propNameSet));
 

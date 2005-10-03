@@ -15,19 +15,7 @@
  */
 package org.apache.jackrabbit.server;
 
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavLocatorFactory;
-import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavResourceFactory;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSessionProvider;
-import org.apache.jackrabbit.webdav.MultiStatus;
-import org.apache.jackrabbit.webdav.WebdavRequest;
-import org.apache.jackrabbit.webdav.WebdavRequestImpl;
-import org.apache.jackrabbit.webdav.WebdavResponse;
-import org.apache.jackrabbit.webdav.WebdavResponseImpl;
+import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
@@ -37,10 +25,7 @@ import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.ordering.OrderPatch;
 import org.apache.jackrabbit.webdav.ordering.OrderingResource;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
@@ -187,7 +172,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 webdavResponse.setHeader("WWW-Authenticate", getAuthenticateHeaderValue());
                 webdavResponse.sendError(e.getErrorCode(), e.getStatusPhrase());
             } else {
-                webdavResponse.sendErrorResponse(e);
+                webdavResponse.sendError(e);
             }
         } finally {
             getDavSessionProvider().releaseSession(webdavRequest);
@@ -459,7 +444,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         MultiStatus mstatus = new MultiStatus();
         mstatus.addResourceProperties(resource, requestProperties, propfindType, depth);
-        response.sendMultiStatusResponse(mstatus);
+        response.sendMultiStatus(mstatus);
     }
 
     /**
@@ -481,18 +466,19 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             return;
         }
 
-        // first resolve merge conflicts
-        // TODO: not correct resolution of merge conflicts are immediately perstisted
-        // TODO: rfc 2518 requires, that no changes must only be persisted if the complete proppatch-req succeeds
-        if (resource instanceof VersionControlledResource) {
-            ((VersionControlledResource) resource).resolveMergeConflict(setProperties, removeProperties);
+        MultiStatus ms = new MultiStatus();
+        try {
+            MultiStatusResponse msr = resource.alterProperties(setProperties, removeProperties);
+            ms.addResponse(msr);
+        } catch (DavException e) {
+            /* NOTE: known bug with litmus, which expects the exception (e.g. 423)
+               to the set instead of the MultiStatus Code. RFC 2518 explicitely
+               expects the errors to be included in the multistatus.
+               Remove the catch if this turns out to be an problem with clients
+               in general. */
+            ms.addResourceStatus(resource, e.getErrorCode(), DEPTH_0);
         }
-
-        // complete any other property setting or removing
-        resource.alterProperties(setProperties, removeProperties);
-        response.setStatus(DavServletResponse.SC_OK);
-
-        // todo return multistatus response in case of failure
+        response.sendMultiStatus(ms);
     }
 
     /**
@@ -558,6 +544,10 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             response.sendError(DavServletResponse.SC_CONFLICT);
             return;
         }
+        // shortcut: mkcol is only allowed on deleted/non-existing resources
+        if (resource.exists()) {
+            response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+        }
 
         if (request.getContentLength() > 0 || request.getHeader("Transfer-Encoding") != null) {
             parentResource.addMember(resource, getInputContext(request));
@@ -569,7 +559,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
     /**
      * Build an InputContext for the given request
-     * 
+     *
      * @param request
      * @return
      * @throws IOException
@@ -718,9 +708,10 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 // adjust lockinfo with type/scope retrieved from the lock.
                 lockInfo.setType(activeLocks[i].getType());
                 lockInfo.setScope(activeLocks[i].getScope());
-                
-                // todo: do not ignore etag
-                if (request.matchesIfHeader(resource.getHref(), activeLocks[i].getToken(), "")) {
+
+                DavProperty etagProp = resource.getProperty(DavPropertyName.GETETAG);
+                String etag = etagProp != null ? String.valueOf(etagProp.getValue()) : "";
+                if (request.matchesIfHeader(resource.getHref(), activeLocks[i].getToken(), etag)) {
                     lList.add(resource.refreshLock(lockInfo, activeLocks[i].getToken()));
                 }
             }
@@ -734,9 +725,6 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             ActiveLock lock = resource.lock(lockInfo);
             response.sendLockResponse(lock);
         }
-
-        // TODO multistatus in case of failure...
-        // NOTE: spec says 409 status, but example says 207 (multistatus)
     }
 
     /**
@@ -787,8 +775,6 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         // perform reordering of internal members
         ((OrderingResource) resource).orderMembers(op);
         response.setStatus(DavServletResponse.SC_OK);
-
-        //TODO: in case of failure Multistatus is required...
     }
 
     /**
@@ -1004,7 +990,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
         MergeInfo info = request.getMergeInfo();
         MultiStatus ms = ((VersionControlledResource) resource).merge(info);
-        response.sendMultiStatusResponse(ms);
+        response.sendMultiStatus(ms);
     }
 
     /**
@@ -1025,7 +1011,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
         UpdateInfo info = request.getUpdateInfo();
         MultiStatus ms = ((VersionControlledResource) resource).update(info);
-        response.sendMultiStatusResponse(ms);
+        response.sendMultiStatus(ms);
     }
 
     /**
@@ -1079,11 +1065,11 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             Document doc = request.getRequestDocument();
             if (doc != null) {
                 SearchInfo sR = new SearchInfo(doc);
-                response.sendMultiStatusResponse(((SearchResource) resource).search(sR));
+                response.sendMultiStatus(((SearchResource) resource).search(sR));
             } else {
                 // request without request body is valid if requested resource
                 // is a 'query' resource.
-                response.sendMultiStatusResponse(((SearchResource) resource).search(null));
+                response.sendMultiStatus(((SearchResource) resource).search(null));
             }
         } catch (IllegalArgumentException e) {
             response.sendError(DavServletResponse.SC_BAD_REQUEST);

@@ -36,9 +36,7 @@ import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
 import org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl;
 import org.apache.jackrabbit.webdav.simple.LocatorFactoryImpl;
 import org.apache.jackrabbit.webdav.simple.ResourceFactoryImpl;
-import org.apache.jackrabbit.webdav.simple.ResourceFilterConfig;
-import org.apache.jackrabbit.webdav.simple.ResourceFilter;
-import org.apache.jackrabbit.webdav.simple.DefaultResourceFilter;
+import org.apache.jackrabbit.webdav.simple.ResourceConfig;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Credentials;
@@ -87,7 +85,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      * Name of the init parameter that specify a separate configuration used
      * for filtering the resources displayed.
      */
-    public static final String INIT_PARAM_RESOURCE_FILTER = "resource-filter";
+    public static final String INIT_PARAM_RESOURCE_CONFIG = "resource-config";
 
     /**
      * Servlet context attribute used to store the path prefix instead of
@@ -145,9 +143,9 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     private SessionProvider sessionProvider;
 
     /**
-     * The resource filter
+     * The config
      */
-    private ResourceFilter resourceFilter;
+    private ResourceConfig config;
 
     /**
      * Init this servlet
@@ -185,11 +183,11 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
         }
         log.info("WWW-Authenticate header = '" + authenticate_header + "'");
 
-        String filterParam = getInitParameter(INIT_PARAM_RESOURCE_FILTER);
-        if (filterParam != null) {
+        String configParam = getInitParameter(INIT_PARAM_RESOURCE_CONFIG);
+        if (configParam != null) {
             try {
-                ResourceFilterConfig config = new ResourceFilterConfig();
-                setResourceFilter(config.parse(getServletContext().getResource(filterParam)));
+                config = new ResourceConfig();
+                config.parse(getServletContext().getResource(configParam));
             } catch (MalformedURLException e) {
                 log.debug("Unable to build resource filter provider.");
             }
@@ -213,11 +211,6 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     protected boolean execute(WebdavRequest request, WebdavResponse response,
                               int method, DavResource resource)
             throws ServletException, IOException, DavException {
-        /* set cache control headers in order to deal with non-dav complient
-        * http1.1 or http1.0 proxies. >> see RFC2518 9.4.5 */
-        response.addHeader("Pragma", "No-cache");  // http1.0
-        response.addHeader("Cache-Control", "no-cache"); // http1.1
-
         switch (method) {
             case DavMethods.DAV_HEAD:
                 doHead(request, response, resource);
@@ -351,7 +344,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      */
     public DavResourceFactory getResourceFactory() {
         if (resourceFactory == null) {
-            resourceFactory = new ResourceFactoryImpl(getLockManager(), getResourceFilter());
+            resourceFactory = new ResourceFactoryImpl(getLockManager(), getResourceConfig());
         }
         return resourceFactory;
     }
@@ -436,25 +429,25 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Returns the resource filter to be applied
+     * Returns the resource configuration to be applied
      *
      * @return
      */
-    public ResourceFilter getResourceFilter() {
-        // fallback if no config present or invalid: an empty resource filter
-        if (resourceFilter == null) {
-            resourceFilter = new DefaultResourceFilter();
+    public ResourceConfig getResourceConfig() {
+        // fallback if no config present
+        if (config == null) {
+            config = new ResourceConfig();
         }
-        return resourceFilter;
+        return config;
     }
 
     /**
-     * Set the resource filter
+     * Set the resource configuration
      *
-     * @param resourceFilter
+     * @param config
      */
-    public void setResourceFilter(ResourceFilter resourceFilter) {
-        this.resourceFilter = resourceFilter;
+    public void setResourceConfig(ResourceConfig config) {
+        this.config = config;
     }
 
     /**

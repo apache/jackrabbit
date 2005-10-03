@@ -32,7 +32,6 @@ import java.io.InputStream;
  *
  * @version $Revision: 13729 $, $Date: 2004/06/04 15:48:16 $
  * @author InigoSurguy
- * @since antbear
  */
 public class BoundedInputStream extends InputStream {
 

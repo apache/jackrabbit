@@ -79,11 +79,13 @@ public class RootItemCollection extends VersionControlledItemCollection {
 
     /**
      * Allows to alter the registered namespaces ({@link #JCR_NAMESPACES}) and
-     * forwards any other property to the super class.
+     * forwards any other property to the super class.<p/>
+     * Note that again no property status is set. Any failure while setting
+     * a property results in an exception (violating RFC 2518).
      *
      * @param property
      * @throws DavException
-     * @see VersionControlledItemCollection#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
+     * @see DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
      */
     public void setProperty(DavProperty property) throws DavException {
         if (JCR_NAMESPACES.equals(property.getName())) {
@@ -139,15 +141,22 @@ public class RootItemCollection extends VersionControlledItemCollection {
     }
 
     /**
+     * Handles an attempt to set {@link #JCR_NAMESPACES} and forwards any other
+     * set or remove requests to the super class.
+     * Please note, that RFC 2518 is violated because setting {@link #JCR_NAMESPACES}
+     * is handled out of the order indicated by the set and changes may be persisted
+     * even if altering another property fails.
+     *
      * @see #setProperty(DavProperty)
-     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
+     * @see DefaultItemCollection#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
      */
-    public void alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException {
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException {
+        // TODO: respect order of the set and do not persist if super.alterProperties fails
         if (setProperties.contains(JCR_NAMESPACES)) {
             setProperty(setProperties.remove(JCR_NAMESPACES));
         }
         // let super-class handle the rest of the properties
-        super.alterProperties(setProperties, removePropertyNames);
+        return super.alterProperties(setProperties, removePropertyNames);
     }
 
     //--------------------------------------------------------------------------
@@ -166,7 +175,7 @@ public class RootItemCollection extends VersionControlledItemCollection {
             }
             properties.add(new DefaultDavProperty(JCR_NAMESPACES, nsElems, false));
         } catch (RepositoryException e) {
-            log.error("Failed to access NamespaceRegistry from the session/workspace: " + e.getMessage());
+            log.error("Failed to access NamespaceRegistry: " + e.getMessage());
         }
     }
 }

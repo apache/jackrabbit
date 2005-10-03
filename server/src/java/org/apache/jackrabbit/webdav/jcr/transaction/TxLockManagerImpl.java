@@ -38,6 +38,8 @@ import org.apache.jackrabbit.util.Text;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Item;
+import javax.jcr.PathNotFoundException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -531,8 +533,7 @@ public class TxLockManagerImpl implements TxLockManager {
 
         public void commit(TransactionResource resource) throws DavException {
             try {
-                DavSession session = resource.getSession();
-                session.getRepositorySession().getItem(getResourcePath()).save();
+                getItem(resource).save();
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }
@@ -540,11 +541,16 @@ public class TxLockManagerImpl implements TxLockManager {
 
         public void rollback(TransactionResource resource) throws DavException {
             try {
-                DavSession session = resource.getSession();
-                session.getRepositorySession().getItem(getResourcePath()).refresh(false);
+                getItem(resource).refresh(false);
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }
+        }
+
+        private Item getItem(TransactionResource resource) throws PathNotFoundException, RepositoryException {
+            DavSession session = resource.getSession();
+            String itemPath = resource.getLocator().getJcrPath();
+            return session.getRepositorySession().getItem(itemPath);
         }
 
         public Transaction put(String key, Transaction value) throws DavException {

@@ -28,7 +28,7 @@ import javax.jcr.RepositoryException;
 public class ResourceFactoryImpl implements DavResourceFactory {
 
     private final LockManager lockMgr;
-    private final ResourceFilter resourceFilter;
+    private final ResourceConfig resourceConfig;
 
     /**
      * Create a new <code>ResourceFactory</code> that uses the given lock manager
@@ -37,7 +37,8 @@ public class ResourceFactoryImpl implements DavResourceFactory {
      * @param lockMgr
      */
     public ResourceFactoryImpl(LockManager lockMgr) {
-        this(lockMgr, new DefaultResourceFilter());
+        this.lockMgr = lockMgr;
+        this.resourceConfig = new ResourceConfig();
     }
 
     /**
@@ -45,11 +46,11 @@ public class ResourceFactoryImpl implements DavResourceFactory {
      * and resource filter.
      *
      * @param lockMgr
-     * @param resourceFilter
+     * @param resourceConfig
      */
-    public ResourceFactoryImpl(LockManager lockMgr, ResourceFilter resourceFilter) {
+    public ResourceFactoryImpl(LockManager lockMgr, ResourceConfig resourceConfig) {
         this.lockMgr = lockMgr;
-        this.resourceFilter = resourceFilter;
+        this.resourceConfig = (resourceConfig != null) ? resourceConfig : new ResourceConfig();
     }
 
     /**
@@ -87,7 +88,7 @@ public class ResourceFactoryImpl implements DavResourceFactory {
      */
     public DavResource createResource(DavResourceLocator locator, DavSession session) throws DavException {
         try {
-            DavResource res = new DavResourceImpl(locator, this, session, resourceFilter);
+            DavResourceImpl res = new DavResourceImpl(locator, this, session, resourceConfig);
             res.addLockManager(lockMgr);
             return res;
         } catch (RepositoryException e) {

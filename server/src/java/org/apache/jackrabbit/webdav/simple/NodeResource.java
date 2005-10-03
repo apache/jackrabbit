@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.server.io.ExportContext;
 import org.apache.jackrabbit.server.io.ExportCollectionChain;
 import org.apache.jackrabbit.server.io.ExportResourceChain;
+import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.commons.chain.Command;
 
 import javax.jcr.*;
@@ -47,13 +48,13 @@ public class NodeResource {
      * modificationDate date format per RFC 1123
      */
     public static SimpleDateFormat modificationDateFormat =
-	new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
+            new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 
     /**
      * Simple date format for the creation date ISO representation (partial).
      */
     public static SimpleDateFormat creationDateFormat =
-	new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     private long creationTime = 0;
     private long modificationTime = new Date().getTime();
@@ -70,7 +71,7 @@ public class NodeResource {
      * @throws RepositoryException
      * @throws IllegalArgumentException if the given item is <code>null</code>
      */
-    public NodeResource(DavResourceImpl davResource, Node node) throws ItemNotFoundException, RepositoryException {
+    public NodeResource(DavResource davResource, Node node) throws ItemNotFoundException, RepositoryException {
         ExportContext ctx = new ExportContext(node);
         Command exportChain = davResource.isCollection()
                 ? ExportCollectionChain.getChain()
@@ -96,7 +97,7 @@ public class NodeResource {
      * @return content Length or '0' if it could not be determined.
      */
     public long getContentLength() {
-	return contentLength;
+        return contentLength;
     }
 
     /**
@@ -105,7 +106,7 @@ public class NodeResource {
      * @return creation time or '0' if it could not be determined.
      */
     public long getCreationTime() {
-	return creationTime;
+        return creationTime;
     }
 
     /**
@@ -113,10 +114,10 @@ public class NodeResource {
      * time.
      *
      * @return time of last modification or the current time, if it could not
-     * be determined.
+     *         be determined.
      */
     public long getModificationTime() {
-	return modificationTime;
+        return modificationTime;
     }
 
     /**
@@ -126,11 +127,11 @@ public class NodeResource {
      * @see NodeResource#modificationDateFormat
      */
     public String getLastModified() {
-	if (modificationTime >= 0) {
-	    return modificationDateFormat.format(new Date(modificationTime));
-	} else {
-	    return null;
-	}
+        if (modificationTime >= 0) {
+            return modificationDateFormat.format(new Date(modificationTime));
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -140,11 +141,11 @@ public class NodeResource {
      * @see NodeResource#creationDateFormat
      */
     public String getCreationDate() {
-	if (creationTime >= 0) {
-	    return creationDateFormat.format(new Date(creationTime));
-	} else {
-	    return null;
-	}
+        if (creationTime >= 0) {
+            return creationDateFormat.format(new Date(creationTime));
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -162,7 +163,7 @@ public class NodeResource {
      * @return content type
      */
     public String getContentType() {
-	return contentType;
+        return contentType;
     }
 
     /**
@@ -180,6 +181,6 @@ public class NodeResource {
      * @return
      */
     public InputStream getStream() {
-	return in;
+        return in;
     }
 }
