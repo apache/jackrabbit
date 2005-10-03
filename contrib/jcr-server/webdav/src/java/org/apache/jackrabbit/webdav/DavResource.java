@@ -169,9 +169,14 @@ public interface DavResource {
      *
      * @param setProperties Set of properties to be added or modified
      * @param removePropertyNames Set of property names to be removed
-     * @throws DavException if an error occurs
+     * @return multistatus response listing the status resulting from
+     * setting and/or removing the specified properties, in order to allow a
+     * detailled multistatus response.
+     * @throws DavException if an error occured. This may be the case if the
+     * general state of the resource prevents any properties to be set or removed
+     * (e.g. due to a lock).
      */
-    public void alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException;
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException;
 
     /**
      * Retrieve the resource this resource is internal member of.

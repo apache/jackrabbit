@@ -179,16 +179,15 @@
             </description>
         </init-param>
         <!--
-            Optional parameter defining namespaces (or uri or prefixes) and/or
-            nodetype names that mark hidden resources.
-            If omitted not resources will be filtered out.
+            Parameter used to configure behaviour of webdav resources such as:
+            - destinction between collections and non-collections
+            - resource filtering
         -->
         <init-param>
-            <param-name>resource-filter</param-name>
-            <param-value>/WEB-INF/filter.xml</param-value>
+            <param-name>resource-config</param-name>
+            <param-value>/WEB-INF/config.xml</param-value>
             <description>
-                Defines namespace (uri or prefix) or nodetype names for hidden 
-                resources.
+                Defines various dav-resource configuration parameters.
             </description>
         </init-param>
         <load-on-startup>3</load-on-startup>

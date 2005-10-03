@@ -35,10 +35,10 @@ import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
 import org.apache.jackrabbit.webdav.lock.*;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.property.ResourceType;
-import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
+import javax.jcr.Item;
 import java.io.InputStream;
 import java.util.*;
 
@@ -189,12 +189,9 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     /**
      * Throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
      *
-     * @param setProperties
-     * @param removePropertyNames
-     * @throws DavException
      * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet) 
      */
-    public void alterProperties(DavPropertySet setProperties,
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties,
                                 DavPropertyNameSet removePropertyNames)
         throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
@@ -418,7 +415,9 @@ abstract class AbstractResource implements DavResource, ObservationResource,
             // currently on DAV:version-history-collection-set and
             // DAV:workspace-collection-set is supported.
             if (optionsInfo.containsElement(DeltaVConstants.XML_VH_COLLECTION_SET, DeltaVConstants.NAMESPACE)) {
-                String[] hrefs = new String[] { getLocatorFromResourcePath(ItemResourceConstants.VERSIONSTORAGE_PATH).getHref(true)};
+                String[] hrefs = new String[] {
+                    getLocatorFromItemPath(ItemResourceConstants.VERSIONSTORAGE_PATH).getHref(true)
+                };
                 oR.addEntry(DeltaVConstants.XML_VH_COLLECTION_SET, DeltaVConstants.NAMESPACE, hrefs);
             } else if (optionsInfo.containsElement(DeltaVConstants.XML_WSP_COLLECTION_SET, DeltaVConstants.NAMESPACE)) {
                 // workspaces cannot be created anywhere.
@@ -506,15 +505,12 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         // build a new locator: remove trailing prefix
         DavResourceLocator locator = getLocator();
         String prefix = locator.getPrefix();
-        if (href.startsWith(prefix)) {
-            href = href.substring(prefix.length());
-        }
         DavResourceLocator loc = locator.getFactory().createResourceLocator(prefix, href);
 
         // create a new resource object
         try {
             DavResource res;
-            if (getRepositorySession().itemExists(loc.getResourcePath())) {
+            if (getRepositorySession().itemExists(loc.getJcrPath())) {
                 res = createResourceFromLocator(loc);
             } else {
                 throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -609,48 +605,35 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     }
 
     /**
-     * Build a <code>DavResourceLocator</code> from the given resource path.
+     * Build a <code>DavResourceLocator</code> from the given itemPath path.
      *
-     * @param resourcePath
+     * @param itemPath
      * @return a new <code>DavResourceLocator</code>
      * @see DavLocatorFactory#createResourceLocator(String, String, String)
      */
-    protected DavResourceLocator getLocatorFromResourcePath(String resourcePath) {
-        DavResourceLocator loc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), resourcePath);
+    protected DavResourceLocator getLocatorFromItemPath(String itemPath) {
+        DavResourceLocator loc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), itemPath, false);
         return loc;
     }
 
     /**
-     * Retrieve the name/label of a repository item from the given href by
-     * splitting of the part after the last slash. If the removeIndex
-     * flag is set to true, any trailing index (e.g. '[1]') will be removed.
+     * Build a new {@link DavResourceLocator} from the given repository item.
      *
-     * @param resourceHref
-     * @param removeIndex
-     * @return the name of the item
+     * @param repositoryItem
+     * @return a new locator for the specified item.
+     * @see #getLocatorFromItemPath(String)
      */
-    protected static String getResourceName(String resourceHref, boolean removeIndex) {
-        if (resourceHref == null) {
-            return resourceHref;
-        }
-
-        // cut the extension
-        int pos = resourceHref.lastIndexOf('.');
-        if (pos > 0) {
-            resourceHref = resourceHref.substring(pos+1);
-        } else if (resourceHref.endsWith("/")) {
-            resourceHref = resourceHref.substring(0, resourceHref.length()-1);
-        }
-
-        // retrieve the last part of the path
-        String name = Text.getName(resourceHref);
-        // remove index
-        if (removeIndex) {
-            if (name.endsWith("]")) {
-                name = name.substring(0, name.lastIndexOf('['));
+    protected DavResourceLocator getLocatorFromItem(Item repositoryItem) {
+        String itemPath = null;
+        try {
+            if (repositoryItem != null) {
+                itemPath = repositoryItem.getPath();
             }
+        } catch (RepositoryException e) {
+            // ignore: should not occur
+            log.warn(e.getMessage());
         }
-        return name;
+        return getLocatorFromItemPath(itemPath);
     }
 
     /**

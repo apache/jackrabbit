@@ -58,9 +58,9 @@ public class WebdavResponseImpl implements WebdavResponse {
      *
      * @param exception
      * @throws IOException
-     * @see DavServletResponse#sendErrorResponse(org.apache.jackrabbit.webdav.DavException)
+     * @see DavServletResponse#sendError(org.apache.jackrabbit.webdav.DavException)
      */
-    public void sendErrorResponse(DavException exception) throws IOException {
+    public void sendError(DavException exception) throws IOException {
         Element errorElem = exception.getError();
         if (errorElem == null || errorElem.getChildren().size() == 0) {
             httpResponse.sendError(exception.getErrorCode(), exception.getStatusPhrase());
@@ -74,9 +74,9 @@ public class WebdavResponseImpl implements WebdavResponse {
      *
      * @param multistatus
      * @throws IOException
-     * @see DavServletResponse#sendMultiStatusResponse(org.apache.jackrabbit.webdav.MultiStatus)
+     * @see DavServletResponse#sendMultiStatus(org.apache.jackrabbit.webdav.MultiStatus)
      */
-    public void sendMultiStatusResponse(MultiStatus multistatus) throws IOException {
+    public void sendMultiStatus(MultiStatus multistatus) throws IOException {
         sendXmlResponse(multistatus.toXml(), SC_MULTI_STATUS);
     }
 

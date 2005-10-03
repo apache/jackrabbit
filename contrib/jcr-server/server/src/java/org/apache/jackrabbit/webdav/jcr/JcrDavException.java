@@ -25,6 +25,7 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.*;
+import java.util.HashMap;
 
 /**
  * <code>JcrDavException</code> extends the {@link DavException} in order to
@@ -34,6 +35,30 @@ public class JcrDavException extends DavException {
 
     private static Logger log = Logger.getLogger(JcrDavException.class);
 
+    // mapping of Jcr exceptions to error codes.
+    private static HashMap codeMap = new HashMap();
+    static {
+        codeMap.put(AccessDeniedException.class, new Integer(DavServletResponse.SC_FORBIDDEN));
+        codeMap.put(ConstraintViolationException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(InvalidItemStateException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(InvalidSerializedDataException.class, new Integer(DavServletResponse.SC_BAD_REQUEST));
+        codeMap.put(InvalidQueryException.class, new Integer(DavServletResponse.SC_BAD_REQUEST));
+        codeMap.put(ItemExistsException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(ItemNotFoundException.class, new Integer(DavServletResponse.SC_FORBIDDEN));
+        codeMap.put(LockException.class, new Integer(DavServletResponse.SC_LOCKED));
+        codeMap.put(MergeException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(NamespaceException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(NoSuchNodeTypeException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(NoSuchWorkspaceException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(PathNotFoundException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(ReferentialIntegrityException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(RepositoryException.class, new Integer(DavServletResponse.SC_FORBIDDEN));
+        codeMap.put(LoginException.class, new Integer(DavServletResponse.SC_UNAUTHORIZED));
+        codeMap.put(UnsupportedRepositoryOperationException.class, new Integer(DavServletResponse.SC_NOT_IMPLEMENTED));
+        codeMap.put(ValueFormatException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(VersionException.class, new Integer(DavServletResponse.SC_CONFLICT));
+    }
+
     private Class exceptionClass;
 
     public JcrDavException(Exception e, int errorCode) {
@@ -41,80 +66,8 @@ public class JcrDavException extends DavException {
         exceptionClass = e.getClass();
     }
 
-    public JcrDavException(AccessDeniedException e) {
-        this(e, DavServletResponse.SC_FORBIDDEN);
-    }
-
-    public JcrDavException(ConstraintViolationException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
-    public JcrDavException(InvalidItemStateException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
-    public JcrDavException(InvalidSerializedDataException e) {
-        this(e, DavServletResponse.SC_BAD_REQUEST);
-    }
-
-    public JcrDavException(InvalidQueryException e) {
-        this(e, DavServletResponse.SC_BAD_REQUEST);
-    }
-
-    public JcrDavException(ItemExistsException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
-    public JcrDavException(ItemNotFoundException e) {
-        this(e, DavServletResponse.SC_FORBIDDEN);
-    }
-
-    public JcrDavException(LockException e) {
-        this(e, DavServletResponse.SC_LOCKED);
-    }
-
-    public JcrDavException(MergeException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
-    public JcrDavException(NamespaceException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
-    public JcrDavException(NoSuchNodeTypeException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
-    public JcrDavException(NoSuchWorkspaceException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
-    public JcrDavException(PathNotFoundException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
-    public JcrDavException(ReferentialIntegrityException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
     public JcrDavException(RepositoryException e) {
-        this(e, DavServletResponse.SC_FORBIDDEN);
-    }
-
-    public JcrDavException(LoginException e) {
-        this(e, DavServletResponse.SC_UNAUTHORIZED);
-    }
-
-    public JcrDavException(UnsupportedRepositoryOperationException e) {
-        this(e, DavServletResponse.SC_NOT_IMPLEMENTED);
-    }
-
-    public JcrDavException(ValueFormatException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
-    }
-
-    public JcrDavException(VersionException e) {
-        this(e, DavServletResponse.SC_CONFLICT);
+        this(e, ((Integer)codeMap.get(e.getClass())).intValue());
     }
 
     /**

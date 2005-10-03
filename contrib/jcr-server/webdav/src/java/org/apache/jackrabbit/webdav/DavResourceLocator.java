@@ -73,7 +73,8 @@ public interface DavResourceLocator {
     public boolean isSameWorkspace(String workspaceName);
 
     /**
-     * Return the 'href' representation of this locator object.
+     * Return the 'href' representation of this locator object. The implementation
+     * should perform an URL encoding of the resource path.
      *
      * @param isCollection
      * @return 'href' representation of this path
@@ -97,4 +98,16 @@ public interface DavResourceLocator {
      * @return the locator factory
      */
     public DavLocatorFactory getFactory();
+
+    /**
+     * An implementation may choose to circumvent the incompatibility of the
+     * JCR path with the URI path by applying an appropriate escaping. This
+     * utility method allows to retrieve the jcr path that corresponds to
+     * the resource path as returned by {#link getResourcePath()}.
+     *
+     * @return a jcr compatible form if the resource path.
+     * @see DavLocatorFactory#createResourceLocator(String, String, String, boolean)
+     * that allows to build a valid <code>DavResourceLocator</code> from a jcr path.
+     */
+    public String getJcrPath();
 }

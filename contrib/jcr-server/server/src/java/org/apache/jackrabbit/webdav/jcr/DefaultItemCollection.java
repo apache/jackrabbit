@@ -115,7 +115,6 @@ public class DefaultItemCollection extends AbstractItemResource
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
      * @see #JCR_MIXINNODETYPES
-     * @todo undo incomplete modifications...
      */
     public void setProperty(DavProperty property) throws DavException {
         internalSetProperty(property);
@@ -135,8 +134,8 @@ public class DefaultItemCollection extends AbstractItemResource
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
         if (property.getName().equals(JCR_MIXINNODETYPES)) {
+            Node n = (Node)item;
             try {
-                Node n = (Node)item;
                 NodeType[] existingMixin = n.getMixinNodeTypes();
                 NodeTypeProperty mix = new NodeTypeProperty(property);
                 Set mixins = mix.getNodeTypeNames();
@@ -174,7 +173,6 @@ public class DefaultItemCollection extends AbstractItemResource
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.DavResource#removeProperty(org.apache.jackrabbit.webdav.property.DavPropertyName)
      * @see #JCR_MIXINNODETYPES
-     * @todo undo incomplete modifications...
      */
     public void removeProperty(DavPropertyName propertyName) throws DavException {
         internalRemoveProperty(propertyName);
@@ -212,27 +210,41 @@ public class DefaultItemCollection extends AbstractItemResource
     }
 
     /**
+     * Loops over the given <code>Set</code>s and alters the properties accordingly.
+     * Changes are persisted at the end according to the rules defined with
+     * the {@link #complete()} method.<p>
+     * Please note: since there is only a single property ({@link #JCR_MIXINNODETYPES}
+     * that can be set or removed with PROPPATCH, this method either succeeds
+     * or throws an exception, even if this violates RFC 2518. Thus no property
+     * specific multistatus will be created in case of an error.
      *
      * @param setProperties
      * @param removePropertyNames
+     * @return
      * @throws DavException
-     * @todo undo incomplete modifications...
+     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
      */
-    public void alterProperties(DavPropertySet setProperties,
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties,
                                 DavPropertyNameSet removePropertyNames)
         throws DavException {
         DavPropertyIterator setIter = setProperties.iterator();
         while (setIter.hasNext()) {
             DavProperty prop = setIter.nextProperty();
+            // use the internal set method in order to prevent premature 'save'
             internalSetProperty(prop);
         }
         Iterator remNameIter = removePropertyNames.iterator();
         while (remNameIter.hasNext()) {
             DavPropertyName propName = (DavPropertyName) remNameIter.next();
+            // use the internal set method in order to prevent premature 'save'
             internalRemoveProperty(propName);
         }
-        // save all changes together
+        // TODO: missing undo of successful set/remove if subsequent operation fails
+        // NOTE, that this is relevant with transactions only.
+
+        // success: save all changes together if no error occured
         complete();
+        return new MultiStatusResponse(getHref(), DavServletResponse.SC_OK);
     }
 
     /**
@@ -268,20 +280,21 @@ public class DefaultItemCollection extends AbstractItemResource
         try {
             Node n = (Node) item;
             InputStream in = (inputCxt != null) ? inputCxt.getInputStream() : null;
+            String itemPath = getLocator().getJcrPath();
             if (resource.isCollection()) {
                 if (in == null) {
                     // MKCOL without a request body, try if a default-primary-type is defined.
-                    n.addNode(resource.getDisplayName());
+                    n.addNode(getItemName(itemPath));
                 } else {
                     // MKCOL, which is not allowed for existing resources
                     if (getTransactionId() == null) {
                         // if not part of a transaction directely import on workspace
                         // since changes would be explicitely saved in the
                         // complete-call.
-                        getRepositorySession().getWorkspace().importXML(getResourcePath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+                        getRepositorySession().getWorkspace().importXML(itemPath, in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
                     } else {
                         // changes will not be persisted unless the tx is completed.
-                        getRepositorySession().importXML(getResourcePath(), in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+                        getRepositorySession().importXML(itemPath, in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
                     }
                 }
             } else {
@@ -292,7 +305,7 @@ public class DefaultItemCollection extends AbstractItemResource
                     // TODO: find a way to create non-binary and multivalue properties
                     // PUT : create new or overwrite existing property.
                     // NOTE: will fail for multivalue properties.
-                    n.setProperty(getResourceName(resource.getResourcePath(), true), in);
+                    n.setProperty(getItemName(itemPath), in);
                 }
             }
             complete();
@@ -360,13 +373,14 @@ public class DefaultItemCollection extends AbstractItemResource
     public void removeMember(DavResource member) throws DavException {
         Session session = getRepositorySession();
         try {
-            if (!exists() || !session.itemExists(member.getResourcePath())) {
+            String itemPath = member.getLocator().getJcrPath();
+            if (!exists() || !session.itemExists(itemPath)) {
                 throw new DavException(DavServletResponse.SC_NOT_FOUND);
             }
             if (!getResourcePath().equals(Text.getRelativeParent(member.getResourcePath(), 1))) {
                 throw new DavException(DavServletResponse.SC_CONFLICT, member.getResourcePath() + "is not member of this resource (" + getResourcePath() + ")");
             }
-            session.getItem(member.getResourcePath()).remove();
+            getRepositorySession().getItem(itemPath).remove();
             complete();
         } catch (RepositoryException e) {
             log.error("Unexpected error: " + e.getMessage());
@@ -600,10 +614,10 @@ public class DefaultItemCollection extends AbstractItemResource
         Node n = (Node)item;
         try {
             for (int i = 0; i < instructions.length; i++) {
-                String srcRelPath = getResourceName(n.getPath() + instructions[i].getMemberHandle(), false);
+                String srcRelPath = Text.getName(instructions[i].getMemberHandle());
                 Position pos = instructions[i].getPosition();
                 String destRelPath = getRelDestinationPath(pos, n.getNodes());
-
+                // preform the reordering
                 n.orderBefore(srcRelPath, destRelPath);
             }
         } catch (RepositoryException e) {
@@ -626,36 +640,34 @@ public class DefaultItemCollection extends AbstractItemResource
     private String getRelDestinationPath(Position position, NodeIterator childNodes)
             throws RepositoryException {
 
-        String destRelPath = null;
+        String destPath = null;
         if (position.getType() == Position.TYPE_FIRST) {
-            while (childNodes.hasNext()) {
+            if (childNodes.hasNext()) {
                 Node firstChild = childNodes.nextNode();
-                destRelPath = firstChild.getPath();
+                destPath = firstChild.getPath();
             }
             // no child nodes available > reordering to 'first' position fails.
-            if (destRelPath == null) {
+            if (destPath == null) {
                 throw new ItemNotFoundException("No 'first' item found for reordering.");
             }
         } else if (position.getType() == Position.TYPE_AFTER) {
-            String afterRelPath = getResourceName(position.getSegment(), false);
+            String afterRelPath = Text.getName(position.getSegment());
             boolean found = false;
-            while (childNodes.hasNext() && destRelPath == null) {
+            // jcr only knows order-before > retrieve the node that follows the
+            // one incidated by the 'afterRelPath'.
+            while (childNodes.hasNext() && destPath == null) {
                 String childPath = childNodes.nextNode().getPath();
                 if (found) {
-                    destRelPath = childPath;
+                    destPath = childPath;
                 } else {
                     found = afterRelPath.equals(Text.getName(childPath));
                 }
             }
         } else {
-            destRelPath = position.getSegment();
+            destPath = position.getSegment();
         }
 
-        if (destRelPath != null) {
-            destRelPath = getResourceName(destRelPath, false);
-        }
-
-        return destRelPath;
+        return (destPath != null) ? Text.getName(destPath) : destPath;
     }
 
     //--------------------------------------------------------------------------
@@ -747,17 +759,17 @@ public class DefaultItemCollection extends AbstractItemResource
 	    try {
                 properties.add(new NodeTypeProperty(JCR_PRIMARYNODETYPE, n.getPrimaryNodeType(), false));
                 properties.add(new NodeTypeProperty(JCR_MIXINNODETYPES, n.getMixinNodeTypes(), false));
-                properties.add(new DefaultDavProperty(JCR_INDEX, new Integer(n.getIndex())));
-		addHrefProperty(JCR_REFERENCES, n.getReferences(), false);
+                properties.add(new DefaultDavProperty(JCR_INDEX, new Integer(n.getIndex()), true));
+                addHrefProperty(JCR_REFERENCES, n.getReferences(), true);
                 if (n.isNodeType(JcrConstants.MIX_REFERENCEABLE)) {
-                    properties.add(new DefaultDavProperty(JCR_UUID, n.getUUID()));
+                    properties.add(new DefaultDavProperty(JCR_UUID, n.getUUID(), true));
                 }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve primary nodetype property: " + e.getMessage());
             }
             try {
                 Item primaryItem = n.getPrimaryItem();
-                addHrefProperty(JCR_PRIMARYITEM, new Item[] {primaryItem}, false);
+                addHrefProperty(JCR_PRIMARYITEM, new Item[] {primaryItem}, true);
             } catch (ItemNotFoundException e) {
                 log.info("No primary item present on this node '" + getResourcePath() + "'");
             } catch (RepositoryException e) {
@@ -784,15 +796,11 @@ public class DefaultItemCollection extends AbstractItemResource
         if (values == null) {
             return;
         }
-        try {
-            String[] pHref = new String[values.length];
-            for (int i = 0; i < values.length; i++) {
-                pHref[i] = getLocatorFromResourcePath(values[i].getPath()).getHref(true);
-            }
-            properties.add(new HrefProperty(name, pHref, isProtected));
-        } catch (RepositoryException e) {
-            e.getMessage();
+        String[] pHref = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+            pHref[i] = getLocatorFromItem(values[i]).getHref(true);
         }
+        properties.add(new HrefProperty(name, pHref, isProtected));
     }
 
     /**

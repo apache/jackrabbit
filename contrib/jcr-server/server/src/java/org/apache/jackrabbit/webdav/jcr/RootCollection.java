@@ -27,7 +27,6 @@ import org.apache.jackrabbit.webdav.version.report.ReportType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.*;
-import java.io.InputStream;
 
 /**
  * <code>RootCollection</code> represent the WebDAV root resource that does not
@@ -120,7 +119,7 @@ public class RootCollection extends AbstractResource implements DavResource {
 
     /**
      * Throws exception: 403 Forbidden.
-     * @see DavResource#addMember(DavResource, InputStream)
+     * @see DavResource#addMember(DavResource, InputContext)
      */
     public void addMember(DavResource resource, InputContext inputCxt) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
@@ -196,7 +195,7 @@ public class RootCollection extends AbstractResource implements DavResource {
      * @see AbstractResource#getWorkspaceHref()
      */
     protected String getWorkspaceHref() {
-        Session session = this.getRepositorySession();
+        Session session = getRepositorySession();
         if (session != null) {
             String workspaceName = session.getWorkspace().getName();
             DavResourceLocator loc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), "/"+workspaceName, ItemResourceConstants.ROOT_ITEM_PATH);

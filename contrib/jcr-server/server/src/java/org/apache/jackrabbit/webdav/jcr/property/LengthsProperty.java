@@ -35,7 +35,7 @@ public class LengthsProperty extends AbstractDavProperty implements ItemResource
      * @param lengths as retrieved from the JCR property
      */
     public LengthsProperty(long[] lengths) {
-	super(JCR_LENGTHS, false);
+	super(JCR_LENGTHS, true);
 
 	Element[] elems = new Element[lengths.length];
 	for (int i = 0; i < lengths.length; i++) {

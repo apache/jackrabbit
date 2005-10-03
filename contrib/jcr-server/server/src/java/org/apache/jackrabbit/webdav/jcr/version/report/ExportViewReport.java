@@ -63,7 +63,7 @@ public class ExportViewReport implements Report {
      */
     public static final ReportType EXPORTVIEW_REPORT = ReportType.register(REPORT_NAME, ItemResourceConstants.NAMESPACE, ExportViewReport.class);
 
-    private String absPath;
+    private String absItemPath;
     private Session session;
     private ReportInfo info;
 
@@ -95,7 +95,7 @@ public class ExportViewReport implements Report {
             throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the exportview report.");
         }
         session = davSession.getRepositorySession();
-        absPath = resource.getResourcePath();
+        absItemPath = resource.getLocator().getJcrPath();
     }
 
     /**
@@ -125,16 +125,16 @@ public class ExportViewReport implements Report {
 
         try {
             // create tmpFile in default system-tmp directory
-            String prefix = "_tmp_" + Text.getName(absPath);
+            String prefix = "_tmp_" + Text.getName(absItemPath);
             File tmpfile = File.createTempFile(prefix, null, null);
             tmpfile.deleteOnExit();
             FileOutputStream out = new FileOutputStream(tmpfile);
 
             if (reportElem.getChild("sysview", ItemResourceConstants.NAMESPACE) != null) {
-                session.exportSystemView(absPath, out, skipBinary, noRecurse);
+                session.exportSystemView(absItemPath, out, skipBinary, noRecurse);
             } else {
                 // default is docview
-                session.exportDocumentView(absPath, out, skipBinary, noRecurse);
+                session.exportDocumentView(absItemPath, out, skipBinary, noRecurse);
             }
             out.close();
 

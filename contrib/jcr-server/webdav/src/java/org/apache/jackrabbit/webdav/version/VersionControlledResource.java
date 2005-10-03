@@ -18,8 +18,6 @@ package org.apache.jackrabbit.webdav.version;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 
 /**
  * The <code>VersionControlledResource</code> represents in contrast to the
@@ -177,7 +175,6 @@ public interface VersionControlledResource extends VersionableResource {
      * </pre>
      *
      * @see #merge(MergeInfo)
-     * @see #resolveMergeConflict(DavPropertySet, DavPropertyNameSet)
      */
     public static final DavPropertyName MERGE_SET = DavPropertyName.create("merge-set", DeltaVConstants.NAMESPACE);
 
@@ -192,7 +189,6 @@ public interface VersionControlledResource extends VersionableResource {
      * </pre>
      *
      * @see #merge(MergeInfo)
-     * @see #resolveMergeConflict(DavPropertySet, DavPropertyNameSet)
      */
     public static final DavPropertyName AUTO_MERGE_SET = DavPropertyName.create("auto-merge-set", DeltaVConstants.NAMESPACE);
 
@@ -238,26 +234,6 @@ public interface VersionControlledResource extends VersionableResource {
      * @throws DavException
      */
     public MultiStatus merge(MergeInfo mergeInfo) throws DavException;
-
-    /**
-     * Resolve one or multiple merge conflicts present on this resource. Please
-     * note that the 'setProperties' or 'removeProperties' set my contain additional
-     * resource properties, that need to be changed. Those properties are left
-     * untouched, whereas the {@link #AUTO_MERGE_SET}, {@link #MERGE_SET} and
-     * the {@link #PREDECESSOR_SET} are removed from the list upon successful
-     * resolution of a merge conflict.<br>
-     * If the removeProperties or setProperties set do not contain any of the
-     * mentioned resource properties or if the value of those properties do
-     * not allow for a resolution of an existing merge conflict, this METHODS
-     * returns silently.
-     *
-     * @param setProperties
-     * @param removePropertyNames
-     * @throws DavException the set or remove property sets attempt to resolve
-     * a non-existing merge conflict of if another error occurs while resolving
-     * an existing conflict.
-     */
-    public void resolveMergeConflict(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException;
 
     /**
      * Modify the labels of the version referenced by the DAV:checked-in property

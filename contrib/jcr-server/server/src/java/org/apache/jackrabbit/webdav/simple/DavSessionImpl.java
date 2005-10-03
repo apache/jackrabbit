@@ -16,9 +16,10 @@
 package org.apache.jackrabbit.webdav.simple;
 
 import javax.jcr.Session;
-import java.util.HashSet;
 
 import org.apache.jackrabbit.webdav.DavSession;
+
+import java.util.HashSet;
 
 /**
  * Simple implementation of the {@link DavSession} interface. Stores
@@ -66,6 +67,7 @@ public class DavSessionImpl implements DavSession {
      */
     public void addLockToken(String token) {
         lockTokens.add(token);
+        session.addLockToken(token);
     }
 
     /**
@@ -80,5 +82,6 @@ public class DavSessionImpl implements DavSession {
      */
     public void removeLockToken(String token) {
         lockTokens.remove(token);
+        session.removeLockToken(token);
     }
 }
