@@ -1167,6 +1167,15 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * {@inheritDoc}
      */
     public boolean isNew() {
+        return state.isTransient() && state.getOverlayedState() == null;
+    }
+
+    /**
+     * checks if this item is new. running outside of transactions, this
+     * is the same as {@link #isNew()} but within a transaction an item can
+     * be saved but not yet persisted.
+     */
+    protected boolean isTransactionalNew() {
         return state.getStatus() == ItemState.STATUS_NEW;
     }
 

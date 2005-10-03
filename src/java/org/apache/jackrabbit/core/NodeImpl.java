@@ -3754,7 +3754,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (isNew()) {
+        // todo: fixme for transactions
+        if (isTransactionalNew()) {
             throw new LockException("Node not locked: " + safeGetJCRPath());
         }
 
@@ -3792,7 +3793,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (!isNodeType(QName.MIX_LOCKABLE) || isNew()) {
+        // todo: fixme for transactions
+        if (!isNodeType(QName.MIX_LOCKABLE) || isTransactionalNew()) {
             // a node that is new or not lockable never holds a lock
             return false;
         }
@@ -3808,7 +3810,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (isNew()) {
+        // todo: fixme for transactions
+        if (isTransactionalNew()) {
             return false;
         }
 
@@ -3838,7 +3841,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException if some other error occurs
      */
     protected void checkLock() throws LockException, RepositoryException {
-        if (isNew()) {
+        // todo: fixme for transactions
+        if (isTransactionalNew()) {
             // a new node must not be checked
             return;
         }
