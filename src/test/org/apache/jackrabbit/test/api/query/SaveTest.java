@@ -58,7 +58,7 @@ public class SaveTest extends AbstractJCRTest {
         assertTrue("Node has not been stored", testRootNode.hasNode(nodeName1));
 
         Node queryNode = testRootNode.getNode(nodeName1);
-        assertEquals("Query node is not of type nt:query", ntQuery, queryNode.getPrimaryNodeType().getName());
+        assertTrue("Query node is not of type nt:query", queryNode.isNodeType(ntQuery));
 
         Query query2 = superuser.getWorkspace().getQueryManager().getQuery(queryNode);
         assertEquals("Persisted query does not match initial query.", query.getStatement(), query2.getStatement());
