@@ -79,7 +79,7 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
         if (exists()) {
             VersionHistory versionHistory = (VersionHistory) item;
             try {
-                versionHistory.removeVersion(getResourceName(member.getHref(), true));
+                versionHistory.removeVersion(getItemName(member.getLocator().getJcrPath()));
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }
@@ -131,8 +131,8 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
 
         // required root-version property for version-history resource
         try {
-            String rootVersionResourcePath = ((VersionHistory)item).getRootVersion().getPath();
-            properties.add(new HrefProperty(VersionHistoryResource.ROOT_VERSION, getLocatorFromResourcePath(rootVersionResourcePath).getHref(true), true));
+            String rootVersionHref = getLocatorFromItem(((VersionHistory)item).getRootVersion()).getHref(true);
+            properties.add(new HrefProperty(VersionHistoryResource.ROOT_VERSION, rootVersionHref, true));
         } catch (RepositoryException e) {
             log.error(e.getMessage());
         }

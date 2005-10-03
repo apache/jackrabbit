@@ -177,8 +177,8 @@ public class VersionItemCollection extends DefaultItemCollection
                 addHrefProperty(SUCCESSOR_SET, v.getSuccessors(), true);
 
                 // required DAV:version-history (computed) property
-                String vhPath = getVersionHistoryItem().getPath();
-                properties.add(new HrefProperty(VersionResource.VERSION_HISTORY, getLocatorFromResourcePath(vhPath).getHref(true), true));
+                String vhHref = getLocatorFromItem(getVersionHistoryItem()).getHref(true);
+                properties.add(new HrefProperty(VersionResource.VERSION_HISTORY, vhHref, true));
 
                 // required DAV:checkout-set (computed) property
                 PropertyIterator it = v.getReferences();

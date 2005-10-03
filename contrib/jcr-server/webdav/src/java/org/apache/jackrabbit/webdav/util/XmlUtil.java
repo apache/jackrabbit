@@ -17,6 +17,7 @@ package org.apache.jackrabbit.webdav.util;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.util.Text;
 import org.jdom.Element;
 
 /**
@@ -67,12 +68,29 @@ public class XmlUtil implements DavConstants {
     }
 
     /**
-     * Builds a 'href' Xml element from the given String
+     * Builds a 'DAV:href' Xml element from the given href. Please note, that
+     * the path present in the given String should be properly
+     * {@link Text#escapePath(String) escaped} in order to prevent problems with
+     * WebDAV clients.
      *
      * @param href String representing the text of the 'href' Xml element
      * @return Xml representation of a 'href' according to RFC 2518.
      */
     public static Element hrefToXml(String href) {
         return new Element(XML_HREF, NAMESPACE).setText(href);
+    }
+
+    /**
+     * Verifies that the given element is a DAV:href element, retrieves the
+     * element text.
+     *
+     * @param hrefElement a DAV:href element
+     * @return the URL decoded element text or empty String if the given element is empty.
+     */
+    public static String hrefFromXml(Element hrefElement) {
+        if (hrefElement == null || !XML_HREF.equals(hrefElement.getName()) || !NAMESPACE.equals(hrefElement.getNamespace())) {
+            throw new IllegalArgumentException("DAV:href element expected.");
+        }
+        return hrefElement.getText();
     }
 }

@@ -137,7 +137,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * @see DavServletRequest#getRequestLocator()
      */
     public DavResourceLocator getRequestLocator() {
-        String path = Text.unescape(getRequestURI());
+        String path = getRequestURI();
         String ctx = getContextPath();
         if (path.startsWith(ctx)) {
             path = path.substring(ctx.length());
@@ -159,13 +159,13 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             try {
                 URI uri = new URI(destination);
                 if (uri.getAuthority().equals(httpRequest.getHeader("Host"))) {
-                    destination = Text.unescape(uri.getRawPath());
+                    destination = uri.getRawPath();
                 }
             } catch (URISyntaxException e) {
                 log.debug("Destination is path is not a valid URI (" + e.getMessage() + ".");
                 int pos = destination.lastIndexOf(":");
                 if (pos > 0) {
-                    destination = Text.unescape(destination.substring(destination.indexOf("/", pos)));
+                    destination = destination.substring(destination.indexOf("/", pos));
                     log.debug("Tried to retrieve resource destination path from invalid URI: " + destination);
                 }
             }
@@ -454,10 +454,10 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     }
 
     /**
-     * MTest if the if header matches the given resource. The comparison is
+     * Test if the if header matches the given resource. The comparison is
      * made with the {@link DavResource#getHref()
      * resource href} and the token returned from an exclusive write lock present on
-     * the resource. An empty strong ETag is currently assumed.<br>
+     * the resource.<br>
      * NOTE: If either the If header or the resource is <code>null</code> or if
      * the resource has not applied an exclusive write lock the preconditions are met.
      * If in contrast the lock applied to the given resource returns a
@@ -475,7 +475,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     public boolean matchesIfHeader(DavResource resource) {
         // no ifheader, no resource or no write lock on resource
         // >> preconditions ok so far
-        if (ifHeader == null || resource == null || !resource.hasLock(Type.WRITE, Scope.EXCLUSIVE)) {
+        if (!ifHeader.hasValue() || resource == null || !resource.hasLock(Type.WRITE, Scope.EXCLUSIVE)) {
             return true;
         }
 
@@ -489,6 +489,14 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     }
 
     /**
+     * @see DavServletRequest#matchesIfHeader(String, String, String)
+     * @see IfHeader#matches(String, String, String)
+     */
+    public boolean matchesIfHeader(String href, String token, String eTag) {
+        return ifHeader.matches(href, token, isStrongETag(eTag) ?  eTag : "");
+    }
+
+    /**
      * Returns the strong etag present on the given resource or empty string
      * if either the resource does not provide any etag or if the etag is weak.
      *
@@ -497,9 +505,9 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      */
     private String getStrongETag(DavResource resource) {
         DavProperty prop = resource.getProperty(DavPropertyName.GETETAG);
-        if (prop != null) {
+        if (prop != null && prop.getValue() != null) {
             String etag = prop.getValue().toString();
-            if (etag != null && etag.length() > 0 && !etag.startsWith("W\\")) {
+            if (isStrongETag(etag)) {
                 return etag;
             }
         }
@@ -508,11 +516,13 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     }
 
     /**
-     * @see DavServletRequest#matchesIfHeader(String, String, String)
-     * @see IfHeader#matches(String, String, String)
+     * Returns true if the given string represents a strong etag.
+     *
+     * @param eTag
+     * @return true, if its a strong etag
      */
-    public boolean matchesIfHeader(String href, String token, String eTag) {
-        return ifHeader.matches(href, token, eTag);
+    private boolean isStrongETag(String eTag) {
+        return eTag != null && eTag.length() > 0 && !eTag.startsWith("W\\");
     }
 
     //-----------------------------< TransactionDavServletRequest Interface >---

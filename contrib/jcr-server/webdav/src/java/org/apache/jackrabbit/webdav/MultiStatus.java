@@ -71,7 +71,8 @@ public class MultiStatus implements DavConstants {
 
     /**
      * Add response(s) to this multistatus, in order to build a multistatus
-     * as returned for failed COPY, MOVE, LOCK or DELETE requests
+     * as returned for COPY, MOVE, LOCK or DELETE requests resulting in an error
+     * with a resource other than the resource identified in the Request-URI.
      *
      * @param resource
      * @param status

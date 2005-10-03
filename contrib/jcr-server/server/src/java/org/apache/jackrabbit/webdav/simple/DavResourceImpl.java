@@ -34,6 +34,7 @@ import org.apache.jackrabbit.server.io.ImportContext;
 import org.apache.jackrabbit.server.io.ImportResourceChain;
 import org.apache.jackrabbit.server.io.ImportCollectionChain;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.log4j.Logger;
 import org.jdom.Namespace;
 
@@ -42,10 +43,13 @@ import org.jdom.Namespace;
  */
 public class DavResourceImpl implements DavResource, JcrConstants {
 
-    /** the default logger */
+    /**
+     * the default logger
+     */
     private static final Logger log = Logger.getLogger(DavResourceImpl.class);
 
     private static final HashMap reservedNamespaces = new HashMap();
+
     static {
         reservedNamespaces.put(DavConstants.NAMESPACE.getPrefix(), DavConstants.NAMESPACE.getURI());
         reservedNamespaces.put(ObservationConstants.NAMESPACE.getPrefix(), ObservationConstants.NAMESPACE.getURI());
@@ -61,7 +65,9 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     private DavPropertySet properties = new DavPropertySet();
     private boolean isCollection = true;
 
-    /** is created on initProperties */
+    /**
+     * is created on initProperties
+     */
     private NodeResource nodeResource;
 
     private ResourceFilter filter;
@@ -74,39 +80,28 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param session
      */
     public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory,
-                           DavSession session, ResourceFilter filter)
-        throws RepositoryException, DavException {
+                           DavSession session, ResourceConfig config)
+            throws RepositoryException, DavException {
         this.session = session;
         this.factory = factory;
         this.locator = locator;
-        this.filter = filter;
+        this.filter = config.getResourceFilter();
+
         if (locator != null && locator.getResourcePath() != null) {
             try {
-                init(session.getRepositorySession().getItem(locator.getResourcePath()));
+                Item item = session.getRepositorySession().getItem(locator.getJcrPath());
+                if (item != null && item.isNode()) {
+                    node = (Node) item;
+                    if (isFilteredNode(node)) {
+                        log.debug("Cannot to access resource based on a filtered repository item: " + locator.getResourcePath());
+                        throw new DavException(DavServletResponse.SC_FORBIDDEN);
+                    }
+                    // define what is a resource in webdav
+                    isCollection = config.isCollectionResource(node);
+                }
             } catch (PathNotFoundException e) {
                 // ignore: exists field evaluates to false
             }
-        }
-    }
-
-    /**
-     * Init the webdav resource and retrieve the relevant property.
-     *
-     * @param repositoryItem
-     * @throws RepositoryException
-     */
-    private void init(Item repositoryItem) throws RepositoryException, DavException {
-        if (repositoryItem == null || !repositoryItem.isNode()) {
-            return;
-        }
-        node = (Node)repositoryItem;
-        if (isFilteredNode(node)) {
-            log.debug("Cannot to access resource based on a filtered repository item: " + locator.getResourcePath());
-            throw new DavException(DavServletResponse.SC_FORBIDDEN);
-        }
-        // define what is a resource in webdav
-        if (node.isNodeType(NT_RESOURCE) || node.isNodeType(NT_FILE)) {
-            isCollection = false;
         }
     }
 
@@ -172,37 +167,36 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
+     * Returns the the last segment of the resource path.<p>
+     * Note that this must not correspond to the name of the underlaying
+     * repository item for two reasons:<ul>
+     * <li>SameNameSiblings have an index appended to their item name.</li>
+     * <li>the resource path may differ from the item path.</li>
+     * </ul>
+     * Using the item name as DAV:displayname caused problems with XP built-in
+     * client in case of resources representing SameNameSibling nodes.
+     *
      * @see DavResource#getDisplayName()
      */
     public String getDisplayName() {
-        String name = null;
-        if (exists()) {
-            try {
-                name = node.getName();
-            } catch (RepositoryException e) {
-                // ignore
-            }
-        }
-        if (name == null && getResourcePath() != null) {
-            name = Text.getName(getResourcePath());
-        }
-        return name;
+        String resPath = getResourcePath();
+        return (resPath != null) ? Text.getName(resPath) : resPath;
     }
 
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getModificationTime()
      */
     public long getModificationTime() {
-	initProperties();
-	return nodeResource == null ? 0 : nodeResource.getModificationTime();
+        initProperties();
+        return nodeResource == null ? 0 : nodeResource.getModificationTime();
     }
 
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getStream()
      */
     public InputStream getStream() {
-	initProperties();
-	return nodeResource == null ? null : nodeResource.getStream();
+        initProperties();
+        return nodeResource == null ? null : nodeResource.getStream();
     }
 
     /**
@@ -232,60 +226,62 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * Fill the set of properties
      */
     private void initProperties() {
-        if (exists()) {
-            try {
-                nodeResource = new NodeResource(this, node);
-                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, nodeResource.getContentLength()+""));
-                properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, nodeResource.getCreationDate()));
-                properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, nodeResource.getLastModified()));
-                setContentType(nodeResource.getContentType());
-                setContentLanguage(nodeResource.getContentLanguage());
-                properties.add(new DefaultDavProperty(DavPropertyName.GETETAG, nodeResource.getETag()));
-            } catch (RepositoryException e) {
-                // should not occure....
-            }
+        if (!exists() || nodeResource != null) {
+            return;
+        }
 
-            if (getDisplayName() != null) {
-                properties.add(new DefaultDavProperty(DavPropertyName.DISPLAYNAME, getDisplayName()));
-            }
-            if (isCollection()) {
-                properties.add(new ResourceType(ResourceType.COLLECTION));
-                // Windows XP support
-                properties.add(new DefaultDavProperty(DavPropertyName.ISCOLLECTION, "1"));
-            } else {
-                properties.add(new ResourceType(ResourceType.DEFAULT_RESOURCE));
-                // Windows XP support
-                properties.add(new DefaultDavProperty(DavPropertyName.ISCOLLECTION, "0"));
-            }
+        try {
+            nodeResource = new NodeResource(this, node);
+            properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, nodeResource.getContentLength() + ""));
+            properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, nodeResource.getCreationDate()));
+            properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, nodeResource.getLastModified()));
+            setContentType(nodeResource.getContentType());
+            setContentLanguage(nodeResource.getContentLanguage());
+            properties.add(new DefaultDavProperty(DavPropertyName.GETETAG, nodeResource.getETag()));
+        } catch (RepositoryException e) {
+            // should not occure....
+        }
 
-            /* set current lock information. If no lock is set to this resource,
-            an empty lockdiscovery will be returned in the response. */
-            properties.add(new LockDiscovery(getLock(Type.WRITE, Scope.EXCLUSIVE)));
+        if (getDisplayName() != null) {
+            properties.add(new DefaultDavProperty(DavPropertyName.DISPLAYNAME, getDisplayName()));
+        }
+        if (isCollection()) {
+            properties.add(new ResourceType(ResourceType.COLLECTION));
+            // Windows XP support
+            properties.add(new DefaultDavProperty(DavPropertyName.ISCOLLECTION, "1"));
+        } else {
+            properties.add(new ResourceType(ResourceType.DEFAULT_RESOURCE));
+            // Windows XP support
+            properties.add(new DefaultDavProperty(DavPropertyName.ISCOLLECTION, "0"));
+        }
 
-            /* lock support information: all locks are lockable. */
-            SupportedLock supportedLock = new SupportedLock();
-            supportedLock.addEntry(Type.WRITE, Scope.EXCLUSIVE);
-            properties.add(supportedLock);
+        /* set current lock information. If no lock is set to this resource,
+        an empty lockdiscovery will be returned in the response. */
+        properties.add(new LockDiscovery(getLock(Type.WRITE, Scope.EXCLUSIVE)));
 
-            // non-protected JCR properties defined on the underlaying jcr node
-            try {
-                // todo: should filter be respected for properties as well?
-                PropertyIterator it = node.getProperties();
-                while (it.hasNext()) {
-                    Property p = it.nextProperty();
-                    String pName = p.getName();
-                    PropertyDefinition def = p.getDefinition();
-                    if (def.isMultiple()) {
-                        log.debug("Multivalue property '" +  pName + "' not added to webdav property set.");
-                        continue;
-                    }
-                    DavPropertyName name = getDavName(pName, node.getSession());
-                    String value = p.getValue().getString();
-                    properties.add(new DefaultDavProperty(name, value, def.isProtected()));
+        /* lock support information: all locks are lockable. */
+        SupportedLock supportedLock = new SupportedLock();
+        supportedLock.addEntry(Type.WRITE, Scope.EXCLUSIVE);
+        properties.add(supportedLock);
+
+        // non-protected JCR properties defined on the underlaying jcr node
+        try {
+            // todo: should filter be respected for properties as well?
+            PropertyIterator it = node.getProperties();
+            while (it.hasNext()) {
+                Property p = it.nextProperty();
+                String pName = p.getName();
+                PropertyDefinition def = p.getDefinition();
+                if (def.isMultiple()) {
+                    log.debug("Multivalue property '" + pName + "' not added to webdav property set.");
+                    continue;
                 }
-            } catch (RepositoryException e) {
-                log.error("Unexpected error while retrieving properties: " + e.getMessage());
+                DavPropertyName name = getDavName(pName, node.getSession());
+                String value = p.getValue().getString();
+                properties.add(new DefaultDavProperty(name, value, def.isProtected()));
             }
+        } catch (RepositoryException e) {
+            log.error("Unexpected error while retrieving properties: " + e.getMessage());
         }
     }
 
@@ -306,12 +302,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             node.save();
         } catch (RepositoryException e) {
             // revert any changes made so far an throw exception
+            JcrDavException je = new JcrDavException(e);
             try {
                 node.refresh(false);
             } catch (RepositoryException re) {
-                throw new JcrDavException(e);
+                // should not happen...
             }
-            throw new JcrDavException(e);
+            throw je;
         }
     }
 
@@ -331,38 +328,89 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             removeJcrProperty(propertyName);
             node.save();
         } catch (RepositoryException e) {
-            throw new JcrDavException(e);
+            JcrDavException je = new JcrDavException(e);
+            try {
+                node.refresh(false);
+            } catch (RepositoryException re) {
+                // should not happen...
+            }
+            throw je;
         }
     }
 
-    public void alterProperties(DavPropertySet setProperties,
-                                DavPropertyNameSet removePropertyNames)
-        throws DavException {
+    /**
+     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
+     */
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties,
+                                               DavPropertyNameSet removePropertyNames)
+            throws DavException {
         if (isLocked(this)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-        try {
-            DavPropertyIterator setIter = setProperties.iterator();
-            while (setIter.hasNext()) {
-                DavProperty prop = setIter.nextProperty();
+
+        MultiStatusResponse msr = new MultiStatusResponse(getHref());
+        boolean success = true;
+
+        // loop over set and remove Sets and remember all properties and propertyNames
+        // that have successfully been altered
+        List successList = new ArrayList();
+        DavPropertyIterator setIter = setProperties.iterator();
+        while (setIter.hasNext()) {
+            DavProperty prop = setIter.nextProperty();
+            try {
                 setJcrProperty(prop);
+                successList.add(prop);
+            } catch (RepositoryException e) {
+                msr.add(prop.getName(), new JcrDavException(e).getErrorCode());
+                success = false;
             }
-            Iterator remNameIter = removePropertyNames.iterator();
-            while (remNameIter.hasNext()) {
-                DavPropertyName propName = (DavPropertyName) remNameIter.next();
+        }
+
+        Iterator remNameIter = removePropertyNames.iterator();
+        while (remNameIter.hasNext()) {
+            DavPropertyName propName = (DavPropertyName) remNameIter.next();
+            try {
                 removeJcrProperty(propName);
+                successList.add(propName);
+            } catch (RepositoryException e) {
+                msr.add(propName, new JcrDavException(e).getErrorCode());
+                success = false;
             }
-            // save all changes together (reverted in case this fails)
-            node.save();
+        }
+
+        try {
+            if (success) {
+                // save all changes together (reverted in case this fails)
+                node.save();
+            } else {
+                // set/remove of at least a single prop failed: undo modifications.
+                node.refresh(false);
+            }
+            /* loop over list of properties/names that were successfully altered
+               and them to the multistatus response respecting the resulte of the
+               complete action. in case of failure set the status to 'failed-dependency'
+               in order to indicate, that altering those names/properties would
+               have succeeded, if no other error occured.*/
+            Iterator it = successList.iterator();
+            while (it.hasNext()) {
+                Object o = it.next();
+                int status = (success) ? DavServletResponse.SC_OK : DavServletResponse.SC_FAILED_DEPENDENCY;
+                if (o instanceof DavProperty) {
+                    msr.add(((DavProperty) o).getName(), status);
+                } else {
+                    msr.add((DavPropertyName) o, status);
+                }
+            }
+            return msr;
         } catch (RepositoryException e) {
             // revert any changes made so far an throw exception
             try {
                 node.refresh(false);
             } catch (RepositoryException re) {
-                throw new JcrDavException(e);
+                // should not happen
             }
             throw new JcrDavException(e);
         }
@@ -398,7 +446,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         if (getResourcePath() != null && !getResourcePath().equals("/")) {
             String parentPath = Text.getRelativeParent(getResourcePath(), 1);
             if (parentPath.equals("")) {
-                parentPath="/";
+                parentPath = "/";
             }
             DavResourceLocator parentloc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), parentPath);
             try {
@@ -418,10 +466,12 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         if (exists() && isCollection()) {
             try {
                 NodeIterator it = node.getNodes();
-                while(it.hasNext()) {
+                while (it.hasNext()) {
                     Node n = it.nextNode();
                     if (!isFilteredNode(n)) {
-                        list.add(buildResourceFromItem(n));
+                        DavResourceLocator resourceLocator = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), n.getPath(), false);
+                        DavResource childRes = factory.createResource(resourceLocator, session);
+                        list.add(childRes);
                     } else {
                         log.debug("Filtered resource '" + n.getName() + "'.");
                     }
@@ -444,7 +494,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
-        if (isLocked(this)) {
+        if (isLocked(this) || isLocked(member)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
         // don't allow creation of nodes, that would be filtered out
@@ -454,7 +504,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         }
         try {
             ImportContext ctx = new ImportContext(node);
-            ctx.setSystemId(member.getDisplayName());
+            String sysId = Text.getName(member.getLocator().getJcrPath());
+            ctx.setSystemId(sysId);
             boolean hasContent = inputCxt != null && inputCxt.getInputStream() != null;
             if (hasContent) {
                 ctx.setInputStream(inputCxt.getInputStream());
@@ -482,7 +533,11 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         } catch (RepositoryException e) {
             log.error("Error while executing import chain: " + e.toString());
             throw new JcrDavException(e);
+        } catch (DavException e) {
+            // TODO: hack needed in order not to fall into the general Exception
+            throw e;
         } catch (Exception e) {
+            // TODO: remove this! why do the commands throw an unspecific exception?
             log.error("Error while executing import chain: " + e.toString());
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
@@ -522,15 +577,15 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                     lockManager.releaseLock(lock.getToken(), member);
                 }
             }
-	    ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
-	    if (lock != null && lockManager.hasLock(lock.getToken(), member)) {
-		lockManager.releaseLock(lock.getToken(), member);
-	    }
+            ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
+            if (lock != null && lockManager.hasLock(lock.getToken(), member)) {
+                lockManager.releaseLock(lock.getToken(), member);
+            }
 
-            Session s = session.getRepositorySession();
-            Item memItem = s.getItem(member.getResourcePath());
+            String itemPath = member.getLocator().getJcrPath();
+            Item memItem = session.getRepositorySession().getItem(itemPath);
             memItem.remove();
-            s.save();
+            session.getRepositorySession().save();
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -550,7 +605,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
         try {
-            session.getRepositorySession().getWorkspace().move(getResourcePath(), destination.getResourcePath());
+            String destItemPath = destination.getLocator().getJcrPath();
+            session.getRepositorySession().getWorkspace().move(locator.getJcrPath(), destItemPath);
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -574,7 +630,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_FORBIDDEN, "Unable to perform shallow copy.");
         }
         try {
-            session.getRepositorySession().getWorkspace().copy(getResourcePath(), destination.getResourcePath());
+            String destItemPath = destination.getLocator().getJcrPath();
+            session.getRepositorySession().getWorkspace().copy(locator.getJcrPath(), destItemPath);
         } catch (PathNotFoundException e) {
             // according to rfc 2518: missing parent
             throw new DavException(DavServletResponse.SC_CONFLICT, e.getMessage());
@@ -607,21 +664,19 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         ActiveLock lock = null;
         if (exists() && Type.WRITE.equals(type) && Scope.EXCLUSIVE.equals(scope)) {
             // try to retrieve the repository lock information first
-	    if (isJsrLockable()) {
-                try {
+            try {
+                if (node.isLocked()) {
                     Lock jcrLock = node.getLock();
                     if (jcrLock != null && jcrLock.isLive()) {
                         lock = new JcrActiveLock(jcrLock);
                     }
-                } catch (RepositoryException e) {
-                    // LockException: no lock applies to this node >> ignore
-                    // RepositoryException, AccessDeniedException or another error >> ignore
                 }
+            } catch (RepositoryException e) {
+                // LockException (no lock applies) >> should never occur
+                // RepositoryException, AccessDeniedException or another error >> ignore
             }
 
-            // could not retrieve jcr-lock (either not jcr-lockable or the lock has
-            // been created before the node was made jcr-lockable. test if a simple
-            // webdav lock is present.
+            // could not retrieve a jcr-lock. test if a simple webdav lock is present.
             if (lock == null) {
                 lock = lockManager.getLock(type, scope, this);
             }
@@ -634,48 +689,48 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      */
     public ActiveLock[] getLocks() {
         ActiveLock writeLock = getLock(Type.WRITE, Scope.EXCLUSIVE);
-        return (writeLock != null) ? new ActiveLock[] {writeLock} : new ActiveLock[0];
+        return (writeLock != null) ? new ActiveLock[]{writeLock} : new ActiveLock[0];
     }
 
     /**
      * @see DavResource#lock(LockInfo)
      */
     public ActiveLock lock(LockInfo lockInfo) throws DavException {
-	ActiveLock lock = null;
+        ActiveLock lock = null;
         if (isLockable(lockInfo.getType(), lockInfo.getScope())) {
-            // todo: deal with existing locks, that may have been created, before the node was jcr-lockable...            
+            // TODO: deal with existing locks, that may have been created, before the node was jcr-lockable...
             if (isJsrLockable()) {
-		try {
-		    // try to execute the lock operation
-		    Lock jcrLock = node.lock(lockInfo.isDeep(), false);
-		    if (jcrLock != null) {
-			lock = new JcrActiveLock(jcrLock);
-		    }
-		} catch (RepositoryException e) {
-		    throw new JcrDavException(e);
-		}
-	    } else {
-		// create a new webdav lock
-		lock = lockManager.createLock(lockInfo, this);
-	    }
-	} else {
-	    throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Unsupported lock type or scope.");
-	}
-	return lock;
+                try {
+                    // try to execute the lock operation
+                    Lock jcrLock = node.lock(lockInfo.isDeep(), false);
+                    if (jcrLock != null) {
+                        lock = new JcrActiveLock(jcrLock);
+                    }
+                } catch (RepositoryException e) {
+                    throw new JcrDavException(e);
+                }
+            } else {
+                // create a new webdav lock
+                lock = lockManager.createLock(lockInfo, this);
+            }
+        } else {
+            throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Unsupported lock type or scope.");
+        }
+        return lock;
     }
 
     /**
      * @see DavResource#refreshLock(LockInfo, String)
      */
-    public ActiveLock refreshLock(LockInfo lockInfo, String lockToken) throws DavException{
+    public ActiveLock refreshLock(LockInfo lockInfo, String lockToken) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
         ActiveLock lock = getLock(lockInfo.getType(), lockInfo.getScope());
         if (lock == null) {
-           throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "No lock with the given type/scope present on resource " + getResourcePath());
+            throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "No lock with the given type/scope present on resource " + getResourcePath());
         }
-        
+
         if (lock instanceof JcrActiveLock) {
             try {
                 // refresh JCR lock and return the original lock object.
@@ -729,15 +784,17 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
     /**
      * Returns the node that is wrapped by this resource.
+     *
      * @return
      */
     protected Node getNode() {
         return node;
     }
-    
+
     /**
-     * Returns true, if this webdav resource allows for locking without checking
-     * its current lock status.
+     * Returns true, if the underlaying node is nodetype jcr:lockable,
+     * without checking its current lock status. If the node is not jcr-lockable
+     * an attempt is made to add the mix:lockable mixin type.
      *
      * @return true if this resource is lockable.
      */
@@ -745,9 +802,15 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         boolean lockable = false;
         if (exists()) {
             try {
-                lockable =  node.isNodeType(MIX_LOCKABLE);
+                lockable = node.isNodeType(MIX_LOCKABLE);
+                // not jcr-lockable: try to make the node jcr-lockable
+                if (!lockable && node.canAddMixin(MIX_LOCKABLE)) {
+                    node.addMixin(MIX_LOCKABLE);
+                    node.save();
+                    lockable = true;
+                }
             } catch (RepositoryException e) {
-                // not jcr-lockable
+                // -> node is definitely not jcr-lockable.
             }
         }
         return lockable;
@@ -767,7 +830,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             String[] sLockTokens = session.getLockTokens();
             for (int i = 0; i < sLockTokens.length; i++) {
                 if (sLockTokens[i].equals(lock.getToken())) {
-                   return false;
+                    return false;
                 }
             }
             return true;
@@ -775,25 +838,19 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
-     * @param item
-     * @return
-     * @throws DavException
-     * @throws RepositoryException
-     */
-    private DavResource buildResourceFromItem(Item item) throws DavException, RepositoryException {
-        DavResourceLocator parentloc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), item.getPath());
-        return factory.createResource(parentloc, session);
-    }
-
-    /**
      * Builds a webdav property name from the given jcrName. In case the jcrName
      * contains a namespace prefix that would conflict with any of the predefined
-     * webdav namespaces a new prefix is assigned.
+     * webdav namespaces a new prefix is assigned.<br>
+     * Please note, that the local part of the jcrName is checked for XML
+     * compatibility by calling {@link ISO9075#encode(String)}
      *
      * @param jcrName
-     * @return namespace
+     * @param session
+     * @return a <code>DavPropertyName</code> for the given jcr name.
      */
     private DavPropertyName getDavName(String jcrName, Session session) throws RepositoryException {
+        // make sure the local name is xml compliant
+        String localName = ISO9075.encode(Text.getLocalName(jcrName));
         String prefix = Text.getNamespacePrefix(jcrName);
         String uri = session.getNamespaceURI(prefix);
         // check for conflicts with reserved webdav-namespaces
@@ -801,7 +858,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             prefix = prefix + "0";
         }
         Namespace namespace = Namespace.getNamespace(prefix, uri);
-        DavPropertyName name = DavPropertyName.create(Text.getLocalName(jcrName), namespace);
+        DavPropertyName name = DavPropertyName.create(localName, namespace);
         return name;
     }
 
@@ -809,16 +866,16 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * Build jcr property name from dav property name. If the property name
      * defines a namespace uri, that has not been registered yet, an attempt
      * is made to register the uri with the prefix defined. Note, that no
-     * extra effort is made to generated a unique prefix. 
+     * extra effort is made to generated a unique prefix.
      *
      * @param propName
      * @return jcr name
      * @throws RepositoryException
      */
     private String getJcrName(DavPropertyName propName) throws RepositoryException {
-        String pName = propName.getName();
+        // remove any encoding necessary for xml compliance
+        String pName = ISO9075.decode(propName.getName());
         String uri = propName.getNamespace().getURI();
-
         if (uri != null && !"".equals(uri)) {
             Session s = session.getRepositorySession();
             String prefix;
@@ -829,6 +886,10 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                 // namespace uri has not been registered yet
                 NamespaceRegistry nsReg = s.getWorkspace().getNamespaceRegistry();
                 prefix = propName.getNamespace().getPrefix();
+                // avoid trouble with default namespace
+                if (prefix == null || "".equals(prefix)) {
+                    prefix = "_pre" + nsReg.getPrefixes().length + 1;
+                }
                 // NOTE: will fail if prefix is already in use in the namespace registry
                 nsReg.registerNamespace(prefix, uri);
             }
@@ -840,7 +901,6 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
-     *
      * @param property
      * @throws RepositoryException
      */
@@ -857,11 +917,15 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @throws RepositoryException
      */
     private void removeJcrProperty(DavPropertyName propertyName) throws RepositoryException {
-        node.getProperty(getJcrName(propertyName)).remove();
+        String jcrName = getJcrName(propertyName);
+        if (node.hasProperty(jcrName)) {
+            node.getProperty(jcrName).remove();
+        }
+        // removal of non existing property succeeds
     }
 
     private boolean isFilteredResource(DavResource resource) {
-        // todo: filtered nodetypes should be checked as well in order to prevent problems.
+        // TODO: filtered nodetypes should be checked as well in order to prevent problems.
         return filter != null && filter.isFilteredResource(resource.getDisplayName(), session.getRepositorySession());
     }
 

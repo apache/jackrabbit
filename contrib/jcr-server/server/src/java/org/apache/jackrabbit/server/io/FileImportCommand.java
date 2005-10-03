@@ -26,6 +26,7 @@ import java.util.Calendar;
  * data as binary property. It further sets the following properties:
  * <ul>
  * <li>jcr:mimeType (from {@link ImportContext#getContentType()})
+ * <li>jcr:encoding (from {@link ImportContext#getContentType()})
  * <li>jcr:lastModified (from current time)
  * <li>jcr:data (from {@link ImportContext#getInputStream()})
  * </ul>
@@ -52,7 +53,9 @@ public class FileImportCommand extends AbstractImportCommand {
         Node content = parentNode.hasNode(JCR_CONTENT)
                 ? parentNode.getNode(JCR_CONTENT)
                 : parentNode.addNode(JCR_CONTENT, resourceNodeType);
-        content.setProperty(JCR_MIMETYPE, ctx.getContentType());
+        String contentType = ctx.getContentType();
+        content.setProperty(JCR_MIMETYPE, getMimeType(contentType));
+        content.setProperty(JCR_ENCODING, getEncoding(contentType));
         content.setProperty(JCR_DATA, in);
         Calendar lastMod = Calendar.getInstance();
         if (ctx.getModificationTime() != 0) {
@@ -79,5 +82,46 @@ public class FileImportCommand extends AbstractImportCommand {
      */
     public boolean canHandle(String contentType) {
         return true;
+    }
+
+    /**
+     * Returns the main media type from a MIME Content-Type
+     * specification.
+     */
+    private String getMimeType(String contentType) {
+        if (contentType == null) {
+            // property will be removed.
+            // Note however, that jcr:mimetype is a mandatory property with the
+            // built-in nt:file nodetype.
+            return contentType;
+        }
+        // strip any parameters
+        int semi = contentType.indexOf(";");
+        return (semi > 0) ? contentType.substring(0, semi) : contentType;
+    }
+
+    /**
+     * Returns the charset parameter of a MIME Content-Type specification, or
+     * <code>null</code> if the specified String is <null> or if the charset
+     * is not included.
+     */
+    private String getEncoding(String contentType) {
+        // find the charset parameter
+        int equal;
+        if (contentType == null || (equal = contentType.indexOf("charset=")) == -1) {
+            // jcr:encoding property will be removed
+            return null;
+        }
+        String charset = contentType.substring(equal + 8);
+        // get rid of any other parameters that might be specified after the charset
+        int semi = charset.indexOf(";");
+        if (semi != -1) {
+            charset = charset.substring(0, semi);
+        }
+        // strip off enclosing quotes
+        if (charset.startsWith("\"") || charset.startsWith("'")) {
+            charset = charset.substring(1, charset.length() - 1);
+        }
+        return charset;
     }
 }

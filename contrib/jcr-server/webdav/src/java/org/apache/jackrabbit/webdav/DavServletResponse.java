@@ -75,7 +75,7 @@ public interface DavServletResponse extends HttpServletResponse {
      * @param error
      * @throws IOException
      */
-    public void sendErrorResponse(DavException error) throws IOException;
+    public void sendError(DavException error) throws IOException;
 
     /**
      * Send the multistatus response to the client. A multistatus response
@@ -87,7 +87,7 @@ public interface DavServletResponse extends HttpServletResponse {
      * @throws IOException
      * @see #SC_MULTI_STATUS
      */
-    public void sendMultiStatusResponse(MultiStatus multistatus) throws IOException;
+    public void sendMultiStatus(MultiStatus multistatus) throws IOException;
 
     /**
      * Send the lock response for a successful LOCK request. The given <code>ActiveLock</code>

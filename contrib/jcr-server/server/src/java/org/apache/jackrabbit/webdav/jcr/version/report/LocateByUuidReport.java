@@ -107,8 +107,7 @@ public class LocateByUuidReport implements Report {
             DavResourceLocator resourceLoc = resource.getLocator();
 
             Node n = session.getRepositorySession().getNodeByUUID(uuid);
-
-            DavResourceLocator loc = resourceLoc.getFactory().createResourceLocator(resourceLoc.getPrefix(), resourceLoc.getWorkspacePath(), n.getPath());
+            DavResourceLocator loc = resourceLoc.getFactory().createResourceLocator(resourceLoc.getPrefix(), resourceLoc.getWorkspacePath(), n.getPath(), false);
             DavResource res = resource.getFactory().createResource(loc, session);
 
             MultiStatus ms = new MultiStatus();

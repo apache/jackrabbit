@@ -297,7 +297,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 String eHref = "";
                 try {
                     boolean isCollection = (event.getType() == Event.NODE_ADDED || event.getType() == Event.NODE_REMOVED);
-                    eHref = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), event.getPath()).getHref(isCollection);
+                    eHref = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), event.getPath(), false).getHref(isCollection);
                 } catch (RepositoryException e) {
                     // should not occur....
                     log.error(e.getMessage());

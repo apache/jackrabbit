@@ -102,11 +102,11 @@ public class SearchResourceImpl implements SearchResource {
 
         Node rootNode = session.getRepositorySession().getRootNode();
         QueryManager qMgr = session.getRepositorySession().getWorkspace().getQueryManager();
-        String resourcePath = locator.getResourcePath();
 
         // test if query is defined by requested repository node
-        if (!rootNode.getPath().equals(resourcePath)) {
-            String qNodeRelPath = resourcePath.substring(1);
+        String itemPath = locator.getJcrPath();
+        if (!rootNode.getPath().equals(itemPath)) {
+            String qNodeRelPath = itemPath.substring(1);
             if (rootNode.hasNode(qNodeRelPath)) {
                 Node qNode = rootNode.getNode(qNodeRelPath);
                 if (qNode.isNodeType(JcrConstants.NT_QUERY)) {
@@ -119,14 +119,14 @@ public class SearchResourceImpl implements SearchResource {
         if (sInfo != null) {
             q = qMgr.createQuery(sInfo.getQuery(), sInfo.getLanguageName());
         } else {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, resourcePath + " is not a nt:query node -> searchRequest body required.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, locator.getResourcePath() + " is not a nt:query node -> searchRequest body required.");
         }
 
         /* test if resource path does not exist -> thus indicating that
         the query must be made persistent by calling Query.save(String) */
-        if (!session.getRepositorySession().itemExists(resourcePath)) {
+        if (!session.getRepositorySession().itemExists(itemPath)) {
             try {
-                q.storeAsNode(resourcePath);
+                q.storeAsNode(itemPath);
             } catch (RepositoryException e) {
                 // ItemExistsException should never occur.
                 new JcrDavException(e);
@@ -153,12 +153,13 @@ public class SearchResourceImpl implements SearchResource {
             Row row = rowIter.nextRow();
             Value[] values = row.getValues();
 
-            // get the jcr:path column indicating the node path
-            String nodePath = row.getValue(JcrConstants.JCR_PATH).getString();
+            // get the jcr:path column indicating the node path and build
+            // a webdav compliant resource path of it.
+            String itemPath = row.getValue(JcrConstants.JCR_PATH).getString();
             // create a new ms-response for this row of the result set
-            DavResourceLocator loc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), nodePath);
-            String nodeHref = loc.getHref(true);
-            MultiStatusResponse resp = new MultiStatusResponse(nodeHref);
+            DavResourceLocator loc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), itemPath, false);
+            String href = loc.getHref(true);
+            MultiStatusResponse resp = new MultiStatusResponse(href);
             // build the s-r-property
             SearchResultProperty srp = new SearchResultProperty(columnNames, values);
             resp.add(srp);

@@ -19,7 +19,7 @@ package org.apache.jackrabbit.server.io;
 import javax.jcr.Node;
 
 /**
- * This Class implements a import command that adds a mixin node type to the
+ * This Class implements a import command that adds a child node to the
  * current node.
  */
 public class AddNodeCommand extends AbstractCommand {

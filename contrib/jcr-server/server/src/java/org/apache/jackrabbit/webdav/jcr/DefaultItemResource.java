@@ -97,8 +97,6 @@ public class DefaultItemResource extends AbstractItemResource {
      * @param property
      * @throws DavException
      * @see DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
-     *
-     * todo: undo incomplete modifications...
      */
     public void setProperty(DavProperty property) throws DavException {
         internalSetProperty(property);
@@ -155,20 +153,26 @@ public class DefaultItemResource extends AbstractItemResource {
     /**
      * Loops over the given <code>Set</code>s and alters the properties accordingly.
      * Changes are persisted at the end only according to the rules defined with
-     * the {@link #complete()} method.
+     * the {@link #complete()} method.<p>
+     * Please note: since there is only a single property than can be set
+     * from a client (i.e. jcr:value OR jcr:values) this method either succeeds
+     * or throws an exception, even if this violates RFC 2518.
      *
      * @param setProperties
      * @param removePropertyNames
      * @throws DavException
      * @see DavResource#alterProperties(DavPropertySet, DavPropertyNameSet)
      */
-    public void alterProperties(DavPropertySet setProperties,
+    public MultiStatusResponse alterProperties(DavPropertySet setProperties,
                                 DavPropertyNameSet removePropertyNames)
         throws DavException {
 
         // altering any properties fails if an attempt is made to remove a property
         if (removePropertyNames != null && !removePropertyNames.isEmpty()) {
-            throw new DavException(DavServletResponse.SC_FORBIDDEN);
+            Iterator it = removePropertyNames.iterator();
+            while (it.hasNext()) {
+                throw new DavException(DavServletResponse.SC_FORBIDDEN);
+            }
         }
 
         // only set/add >> existance of resource is checked inside internal method
@@ -178,12 +182,13 @@ public class DefaultItemResource extends AbstractItemResource {
             internalSetProperty(prop);
         }
         complete();
+        return new MultiStatusResponse(getHref(), DavServletResponse.SC_OK);
     }
 
     /**
      * Method is not allowed.
      *
-     * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource, InputStream)
+     * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource, InputContext)
      */
     public void addMember(DavResource resource, InputContext inputCxt) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED, "Cannot add members to a non-collection resource");
@@ -264,7 +269,7 @@ public class DefaultItemResource extends AbstractItemResource {
                     properties.add(new LengthsProperty(prop.getLengths()));
                 } else {
                     properties.add(new DefaultDavProperty(JCR_VALUE, ValueHelper.serialize(prop.getValue(), false)));
-                    properties.add(new DefaultDavProperty(JCR_LENGTH, String.valueOf(prop.getLength())));
+                    properties.add(new DefaultDavProperty(JCR_LENGTH, String.valueOf(prop.getLength()), true));
                 }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve resource properties: "+e.getMessage());

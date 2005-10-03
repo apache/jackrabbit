@@ -22,6 +22,7 @@ import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.server.CredentialsProvider;
 import org.apache.jackrabbit.server.SessionProvider;
+import org.apache.log4j.Logger;
 
 /**
  * Simple implementation of the {@link DavSessionProvider}
@@ -30,6 +31,8 @@ import org.apache.jackrabbit.server.SessionProvider;
  * a {@link DavSession} to the request.
  */
 public class DavSessionProviderImpl implements DavSessionProvider {
+
+    private static Logger log = Logger.getLogger(DavSessionProviderImpl.class);
 
     /**
      * the repository
@@ -66,9 +69,11 @@ public class DavSessionProviderImpl implements DavSessionProvider {
             // login to repository
             Session repSession = sesProvider.getSession(request, repository, null);
             if (repSession == null) {
+                log.debug("Could not to retrieve a repository session.");
                 return false;
             }
             DavSession ds = new DavSessionImpl(repSession);
+            log.debug("Attaching session '"+ ds + "' to request '" + request + "'");
             request.setDavSession(ds);
             return true;
         } catch (LoginException e) {
@@ -82,13 +87,28 @@ public class DavSessionProviderImpl implements DavSessionProvider {
 
     /**
      * Only removes the <code>DavSession</code> object from the given request object.
-     * No further actions required, since <code>DavSessionImpl</code> does not
-     * allow to keep track of references to it.
+     * and remove all the lock tokens from the underlaying repository session
+     * in order make sure they can be reset when attaching a session to the
+     * next request. Finally the session is logged-out. The latter is a workaround
+     * only, since the SessionProvider may not clean up unused sessions properly.
      *
      * @param request
      * @see DavSessionProvider#releaseSession(org.apache.jackrabbit.webdav.WebdavRequest)
      */
     public void releaseSession(WebdavRequest request) {
+        DavSession ds = request.getDavSession();
+        if (ds != null) {
+            Session repSession = ds.getRepositorySession();
+            String[] lockTokens = repSession.getLockTokens();
+            for (int i = 0; i < lockTokens.length; i++) {
+                repSession.removeLockToken(lockTokens[i]);
+            }
+            // TODO: not quite correct. the SessionProvider should take care of removing session.
+            repSession.logout();
+            log.debug("Releasing session '"+ ds + "' from request '" + request + "'");
+        } else {
+            // session is null. nothing to be done.
+        }
         request.setDavSession(null);
     }
 }

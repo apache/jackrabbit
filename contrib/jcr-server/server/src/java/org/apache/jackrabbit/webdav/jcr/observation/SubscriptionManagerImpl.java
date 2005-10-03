@@ -98,8 +98,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             throws DavException {
         try {
             ObservationManager oMgr = session.getRepositorySession().getWorkspace().getObservationManager();
+            String itemPath = subscription.getLocator().getJcrPath();
             oMgr.addEventListener(subscription, subscription.getEventTypes(),
-                    subscription.getLocator().getResourcePath(), subscription.isDeep(),
+                    itemPath, subscription.isDeep(),
                     subscription.getUuidFilters(),
                     subscription.getNodetypeNameFilters(),
                     subscription.isNoLocal());
@@ -203,7 +204,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     private class SubscriptionMap {
 
         private HashMap subscriptions = new HashMap();
-        private HashMap paths = new HashMap();
+        private HashMap ids = new HashMap();
 
         private boolean contains(String subscriptionId) {
             return subscriptions.containsKey(subscriptionId);
@@ -217,11 +218,11 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             subscriptions.put(subscriptionId, subscription);
             DavResourceLocator key = subscription.getLocator();
             Set idSet;
-            if (paths.containsKey(key)) {
-                idSet = (Set) paths.get(key);
+            if (ids.containsKey(key)) {
+                idSet = (Set) ids.get(key);
             } else {
                 idSet = new HashSet();
-                paths.put(key, idSet);
+                ids.put(key, idSet);
             }
             if (!idSet.contains(subscriptionId)) {
                 idSet.add(subscriptionId);
@@ -230,11 +231,11 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
 
         private void remove(String subscriptionId) {
             SubscriptionImpl sub = (SubscriptionImpl) subscriptions.remove(subscriptionId);
-            ((Set)paths.get(sub.getLocator())).remove(subscriptionId);
+            ((Set)ids.get(sub.getLocator())).remove(subscriptionId);
         }
 
         private Subscription[] getByPath(DavResourceLocator locator) {
-            Set idSet = (Set) paths.get(locator);
+            Set idSet = (Set) ids.get(locator);
             if (idSet != null && !idSet.isEmpty()) {
                 Iterator idIterator = idSet.iterator();
                 Subscription[] subsForResource = new Subscription[idSet.size()];
