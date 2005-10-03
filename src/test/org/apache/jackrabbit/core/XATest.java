@@ -57,8 +57,12 @@ public class XATest extends AbstractJCRTest {
 
         n.checkin();
 
+        assertFalse("Node must be checked-in", n.isCheckedOut());
+
         // commit
         utx.commit();
+
+        assertFalse("Node must be checked-in", n.isCheckedOut());
     }
 
     /**
@@ -191,6 +195,82 @@ public class XATest extends AbstractJCRTest {
         Node n = (Node) otherSuperuser.getItem(testRootNode.getPath());
         assertEquals(n.getProperty(propertyName1).getString(), "1");
         otherSuperuser.logout();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public void testPropertyIsNew() throws Exception {
+        // prerequisite: non-existing property
+        if (testRootNode.hasProperty(propertyName1)) {
+            testRootNode.getProperty(propertyName1).remove();
+            testRootNode.save();
+        }
+
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // start transaction
+        utx.begin();
+
+        // 'add' property and save
+        testRootNode.setProperty(propertyName1, "0");
+
+        assertTrue("New property must be new.", testRootNode.getProperty(propertyName1).isNew());
+
+        testRootNode.save();
+
+        assertFalse("Saved property must not be new.", testRootNode.getProperty(propertyName1).isNew());
+
+        // commit
+        utx.commit();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public void testNewNodeIsLocked() throws Exception {
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // start transaction
+        utx.begin();
+
+        // add node and save
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        testRootNode.save();
+
+        assertFalse("New node must not be locked.", n.isLocked());
+
+        // commit
+        utx.commit();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public void testPropertyIsModified() throws Exception {
+        // prerequisite: existing property
+        testRootNode.setProperty(propertyName1, "0");
+        testRootNode.save();
+
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // start transaction
+        utx.begin();
+
+        // 'add' property and save
+        testRootNode.setProperty(propertyName1, "1");
+
+        assertTrue("Unsaved property must be modified.", testRootNode.getProperty(propertyName1).isModified());
+
+        testRootNode.save();
+
+        assertFalse("Saved property must not be modified.", testRootNode.getProperty(propertyName1).isModified());
+
+        // commit
+        utx.commit();
     }
 
     /**
