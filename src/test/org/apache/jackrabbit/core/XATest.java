@@ -43,6 +43,24 @@ public class XATest extends AbstractJCRTest {
         }
     }
 
+    public void testCheckin() throws Exception {
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // start transaction
+        utx.begin();
+
+        // add node and save
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixVersionable);
+        testRootNode.save();
+
+        n.checkin();
+
+        // commit
+        utx.commit();
+    }
+
     /**
      * Add a node inside a transaction and commit changes. Make sure
      * node exists for other sessions only after commit.
@@ -138,6 +156,138 @@ public class XATest extends AbstractJCRTest {
         assertTrue(otherRootNode.hasProperty(propertyName1));
 
         // logout
+        otherSuperuser.logout();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public void testAddAndSetProperty() throws Exception {
+        // prerequisite: non-existing property
+        if (testRootNode.hasProperty(propertyName1)) {
+            testRootNode.getProperty(propertyName1).remove();
+            testRootNode.save();
+        }
+
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // start transaction
+        utx.begin();
+
+        // 'add' property and save
+        testRootNode.setProperty(propertyName1, "0");
+        testRootNode.save();
+
+        // 'modify' property and save
+        testRootNode.setProperty(propertyName1, "1");
+        testRootNode.save();
+
+        // commit
+        utx.commit();
+
+        // check property value
+        Session otherSuperuser = helper.getSuperuserSession();
+        Node n = (Node) otherSuperuser.getItem(testRootNode.getPath());
+        assertEquals(n.getProperty(propertyName1).getString(), "1");
+        otherSuperuser.logout();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public void testDeleteAndAddProperty() throws Exception {
+        // prerequisite: existing property
+        testRootNode.setProperty(propertyName1, "0");
+        testRootNode.save();
+
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // start transaction
+        utx.begin();
+
+        // 'delete' property and save
+        testRootNode.getProperty(propertyName1).remove();
+        testRootNode.save();
+
+        // 'add' property and save
+        testRootNode.setProperty(propertyName1, "1");
+        testRootNode.save();
+
+        // commit
+        utx.commit();
+
+        // check property value
+        Session otherSuperuser = helper.getSuperuserSession();
+        Node n = (Node) otherSuperuser.getItem(testRootNode.getPath());
+        assertEquals(n.getProperty(propertyName1).getString(), "1");
+        otherSuperuser.logout();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public void testModifyAndDeleteProperty() throws Exception {
+        // prerequisite: existing property
+        testRootNode.setProperty(propertyName1, "0");
+        testRootNode.save();
+
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // start transaction
+        utx.begin();
+
+        // 'modify' property and save
+        testRootNode.setProperty(propertyName1, "1");
+        testRootNode.save();
+
+        // 'delete' property and save
+        testRootNode.getProperty(propertyName1).remove();
+        testRootNode.save();
+
+        // commit
+        utx.commit();
+
+        // check property value
+        Session otherSuperuser = helper.getSuperuserSession();
+        Node n = (Node) otherSuperuser.getItem(testRootNode.getPath());
+        assertFalse("Property must be deleted.", n.hasProperty(propertyName1));
+        otherSuperuser.logout();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public void testAddAndDeleteProperty() throws Exception {
+        // prerequisite: non-existing property
+        if (testRootNode.hasProperty(propertyName1)) {
+            testRootNode.getProperty(propertyName1).remove();
+            testRootNode.save();
+        }
+
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // start transaction
+        utx.begin();
+
+        // 'add' property and save
+        testRootNode.setProperty(propertyName1, "1");
+        testRootNode.save();
+
+        // 'delete' property and save
+        testRootNode.getProperty(propertyName1).remove();
+        testRootNode.save();
+
+        // commit
+        utx.commit();
+
+        // check property value
+        Session otherSuperuser = helper.getSuperuserSession();
+        Node n = (Node) otherSuperuser.getItem(testRootNode.getPath());
+        assertFalse("Property must be deleted.", n.hasProperty(propertyName1));
         otherSuperuser.logout();
     }
 

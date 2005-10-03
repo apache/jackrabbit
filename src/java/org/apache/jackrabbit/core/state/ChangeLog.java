@@ -186,21 +186,35 @@ public class ChangeLog {
      * @param other other change log
      */
     public void merge(ChangeLog other) {
-        /*
-         * Remove all states from our added set that have
-         * now been deleted
-         */
-        Iterator iter = other.deletedStates.keySet().iterator();
+        // Remove all states from our added set that have now been deleted
+        Iterator iter = other.deletedStates();
         while (iter.hasNext()) {
-            ItemId id = (ItemId) iter.next();
-            if (addedStates.remove(id) == null) {
-                deletedStates.put(id, other.deletedStates.get(id));
+            ItemState state = (ItemState) iter.next();
+            if (addedStates.remove(state.getId()) == null) {
+                deletedStates.put(state.getId(), state);
+            }
+            // also remove from eventual modified state
+            modifiedStates.remove(state.getId());
+        }
+
+        // only add modified states that are not already 'added'
+        iter = other.modifiedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            if (!addedStates.containsKey(state.getId())) {
+                modifiedStates.put(state.getId(), state);
             }
         }
 
-        /* Now merge other changes */
-        addedStates.putAll(other.addedStates);
-        modifiedStates.putAll(other.modifiedStates);
+        // add 'added' state, but respect previously deleted
+        iter = other.addedStates();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            addedStates.put(state.getId(), state);
+            deletedStates.remove(state.getId());
+        }
+
+        // add refs
         modifiedRefs.putAll(other.modifiedRefs);
     }
 
