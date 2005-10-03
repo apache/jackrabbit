@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
@@ -268,5 +269,12 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         } catch (UnsupportedEncodingException e) {
             throw new RepositoryException(e);
         }
+    }
+
+    /**
+     * @inheritDoc
+     */ 
+    public boolean setNodeReferences(NodeReferences refs) {
+        return false;
     }
 }
