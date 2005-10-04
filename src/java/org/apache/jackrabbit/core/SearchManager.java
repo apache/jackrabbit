@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.BeanMap;
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 import org.apache.jackrabbit.core.config.SearchConfig;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -125,14 +124,6 @@ public class SearchManager implements SynchronousEventListener {
             handler.init(context);
         } catch (Exception e) {
             throw new RepositoryException(e.getMessage(), e);
-        }
-
-        // set properties
-        BeanMap bm = new BeanMap(handler);
-        try {
-            bm.putAll(config.getParameters());
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid configuration: " + e.getMessage());
         }
     }
 
