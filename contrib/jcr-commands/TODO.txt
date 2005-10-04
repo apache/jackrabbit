@@ -1,2 +1,4 @@
-- Add more commands
-- Add logging
+- xdocs
+- javadocs
+- testing
+- review i18n resource file

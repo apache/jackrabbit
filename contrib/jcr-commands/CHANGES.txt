@@ -1,3 +1,14 @@
+2005-10-01
+ - naming and packaging reviewed
+ - now commands only read parameters from the context 
+   because commands shouldn't have a state of their own
+   but use only the context.
+ - i18n reorganized in one single resources file
+ - batch mode added
+ - cover most of jcr operations (versioning, locking, etc.)
+ - commands simplified. Most commands don't have default values.
+ - logging added
+
 2005-08-11
  - removed jmeter dependencies
  - added command line interface (o.a.j.chain.cli)
