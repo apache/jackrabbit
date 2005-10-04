@@ -2,3 +2,4 @@
 - javadocs
 - testing
 - review i18n resource file
+- replace the parser, it hardly works
