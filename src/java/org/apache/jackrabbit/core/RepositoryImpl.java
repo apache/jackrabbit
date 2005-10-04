@@ -884,7 +884,8 @@ public class RepositoryImpl implements Repository, SessionListener,
             if (lmc == null) {
                 authCtx = new AuthContext.JAAS(repConfig.getAppName(), credentials);
             } else {
-                authCtx = new AuthContext.Local(lmc, credentials);
+                authCtx = new AuthContext.Local(
+                        lmc.getLoginModule(), lmc.getParameters(), credentials);
             }
             authCtx.login();
         } catch (javax.security.auth.login.LoginException le) {
