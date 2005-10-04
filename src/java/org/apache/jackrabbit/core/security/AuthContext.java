@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.jackrabbit.core.config.ConfigurationException;
-import org.apache.jackrabbit.core.config.LoginModuleConfig;
-
 import javax.jcr.Credentials;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
@@ -34,7 +31,7 @@ import java.util.Map;
  * This class is abstract and has two implementations:
  * <ul>
  *   <li>{@link AuthContext.JAAS} which delegates to a regular JAAS <code>LoginContext</code></li>
- *   <li>{@link AuthCotnext.Local} which implements authentication using a locally-defined
+ *   <li>{@link AuthContext.Local} which implements authentication using a locally-defined
  *       JAAS <code>LoginModule</code></li>
  * </ul>
  *
@@ -118,15 +115,16 @@ public abstract class AuthContext {
         private Credentials creds;
 
         /**
-         * Creates an authentication context given a login module configuration and some credentials.
+         * Creates an authentication context given a login module and some credentials.
          *
+         * @param module the login module
+         * @param options login module options
          * @param config the login module configuration
          * @param creds the credentials
-         * @throws ConfigurationException if the login module couldn't be created
          */
-        public Local(LoginModuleConfig config, Credentials creds) throws ConfigurationException {
-            this.module = config.getLoginModule();
-            this.options = config.getParameters();
+        public Local(LoginModule module, Map options, Credentials creds) {
+            this.module = module;
+            this.options = options;
             this.creds = creds;
         }
 
