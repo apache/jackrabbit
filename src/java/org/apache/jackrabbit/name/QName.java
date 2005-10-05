@@ -107,16 +107,6 @@ public final class QName implements Cloneable, Comparable, Serializable {
     //------------------------------------------< general item name constants >
 
     /**
-     * Empty name
-     */
-    public static final QName EMPTY = new QName(NS_DEFAULT_URI, "");
-
-    /**
-     * Wildcard name
-     */
-    public static final QName WILDCARD = new QName(NS_DEFAULT_URI, "*");
-
-    /**
      * jcr:system
      */
     public static final QName JCR_SYSTEM = new QName(NS_JCR_URI, "system");

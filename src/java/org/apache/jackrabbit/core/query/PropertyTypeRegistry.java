@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
@@ -91,7 +92,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
                 for (int i = 0; i < propDefs.length; i++) {
                     QName name = propDefs[i].getName();
                     int type = propDefs[i].getRequiredType();
-                    if (!QName.WILDCARD.equals(name) && type != PropertyType.UNDEFINED) {
+                    if (!ItemDef.ANY_NAME.equals(name) && type != PropertyType.UNDEFINED) {
                         // only remember defined property types
                         TypeMapping[] types = (TypeMapping[]) typeMapping.get(name);
                         if (types == null) {

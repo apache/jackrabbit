@@ -40,6 +40,12 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     private static Logger log = Logger.getLogger(HierarchyManagerImpl.class);
 
+    /**
+     * The parent name returned for orphaned or root nodes.
+     * TODO: Is it proper to use an invalid QName for this.
+     */
+    private static final QName EMPTY_NAME = new QName("", "");
+
     protected final NodeId rootNodeId;
     protected final ItemStateManager provider;
     // used for outputting user-friendly paths and names
@@ -378,7 +384,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 if (parentUUID == null) {
                     // this is the root or an orphaned node
                     // FIXME
-                    return QName.EMPTY;
+                    return EMPTY_NAME;
                 }
                 parentState = (NodeState) getItemState(new NodeId(parentUUID));
             } catch (NoSuchItemStateException nsis) {

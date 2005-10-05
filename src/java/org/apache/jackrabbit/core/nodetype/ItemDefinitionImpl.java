@@ -73,7 +73,17 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     }
 
     /**
-     * Gets the <code>QName</code> of the child item.
+     * Checks whether this is a residual item definition.
+     *
+     * @return <code>true</code> if this is a residual item definition  
+     */
+    public boolean definesResidual() {
+        return itemDef.definesResidual();
+    }
+
+    /**
+     * Gets the <code>QName</code> of the child item. It is an error to
+     * call this method if this is a residual item definition.
      *
      * @return the <code>QName</code> of the child item.
      * @see #getName()

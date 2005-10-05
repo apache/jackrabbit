@@ -53,6 +53,13 @@ public class NodeTypeRegistry implements Dumpable {
 
     private static Logger log = Logger.getLogger(NodeTypeRegistry.class);
 
+    /**
+     * The empty name used as the name of the declaring node type of the
+     * root node definion.
+     * TODO: Is it proper to use an invalid QName for this.
+     */
+    private static final QName EMPTY_NAME = new QName("", "");
+
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
             "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";
     private static final String CUSTOM_NODETYPES_RESOURCE_NAME =
@@ -204,7 +211,7 @@ public class NodeTypeRegistry implements Dumpable {
         NodeDefImpl def = new NodeDefImpl();
 
         // FIXME need a fake declaring node type
-        def.setDeclaringNodeType(QName.EMPTY);
+        def.setDeclaringNodeType(EMPTY_NAME);
         def.setRequiredPrimaryTypes(new QName[] { QName.REP_ROOT });
         def.setDefaultPrimaryType(QName.REP_ROOT);
         def.setMandatory(true);

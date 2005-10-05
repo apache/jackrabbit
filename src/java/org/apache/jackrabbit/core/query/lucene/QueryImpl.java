@@ -216,8 +216,9 @@ class QueryImpl implements ExecutableQuery {
             NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
             PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
             for (int i = 0; i < propDefs.length; i++) {
-                if (!propDefs[i].isMultiple()) {
-                    selectProps.add(((PropertyDefinitionImpl) propDefs[i]).getQName());
+                PropertyDefinitionImpl propDef = (PropertyDefinitionImpl) propDefs[i];
+                if (!propDef.definesResidual() && !propDef.isMultiple()) {
+                    selectProps.add(propDef.getQName());
                 }
             }
         }
