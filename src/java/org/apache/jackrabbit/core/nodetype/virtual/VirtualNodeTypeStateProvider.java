@@ -199,7 +199,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + QName.JCR_PROPERTYDEFINITION.toString() + "/" + n);
         VirtualNodeState pState = createNodeState(parent, QName.JCR_PROPERTYDEFINITION, uuid, QName.NT_PROPERTYDEFINITION);
         // add properties
-        if (!propDef.getName().equals(ItemDef.ANY_NAME)) {
+        if (!propDef.definesResidual()) {
             pState.setPropertyValue(QName.JCR_NAME, InternalValue.create(propDef.getName()));
         }
         pState.setPropertyValue(QName.JCR_AUTOCREATED, InternalValue.create(propDef.isAutoCreated()));
@@ -234,7 +234,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         String uuid = calculateStableUUID(ntDef.getName().toString() + "/" + QName.JCR_CHILDNODEDEFINITION.toString() + "/" + n);
         VirtualNodeState pState = createNodeState(parent, QName.JCR_CHILDNODEDEFINITION, uuid, QName.NT_CHILDNODEDEFINITION);
         // add properties
-        if (!cnDef.getName().equals(ItemDef.ANY_NAME)) {
+        if (!cnDef.definesResidual()) {
             pState.setPropertyValue(QName.JCR_NAME, InternalValue.create(cnDef.getName()));
         }
         pState.setPropertyValue(QName.JCR_AUTOCREATED, InternalValue.create(cnDef.isAutoCreated()));
