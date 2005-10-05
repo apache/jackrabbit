@@ -200,8 +200,7 @@ public class TestAll extends TestCase {
         assertEquals("itemNodeType propertyDefs",
                 10, def.getPropertyDefs().length);
         PropDef[] defs = def.getPropertyDefs();
-        assertEquals("itemNodeType wildcard property",
-                ItemDef.ANY_NAME, defs[0].getName());
+        assertTrue("itemNodeType wildcard property", defs[0].definesResidual());
     }
 
     /** Test for the empty item definition. */

@@ -90,9 +90,9 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
             PropDef[] propDefs = def.getPropertyDefs();
             synchronized (typeMapping) {
                 for (int i = 0; i < propDefs.length; i++) {
-                    QName name = propDefs[i].getName();
                     int type = propDefs[i].getRequiredType();
-                    if (!ItemDef.ANY_NAME.equals(name) && type != PropertyType.UNDEFINED) {
+                    if (!propDefs[i].definesResidual() && type != PropertyType.UNDEFINED) {
+                        QName name = propDefs[i].getName();
                         // only remember defined property types
                         TypeMapping[] types = (TypeMapping[]) typeMapping.get(name);
                         if (types == null) {
