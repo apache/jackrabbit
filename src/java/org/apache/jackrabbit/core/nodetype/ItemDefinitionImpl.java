@@ -142,5 +142,25 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     public boolean isProtected() {
         return itemDef.isProtected();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ItemDefinitionImpl)) {
+            return false;
+        }
+        return itemDef.equals(((ItemDefinitionImpl) o).itemDef);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int hashCode() {
+        return itemDef.hashCode();
+    }
 }
 
