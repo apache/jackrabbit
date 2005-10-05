@@ -81,6 +81,10 @@ class LocalNamespaceMappings implements NamespaceResolver {
                 || QName.NS_DEFAULT_URI.equals(uri)) {
             throw new NamespaceException("default namespace is reserved and can not be changed");
         }
+        // special case: xml namespace
+        if (uri.equals(QName.NS_XML_URI)) {
+            throw new NamespaceException("xml namespace is reserved and can not be changed.");
+        }
         // special case: prefixes xml*
         if (prefix.toLowerCase().startsWith(QName.NS_XML_PREFIX)) {
             throw new NamespaceException("reserved prefix: " + prefix);
