@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.nodetype.xml;
 
 import org.apache.jackrabbit.core.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
@@ -202,7 +203,7 @@ public class NodeTypeReader {
         PropDefImpl def = new PropDefImpl();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
-            def.setName(QName.WILDCARD);
+            def.setName(ItemDef.ANY_NAME);
         } else {
             def.setName(QName.fromJCRName(name, resolver));
         }
@@ -281,7 +282,7 @@ public class NodeTypeReader {
         NodeDefImpl def = new NodeDefImpl();
         String name = walker.getAttribute(Constants.NAME_ATTRIBUTE);
         if (name.equals("*")) {
-            def.setName(QName.WILDCARD);
+            def.setName(ItemDef.ANY_NAME);
         } else {
             def.setName(QName.fromJCRName(name, resolver));
         }

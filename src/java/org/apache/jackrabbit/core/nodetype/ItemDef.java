@@ -30,6 +30,11 @@ public interface ItemDef {
     public static final ItemDef[] EMPTY_ARRAY = new ItemDef[0];
 
     /**
+     * The special wildcard name used as the name of residual item definitions.
+     */
+    public static final QName ANY_NAME = new QName("", "*");
+
+    /**
      * Gets the name of the child item.
      *
      * @return the name of the child item.

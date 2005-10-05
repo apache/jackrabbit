@@ -528,7 +528,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         pathNode.setAbsolute(true);
 
         if (path.equals("/")) {
-            pathNode.addPathStep(new LocationStepQueryNode(pathNode, QName.EMPTY, false));
+            pathNode.addPathStep(new LocationStepQueryNode(pathNode));
             pathConstraints.add(pathNode);
             return;
         }
@@ -539,13 +539,13 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             if (names[i].length() == 0) {
                 if (i == 0) {
                     // root
-                    pathNode.addPathStep(new LocationStepQueryNode(pathNode, QName.EMPTY, false));
+                    pathNode.addPathStep(new LocationStepQueryNode(pathNode));
                 } else {
                     // descendant '//' -> invalid path
                     // todo throw or ignore?
                     // we currently do not throw and add location step for an
                     // empty name (which is basically the root node)
-                    pathNode.addPathStep(new LocationStepQueryNode(pathNode, QName.EMPTY, false));
+                    pathNode.addPathStep(new LocationStepQueryNode(pathNode));
                 }
             } else {
                 int idx = names[i].indexOf('[');

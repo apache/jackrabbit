@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.nodetype.xml;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
+import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
@@ -200,7 +201,7 @@ public class TestAll extends TestCase {
                 10, def.getPropertyDefs().length);
         PropDef[] defs = def.getPropertyDefs();
         assertEquals("itemNodeType wildcard property",
-                QName.WILDCARD, defs[0].getName());
+                ItemDef.ANY_NAME, defs[0].getName());
     }
 
     /** Test for the empty item definition. */

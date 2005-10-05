@@ -25,7 +25,8 @@ import org.apache.jackrabbit.name.QName;
  * /foo  -> descendants = false, nameTest = foo<br>
  * //foo -> descendants = true, nameTest = foo<br>
  * //*   -> descendants = true, nameTest = null<br>
- * /*    -> descendants = false, nameTest = null
+ * /*    -> descendants = false, nameTest = null<br>
+ * /     -> descendants = false, nameTest = ""
  * </code>
  */
 public class LocationStepQueryNode extends NAryQueryNode {
@@ -35,6 +36,13 @@ public class LocationStepQueryNode extends NAryQueryNode {
 
     /** Constant value to indicate no position index */
     public static final int NONE = Integer.MIN_VALUE + 1;
+
+    /**
+     * The empty name used in matching the root node. This is an implementation
+     * specific constant as the empty name is not a valid JCR name.
+     * TODO: The root location step should be refactored somehow
+     */
+    public static final QName EMPTY_NAME = new QName("", "");
 
     /** Empty <code>QueryNode</code> array for us as return value */
     private static final QueryNode[] EMPTY = new QueryNode[0];
@@ -69,6 +77,17 @@ public class LocationStepQueryNode extends NAryQueryNode {
         super(parent);
         this.nameTest = nameTest;
         this.includeDescendants = descendants;
+    }
+
+    /**
+     * Creates a new <code>LocationStepQueryNode</code> that matches only
+     * the empty name (the repository root). The created location step
+     * uses only the child axis.
+     */
+    public LocationStepQueryNode(QueryNode parent) {
+        super(parent);
+        this.nameTest = EMPTY_NAME;
+        this.includeDescendants = false;
     }
 
     /**
