@@ -605,6 +605,7 @@ public class VersionManagerImpl implements VersionManager {
                     labelNode.getPrimaryPath(),
                     Path.PathElement.fromString(label.toString()),
                     (NodeTypeImpl) labelNode.getPrimaryNodeType(),
+                    labelNode.getMixinTypeNames(),
                     labelNode.getSession()
             ));
         } else if (v == null) {
@@ -614,6 +615,7 @@ public class VersionManagerImpl implements VersionManager {
                     labelNode.getPrimaryPath(),
                     Path.PathElement.fromString(label.toString()),
                     (NodeTypeImpl) labelNode.getPrimaryNodeType(),
+                    labelNode.getMixinTypeNames(),
                     labelNode.getSession()
             ));
         } else {
@@ -623,6 +625,7 @@ public class VersionManagerImpl implements VersionManager {
                     labelNode.getPrimaryPath(),
                     Path.PathElement.fromString(label.toString()),
                     (NodeTypeImpl) labelNode.getPrimaryNodeType(),
+                    labelNode.getMixinTypeNames(),
                     labelNode.getSession()
             ));
         }
@@ -652,6 +655,7 @@ public class VersionManagerImpl implements VersionManager {
                 node.internalGetUUID(),
                 node.getPrimaryPath().getNameElement(),
                 (NodeTypeImpl) parent.getPrimaryNodeType(),
+                parent.getMixinTypeNames(),
                 node.getSession()
         ));
 
@@ -663,6 +667,7 @@ public class VersionManagerImpl implements VersionManager {
                     node.getPrimaryPath(),
                     prop.getPrimaryPath().getNameElement(),
                     (NodeTypeImpl) node.getPrimaryNodeType(),
+                    node.getMixinTypeNames(),
                     node.getSession()
             ));
         }
@@ -693,6 +698,7 @@ public class VersionManagerImpl implements VersionManager {
                 node.internalGetUUID(),
                 node.getPrimaryPath().getNameElement(),
                 (NodeTypeImpl) parent.getPrimaryNodeType(),
+                parent.getMixinTypeNames(),
                 node.getSession()
         ));
         if (recursive) {

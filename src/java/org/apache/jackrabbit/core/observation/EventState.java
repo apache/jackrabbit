@@ -24,6 +24,7 @@ import org.apache.jackrabbit.name.Path;
 
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
+import java.util.Set;
 
 /**
  * The <code>EventState</code> class encapsulates the session
@@ -65,6 +66,11 @@ public class EventState {
     private final NodeTypeImpl nodeType;
 
     /**
+     * Set of mixin QNames assigned to the parent node.
+     */
+    private final Set mixins;
+
+    /**
      * The session that caused this event.
      */
     private final Session session;
@@ -94,6 +100,7 @@ public class EventState {
      * @param childPath  the relative path of the child item associated with
      *                   this event.
      * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
      * @param session    the {@link javax.jcr.Session} that caused this event.
      */
     private EventState(int type,
@@ -102,6 +109,7 @@ public class EventState {
                        String childUUID,
                        Path.PathElement childPath,
                        NodeTypeImpl nodeType,
+                       Set mixins,
                        Session session) {
         int mask = (Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
         if ((type & mask) > 0) {
@@ -119,6 +127,7 @@ public class EventState {
         this.childUUID = childUUID;
         this.childRelPath = childPath;
         this.nodeType = nodeType;
+        this.mixins = mixins;
         this.session = session;
     }
 
@@ -135,6 +144,7 @@ public class EventState {
      * @param childUUID  the uuid of the child node associated with this event.
      * @param childPath  the relative path of the child node that was added.
      * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
      * @param session    the session that added the node.
      * @return an <code>EventState</code> instance.
      */
@@ -143,6 +153,7 @@ public class EventState {
                                             String childUUID,
                                             Path.PathElement childPath,
                                             NodeTypeImpl nodeType,
+                                            Set mixins,
                                             Session session) {
         return new EventState(Event.NODE_ADDED,
                 parentUUID,
@@ -150,6 +161,7 @@ public class EventState {
                 childUUID,
                 childPath,
                 nodeType,
+                mixins,
                 session);
     }
 
@@ -164,6 +176,7 @@ public class EventState {
      * @param childUUID  the uuid of the child node associated with this event.
      * @param childPath  the relative path of the child node that was removed.
      * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
      * @param session    the session that removed the node.
      * @return an <code>EventState</code> instance.
      */
@@ -172,6 +185,7 @@ public class EventState {
                                               String childUUID,
                                               Path.PathElement childPath,
                                               NodeTypeImpl nodeType,
+                                              Set mixins,
                                               Session session) {
         return new EventState(Event.NODE_REMOVED,
                 parentUUID,
@@ -179,6 +193,7 @@ public class EventState {
                 childUUID,
                 childPath,
                 nodeType,
+                mixins,
                 session);
     }
 
@@ -192,6 +207,7 @@ public class EventState {
      *                   this <code>EventState</code>.
      * @param childPath  the relative path of the property that was added.
      * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
      * @param session    the session that added the property.
      * @return an <code>EventState</code> instance.
      */
@@ -199,6 +215,7 @@ public class EventState {
                                            Path parentPath,
                                            Path.PathElement childPath,
                                            NodeTypeImpl nodeType,
+                                           Set mixins,
                                            Session session) {
         return new EventState(Event.PROPERTY_ADDED,
                 parentUUID,
@@ -206,6 +223,7 @@ public class EventState {
                 null,
                 childPath,
                 nodeType,
+                mixins,
                 session);
     }
 
@@ -219,6 +237,7 @@ public class EventState {
      *                   this <code>EventState</code>.
      * @param childPath  the relative path of the property that was removed.
      * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
      * @param session    the session that removed the property.
      * @return an <code>EventState</code> instance.
      */
@@ -226,6 +245,7 @@ public class EventState {
                                              Path parentPath,
                                              Path.PathElement childPath,
                                              NodeTypeImpl nodeType,
+                                             Set mixins,
                                              Session session) {
         return new EventState(Event.PROPERTY_REMOVED,
                 parentUUID,
@@ -233,6 +253,7 @@ public class EventState {
                 null,
                 childPath,
                 nodeType,
+                mixins,
                 session);
     }
 
@@ -246,6 +267,7 @@ public class EventState {
      *                   this <code>EventState</code>.
      * @param childPath  the relative path of the property that changed.
      * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
      * @param session    the session that changed the property.
      * @return an <code>EventState</code> instance.
      */
@@ -253,6 +275,7 @@ public class EventState {
                                              Path parentPath,
                                              Path.PathElement childPath,
                                              NodeTypeImpl nodeType,
+                                             Set mixins,
                                              Session session) {
         return new EventState(Event.PROPERTY_CHANGED,
                 parentUUID,
@@ -260,6 +283,7 @@ public class EventState {
                 null,
                 childPath,
                 nodeType,
+                mixins,
                 session);
     }
 
@@ -316,6 +340,16 @@ public class EventState {
      */
     public NodeTypeImpl getNodeType() {
         return nodeType;
+    }
+
+    /**
+     * Returns a set of <code>QName</code>s which are the names of the mixins
+     * assigned to the parent node associated with this event.
+     *
+     * @return the mixin names as <code>QName</code>s.
+     */
+    public Set getMixinNames() {
+        return mixins;
     }
 
     /**

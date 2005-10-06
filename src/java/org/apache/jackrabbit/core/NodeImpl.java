@@ -824,6 +824,15 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * Returns the <code>QName</code>s of this node's mixin types.
+     *
+     * @return a set of the <code>QName</code>s of this node's mixin types.
+     */
+    public Set getMixinTypeNames() {
+        return ((NodeState) state).getMixinTypeNames();
+    }
+
+    /**
      * Returns the effective (i.e. merged and resolved) node type representation
      * of this node's primary and mixin node types.
      *

@@ -1,0 +1,129 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.observation;
+
+import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
+import org.apache.jackrabbit.test.api.observation.EventResult;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventListener;
+
+/**
+ * Tests if observation event filtering works based on mixin type names.
+ */
+public class MixinTest extends AbstractObservationTest {
+
+    /**
+     * Tests event filtering with a single mixin type name.
+     */
+    public void testSingleMixin() throws RepositoryException {
+        testRootNode.addNode(nodeName1, testNodeType).addMixin(mixReferenceable);
+        testRootNode.addNode(nodeName2, testNodeType);
+        testRootNode.addNode(nodeName3, testNodeType).addMixin(mixReferenceable);
+        testRootNode.save();
+
+        EventResult propertyAddedListener = new EventResult(log);
+        addEventListener(propertyAddedListener, new String[]{mixReferenceable}, Event.PROPERTY_ADDED);
+
+        testRootNode.getNode(nodeName1).setProperty(propertyName1, "test");
+        testRootNode.getNode(nodeName2).setProperty(propertyName1, "test");
+        testRootNode.getNode(nodeName3).setProperty(propertyName1, "test");
+        testRootNode.save();
+
+        removeEventListener(propertyAddedListener);
+        Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1,
+                                               nodeName3 + "/" + propertyName1});
+    }
+
+    /**
+     * Tests event filtering with multiple mixin type name.
+     */
+    public void testMultipleMixin() throws RepositoryException {
+        testRootNode.addNode(nodeName1, testNodeType).addMixin(mixReferenceable);
+        testRootNode.addNode(nodeName2, testNodeType).addMixin(mixLockable);
+        testRootNode.addNode(nodeName3, testNodeType).addMixin(mixReferenceable);
+        testRootNode.save();
+
+        EventResult propertyAddedListener = new EventResult(log);
+        addEventListener(propertyAddedListener, new String[]{mixReferenceable, mixLockable}, Event.PROPERTY_ADDED);
+
+        testRootNode.getNode(nodeName1).setProperty(propertyName1, "test");
+        testRootNode.getNode(nodeName2).setProperty(propertyName1, "test");
+        testRootNode.getNode(nodeName3).setProperty(propertyName1, "test");
+        testRootNode.save();
+
+        removeEventListener(propertyAddedListener);
+        Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1,
+                                               nodeName2 + "/" + propertyName1,
+                                               nodeName3 + "/" + propertyName1});
+    }
+
+    /**
+     * Tests event filtering on nodes with multiple mixins applied.
+     */
+    public void testMultipleMixinOnNode() throws RepositoryException {
+        Node node1 = testRootNode.addNode(nodeName1, testNodeType);
+        node1.addMixin(mixReferenceable);
+        node1.addMixin(mixLockable);
+        Node node2 = testRootNode.addNode(nodeName2, testNodeType);
+        Node node3 = testRootNode.addNode(nodeName3, testNodeType);
+        node3.addMixin(mixLockable);
+        node3.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        EventResult propertyAddedListener = new EventResult(log);
+        addEventListener(propertyAddedListener, new String[]{mixReferenceable}, Event.PROPERTY_ADDED);
+
+        node1.setProperty(propertyName1, "test");
+        node2.setProperty(propertyName1, "test");
+        node3.setProperty(propertyName1, "test");
+        testRootNode.save();
+
+        removeEventListener(propertyAddedListener);
+        Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1,
+                                               nodeName3 + "/" + propertyName1});
+    }
+
+    /**
+     * Registers an <code>EventListener</code> for events of the specified
+     * type(s).
+     *
+     * @param listener  the <code>EventListener</code>.
+     * @param mixins    the names of mixin types to filter.
+     * @param eventType the event types
+     * @throws RepositoryException if registration fails.
+     */
+    protected void addEventListener(EventListener listener, String[] mixins, int eventType)
+            throws RepositoryException {
+        if (obsMgr != null) {
+            obsMgr.addEventListener(listener,
+                    eventType,
+                    superuser.getRootNode().getPath(),
+                    true,
+                    null,
+                    mixins,
+                    false);
+        } else {
+            throw new IllegalStateException("ObservationManager not available.");
+        }
+    }
+}
