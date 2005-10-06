@@ -148,7 +148,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * Default constructor.
      */
     public SearchIndex() {
-        this.analyzer = new StandardAnalyzer();
+        this.analyzer = new StandardAnalyzer(new String[]{});
     }
 
     /**

@@ -25,8 +25,8 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 /**
- * Implements a wildcard term enum that supports embedded property names in
- * lucene term texts.
+ * Implements a wildcard term enum that optionally supports embedded property
+ * names in lucene term texts.
  */
 class WildcardTermEnum extends FilteredTermEnum {
 
@@ -60,7 +60,8 @@ class WildcardTermEnum extends FilteredTermEnum {
      *
      * @param reader the index reader.
      * @param field the lucene field to search.
-     * @param propName the embedded jcr property name.
+     * @param propName the embedded jcr property name or <code>null</code> if
+     *   there is not embedded property name.
      * @param pattern the pattern to match the values.
      * @throws IOException if an error occurs while reading from the index.
      */
@@ -76,7 +77,11 @@ class WildcardTermEnum extends FilteredTermEnum {
             idx++;
         }
 
-        prefix = FieldNames.createNamedValue(propName, pattern.substring(0, idx));
+        if (propName == null) {
+            prefix = pattern.substring(0, idx);
+        } else {
+            prefix = FieldNames.createNamedValue(propName, pattern.substring(0, idx));
+        }
 
         // initialize with prefix as dummy value
         input = new OffsetCharSequence(prefix.length(), prefix);

@@ -96,6 +96,18 @@
         <j:if test="${xpathparser_stale == 'true'}">
             <attainGoal name="jackrabbit:generate-xpath-parser"/>
         </j:if>
+        <ant:condition property="fulltextparser_stale">
+            <ant:not>
+                <ant:uptodate targetfile="${maven.gen.src}/java/org/apache/jackrabbit/core/query/lucene/fulltext/QueryParser.java">
+                    <ant:srcfiles dir="${maven.src.dir}/grammar/fulltext">
+                        <ant:include name="QueryParser.jjt"/>
+                    </ant:srcfiles>
+                </ant:uptodate>
+            </ant:not>
+        </ant:condition>
+        <j:if test="${fulltextparser_stale == 'true'}">
+            <attainGoal name="jackrabbit:generate-fulltext-parser"/>
+        </j:if>
         <ant:path id="jackrabbit.generated.src"
                   location="${maven.gen.src}/java"/>
         <maven:addPath id="maven.compile.src.set"
@@ -152,6 +164,17 @@
             <ant:include name="SimpleNode.java"/>
           </ant:fileset>
         </ant:delete>
+    </goal>
+
+    <!-- Generates the fulltext query Parser -->
+    <goal name="jackrabbit:generate-fulltext-parser">
+        <j:set var="maven.javacc.jjtree.package"
+               value="org.apache.jackrabbit.core.query.lucene.fulltext"/>
+        <j:set var="maven.javacc.javacc.package"
+               value="${maven.javacc.jjtree.package}"/>
+        <j:set var="maven.javacc.jjtree.grammar"
+               value="${maven.src.dir}/grammar/fulltext/QueryParser.jjt"/>
+        <attainGoal name="javacc"/>
     </goal>
 
     <!--
