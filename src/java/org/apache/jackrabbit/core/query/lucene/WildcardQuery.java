@@ -47,7 +47,7 @@ import java.util.Map;
  * <li><code>_</code> : matches exactly one character</li>
  * </ul>
  */
-class WildcardQuery extends Query {
+public class WildcardQuery extends Query {
 
     /**
      * Logger instance for this class.
@@ -83,7 +83,7 @@ class WildcardQuery extends Query {
      * @param pattern the wildcard pattern.
      */
     public WildcardQuery(String field, String propName, String pattern) {
-        this.field = field;
+        this.field = field.intern();
         this.propName = propName;
         this.pattern = pattern;
     }

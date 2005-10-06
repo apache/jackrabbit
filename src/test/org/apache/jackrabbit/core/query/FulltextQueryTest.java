@@ -219,4 +219,72 @@ public class FulltextQueryTest extends AbstractQueryTest {
         checkResult(q.execute(), 1);
     }
 
+    public void testWildcard() throws RepositoryException {
+        String content = "The quick brown Fox jumps over the lazy dog.";
+
+        // single * wildcard
+        executeContainsQuery("qu*", content, true);
+        executeContainsQuery("qu*ck", content, true);
+        executeContainsQuery("quick*", content, true);
+        executeContainsQuery("*quick", content, true);
+        executeContainsQuery("qu*Ck", content, true);
+
+        // multiple * wildcard
+        executeContainsQuery("*o*", content, true);
+        executeContainsQuery("*ump*", content, true);
+        executeContainsQuery("qu**ck", content, true);
+        executeContainsQuery("q***u**c*k", content, true);
+        executeContainsQuery("*uMp*", content, true);
+
+        // single ? wildcard
+        executeContainsQuery("quic?", content, true);
+        executeContainsQuery("?uick", content, true);
+        executeContainsQuery("qu?ck", content, true);
+        executeContainsQuery("qu?cK", content, true);
+
+        // multiple ? wildcard
+        executeContainsQuery("q??ck", content, true);
+        executeContainsQuery("?uic?", content, true);
+        executeContainsQuery("??iCk", content, true);
+
+        // no matches
+        executeContainsQuery("*ab*", content, false);
+        executeContainsQuery("q***j**c*k", content, false);
+
+    }
+
+
+    /**
+     * Executes a query and checks if the query matched the test node.
+     *
+     * @param statement the query statement.
+     * @param content   the content for the test node.
+     * @param match     if the query matches the node.
+     * @throws RepositoryException if an error occurs.
+     */
+    private void executeContainsQuery(String statement,
+                              String content,
+                              boolean match) throws RepositoryException {
+        while (testRootNode.hasNode(nodeName1)) {
+            testRootNode.getNode(nodeName1).remove();
+        }
+        testRootNode.addNode(nodeName1).setProperty("text", content);
+        testRootNode.save();
+
+        StringBuffer stmt = new StringBuffer();
+        stmt.append("/jcr:root").append(testRoot).append("/*");
+        stmt.append("[jcr:contains(., '").append(statement);
+        stmt.append("')]");
+
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(stmt.toString(), Query.XPATH);
+        checkResult(q.execute(), match ? 1 : 0);
+
+        stmt = new StringBuffer();
+        stmt.append("SELECT * FROM nt:base ");
+        stmt.append("WHERE jcr:path LIKE '").append(testRoot).append("/%' ");
+        stmt.append("AND CONTAINS(*, '").append(statement).append("')");
+
+        q = superuser.getWorkspace().getQueryManager().createQuery(stmt.toString(), Query.SQL);
+        checkResult(q.execute(), match ? 1 : 0);
+    }
 }

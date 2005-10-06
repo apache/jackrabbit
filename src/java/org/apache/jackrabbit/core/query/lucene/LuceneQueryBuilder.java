@@ -33,6 +33,8 @@ import org.apache.jackrabbit.core.query.QueryNodeVisitor;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
+import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
+import org.apache.jackrabbit.core.query.lucene.fulltext.ParseException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -44,7 +46,6 @@ import org.apache.jackrabbit.util.ISO8601;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -314,9 +315,8 @@ class LuceneQueryBuilder implements QueryNodeVisitor {
                 tmp.append(node.getPropertyName().getLocalName());
                 fieldname = tmp.toString();
             }
-            org.apache.lucene.queryParser.QueryParser parser
-                    = new org.apache.lucene.queryParser.QueryParser(fieldname, analyzer);
-            parser.setOperator(org.apache.lucene.queryParser.QueryParser.DEFAULT_OPERATOR_AND);
+            QueryParser parser = new QueryParser(fieldname, analyzer);
+            parser.setOperator(QueryParser.DEFAULT_OPERATOR_AND);
             // replace unescaped ' with " and escaped ' with just '
             StringBuffer query = new StringBuffer();
             String textsearch = node.getQuery();
