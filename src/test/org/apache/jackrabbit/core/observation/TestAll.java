@@ -37,6 +37,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("Observation tests");
 
         suite.addTestSuite(ReorderTest.class);
+        suite.addTestSuite(MixinTest.class);
 
         return suite;
     }
