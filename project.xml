@@ -316,16 +316,14 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>3.8.1</version>
+            <properties>
+                <scope>test</scope>
+            </properties>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>javacc</groupId>
-            <artifactId>javacc</artifactId>
-            <version>3.2</version>
         </dependency>
         <dependency>
             <groupId>geronimo-spec</groupId>
@@ -368,17 +366,26 @@
             <artifactId>cqfs-jackrabbit</artifactId>
             <version>3.5.6-SNAPSHOT</version>
             <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6-SNAPSHOT.jar</url>
+            <properties>
+                <scope>runtime</scope>
+            </properties>
         </dependency>
         <dependency>
             <groupId>cqfs</groupId>
             <artifactId>cqfs</artifactId>
             <version>3.5.6-SNAPSHOT</version>
             <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6-SNAPSHOT.jar</url>
+            <properties>
+                <scope>runtime</scope>
+            </properties>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>1.0</version>
+            <properties>
+                <scope>runtime</scope>
+            </properties>
         </dependency>
     </dependencies>
 
