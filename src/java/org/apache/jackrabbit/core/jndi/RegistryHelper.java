@@ -63,7 +63,9 @@ public class RegistryHelper {
     }
 
     /**
-     * Removes the given JNDI binding.
+     * This method shutdowns a {@link BindableRepository BindableRepository}
+     * instance using the given configuration information, and unbinds
+     * it from the given JNDI context.
      *
      * @param ctx  context where the repository should be unregistered (i.e. unbound)
      * @param name the name of the repository to unregister
@@ -71,6 +73,7 @@ public class RegistryHelper {
      */
     public static void unregisterRepository(Context ctx, String name)
             throws NamingException {
+        ((BindableRepository) ctx.lookup(name)).shutdown() ;
         ctx.unbind(name);
     }
 }

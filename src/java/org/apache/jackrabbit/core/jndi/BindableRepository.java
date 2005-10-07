@@ -53,7 +53,7 @@ import java.io.Serializable;
  * {@link #create(String, String) create} method and during
  * serialization and JNDI "referenciation".
  */
-public class BindableRepository implements Repository, Referenceable, Serializable {
+class BindableRepository implements Repository, Referenceable, Serializable {
 
     /** The serialization UID of this class. */
     static final long serialVersionUID = -2298220550793843166L;
@@ -232,7 +232,7 @@ public class BindableRepository implements Repository, Referenceable, Serializab
     /**
      * Delegated to the underlying repository instance.
      */
-    public void shutdown() {
+    void shutdown() {
     	((RepositoryImpl) delegatee).shutdown() ;
     }
 }
