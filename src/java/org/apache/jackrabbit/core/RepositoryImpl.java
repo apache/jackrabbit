@@ -221,13 +221,6 @@ public class RepositoryImpl implements Repository, SessionListener,
         // after the workspaces are initialized, we setup a system session for
         // the virtual nodetype manager
         virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
-
-        // finally register shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                shutdown();
-            }
-        });
     }
 
     /**

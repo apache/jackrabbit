@@ -52,6 +52,12 @@ import java.io.Serializable;
  * The uninitialized state is only used briefly during the static
  * {@link #create(String, String) create} method and during
  * serialization and JNDI "referenciation".
+ * <p>
+ * A JVM shutdown hook is used to make sure that the initialized
+ * repository is properly closed when the JVM shuts down. The
+ * {@link RegistryHelper#unregisterRepository(Context, String)}
+ * method should be used to explicitly close the repository if
+ * needed. 
  */
 class BindableRepository implements Repository, Referenceable, Serializable {
 
@@ -106,7 +112,9 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     }
 
     /**
-     * Creates the underlying repository instance.
+     * Creates the underlying repository instance. A shutdown hook is
+     * registered to make sure that the initialized repository gets closed
+     * when the JVM shuts down. 
      *
      * @throws RepositoryException if the repository cannot be created
      */
@@ -114,6 +122,11 @@ class BindableRepository implements Repository, Referenceable, Serializable {
         RepositoryConfig config =
             RepositoryConfig.create(configFilePath, repHomeDir);
         delegatee = RepositoryImpl.create(config);
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                shutdown();
+            }
+        });
     }
 
     //-----------------------------------------------------------< Repository >
