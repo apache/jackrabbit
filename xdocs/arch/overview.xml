@@ -118,6 +118,11 @@ Every function that is operated against a repository can be attributed to at lea
 </ul>
 This is not a complete list but includes some of the most important component of the content repository implementation.
 </p>
+<p>The chart below explains how some of the bigger building blocks of the Jackrabbit implementation 
+works together when it comes to a common operation like writing content into the content repository.</p>
+<p>
+<img src="../images/arch/jackrabbit-ism_small.jpg"/>
+</p>
 </section>
 
 </body>
