@@ -22,10 +22,6 @@
     xmlns:ant="jelly:ant"
     xmlns:maven="jelly:maven">
 
-    <postGoal name="ant:generate-build">
-        <attainGoal name="jackrabbit:post-ant"/>
-    </postGoal>
-
     <postGoal name="maven-javadoc-plugin:report">
         <attainGoal name="jackrabbit:post-javadoc"/>
     </postGoal>
