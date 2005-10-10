@@ -464,6 +464,16 @@ public class SessionItemStateManager
                 resultIter.addIterator(list.iterator());
             }
         }
+        /**
+         * if the resulting iterator chain is empty return
+         * EMPTY_LIST.iterator() instead because older versions
+         * of IteratorChain (pre Commons Collections 3.1)
+         * would throw UnsupportedOperationException in this
+         * situation
+         */
+        if (resultIter.getIterators().isEmpty()) {
+            return Collections.EMPTY_LIST.iterator();
+        }
         return resultIter;
     }
 
@@ -562,6 +572,16 @@ public class SessionItemStateManager
             if (list != null) {
                 resultIter.addIterator(list.iterator());
             }
+        }
+        /**
+         * if the resulting iterator chain is empty return
+         * EMPTY_LIST.iterator() instead because older versions
+         * of IteratorChain (pre Commons Collections 3.1)
+         * would throw UnsupportedOperationException in this
+         * situation
+         */
+        if (resultIter.getIterators().isEmpty()) {
+            return Collections.EMPTY_LIST.iterator();
         }
         return resultIter;
     }
