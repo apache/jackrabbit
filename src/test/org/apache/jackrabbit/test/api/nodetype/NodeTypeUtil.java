@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
-import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.test.ISO8601;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
