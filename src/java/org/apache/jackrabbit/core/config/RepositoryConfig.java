@@ -16,9 +16,15 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.w3c.dom.Element;
-import org.xml.sax.InputSource;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -27,13 +33,10 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 
 /**
  * Repository configuration. This configuration class is used to
@@ -51,35 +54,63 @@ public class RepositoryConfig {
     private static final String WORKSPACE_XML = "workspace.xml";
 
     /**
-     * Parses the given repository configuration file and returns the parsed
-     * repository configuration. The given repository home directory path
-     * will be used as the ${rep.home} parser variable.
+     * Convenience method that wraps the configuration file name into an
+     * {@link InputSource} and invokes the
+     * {@link #create(InputSource, String)} method.
      *
-     * @param file repository configuration file
+     * @param file repository configuration file name
      * @param home repository home directory
      * @return repository configuration
      * @throws ConfigurationException on configuration errors
+     * @see #create(InputSource, String)
      */
     public static RepositoryConfig create(String file, String home)
             throws ConfigurationException {
-        try {
-            File config = new File(file);
+        URI uri = new File(file).toURI();
+        return create(new InputSource(uri.toString()), home);
+    }
 
-            InputSource xml = new InputSource(new FileReader(config));
-            xml.setSystemId(config.toURI().toString());
+    /**
+     * Convenience method that wraps the configuration URI into an
+     * {@link InputSource} and invokes the
+     * {@link #create(InputSource, String)} method.
+     *
+     * @param uri repository configuration URI
+     * @param home repository home directory
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     * @see #create(InputSource, String)
+     */
+    public static RepositoryConfig create(URI uri, String home)
+            throws ConfigurationException {
+        return create(new InputSource(uri.toString()), home);
+    }
 
-            return create(xml, home);
-        } catch (FileNotFoundException e) {
-            throw new ConfigurationException(
-                    "The repository configuration file " + file
-                    + " could not be found.", e);
-        }
+    /**
+     * Convenience method that wraps the configuration input stream into an
+     * {@link InputSource} and invokes the
+     * {@link #create(InputSource, String)} method.
+     *
+     * @param input repository configuration input stream
+     * @param home repository home directory
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     * @see #create(InputSource, String)
+     */
+    public static RepositoryConfig create(InputStream input, String home)
+            throws ConfigurationException {
+        return create(new InputSource(input), home);
     }
 
     /**
      * Parses the given repository configuration document and returns the
-     * parsed repository configuration. The given repository home directory
-     * path will be used as the ${rep.home} parser variable.
+     * parsed and initialized repository configuration. The given repository
+     * home directory path will be used as the ${rep.home} parser variable.
+     * <p>
+     * Note that in addition to parsing the repository configuration, this
+     * method also initializes the configuration (creates the configured
+     * directories, etc.). The {@link ConfigurationParser} class should be
+     * used directly to just parse the configuration.
      *
      * @param xml repository configuration document
      * @param home repository home directory
