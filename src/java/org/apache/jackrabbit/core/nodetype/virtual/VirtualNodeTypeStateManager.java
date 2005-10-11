@@ -124,7 +124,9 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
     public void nodeTypeRegistered(QName ntName) {
         try {
             // allow provider to update
-            virtProvider.onNodeTypeAdded(ntName);
+            if (virtProvider != null) {
+                virtProvider.onNodeTypeAdded(ntName);
+            }
 
             NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(new NodeId(rootNodeId));
             NodeImpl child = root.getNode(ntName);
@@ -155,7 +157,9 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
             List events = new ArrayList();
             recursiveRemove(events, root, child);
             obsDispatcher.dispatch(events, systemSession);
-            virtProvider.onNodeTypeRemoved(ntName);
+            if (virtProvider != null) {
+                virtProvider.onNodeTypeRemoved(ntName);
+            }
         } catch (RepositoryException e) {
             log.error("Unable to index removed nodetype: " + e.toString());
         }
