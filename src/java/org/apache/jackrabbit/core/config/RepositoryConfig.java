@@ -166,6 +166,11 @@ public class RepositoryConfig {
     private final String defaultWorkspace;
 
     /**
+     * the default parser
+     */
+    private final ConfigurationParser parser;
+
+    /**
      * Workspace root directory. This directory contains a subdirectory for
      * each workspace in this repository. Each workspace is configured by
      * a workspace configuration file contained in the workspace subdirectory.
@@ -195,11 +200,12 @@ public class RepositoryConfig {
      * @param workspaceDirectory workspace root directory
      * @param defaultWorkspace name of the default workspace
      * @param vc versioning configuration
+     * @param parser the ConfigurationParser that servers as config factory
      */
     RepositoryConfig(String home, String name,
             AccessManagerConfig amc, LoginModuleConfig lmc, FileSystemConfig fsc,
             String workspaceDirectory, String defaultWorkspace,
-            Element template, VersioningConfig vc) {
+            Element template, VersioningConfig vc, ConfigurationParser parser) {
         this.workspaces = new HashMap();
         this.home = home;
         this.name = name;
@@ -210,6 +216,7 @@ public class RepositoryConfig {
         this.defaultWorkspace = defaultWorkspace;
         this.template = template;
         this.vc = vc;
+        this.parser = parser;
     }
 
     /**
@@ -219,7 +226,7 @@ public class RepositoryConfig {
      *
      * @throws ConfigurationException on initialization errors
      */
-    private void init() throws ConfigurationException {
+    protected void init() throws ConfigurationException {
         fsc.init();
         vc.init();
 
@@ -281,9 +288,8 @@ public class RepositoryConfig {
             variables.setProperty(
                     ConfigurationParser.WORKSPACE_HOME_VARIABLE,
                     directory.getPath());
-            ConfigurationParser parser = new ConfigurationParser(variables);
-
-            return parser.parseWorkspaceConfig(xml);
+            ConfigurationParser localParser = parser.createSubParser(variables);
+            return localParser.parseWorkspaceConfig(xml);
         } catch (FileNotFoundException e) {
             return null;
         }
