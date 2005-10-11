@@ -17,22 +17,27 @@
 package org.apache.jackrabbit.core.config;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
-
-import org.xml.sax.InputSource;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import junit.framework.TestCase;
+
+import org.xml.sax.InputSource;
 
 /**
  * Test cases for repository configuration handling.
  */
 public class RepositoryConfigTest extends TestCase {
 
-    private static final String REPOSITORY_XML = "org/apache/jackrabbit/core/config/repository.xml";
+    private static final String REPOSITORY_XML = "target/test-repository.xml";
 
     private static final String REPOSITORY_HOME = "target/test-repository";
-
-    private RepositoryConfig config;
 
     private static void deleteAll(File file) {
         if (file.exists()) {
@@ -47,22 +52,129 @@ public class RepositoryConfigTest extends TestCase {
     }
 
     /**
-     * Sets up the test case by reading the test repository configuration file.
+     * Sets up the test case by creating the repository home directory
+     * and copying the repository configuration file in place.
      */
     protected void setUp() throws Exception {
+        // Create the repository directory
+        File home = new File(REPOSITORY_HOME);
+        home.mkdirs();
+
+        // Copy the repository configuration file in place
         ClassLoader loader = getClass().getClassLoader();
-        InputStream xml = loader.getResourceAsStream(REPOSITORY_XML);
-        config = RepositoryConfig.create(new InputSource(xml), REPOSITORY_HOME);
+        InputStream input = loader.getResourceAsStream(
+                "org/apache/jackrabbit/core/config/repository.xml");
+        try {
+            OutputStream output = new FileOutputStream(REPOSITORY_XML);
+            try {
+                int n;
+                byte[] buffer = new byte[1024];
+                while ((n = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, n);
+                }
+            } finally {
+                output.close();
+            }
+        } finally {
+            input.close();
+        }
     }
 
     protected void tearDown() {
-        deleteAll(new File(REPOSITORY_HOME));
+        File home = new File(REPOSITORY_HOME);
+        deleteAll(home);
+        File config = new File(REPOSITORY_XML);
+        config.delete();
+    }
+
+    /**
+     * Tests that a file name can be used for the configuration.
+     */
+    public void testRepositoryConfigCreateWithFileName() {
+        try {
+            RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
+        } catch (ConfigurationException e) {
+            fail("Valid configuration file name");
+        }
+        try {
+            RepositoryConfig.create("invalid-config-file", REPOSITORY_HOME);
+            fail("Invalid configuration file name");
+        } catch (ConfigurationException e) {
+        }
+    }
+
+    /**
+     * Tests that a URI can be used for the configuration.
+     */
+    public void testRepositoryConfigCreateWithURI() throws URISyntaxException {
+        try {
+            URI uri = new File(REPOSITORY_XML).toURI();
+            RepositoryConfig.create(uri, REPOSITORY_HOME);
+        } catch (ConfigurationException e) {
+            fail("Valid configuration URI");
+        }
+        try {
+            URI uri = new URI("invalid://config/uri");
+            RepositoryConfig.create(uri, REPOSITORY_HOME);
+            fail("Invalid configuration URI");
+        } catch (ConfigurationException e) {
+        }
+    }
+
+    /**
+     * Tests that an input stream can be used for the configuration.
+     */
+    public void testRepositoryConfigCreateWithInputStream() throws IOException {
+        InputStream input = new FileInputStream(REPOSITORY_XML);
+        try {
+            RepositoryConfig.create(input, REPOSITORY_HOME);
+        } catch (ConfigurationException e) {
+            fail("Valid configuration input stream");
+        } finally {
+            input.close();
+        }
+        input = new InputStream() {
+            public int read() throws IOException {
+                throw new IOException("invalid input stream");
+            }
+        };
+        try {
+            RepositoryConfig.create(input, REPOSITORY_HOME);
+            fail("Invalid configuration input stream");
+        } catch (ConfigurationException e) {
+        } finally {
+            input.close();
+        }
+    }
+
+    /**
+     * Tests that an InputSource can be used for the configuration.
+     */
+    public void testRepositoryConfigCreateWithInputSource() throws IOException {
+        try {
+            URI uri = new File(REPOSITORY_XML).toURI();
+            InputSource source = new InputSource(uri.toString());
+            RepositoryConfig.create(source, REPOSITORY_HOME);
+        } catch (ConfigurationException e) {
+            fail("Valid configuration input source with file URI");
+        }
+        InputStream stream = new FileInputStream(REPOSITORY_XML);
+        try {
+            InputSource source = new InputSource(stream);
+            RepositoryConfig.create(source, REPOSITORY_HOME);
+        } catch (ConfigurationException e) {
+            fail("Valid configuration input source with input stream");
+        } finally {
+            stream.close();
+        }
     }
 
     /**
      * Test that the repository configuration file is correctly parsed.
      */
     public void testRepositoryConfig() throws Exception {
+        RepositoryConfig config =
+            RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
         assertEquals(REPOSITORY_HOME, config.getHomeDir());
         assertEquals("default", config.getDefaultWorkspaceName());
         assertEquals(
@@ -85,13 +197,16 @@ public class RepositoryConfigTest extends TestCase {
     }
 
     public void testInit() throws Exception {
+        RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
         File workspaces_dir = new File(REPOSITORY_HOME, "workspaces");
         File workspace_dir = new File(workspaces_dir, "default");
         File workspace_xml = new File(workspace_dir, "workspace.xml");
-        assertTrue(workspace_xml.exists());
+        assertTrue("Default workspace is created", workspace_xml.exists());
     }
 
     public void testCreateWorkspaceConfig() throws Exception {
+        RepositoryConfig config =
+            RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
         config.createWorkspaceConfig("test-workspace");
         File workspaces_dir = new File(REPOSITORY_HOME, "workspaces");
         File workspace_dir = new File(workspaces_dir, "test-workspace");
@@ -101,6 +216,8 @@ public class RepositoryConfigTest extends TestCase {
 
     public void testCreateDuplicateWorkspaceConfig() throws Exception {
         try {
+            RepositoryConfig config =
+                RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
             config.createWorkspaceConfig("default");
             fail("No exception thrown when creating a duplicate workspace");
         } catch (ConfigurationException e) {
