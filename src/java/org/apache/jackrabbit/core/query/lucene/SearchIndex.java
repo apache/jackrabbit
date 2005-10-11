@@ -76,7 +76,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The analyzer we use for indexing.
      */
-    private final Analyzer analyzer;
+    private Analyzer analyzer;
 
     /**
      * The location of the search index.
@@ -330,6 +330,34 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     Analyzer getAnalyzer() {
         return analyzer;
+    }
+
+    /**
+     * Sets the analyzer in use for indexing. The given analyzer class name
+     * must satisfy the following conditions:
+     * <ul>
+     *   <li>the class must exist in the class path</li>
+     *   <li>the class must have a public default constructor</li>
+     *   <li>the class must be a Lucene Analyzer</li> 
+     * </ul>
+     * <p>
+     * If the above conditions are met, then a new instance of the class is
+     * set as the analyzer. Otherwise a warning is logged and the current
+     * analyzer is not changed.
+     * <p>
+     * This property setter method is normally invoked by the Jackrabbit
+     * configuration mechanism if the "analyzer" parameter is set in the
+     * search configuration. 
+     *
+     * @param analyzerClassName the analyzer class name
+     */
+    public void setAnalyzer(String analyzerClassName) {
+        try {
+            Class analyzerClass = Class.forName(analyzerClassName);
+            analyzer = (Analyzer) analyzerClass.newInstance();
+        } catch (Exception e) {
+            log.warn("Invalid Analyzer class: " + analyzerClassName, e);
+        }
     }
 
     /**
