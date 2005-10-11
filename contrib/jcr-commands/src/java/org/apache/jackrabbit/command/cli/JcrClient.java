@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
@@ -256,7 +257,14 @@ public class JcrClient {
 
         try {
             Node n = CommandHelper.getCurrentNode(ctx);
-            return n.getPath();
+            // the current node might be Invalid
+            try {
+                return n.getPath();
+            } catch (InvalidItemStateException e) {
+                CommandHelper.setCurrentNode(ctx, CommandHelper.getSession(ctx)
+                    .getRootNode());
+                return CommandHelper.getCurrentNode(ctx).getPath();
+            }
         } catch (CommandException e) {
             return bundle.getString("phrase.not.logged.in");
         }
