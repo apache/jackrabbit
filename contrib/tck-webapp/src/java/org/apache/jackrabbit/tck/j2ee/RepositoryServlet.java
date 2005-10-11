@@ -206,6 +206,7 @@ public class RepositoryServlet extends HttpServlet {
 
     public void destroy() {
         super.destroy();
+        repository.shutdown();
         log_info("RepositoryServlet shutting down...");
     }
 
