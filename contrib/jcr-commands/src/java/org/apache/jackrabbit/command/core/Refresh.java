@@ -26,80 +26,71 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Refresh the session to reflect the current saved state. <br>
- * If the path is set then only that Item is refreshed.
+ * Refresh the <code>Item</code> if specified or the <code>Session</code> to
+ * reflect the current saved state.
  */
-public class Refresh implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(Refresh.class);
+public class Refresh implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(Refresh.class);
 
-	// ---------------------------- < keys >
-	/** keep changes key */
-	private String keepChangesKey = "keepChanges";
+    // ---------------------------- < keys >
+    /** keep changes key */
+    private String keepChangesKey = "keepChanges";
 
-	/** path to the node to refresh key */
-	private String pathKey = "path";
+    /** path to the node to refresh key */
+    private String pathKey = "path";
 
-	/**
-	 * @return Returns the keepChangesKey.
-	 */
-	public String getKeepChangesKey()
-	{
-		return keepChangesKey;
-	}
+    /**
+     * @return the keep changes key
+     */
+    public String getKeepChangesKey() {
+        return keepChangesKey;
+    }
 
-	/**
-	 * @param keepChangesKey
-	 *            The keepChangesKey to set.
-	 */
-	public void setKeepChangesKey(String keepChangesKey)
-	{
-		this.keepChangesKey = keepChangesKey;
-	}
+    /**
+     * @param keepChangesKey
+     *        the keep changes key to set
+     */
+    public void setKeepChangesKey(String keepChangesKey) {
+        this.keepChangesKey = keepChangesKey;
+    }
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		boolean keepChanges = Boolean.valueOf(
-				(String) ctx.get(this.keepChangesKey)).booleanValue();
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        boolean keepChanges = Boolean.valueOf(
+            (String) ctx.get(this.keepChangesKey)).booleanValue();
 
-		String path = (String) ctx.get(this.pathKey);
+        String path = (String) ctx.get(this.pathKey);
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("refreshing. from node " + path);
-		}
+        if (log.isDebugEnabled()) {
+            log.debug("refreshing. from node " + path);
+        }
 
-		if (path == null)
-		{
-			Session s = CommandHelper.getSession(ctx);
-			s.refresh(keepChanges);
-		} else
-		{
-			Item i = CommandHelper.getItem(ctx, path);
-			i.refresh(keepChanges);
-		}
+        if (path == null) {
+            Session s = CommandHelper.getSession(ctx);
+            s.refresh(keepChanges);
+        } else {
+            Item i = CommandHelper.getItem(ctx, path);
+            i.refresh(keepChanges);
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 }

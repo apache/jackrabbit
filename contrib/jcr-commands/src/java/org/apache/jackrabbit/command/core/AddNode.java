@@ -25,76 +25,67 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Add a node to the current working node.
+ * Add a node to the current working <code>Node</code>
  */
-public class AddNode implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(AddNode.class);
+public class AddNode implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(AddNode.class);
 
-	// ---------------------------- < keys >
+    // ---------------------------- < keys >
 
-	/** Node type key */
-	private String typeKey = "type";
+    /** Node type key */
+    private String typeKey = "type";
 
-	/** Node name key */
-	private String relPathKey = "relPath";
+    /** Node name key */
+    private String relPathKey = "relPath";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		Node node = CommandHelper.getCurrentNode(ctx);
-		String nodeType = (String) ctx.get(this.typeKey);
-		String name = (String) ctx.get(this.relPathKey);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        Node node = CommandHelper.getCurrentNode(ctx);
+        String nodeType = (String) ctx.get(this.typeKey);
+        String name = (String) ctx.get(this.relPathKey);
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("adding node at " + node.getPath() + "/" + name);
-		}
+        if (log.isDebugEnabled()) {
+            log.debug("adding node at " + node.getPath() + "/" + name);
+        }
 
-		if (nodeType == null)
-		{
-			node.addNode(name);
-		} else
-		{
-			node.addNode(name, nodeType);
-		}
-		return false;
-	}
+        if (nodeType == null) {
+            node.addNode(name);
+        } else {
+            node.addNode(name, nodeType);
+        }
+        return false;
+    }
 
-	/**
-	 * @return Returns the nodeTypeKey.
-	 */
-	public String getTypeKey()
-	{
-		return typeKey;
-	}
+    /**
+     * @return the nodeTypeKey.
+     */
+    public String getTypeKey() {
+        return typeKey;
+    }
 
-	/**
-	 * @param nodeTypeKey
-	 *            Set the context attribute key for the node type attribute.
-	 */
-	public void setTypeKey(String nodeTypeKey)
-	{
-		this.typeKey = nodeTypeKey;
-	}
+    /**
+     * @param nodeTypeKey
+     *        Set the context attribute key for the node type attribute.
+     */
+    public void setTypeKey(String nodeTypeKey) {
+        this.typeKey = nodeTypeKey;
+    }
 
-	/**
-	 * @return Returns the relative path.
-	 */
-	public String getRelPathKey()
-	{
-		return relPathKey;
-	}
+    /**
+     * @return the relative path.
+     */
+    public String getRelPathKey() {
+        return relPathKey;
+    }
 
-	/**
-	 * @param relPathKey
-	 *            The relative path key to set.
-	 */
-	public void setRelPathKey(String relPathKey)
-	{
-		this.relPathKey = relPathKey;
-	}
+    /**
+     * @param relPathKey
+     *        the relative path key to set
+     */
+    public void setRelPathKey(String relPathKey) {
+        this.relPathKey = relPathKey;
+    }
 }

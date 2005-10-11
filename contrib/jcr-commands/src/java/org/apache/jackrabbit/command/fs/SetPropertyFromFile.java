@@ -34,55 +34,50 @@ import org.apache.jackrabbit.command.CommandHelper;
 import org.apache.jackrabbit.command.core.AbstractSetProperty;
 
 /**
- * Set a property value with the content of the given files. The PropertyType
- * may be specified.
+ * Set a <code>Property</code> <code>Value</code> with the content of the
+ * given file.
  */
-public class SetPropertyFromFile extends AbstractSetProperty
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(SetPropertyFromFile.class);
+public class SetPropertyFromFile extends AbstractSetProperty {
+    /** logger */
+    private static Log log = LogFactory.getLog(SetPropertyFromFile.class);
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String value = (String) ctx.get(this.valueKey);
-		String name = (String) ctx.get(this.nameKey);
-		String propertyType = (String) ctx.get(this.typeKey);
-		String parent = (String) ctx.get(this.parentPathKey);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String value = (String) ctx.get(this.valueKey);
+        String name = (String) ctx.get(this.nameKey);
+        String propertyType = (String) ctx.get(this.typeKey);
+        String parent = (String) ctx.get(this.parentPathKey);
 
-		Node node = CommandHelper.getNode(ctx, parent);
+        Node node = CommandHelper.getNode(ctx, parent);
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("setting property " + node.getPath() + "/" + name
-					+ " with content of file " + value);
-		}
+        if (log.isDebugEnabled()) {
+            log.debug("setting property " + node.getPath() + "/" + name
+                    + " with content of file " + value);
+        }
 
-		File f = new File(value);
-		if (!f.exists())
-		{
-			throw new CommandException("exception.file.not.found", new String[]
-			{ value });
-		}
-		if (propertyType.equals(PropertyType.TYPENAME_BINARY))
-		{
-			node.setProperty(name, new FileInputStream(f));
-		} else
-		{
-			CharArrayWriter cw = new CharArrayWriter();
-			PrintWriter out = new PrintWriter(cw);
-			BufferedReader in = new BufferedReader(new FileReader(f));
-			String str;
-			while ((str = in.readLine()) != null)
-			{
-				out.println(str);
-			}
-			in.close();
-			node.setProperty(name, cw.toString(), PropertyType
-					.valueFromName(propertyType));
-		}
-		return false;
-	}
+        File f = new File(value);
+        if (!f.exists()) {
+            throw new CommandException("exception.file.not.found",
+                new String[] {
+                    value
+                });
+        }
+        if (propertyType.equals(PropertyType.TYPENAME_BINARY)) {
+            node.setProperty(name, new FileInputStream(f));
+        } else {
+            CharArrayWriter cw = new CharArrayWriter();
+            PrintWriter out = new PrintWriter(cw);
+            BufferedReader in = new BufferedReader(new FileReader(f));
+            String str;
+            while ((str = in.readLine()) != null) {
+                out.println(str);
+            }
+            in.close();
+            node.setProperty(name, cw.toString(), PropertyType
+                .valueFromName(propertyType));
+        }
+        return false;
+    }
 }

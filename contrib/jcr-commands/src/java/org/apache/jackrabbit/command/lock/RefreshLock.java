@@ -25,10 +25,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Resets lock timer
+ * Reset the <code>Lock</code> timer
  */
-public class RefreshLock implements Command
-{
+public class RefreshLock implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(RefreshLock.class);
 
@@ -37,13 +36,11 @@ public class RefreshLock implements Command
     private String pathKey = "path";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String path = (String) ctx.get(this.pathKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("refreshing lock at " + path);
         }
         Node n = CommandHelper.getNode(ctx, path);
@@ -52,19 +49,17 @@ public class RefreshLock implements Command
     }
 
     /**
-     * @return Returns the srcPathKey.
+     * @return the source path key
      */
-    public String getPathKey()
-    {
+    public String getPathKey() {
         return pathKey;
     }
 
     /**
      * @param srcPathKey
-     *            The srcPathKey to set.
+     *        the source path key to set
      */
-    public void setPathKey(String srcPathKey)
-    {
+    public void setPathKey(String srcPathKey) {
         this.pathKey = srcPathKey;
     }
 }

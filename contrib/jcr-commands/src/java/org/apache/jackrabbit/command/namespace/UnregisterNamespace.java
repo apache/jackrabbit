@@ -25,8 +25,7 @@ import org.apache.jackrabbit.command.CommandHelper;
 /**
  * Unregister a namespace
  */
-public class UnregisterNamespace implements Command
-{
+public class UnregisterNamespace implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(UnregisterNamespace.class);
 
@@ -35,13 +34,11 @@ public class UnregisterNamespace implements Command
     private String prefixKey = "prefix";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String prefix = (String) ctx.get(this.prefixKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("unregistering namespace with prefix=" + prefix);
         }
         CommandHelper.getSession(ctx).getWorkspace().getNamespaceRegistry()
@@ -50,19 +47,17 @@ public class UnregisterNamespace implements Command
     }
 
     /**
-     * @return Returns the prefixKey.
+     * @return the prefix key.
      */
-    public String getPrefixKey()
-    {
+    public String getPrefixKey() {
         return prefixKey;
     }
 
     /**
      * @param prefixKey
-     *            The prefixKey to set.
+     *        the prefix key to set
      */
-    public void setPrefixKey(String prefixKey)
-    {
+    public void setPrefixKey(String prefixKey) {
         this.prefixKey = prefixKey;
     }
 }

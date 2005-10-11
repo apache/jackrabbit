@@ -23,10 +23,9 @@ import java.util.ResourceBundle;
 /**
  * JCR command Exception
  */
-public class CommandException extends Exception
-{
+public class CommandException extends Exception {
     /** Resource bundle */
-    private static ResourceBundle bundle = CommandHelper.getBundle() ;
+    private static ResourceBundle bundle = CommandHelper.getBundle();
 
     /**
      * Exception arguments
@@ -40,39 +39,42 @@ public class CommandException extends Exception
 
     /**
      * @param message
+     *        the message
      */
-    public CommandException(String message)
-    {
+    public CommandException(String message) {
         super(message);
     }
 
     /**
      * @param message
+     *        the message
      * @param arguments
+     *        the arguments
      */
-    public CommandException(String message, Object[] arguments)
-    {
+    public CommandException(String message, Object[] arguments) {
         super(message);
         this.arguments = arguments;
     }
 
     /**
      * @param message
+     *        the message
      * @param cause
+     *        the cause
      */
-    public CommandException(String message, Throwable cause)
-    {
+    public CommandException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
      * @param message
+     *        the message
      * @param cause
+     *        the cause
      * @param arguments
+     *        the arguments
      */
-    public CommandException(String message, Throwable cause,
-        Object[] arguments)
-    {
+    public CommandException(String message, Throwable cause, Object[] arguments) {
         super(message, cause);
         this.arguments = arguments;
     }
@@ -80,21 +82,16 @@ public class CommandException extends Exception
     /**
      * @return the localized message
      */
-    public String getLocalizedMessage()
-    {
-        try
-        {
-            if (this.arguments == null)
-            {
+    public String getLocalizedMessage() {
+        try {
+            if (this.arguments == null) {
                 return bundle.getString(this.getMessage());
-            } else
-            {
+            } else {
                 MessageFormat f = new MessageFormat("");
                 f.applyPattern(bundle.getString(this.getMessage()));
                 return f.format(this.arguments);
             }
-        } catch (MissingResourceException e)
-        {
+        } catch (MissingResourceException e) {
             return this.getMessage();
         }
     }

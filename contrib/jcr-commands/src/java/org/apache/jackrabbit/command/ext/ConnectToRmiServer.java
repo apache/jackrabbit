@@ -28,45 +28,40 @@ import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
 /**
  * Connect to a JCR-RMI server
  */
-public class ConnectToRmiServer implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(ConnectToRmiServer.class);
+public class ConnectToRmiServer implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(ConnectToRmiServer.class);
 
-	// ---------------------------- < keys >
-	/** url key */
-	private String urlKey = "url";
+    // ---------------------------- < keys >
+    /** url key */
+    private String urlKey = "url";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String url = (String) ctx.get(this.urlKey);
-		if (log.isDebugEnabled())
-		{
-			log.debug("connecting to jcr-rmi server at " + url);
-		}
-		ClientRepositoryFactory factory = new ClientRepositoryFactory();
-		Repository repository = factory.getRepository(url);
-		CommandHelper.setRepository(ctx, repository);
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String url = (String) ctx.get(this.urlKey);
+        if (log.isDebugEnabled()) {
+            log.debug("connecting to jcr-rmi server at " + url);
+        }
+        ClientRepositoryFactory factory = new ClientRepositoryFactory();
+        Repository repository = factory.getRepository(url);
+        CommandHelper.setRepository(ctx, repository);
+        return false;
+    }
 
-	/**
-	 * @return Returns the urlKey.
-	 */
-	public String getUrlKey()
-	{
-		return urlKey;
-	}
+    /**
+     * @return the url key
+     */
+    public String getUrlKey() {
+        return urlKey;
+    }
 
-	/**
-	 * @param urlKey
-	 *            The urlKey to set.
-	 */
-	public void setUrlKey(String urlKey)
-	{
-		this.urlKey = urlKey;
-	}
+    /**
+     * @param urlKey
+     *            the url key to set
+     */
+    public void setUrlKey(String urlKey) {
+        this.urlKey = urlKey;
+    }
 }

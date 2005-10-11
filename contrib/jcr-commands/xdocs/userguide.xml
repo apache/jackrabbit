@@ -16,18 +16,18 @@
    limitations under the License.
   -->
 <document>
-	<properties>
-		<title>User guide</title>
-	</properties>
-	<body>
-		<section name="Interactive mode">
-			<p></p>
-		</section>
-		<section name="Batch mode">
-			<p></p>
-		</section>
-		<section name="Benchmarcking jcr">
-			<p></p>
-		</section>		
-	</body>
+  <properties>
+    <title>User guide</title>
+  </properties>
+  <body>
+    <section name="Interactive mode">
+      <p>TODO</p>
+    </section>
+    <section name="Batch mode">
+      <p>TODO</p>
+    </section>
+    <section name="Benchmarcking jcr">
+      <p>TODO</p>
+    </section>
+  </body>
 </document>

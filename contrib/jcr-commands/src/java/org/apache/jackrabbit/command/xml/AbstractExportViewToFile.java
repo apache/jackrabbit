@@ -36,8 +36,7 @@ import org.apache.jackrabbit.command.CommandHelper;
 /**
  * Export the xml view to a file
  */
-public abstract class AbstractExportViewToFile implements Command
-{
+public abstract class AbstractExportViewToFile implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(AbstractExportViewToFile.class);
 
@@ -63,23 +62,19 @@ public abstract class AbstractExportViewToFile implements Command
      * @throws IOException
      */
     protected OutputStream getOutputStream(Context ctx)
-            throws CommandException, IOException
-    {
+            throws CommandException, IOException {
         String to = (String) ctx.get(this.desFsPathKey);
         boolean overwrite = Boolean
             .valueOf((String) ctx.get(this.overwriteKey)).booleanValue();
         File f = new File(to);
 
-        if (f.exists() && !overwrite)
-        {
-            throw new CommandException("exception.file.exists", new String[]
-            {
+        if (f.exists() && !overwrite) {
+            throw new CommandException("exception.file.exists", new String[] {
                 to
             });
         }
 
-        if (!f.exists())
-        {
+        if (!f.exists()) {
             f.createNewFile();
         }
 
@@ -90,102 +85,90 @@ public abstract class AbstractExportViewToFile implements Command
     }
 
     /**
-     * @return Returns the noRecurseKey.
+     * @return the no recurse key
      */
-    public String getNoRecurseKey()
-    {
+    public String getNoRecurseKey() {
         return noRecurseKey;
     }
 
     /**
      * @param noRecurseKey
-     *            Set the context attribute key for the noRecurse attribute.
+     *        the no recurse key to set
      */
-    public void setNoRecurseKey(String noRecurseKey)
-    {
+    public void setNoRecurseKey(String noRecurseKey) {
         this.noRecurseKey = noRecurseKey;
     }
 
     /**
-     * @return Returns the overwriteKey.
+     * @return the overwrite key
      */
-    public String getOverwriteKey()
-    {
+    public String getOverwriteKey() {
         return overwriteKey;
     }
 
     /**
      * @param overwriteKey
-     *            Set the context attribute key for the overwrite attribute.
+     *        the overwrite key to set
      */
-    public void setOverwriteKey(String overwriteKey)
-    {
+    public void setOverwriteKey(String overwriteKey) {
         this.overwriteKey = overwriteKey;
     }
 
     /**
-     * @return Returns the skipBinaryKey.
+     * @return the skip binary key
      */
-    public String getSkipBinaryKey()
-    {
+    public String getSkipBinaryKey() {
         return skipBinaryKey;
     }
 
     /**
      * @param skipBinaryKey
-     *            Set the context attribute key for the skipBinary attribute.
+     *        the skip binary key to set
      */
-    public void setSkipBinaryKey(String skipBinaryKey)
-    {
+    public void setSkipBinaryKey(String skipBinaryKey) {
         this.skipBinaryKey = skipBinaryKey;
     }
 
     /**
-     * @return Returns the fromKey.
+     * @return the from key
      */
-    public String getSrcAbsPathKey()
-    {
+    public String getSrcAbsPathKey() {
         return srcAbsPathKey;
     }
 
     /**
      * @param fromKey
-     *            The fromKey to set.
+     *        the from key to set
      */
-    public void setSrcAbsPathKey(String fromKey)
-    {
+    public void setSrcAbsPathKey(String fromKey) {
         this.srcAbsPathKey = fromKey;
     }
 
     /**
-     * @return Returns the toKey.
+     * @return the to key
      */
-    public String getDesFsPathKey()
-    {
+    public String getDesFsPathKey() {
         return desFsPathKey;
     }
 
     /**
      * @param toKey
-     *            The toKey to set.
+     *        the to key to set
      */
-    public void setDesFsPathKey(String toKey)
-    {
+    public void setDesFsPathKey(String toKey) {
         this.desFsPathKey = toKey;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public final boolean execute(Context ctx) throws Exception
-    {
+    public final boolean execute(Context ctx) throws Exception {
         boolean skipBinary = Boolean.valueOf(
             (String) ctx.get(this.skipBinaryKey)).booleanValue();
         boolean noRecurse = Boolean
             .valueOf((String) ctx.get(this.noRecurseKey)).booleanValue();
         String fromStr = (String) ctx.get(this.srcAbsPathKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("exporting view from " + fromStr);
         }
         Node from = CommandHelper.getNode(ctx, fromStr);
@@ -197,9 +180,10 @@ public abstract class AbstractExportViewToFile implements Command
 
     /**
      * Export the view to the given OutputStream
-     * 
      * @param node
+     *        the <code>Node</code>
      * @param out
+     *        the <code>OutputStream</code>
      * @param skipBinary
      * @param noRecurse
      * @throws RepositoryException

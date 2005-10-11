@@ -30,54 +30,59 @@ import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Lists the <code>Version</code> in the <code>VersionHistory</code>.
+ * List the <code>Version</code> s in the <code>VersionHistory</code>.
  */
-public class LsVersions implements Command
-{
-	/** bundle */
-	private static ResourceBundle bundle = CommandHelper.getBundle();
+public class LsVersions implements Command {
+    /** bundle */
+    private static ResourceBundle bundle = CommandHelper.getBundle();
 
-	/** path to the node */
-	private String pathKey = "path";
+    /** path to the node */
+    private String pathKey = "path";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		Node n = CommandHelper.getNode(ctx, path);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        Node n = CommandHelper.getNode(ctx, path);
 
-		// header
-		int[] width = new int[]
-		{ 20, 50};
-		String[] header = new String[]
-		{ bundle.getString("word.version"), bundle.getString("word.labels") };
-		// print header
-		PrintHelper.printRow(ctx, width, header);
-		// print separator
-		PrintHelper.printSeparatorRow(ctx, width, '-');
-		VersionIterator iter = n.getVersionHistory().getAllVersions();
-		while (iter.hasNext())
-		{
-			Version v = iter.nextVersion();
-			Collection row = new ArrayList();
-			row.add(v.getName());
-			row.add(Arrays.asList(n.getVersionHistory().getVersionLabels(v)));
-			PrintHelper.printRow(ctx, width, row);
-		}
+        // header
+        int[] width = new int[] {
+                20, 50
+        };
+        String[] header = new String[] {
+                bundle.getString("word.version"),
+                bundle.getString("word.labels")
+        };
+        // print header
+        PrintHelper.printRow(ctx, width, header);
+        // print separator
+        PrintHelper.printSeparatorRow(ctx, width, '-');
+        VersionIterator iter = n.getVersionHistory().getAllVersions();
+        while (iter.hasNext()) {
+            Version v = iter.nextVersion();
+            Collection row = new ArrayList();
+            row.add(v.getName());
+            row.add(Arrays.asList(n.getVersionHistory().getVersionLabels(v)));
+            PrintHelper.printRow(ctx, width, row);
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 
 }

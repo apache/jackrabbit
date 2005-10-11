@@ -16,24 +16,28 @@
    limitations under the License.
   -->
 <document>
-	<properties>
-		<title>Overview</title>
-	</properties>
-	<body>
-		<section name="Overview">
-			<p> JCR-commands contains a jcr command line client. It's backed by a set of
-				Apache Commons Chain commands that perform operations on any JCR compliant
-				repository. Moreover it includes a few commands jackrabbit specific to
-				cover some use cases that were not included in the specification.
-				<br/> For more information about using Commons Chain please refer to
-				http://jakarta.apache.org/commons/chain/ </p>
-		</section>
-		<section name="Usage scenarios">
-			<p>Perform any jcr operation either in interactive or batch mode.</p>
-			<p>Reuse the commands in applications through the Jakarta Commons Chains
-				library</p>
-			<p>Benchmarck any jcr compliant repository with jmeter by using
-				jmeter-command plugin.</p>
-		</section>
-	</body>
+    <properties>
+        <title>Overview</title>
+    </properties>
+    <body>
+        <section name="Overview">
+            <p> This project contains a jcr command line client. It's backed by
+                a set of Apache Commons Chain commands that perform operations
+                on any JCR compliant repository. Moreover it includes a few
+                jackrabbit specific commands to cover some use cases that were
+                not included in the specification. <br/> For more information
+                about using Commons Chain please refer to
+                http://jakarta.apache.org/commons/chain/ </p>
+        </section>
+        <section name="Usage scenarios">
+            <ul>
+                <li>Perform jcr operations either in interactive or batch
+                    mode</li>
+                <li>Reuse the commands in applications through the Jakarta
+                    Commons Chains library</li>
+                <li>Benchmark any jcr compliant repository with jmeter-command
+                    plugin.</li>
+            </ul>
+        </section>
+    </body>
 </document>

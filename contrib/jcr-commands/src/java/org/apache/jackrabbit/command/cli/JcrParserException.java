@@ -21,8 +21,7 @@ import org.apache.jackrabbit.command.CommandException;
 /**
  * Exception thrown if any error occurs while parsing the user's input.
  */
-public class JcrParserException extends CommandException
-{
+public class JcrParserException extends CommandException {
 
     /**
      * <code>serialVersionUID</code>
@@ -30,39 +29,35 @@ public class JcrParserException extends CommandException
     private static final long serialVersionUID = 3761694498056713525L;
 
     /**
-     * @param message
-     * @param arguments
+     * @param message the message
+     * @param arguments the arguments
      */
-    public JcrParserException(String message, Object[] arguments)
-    {
+    public JcrParserException(String message, Object[] arguments) {
         super(message, arguments);
     }
 
     /**
-     * @param message
-     * @param cause
-     * @param arguments
+     * @param message the message
+     * @param cause the cause
+     * @param arguments the arguments
      */
     public JcrParserException(String message, Throwable cause,
-        Object[] arguments)
-    {
+        Object[] arguments) {
         super(message, cause, arguments);
     }
 
     /**
-     * @param message
+     * @param message the message
      */
-    public JcrParserException(String message)
-    {
+    public JcrParserException(String message) {
         super(message);
     }
 
     /**
-     * @param message
-     * @param cause
+     * @param message the message
+     * @param cause the cause
      */
-    public JcrParserException(String message, Throwable cause)
-    {
+    public JcrParserException(String message, Throwable cause) {
         super(message, cause);
     }
 }

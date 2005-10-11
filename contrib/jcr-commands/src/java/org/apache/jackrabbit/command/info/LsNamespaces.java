@@ -20,16 +20,14 @@ import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
 
 /**
- * Lists the registered namespaces
+ * Lists the registered namespaces.
  */
-public class LsNamespaces implements Command
-{
+public class LsNamespaces implements Command {
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
-        throw new UnsupportedOperationException() ;
+    public boolean execute(Context ctx) throws Exception {
+        throw new UnsupportedOperationException();
     }
 }

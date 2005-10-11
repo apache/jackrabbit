@@ -24,44 +24,40 @@ import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.command.CommandException;
 
 /**
- * Lists collected nodes. This Command looks for an Iterator under the given
- * context variable and lists its nodes.
+ * Lists collected <code>Node</code>s.<br>
+ * This <code>Command</code> looks for an <code>Iterator</code> under the
+ * given <code>Context</code> variable and lists its <code>Node</code>s.
  */
-public class LsCollectedNodes extends AbstractLsNodes
-{
+public class LsCollectedNodes extends AbstractLsNodes {
     /** Context variable that holds the Iterator */
     private String fromKey = "collected";
 
     /**
      * @return the context variable
      */
-    public String getFromKey()
-    {
+    public String getFromKey() {
         return fromKey;
     }
 
     /**
-     * Sets the context variable
-     * @param context variable name
+     * Sets the <code>Context<code> variable
+     * @param contextVariable
+     *        the context variable
      */
-    public void setFromKey(String contextVariable)
-    {
+    public void setFromKey(String contextVariable) {
         this.fromKey = contextVariable;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     protected Iterator getNodes(Context ctx) throws CommandException,
-            RepositoryException
-    {
+            RepositoryException {
         this.setPath(true);
         Object o = ctx.get(this.fromKey);
-        if (o == null || !(o instanceof Iterator))
-        {
+        if (o == null || !(o instanceof Iterator)) {
             throw new JcrInfoCommandException(
-                "illegalargument.no.iterator.under", new String[]
-                {
+                "illegalargument.no.iterator.under", new String[] {
                     fromKey
                 });
         }

@@ -30,46 +30,39 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Remove all the content from the current working Workspace
+ * Remove all the content from the current working <code>Workspace</code>
  */
-public class ClearWorkspace implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(ClearWorkspace.class);
+public class ClearWorkspace implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(ClearWorkspace.class);
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		Session s = CommandHelper.getSession(ctx);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        Session s = CommandHelper.getSession(ctx);
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("removing all content from workspace "
-					+ s.getWorkspace().getName());
-		}
+        if (log.isDebugEnabled()) {
+            log.debug("removing all content from workspace "
+                    + s.getWorkspace().getName());
+        }
 
-		// Set current node to root
-		CommandHelper.setCurrentNode(ctx, s.getRootNode());
-		NodeIterator iter = s.getRootNode().getNodes();
-		while (iter.hasNext())
-		{
-			Node n = (Node) iter.next();
-			if (!n.getName().equals(JcrConstants.JCR_SYSTEM))
-			{
-				n.remove();
-			}
-		}
-		PropertyIterator pIter = s.getRootNode().getProperties();
-		while (pIter.hasNext())
-		{
-			Property p = pIter.nextProperty();
-			if (!p.getName().equals(JcrConstants.JCR_PRIMARYTYPE))
-			{
-				p.remove();
-			}
-		}
-		return false;
-	}
+        // Set current node to root
+        CommandHelper.setCurrentNode(ctx, s.getRootNode());
+        NodeIterator iter = s.getRootNode().getNodes();
+        while (iter.hasNext()) {
+            Node n = (Node) iter.next();
+            if (!n.getName().equals(JcrConstants.JCR_SYSTEM)) {
+                n.remove();
+            }
+        }
+        PropertyIterator pIter = s.getRootNode().getProperties();
+        while (pIter.hasNext()) {
+            Property p = pIter.nextProperty();
+            if (!p.getName().equals(JcrConstants.JCR_PRIMARYTYPE)) {
+                p.remove();
+            }
+        }
+        return false;
+    }
 }

@@ -26,33 +26,28 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 /**
  * Stop Jackrabbit
  */
-public class StopJackrabbit implements Command
-{
+public class StopJackrabbit implements Command {
 
-	/** logger */
-	private static Log log = LogFactory.getLog(StopJackrabbit.class);
+    /** logger */
+    private static Log log = LogFactory.getLog(StopJackrabbit.class);
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		if (log.isDebugEnabled())
-		{
-			log.debug("stopping jackrabbit");
-		}
-		RepositoryImpl repo = (RepositoryImpl) CommandHelper.getRepository(ctx);
-		if (repo == null)
-		{
-			throw new IllegalStateException("No current working repository");
-		}
-		if (!(repo instanceof RepositoryImpl))
-		{
-			throw new IllegalStateException(
-					"Jackrabbit is not the current working repository");
-		}
-		repo.shutdown();
-		CommandHelper.setRepository(ctx, null);
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        if (log.isDebugEnabled()) {
+            log.debug("stopping jackrabbit");
+        }
+        RepositoryImpl repo = (RepositoryImpl) CommandHelper.getRepository(ctx);
+        if (repo == null) {
+            throw new IllegalStateException("No current working repository");
+        }
+        if (!(repo instanceof RepositoryImpl)) {
+            throw new IllegalStateException(
+                    "Jackrabbit is not the current working repository");
+        }
+        repo.shutdown();
+        CommandHelper.setRepository(ctx, null);
+        return false;
+    }
 }

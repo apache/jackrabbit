@@ -23,111 +23,100 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Adds a label to the given version
+ * Add a label to the given <code>Version</code>
  */
-public class AddVersionLabel implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(AddVersionLabel.class);
+public class AddVersionLabel implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(AddVersionLabel.class);
 
-	// ---------------------------- < keys >
-	/** node path */
-	private String pathKey = "path";
+    // ---------------------------- < keys >
+    /** node path */
+    private String pathKey = "path";
 
-	/** version name key */
-	private String versionKey = "version";
+    /** version name key */
+    private String versionKey = "version";
 
-	/** version label key */
-	private String labelKey = "label";
+    /** version label key */
+    private String labelKey = "label";
 
-	/** move label key */
-	private String moveLabelKey = "moveLabel";
+    /** move label key */
+    private String moveLabelKey = "moveLabel";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		String versionName = (String) ctx.get(this.versionKey);
-		boolean moveLabel = Boolean
-				.valueOf((String) ctx.get(this.moveLabelKey)).booleanValue();
-		String versionLabel = (String) ctx.get(this.labelKey);
-		if (log.isDebugEnabled())
-		{
-			log.debug("Add label " + versionLabel + " to version  "
-					+ versionName + " of node at " + path);
-		}
-		CommandHelper.getNode(ctx, path).getVersionHistory().addVersionLabel(
-				versionName, versionLabel, moveLabel);
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        String versionName = (String) ctx.get(this.versionKey);
+        boolean moveLabel = Boolean
+            .valueOf((String) ctx.get(this.moveLabelKey)).booleanValue();
+        String versionLabel = (String) ctx.get(this.labelKey);
+        if (log.isDebugEnabled()) {
+            log.debug("Add label " + versionLabel + " to version  "
+                    + versionName + " of node at " + path);
+        }
+        CommandHelper.getNode(ctx, path).getVersionHistory().addVersionLabel(
+            versionName, versionLabel, moveLabel);
+        return false;
+    }
 
-	/**
-	 * @return Returns the moveLabelKey.
-	 */
-	public String getMoveLabelKey()
-	{
-		return moveLabelKey;
-	}
+    /**
+     * @return the move label key
+     */
+    public String getMoveLabelKey() {
+        return moveLabelKey;
+    }
 
-	/**
-	 * @param moveLabelKey
-	 *            The moveLabelKey to set.
-	 */
-	public void setMoveLabelKey(String moveLabelKey)
-	{
-		this.moveLabelKey = moveLabelKey;
-	}
+    /**
+     * @param moveLabelKey
+     *        the move label key to set
+     */
+    public void setMoveLabelKey(String moveLabelKey) {
+        this.moveLabelKey = moveLabelKey;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 
-	/**
-	 * @return Returns the versionLabelKey.
-	 */
-	public String getLabelKey()
-	{
-		return labelKey;
-	}
+    /**
+     * @return the version label key
+     */
+    public String getLabelKey() {
+        return labelKey;
+    }
 
-	/**
-	 * @param versionLabelKey
-	 *            The versionLabelKey to set.
-	 */
-	public void setLabelKey(String versionLabelKey)
-	{
-		this.labelKey = versionLabelKey;
-	}
+    /**
+     * @param versionLabelKey
+     *        the version label key to set
+     */
+    public void setLabelKey(String versionLabelKey) {
+        this.labelKey = versionLabelKey;
+    }
 
-	/**
-	 * @return Returns the versionNameKey.
-	 */
-	public String getVersionKey()
-	{
-		return versionKey;
-	}
+    /**
+     * @return the version name key
+     */
+    public String getVersionKey() {
+        return versionKey;
+    }
 
-	/**
-	 * @param versionNameKey
-	 *            The versionNameKey to set.
-	 */
-	public void setVersionKey(String versionNameKey)
-	{
-		this.versionKey = versionNameKey;
-	}
+    /**
+     * @param versionNameKey
+     *        the version name key to set
+     */
+    public void setVersionKey(String versionNameKey) {
+        this.versionKey = versionNameKey;
+    }
 }

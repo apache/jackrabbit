@@ -31,45 +31,49 @@ import org.apache.jackrabbit.core.WorkspaceImpl;
  * Creates a Workspace.<br>
  * Note that this Command uses Jackrabbit specific API.
  */
-public class CreateWorkspace implements Command
-{
-	/** bundle */
-	ResourceBundle bundle = CommandHelper.getBundle();
+public class CreateWorkspace implements Command {
+    /** bundle */
+    private ResourceBundle bundle = CommandHelper.getBundle();
 
-	/** logger */
-	private static Log log = LogFactory.getLog(CreateWorkspace.class);
+    /** logger */
+    private static Log log = LogFactory.getLog(CreateWorkspace.class);
 
-	// ---------------------------- < keys >
-	/** workspace name key */
-	private String nameKey = "name";
+    // ---------------------------- < keys >
+    /** workspace name key */
+    private String nameKey = "name";
 
-	public boolean execute(Context ctx) throws Exception
-	{
-		String name = (String) ctx.get(this.nameKey);
-		if (log.isDebugEnabled())
-		{
-			log.debug("creating workspace for name " + name);
-		}
-		Workspace w = CommandHelper.getSession(ctx).getWorkspace();
-		if (w instanceof WorkspaceImpl == false)
-		{
-			throw new IllegalStateException(bundle
-					.getString("phrase.jackrabbit.command"));
-		}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String name = (String) ctx.get(this.nameKey);
+        if (log.isDebugEnabled()) {
+            log.debug("creating workspace for name " + name);
+        }
+        Workspace w = CommandHelper.getSession(ctx).getWorkspace();
+        if (!(w instanceof WorkspaceImpl)) {
+            throw new IllegalStateException(bundle
+                    .getString("phrase.jackrabbit.command"));
+        }
 
-		WorkspaceImpl jrw = (WorkspaceImpl) w;
-		jrw.createWorkspace(name);
-		return false;
-	}
+        WorkspaceImpl jrw = (WorkspaceImpl) w;
+        jrw.createWorkspace(name);
+        return false;
+    }
 
-	public String getNameKey()
-	{
-		return nameKey;
-	}
+    /**
+     * @return the name key
+     */
+    public String getNameKey() {
+        return nameKey;
+    }
 
-	public void setNameKey(String nameKey)
-	{
-		this.nameKey = nameKey;
-	}
+    /**
+     * @param nameKey
+     *            the name key to set
+     */
+    public void setNameKey(String nameKey) {
+        this.nameKey = nameKey;
+    }
 
 }

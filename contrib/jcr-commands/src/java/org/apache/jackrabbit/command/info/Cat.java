@@ -35,11 +35,10 @@ import org.apache.jackrabbit.command.CommandHelper;
 import org.apache.jackrabbit.command.CommandException;
 
 /**
- * Displays the content of a <code>Property</code> or a <code>Node</code> of
+ * Display the content of a <code>Property</code> or a <code>Node</code> of
  * type nt:file or nt:resource.
  */
-public class Cat implements Command
-{
+public class Cat implements Command {
     /** property name */
     private String pathKey = "path";
 
@@ -47,36 +46,39 @@ public class Cat implements Command
     private String indexKey = "index";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String path = (String) ctx.get(this.pathKey);
         Item item = CommandHelper.getItem(ctx, path);
-        if (item.isNode())
-        {
+        if (item.isNode()) {
             printNode(ctx, (Node) item);
-        } else
-        {
+        } else {
             printProperty(ctx, (Property) item);
         }
         return false;
     }
 
-    public String getPathKey()
-    {
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
         return pathKey;
     }
 
-    public void setPathKey(String path)
-    {
+    /**
+     * @param path
+     *        the path key to set
+     */
+    public void setPathKey(String path) {
         this.pathKey = path;
     }
 
     /**
-     * 
      * @param ctx
+     *        the <code>Context</code>
      * @param n
+     *        the <code>Node</code>
      * @throws PathNotFoundException
      * @throws CommandException
      * @throws RepositoryException
@@ -85,28 +87,25 @@ public class Cat implements Command
      */
     private void printNode(Context ctx, Node n) throws PathNotFoundException,
             CommandException, RepositoryException, IllegalStateException,
-            IOException
-    {
-        if (n.isNodeType("nt:file"))
-        {
+            IOException {
+        if (n.isNodeType("nt:file")) {
             printValue(ctx, n.getNode("jcr:content").getProperty("jcr:data")
                 .getValue());
-        } else if (n.isNodeType("nt:resource"))
-        {
+        } else if (n.isNodeType("nt:resource")) {
             printValue(ctx, n.getProperty("jcr:data").getValue());
-        } else
-        {
-            throw new CommandException("exception.cat.unsupported.type", new String[]
-            {
-                n.getPrimaryNodeType().getName()
-            });
+        } else {
+            throw new CommandException("exception.cat.unsupported.type",
+                new String[] {
+                    n.getPrimaryNodeType().getName()
+                });
         }
     }
 
     /**
-     * 
      * @param ctx
+     *        the <code>Context</code>
      * @param p
+     *        the <code>Property</code>
      * @throws CommandException
      * @throws ValueFormatException
      * @throws IllegalStateException
@@ -115,28 +114,25 @@ public class Cat implements Command
      */
     private void printProperty(Context ctx, Property p)
             throws CommandException, ValueFormatException,
-            IllegalStateException, RepositoryException, IOException
-    {
+            IllegalStateException, RepositoryException, IOException {
         String indexStr = (String) ctx.get(this.indexKey);
         int index = 0;
-        if (indexStr != null)
-        {
+        if (indexStr != null) {
             index = Integer.parseInt(indexStr);
         }
-        if (p.getDefinition().isMultiple())
-        {
+        if (p.getDefinition().isMultiple()) {
             printValue(ctx, p.getValues()[index]);
-        } else
-        {
+        } else {
             printValue(ctx, p.getValue());
         }
     }
 
     /**
      * Read the value
-     * 
      * @param ctx
+     *        the <code>Context</code>
      * @param value
+     *        the <code>Value</code>
      * @throws ValueFormatException
      * @throws IllegalStateException
      * @throws RepositoryException
@@ -144,33 +140,29 @@ public class Cat implements Command
      */
     private void printValue(Context ctx, Value value)
             throws ValueFormatException, IllegalStateException,
-            RepositoryException, IOException
-    {
+            RepositoryException, IOException {
         PrintWriter out = CommandHelper.getOutput(ctx);
         out.println();
         BufferedReader in = new BufferedReader(new StringReader(value
             .getString()));
         String str = null;
-        while ((str = in.readLine()) != null)
-        {
+        while ((str = in.readLine()) != null) {
             out.println(str);
         }
     }
 
     /**
-     * @return Returns the indexKey.
+     * @return the index key
      */
-    public String getIndexKey()
-    {
+    public String getIndexKey() {
         return indexKey;
     }
 
     /**
      * @param indexKey
-     *            The indexKey to set.
+     *        the index key to set
      */
-    public void setIndexKey(String indexKey)
-    {
+    public void setIndexKey(String indexKey) {
         this.indexKey = indexKey;
     }
 }

@@ -25,10 +25,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Sets the order of the given node.
+ * Set the order of the given <code>Node</code>
  */
-public class OrderBefore implements Command
-{
+public class OrderBefore implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(OrderBefore.class);
 
@@ -42,19 +41,21 @@ public class OrderBefore implements Command
     /** destination path */
     private String destChildKey = "destChild";
 
-    public boolean execute(Context ctx) throws Exception
-    {
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
         String parentPath = (String) ctx.get(this.parentPathKey);
         Node n = CommandHelper.getNode(ctx, parentPath);
 
         String srcChildPath = (String) ctx.get(this.srcChildKey);
         String destChildPath = (String) ctx.get(this.destChildKey);
 
-        if (log.isDebugEnabled())
-        {
-            log.debug("ordering before. from " + n.getPath() + "/"
-                    + srcChildPath + " to " + n.getPath() + "/"
-                    + destChildPath);
+        if (log.isDebugEnabled()) {
+            log
+                .debug("ordering before. from " + n.getPath() + "/"
+                        + srcChildPath + " to " + n.getPath() + "/"
+                        + destChildPath);
         }
 
         n.orderBefore(srcChildPath, destChildPath);
@@ -62,40 +63,48 @@ public class OrderBefore implements Command
         return false;
     }
 
-    public String getDestChildKey()
-    {
+    /**
+     * @return the destination child key
+     */
+    public String getDestChildKey() {
         return destChildKey;
     }
 
-    public void setDestChildKey(String destChildRelPathKey)
-    {
+    /**
+     * @param destChildRelPathKey
+     *        the destination child key to set
+     */
+    public void setDestChildKey(String destChildRelPathKey) {
         this.destChildKey = destChildRelPathKey;
     }
 
-    public String getSrcChildKey()
-    {
+    /**
+     * @return the source child key
+     */
+    public String getSrcChildKey() {
         return srcChildKey;
     }
 
-    public void setSrcChildKey(String srcChildRelPathKey)
-    {
+    /**
+     * @param srcChildRelPathKey
+     *        the source child key to set
+     */
+    public void setSrcChildKey(String srcChildRelPathKey) {
         this.srcChildKey = srcChildRelPathKey;
     }
 
     /**
-     * @return Returns the parentPathKey.
+     * @return the parent path key
      */
-    public String getParentPathKey()
-    {
+    public String getParentPathKey() {
         return parentPathKey;
     }
 
     /**
      * @param parentPathKey
-     *            The parentPathKey to set.
+     *        the parent path key to set
      */
-    public void setParentPathKey(String parentPathKey)
-    {
+    public void setParentPathKey(String parentPathKey) {
         this.parentPathKey = parentPathKey;
     }
 }

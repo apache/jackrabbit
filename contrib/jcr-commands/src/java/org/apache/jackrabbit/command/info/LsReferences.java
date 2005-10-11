@@ -27,31 +27,27 @@ import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Displays references to the given Node
+ * Displays references to the given <code>Node</code>
  */
-public class LsReferences implements Command
-{
-	/** bundle */
-	private static ResourceBundle bundle = CommandHelper.getBundle() ; 
-	
-    /** path to the node */
+public class LsReferences implements Command {
+    /** bundle */
+    private static ResourceBundle bundle = CommandHelper.getBundle();
+
+    /** path to the <code>Node</code> key */
     private String pathKey = "path";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
-    	String path = (String) ctx.get(this.pathKey) ;
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
         Node n = CommandHelper.getNode(ctx, path);
 
         // header
-        int[] width = new int[]
-        {
+        int[] width = new int[] {
             60
         };
-        String[] header = new String[]
-        {
+        String[] header = new String[] {
             bundle.getString("word.path")
         };
 
@@ -62,12 +58,10 @@ public class LsReferences implements Command
         PrintHelper.printSeparatorRow(ctx, width, '-');
 
         PropertyIterator iter = n.getReferences();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             Property p = iter.nextProperty();
             // print header
-            PrintHelper.printRow(ctx, width, new String[]
-            {
+            PrintHelper.printRow(ctx, width, new String[] {
                 p.getPath()
             });
         }
@@ -80,19 +74,17 @@ public class LsReferences implements Command
     }
 
     /**
-     * @return Returns the path.
+     * @return the path key
      */
-    public String getPathKey()
-    {
+    public String getPathKey() {
         return pathKey;
     }
 
     /**
      * @param path
-     *            The path to set.
+     *        the path key to set
      */
-    public void setPathKey(String path)
-    {
+    public void setPathKey(String path) {
         this.pathKey = path;
     }
 }

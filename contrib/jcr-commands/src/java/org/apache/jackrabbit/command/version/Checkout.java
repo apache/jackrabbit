@@ -23,10 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Checkout a node
+ * Checkout the given versionable <code>Node</code>
  */
-public class Checkout implements Command
-{
+public class Checkout implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(Checkout.class);
 
@@ -35,13 +34,11 @@ public class Checkout implements Command
     private String pathKey = "path";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String path = (String) ctx.get(this.pathKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("cheking out node at " + path);
         }
         CommandHelper.getNode(ctx, path).checkout();
@@ -49,19 +46,17 @@ public class Checkout implements Command
     }
 
     /**
-     * @return Returns the pathKey.
+     * @return the path key
      */
-    public String getPathKey()
-    {
+    public String getPathKey() {
         return pathKey;
     }
 
     /**
      * @param pathKey
-     *            The pathKey to set.
+     *        the path key to set
      */
-    public void setPathKey(String pathKey)
-    {
+    public void setPathKey(String pathKey) {
         this.pathKey = pathKey;
     }
 }

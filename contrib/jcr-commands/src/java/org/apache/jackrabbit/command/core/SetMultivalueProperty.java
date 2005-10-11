@@ -25,66 +25,60 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Set a multivalue property to the current working node. <br>
+ * Set a multivalue <code>Property</code> to the current working
+ * <code>Node</code>.<br>
  * The default regular expression is ",".
  */
-public class SetMultivalueProperty extends AbstractSetProperty
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(SetMultivalueProperty.class);
+public class SetMultivalueProperty extends AbstractSetProperty {
+    /** logger */
+    private static Log log = LogFactory.getLog(SetMultivalueProperty.class);
 
-	// ---------------------------- < keys >
+    // ---------------------------- < keys >
 
-	/** regular expression key */
-	private String regExpKey = "regExp";
+    /** regular expression key */
+    private String regExpKey = "regExp";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String regExp = (String) ctx.get(this.regExpKey);
-		String value = (String) ctx.get(this.valueKey);
-		String name = (String) ctx.get(this.nameKey);
-		String type = (String) ctx.get(this.typeKey);
-		String parent = (String) ctx.get(this.parentPathKey);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String regExp = (String) ctx.get(this.regExpKey);
+        String value = (String) ctx.get(this.valueKey);
+        String name = (String) ctx.get(this.nameKey);
+        String type = (String) ctx.get(this.typeKey);
+        String parent = (String) ctx.get(this.parentPathKey);
 
-		Node node = CommandHelper.getNode(ctx, parent);
+        Node node = CommandHelper.getNode(ctx, parent);
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("setting multivalue property from node at "
-					+ node.getPath() + ". regexp=" + regExp + " value=" + value
-					+ " property=" + name);
-		}
+        if (log.isDebugEnabled()) {
+            log.debug("setting multivalue property from node at "
+                    + node.getPath() + ". regexp=" + regExp + " value=" + value
+                    + " property=" + name);
+        }
 
-		String[] values = value.split(regExp);
+        String[] values = value.split(regExp);
 
-		if (type == null)
-		{
-			node.setProperty(name, values);
-		} else
-		{
-			node.setProperty(name, values, PropertyType.valueFromName(type));
-		}
+        if (type == null) {
+            node.setProperty(name, values);
+        } else {
+            node.setProperty(name, values, PropertyType.valueFromName(type));
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
-	 * @return Returns the regExpKey.
-	 */
-	public String getRegExpKey()
-	{
-		return regExpKey;
-	}
+    /**
+     * @return the regular expression key
+     */
+    public String getRegExpKey() {
+        return regExpKey;
+    }
 
-	/**
-	 * @param regExpKey
-	 *            Set the context attribute key for the regExp attribute.
-	 */
-	public void setRegExpKey(String regExpKey)
-	{
-		this.regExpKey = regExpKey;
-	}
+    /**
+     * @param regExpKey
+     *        the regular expression key to set
+     */
+    public void setRegExpKey(String regExpKey) {
+        this.regExpKey = regExpKey;
+    }
 }

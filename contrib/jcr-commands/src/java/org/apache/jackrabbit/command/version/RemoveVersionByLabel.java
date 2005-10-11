@@ -26,70 +26,64 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * remove a version from the versio history
+ * Remove the <code>Version</code> from the <code>VersionHistory</code> that
+ * match the given label
  */
-public class RemoveVersionByLabel implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(RemoveVersionByLabel.class);
+public class RemoveVersionByLabel implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(RemoveVersionByLabel.class);
 
-	// ---------------------------- < keys >
-	/** node path */
-	private String pathKey = "path";
+    // ---------------------------- < keys >
+    /** node path */
+    private String pathKey = "path";
 
-	/** version label key */
-	private String labelKey = "label";
+    /** version label key */
+    private String labelKey = "label";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		String label = (String) ctx.get(this.labelKey);
-		if (log.isDebugEnabled())
-		{
-			log.debug("Remove version with label " + label + " from node "
-					+ path);
-		}
-		VersionHistory vh = CommandHelper.getNode(ctx, path)
-				.getVersionHistory();
-		Version v = vh.getVersionByLabel(label);
-		vh.removeVersion(v.getName());
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        String label = (String) ctx.get(this.labelKey);
+        if (log.isDebugEnabled()) {
+            log.debug("Remove version with label " + label + " from node "
+                    + path);
+        }
+        VersionHistory vh = CommandHelper.getNode(ctx, path)
+            .getVersionHistory();
+        Version v = vh.getVersionByLabel(label);
+        vh.removeVersion(v.getName());
+        return false;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 
-	/**
-	 * @return Returns the versionNameKey.
-	 */
-	public String getLabelKey()
-	{
-		return labelKey;
-	}
+    /**
+     * @return the version name key
+     */
+    public String getLabelKey() {
+        return labelKey;
+    }
 
-	/**
-	 * @param versionNameKey
-	 *            The versionNameKey to set.
-	 */
-	public void setLabelKey(String versionNameKey)
-	{
-		this.labelKey = versionNameKey;
-	}
+    /**
+     * @param versionNameKey
+     *        the version name key to set
+     */
+    public void setLabelKey(String versionNameKey) {
+        this.labelKey = versionNameKey;
+    }
 }

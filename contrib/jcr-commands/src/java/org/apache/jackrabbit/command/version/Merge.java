@@ -25,87 +25,78 @@ import org.apache.jackrabbit.command.CommandHelper;
 /**
  * Merge
  */
-public class Merge implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(Merge.class);
+public class Merge implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(Merge.class);
 
-	// ---------------------------- < keys >
-	/** node path */
-	private String pathKey = "path";
+    // ---------------------------- < keys >
+    /** node path */
+    private String pathKey = "path";
 
-	/** source workspace key */
-	private String srcWorkspaceKey = "srcWorkspace";
+    /** source workspace key */
+    private String srcWorkspaceKey = "srcWorkspace";
 
-	/** best effort key */
-	private String bestEffortKey = "bestEffort";
+    /** best effort key */
+    private String bestEffortKey = "bestEffort";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		String srcWorkspace = (String) ctx.get(this.srcWorkspaceKey);
-		boolean bestEffort = Boolean.valueOf(
-				(String) ctx.get(this.bestEffortKey)).booleanValue();
-		if (log.isDebugEnabled())
-		{
-			log.debug("merging node at " + path + " from workspace "
-					+ srcWorkspace + " besteffort=" + bestEffort);
-		}
-		CommandHelper.getNode(ctx, path).merge(srcWorkspace, bestEffort);
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        String srcWorkspace = (String) ctx.get(this.srcWorkspaceKey);
+        boolean bestEffort = Boolean.valueOf(
+            (String) ctx.get(this.bestEffortKey)).booleanValue();
+        if (log.isDebugEnabled()) {
+            log.debug("merging node at " + path + " from workspace "
+                    + srcWorkspace + " besteffort=" + bestEffort);
+        }
+        CommandHelper.getNode(ctx, path).merge(srcWorkspace, bestEffort);
+        return false;
+    }
 
-	/**
-	 * @return Returns the bestEffortKey.
-	 */
-	public String getBestEffortKey()
-	{
-		return bestEffortKey;
-	}
+    /**
+     * @return the best effort key
+     */
+    public String getBestEffortKey() {
+        return bestEffortKey;
+    }
 
-	/**
-	 * @param bestEffortKey
-	 *            The bestEffortKey to set.
-	 */
-	public void setBestEffortKey(String bestEffortKey)
-	{
-		this.bestEffortKey = bestEffortKey;
-	}
+    /**
+     * @param bestEffortKey
+     *        the best effort key to set
+     */
+    public void setBestEffortKey(String bestEffortKey) {
+        this.bestEffortKey = bestEffortKey;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 
-	/**
-	 * @return Returns the srcWorkspaceKey.
-	 */
-	public String getSrcWorkspaceKey()
-	{
-		return srcWorkspaceKey;
-	}
+    /**
+     * @return the source <code>Workspace</code> key
+     */
+    public String getSrcWorkspaceKey() {
+        return srcWorkspaceKey;
+    }
 
-	/**
-	 * @param srcWorkspaceKey
-	 *            The srcWorkspaceKey to set.
-	 */
-	public void setSrcWorkspaceKey(String srcWorkspaceKey)
-	{
-		this.srcWorkspaceKey = srcWorkspaceKey;
-	}
+    /**
+     * @param srcWorkspaceKey
+     *        the source <code>Workspace</code> key to set
+     */
+    public void setSrcWorkspaceKey(String srcWorkspaceKey) {
+        this.srcWorkspaceKey = srcWorkspaceKey;
+    }
 }

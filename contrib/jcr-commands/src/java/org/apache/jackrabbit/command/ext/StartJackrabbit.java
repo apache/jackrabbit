@@ -27,12 +27,9 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 /**
- * <p>
- * Starts a Jackrabbit instance and put it in the <code>Context</code>.
- * </p>
+ * Set a new Jackrabbit instance as the current working <code>Repository</code>
  */
-public class StartJackrabbit implements Command
-{
+public class StartJackrabbit implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(StartJackrabbit.class);
 
@@ -43,17 +40,15 @@ public class StartJackrabbit implements Command
     private String homeKey = "home";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String config = (String) ctx.get(this.configKey);
         String home = (String) ctx.get(this.homeKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log
-                .debug("starting jackrabbit. config=" + config + " home="
-                        + home);
+                    .debug("starting jackrabbit. config=" + config + " home="
+                            + home);
         }
         RepositoryConfig conf = RepositoryConfig.create(config, home);
         Repository repo = RepositoryImpl.create(conf);
@@ -61,23 +56,33 @@ public class StartJackrabbit implements Command
         return false;
     }
 
-    public String getConfigKey()
-    {
+    /**
+     * @return the config key
+     */
+    public String getConfigKey() {
         return configKey;
     }
 
-    public void setConfigKey(String configKey)
-    {
+    /**
+     * @param configKey
+     *            the config key to set
+     */
+    public void setConfigKey(String configKey) {
         this.configKey = configKey;
     }
 
-    public String getHomeKey()
-    {
+    /**
+     * @return the home key
+     */
+    public String getHomeKey() {
         return homeKey;
     }
 
-    public void setHomeKey(String homeKey)
-    {
+    /**
+     * @param homeKey
+     *            the home key to set
+     */
+    public void setHomeKey(String homeKey) {
         this.homeKey = homeKey;
     }
 

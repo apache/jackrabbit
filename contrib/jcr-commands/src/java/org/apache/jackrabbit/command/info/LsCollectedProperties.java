@@ -24,46 +24,40 @@ import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.command.CommandException;
 
 /**
- * Lists collected properties.<br> 
- * This Command looks for an Iterator under the given
- * context variable and lists its properties.
+ * Lists collected <code>Property</code>s.<br>
+ * This <code>Command</code> looks for an <code>Iterator</code> under the
+ * given <code>Context</code> variable and lists its <code>Property</code>s.
  */
-public class LsCollectedProperties extends AbstractLsProperties
-{
+public class LsCollectedProperties extends AbstractLsProperties {
     /** Context variable that holds the Iterator */
     private String fromKey = "collected";
 
     /**
-     * @return the context variable
+     * @return the from key
      */
-    public String getFromKey()
-    {
+    public String getFromKey() {
         return fromKey;
     }
 
     /**
-     * Sets the context variable
-     * @param context variable name
+     * @param fromKey
+     *        from key to set
      */
-    public void setFromKey(String contextVariable)
-    {
-        this.fromKey = contextVariable;
+    public void setFromKey(String fromKey) {
+        this.fromKey = fromKey;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     protected Iterator getProperties(Context ctx) throws CommandException,
-            RepositoryException
-    {
+            RepositoryException {
         // show the path
         this.setPath(true);
         Object o = ctx.get(fromKey);
-        if (o == null || !(o instanceof Iterator))
-        {
+        if (o == null || !(o instanceof Iterator)) {
             throw new JcrInfoCommandException(
-                "illegalargument.no.iterator.under", new String[]
-                {
+                "illegalargument.no.iterator.under", new String[] {
                     fromKey
                 });
         }

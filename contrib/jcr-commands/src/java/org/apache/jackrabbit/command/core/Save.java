@@ -25,53 +25,47 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Saves the current working node. <br>
- * 
+ * Save the current working <code>Node</code> if specified, or the current
+ * working <code>Session</code>
  */
-public class Save implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(Save.class);
+public class Save implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(Save.class);
 
-	// ---------------------------- < keys >
-	/** path key */
-	private String pathKey = "path";
+    // ---------------------------- < keys >
+    /** path key */
+    private String pathKey = "path";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
 
-		if (path == null)
-		{
-			log.debug("saving session");
-			CommandHelper.getSession(ctx).save();
-		} else
-		{
-			log.debug("saving node at " + path);
-			Node n = CommandHelper.getNode(ctx, path);
-			n.save();
-		}
+        if (path == null) {
+            log.debug("saving session");
+            CommandHelper.getSession(ctx).save();
+        } else {
+            log.debug("saving node at " + path);
+            Node n = CommandHelper.getNode(ctx, path);
+            n.save();
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 }

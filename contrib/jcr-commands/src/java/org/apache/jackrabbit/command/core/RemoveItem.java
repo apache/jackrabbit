@@ -25,52 +25,46 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Removes the item at the given path.
+ * Remove the <code>Item</code> at the given path
  */
-public class RemoveItem implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(RemoveItem.class);
+public class RemoveItem implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(RemoveItem.class);
 
-	// ---------------------------- < keys >
+    // ---------------------------- < keys >
 
-	/** context attribute key for the path attribute */
-	private String pathKey = "path";
+    /** context attribute key for the path attribute */
+    private String pathKey = "path";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		if (log.isDebugEnabled())
-		{
-			log.debug("removing item from " + path);
-		}
-		Item item = CommandHelper.getItem(ctx, path);
-		if (item.isSame(CommandHelper.getCurrentNode(ctx))
-				&& item.getDepth() > 0)
-		{
-			CommandHelper.setCurrentNode(ctx, item.getParent());
-		}
-		item.remove();
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        if (log.isDebugEnabled()) {
+            log.debug("removing item from " + path);
+        }
+        Item item = CommandHelper.getItem(ctx, path);
+        if (item.isSame(CommandHelper.getCurrentNode(ctx))
+                && item.getDepth() > 0) {
+            CommandHelper.setCurrentNode(ctx, item.getParent());
+        }
+        item.remove();
+        return false;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 }

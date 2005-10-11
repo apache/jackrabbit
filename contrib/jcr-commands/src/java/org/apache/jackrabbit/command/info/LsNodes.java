@@ -26,39 +26,36 @@ import org.apache.jackrabbit.command.CommandHelper;
 import org.apache.jackrabbit.command.CommandException;
 
 /**
- * Lists the nodes under the current working node that match the given pattern.
+ * List the <code>Node</code>s under the current working <code>Node</code>
+ * that match the given pattern.
  */
-public class LsNodes extends AbstractLsNodes
-{
+public class LsNodes extends AbstractLsNodes {
 
     /** name pattern key */
     private String patternKey = "pattern";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     protected Iterator getNodes(Context ctx) throws CommandException,
-            RepositoryException
-    {
+            RepositoryException {
         String pattern = (String) ctx.get(this.patternKey);
-        Node n = CommandHelper.getCurrentNode(ctx) ;
+        Node n = CommandHelper.getCurrentNode(ctx);
         return CommandHelper.getNodes(ctx, n, pattern);
     }
 
     /**
-     * @return Returns the patternKey.
+     * @return the pattern key
      */
-    public String getPatternKey()
-    {
+    public String getPatternKey() {
         return patternKey;
     }
 
     /**
      * @param patternKey
-     *            The patternKey to set.
+     *        the pattern key to set
      */
-    public void setPatternKey(String patternKey)
-    {
+    public void setPatternKey(String patternKey) {
         this.patternKey = patternKey;
     }
 }

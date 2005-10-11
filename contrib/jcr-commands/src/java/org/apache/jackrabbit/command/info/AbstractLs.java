@@ -29,13 +29,12 @@ import org.apache.jackrabbit.command.CommandHelper;
 /**
  * Ls superclass
  */
-public abstract class AbstractLs implements Command
-{
+public abstract class AbstractLs implements Command {
     /** bundle */
     private static ResourceBundle bundle = CommandHelper.getBundle();
 
     /** long width */
-    protected int longWidth = 10;
+    protected int longWidth = 9;
 
     /** max items to list */
     private int defaultMaxItems = 100;
@@ -46,84 +45,100 @@ public abstract class AbstractLs implements Command
     /** show path flag */
     private boolean path;
 
-    protected void printFooter(Context ctx, Iterator iter)
-    {
+    /**
+     * Print the footer
+     * @param ctx
+     *        the <code>Context</code>
+     * @param iter
+     *        the <code>Iterator</code>
+     */
+    protected void printFooter(Context ctx, Iterator iter) {
         CommandHelper.getOutput(ctx).println();
         CommandHelper.getOutput(ctx).println(bundle.getString("word.total"));
-        if (iter instanceof NodeIterator)
-        {
+        if (iter instanceof NodeIterator) {
             printFooter(ctx, (NodeIterator) iter);
-        } else if (iter instanceof PropertyIterator)
-        {
+        } else if (iter instanceof PropertyIterator) {
             printFooter(ctx, (PropertyIterator) iter);
         }
     }
 
-    private void printFooter(Context ctx, NodeIterator iter)
-    {
+    /**
+     * Print footer
+     * @param ctx
+     *        the <code>Context</code>
+     * @param iter
+     *        the <code>Iterator</code>
+     */
+    private void printFooter(Context ctx, NodeIterator iter) {
         CommandHelper.getOutput(ctx).println(
             iter.getSize() + " " + bundle.getString("word.nodes"));
     }
 
-    private void printFooter(Context ctx, PropertyIterator iter)
-    {
+    /**
+     * Print footer
+     * @param ctx
+     *        the <code>Context</code>
+     * @param iter
+     *        the <code>Iterator</code>
+     */
+    private void printFooter(Context ctx, PropertyIterator iter) {
         CommandHelper.getOutput(ctx).println(
             iter.getSize() + " " + bundle.getString("word.properties"));
     }
 
-    public int getDefaultMaxItems()
-    {
+    /**
+     * @return the default max number of <code>Items</code> s to show
+     */
+    public int getDefaultMaxItems() {
         return defaultMaxItems;
     }
 
-    public void setDefaultMaxItems(int maxItems)
-    {
+    /**
+     * @param maxItems
+     *        the default max number of <code>Items</code> s to set
+     */
+    public void setDefaultMaxItems(int maxItems) {
         this.defaultMaxItems = maxItems;
     }
 
     /**
-     * @return Returns the path.
+     * @return the path
      */
-    public boolean isPath()
-    {
+    public boolean isPath() {
         return path;
     }
 
     /**
      * @param path
-     *            The path to set.
+     *        the path to set
      */
-    public void setPath(boolean path)
-    {
+    public void setPath(boolean path) {
         this.path = path;
     }
 
     /**
-     * @return Returns the maxItemsKey.
+     * @return the max number of items key
      */
-    public String getMaxItemsKey()
-    {
+    public String getMaxItemsKey() {
         return maxItemsKey;
     }
 
     /**
      * @param maxItemsKey
-     *            The maxItemsKey to set.
+     *        the max number of items key to set
      */
-    public void setMaxItemsKey(String maxItemsKey)
-    {
+    public void setMaxItemsKey(String maxItemsKey) {
         this.maxItemsKey = maxItemsKey;
     }
 
     /**
      * @param ctx
-     * @return max number of items to show
+     *        the <code>Context</code>
+     * @return the max number of <code>Item</code> s to show
      */
-    protected int getMaxItems(Context ctx)
-    {
+    protected int getMaxItems(Context ctx) {
         String maxItems = (String) ctx.get(this.maxItemsKey);
-        if (maxItems == null)
-        {
+        if (maxItems == null) {
             maxItems = new Integer(this.defaultMaxItems).toString();
         }
         return Integer.valueOf(maxItems).intValue();

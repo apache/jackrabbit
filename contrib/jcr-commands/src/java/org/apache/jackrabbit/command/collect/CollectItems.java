@@ -19,22 +19,19 @@ package org.apache.jackrabbit.command.collect;
 /**
  * Collect children, either nodes or properties
  */
-public class CollectItems extends AbstractCollect
-{
+public class CollectItems extends AbstractCollect {
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    protected boolean isCollectNodes()
-    {
+    protected boolean isCollectNodes() {
         return true;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    protected boolean isCollectProperties()
-    {
+    protected boolean isCollectProperties() {
         return true;
     }
 }

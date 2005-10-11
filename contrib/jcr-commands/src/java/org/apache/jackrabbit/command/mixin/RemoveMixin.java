@@ -23,10 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Remove a mixin from the given node
+ * Remove a mixin from the given <code>Node</code>
  */
-public class RemoveMixin implements Command
-{
+public class RemoveMixin implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(RemoveMixin.class);
 
@@ -38,48 +37,42 @@ public class RemoveMixin implements Command
     private String mixinKey = "mixin";
 
     /**
-     * @return Returns the mixinNameKey.
+     * @return the mixin name key
      */
-    public String getMixinKey()
-    {
+    public String getMixinKey() {
         return mixinKey;
     }
 
     /**
      * @param mixinNameKey
-     *            The mixinNameKey to set.
+     *        the mixin name key to set
      */
-    public void setMixinKey(String mixinNameKey)
-    {
+    public void setMixinKey(String mixinNameKey) {
         this.mixinKey = mixinNameKey;
     }
 
     /**
-     * @return Returns the pathKey.
+     * @return he path key
      */
-    public String getPathKey()
-    {
+    public String getPathKey() {
         return pathKey;
     }
 
     /**
      * @param pathKey
-     *            The pathKey to set.
+     *        the path key to set
      */
-    public void setPathKey(String pathKey)
-    {
+    public void setPathKey(String pathKey) {
         this.pathKey = pathKey;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
-        String path = (String) ctx.get(this.pathKey) ;
-        String mixin = (String) ctx.get(this.mixinKey) ;
-        if (log.isDebugEnabled())
-        {
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        String mixin = (String) ctx.get(this.mixinKey);
+        if (log.isDebugEnabled()) {
             log.debug("removing mixin " + mixin + " from node " + path);
         }
         CommandHelper.getNode(ctx, path).removeMixin(mixin);

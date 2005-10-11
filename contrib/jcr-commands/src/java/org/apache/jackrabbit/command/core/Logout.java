@@ -25,28 +25,24 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Logout command
+ * Logout from the current working <code>Repository</code>
  */
-public class Logout implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(Logout.class);
+public class Logout implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(Logout.class);
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		Session s = CommandHelper.getSession(ctx);
-		if (log.isDebugEnabled())
-		{
-			log.debug("logging out user " + s.getUserID());
-		}
-		s.logout();
-		CommandHelper.setCurrentNode(ctx, null);
-		CommandHelper.setSession(ctx, null);
-		return false;
-	}
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        Session s = CommandHelper.getSession(ctx);
+        if (log.isDebugEnabled()) {
+            log.debug("logging out user " + s.getUserID());
+        }
+        s.logout();
+        CommandHelper.setCurrentNode(ctx, null);
+        CommandHelper.setSession(ctx, null);
+        return false;
+    }
 }

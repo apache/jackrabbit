@@ -26,128 +26,104 @@ import org.apache.commons.chain.Context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
-import org.apache.jackrabbit.command.CommandException;
 
 /**
- * Login command.
+ * Login to the current working <code>Repository<code>
  */
-public class Login implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(Login.class);
+public class Login implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(Login.class);
 
-	// ---------------------------- < keys >
-	/** user key */
-	private String userKey = "user";
+    // ---------------------------- < keys >
+    /** user key */
+    private String userKey = "user";
 
-	/** password key */
-	private String passwordKey = "password";
+    /** password key */
+    private String passwordKey = "password";
 
-	/** workspace key */
-	private String workspaceKey = "workspace";
+    /** workspace key */
+    private String workspaceKey = "workspace";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		if (CommandHelper.getSession(ctx) != null)
-		{
-			throw new CommandException("exception.already.logged.in");
-		}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String anon = "anonymous";
 
-		String anon = "anonymous";
+        String user = (String) ctx.get(this.userKey);
+        String password = (String) ctx.get(this.passwordKey);
+        String workspace = (String) ctx.get(this.workspaceKey);
 
-		String user = (String) ctx.get(this.userKey);
-		String password = (String) ctx.get(this.passwordKey);
-		String workspace = (String) ctx.get(this.workspaceKey);
+        if (user == null) {
+            user = anon;
+        }
 
-		if (user == null)
-		{
-			user = anon;
-		}
+        if (password == null) {
+            password = anon;
+        }
 
-		if (password == null)
-		{
-			password = anon;
-		}
+        if (log.isDebugEnabled()) {
+            log.debug("logging in as " + user);
+        }
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("logging in as " + user);
-		}
+        Session session = null;
+        Repository repo = CommandHelper.getRepository(ctx);
 
-		Session session = null;
-		Repository repo = CommandHelper.getRepository(ctx);
+        Credentials credentials = new SimpleCredentials(user, password
+            .toCharArray());
 
-		if (repo == null)
-		{
-			throw new CommandException("exception.repository.not.in.context");
-		}
+        if (workspace == null) {
+            session = repo.login(credentials);
+        } else {
+            session = repo.login(credentials, workspace);
+        }
+        CommandHelper.setSession(ctx, session);
+        CommandHelper.setCurrentNode(ctx, session.getRootNode());
+        return false;
+    }
 
-		Credentials credentials = new SimpleCredentials(user, password
-				.toCharArray());
+    /**
+     * @return the password key
+     */
+    public String getPasswordKey() {
+        return passwordKey;
+    }
 
-		if (workspace == null)
-		{
-			session = repo.login(credentials);
-		} else
-		{
-			session = repo.login(credentials, workspace);
-		}
-		CommandHelper.setSession(ctx, session);
-		CommandHelper.setCurrentNode(ctx, session.getRootNode());
-		return false;
-	}
+    /**
+     * @param passwordKey
+     *        the password key to set
+     */
+    public void setPasswordKey(String passwordKey) {
+        this.passwordKey = passwordKey;
+    }
 
-	/**
-	 * @return Returns the passwordKey.
-	 */
-	public String getPasswordKey()
-	{
-		return passwordKey;
-	}
+    /**
+     * @return the user key.
+     */
+    public String getUserKey() {
+        return userKey;
+    }
 
-	/**
-	 * @param passwordKey
-	 *            Set the context attribute key for the password attribute.
-	 */
-	public void setPasswordKey(String passwordKey)
-	{
-		this.passwordKey = passwordKey;
-	}
+    /**
+     * @param userKey
+     *        the user key to set
+     */
+    public void setUserKey(String userKey) {
+        this.userKey = userKey;
+    }
 
-	/**
-	 * @return Returns the userKey.
-	 */
-	public String getUserKey()
-	{
-		return userKey;
-	}
+    /**
+     * @return the <code>Workspace</code>.
+     */
+    public String getWorkspaceKey() {
+        return workspaceKey;
+    }
 
-	/**
-	 * @param userKey
-	 *            Set the context attribute key for the user attribute.
-	 */
-	public void setUserKey(String userKey)
-	{
-		this.userKey = userKey;
-	}
-
-	/**
-	 * @return Returns the workspaceKey.
-	 */
-	public String getWorkspaceKey()
-	{
-		return workspaceKey;
-	}
-
-	/**
-	 * @param workspaceKey
-	 *            Set the context attribute key for the workspace attribute.
-	 */
-	public void setWorkspaceKey(String workspaceKey)
-	{
-		this.workspaceKey = workspaceKey;
-	}
+    /**
+     * @param workspaceKey
+     *        the <code>Workspace<code> key to set
+     */
+    public void setWorkspaceKey(String workspaceKey) {
+        this.workspaceKey = workspaceKey;
+    }
 }

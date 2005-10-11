@@ -27,7 +27,6 @@ import org.apache.jackrabbit.command.CommandException;
 
 /**
  * List items
- * 
  * <p>
  * <ul>
  * <li>name</li>
@@ -38,39 +37,33 @@ import org.apache.jackrabbit.command.CommandException;
  * </ul>
  * </p>
  */
-public class LsItems extends AbstractLsItems
-{
+public class LsItems extends AbstractLsItems {
 
-	/** name pattern key */
-	private String patternKey = "pattern";
+    /** name pattern key */
+    private String patternKey = "pattern";
 
-	/**
-	 * @return the name pattern
-	 */
-	public String getPatternKey()
-	{
-		return patternKey;
-	}
+    /**
+     * @return the name pattern
+     */
+    public String getPatternKey() {
+        return patternKey;
+    }
 
-	/**
-	 * Sets the name pattern
-	 * 
-	 * @param name
-	 *            pattern
-	 */
-	public void setPatternKey(String pattern)
-	{
-		this.patternKey = pattern;
-	}
+    /**
+     * @param pattern
+     *        the pattern
+     */
+    public void setPatternKey(String pattern) {
+        this.patternKey = pattern;
+    }
 
-	/**
-	 * @inheritDoc
-	 */
-	protected Iterator getItems(Context ctx) throws CommandException,
-			RepositoryException
-	{
-		String pattern = (String) ctx.get(this.patternKey);
-		Node n = CommandHelper.getCurrentNode(ctx) ;
-		return CommandHelper.getItems(ctx, n, pattern);
-	}
+    /**
+     * {@inheritDoc}
+     */
+    protected Iterator getItems(Context ctx) throws CommandException,
+            RepositoryException {
+        String pattern = (String) ctx.get(this.patternKey);
+        Node n = CommandHelper.getCurrentNode(ctx);
+        return CommandHelper.getItems(ctx, n, pattern);
+    }
 }

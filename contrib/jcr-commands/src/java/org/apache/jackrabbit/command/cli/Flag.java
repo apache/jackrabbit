@@ -17,51 +17,47 @@
 package org.apache.jackrabbit.command.cli;
 
 /**
- * Command line flag. A flag is a parameter that has no other value that the
- * option name. e.g. -[flag name].
+ * A command line flag <br>
+ * A flag is a parameter that has no other value that the option name. e.g.
+ * -[flag name].
  */
-public class Flag extends AbstractParameter
-{
+public class Flag extends AbstractParameter {
+    /** true if flag is present in the user's input */
     private boolean present = false;
 
     /**
-     * @return Returns the present.
+     * @return true if the flag exists in the user's input
      */
-    public boolean isPresent()
-    {
+    public boolean isPresent() {
         return present;
     }
 
     /**
      * @param present
-     *            The present to set.
+     *        the present to set
      */
-    public void setPresent(boolean present)
-    {
+    public void setPresent(boolean present) {
         this.present = present;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public String getValue()
-    {
+    public String getValue() {
         return Boolean.toString(present);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public void setValue(String value)
-    {
+    public void setValue(String value) {
         present = Boolean.getBoolean(value);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public Object clone()
-    {
+    public Object clone() {
         Flag f = new Flag();
         f.present = this.present;
         this.clone(f);
@@ -69,31 +65,26 @@ public class Flag extends AbstractParameter
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean isRequired()
-    {
+    public boolean isRequired() {
         return false;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public String getLocalizedArgName()
-    {
+    public String getLocalizedArgName() {
         return "";
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public String getLocalizedDescription()
-    {
-        if (this.getDescription() == null)
-        {
+    public String getLocalizedDescription() {
+        if (this.getDescription() == null) {
             return bundle.getString("param.flag." + this.getName() + ".desc");
-        } else
-        {
+        } else {
             return bundle.getString(this.getDescription());
         }
     }

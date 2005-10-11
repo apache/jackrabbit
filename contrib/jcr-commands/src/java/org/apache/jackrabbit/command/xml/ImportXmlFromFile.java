@@ -29,10 +29,9 @@ import org.apache.jackrabbit.command.CommandException;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Imports the xml view from the given file to the current working node.
+ * Import the xml view from the given file to the current working <code>Node</code>
  */
-public class ImportXmlFromFile implements Command
-{
+public class ImportXmlFromFile implements Command {
 
     // ---------------------------- < keys >
 
@@ -46,21 +45,19 @@ public class ImportXmlFromFile implements Command
     private String uuidBehaviourKey = "uuidBehaviour";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String file = (String) ctx.get(this.srcFsPathKey);
         String dest = (String) ctx.get(this.destJcrPathKey);
         int uuidBehaviour = Integer.valueOf(
             (String) ctx.get(this.uuidBehaviourKey)).intValue();
         File f = new File(file);
-        if (!f.exists())
-        {
-            throw new CommandException("exception.file.not.found", new String[]
-            {
-                file
-            });
+        if (!f.exists()) {
+            throw new CommandException("exception.file.not.found",
+                new String[] {
+                    file
+                });
         }
         BufferedInputStream in = new BufferedInputStream(new FileInputStream(f));
         Session s = CommandHelper.getSession(ctx);
@@ -70,53 +67,47 @@ public class ImportXmlFromFile implements Command
     }
 
     /**
-     * @return Returns the fromKey.
+     * @return the from key
      */
-    public String getSrcFsPathKey()
-    {
+    public String getSrcFsPathKey() {
         return srcFsPathKey;
     }
 
     /**
      * @param fromKey
-     *            Set the context attribute key for the from attribute.
+     *        the from key to set
      */
-    public void setSrcFsPathKey(String fromKey)
-    {
+    public void setSrcFsPathKey(String fromKey) {
         this.srcFsPathKey = fromKey;
     }
 
     /**
-     * @return Returns the uuidBehaviourKey.
+     * @return the uuidBehaviourKey
      */
-    public String getUuidBehaviourKey()
-    {
+    public String getUuidBehaviourKey() {
         return uuidBehaviourKey;
     }
 
     /**
      * @param uuidBehaviourKey
-     *            Set the context attribute key for the uuidBehaviour attribute.
+     *        the uuidBehaviourKey to set
      */
-    public void setUuidBehaviourKey(String uuidBehaviourKey)
-    {
+    public void setUuidBehaviourKey(String uuidBehaviourKey) {
         this.uuidBehaviourKey = uuidBehaviourKey;
     }
 
     /**
-     * @return Returns the destJcrPathKey.
+     * @return the destination jcr path key
      */
-    public String getDestJcrPathKey()
-    {
+    public String getDestJcrPathKey() {
         return destJcrPathKey;
     }
 
     /**
      * @param destJcrPathKey
-     *            The destJcrPathKey to set.
+     *        the destination jcr path key to set
      */
-    public void setDestJcrPathKey(String destJcrPathKey)
-    {
+    public void setDestJcrPathKey(String destJcrPathKey) {
         this.destJcrPathKey = destJcrPathKey;
     }
 }

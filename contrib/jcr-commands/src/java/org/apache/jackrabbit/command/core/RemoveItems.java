@@ -31,88 +31,80 @@ import org.apache.jackrabbit.command.CommandHelper;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 
 /**
- * Removes any item under the given node that match the given name pattern.
+ * Remove any <code>Item</code> under the given <code>Node</code> that match
+ * the given name pattern.
  */
-public class RemoveItems implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(RemoveItems.class);
+public class RemoveItems implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(RemoveItems.class);
 
-	// ---------------------------- < keys >
-	/** path key */
-	private String pathKey = "path";
+    // ---------------------------- < keys >
+    /** path key */
+    private String pathKey = "path";
 
-	/** item pattern key */
-	private String patternKey = "pattern";
+    /** item pattern key */
+    private String patternKey = "pattern";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String pattern = (String) ctx.get(this.patternKey);
-		String path = (String) ctx.get(this.pathKey);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String pattern = (String) ctx.get(this.patternKey);
+        String path = (String) ctx.get(this.pathKey);
 
-		Node n = CommandHelper.getNode(ctx, path);
+        Node n = CommandHelper.getNode(ctx, path);
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("removing nodes from " + n.getPath()
-					+ " that match pattern " + pattern);
-		}
+        if (log.isDebugEnabled()) {
+            log.debug("removing nodes from " + n.getPath()
+                    + " that match pattern " + pattern);
+        }
 
-		List children = new ArrayList();
-		ChildrenCollectorFilter collector = new ChildrenCollectorFilter(
-				pattern, children, true, true, 1);
-		collector.visit(n);
+        List children = new ArrayList();
+        ChildrenCollectorFilter collector = new ChildrenCollectorFilter(
+            pattern, children, true, true, 1);
+        collector.visit(n);
 
-		Iterator items = children.iterator();
+        Iterator items = children.iterator();
 
-		while (items.hasNext())
-		{
-			Item item = (Item) items.next();
-			if (item.isSame(CommandHelper.getCurrentNode(ctx))
-					&& item.getDepth() > 0)
-			{
-				CommandHelper.setCurrentNode(ctx, item.getParent());
-			}
-			item.remove();
-		}
+        while (items.hasNext()) {
+            Item item = (Item) items.next();
+            if (item.isSame(CommandHelper.getCurrentNode(ctx))
+                    && item.getDepth() > 0) {
+                CommandHelper.setCurrentNode(ctx, item.getParent());
+            }
+            item.remove();
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
-	 * @return Returns the patternKey.
-	 */
-	public String getPatternKey()
-	{
-		return patternKey;
-	}
+    /**
+     * @return the pattern key
+     */
+    public String getPatternKey() {
+        return patternKey;
+    }
 
-	/**
-	 * @param patternKey
-	 *            Set the context attribute key for the pattern attribute.
-	 */
-	public void setPatternKey(String patternKey)
-	{
-		this.patternKey = patternKey;
-	}
+    /**
+     * @param patternKey
+     *        the pattern key to set
+     */
+    public void setPatternKey(String patternKey) {
+        this.patternKey = patternKey;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 }
