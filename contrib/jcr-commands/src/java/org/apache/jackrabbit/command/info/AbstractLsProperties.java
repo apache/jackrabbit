@@ -38,12 +38,15 @@ public abstract class AbstractLsProperties extends AbstractLs {
     /** bundle */
     private static ResourceBundle bundle = CommandHelper.getBundle();
 
+    /** length of length field */
+    private static final int LENGTH_LENGTH = 8;
+
     /**
      * {@inheritDoc}
      */
     public final boolean execute(Context ctx) throws Exception {
         int[] width = new int[] {
-                30, longWidth, longWidth, longWidth, 20
+                30, longWidth, longWidth, LENGTH_LENGTH, 18
         };
 
         String header[] = new String[] {
