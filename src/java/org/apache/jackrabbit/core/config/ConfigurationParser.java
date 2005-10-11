@@ -58,60 +58,60 @@ public class ConfigurationParser {
     public static final String WORKSPACE_HOME_VARIABLE = "wsp.home";
 
     /** Name of the repository name parser variable. */
-    private static final String WORKSPACE_NAME_VARIABLE = "wsp.name";
+    public static final String WORKSPACE_NAME_VARIABLE = "wsp.name";
 
     /** Name of the security configuration element. */
-    private static final String SECURITY_ELEMENT = "Security";
+    public static final String SECURITY_ELEMENT = "Security";
 
     /** Name of the access manager configuration element. */
-    private static final String ACCESS_MANAGER_ELEMENT = "AccessManager";
+    public static final String ACCESS_MANAGER_ELEMENT = "AccessManager";
 
     /** Name of the login module configuration element. */
-    private static final String LOGIN_MODULE_ELEMENT = "LoginModule";
+    public static final String LOGIN_MODULE_ELEMENT = "LoginModule";
 
     /** Name of the general workspace configuration element. */
-    private static final String WORKSPACES_ELEMENT = "Workspaces";
+    public static final String WORKSPACES_ELEMENT = "Workspaces";
 
     /** Name of the workspace configuration element. */
-    private static final String WORKSPACE_ELEMENT = "Workspace";
+    public static final String WORKSPACE_ELEMENT = "Workspace";
 
     /** Name of the versioning configuration element. */
-    private static final String VERSIONING_ELEMENT = "Versioning";
+    public static final String VERSIONING_ELEMENT = "Versioning";
 
     /** Name of the file system configuration element. */
-    private static final String FILE_SYSTEM_ELEMENT = "FileSystem";
+    public static final String FILE_SYSTEM_ELEMENT = "FileSystem";
 
     /** Name of the persistence manager configuration element. */
-    private static final String PERSISTENCE_MANAGER_ELEMENT =
+    public static final String PERSISTENCE_MANAGER_ELEMENT =
         "PersistenceManager";
 
     /** Name of the search index configuration element. */
-    private static final String SEARCH_INDEX_ELEMENT = "SearchIndex";
+    public static final String SEARCH_INDEX_ELEMENT = "SearchIndex";
 
     /** Name of the bean parameter configuration element. */
-    private static final String PARAM_ELEMENT = "param";
+    public static final String PARAM_ELEMENT = "param";
 
     /** Name of the application name configuration attribute. */
-    private static final String APP_NAME_ATTRIBUTE = "appName";
+    public static final String APP_NAME_ATTRIBUTE = "appName";
 
     /** Name of the root path configuration attribute. */
-    private static final String ROOT_PATH_ATTRIBUTE = "rootPath";
+    public static final String ROOT_PATH_ATTRIBUTE = "rootPath";
 
     /** Name of the default workspace configuration attribute. */
-    private static final String DEFAULT_WORKSPACE_ATTRIBUTE =
+    public static final String DEFAULT_WORKSPACE_ATTRIBUTE =
         "defaultWorkspace";
 
     /** Name of the bean implementation class configuration attribute. */
-    private static final String CLASS_ATTRIBUTE = "class";
+    public static final String CLASS_ATTRIBUTE = "class";
 
     /** Name of the bean parameter name configuration attribute. */
-    private static final String NAME_ATTRIBUTE = "name";
+    public static final String NAME_ATTRIBUTE = "name";
 
     /** Name of the bean parameter value configuration attribute. */
-    private static final String VALUE_ATTRIBUTE = "value";
+    public static final String VALUE_ATTRIBUTE = "value";
 
     /** Name of the default search index implementation class. */
-    private static final String DEFAULT_QUERY_HANDLER =
+    public static final String DEFAULT_QUERY_HANDLER =
             "org.apache.jackrabbit.core.query.lucene.SearchIndex";
 
     /**
@@ -130,6 +130,14 @@ public class ConfigurationParser {
      */
     public ConfigurationParser(Properties variables) {
         this.variables = variables;
+    }
+
+    /**
+     * Returns the variables.
+     * @return the variables.
+     */
+    public Properties getVariables() {
+        return variables;
     }
 
     /**
@@ -220,7 +228,7 @@ public class ConfigurationParser {
         VersioningConfig vc = parseVersioningConfig(root);
 
         return new RepositoryConfig(home, appName, amc, lmc, fsc,
-                workspaceDirectory, defaultWorkspace, template, vc);
+                workspaceDirectory, defaultWorkspace, template, vc, this);
     }
 
     /**
@@ -280,15 +288,14 @@ public class ConfigurationParser {
         // Create a temporary parser that contains the ${wsp.name} variable
         Properties tmpVariables = (Properties) variables.clone();
         tmpVariables.put(WORKSPACE_NAME_VARIABLE, name);
-        ConfigurationParser tmpParser = new ConfigurationParser(tmpVariables);
+        ConfigurationParser tmpParser = createSubParser(tmpVariables);
 
         // File system implementation
         FileSystemConfig fsc = new FileSystemConfig(
                 tmpParser.parseBeanConfig(root, FILE_SYSTEM_ELEMENT));
 
         // Persistence manager implementation
-        PersistenceManagerConfig pmc = new PersistenceManagerConfig(
-            tmpParser.parseBeanConfig(root, PERSISTENCE_MANAGER_ELEMENT));
+        PersistenceManagerConfig pmc = parsePersistenceManagerConfig(root);
 
         // Search implementation (optional)
         SearchConfig sc = tmpParser.parseSearchConfig(root);
@@ -323,7 +330,7 @@ public class ConfigurationParser {
      * @return search configuration, or <code>null</code>
      * @throws ConfigurationException if the configuration is broken
      */
-    private SearchConfig parseSearchConfig(Element parent)
+    protected SearchConfig parseSearchConfig(Element parent)
             throws ConfigurationException {
         NodeList children = parent.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -372,7 +379,7 @@ public class ConfigurationParser {
      * @return versioning configuration
      * @throws ConfigurationException if the configuration is broken
      */
-    private VersioningConfig parseVersioningConfig(Element parent)
+    protected VersioningConfig parseVersioningConfig(Element parent)
             throws ConfigurationException {
         Element element = getElement(parent, VERSIONING_ELEMENT);
 
@@ -385,10 +392,23 @@ public class ConfigurationParser {
                 parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
 
         // Persistence manager implementation
-        PersistenceManagerConfig pmc = new PersistenceManagerConfig(
-                parseBeanConfig(element, PERSISTENCE_MANAGER_ELEMENT));
+        PersistenceManagerConfig pmc = parsePersistenceManagerConfig(element);
 
         return new VersioningConfig(home, fsc, pmc);
+    }
+
+    /**
+     * Parses the PersistenceManager config.
+     *
+     * @param parent
+     * @return
+     * @throws ConfigurationException
+     */
+    protected PersistenceManagerConfig parsePersistenceManagerConfig(Element parent)
+            throws ConfigurationException {
+
+        return new PersistenceManagerConfig(
+                parseBeanConfig(parent, PERSISTENCE_MANAGER_ELEMENT));
     }
 
     /**
@@ -411,7 +431,7 @@ public class ConfigurationParser {
      * @throws ConfigurationException if the configuration element does not
      *                                exist or is broken
      */
-    private BeanConfig parseBeanConfig(Element parent, String name)
+    protected BeanConfig parseBeanConfig(Element parent, String name)
             throws ConfigurationException {
         // Bean configuration element
         Element element = getElement(parent, name);
@@ -439,7 +459,7 @@ public class ConfigurationParser {
      *                                not contain the <code>name</code> and
      *                                <code>value</code> attributes
      */
-    private Properties parseParameters(Element element)
+    protected Properties parseParameters(Element element)
             throws ConfigurationException {
         Properties parameters = new Properties();
 
@@ -476,7 +496,7 @@ public class ConfigurationParser {
      * @throws ConfigurationException if the replacement of a referenced
      *                                variable is not found
      */
-    private String replaceVariables(String value)
+    protected String replaceVariables(String value)
             throws ConfigurationException {
         StringBuffer result = new StringBuffer();
 
@@ -517,7 +537,7 @@ public class ConfigurationParser {
      * @throws ConfigurationException if the configuration document could
      *                                not be read or parsed
      */
-    private Element parseXML(InputSource xml) throws ConfigurationException {
+    protected Element parseXML(InputSource xml) throws ConfigurationException {
         try {
             DocumentBuilderFactory factory =
                 DocumentBuilderFactory.newInstance();
@@ -546,7 +566,7 @@ public class ConfigurationParser {
      * @throws ConfigurationException
      * @throws ConfigurationException if the child element is not found
      */
-    private Element getElement(Element parent, String name) throws ConfigurationException {
+    protected Element getElement(Element parent, String name) throws ConfigurationException {
         return getElement(parent, name, true);
     }
 
@@ -561,7 +581,7 @@ public class ConfigurationParser {
      * @throws ConfigurationException if the child element is not found and
      *         <code>required</code> is <code>true</code>.
      */
-    private Element getElement(Element parent, String name, boolean required)
+    protected Element getElement(Element parent, String name, boolean required)
             throws ConfigurationException {
         NodeList children = parent.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -588,7 +608,7 @@ public class ConfigurationParser {
      * @return attribute value
      * @throws ConfigurationException if the attribute is not found
      */
-    private String getAttribute(Element element, String name)
+    protected String getAttribute(Element element, String name)
             throws ConfigurationException {
         Attr attribute = element.getAttributeNode(name);
         if (attribute != null) {
@@ -609,7 +629,7 @@ public class ConfigurationParser {
      * @param def default value
      * @return attribute value, or the default value
      */
-    private String getAttribute(Element element, String name, String def) {
+    protected String getAttribute(Element element, String name, String def) {
         Attr attribute = element.getAttributeNode(name);
         if (attribute != null) {
             return attribute.getValue();
@@ -618,4 +638,17 @@ public class ConfigurationParser {
         }
     }
 
+    /**
+     * Creates a new instance of a configuration parser but with overlayed
+     * variables.
+     *
+     * @param variables the variables overlay
+     * @return a new configuration parser instance
+     */
+    protected ConfigurationParser createSubParser(Properties variables) {
+        // overlay the properties
+        Properties props = new Properties(this.variables);
+        props.putAll(variables);
+        return new ConfigurationParser(props);
+    }
 }
