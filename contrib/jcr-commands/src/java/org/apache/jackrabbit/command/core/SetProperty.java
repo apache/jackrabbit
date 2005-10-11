@@ -25,38 +25,34 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Sets a property to the current working Node
+ * Set a <code>Property</code> <code>Value</code> to the current working
+ * <code>Node</code>
  */
-public class SetProperty extends AbstractSetProperty
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(SetProperty.class);
+public class SetProperty extends AbstractSetProperty {
+    /** logger */
+    private static Log log = LogFactory.getLog(SetProperty.class);
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String value = (String) ctx.get(this.valueKey);
-		String name = (String) ctx.get(this.nameKey);
-		String propertyType = (String) ctx.get(this.typeKey);
-		String parent = (String) ctx.get(this.parentPathKey);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String value = (String) ctx.get(this.valueKey);
+        String name = (String) ctx.get(this.nameKey);
+        String propertyType = (String) ctx.get(this.typeKey);
+        String parent = (String) ctx.get(this.parentPathKey);
 
-		Node node = CommandHelper.getNode(ctx, parent);
-		if (log.isDebugEnabled())
-		{
-			log.debug("setting property to node at " + node.getPath()
-					+ ". property=" + name + " value=" + value);
-		}
-		if (propertyType == null)
-		{
-			node.setProperty(name, value);
-		} else
-		{
-			node.setProperty(name, value, PropertyType
-					.valueFromName(propertyType));
-		}
-		return false;
-	}
+        Node node = CommandHelper.getNode(ctx, parent);
+        if (log.isDebugEnabled()) {
+            log.debug("setting property to node at " + node.getPath()
+                    + ". property=" + name + " value=" + value);
+        }
+        if (propertyType == null) {
+            node.setProperty(name, value);
+        } else {
+            node.setProperty(name, value, PropertyType
+                .valueFromName(propertyType));
+        }
+        return false;
+    }
 
 }

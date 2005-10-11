@@ -17,11 +17,15 @@
   -->
 <project name="jcr-commands">
  <title>Jackrabbit - jcr-commands</title>
-	<body>
-		<menu name="JCR commands">
-			<item name="Overview" href="index.html" />
-			<item name="User guide" href="userguide.html" />
-			<item name="Developer guide" href="devguide.html" />
-		</menu>
-	</body>
+    <body>
+        <links>
+            <item name="Jackrabbit"
+                href="http://incubator.apache.org/jackrabbit"/>
+        </links>
+        <menu name="JCR commands">
+            <item name="Overview" href="index.html" />
+            <item name="User guide" href="userguide.html" />
+            <item name="Developer guide" href="devguide.html" />
+        </menu>
+    </body>
 </project>

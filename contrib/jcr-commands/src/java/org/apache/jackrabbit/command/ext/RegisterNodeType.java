@@ -22,11 +22,13 @@ import org.apache.commons.chain.Context;
 /**
  * Register a node type
  */
-public class RegisterNodeType implements Command
-{
-	public boolean execute(Context arg0) throws Exception
-	{
-		throw new UnsupportedOperationException("not implemented yet");
-	}
+public class RegisterNodeType implements Command {
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context arg0) throws Exception {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
 
 }

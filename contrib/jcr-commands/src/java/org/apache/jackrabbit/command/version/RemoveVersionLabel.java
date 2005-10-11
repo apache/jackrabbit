@@ -23,67 +23,60 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * remove version label
+ * Remove a label from the <code>VersionHistory</code>
  */
-public class RemoveVersionLabel implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(RemoveVersionLabel.class);
+public class RemoveVersionLabel implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(RemoveVersionLabel.class);
 
-	// ---------------------------- < keys >
-	/** node path */
-	private String pathKey = "path";
+    // ---------------------------- < keys >
+    /** node path */
+    private String pathKey = "path";
 
-	/** version label key */
-	private String labelKey = "label";
+    /** version label key */
+    private String labelKey = "label";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		String versionLabel = (String) ctx.get(this.labelKey);
-		if (log.isDebugEnabled())
-		{
-			log.debug("Remove label " + versionLabel + " from node " + path);
-		}
-		CommandHelper.getNode(ctx, path).getVersionHistory()
-				.removeVersionLabel(versionLabel);
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        String versionLabel = (String) ctx.get(this.labelKey);
+        if (log.isDebugEnabled()) {
+            log.debug("Remove label " + versionLabel + " from node " + path);
+        }
+        CommandHelper.getNode(ctx, path).getVersionHistory()
+            .removeVersionLabel(versionLabel);
+        return false;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return returns the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 
-	/**
-	 * @return Returns the versionLabelKey.
-	 */
-	public String getLabelKey()
-	{
-		return labelKey;
-	}
+    /**
+     * @return the version label key.
+     */
+    public String getLabelKey() {
+        return labelKey;
+    }
 
-	/**
-	 * @param versionLabelKey
-	 *            The versionLabelKey to set.
-	 */
-	public void setLabelKey(String versionLabelKey)
-	{
-		this.labelKey = versionLabelKey;
-	}
+    /**
+     * @param versionLabelKey
+     *        the version label key to set
+     */
+    public void setLabelKey(String versionLabelKey) {
+        this.labelKey = versionLabelKey;
+    }
 }

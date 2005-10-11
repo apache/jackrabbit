@@ -23,90 +23,82 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Restore a node to the version with the specified label
+ * Restore a <code>Node</code> to the state of the <code>Version</code> with
+ * the specified label
  */
-public class RestoreByLabel implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(RestoreByLabel.class);
+public class RestoreByLabel implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(RestoreByLabel.class);
 
-	// ---------------------------- < keys >
-	/** node path */
-	private String pathKey = "path";
+    // ---------------------------- < keys >
+    /** node path */
+    private String pathKey = "path";
 
-	/** version name key */
-	private String labelKey = "label";
+    /** version name key */
+    private String labelKey = "label";
 
-	/** remove existing node key */
-	private String removeExistingKey = "removeExisting";
+    /** remove existing node key */
+    private String removeExistingKey = "removeExisting";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		String versionLabel = (String) ctx.get(this.labelKey);
-		boolean removeExisting = Boolean.valueOf(
-				(String) ctx.get(this.removeExistingKey)).booleanValue();
-		if (log.isDebugEnabled())
-		{
-			log.debug("restoring node at " + path + " to version label "
-					+ versionLabel + " removeexisting=" + removeExisting);
-		}
-		CommandHelper.getNode(ctx, path).restoreByLabel(versionLabel,
-				removeExisting);
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        String versionLabel = (String) ctx.get(this.labelKey);
+        boolean removeExisting = Boolean.valueOf(
+            (String) ctx.get(this.removeExistingKey)).booleanValue();
+        if (log.isDebugEnabled()) {
+            log.debug("restoring node at " + path + " to version label "
+                    + versionLabel + " removeexisting=" + removeExisting);
+        }
+        CommandHelper.getNode(ctx, path).restoreByLabel(versionLabel,
+            removeExisting);
+        return false;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 
-	/**
-	 * @return Returns the removeExistingKey.
-	 */
-	public String getRemoveExistingKey()
-	{
-		return removeExistingKey;
-	}
+    /**
+     * @return the remove existing key
+     */
+    public String getRemoveExistingKey() {
+        return removeExistingKey;
+    }
 
-	/**
-	 * @param removeExistingKey
-	 *            The removeExistingKey to set.
-	 */
-	public void setRemoveExistingKey(String removeExistingKey)
-	{
-		this.removeExistingKey = removeExistingKey;
-	}
+    /**
+     * @param removeExistingKey
+     *        the remove existing key to set
+     */
+    public void setRemoveExistingKey(String removeExistingKey) {
+        this.removeExistingKey = removeExistingKey;
+    }
 
-	/**
-	 * @return Returns the versionNameKey.
-	 */
-	public String getLabelKey()
-	{
-		return labelKey;
-	}
+    /**
+     * @return the version name key
+     */
+    public String getLabelKey() {
+        return labelKey;
+    }
 
-	/**
-	 * @param versionNameKey
-	 *            The versionNameKey to set.
-	 */
-	public void setLabelKey(String versionNameKey)
-	{
-		this.labelKey = versionNameKey;
-	}
+    /**
+     * @param versionNameKey
+     *        the version name key to set
+     */
+    public void setLabelKey(String versionNameKey) {
+        this.labelKey = versionNameKey;
+    }
 }

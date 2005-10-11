@@ -33,25 +33,22 @@ import org.apache.jackrabbit.command.CommandHelper;
 /**
  * List properties superclass
  */
-public abstract class AbstractLsProperties extends AbstractLs
-{
+public abstract class AbstractLsProperties extends AbstractLs {
 
     /** bundle */
     private static ResourceBundle bundle = CommandHelper.getBundle();
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public final boolean execute(Context ctx) throws Exception
-    {
-        int[] width = new int[]
-        {
+    public final boolean execute(Context ctx) throws Exception {
+        int[] width = new int[] {
                 30, longWidth, longWidth, longWidth, 20
         };
 
-        String header[] = new String[]
-        {
-                bundle.getString("word.name"), bundle.getString("word.multiple"),
+        String header[] = new String[] {
+                bundle.getString("word.name"),
+                bundle.getString("word.multiple"),
                 bundle.getString("word.type"), bundle.getString("word.length"),
                 bundle.getString("word.preview")
         };
@@ -64,27 +61,22 @@ public abstract class AbstractLsProperties extends AbstractLs
 
         int maxItems = getMaxItems(ctx);
 
-        while (iter.hasNext() && index < maxItems)
-        {
+        while (iter.hasNext() && index < maxItems) {
             Property p = (Property) iter.next();
 
             long length = 0;
 
-            if (p.getDefinition().isMultiple())
-            {
+            if (p.getDefinition().isMultiple()) {
                 long[] lengths = p.getLengths();
-                for (int i = 0; i < lengths.length; i++)
-                {
+                for (int i = 0; i < lengths.length; i++) {
                     length += lengths[i];
                 }
-            } else
-            {
+            } else {
                 length = p.getLength();
             }
 
             String multiple = Boolean.toString(p.getDefinition().isMultiple());
-            if (p.getDefinition().isMultiple())
-            {
+            if (p.getDefinition().isMultiple()) {
                 multiple += "[" + p.getValues().length + "]";
             }
 
@@ -94,11 +86,9 @@ public abstract class AbstractLsProperties extends AbstractLs
             row.add(PropertyType.nameFromValue(p.getType()));
             row.add(Long.toString(length));
             // preview
-            if (p.getDefinition().isMultiple())
-            {
+            if (p.getDefinition().isMultiple()) {
                 row.add(this.getMultiplePreview(p));
-            } else
-            {
+            } else {
                 row.add(this.getPreview(p));
             }
 
@@ -115,10 +105,11 @@ public abstract class AbstractLsProperties extends AbstractLs
     }
 
     /**
-     * Subclasses are responsible of collecting the properties to display
-     * 
      * @param ctx
-     * @return
+     *        the <code>Context</code>
+     * @return collected <code>Property</code> s to display
+     * @throws Exception
+     *         if the <code>Property</code> s can't be retrieved
      */
     protected abstract Iterator getProperties(Context ctx) throws Exception;
 
@@ -127,14 +118,12 @@ public abstract class AbstractLsProperties extends AbstractLs
      * @return the first 50 characters of single value properties
      * @throws RepositoryException
      */
-    private String getPreview(Property p) throws RepositoryException
-    {
+    private String getPreview(Property p) throws RepositoryException {
         String value = p.getValue().getString();
         return value.substring(0, Math.min(value.length(), 50));
     }
 
     /**
-     * 
      * @param property
      * @return a <code>Collection</code> in which element contains the first
      *         50 characters of the <code>Value</code>'s string
@@ -143,18 +132,14 @@ public abstract class AbstractLsProperties extends AbstractLs
      * @throws ValueFormatException
      */
     private Collection getMultiplePreview(Property p)
-            throws ValueFormatException, RepositoryException
-    {
+            throws ValueFormatException, RepositoryException {
         Collection c = new ArrayList();
         Value[] values = p.getValues();
-        for (int i = 0; i < values.length; i++)
-        {
-            try
-            {
+        for (int i = 0; i < values.length; i++) {
+            try {
                 String value = values[i].getString();
                 c.add(value.substring(0, Math.min(value.length(), 50)));
-            } catch (ValueFormatException e)
-            {
+            } catch (ValueFormatException e) {
                 c.add(bundle.getString("phrase.notavailable"));
             }
         }

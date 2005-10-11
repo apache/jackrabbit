@@ -28,57 +28,48 @@ import org.apache.jackrabbit.command.CommandHelper;
 import org.apache.jackrabbit.command.CommandException;
 
 /**
- * Executes a CLI script from the given file.
+ * Executes a script from the given file
  */
-public class SourceCommand implements Command
-{
+public class SourceCommand implements Command {
     /** Resource bundle */
-    private ResourceBundle bundle = CommandHelper.getBundle() ;
+    private ResourceBundle bundle = CommandHelper.getBundle();
 
     /** file */
     private String fileKey = "file";
 
-    /** cli parser */
-    JcrParser parser = new JcrParser();
-
     /**
      * @return Returns the file.
      */
-    public String getFileKey()
-    {
+    public String getFileKey() {
         return fileKey;
     }
 
     /**
      * @param file
-     *            The file to set.
+     *        The file to set.
      */
-    public void setFileKey(String file)
-    {
+    public void setFileKey(String file) {
         this.fileKey = file;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         File f = new File((String) ctx.get(this.fileKey));
-        if (!f.exists())
-        {
-            throw new CommandException("exception.file.not.found", new String[]
-            {
-                f.getAbsolutePath()
-            });
+        if (!f.exists()) {
+            throw new CommandException("exception.file.not.found",
+                new String[] {
+                    f.getAbsolutePath()
+                });
         }
         // client
-        JcrClient client = new JcrClient(ctx) ;
-        
+        JcrClient client = new JcrClient(ctx);
+
         BufferedReader in = new BufferedReader(new FileReader(f));
         PrintWriter out = CommandHelper.getOutput(ctx);
         String line = null;
-        while ((line = in.readLine()) != null)
-        {
+        while ((line = in.readLine()) != null) {
             out.println(bundle.getString("word.running") + ": " + line);
             client.runCommand(line);
         }

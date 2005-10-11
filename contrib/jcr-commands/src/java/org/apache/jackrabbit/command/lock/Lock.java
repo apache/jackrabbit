@@ -23,81 +23,86 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Locks the given node
+ * Lock the given <code>Node</code>
  */
-public class Lock implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(Lock.class);
+public class Lock implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(Lock.class);
 
-	// ---------------------------- < keys >
-	/** Node path key */
-	private String pathKey = "path";
+    // ---------------------------- < keys >
+    /** Node path key */
+    private String pathKey = "path";
 
-	/**
-	 * depth lock
-	 */
-	private String deepKey = "deep";
+    /**
+     * depth lock
+     */
+    private String deepKey = "deep";
 
-	/**
-	 * Session scoped lock <br>
-	 * Key that refers to a <code>Boolean</code> context variable
-	 */
-	private String sessionScopedKey = "sessionScoped";
+    /**
+     * Session scoped lock <br>
+     * Key that refers to a <code>Boolean</code> context variable
+     */
+    private String sessionScopedKey = "sessionScoped";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		boolean deep = Boolean.valueOf((String) ctx.get(this.deepKey))
-				.booleanValue();
-		boolean sessionScoped = Boolean.valueOf(
-				(String) ctx.get(this.sessionScopedKey)).booleanValue();
-		if (log.isDebugEnabled())
-		{
-			log.debug("locking node at " + path + " deep=" + deep
-					+ " sessionScoped=" + sessionScoped);
-		}
-		CommandHelper.getNode(ctx, path).lock(deep, sessionScoped);
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        boolean deep = Boolean.valueOf((String) ctx.get(this.deepKey))
+            .booleanValue();
+        boolean sessionScoped = Boolean.valueOf(
+            (String) ctx.get(this.sessionScopedKey)).booleanValue();
+        if (log.isDebugEnabled()) {
+            log.debug("locking node at " + path + " deep=" + deep
+                    + " sessionScoped=" + sessionScoped);
+        }
+        CommandHelper.getNode(ctx, path).lock(deep, sessionScoped);
+        return false;
+    }
 
-	public String getDeepKey()
-	{
-		return deepKey;
-	}
+    /**
+     * @return deep key
+     */
+    public String getDeepKey() {
+        return deepKey;
+    }
 
-	public void setDeepKey(String deepKey)
-	{
-		this.deepKey = deepKey;
-	}
+    /**
+     * @param deepKey
+     *        deep key to set
+     */
+    public void setDeepKey(String deepKey) {
+        this.deepKey = deepKey;
+    }
 
-	public String getSessionScopedKey()
-	{
-		return sessionScopedKey;
-	}
+    /**
+     * @return the session scoped key
+     */
+    public String getSessionScopedKey() {
+        return sessionScopedKey;
+    }
 
-	public void setSessionScopedKey(String sessionScopedKey)
-	{
-		this.sessionScopedKey = sessionScopedKey;
-	}
+    /**
+     * @param sessionScopedKey
+     *        the session scoped key to set
+     */
+    public void setSessionScopedKey(String sessionScopedKey) {
+        this.sessionScopedKey = sessionScopedKey;
+    }
 
-	/**
-	 * @return Returns the srcPathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the source path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param srcPathKey
-	 *            The srcPathKey to set.
-	 */
-	public void setPathKey(String srcPathKey)
-	{
-		this.pathKey = srcPathKey;
-	}
+    /**
+     * @param srcPathKey
+     *        the source path key to set
+     */
+    public void setPathKey(String srcPathKey) {
+        this.pathKey = srcPathKey;
+    }
 }

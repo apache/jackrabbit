@@ -21,66 +21,81 @@ import org.apache.commons.chain.Command;
 /**
  * SetProperty superclass.
  */
-public abstract class AbstractSetProperty implements Command
-{
-	// ---------------------------- < keys >
+public abstract class AbstractSetProperty implements Command {
+    // ---------------------------- < keys >
 
-	/** destination node path key */
-	protected String parentPathKey = "parentPath";
+    /** destination node path key */
+    protected String parentPathKey = "parentPath";
 
-	/** Property name key */
-	protected String nameKey = "name";
+    /** Property name key */
+    protected String nameKey = "name";
 
-	/** Propety type key */
-	protected String typeKey = "type";
+    /** Propety type key */
+    protected String typeKey = "type";
 
-	/** Property value key */
-	protected String valueKey = "value";
+    /** Property value key */
+    protected String valueKey = "value";
 
-	/**
-	 * @return Returns the valueKey.
-	 */
-	public String getValueKey()
-	{
-		return valueKey;
-	}
+    /**
+     * @return Returns the valueKey.
+     */
+    public String getValueKey() {
+        return valueKey;
+    }
 
-	/**
-	 * @param valueKey
-	 *            Set the context attribute key for the value attribute.
-	 */
-	public void setValueKey(String valueKey)
-	{
-		this.valueKey = valueKey;
-	}
+    /**
+     * @param valueKey
+     *        Set the context attribute key for the value attribute.
+     */
+    public void setValueKey(String valueKey) {
+        this.valueKey = valueKey;
+    }
 
-	public String getParentPathKey()
-	{
-		return parentPathKey;
-	}
+    /**
+     * @return the parent path key
+     */
+    public String getParentPathKey() {
+        return parentPathKey;
+    }
 
-	public void setParentPathKey(String parentPathKey)
-	{
-		this.parentPathKey = parentPathKey;
-	}
+    /**
+     * Sets the parent path key
+     * @param parentPathKey
+     *        the parent path key
+     */
+    public void setParentPathKey(String parentPathKey) {
+        this.parentPathKey = parentPathKey;
+    }
 
-	public String getNameKey()
-	{
-		return nameKey;
-	}
+    /**
+     * @return the name key
+     */
+    public String getNameKey() {
+        return nameKey;
+    }
 
-	public void setNameKey(String nameKey)
-	{
-		this.nameKey = nameKey;
-	}
+    /**
+     * Sets the name key
+     * @param nameKey
+     *        the name key
+     */
+    public void setNameKey(String nameKey) {
+        this.nameKey = nameKey;
+    }
 
-	public String getTypeKey()
-	{
-		return typeKey;
-	}
+    /**
+     * @return the type key
+     */
+    public String getTypeKey() {
+        return typeKey;
+    }
 
-	public void setTypeKey(String typeKey)
-	{
-		this.typeKey = typeKey;
-	}
+    /**
+     * Sets the type key
+     * @param typeKey
+     *        the type key
+     */
+    public void setTypeKey(String typeKey) {
+        this.typeKey = typeKey;
+    }
 }

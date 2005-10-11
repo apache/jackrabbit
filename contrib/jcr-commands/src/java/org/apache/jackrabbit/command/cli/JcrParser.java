@@ -33,19 +33,15 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Input Parser
  */
-public class JcrParser
-{
+public class JcrParser {
     /** parser */
     private static Log log = LogFactory.getLog(JcrParser.class);
 
-    static
-    {
-        try
-        {
+    static {
+        try {
             ConfigParser parser = new ConfigParser();
             parser.parse(JcrParser.class.getResource("command.xml"));
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             log.error(e);
         }
@@ -63,31 +59,26 @@ public class JcrParser
     /**
      * Constructor
      */
-    public JcrParser()
-    {
+    public JcrParser() {
         super();
     }
 
     /**
      * Parse the user's input.
-     * 
      * @param input
-     * @return a Command
+     *        user's input
      * @throws JcrParserException
-     *             if the input is illegal
+     *         if the input is illegal
      * @throws ConfigurationException
-     *             if the mapped command can't be mapped to a Commons Chain
-     *             Command
+     *         if the mapped command can't be mapped to a Commons Chain Command
      */
     public void parse(String input) throws JcrParserException,
-            ConfigurationException
-    {
+            ConfigurationException {
         this.cl = null;
         this.cmd = null;
 
         // Validate input
-        if (input == null || input.length() == 0)
-        {
+        if (input == null || input.length() == 0) {
             throw new JcrParserException("exception.parse.input.empty");
         }
 
@@ -109,14 +100,12 @@ public class JcrParser
 
         // Create Chain Command
         String impl = cl.getImpl();
-        if (impl == null)
-        {
+        if (impl == null) {
             impl = cl.getName();
         }
         cmd = catalog.getCommand(impl);
 
-        if (cmd == null)
-        {
+        if (cmd == null) {
             throw new JcrParserException("no chain command for name " + impl);
         }
 
@@ -124,12 +113,11 @@ public class JcrParser
 
     /**
      * Tokenize user's input
-     * 
      * @param input
-     * @return
+     *        the user's input
+     * @return a <code>List</code> containing the arguments
      */
-    private LinkedList getArguments(String input)
-    {
+    private LinkedList getArguments(String input) {
         LinkedList args = new LinkedList();
         int length = input.length();
 
@@ -139,29 +127,23 @@ public class JcrParser
 
         StringBuffer arg = new StringBuffer();
 
-        for (int i = 0; i < length; ++i)
-        {
+        for (int i = 0; i < length; ++i) {
             char c = input.charAt(i);
 
             // end of argument?
             if ((!insideSingleQuote & !insideDoubleQuote & Character
-                .isWhitespace(c)))
-            {
-                if (arg.toString().trim().length() > 0)
-                {
+                .isWhitespace(c))) {
+                if (arg.toString().trim().length() > 0) {
                     args.add(arg.toString().trim());
                     arg = new StringBuffer();
                 }
                 continue;
             }
 
-            if (i == escape)
-            { // escaped char
+            if (i == escape) { // escaped char
                 arg.append(c);
-            } else
-            { // unescaped char
-                switch (c)
-                {
+            } else { // unescaped char
+                switch (c) {
                 case '\\':
                     escape = i + 1;
                     break;
@@ -178,8 +160,7 @@ public class JcrParser
             }
         }
 
-        if (arg.toString().trim().length() > 0)
-        {
+        if (arg.toString().trim().length() > 0) {
             args.add(arg.toString());
         }
 
@@ -187,52 +168,55 @@ public class JcrParser
     }
 
     /**
-     * Populate the context with the attributes needed by the Command
+     * Populate the <code>Context</code> with the attributes needed by the
+     * <code>Command</code>
+     * @param ctx
+     *        the <code>Context</code>
      */
-    public void populateContext(Context ctx)
-    {
+    public void populateContext(Context ctx) {
         Iterator iter = cl.getAllParameters();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             AbstractParameter param = (AbstractParameter) iter.next();
-            log.debug("add ctx attr: " + param.getContextKey() + "=" + param.getValue());
+            log.debug("add ctx attr: " + param.getContextKey() + "="
+                    + param.getValue());
             ctx.put(param.getContextKey(), param.getValue());
         }
     }
 
     /**
-     * Remove context attribute specific to the parsed command
+     * Remove <code>Context</code> attribute specific to the parsed
+     * <code>Command</code>
+     * @param ctx
+     *        the <code>Context</code>
      */
-    public void depopulateContext(Context ctx)
-    {
+    public void depopulateContext(Context ctx) {
         Iterator iter = cl.getAllParameters();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             AbstractParameter param = (AbstractParameter) iter.next();
-            String ctxKey = param.getContextKey() ;
+            String ctxKey = param.getContextKey();
             log.debug("remove ctx attr: " + ctxKey + "=" + param.getValue());
             ctx.remove(ctxKey);
         }
     }
 
     /**
-     * @return the Command
+     * @return the <code>Command</code>
      */
-    public Command getCommand()
-    {
+    public Command getCommand() {
         return cmd;
     }
 
     /**
-     * Populate the CommandLine with the given parameters
-     * 
+     * Populate the <code>CommandLine</code> with the given parameters
      * @param cl
-     * @param values
+     *        the <code>CommandLine</code>
+     * @param valList
+     *        the arguments
      * @throws JcrParserException
+     *         if the user's input is illegal
      */
     private void populate(CommandLine cl, List valList)
-            throws JcrParserException
-    {
+            throws JcrParserException {
         String[] values = (String[]) valList
             .toArray(new String[valList.size()]);
 
@@ -244,42 +228,33 @@ public class JcrParser
         // Input arguments
         List args = new ArrayList();
 
-        for (int i = 0; i < values.length; i++)
-        {
+        for (int i = 0; i < values.length; i++) {
             String value = values[i];
 
-            if (value.startsWith("-"))
-            {
+            if (value.startsWith("-")) {
                 // option
-                if (i + 1 < values.length && !values[i + 1].startsWith("-"))
-                {
+                if (i + 1 < values.length && !values[i + 1].startsWith("-")) {
                     Option opt = (Option) options.get(value.substring(1));
-                    if (opt == null)
-                    {
-                        throw new JcrParserException("no.opt.for.name",
-                            new String[]
-                            {
+                    if (opt == null) {
+                        throw new JcrParserException("exception.no.opt.for.name",
+                            new String[] {
                                 value.substring(1)
                             });
                     }
                     opt.setValue(values[i + 1]);
                     i++;
-                } else
-                {
+                } else {
                     // flag
                     Flag flag = (Flag) flags.get(value.substring(1));
-                    if (flag == null)
-                    {
-                        throw new JcrParserException("no.flag.for.name",
-                            new String[]
-                            {
+                    if (flag == null) {
+                        throw new JcrParserException("exception.no.flag.for.name",
+                            new String[] {
                                 value
                             });
                     }
                     flag.setPresent(true);
                 }
-            } else
-            {
+            } else {
                 // collect arguments
                 args.add(value);
             }
@@ -287,12 +262,10 @@ public class JcrParser
 
         // set arguments
         String[] argValues = (String[]) args.toArray(new String[args.size()]);
-        for (int j = 0; j < argValues.length; j++)
-        {
+        for (int j = 0; j < argValues.length; j++) {
             Argument arg = (Argument) clArgs.get(new Integer(j));
-            if (arg == null)
-            {
-                throw new JcrParserException("more.arguments.than.expected");
+            if (arg == null) {
+                throw new JcrParserException("exception.more.arguments.than.expected");
             }
             arg.setValue(argValues[j]);
         }
@@ -300,21 +273,18 @@ public class JcrParser
     }
 
     /**
-     * Validate the CommandLine.
-     * 
+     * Validate the <code>CommandLine</code>
      * @param cl
+     *        the <code>CommandLine</code>
      * @throws JcrParserException
+     *         if a required parameter is not present in the user's input
      */
-    private void validate(CommandLine cl) throws JcrParserException
-    {
+    private void validate(CommandLine cl) throws JcrParserException {
         Iterator iter = cl.getRequiredParameters();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             AbstractParameter param = (AbstractParameter) iter.next();
-            if (param.getValue() == null)
-            {
-                throw new JcrParserException("missing.paramater", new String[]
-                {
+            if (param.getValue() == null) {
+                throw new JcrParserException("exception.missing.paramater", new String[] {
                     param.getName()
                 });
             }

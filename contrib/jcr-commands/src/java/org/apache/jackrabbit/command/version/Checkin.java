@@ -23,10 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Creates a new version
+ * Check in the given versionable <code>Node</code>
  */
-public class Checkin implements Command
-{
+public class Checkin implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(Checkin.class);
 
@@ -35,13 +34,11 @@ public class Checkin implements Command
     private String pathKey = "path";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String path = (String) ctx.get(this.pathKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("cheking in node at " + path);
         }
         CommandHelper.getNode(ctx, path).checkin();
@@ -49,19 +46,17 @@ public class Checkin implements Command
     }
 
     /**
-     * @return Returns the pathKey.
+     * @return the path key
      */
-    public String getPathKey()
-    {
+    public String getPathKey() {
         return pathKey;
     }
 
     /**
      * @param pathKey
-     *            The pathKey to set.
+     *        the path key to set
      */
-    public void setPathKey(String pathKey)
-    {
+    public void setPathKey(String pathKey) {
         this.pathKey = pathKey;
     }
 }

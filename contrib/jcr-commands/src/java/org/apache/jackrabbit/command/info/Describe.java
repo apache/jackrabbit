@@ -22,12 +22,13 @@ import org.apache.commons.chain.Context;
 /**
  * Describes the given <code>Node</code>.
  */
-public class Describe implements Command
-{
+public class Describe implements Command {
 
-	public boolean execute(Context arg0) throws Exception
-	{
-        throw new UnsupportedOperationException() ;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context arg0) throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
 }

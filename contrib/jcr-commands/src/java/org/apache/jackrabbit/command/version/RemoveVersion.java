@@ -23,10 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * remove a version from the versio history
+ * Remove a <code>Version</code> from the <code>VersionHistory</code>
  */
-public class RemoveVersion implements Command
-{
+public class RemoveVersion implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(RemoveVersion.class);
 
@@ -38,14 +37,12 @@ public class RemoveVersion implements Command
     private String nameKey = "name";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String path = (String) ctx.get(this.pathKey);
         String versionName = (String) ctx.get(this.nameKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("Remove version " + versionName + " from node " + path);
         }
         CommandHelper.getNode(ctx, path).getVersionHistory().removeVersion(
@@ -54,36 +51,32 @@ public class RemoveVersion implements Command
     }
 
     /**
-     * @return Returns the pathKey.
+     * @return the path key
      */
-    public String getPathKey()
-    {
+    public String getPathKey() {
         return pathKey;
     }
 
     /**
      * @param pathKey
-     *            The pathKey to set.
+     *        the path key to set
      */
-    public void setPathKey(String pathKey)
-    {
+    public void setPathKey(String pathKey) {
         this.pathKey = pathKey;
     }
 
     /**
-     * @return Returns the versionNameKey.
+     * @return the version name key
      */
-    public String getNameKey()
-    {
+    public String getNameKey() {
         return nameKey;
     }
 
     /**
      * @param versionNameKey
-     *            The versionNameKey to set.
+     *        the version name key to set
      */
-    public void setNameKey(String versionNameKey)
-    {
+    public void setNameKey(String versionNameKey) {
         this.nameKey = versionNameKey;
     }
 }

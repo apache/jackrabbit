@@ -25,108 +25,94 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Read the Value of the given property and store it under the given context
- * attribute.
+ * Read the <code>Value</code> of the given <code>Property</code> and store
+ * it under the given <code>Context</code> attribute.
  */
-public class ReadValue implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(ReadValue.class);
+public class ReadValue implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(ReadValue.class);
 
-	// ---------------------------- < keys >
+    // ---------------------------- < keys >
 
-	/** property path key */
-	private String srcPathKey = "srcPath";
+    /** property path key */
+    private String srcPathKey = "srcPath";
 
-	/** value index key */
-	private String srcIndexKey = "srcIndex";
+    /** value index key */
+    private String srcIndexKey = "srcIndex";
 
-	/** destination context attribute */
-	private String destKey = "dest";
+    /** destination context attribute */
+    private String destKey = "dest";
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.commons.chain.Command#execute(org.apache.commons.chain.Context)
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.srcPathKey);
-		int index = 1;
-		if (ctx.get(this.srcIndexKey) != null)
-		{
-			index = Integer.valueOf(((String) ctx.get(this.srcIndexKey)))
-					.intValue();
-		}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.srcPathKey);
+        int index = 1;
+        if (ctx.get(this.srcIndexKey) != null) {
+            index = Integer.valueOf(((String) ctx.get(this.srcIndexKey)))
+                .intValue();
+        }
 
-		String dest = (String) ctx.get(this.destKey);
+        String dest = (String) ctx.get(this.destKey);
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("reading value from " + path + "[" + index + "] to "
-					+ dest);
-		}
+        if (log.isDebugEnabled()) {
+            log.debug("reading value from " + path + "[" + index + "] to "
+                    + dest);
+        }
 
-		Property p = (Property) CommandHelper.getItem(ctx, path);
+        Property p = (Property) CommandHelper.getItem(ctx, path);
 
-		if (p.getDefinition().isMultiple())
-		{
-			ctx.put(dest, p.getValues()[index].getString());
-		} else
-		{
-			ctx.put(dest, p.getValue().getString());
-		}
-		return false;
-	}
+        if (p.getDefinition().isMultiple()) {
+            ctx.put(dest, p.getValues()[index].getString());
+        } else {
+            ctx.put(dest, p.getValue().getString());
+        }
+        return false;
+    }
 
-	/**
-	 * @return Returns the destKey.
-	 */
-	public String getDestKey()
-	{
-		return destKey;
-	}
+    /**
+     * @return the destination key
+     */
+    public String getDestKey() {
+        return destKey;
+    }
 
-	/**
-	 * @param destKey
-	 *            The destKey to set.
-	 */
-	public void setDestKey(String destKey)
-	{
-		this.destKey = destKey;
-	}
+    /**
+     * @param destKey
+     *        the destination key to set
+     */
+    public void setDestKey(String destKey) {
+        this.destKey = destKey;
+    }
 
-	/**
-	 * @return Returns the srcIndexKey.
-	 */
-	public String getSrcIndexKey()
-	{
-		return srcIndexKey;
-	}
+    /**
+     * @return the source index key
+     */
+    public String getSrcIndexKey() {
+        return srcIndexKey;
+    }
 
-	/**
-	 * @param srcIndexKey
-	 *            The srcIndexKey to set.
-	 */
-	public void setSrcIndexKey(String srcIndexKey)
-	{
-		this.srcIndexKey = srcIndexKey;
-	}
+    /**
+     * @param srcIndexKey
+     *        the source index key to set
+     */
+    public void setSrcIndexKey(String srcIndexKey) {
+        this.srcIndexKey = srcIndexKey;
+    }
 
-	/**
-	 * @return Returns the srcPathKey.
-	 */
-	public String getSrcPathKey()
-	{
-		return srcPathKey;
-	}
+    /**
+     * @return the source path key
+     */
+    public String getSrcPathKey() {
+        return srcPathKey;
+    }
 
-	/**
-	 * @param srcPathKey
-	 *            The srcPathKey to set.
-	 */
-	public void setSrcPathKey(String srcPathKey)
-	{
-		this.srcPathKey = srcPathKey;
-	}
+    /**
+     * @param srcPathKey
+     *        the source path key to set
+     */
+    public void setSrcPathKey(String srcPathKey) {
+        this.srcPathKey = srcPathKey;
+    }
 }

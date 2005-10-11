@@ -21,8 +21,7 @@ import org.apache.jackrabbit.command.CommandException;
 /**
  * Exception thrown by Info Commands
  */
-public class JcrInfoCommandException extends CommandException
-{
+public class JcrInfoCommandException extends CommandException {
     /**
      * Comment for <code>serialVersionUID</code>
      */
@@ -30,38 +29,42 @@ public class JcrInfoCommandException extends CommandException
 
     /**
      * @param message
+     *        the message
      */
-    public JcrInfoCommandException(String message)
-    {
+    public JcrInfoCommandException(String message) {
         super(message);
     }
 
     /**
      * @param message
+     *        the message
      * @param arguments
+     *        the arguments
      */
-    public JcrInfoCommandException(String message, Object[] arguments)
-    {
+    public JcrInfoCommandException(String message, Object[] arguments) {
         super(message, arguments);
     }
 
     /**
      * @param message
+     *        the message
      * @param cause
+     *        the cause
      */
-    public JcrInfoCommandException(String message, Throwable cause)
-    {
+    public JcrInfoCommandException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
      * @param message
+     *        the message
      * @param cause
+     *        the cause
      * @param arguments
+     *        the arguments
      */
     public JcrInfoCommandException(String message, Throwable cause,
-        Object[] arguments)
-    {
+        Object[] arguments) {
         super(message, cause, arguments);
     }
 }

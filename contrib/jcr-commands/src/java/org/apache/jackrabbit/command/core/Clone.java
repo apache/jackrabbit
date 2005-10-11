@@ -25,10 +25,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Clones the given node to another workspace.
+ * Clone the given <code>Node</code> to another <code>Workspace</code>
  */
-public class Clone implements Command
-{
+public class Clone implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(Clone.class);
 
@@ -46,10 +45,9 @@ public class Clone implements Command
     private String removeExistingKey = "removeExisting";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String srcWorkspace = (String) ctx.get(this.srcWorkspaceKey);
         String srcAbsPath = (String) ctx.get(this.srcAbsPathKey);
         String destAbsPath = (String) ctx.get(this.destAbsPathKey);
@@ -58,8 +56,7 @@ public class Clone implements Command
 
         Workspace w = CommandHelper.getSession(ctx).getWorkspace();
 
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("cloning node. from [" + srcWorkspace + ":" + srcAbsPath
                     + "] to [" + w.getName() + ":" + destAbsPath + "]");
         }
@@ -70,43 +67,67 @@ public class Clone implements Command
         return false;
     }
 
-    public String getDestAbsPathKey()
-    {
+    /**
+     * @return the destination absolute path key
+     */
+    public String getDestAbsPathKey() {
         return destAbsPathKey;
     }
 
-    public void setDestAbsPathKey(String destAbsPathKey)
-    {
+    /**
+     * Sets the destination absolute path key
+     * @param destAbsPathKey
+     *        the destination absolute path key
+     */
+    public void setDestAbsPathKey(String destAbsPathKey) {
         this.destAbsPathKey = destAbsPathKey;
     }
 
-    public String getRemoveExistingKey()
-    {
+    /**
+     * @return the remove existing key option
+     */
+    public String getRemoveExistingKey() {
         return removeExistingKey;
     }
 
-    public void setRemoveExistingKey(String removeExistingKey)
-    {
+    /**
+     * Set the remove existing key option
+     * @param removeExistingKey
+     *        the remove existing key option
+     */
+    public void setRemoveExistingKey(String removeExistingKey) {
         this.removeExistingKey = removeExistingKey;
     }
 
-    public String getSrcAbsPathKey()
-    {
+    /**
+     * @return the source absolute path key
+     */
+    public String getSrcAbsPathKey() {
         return srcAbsPathKey;
     }
 
-    public void setSrcAbsPathKey(String srcAbsPathKey)
-    {
+    /**
+     * Sets the source absolute path key
+     * @param srcAbsPathKey
+     *        the source absolute path key
+     */
+    public void setSrcAbsPathKey(String srcAbsPathKey) {
         this.srcAbsPathKey = srcAbsPathKey;
     }
 
-    public String getSrcWorkspaceKey()
-    {
+    /**
+     * @return the source <code>Workspace</code> key
+     */
+    public String getSrcWorkspaceKey() {
         return srcWorkspaceKey;
     }
 
-    public void setSrcWorkspaceKey(String srcWorkspaceKey)
-    {
+    /**
+     * Sets the source <code>Workspace</code> key
+     * @param srcWorkspaceKey
+     *        the source <code>Workspace</code> key
+     */
+    public void setSrcWorkspaceKey(String srcWorkspaceKey) {
         this.srcWorkspaceKey = srcWorkspaceKey;
     }
 }

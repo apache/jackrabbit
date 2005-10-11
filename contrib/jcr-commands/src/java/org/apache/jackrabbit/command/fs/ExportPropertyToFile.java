@@ -40,173 +40,167 @@ import org.apache.jackrabbit.command.CommandException;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Exports a property value of the current working node to the file system.
+ * Exports a <code>Property</code> <code>Value</code> of the current working
+ * <code>Node<code> to the file system.
  */
-public class ExportPropertyToFile implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(ExportPropertyToFile.class);
+public class ExportPropertyToFile implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(ExportPropertyToFile.class);
 
-	// ---------------------------- < keys >
+    // ---------------------------- < keys >
 
-	/** property name */
-	private String nameKey = "name";
+    /** property name */
+    private String nameKey = "name";
 
-	/** value index */
-	private String indexKey = "index";
+    /** value index */
+    private String indexKey = "index";
 
-	/** target file */
-	private String destFsPathKey = "destFsPath";
+    /** target file */
+    private String destFsPathKey = "destFsPath";
 
-	/** overwrite the target file if necessary */
-	private String overwriteKey = "overwrite";
+    /** overwrite the target file if necessary */
+    private String overwriteKey = "overwrite";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String name = (String) ctx.get(this.nameKey);
-		Integer index = (Integer) ctx.get(this.indexKey);
-		String to = (String) ctx.get(this.destFsPathKey);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String name = (String) ctx.get(this.nameKey);
+        Integer index = (Integer) ctx.get(this.indexKey);
+        String to = (String) ctx.get(this.destFsPathKey);
 
-		Node n = CommandHelper.getCurrentNode(ctx);
+        Node n = CommandHelper.getCurrentNode(ctx);
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("exporting property value from " + n.getPath() + "/"
-					+ name + " to the filesystem: " + to);
-		}
+        if (log.isDebugEnabled()) {
+            log.debug("exporting property value from " + n.getPath() + "/"
+                    + name + " to the filesystem: " + to);
+        }
 
-		Property p = n.getProperty(name);
-		if (p.getDefinition().isMultiple())
-		{
-			exportValue(ctx, p.getValues()[index.intValue()], to);
-		} else
-		{
-			exportValue(ctx, p.getValue(), to);
-		}
-		return false;
-	}
+        Property p = n.getProperty(name);
+        if (p.getDefinition().isMultiple()) {
+            exportValue(ctx, p.getValues()[index.intValue()], to);
+        } else {
+            exportValue(ctx, p.getValue(), to);
+        }
+        return false;
+    }
 
-	/**
-	 * Export th given value to a File
-	 * 
-	 * @param ctx
-	 * @param value
-	 * @throws CommandException
-	 * @throws IOException
-	 * @throws RepositoryException
-	 * @throws IllegalStateException
-	 */
-	private void exportValue(Context ctx, Value value, String to)
-			throws CommandException, IOException, IllegalStateException,
-			RepositoryException
-	{
-		boolean overwrite = Boolean
-				.valueOf((String) ctx.get(this.overwriteKey)).booleanValue();
+    /**
+     * Export th given value to a File
+     * @param ctx
+     *        the <code>Context</code>
+     * @param value
+     *        the <code>Value</code>
+     * @param to
+     *        the target file system path
+     * @throws CommandException
+     *         if the <code>File</code> already exists
+     * @throws IOException
+     *         if an <code>IOException</code> occurs
+     * @throws RepositoryException
+     *         if the current working <code>Repository</code> throws an
+     *         <code>Exception</code>
+     */
+    private void exportValue(Context ctx, Value value, String to)
+            throws CommandException, IOException, RepositoryException {
+        boolean overwrite = Boolean
+            .valueOf((String) ctx.get(this.overwriteKey)).booleanValue();
 
-		File file = new File(to);
+        File file = new File(to);
 
-		// Check if there's a file at the given target path
-		if (file.exists() && !overwrite)
-		{
-			throw new CommandException("exception.file.exists", new String[]
-			{ to });
-		}
+        // Check if there's a file at the given target path
+        if (file.exists() && !overwrite) {
+            throw new CommandException("exception.file.exists", new String[] {
+                to
+            });
+        }
 
-		// If it doesn't exists create the file
-		if (!file.exists())
-		{
-			file.createNewFile();
-		}
+        // If it doesn't exists create the file
+        if (!file.exists()) {
+            file.createNewFile();
+        }
 
-		if (value.getType() == PropertyType.BINARY)
-		{
-			InputStream in = value.getStream();
-			BufferedOutputStream out = new BufferedOutputStream(
-					new FileOutputStream(file));
-			int c;
-			while ((c = in.read()) != -1)
-			{
-				out.write(c);
-			}
-			in.close();
-			out.flush();
-			out.close();
-		} else
-		{
-			Reader in = new StringReader(value.getString());
-			BufferedWriter out = new BufferedWriter(new FileWriter(file));
-			int c;
-			while ((c = in.read()) != -1)
-			{
-				out.write(c);
-			}
-			in.close();
-			out.flush();
-			out.close();
-		}
-	}
+        if (value.getType() == PropertyType.BINARY) {
+            InputStream in = value.getStream();
+            BufferedOutputStream out = new BufferedOutputStream(
+                new FileOutputStream(file));
+            int c;
+            while ((c = in.read()) != -1) {
+                out.write(c);
+            }
+            in.close();
+            out.flush();
+            out.close();
+        } else {
+            Reader in = new StringReader(value.getString());
+            BufferedWriter out = new BufferedWriter(new FileWriter(file));
+            int c;
+            while ((c = in.read()) != -1) {
+                out.write(c);
+            }
+            in.close();
+            out.flush();
+            out.close();
+        }
+    }
 
-	/**
-	 * @return Returns the indexKey.
-	 */
-	public String getIndexKey()
-	{
-		return indexKey;
-	}
+    /**
+     * @return the index key
+     */
+    public String getIndexKey() {
+        return indexKey;
+    }
 
-	/**
-	 * @param indexKey
-	 *            Set the context attribute key for the index attribute.
-	 */
-	public void setIndexKey(String indexKey)
-	{
-		this.indexKey = indexKey;
-	}
+    /**
+     * @param indexKey
+     *        the index key to set
+     */
+    public void setIndexKey(String indexKey) {
+        this.indexKey = indexKey;
+    }
 
-	/**
-	 * @return Returns the nameKey.
-	 */
-	public String getNameKey()
-	{
-		return nameKey;
-	}
+    /**
+     * @return the name key
+     */
+    public String getNameKey() {
+        return nameKey;
+    }
 
-	/**
-	 * @param nameKey
-	 *            Set the context attribute key for the name attribute.
-	 */
-	public void setNameKey(String nameKey)
-	{
-		this.nameKey = nameKey;
-	}
+    /**
+     * @param nameKey
+     *        the name key to set
+     */
+    public void setNameKey(String nameKey) {
+        this.nameKey = nameKey;
+    }
 
-	/**
-	 * @return Returns the overwriteKey.
-	 */
-	public String getOverwriteKey()
-	{
-		return overwriteKey;
-	}
+    /**
+     * @return the overwrite key
+     */
+    public String getOverwriteKey() {
+        return overwriteKey;
+    }
 
-	/**
-	 * @param overwriteKey
-	 *            Set the context attribute key for the overwrite attribute.
-	 */
-	public void setOverwriteKey(String overwriteKey)
-	{
-		this.overwriteKey = overwriteKey;
-	}
+    /**
+     * @param overwriteKey
+     *        the overwrite key to set
+     */
+    public void setOverwriteKey(String overwriteKey) {
+        this.overwriteKey = overwriteKey;
+    }
 
-	public String getDestFsPathKey()
-	{
-		return destFsPathKey;
-	}
+    /**
+     * @return the destination file system path key
+     */
+    public String getDestFsPathKey() {
+        return destFsPathKey;
+    }
 
-	public void setDestFsPathKey(String destFsPathKey)
-	{
-		this.destFsPathKey = destFsPathKey;
-	}
+    /**
+     * @param destFsPathKey
+     *        the destination file system path key to set
+     */
+    public void setDestFsPathKey(String destFsPathKey) {
+        this.destFsPathKey = destFsPathKey;
+    }
 }

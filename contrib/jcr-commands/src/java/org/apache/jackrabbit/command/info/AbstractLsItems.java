@@ -32,12 +32,11 @@ import org.apache.jackrabbit.command.CommandHelper;
 /**
  * List items superclass
  */
-public abstract class AbstractLsItems extends AbstractLs
-{
-	/** bundle */
-	private static ResourceBundle bundle = CommandHelper.getBundle() ; 
-	
-	/** name width */
+public abstract class AbstractLsItems extends AbstractLs {
+    /** bundle */
+    private static ResourceBundle bundle = CommandHelper.getBundle();
+
+    /** name width */
     private int nameWidth = 30;
 
     /** node type width */
@@ -45,28 +44,29 @@ public abstract class AbstractLsItems extends AbstractLs
 
     /**
      * @param ctx
+     *        the <code>Context</code>
      * @return Iterator containing the Items to list
      * @throws CommandException
+     *         if an errors occurs
      * @throws RepositoryException
+     *         if the current <code>Repository</code> throws a
+     *         <code>RepositoryException<code>
      */
-    protected abstract Iterator getItems(Context ctx)
-            throws CommandException, RepositoryException;
+    protected abstract Iterator getItems(Context ctx) throws CommandException,
+            RepositoryException;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public final boolean execute(Context ctx) throws Exception
-    {
+    public final boolean execute(Context ctx) throws Exception {
         int nodes = 0;
         int properties = 0;
 
         // header
-        int[] width = new int[]
-        {
+        int[] width = new int[] {
                 nameWidth, typeWidth, longWidth, longWidth, longWidth
         };
-        String[] header = new String[]
-        {
+        String[] header = new String[] {
                 bundle.getString("word.name"), bundle.getString("word.type"),
                 bundle.getString("word.node"), bundle.getString("word.new"),
                 bundle.getString("word.modified")
@@ -86,41 +86,34 @@ public abstract class AbstractLsItems extends AbstractLs
         int maxItems = getMaxItems(ctx);
 
         // Print nodes
-        while (iter.hasNext() && index < maxItems)
-        {
+        while (iter.hasNext() && index < maxItems) {
             Item i = (Item) iter.next();
 
             String type = null;
 
             // Show name or path
             String name = null;
-            if (this.isPath())
-            {
+            if (this.isPath()) {
                 name = i.getPath();
-            } else
-            {
+            } else {
                 name = i.getName();
             }
 
-            if (i.isNode())
-            {
+            if (i.isNode()) {
                 nodes++;
                 // name
                 Node n = (Node) i;
-                if (!isPath() && n.getIndex() > 1)
-                {
+                if (!isPath() && n.getIndex() > 1) {
                     name = n.getName() + "[" + n.getIndex() + "]";
                 }
                 // type
                 type = n.getPrimaryNodeType().getName();
-            } else
-            {
+            } else {
                 properties++;
                 type = PropertyType.nameFromValue(((Property) i).getType());
             }
 
-            PrintHelper.printRow(ctx, width, new String[]
-            {
+            PrintHelper.printRow(ctx, width, new String[] {
                     name, type, Boolean.toString(i.isNode()),
                     Boolean.valueOf(i.isNew()).toString(),
                     Boolean.valueOf(i.isModified()).toString()

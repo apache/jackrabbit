@@ -17,31 +17,33 @@
 package org.apache.jackrabbit.command.cli;
 
 /**
- * Command line argument.
+ * Command line argument
  */
-public class Argument extends Option
-{
+public class Argument extends Option {
     /** position of the argument */
     private int position;
 
     /**
-     * @return
+     * @return the position
      */
-    public int getPosition()
-    {
+    public int getPosition() {
         return position;
     }
 
-    public void setPosition(int position)
-    {
+    /**
+     * sets the argument position
+     * @param position
+     *        the position
+     */
+    public void setPosition(int position) {
         this.position = position;
     }
 
     /**
      * @inheritDoc
+     * @return a clone
      */
-    public Object clone()
-    {
+    public Object clone() {
         Argument arg = new Argument();
         arg.position = this.position;
         this.clone(arg);

@@ -23,10 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Add a mixin to the given node
+ * Add a mixin to the given <code>Node</code>
  */
-public class AddMixin implements Command
-{
+public class AddMixin implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(AddMixin.class);
 
@@ -40,46 +39,40 @@ public class AddMixin implements Command
     /**
      * @return Returns the mixinNameKey.
      */
-    public String getMixinKey()
-    {
+    public String getMixinKey() {
         return mixinKey;
     }
 
     /**
      * @param mixinNameKey
-     *            The mixinNameKey to set.
+     *        The mixinNameKey to set.
      */
-    public void setMixinKey(String mixinNameKey)
-    {
+    public void setMixinKey(String mixinNameKey) {
         this.mixinKey = mixinNameKey;
     }
 
     /**
      * @return Returns the pathKey.
      */
-    public String getPathKey()
-    {
+    public String getPathKey() {
         return pathKey;
     }
 
     /**
      * @param pathKey
-     *            The pathKey to set.
+     *        The pathKey to set.
      */
-    public void setPathKey(String pathKey)
-    {
+    public void setPathKey(String pathKey) {
         this.pathKey = pathKey;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String path = (String) ctx.get(this.pathKey);
         String mixin = (String) ctx.get(this.mixinKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("adding mixin " + mixin + " to node " + path);
         }
         CommandHelper.getNode(ctx, path).addMixin(mixin);

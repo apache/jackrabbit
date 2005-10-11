@@ -30,59 +30,67 @@ import org.apache.commons.chain.Context;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Dumps stored data from the current working node
+ * Dump stored data from the current working <code>Node</code>
  */
-public class Dump implements Command
-{
-	/** root node to dump */
-	private String pathKey = "path";
+public class Dump implements Command {
+    /** root node to dump */
+    private String pathKey = "path";
 
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		PrintWriter out = CommandHelper.getOutput(ctx);
-		dump(out, CommandHelper.getNode(ctx, path));
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        PrintWriter out = CommandHelper.getOutput(ctx);
+        dump(out, CommandHelper.getNode(ctx, path));
+        return false;
+    }
 
-	public void dump(PrintWriter out, Node n) throws RepositoryException
-	{
-		out.println(n.getPath());
-		PropertyIterator pit = n.getProperties();
-		while (pit.hasNext())
-		{
-			Property p = pit.nextProperty();
-			out.print(p.getPath() + "=");
-			if (p.getDefinition().isMultiple())
-			{
-				Value[] values = p.getValues();
-				for (int i = 0; i < values.length; i++)
-				{
-					if (i > 0)
-						out.println(",");
-					out.println(values[i].getString());
-				}
-			} else
-			{
-				out.print(p.getString());
-			}
-			out.println();
-		}
-		NodeIterator nit = n.getNodes();
-		while (nit.hasNext())
-		{
-			Node cn = nit.nextNode();
-			dump(out, cn);
-		}
-	}
+    /**
+     * Dumps the given <code>Node</code> to the given <code>PrintWriter</code>
+     * @param out
+     *        the <code>PrintWriter</code>
+     * @param n
+     *        the <code>Node</code>
+     * @throws RepositoryException
+     */
+    public void dump(PrintWriter out, Node n) throws RepositoryException {
+        out.println(n.getPath());
+        PropertyIterator pit = n.getProperties();
+        while (pit.hasNext()) {
+            Property p = pit.nextProperty();
+            out.print(p.getPath() + "=");
+            if (p.getDefinition().isMultiple()) {
+                Value[] values = p.getValues();
+                for (int i = 0; i < values.length; i++) {
+                    if (i > 0)
+                        out.println(",");
+                    out.println(values[i].getString());
+                }
+            } else {
+                out.print(p.getString());
+            }
+            out.println();
+        }
+        NodeIterator nit = n.getNodes();
+        while (nit.hasNext()) {
+            Node cn = nit.nextNode();
+            dump(out, cn);
+        }
+    }
 
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 }

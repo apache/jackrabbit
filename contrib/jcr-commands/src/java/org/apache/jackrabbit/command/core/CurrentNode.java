@@ -25,44 +25,42 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Set the current working Node.
+ * Set the current working <code>Node</code>
  */
-public class CurrentNode implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(CurrentNode.class);
+public class CurrentNode implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(CurrentNode.class);
 
-	// ---------------------------- < keys >
+    // ---------------------------- < keys >
 
-	/** context attribute key for the path attribute */
-	private String pathKey = "path";
+    /** context attribute key for the path attribute */
+    private String pathKey = "path";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String dest = (String) ctx.get(this.pathKey);
-		Node n = CommandHelper.getNode(ctx, dest);
-		if (log.isDebugEnabled())
-		{
-			log.debug("set current working node to " + n.getPath());
-		}
-		CommandHelper.setCurrentNode(ctx, n);
-		return false;
-	}
     /**
-     * @return Returns the pathKey.
+     * {@inheritDoc}
      */
-    public String getPathKey()
-    {
+    public boolean execute(Context ctx) throws Exception {
+        String dest = (String) ctx.get(this.pathKey);
+        Node n = CommandHelper.getNode(ctx, dest);
+        if (log.isDebugEnabled()) {
+            log.debug("set current working node to " + n.getPath());
+        }
+        CommandHelper.setCurrentNode(ctx, n);
+        return false;
+    }
+
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
         return pathKey;
     }
+
     /**
-     * @param pathKey The pathKey to set.
+     * @param pathKey
+     *        the path key to set
      */
-    public void setPathKey(String pathKey)
-    {
+    public void setPathKey(String pathKey) {
         this.pathKey = pathKey;
     }
 }

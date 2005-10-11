@@ -23,10 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Registers a namespace
+ * Register a namespace
  */
-public class RegisterNamespace implements Command
-{
+public class RegisterNamespace implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(RegisterNamespace.class);
 
@@ -38,14 +37,12 @@ public class RegisterNamespace implements Command
     private String uriKey = "uri";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String prefix = (String) ctx.get(this.prefixKey);
         String uri = (String) ctx.get(this.uriKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("registering namespace uri=" + uri + " prefix=" + prefix);
         }
         CommandHelper.getSession(ctx).getWorkspace().getNamespaceRegistry()
@@ -54,36 +51,32 @@ public class RegisterNamespace implements Command
     }
 
     /**
-     * @return Returns the prefixKey.
+     * @return the prefix key.
      */
-    public String getPrefixKey()
-    {
+    public String getPrefixKey() {
         return prefixKey;
     }
 
     /**
      * @param prefixKey
-     *            The prefixKey to set.
+     *        the prefix key to set
      */
-    public void setPrefixKey(String prefixKey)
-    {
+    public void setPrefixKey(String prefixKey) {
         this.prefixKey = prefixKey;
     }
 
     /**
-     * @return Returns the uriKey.
+     * @return the uri key
      */
-    public String getUriKey()
-    {
+    public String getUriKey() {
         return uriKey;
     }
 
     /**
      * @param uriKey
-     *            The uriKey to set.
+     *        the uri key to set
      */
-    public void setUriKey(String uriKey)
-    {
+    public void setUriKey(String uriKey) {
         this.uriKey = uriKey;
     }
 }

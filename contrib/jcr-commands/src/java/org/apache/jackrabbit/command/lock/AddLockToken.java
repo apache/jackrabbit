@@ -25,41 +25,45 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Adds the given lock token to the current session.
+ * Add the given <code>Lock</code> token to the current <code>Session</code>
  */
-public class AddLockToken implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(AddLockToken.class);
+public class AddLockToken implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(AddLockToken.class);
 
-	// ---------------------------- < keys >
-	/**
-	 * token
-	 */
-	private String tokenKey = "token";
+    // ---------------------------- < keys >
+    /**
+     * token
+     */
+    private String tokenKey = "token";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String token = (String) ctx.get(this.tokenKey);
-		if (log.isDebugEnabled())
-		{
-			log.debug("Adding lock token " + token + " to the current session.");
-		}
-		Session s = CommandHelper.getSession(ctx);
-		s.addLockToken(token);
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String token = (String) ctx.get(this.tokenKey);
+        if (log.isDebugEnabled()) {
+            log
+                .debug("Adding lock token " + token
+                        + " to the current session.");
+        }
+        Session s = CommandHelper.getSession(ctx);
+        s.addLockToken(token);
+        return false;
+    }
 
-	public String getTokenKey()
-	{
-		return tokenKey;
-	}
+    /**
+     * @return the token key
+     */
+    public String getTokenKey() {
+        return tokenKey;
+    }
 
-	public void setTokenKey(String tokenKey)
-	{
-		this.tokenKey = tokenKey;
-	}
+    /**
+     * @param tokenKey
+     *        the token key to set
+     */
+    public void setTokenKey(String tokenKey) {
+        this.tokenKey = tokenKey;
+    }
 }

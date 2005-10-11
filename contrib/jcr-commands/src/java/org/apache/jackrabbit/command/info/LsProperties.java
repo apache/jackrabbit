@@ -36,8 +36,7 @@ import org.apache.jackrabbit.command.CommandException;
  * </ul>
  * </p>
  */
-public class LsProperties extends AbstractLsProperties
-{
+public class LsProperties extends AbstractLsProperties {
 
     /** property name pattern key */
     private String patternKey = "pattern";
@@ -45,29 +44,25 @@ public class LsProperties extends AbstractLsProperties
     /**
      * @return name pattern
      */
-    public String getPatternKey()
-    {
+    public String getPatternKey() {
         return patternKey;
     }
 
     /**
      * Sets the name pattern
-     * 
-     * @param pattern
+     * @param pattern the pattern key
      */
-    public void setPatternKey(String pattern)
-    {
+    public void setPatternKey(String pattern) {
         this.patternKey = pattern;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     protected Iterator getProperties(Context ctx) throws CommandException,
-            RepositoryException
-    {
-        String pattern = (String) ctx.get(this.patternKey) ;
-        Node n = CommandHelper.getCurrentNode(ctx) ;
+            RepositoryException {
+        String pattern = (String) ctx.get(this.patternKey);
+        Node n = CommandHelper.getCurrentNode(ctx);
         return CommandHelper.getProperties(ctx, n, pattern);
     }
 }

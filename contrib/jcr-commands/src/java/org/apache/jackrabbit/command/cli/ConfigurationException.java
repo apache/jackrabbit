@@ -21,8 +21,7 @@ import org.apache.jackrabbit.command.CommandException;
 /**
  * This Exception is thrown when there's an error in the command config file.
  */
-public class ConfigurationException extends CommandException
-{
+public class ConfigurationException extends CommandException {
 
     /**
      * <code>serialVersionUID</code>
@@ -31,38 +30,42 @@ public class ConfigurationException extends CommandException
 
     /**
      * @param message
+     *        the message
      */
-    public ConfigurationException(String message)
-    {
+    public ConfigurationException(String message) {
         super(message);
     }
 
     /**
      * @param message
+     *        the message
      * @param arguments
+     *        the arguments
      */
-    public ConfigurationException(String message, Object[] arguments)
-    {
+    public ConfigurationException(String message, Object[] arguments) {
         super(message, arguments);
     }
 
     /**
      * @param message
+     *        the message
      * @param cause
+     *        the arguments
      */
-    public ConfigurationException(String message, Throwable cause)
-    {
+    public ConfigurationException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
      * @param message
+     *        the message
      * @param cause
+     *        the cause
      * @param arguments
+     *        the arguments
      */
     public ConfigurationException(String message, Throwable cause,
-        Object[] arguments)
-    {
+        Object[] arguments) {
         super(message, cause, arguments);
     }
 }

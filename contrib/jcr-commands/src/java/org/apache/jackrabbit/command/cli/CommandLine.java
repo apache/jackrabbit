@@ -29,10 +29,9 @@ import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Command Line.
+ * Command Line
  */
-public class CommandLine implements Comparable, Cloneable
-{
+public class CommandLine implements Comparable, Cloneable {
     /** Resource bundle */
     protected static ResourceBundle bundle = CommandHelper.getBundle();
 
@@ -51,7 +50,7 @@ public class CommandLine implements Comparable, Cloneable
     /** Options */
     private Map options = new TreeMap();
 
-    /** Options */
+    /** flags */
     private Map flags = new TreeMap();
 
     /** arguments */
@@ -60,20 +59,16 @@ public class CommandLine implements Comparable, Cloneable
     /**
      * constructor
      */
-    public CommandLine()
-    {
+    public CommandLine() {
         super();
     }
 
     /**
      * @return required arguments
      */
-    public Collection getRequiredArguments()
-    {
-        Predicate p = new Predicate()
-        {
-            public boolean evaluate(Object o)
-            {
+    public Collection getRequiredArguments() {
+        Predicate p = new Predicate() {
+            public boolean evaluate(Object o) {
                 Argument arg = (Argument) o;
                 return arg.isRequired();
             }
@@ -84,12 +79,9 @@ public class CommandLine implements Comparable, Cloneable
     /**
      * @return required options
      */
-    public Collection getRequiredOptions()
-    {
-        Predicate p = new Predicate()
-        {
-            public boolean evaluate(Object o)
-            {
+    public Collection getRequiredOptions() {
+        Predicate p = new Predicate() {
+            public boolean evaluate(Object o) {
                 Option opt = (Option) o;
                 return opt.isRequired();
             }
@@ -98,109 +90,95 @@ public class CommandLine implements Comparable, Cloneable
     }
 
     /**
-     * @return Returns the description.
+     * @return the description.
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 
     /**
-     * @return Returns the localized description. 
+     * @return the localized description.
      */
-    public String getLocalizedDescription()
-    {
-        if (description == null)
-        {
+    public String getLocalizedDescription() {
+        if (description == null) {
             return bundle.getString("cmd." + this.name);
-        } else
-        {
+        } else {
             return bundle.getString(this.description);
         }
     }
 
     /**
      * @param description
-     *            The description to set.
+     *        The description to set
      */
-    public void setDescription(String description)
-    {
+    public void setDescription(String description) {
         this.description = description;
     }
 
     /**
-     * @return Returns the flags.
+     * @return the flags
      */
-    public Map getFlags()
-    {
+    public Map getFlags() {
         return flags;
     }
 
     /**
      * @param flags
-     *            The flags to set.
+     *        The flags to set
      */
-    public void setFlags(Map flags)
-    {
+    public void setFlags(Map flags) {
         this.flags = flags;
     }
 
     /**
-     * @return Returns the impl.
+     * @return the impl
      */
-    public String getImpl()
-    {
+    public String getImpl() {
         return impl;
     }
 
     /**
      * @param impl
-     *            The impl to set.
+     *        The impl to set
      */
-    public void setImpl(String impl)
-    {
+    public void setImpl(String impl) {
         this.impl = impl;
     }
 
     /**
-     * @return Returns the name.
+     * @return the name
      */
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
     /**
      * @param name
-     *            The name to set.
+     *        the name to set
      */
-    public void setName(String name)
-    {
+    public void setName(String name) {
         this.name = name;
     }
 
     /**
-     * @return Returns the options.
+     * @return the options
      */
-    public Map getOptions()
-    {
+    public Map getOptions() {
         return options;
     }
 
     /**
      * @param options
-     *            The options to set.
+     *        the <code>Option</code>s to set
      */
-    public void setOptions(Map options)
-    {
+    public void setOptions(Map options) {
         this.options = options;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public int compareTo(Object o)
-    {
+    public int compareTo(Object o) {
         CommandLine cl = (CommandLine) o;
         return name.compareTo(cl.name);
     }
@@ -208,8 +186,7 @@ public class CommandLine implements Comparable, Cloneable
     /**
      * @return all the parameters. i.e. args, options and flags.
      */
-    public Iterator getAllParameters()
-    {
+    public Iterator getAllParameters() {
         IteratorChain chain = new IteratorChain();
         chain.addIterator(getArguments().values().iterator());
         chain.addIterator(getOptions().values().iterator());
@@ -220,8 +197,7 @@ public class CommandLine implements Comparable, Cloneable
     /**
      * @return the required parameters. i.e. args, options and flags.
      */
-    public Iterator getRequiredParameters()
-    {
+    public Iterator getRequiredParameters() {
         IteratorChain chain = new IteratorChain();
         chain.addIterator(getRequiredArguments().iterator());
         chain.addIterator(getRequiredOptions().iterator());
@@ -229,24 +205,19 @@ public class CommandLine implements Comparable, Cloneable
     }
 
     /**
-     * Adds an argument.
-     * 
      * @param arg
+     *        the <code>Argument</code> to add
      */
-    public void addArgument(Argument arg)
-    {
-        if (arguments.containsKey(new Integer(arg.getPosition())))
-        {
+    public void addArgument(Argument arg) {
+        if (arguments.containsKey(new Integer(arg.getPosition()))) {
             throw new IllegalArgumentException(
                 "there's an argument in the position in command " + this.name);
         }
         // Put default values description and arg name i18n keys
-        if (arg.getArgName() == null)
-        {
+        if (arg.getArgName() == null) {
             arg.setArgName("cmd." + this.getName() + "." + arg.getName());
         }
-        if (arg.getDescription() == null)
-        {
+        if (arg.getDescription() == null) {
             arg.setDescription("cmd." + this.getName() + "." + arg.getName()
                     + ".desc");
         }
@@ -254,19 +225,14 @@ public class CommandLine implements Comparable, Cloneable
     }
 
     /**
-     * Add an Option
-     * 
-     * @param opt
+     * @param opt the <code>Option</code> to add
      */
-    public void addOption(Option opt)
-    {
+    public void addOption(Option opt) {
         // Put default values description and arg name i18n keys
-        if (opt.getArgName() == null)
-        {
+        if (opt.getArgName() == null) {
             opt.setArgName("cmd." + this.getName() + "." + opt.getName());
         }
-        if (opt.getDescription() == null)
-        {
+        if (opt.getDescription() == null) {
             opt.setDescription("cmd." + this.getName() + "." + opt.getName()
                     + ".desc");
         }
@@ -274,15 +240,11 @@ public class CommandLine implements Comparable, Cloneable
     }
 
     /**
-     * Flag
-     * 
-     * @param flag
+     * @param flag the <code>Flag</code> to add
      */
-    public void addFlag(Flag flag)
-    {
+    public void addFlag(Flag flag) {
         // Put default values description and arg name i18n keys
-        if (flag.getDescription() == null)
-        {
+        if (flag.getDescription() == null) {
             flag.setDescription("cmd." + this.getName() + "." + flag.getName()
                     + ".desc");
         }
@@ -290,68 +252,58 @@ public class CommandLine implements Comparable, Cloneable
     }
 
     /**
-     * @return Returns the arguments.
+     * @return the arguments
      */
-    public Map getArguments()
-    {
+    public Map getArguments() {
         return arguments;
     }
 
     /**
      * @param arguments
-     *            The arguments to set.
+     *        the arguments to set
      */
-    public void setArguments(Map arguments)
-    {
+    public void setArguments(Map arguments) {
         this.arguments = arguments;
     }
 
     /**
-     * @return Returns the alias.
+     * @return the alias
      */
-    public Collection getAlias()
-    {
+    public Collection getAlias() {
         return alias;
     }
 
     /**
      * @param alias
-     *            The alias to set.
+     *        the alias to set
      */
-    public void setAlias(Collection alias)
-    {
+    public void setAlias(Collection alias) {
         this.alias = alias;
     }
 
     /**
-     * Add alias
-     * 
-     * @param alias
+     * @param alias the alias to add
      */
-    public void addAlias(String alias)
-    {
+    public void addAlias(String alias) {
         this.alias.add(alias);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public Object clone()
-    {
+    public Object clone() {
         CommandLine cl = new CommandLine();
         cl.alias = this.alias;
         // Arguments
         Iterator iter = this.arguments.values().iterator();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             Argument arg = (Argument) iter.next();
             cl.addArgument((Argument) arg.clone());
         }
         cl.description = this.description;
         // Flags
         iter = this.flags.values().iterator();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             Flag f = (Flag) iter.next();
             cl.addFlag((Flag) f.clone());
         }
@@ -359,8 +311,7 @@ public class CommandLine implements Comparable, Cloneable
         cl.name = this.name;
         // Flags
         iter = this.options.values().iterator();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             Option o = (Option) iter.next();
             cl.addOption((Option) o.clone());
         }
@@ -368,10 +319,9 @@ public class CommandLine implements Comparable, Cloneable
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public String toString()
-    {
+    public String toString() {
         return "CommandLine-" + this.getName() + "(" + impl + ")";
     }
 }

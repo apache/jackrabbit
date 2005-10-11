@@ -26,10 +26,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Rename a node
+ * Rename a <code>Node<code>
  */
-public class Rename implements Command
-{
+public class Rename implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(Rename.class);
 
@@ -41,25 +40,21 @@ public class Rename implements Command
     private String destPathKey = "destPath";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String from = (String) ctx.get(this.srcPathKey);
         String to = (String) ctx.get(this.destPathKey);
 
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("renaming node from " + from + " to " + to);
         }
 
         Session s = CommandHelper.getSession(ctx);
         Node nodeFrom = CommandHelper.getNode(ctx, from);
-        if (nodeFrom.getDepth() == 1)
-        {
+        if (nodeFrom.getDepth() == 1) {
             s.move(nodeFrom.getPath(), "/" + to);
-        } else
-        {
+        } else {
             s.move(nodeFrom.getPath(), nodeFrom.getParent().getPath() + "/"
                     + to);
         }
@@ -67,23 +62,33 @@ public class Rename implements Command
         return false;
     }
 
-    public String getDestPathKey()
-    {
+    /**
+     * @return the destination path key
+     */
+    public String getDestPathKey() {
         return destPathKey;
     }
 
-    public void setDestPathKey(String destPathKey)
-    {
+    /**
+     * @param destPathKey
+     *        the destination path key to set
+     */
+    public void setDestPathKey(String destPathKey) {
         this.destPathKey = destPathKey;
     }
 
-    public String getSrcPathKey()
-    {
+    /**
+     * @return the source path key
+     */
+    public String getSrcPathKey() {
         return srcPathKey;
     }
 
-    public void setSrcPathKey(String srcPathKey)
-    {
+    /**
+     * @param srcPathKey
+     *        the source path key to set
+     */
+    public void setSrcPathKey(String srcPathKey) {
         this.srcPathKey = srcPathKey;
     }
 }

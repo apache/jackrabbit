@@ -23,10 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Unlocks the current working node
+ * Unlock the current working <code>Node</code>
  */
-public class Unlock implements Command
-{
+public class Unlock implements Command {
     /** logger */
     private static Log log = LogFactory.getLog(Unlock.class);
 
@@ -35,13 +34,11 @@ public class Unlock implements Command
     private String pathKey = "path";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String path = (String) ctx.get(this.pathKey);
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("Unlocking node at " + path);
         }
         CommandHelper.getNode(ctx, path).unlock();
@@ -49,19 +46,17 @@ public class Unlock implements Command
     }
 
     /**
-     * @return Returns the pathKey.
+     * @return the path key
      */
-    public String getPathKey()
-    {
+    public String getPathKey() {
         return pathKey;
     }
 
     /**
      * @param pathKey
-     *            The pathKey to set.
+     *        the path key to set
      */
-    public void setPathKey(String pathKey)
-    {
+    public void setPathKey(String pathKey) {
         this.pathKey = pathKey;
     }
 }

@@ -19,23 +19,20 @@ package org.apache.jackrabbit.command.collect;
 /**
  * Collect properties only
  */
-public class CollectProperties extends AbstractCollect
-{
+public class CollectProperties extends AbstractCollect {
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    protected boolean isCollectNodes()
-    {
+    protected boolean isCollectNodes() {
         return false;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    protected boolean isCollectProperties()
-    {
+    protected boolean isCollectProperties() {
         return true;
     }
-    
+
 }

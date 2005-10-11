@@ -34,10 +34,10 @@ import org.apache.jackrabbit.command.cli.Flag;
 import org.apache.jackrabbit.command.cli.Option;
 
 /**
- * Help on available commands
+ * Show available <code>Command</code>s. If a <code>Command</code> is
+ * specified it will show its description, usage and parameters.
  */
-public class Help implements Command
-{
+public class Help implements Command {
     /** bundle */
     private static ResourceBundle bundle = CommandHelper.getBundle();
 
@@ -50,16 +50,16 @@ public class Help implements Command
     /** command key */
     private String commandKey = "command";
 
-    public boolean execute(Context ctx) throws Exception
-    {
-        String command = (String) ctx.get(this.commandKey) ;
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String command = (String) ctx.get(this.commandKey);
         PrintWriter out = CommandHelper.getOutput(ctx);
         out.println();
-        if (command == null)
-        {
+        if (command == null) {
             helpAll(ctx);
-        } else
-        {
+        } else {
             helpCommand(ctx);
         }
         return false;
@@ -67,53 +67,47 @@ public class Help implements Command
 
     /**
      * Writes help for all the commands
-     * 
      * @param ctx
+     *        the current working <code>Context</code>
      * @throws CommandException
      */
-    private void helpAll(Context ctx) throws CommandException
-    {
+    private void helpAll(Context ctx) throws CommandException {
         PrintWriter out = CommandHelper.getOutput(ctx);
         Collection descriptors = factory.getCommandLines();
         Iterator iter = descriptors.iterator();
 
         // Tab position
         int tabPos = 20;
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             CommandLine desc = (CommandLine) iter.next();
-            if (desc.getName().length() > tabPos)
-            {
+            if (desc.getName().length() > tabPos) {
                 tabPos = desc.getName().length() + 1;
             }
         }
 
         iter = descriptors.iterator();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             CommandLine desc = (CommandLine) iter.next();
             StringBuffer buf = new StringBuffer(desc.getName());
             buf.setLength(tabPos);
-            for (int i = desc.getName().length(); i < buf.length(); i++)
-            {
+            for (int i = desc.getName().length(); i < buf.length(); i++) {
                 buf.setCharAt(i, ' ');
             }
             buf.append(desc.getLocalizedDescription());
-            hf.printWrapped(out, 74, tabPos, buf.toString());
+            hf.printWrapped(out, 70, tabPos, buf.toString());
         }
     }
 
     /**
      * Writes detailed help for the given command
-     * 
      * @param ctx
+     *        the current working <code>Context</code>
      * @throws CommandException
      */
-    private void helpCommand(Context ctx) throws CommandException
-    {
+    private void helpCommand(Context ctx) throws CommandException {
         PrintWriter out = CommandHelper.getOutput(ctx);
-        
-        String cmdName = (String) ctx.get(this.commandKey) ;
+
+        String cmdName = (String) ctx.get(this.commandKey);
 
         CommandLine desc = factory.getCommandLine(cmdName);
 
@@ -127,16 +121,14 @@ public class Help implements Command
 
         // Arguments
         Iterator iter = desc.getArguments().values().iterator();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             Argument arg = (Argument) iter.next();
             out.print("<" + arg.getLocalizedArgName() + "> ");
         }
 
         // Options
         iter = desc.getOptions().values().iterator();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             Option arg = (Option) iter.next();
             out.print("-" + arg.getName() + " <" + arg.getLocalizedArgName()
                     + "> ");
@@ -144,20 +136,17 @@ public class Help implements Command
 
         // flags
         iter = desc.getFlags().values().iterator();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             Flag arg = (Flag) iter.next();
             out.print("-" + arg.getName() + " ");
         }
         out.println();
 
         // Alias
-        if (desc.getAlias().size() > 0)
-        {
+        if (desc.getAlias().size() > 0) {
             out.print(bundle.getString("word.alias") + ":");
             iter = desc.getAlias().iterator();
-            while (iter.hasNext())
-            {
+            while (iter.hasNext()) {
                 out.print((String) iter.next() + " ");
 
             }
@@ -166,23 +155,20 @@ public class Help implements Command
         out.println();
 
         // Arguments details
-        if (desc.getArguments().size() > 0)
-        {
+        if (desc.getArguments().size() > 0) {
             out.println("<" + bundle.getString("word.arguments") + ">");
             printParam(ctx, desc.getArguments().values());
         }
 
         // Options details
-        if (desc.getOptions().values().size() > 0)
-        {
+        if (desc.getOptions().values().size() > 0) {
             out.println();
             out.println("<" + bundle.getString("word.options") + ">");
             printParam(ctx, desc.getOptions().values());
         }
 
         // flag details
-        if (desc.getFlags().values().size() > 0)
-        {
+        if (desc.getFlags().values().size() > 0) {
             out.println();
             out.println("<" + bundle.getString("word.flags") + ">");
             printParam(ctx, desc.getFlags().values());
@@ -190,28 +176,31 @@ public class Help implements Command
 
     }
 
-    private void printParam(Context ctx, Collection params)
-    {
-        int[] width = new int[]
-        {
+    /**
+     * @param ctx
+     *        the current working <code>Context</code>
+     * @param params
+     *        the parameters
+     */
+    private void printParam(Context ctx, Collection params) {
+        int[] width = new int[] {
                 10, 10, 10, 40
         };
 
-        String[] header = new String[]
-        {
-                bundle.getString("word.name"), bundle.getString("word.argument"),
-                bundle.getString("word.required"), bundle.getString("word.description")
+        String[] header = new String[] {
+                bundle.getString("word.name"),
+                bundle.getString("word.argument"),
+                bundle.getString("word.required"),
+                bundle.getString("word.description")
         };
 
         PrintHelper.printRow(ctx, width, header);
         PrintHelper.printSeparatorRow(ctx, width, '-');
 
         Iterator iter = params.iterator();
-        while (iter.hasNext())
-        {
+        while (iter.hasNext()) {
             AbstractParameter p = (AbstractParameter) iter.next();
-            String[] item = new String[]
-            {
+            String[] item = new String[] {
                     p.getName(), p.getLocalizedArgName(),
                     Boolean.toString(p.isRequired()),
                     p.getLocalizedDescription()
@@ -222,19 +211,17 @@ public class Help implements Command
     }
 
     /**
-     * @return Returns the commandKey.
+     * @return the command key
      */
-    public String getCommandKey()
-    {
+    public String getCommandKey() {
         return commandKey;
     }
 
     /**
      * @param commandKey
-     *            The commandKey to set.
+     *        the command key to set
      */
-    public void setCommandKey(String commandKey)
-    {
+    public void setCommandKey(String commandKey) {
         this.commandKey = commandKey;
     }
 }

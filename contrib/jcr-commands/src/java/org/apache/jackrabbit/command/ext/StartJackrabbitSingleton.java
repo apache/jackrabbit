@@ -33,82 +33,85 @@ import org.apache.jackrabbit.core.config.RepositoryConfig;
  * <p>
  * Get a Jackrabbit instance and put it in the <code>Context</code>.<br>
  * This commands maintains a cache with already created instances.<br>
- * if there's no Repository for the given config and home settings a 
- * new instance will be created and cached.
+ * if there's no Repository for the given config and home settings a new
+ * instance will be created and cached.
  * </p>
  */
-public class StartJackrabbitSingleton implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(StartJackrabbitSingleton.class);
+public class StartJackrabbitSingleton implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(StartJackrabbitSingleton.class);
 
-	/** cache */
-	private static Map cache = new HashMap();
+    /** cache */
+    private static Map cache = new HashMap();
 
-	/** config file */
-	private String configKey = "config";
+    /** config file */
+    private String configKey = "config";
 
-	/** home folder */
-	private String homeKey = "home";
+    /** home folder */
+    private String homeKey = "home";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String config = (String) ctx.get(this.configKey);
-		String home = (String) ctx.get(this.homeKey);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String config = (String) ctx.get(this.configKey);
+        String home = (String) ctx.get(this.homeKey);
 
-		if (log.isDebugEnabled())
-		{
-			log
-					.debug("starting jackrabbit. config=" + config + " home="
-							+ home);
-		}
+        if (log.isDebugEnabled()) {
+            log
+                    .debug("starting jackrabbit. config=" + config + " home="
+                            + home);
+        }
 
-		try
-		{
-			synchronized (cache)
-			{
-				String key = config + "@" + home;
-				Repository repo = (Repository) cache.get(key);
-				if (repo == null)
-				{
-					String msg = "Starting Jakrabbit instance";
-					log.info(msg);
-					RepositoryConfig conf = RepositoryConfig.create(config,
-							home);
-					repo = RepositoryImpl.create(conf);
-					cache.put(key, repo);
-				}
-				CommandHelper.setRepository(ctx, repo);
-			}
-		} catch (Exception e)
-		{
-			log.error("Unable to start jackrabbit", e) ;
-			throw e;
-		}
-		return false;
-	}
+        try {
+            synchronized (cache) {
+                String key = config + "@" + home;
+                Repository repo = (Repository) cache.get(key);
+                if (repo == null) {
+                    String msg = "Starting Jakrabbit instance";
+                    log.info(msg);
+                    RepositoryConfig conf = RepositoryConfig.create(config,
+                            home);
+                    repo = RepositoryImpl.create(conf);
+                    cache.put(key, repo);
+                }
+                CommandHelper.setRepository(ctx, repo);
+            }
+        } catch (Exception e) {
+            log.error("Unable to start jackrabbit", e);
+            throw e;
+        }
+        return false;
+    }
 
-	public String getConfigKey()
-	{
-		return configKey;
-	}
+    /**
+     * @return the config key
+     */
+    public String getConfigKey() {
+        return configKey;
+    }
 
-	public void setConfigKey(String configKey)
-	{
-		this.configKey = configKey;
-	}
+    /**
+     * @param configKey
+     *            the config key to set
+     */
+    public void setConfigKey(String configKey) {
+        this.configKey = configKey;
+    }
 
-	public String getHomeKey()
-	{
-		return homeKey;
-	}
+    /**
+     * @return the home key
+     */
+    public String getHomeKey() {
+        return homeKey;
+    }
 
-	public void setHomeKey(String homeKey)
-	{
-		this.homeKey = homeKey;
-	}
+    /**
+     * @param homeKey
+     *            the home key to set
+     */
+    public void setHomeKey(String homeKey) {
+        this.homeKey = homeKey;
+    }
 
 }

@@ -23,139 +23,130 @@ import org.apache.jackrabbit.command.CommandHelper;
 /**
  * Command Line parameter superclass
  */
-public abstract class AbstractParameter implements Cloneable
-{
+public abstract class AbstractParameter implements Cloneable {
 
-	/** Resource bundle */
-	protected ResourceBundle bundle = CommandHelper.getBundle();
+    /** Resource bundle */
+    protected ResourceBundle bundle = CommandHelper.getBundle();
 
-	/** name */
-	private String name;
+    /** name */
+    private String name;
 
-	/** long name */
-	private String longName;
+    /** long name */
+    private String longName;
 
-	/** description */
-	private String description;
+    /** description */
+    private String description;
 
-	/** command or a context attribute */
-	private String contextKey;
+    /** command or a context attribute */
+    private String contextKey;
 
-	/** value */
-	private String value;
+    /** value */
+    private String value;
 
-	/**
-	 * @return Returns the description.
-	 */
-	public String getDescription()
-	{
-		return description;
-	}
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
 
-	/**
-	 * @return localized description
-	 */
-	public abstract String getLocalizedDescription();
+    /**
+     * @return the localized description
+     */
+    public abstract String getLocalizedDescription();
 
-	/**
-	 * @return Returns the name.
-	 */
-	public String getName()
-	{
-		return name;
-	}
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
 
-	/**
-	 * @param description
-	 *            The description to set.
-	 */
-	public void setDescription(String description)
-	{
-		this.description = description;
-	}
+    /**
+     * @param description
+     *        The description to set
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	/**
-	 * @param name
-	 *            The name to set.
-	 */
-	public void setName(String name)
-	{
-		this.name = name;
-	}
+    /**
+     * @param name
+     *        the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	/**
-	 * @return Returns the value.
-	 */
-	public String getValue()
-	{
-		return value;
-	}
+    /**
+     * @return the value
+     */
+    public String getValue() {
+        return value;
+    }
 
-	/**
-	 * @param value
-	 *            The value to set.
-	 */
-	public void setValue(String value)
-	{
-		this.value = value;
-	}
+    /**
+     * @param value
+     *        The value to set
+     */
+    public void setValue(String value) {
+        this.value = value;
+    }
 
-	/**
-	 * @return Returns the longName.
-	 */
-	public String getLongName()
-	{
-		return longName;
-	}
+    /**
+     * @return the longName
+     */
+    public String getLongName() {
+        return longName;
+    }
 
-	/**
-	 * @param longName
-	 *            The longName to set.
-	 */
-	public void setLongName(String longName)
-	{
-		this.longName = longName;
-	}
+    /**
+     * @param longName
+     *        The longName to set
+     */
+    public void setLongName(String longName) {
+        this.longName = longName;
+    }
 
-	protected void clone(AbstractParameter param)
-	{
-		param.contextKey = this.contextKey;
-		param.description = this.description;
-		param.longName = this.longName;
-		param.name = this.name;
-		param.value = this.value;
-	}
+    /**
+     * @param param
+     *        the <code>AbstractParameter</code> to clone
+     */
+    protected void clone(AbstractParameter param) {
+        param.contextKey = this.contextKey;
+        param.description = this.description;
+        param.longName = this.longName;
+        param.name = this.name;
+        param.value = this.value;
+    }
 
-	/**
-	 * @return Returns the commandAttribute.
-	 * if the context key is unset it returns the parameter name
-	 */
-	public String getContextKey()
-	{
-		if (contextKey == null)
-		{
-			return this.name;
-		}
-		return contextKey;
-	}
+    /**
+     * @return the commandAttribute. if the context key is unset it returns the
+     *         parameter name
+     */
+    public String getContextKey() {
+        if (contextKey == null) {
+            return this.name;
+        }
+        return contextKey;
+    }
 
-	/**
-	 * @param commandAttribute
-	 *            The commandAttribute to set.
-	 */
-	public void setContextKey(String commandAttribute)
-	{
-		this.contextKey = commandAttribute;
-	}
+    /**
+     * @param commandAttribute
+     *        The commandAttribute to set
+     */
+    public void setContextKey(String commandAttribute) {
+        this.contextKey = commandAttribute;
+    }
 
-	/**
-	 * @return true if this parameter is mandatory
-	 */
-	public abstract boolean isRequired();
+    /**
+     * @return true if this parameter is mandatory
+     */
+    public abstract boolean isRequired();
 
-	/**
-	 * @return argumentlocalized name
-	 */
-	public abstract String getLocalizedArgName();
+    /**
+     * @return argumentlocalized name
+     */
+    public abstract String getLocalizedArgName();
 
 }

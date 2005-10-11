@@ -25,80 +25,95 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Copy a Node. If the source workspace is null it will create a copy of the
- * given node from the current working workspace.
+ * Copy a Node. <br>
+ * If the source <code>Workspace</code> is unset it will create a copy of the
+ * given <code>Node</code> from the current working <code>Workspace</code>.
  */
-public class Copy implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(Copy.class);
+public class Copy implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(Copy.class);
 
-	// ---------------------------- < keys >
-	/**
-	 * Source workspace.
-	 */
-	private String srcWorkspaceKey = "srcWorkspace";
+    // ---------------------------- < keys >
+    /**
+     * Source workspace.
+     */
+    private String srcWorkspaceKey = "srcWorkspace";
 
-	/** source path */
-	private String srcAbsPathKey = "srcAbsPath";
+    /** source path */
+    private String srcAbsPathKey = "srcAbsPath";
 
-	/** destination path */
-	private String destAbsPathKey = "destAbsPath";
+    /** destination path */
+    private String destAbsPathKey = "destAbsPath";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String srcWorkspace = (String) ctx.get(this.srcWorkspaceKey);
-		String srcAbsPath = (String) ctx.get(this.srcAbsPathKey);
-		String destAbsPath = (String) ctx.get(this.destAbsPathKey);
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String srcWorkspace = (String) ctx.get(this.srcWorkspaceKey);
+        String srcAbsPath = (String) ctx.get(this.srcAbsPathKey);
+        String destAbsPath = (String) ctx.get(this.destAbsPathKey);
 
-		Workspace w = CommandHelper.getSession(ctx).getWorkspace();
-		
-		if (srcWorkspace == null)
-		{
-			srcWorkspace = w.getName();
-		}
+        Workspace w = CommandHelper.getSession(ctx).getWorkspace();
 
-		if (log.isDebugEnabled())
-		{
-			log.debug("copying node from [" + srcWorkspace + ":" + srcAbsPath
-					+ "] to [" + w.getName() + ":" + destAbsPath + "]");
-		}
+        if (srcWorkspace == null) {
+            srcWorkspace = w.getName();
+        }
 
-		w.copy(srcWorkspace, srcAbsPath, destAbsPath);
+        if (log.isDebugEnabled()) {
+            log.debug("copying node from [" + srcWorkspace + ":" + srcAbsPath
+                    + "] to [" + w.getName() + ":" + destAbsPath + "]");
+        }
 
-		return false;
-	}
+        w.copy(srcWorkspace, srcAbsPath, destAbsPath);
 
-	public String getDestAbsPathKey()
-	{
-		return destAbsPathKey;
-	}
+        return false;
+    }
 
-	public void setDestAbsPathKey(String destAbsPathKey)
-	{
-		this.destAbsPathKey = destAbsPathKey;
-	}
+    /**
+     * @return the destination absolute path key
+     */
+    public String getDestAbsPathKey() {
+        return destAbsPathKey;
+    }
 
-	public String getSrcAbsPathKey()
-	{
-		return srcAbsPathKey;
-	}
+    /**
+     * sets the destination absolute path key
+     * @param destAbsPathKey
+     *        the destination absolute path key
+     */
+    public void setDestAbsPathKey(String destAbsPathKey) {
+        this.destAbsPathKey = destAbsPathKey;
+    }
 
-	public void setSrcAbsPathKey(String srcAbsPathKey)
-	{
-		this.srcAbsPathKey = srcAbsPathKey;
-	}
+    /**
+     * @return the source absolute path key
+     */
+    public String getSrcAbsPathKey() {
+        return srcAbsPathKey;
+    }
 
-	public String getSrcWorkspaceKey()
-	{
-		return srcWorkspaceKey;
-	}
+    /**
+     * Sets the source absolute path key
+     * @param srcAbsPathKey
+     *        the source absolute path key
+     */
+    public void setSrcAbsPathKey(String srcAbsPathKey) {
+        this.srcAbsPathKey = srcAbsPathKey;
+    }
 
-	public void setSrcWorkspaceKey(String srcWorkspaceKey)
-	{
-		this.srcWorkspaceKey = srcWorkspaceKey;
-	}
+    /**
+     * @return the source <code>Workspace</code> key
+     */
+    public String getSrcWorkspaceKey() {
+        return srcWorkspaceKey;
+    }
+
+    /**
+     * Sets the source <code>Workspace</code> key
+     * @param srcWorkspaceKey
+     *        the source <code>Workspace</code> key
+     */
+    public void setSrcWorkspaceKey(String srcWorkspaceKey) {
+        this.srcWorkspaceKey = srcWorkspaceKey;
+    }
 }

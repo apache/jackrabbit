@@ -27,10 +27,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Move a Node.
+ * Move a <code>Node</code>
  */
-public class Move implements Command
-{
+public class Move implements Command {
     /** resource bundle */
     private static ResourceBundle bundle = CommandHelper.getBundle();
 
@@ -45,25 +44,23 @@ public class Move implements Command
     private String destAbsPathKey = "destAbsPath";
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public boolean execute(Context ctx) throws Exception
-    {
+    public boolean execute(Context ctx) throws Exception {
         String srcAbsPath = (String) ctx.get(this.srcAbsPathKey);
         String destAbsPath = (String) ctx.get(this.destAbsPathKey);
 
-        if (!srcAbsPath.startsWith("/") || !destAbsPath.startsWith("/"))
-        {
-            throw new IllegalArgumentException(
-                bundle.getString("exception.illegalargument")
-                + ". " + 
-                bundle.getString("exception.only.absolute.path") + ".");
+        if (!srcAbsPath.startsWith("/") || !destAbsPath.startsWith("/")) {
+            throw new IllegalArgumentException(bundle
+                .getString("exception.illegalargument")
+                    + ". "
+                    + bundle.getString("exception.only.absolute.path")
+                    + ".");
         }
 
         Workspace w = CommandHelper.getSession(ctx).getWorkspace();
 
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("moving node from " + srcAbsPath + " to " + destAbsPath);
         }
 
@@ -73,36 +70,32 @@ public class Move implements Command
     }
 
     /**
-     * @return Returns the destAbsPathKey.
+     * @return the destintation absolute path key
      */
-    public String getDestAbsPathKey()
-    {
+    public String getDestAbsPathKey() {
         return destAbsPathKey;
     }
 
     /**
      * @param destAbsPathKey
-     *            The destAbsPathKey to set.
+     *        the destintation absolute path key to set
      */
-    public void setDestAbsPathKey(String destAbsPathKey)
-    {
+    public void setDestAbsPathKey(String destAbsPathKey) {
         this.destAbsPathKey = destAbsPathKey;
     }
 
     /**
-     * @return Returns the srcAbsPathKey.
+     * @return the source absolute path key
      */
-    public String getSrcAbsPathKey()
-    {
+    public String getSrcAbsPathKey() {
         return srcAbsPathKey;
     }
 
     /**
      * @param srcAbsPathKey
-     *            The srcAbsPathKey to set.
+     *        the source absolute path key to set
      */
-    public void setSrcAbsPathKey(String srcAbsPathKey)
-    {
+    public void setSrcAbsPathKey(String srcAbsPathKey) {
         this.srcAbsPathKey = srcAbsPathKey;
     }
 }

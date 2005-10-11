@@ -17,11 +17,10 @@
 package org.apache.jackrabbit.command.cli;
 
 /**
- * Command Line option. An option is a pair of parameters with the following
- * pattern -[option name] [option value]
+ * Command Line option. <br>
+ * An option is a pair with the following pattern -[option name] [option value]
  */
-public class Option extends AbstractParameter
-{
+public class Option extends AbstractParameter {
 
     /** argument name */
     private String argName;
@@ -30,59 +29,55 @@ public class Option extends AbstractParameter
     private boolean required = false;
 
     /**
-     * @return Returns the required.
+     * @return true if this <code>Option</code> is required
      */
-    public boolean isRequired()
-    {
+    public boolean isRequired() {
         return required;
     }
 
     /**
      * @param required
-     *            The required to set.
+     *        set required
      */
-    public void setRequired(boolean required)
-    {
+    public void setRequired(boolean required) {
         this.required = required;
     }
 
     /**
-     * @return Returns the argName.
+     * @return the argument name
      */
-    public String getArgName()
-    {
+    public String getArgName() {
         return argName;
     }
 
     /**
-     * @return localized argument name
+     * @return the localized argument name
      */
-    public String getLocalizedArgName()
-    {
+    public String getLocalizedArgName() {
         return bundle.getString(this.getArgName());
     }
 
     /**
      * @param argName
-     *            The argName to set.
+     *        the argument name to set
      */
-    public void setArgName(String argName)
-    {
+    public void setArgName(String argName) {
         this.argName = argName;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public Object clone()
-    {
+    public Object clone() {
         Option o = new Option();
         this.clone(o);
         return o;
     }
 
-    protected void clone(Option opt)
-    {
+    /**
+     * {@inheritDoc}
+     */
+    protected void clone(Option opt) {
         super.clone(opt);
         opt.argName = this.argName;
         opt.required = this.required;
@@ -90,10 +85,9 @@ public class Option extends AbstractParameter
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public String getLocalizedDescription()
-    {
+    public String getLocalizedDescription() {
         return bundle.getString(this.getDescription());
     }
 }

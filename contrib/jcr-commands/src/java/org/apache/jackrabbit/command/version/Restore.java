@@ -23,89 +23,80 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Restore a node to the given version
+ * Restore a <code>Node</code> to the state of the given <code>Version</code>
  */
-public class Restore implements Command
-{
-	/** logger */
-	private static Log log = LogFactory.getLog(Restore.class);
+public class Restore implements Command {
+    /** logger */
+    private static Log log = LogFactory.getLog(Restore.class);
 
-	// ---------------------------- < keys >
-	/** node path */
-	private String pathKey = "path";
+    // ---------------------------- < keys >
+    /** node path */
+    private String pathKey = "path";
 
-	/** version name key */
-	private String versionKey = "version";
+    /** version name key */
+    private String versionKey = "version";
 
-	/** remove existing node key */
-	private String removeExistingKey = "removeExisting";
+    /** remove existing node key */
+    private String removeExistingKey = "removeExisting";
 
-	/**
-	 * @inheritDoc
-	 */
-	public boolean execute(Context ctx) throws Exception
-	{
-		String path = (String) ctx.get(this.pathKey);
-		String versionName = (String) ctx.get(this.versionKey);
-		boolean removeExisting = Boolean.valueOf(
-				(String) ctx.get(this.removeExistingKey)).booleanValue();
-		if (log.isDebugEnabled())
-		{
-			log.debug("restoring node at " + path + " to version "
-					+ versionName + " removeexisting=" + removeExisting);
-		}
-		CommandHelper.getNode(ctx, path).restore(versionName, removeExisting);
-		return false;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public boolean execute(Context ctx) throws Exception {
+        String path = (String) ctx.get(this.pathKey);
+        String versionName = (String) ctx.get(this.versionKey);
+        boolean removeExisting = Boolean.valueOf(
+            (String) ctx.get(this.removeExistingKey)).booleanValue();
+        if (log.isDebugEnabled()) {
+            log.debug("restoring node at " + path + " to version "
+                    + versionName + " removeexisting=" + removeExisting);
+        }
+        CommandHelper.getNode(ctx, path).restore(versionName, removeExisting);
+        return false;
+    }
 
-	/**
-	 * @return Returns the pathKey.
-	 */
-	public String getPathKey()
-	{
-		return pathKey;
-	}
+    /**
+     * @return the path key
+     */
+    public String getPathKey() {
+        return pathKey;
+    }
 
-	/**
-	 * @param pathKey
-	 *            The pathKey to set.
-	 */
-	public void setPathKey(String pathKey)
-	{
-		this.pathKey = pathKey;
-	}
+    /**
+     * @param pathKey
+     *        the path key to set
+     */
+    public void setPathKey(String pathKey) {
+        this.pathKey = pathKey;
+    }
 
-	/**
-	 * @return Returns the removeExistingKey.
-	 */
-	public String getRemoveExistingKey()
-	{
-		return removeExistingKey;
-	}
+    /**
+     * @return the remove existing key
+     */
+    public String getRemoveExistingKey() {
+        return removeExistingKey;
+    }
 
-	/**
-	 * @param removeExistingKey
-	 *            The removeExistingKey to set.
-	 */
-	public void setRemoveExistingKey(String removeExistingKey)
-	{
-		this.removeExistingKey = removeExistingKey;
-	}
+    /**
+     * @param removeExistingKey
+     *        the remove existing key to set
+     */
+    public void setRemoveExistingKey(String removeExistingKey) {
+        this.removeExistingKey = removeExistingKey;
+    }
 
-	/**
-	 * @return Returns the versionNameKey.
-	 */
-	public String getVersionKey()
-	{
-		return versionKey;
-	}
+    /**
+     * @return the version name key
+     */
+    public String getVersionKey() {
+        return versionKey;
+    }
 
-	/**
-	 * @param versionNameKey
-	 *            The versionNameKey to set.
-	 */
-	public void setVersionKey(String versionNameKey)
-	{
-		this.versionKey = versionNameKey;
-	}
+    /**
+     * @param versionNameKey
+     *        the version name key to set
+     */
+    public void setVersionKey(String versionNameKey) {
+        this.versionKey = versionNameKey;
+    }
 }
