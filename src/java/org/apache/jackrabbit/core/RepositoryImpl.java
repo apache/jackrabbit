@@ -62,12 +62,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.RandomAccessFile;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
+import java.nio.channels.FileLock;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -142,6 +144,11 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     // flag indicating if respository has been shut down
     private boolean disposed = false;
+
+    /**
+     * the lock that guards instantiation of multiple repositories.
+     */
+    private FileLock repLock;
 
     /**
      * private constructor
@@ -225,32 +232,55 @@ public class RepositoryImpl implements Repository, SessionListener,
 
     /**
      * Lock the repository home.
-     * @throws RepositoryException
-     *         if the repository lock can not be acquired
+     *
+     * @throws RepositoryException if the repository lock can not be acquired
      */
-    private void acquireRepositoryLock() throws RepositoryException {
+    protected void acquireRepositoryLock() throws RepositoryException {
         File home = new File(this.repConfig.getHomeDir());
-        File lock  = new File(home, REPOSITORY_LOCK) ;
+        File lock = new File(home, REPOSITORY_LOCK);
+
         if (lock.exists()) {
-            throw new RepositoryException("The repository home at " + home.getAbsolutePath() + 
-                " appears to be in use. If you are sure it's not in use please delete the file at " + 
-                lock.getAbsolutePath() + ". Probably the repository was not shutdown properly.");
+            log.warn("Existing lock file at " + lock.getAbsolutePath() +
+                    " deteteced. Repository was not shutdown properly.");
+        } else {
+            try {
+                lock.createNewFile();
+            } catch (IOException e) {
+                throw new RepositoryException(
+                    "Unable to create lock file at " + lock.getAbsolutePath(), e);
+            }
         }
         try {
-            lock.createNewFile() ;
+            repLock = new RandomAccessFile(lock, "rw").getChannel().tryLock();
         } catch (IOException e) {
-            throw new RepositoryException("Unable to create lock file at " + lock.getAbsolutePath());
+            throw new RepositoryException(
+                "Unable to lock file at " + lock.getAbsolutePath(), e);
+        }
+        if (repLock == null) {
+            throw new RepositoryException(
+                    "The repository home at " + home.getAbsolutePath() +
+                    " appears to be in use since the file at " +
+                    lock.getAbsolutePath() + " is locked by another process.");
         }
     }
 
     /**
      * Release repository lock
      */
-    private void releaseRepositoryLock() {
+    protected void releaseRepositoryLock() {
+        if (repLock != null) {
+            try {
+                repLock.release();
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+        repLock = null;
+
         File home = new File(this.repConfig.getHomeDir());
-        File lock  = new File(home, REPOSITORY_LOCK) ;
+        File lock = new File(home, REPOSITORY_LOCK);
         if (!lock.delete()) {
-            log.error("Unable to release repository lock") ;
+            log.error("Unable to release repository lock");
         }
     }
 
