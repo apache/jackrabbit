@@ -295,7 +295,7 @@ public class ConfigurationParser {
                 tmpParser.parseBeanConfig(root, FILE_SYSTEM_ELEMENT));
 
         // Persistence manager implementation
-        PersistenceManagerConfig pmc = parsePersistenceManagerConfig(root);
+        PersistenceManagerConfig pmc = tmpParser.parsePersistenceManagerConfig(root);
 
         // Search implementation (optional)
         SearchConfig sc = tmpParser.parseSearchConfig(root);
