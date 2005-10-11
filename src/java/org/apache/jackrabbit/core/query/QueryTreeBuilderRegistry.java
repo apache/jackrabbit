@@ -41,7 +41,8 @@ public class QueryTreeBuilderRegistry {
 
     static {
         try {
-            Iterator it = ServiceRegistry.lookupProviders(QueryTreeBuilder.class);
+            Iterator it = ServiceRegistry.lookupProviders(QueryTreeBuilder.class, 
+                    QueryTreeBuilderRegistry.class.getClassLoader());
             while (it.hasNext()) {
                 BUILDERS.add(it.next());
             }
