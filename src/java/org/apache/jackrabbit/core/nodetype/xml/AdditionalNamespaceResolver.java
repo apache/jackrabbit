@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
@@ -28,7 +28,7 @@ import java.util.Properties;
  * A simple namespace resolver implementation, that uses the additional
  * namespaces declared in an XML element.
  */
-public class AdditionalNamespaceResolver implements NamespaceResolver {
+public class AdditionalNamespaceResolver extends AbstractNamespaceResolver {
 
     /** Map from namespace prefixes to namespace URIs. */
     private final Properties prefixToURI = new Properties();

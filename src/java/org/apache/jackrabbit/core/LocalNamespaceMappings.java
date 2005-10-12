@@ -18,6 +18,10 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.CachingNamespaceResolver;
 import org.apache.xerces.util.XMLChar;
 
 import javax.jcr.NamespaceException;
@@ -40,7 +44,7 @@ import java.util.Set;
  * looking up the local namespace mapping and then backing to the
  * underlying namespace registry.
  */
-class LocalNamespaceMappings implements NamespaceResolver {
+class LocalNamespaceMappings extends CachingNamespaceResolver {
 
     /** The underlying global and persistent namespace registry. */
     private final NamespaceRegistryImpl nsReg;
@@ -61,6 +65,7 @@ class LocalNamespaceMappings implements NamespaceResolver {
      * @param nsReg namespace registry
      */
     LocalNamespaceMappings(NamespaceRegistryImpl nsReg) {
+        super(nsReg, 100);
         this.nsReg = nsReg;
     }
 
@@ -151,6 +156,9 @@ class LocalNamespaceMappings implements NamespaceResolver {
             uriToPrefix.put(uri, prefix);
             hiddenPrefixes.add(globalPrefix);
         }
+
+        // invalidate cache
+        super.prefixRemapped(prefix, uri);
     }
 
     /**
@@ -189,8 +197,9 @@ class LocalNamespaceMappings implements NamespaceResolver {
             return nsReg.getURI(prefix);
         }
         // check local mappings
-        if (prefixToURI.containsKey(prefix)) {
-            return (String) prefixToURI.get(prefix);
+        String uri = (String) prefixToURI.get(prefix);
+        if (uri != null) {
+            return uri;
         }
 
         // check global mappings
@@ -211,11 +220,68 @@ class LocalNamespaceMappings implements NamespaceResolver {
         }
 
         // check local mappings
-        if (uriToPrefix.containsKey(uri)) {
-            return (String) uriToPrefix.get(uri);
+        String prefix = (String) uriToPrefix.get(uri);
+        if (prefix != null) {
+            return prefix;
         }
 
         // check global mappings
         return nsReg.getPrefix(uri);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public QName getQName(String name)
+            throws IllegalNameException, UnknownPrefixException {
+        if (prefixToURI.isEmpty()) {
+            // shortcut
+            return nsReg.getQName(name);
+        }
+        try {
+            // first try registry, this might result in a wrong QName because
+            // of locally overlayed mappings
+            QName candidate = nsReg.getQName(name);
+            // check if valid
+            String prefix = nsReg.getPrefix(candidate.getNamespaceURI());
+            if (!hiddenPrefixes.contains(prefix)) {
+                return candidate;
+            }
+        } catch (UnknownPrefixException e) {
+            // try using local mappings
+        } catch (NamespaceException e) {
+            // may be thrown by nsReg.getPrefix() but should never happend
+            // because we got the namespace from the nsReg itself
+            throw new UnknownPrefixException(name);
+        }
+        return super.getQName(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getJCRName(QName name)
+            throws NoPrefixDeclaredException {
+        if (uriToPrefix.isEmpty()) {
+            // shortcut
+            return nsReg.getJCRName(name);
+        }
+        if (uriToPrefix.containsKey(name.getNamespaceURI())) {
+            // locally re-mappped
+            return super.getJCRName(name);
+        } else {
+            // use global mapping
+            return nsReg.getJCRName(name);
+        }
+    }
+
+    /**
+     * @inheritDoc
+     * This method gets called when the NamespaceRegistry remapped a namespace
+     * to a new prefix or if a new namespace is registered.
+     */
+    public void prefixRemapped(String prefix, String uri) {
+        // todo check overlayed mappings and adjust prefixes if necessary
+        super.prefixRemapped(prefix, uri);
     }
 }

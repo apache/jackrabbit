@@ -160,7 +160,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             case PropertyType.NAME:
                 QName name = (QName) value.internalValue();
                 try {
-                    return name.toJCRName(session.getNamespaceResolver()).length();
+                    return session.getNamespaceResolver().getJCRName(name).length();
                 } catch (NoPrefixDeclaredException npde) {
                     // should never happen...
                     String msg = safeGetJCRPath()
@@ -1116,7 +1116,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         PropertyId propId = (PropertyId) id;
         QName name = propId.getName();
         try {
-            return name.toJCRName(session.getNamespaceResolver());
+            return session.getNamespaceResolver().getJCRName(name);
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace " + name.getNamespaceURI();

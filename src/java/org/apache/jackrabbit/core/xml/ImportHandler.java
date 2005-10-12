@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -264,7 +265,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * <code>NamespaceContext</code> supports scoped namespace declarations.
      */
-    class NamespaceContext implements NamespaceResolver {
+    class NamespaceContext extends AbstractNamespaceResolver {
 
         private final NamespaceSupport nsContext;
 
