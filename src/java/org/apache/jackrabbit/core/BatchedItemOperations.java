@@ -1,6 +1,6 @@
 /*
  * Copyright 2004-2005 The Apache Software Foundation or its licensors,
- *                     as applicable.
+  *                     as applicable.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
@@ -51,6 +52,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -1592,6 +1594,7 @@ public class BatchedItemOperations extends ItemValidator {
             NodeId id;
             EffectiveNodeType ent = getEffectiveNodeType(srcState);
             boolean referenceable = ent.includesNodeType(QName.MIX_REFERENCEABLE);
+            boolean versionable = ent.includesNodeType(QName.MIX_VERSIONABLE);
             switch (flag) {
                 case COPY:
                     // always create new uuid
@@ -1715,6 +1718,37 @@ public class BatchedItemOperations extends ItemValidator {
 
                 PropertyState newChildState =
                         copyPropertyState(srcChildState, uuid, propName);
+
+                if (versionable && flag == COPY) {
+                    /**
+                     * a versionable node is being copied:
+                     * copied properties declared by mix:versionable need to be
+                     * adjusted accordingly.
+                     */
+                    // jcr:versionHistory
+                    if (!propName.equals(QName.JCR_VERSIONHISTORY)) {
+                        VersionHistory vh = getOrCreateVersionHistory(newState);
+                        newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getUUID()))});
+                    }
+
+                    // jcr:baseVersion
+                    if (!propName.equals(QName.JCR_BASEVERSION)) {
+                        VersionHistory vh = getOrCreateVersionHistory(newState);
+                        newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
+                    }
+
+                    // jcr:predecessors
+                    if (!propName.equals(QName.JCR_PREDECESSORS)) {
+                        VersionHistory vh = getOrCreateVersionHistory(newState);
+                        newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
+                    }
+
+                    // jcr:isCheckedOut
+                    if (!propName.equals(QName.JCR_ISCHECKEDOUT)) {
+                        newChildState.setValues(new InternalValue[]{InternalValue.create(true)});
+                    }
+                }
+
                 if (newChildState.getType() == PropertyType.REFERENCE) {
                     refTracker.processedReference(newChildState);
                 }
@@ -1775,5 +1809,24 @@ public class BatchedItemOperations extends ItemValidator {
             }
         }
         return newState;
+    }
+
+    /**
+     * Returns the version history of the given node state. A new
+     * version history will be created if doesn't exist yet.
+     *
+     * @param node node state
+     * @return the version history of the target node state
+     * @throws RepositoryException if an error occurs
+     */
+    private VersionHistory getOrCreateVersionHistory(NodeState node)
+            throws RepositoryException {
+        VersionManager vMgr = session.getVersionManager();
+        VersionHistory vh = vMgr.getVersionHistory(session, node);
+        if (vh == null) {
+            // create a new version history
+            vh = vMgr.createVersionHistory(session, node);
+        }
+        return vh;
     }
 }
