@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.name;
+package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.IllegalNameException;
@@ -33,7 +33,7 @@ import java.util.Map;
  * and vice versa. The cache is invalidated when a namespace uri to prefix
  * mapping is changed.
  */
-public class CachingNamespaceResolver
+class CachingNamespaceResolver
         implements NamespaceResolver, NamespaceListener {
 
     /**
