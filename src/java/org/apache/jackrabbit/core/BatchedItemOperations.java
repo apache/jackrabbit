@@ -1,6 +1,6 @@
 /*
  * Copyright 2004-2005 The Apache Software Foundation or its licensors,
-  *                     as applicable.
+ *                     as applicable.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1726,25 +1726,25 @@ public class BatchedItemOperations extends ItemValidator {
                      * adjusted accordingly.
                      */
                     // jcr:versionHistory
-                    if (!propName.equals(QName.JCR_VERSIONHISTORY)) {
+                    if (propName.equals(QName.JCR_VERSIONHISTORY)) {
                         VersionHistory vh = getOrCreateVersionHistory(newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getUUID()))});
                     }
 
                     // jcr:baseVersion
-                    if (!propName.equals(QName.JCR_BASEVERSION)) {
+                    if (propName.equals(QName.JCR_BASEVERSION)) {
                         VersionHistory vh = getOrCreateVersionHistory(newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
                     }
 
                     // jcr:predecessors
-                    if (!propName.equals(QName.JCR_PREDECESSORS)) {
+                    if (propName.equals(QName.JCR_PREDECESSORS)) {
                         VersionHistory vh = getOrCreateVersionHistory(newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
                     }
 
                     // jcr:isCheckedOut
-                    if (!propName.equals(QName.JCR_ISCHECKEDOUT)) {
+                    if (propName.equals(QName.JCR_ISCHECKEDOUT)) {
                         newChildState.setValues(new InternalValue[]{InternalValue.create(true)});
                     }
                 }
