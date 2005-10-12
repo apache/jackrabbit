@@ -409,7 +409,7 @@ public class VersionManagerImpl implements VersionManager {
      * @return
      * @throws RepositoryException
      */
-    public synchronized Version checkin(NodeImpl node) throws RepositoryException {
+    public Version checkin(NodeImpl node) throws RepositoryException {
         SessionImpl session = (SessionImpl) node.getSession();
         InternalVersion version = internalCheckin(node);
 
@@ -439,7 +439,7 @@ public class VersionManagerImpl implements VersionManager {
      * @throws RepositoryException
      * @see javax.jcr.Node#checkin()
      */
-    private InternalVersion internalCheckin(NodeImpl node) throws RepositoryException {
+    private synchronized InternalVersion internalCheckin(NodeImpl node) throws RepositoryException {
         // assuming node is versionable and checkout (check in nodeimpl)
         // To create a new version of a versionable node N, the client calls N.checkin.
         // This causes the following series of events:
