@@ -123,16 +123,18 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
      */
     public void nodeTypeRegistered(QName ntName) {
         try {
-            // allow provider to update
             if (virtProvider != null) {
+                // allow provider to update
                 virtProvider.onNodeTypeAdded(ntName);
             }
-
-            NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(new NodeId(rootNodeId));
-            NodeImpl child = root.getNode(ntName);
-            List events = new ArrayList();
-            recursiveAdd(events, root, child);
-            obsDispatcher.dispatch(events, systemSession);
+            if (systemSession != null) {
+                // generate observation events
+                NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(new NodeId(rootNodeId));
+                NodeImpl child = root.getNode(ntName);
+                List events = new ArrayList();
+                recursiveAdd(events, root, child);
+                obsDispatcher.dispatch(events, systemSession);
+            }
         } catch (RepositoryException e) {
             log.error("Unable to index new nodetype: " + e.toString());
         }
@@ -152,12 +154,16 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
      */
     public void nodeTypeUnregistered(QName ntName) {
         try {
-            NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(new NodeId(rootNodeId));
-            NodeImpl child = root.getNode(ntName);
-            List events = new ArrayList();
-            recursiveRemove(events, root, child);
-            obsDispatcher.dispatch(events, systemSession);
+            if (systemSession != null) {
+                // generated observation events
+                NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(new NodeId(rootNodeId));
+                NodeImpl child = root.getNode(ntName);
+                List events = new ArrayList();
+                recursiveRemove(events, root, child);
+                obsDispatcher.dispatch(events, systemSession);
+            }
             if (virtProvider != null) {
+                // allow provider to update
                 virtProvider.onNodeTypeRemoved(ntName);
             }
         } catch (RepositoryException e) {
