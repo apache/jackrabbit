@@ -21,6 +21,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.log4j.Logger;
 
 import javax.jcr.NamespaceException;
@@ -46,7 +47,7 @@ import java.util.Properties;
  * prefix is created on the fly and associated with the namespace. Known
  * namespace mappings are stored in a properties file.
  */
-public class NamespaceMappings implements NamespaceResolver {
+public class NamespaceMappings extends AbstractNamespaceResolver {
 
     /**
      * Default logger instance for this class

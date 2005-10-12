@@ -46,4 +46,22 @@ public interface NamespaceResolver {
      */
     String getPrefix(String uri) throws NamespaceException;
 
+    /**
+     * Parses the given prefixed JCR name into a qualified name.
+     *
+     * @param name the raw name, potentially prefixed.
+     * @return the QName instance for the raw name.
+     * @throws IllegalNameException   if the given name is not a valid JCR name
+     * @throws UnknownPrefixException if the JCR name prefix does not resolve
+     */
+    public QName getQName(String name)
+            throws IllegalNameException, UnknownPrefixException;
+
+    /**
+     * Returns the qualified name in the prefixed JCR name format.
+     *
+     * @return name the qualified name
+     * @throws NoPrefixDeclaredException if the namespace can not be resolved
+     */
+    public String getJCRName(QName name) throws NoPrefixDeclaredException;
 }

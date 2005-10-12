@@ -18,8 +18,12 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.AbstractNamespaceResolver;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.CachingNamespaceResolver;
 import org.apache.log4j.Logger;
 import org.apache.xerces.util.XMLChar;
 
@@ -38,8 +42,8 @@ import java.util.Properties;
 /**
  * A <code>NamespaceRegistryImpl</code> ...
  */
-public class NamespaceRegistryImpl implements NamespaceRegistry,
-        NamespaceResolver {
+public class NamespaceRegistryImpl extends AbstractNamespaceResolver
+        implements NamespaceRegistry {
 
     private static Logger log = Logger.getLogger(NamespaceRegistryImpl.class);
 
@@ -72,6 +76,8 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
     private HashMap prefixToURI = new HashMap();
     private HashMap uriToPrefix = new HashMap();
 
+    private final CachingNamespaceResolver resolver;
+
     private final FileSystem nsRegStore;
 
     /**
@@ -80,13 +86,17 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
      * @param nsRegStore
      * @throws RepositoryException
      */
-    protected NamespaceRegistryImpl(FileSystem nsRegStore) throws RepositoryException {
+    protected NamespaceRegistryImpl(FileSystem nsRegStore)
+            throws RepositoryException {
+        super(true); // enable listener support
         this.nsRegStore = nsRegStore;
+        resolver = new CachingNamespaceResolver(this, 1000);
         load();
     }
 
     private void load() throws RepositoryException {
-        FileSystemResource propFile = new FileSystemResource(nsRegStore, NS_REG_RESOURCE);
+        FileSystemResource propFile =
+                new FileSystemResource(nsRegStore, NS_REG_RESOURCE);
         try {
             if (!propFile.exists()) {
                 // clear existing mappings
@@ -150,7 +160,8 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
     }
 
     private void store() throws RepositoryException {
-        FileSystemResource propFile = new FileSystemResource(nsRegStore, NS_REG_RESOURCE);
+        FileSystemResource propFile =
+                new FileSystemResource(nsRegStore, NS_REG_RESOURCE);
         try {
             propFile.makeParentDirs();
             OutputStream os = propFile.getOutputStream();
@@ -249,7 +260,8 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
              * (in names of nodes/properties/node types etc.) we simply don't allow it.
              */
             throw new NamespaceException("failed to register namespace "
-                    + prefix + " -> " + uri + ": remapping existing prefixes is not supported.");
+                    + prefix + " -> " + uri
+                    + ": remapping existing prefixes is not supported.");
         }
 
         prefixToURI.put(prefix, uri);
@@ -257,6 +269,9 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
 
         // persist mappings
         store();
+
+        // notify listeners
+        notifyPrefixRemapped(prefix, uri);
     }
 
     /**
@@ -298,19 +313,38 @@ public class NamespaceRegistryImpl implements NamespaceRegistry,
      * {@inheritDoc}
      */
     public String getURI(String prefix) throws NamespaceException {
-        if (!prefixToURI.containsKey(prefix)) {
-            throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
+        String uri = (String) prefixToURI.get(prefix);
+        if (uri == null) {
+            throw new NamespaceException(prefix
+                    + ": is not a registered namespace prefix.");
         }
-        return (String) prefixToURI.get(prefix);
+        return uri;
     }
 
     /**
      * {@inheritDoc}
      */
     public String getPrefix(String uri) throws NamespaceException {
-        if (!uriToPrefix.containsKey(uri)) {
-            throw new NamespaceException(uri + ": is not a registered namespace uri.");
+        String prefix = (String) uriToPrefix.get(uri);
+        if (prefix == null) {
+            throw new NamespaceException(uri
+                    + ": is not a registered namespace uri.");
         }
-        return (String) uriToPrefix.get(uri);
+        return prefix;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public QName getQName(String name)
+            throws IllegalNameException, UnknownPrefixException {
+        return resolver.getQName(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getJCRName(QName name) throws NoPrefixDeclaredException {
+        return resolver.getJCRName(name);
     }
 }

@@ -24,7 +24,7 @@ import javax.jcr.Session;
  * helper class that exposes the <code>NamespaceResolver</code>
  * interface on a <code>Session</code>
  */
-public class SessionNamespaceResolver implements NamespaceResolver {
+public class SessionNamespaceResolver extends AbstractNamespaceResolver {
 
     /**
      * the session for the namespace lookups

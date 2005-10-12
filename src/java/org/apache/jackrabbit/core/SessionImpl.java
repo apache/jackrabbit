@@ -1117,6 +1117,8 @@ public class SessionImpl implements Session, Dumpable {
         // notify listeners that session is about to be closed
         notifyLoggingOut();
 
+        // dispose name resolver
+        nsMappings.dispose();
         // dispose session item state manager
         itemStateMgr.dispose();
         // dispose item manager

@@ -37,7 +37,7 @@ public class QNameTest extends TestCase {
     public QNameTest() {
 
         // create dummy namespace resolver
-        resolver = new NamespaceResolver(){
+        resolver = new AbstractNamespaceResolver(){
             public String getURI(String prefix) {
                 return prefix;
             }
