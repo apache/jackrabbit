@@ -23,7 +23,6 @@ import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.CachingNamespaceResolver;
 import org.apache.log4j.Logger;
 import org.apache.xerces.util.XMLChar;
 

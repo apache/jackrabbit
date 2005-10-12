@@ -21,7 +21,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.CachingNamespaceResolver;
+import org.apache.jackrabbit.name.AbstractNamespaceResolver;
+import org.apache.jackrabbit.name.NamespaceListener;
 import org.apache.xerces.util.XMLChar;
 
 import javax.jcr.NamespaceException;
@@ -44,7 +45,8 @@ import java.util.Set;
  * looking up the local namespace mapping and then backing to the
  * underlying namespace registry.
  */
-class LocalNamespaceMappings extends CachingNamespaceResolver {
+class LocalNamespaceMappings extends AbstractNamespaceResolver
+        implements NamespaceListener{
 
     /** The underlying global and persistent namespace registry. */
     private final NamespaceRegistryImpl nsReg;
@@ -65,8 +67,8 @@ class LocalNamespaceMappings extends CachingNamespaceResolver {
      * @param nsReg namespace registry
      */
     LocalNamespaceMappings(NamespaceRegistryImpl nsReg) {
-        super(nsReg, 100);
         this.nsReg = nsReg;
+        this.nsReg.addListener(this);
     }
 
     /**
@@ -156,9 +158,6 @@ class LocalNamespaceMappings extends CachingNamespaceResolver {
             uriToPrefix.put(uri, prefix);
             hiddenPrefixes.add(globalPrefix);
         }
-
-        // invalidate cache
-        super.prefixRemapped(prefix, uri);
     }
 
     /**
@@ -185,6 +184,13 @@ class LocalNamespaceMappings extends CachingNamespaceResolver {
         prefixes.addAll(prefixToURI.keySet());
 
         return (String[]) prefixes.toArray(new String[prefixes.size()]);
+    }
+
+    /**
+     * Disposes this <code>LocalNamespaceMappings</code>.
+     */
+    void dispose() {
+        nsReg.removeListener(this);
     }
 
     //----------------------------------------------------< NamespaceResolver >
@@ -282,6 +288,5 @@ class LocalNamespaceMappings extends CachingNamespaceResolver {
      */
     public void prefixRemapped(String prefix, String uri) {
         // todo check overlayed mappings and adjust prefixes if necessary
-        super.prefixRemapped(prefix, uri);
     }
 }
