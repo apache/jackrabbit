@@ -70,6 +70,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 import java.nio.channels.FileLock;
+import java.nio.channels.FileChannel;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -270,7 +271,9 @@ public class RepositoryImpl implements Repository, SessionListener,
     protected void releaseRepositoryLock() {
         if (repLock != null) {
             try {
+                FileChannel channel = repLock.channel();
                 repLock.release();
+                channel.close();
             } catch (IOException e) {
                 // ignore
             }
