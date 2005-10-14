@@ -39,10 +39,14 @@ import java.util.Arrays;
 import java.util.Calendar;
 
 /**
- * <code>BLOBFileValue</code> represents a binary <code>Value</code> that
- * is backed by a resource or . Unlike <code>BinaryValue</code> it has no
+ * <code>BLOBFileValue</code> represents a binary <code>Value</code> which is
+ * backed by a resource or byte[]. Unlike <code>BinaryValue</code> it has no
  * state, i.e. the <code>getStream()</code> method always returns a fresh
  * <code>InputStream</code> instance.
+ * <p/>
+ * <b>Important Note:</b><p/>
+ * This is class is for Jackrabbit-internal use only. Applications should
+ * use <code>javax.jcr.ValueFactory</code> to create binary values. 
  */
 public class BLOBFileValue implements Value {
 
