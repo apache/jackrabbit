@@ -576,6 +576,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
     private void compareNamespaces(Element root) throws RepositoryException {
 
         Properties nameSpaces = new AttributeSeparator(root).getNsAttrs();
+        // check if all namespaces exist that were exported
         for (Enumeration e = nameSpaces.keys(); e.hasMoreElements();) {
             String prefix = (String) e.nextElement();
             String URI = nameSpaces.getProperty(prefix);
@@ -585,8 +586,18 @@ public class ExportDocViewTest extends AbstractJCRTest {
             assertEquals("Uri of prefix " + prefix + "is not exported correctly.",
                     nsr.getURI(prefix), URI);
         }
-        assertEquals("Not all namespace declarations are exported.",
-                nameSpaces.size(), nsr.getPrefixes().length - 1);
+
+        String[] registeredNamespaces = nsr.getURIs();
+        // check if all required namespaces are exported
+        for (int i = 0; i < registeredNamespaces.length; i++) {
+            String prefix = nsr.getPrefix(registeredNamespaces[i]);
+            // skip default namespace and xml namespaces
+            if (prefix.length() == 0 || prefix.startsWith("xml")) {
+                continue;
+            } else {
+                assertTrue("namespace: " + registeredNamespaces[i] + " not exported", nameSpaces.keySet().contains(prefix));
+            }
+        }
     }
 
     /**
@@ -1112,9 +1123,9 @@ public class ExportDocViewTest extends AbstractJCRTest {
 
                 if (xmlnsURI.equals(attribute.getNamespaceURI())) {
                     String localName = attribute.getLocalName();
-                    // empty prefix
+                    // ignore setting default namespace
                     if (xmlnsPrefix.equals(localName)) {
-                        localName = "";
+                        continue;
                     }
                     nsAttrs.put(localName, attribute.getValue());
                 } else {
