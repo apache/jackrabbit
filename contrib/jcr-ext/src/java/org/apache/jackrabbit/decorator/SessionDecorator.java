@@ -47,16 +47,21 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
- * TODO
  */
 public class SessionDecorator implements Session {
 
-    private DecoratorFactory factory;
+    protected final DecoratorFactory factory;
 
-    private Repository repository;
+    protected final Repository repository;
 
-    private Session session;
+    protected final Session session;
 
+    /**
+     * @param factory
+     * @param repository the repository (decorator) that was used to create the
+     *                   session decorator.
+     * @param session
+     */
     public SessionDecorator(
             DecoratorFactory factory, Repository repository, Session session) {
         this.factory = factory;
@@ -121,7 +126,7 @@ public class SessionDecorator implements Session {
      */
     public Node getRootNode() throws RepositoryException {
         Node root = session.getRootNode();
-        return factory.getNodeDecorator(session, root);
+        return factory.getNodeDecorator(this, root);
     }
 
     /**
@@ -133,7 +138,7 @@ public class SessionDecorator implements Session {
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException,
             RepositoryException {
         Node node = session.getNodeByUUID(uuid);
-        return factory.getNodeDecorator(session, node);
+        return factory.getNodeDecorator(this, node);
     }
 
     /**
@@ -147,13 +152,7 @@ public class SessionDecorator implements Session {
     public Item getItem(String absPath) throws PathNotFoundException,
             RepositoryException {
         Item item = session.getItem(absPath);
-        if (item instanceof Node) {
-            return factory.getNodeDecorator(session, (Node) item);
-        } else if (item instanceof Property) {
-            return factory.getPropertyDecorator(session, (Property) item);
-        } else {
-            return factory.getItemDecorator(session, item);
-        }
+        return factory.getItemDecorator(this, item);
     }
 
     /**
@@ -286,7 +285,7 @@ public class SessionDecorator implements Session {
      */
     public String getNamespaceURI(String prefix) throws NamespaceException,
             RepositoryException {
-        return session.getNamespacePrefix(prefix);
+        return session.getNamespaceURI(prefix);
     }
 
     /**
@@ -327,7 +326,7 @@ public class SessionDecorator implements Session {
 
     public ValueFactory getValueFactory()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return session.getValueFactory();
+        return factory.getValueFactoryDecorator(this, session.getValueFactory());
     }
 
     public boolean isLive() {

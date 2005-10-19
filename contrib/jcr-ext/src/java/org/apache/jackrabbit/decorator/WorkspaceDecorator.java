@@ -43,16 +43,10 @@ import org.xml.sax.ContentHandler;
 /**
  * Simple workspace decorator.
  */
-public class WorkspaceDecorator implements Workspace {
-
-    /** The decorator factory. */
-    private final DecoratorFactory factory;
-
-    /** The session (decorator) instance. */
-    private final Session session;
+public class WorkspaceDecorator extends AbstractDecorator implements Workspace {
 
     /** The underlying workspace instance. */
-    private final Workspace workspace;
+    protected final Workspace workspace;
 
     /**
      * Creates a workspace decorator.
@@ -63,8 +57,7 @@ public class WorkspaceDecorator implements Workspace {
      */
     public WorkspaceDecorator(
             DecoratorFactory factory, Session session, Workspace workspace) {
-        this.factory = factory;
-        this.session = session;
+        super(factory, session);
         this.workspace = workspace;
     }
 
@@ -128,14 +121,18 @@ public class WorkspaceDecorator implements Workspace {
             throws ItemExistsException,
             UnsupportedRepositoryOperationException, VersionException,
             LockException, InvalidItemStateException, RepositoryException {
-        workspace.restore(versions, removeExisting);
+        Version[] tmp = new Version[versions.length];
+        for (int i = 0; i < versions.length; i++) {
+            tmp[i] = VersionDecorator.unwrap(versions[i]);
+        }
+        workspace.restore(tmp, removeExisting);
     }
 
     /**
      * Forwards the method call to the underlying workspace.
      */
     public QueryManager getQueryManager() throws RepositoryException {
-        return workspace.getQueryManager();
+        return factory.getQueryManagerDecorator(session, workspace.getQueryManager());
     }
 
     /**

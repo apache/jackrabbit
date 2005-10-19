@@ -21,6 +21,8 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RangeIterator;
 import javax.jcr.Session;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 /**
  * Range iterator that decorates all iterated objects. This class is used
@@ -31,16 +33,11 @@ import javax.jcr.Session;
  * and best effort is made to decorate the objects returned by the
  * {@link #next() next()} method.
  */
-public class DecoratingRangeIterator implements RangeIterator {
-
-    /** The decorator factory. Used to decorate returned objects. */
-    private final DecoratorFactory factory;
-
-    /** The decorated session to which the returned objects belong. */
-    private final Session session;
+public class DecoratingRangeIterator
+        extends AbstractDecorator implements RangeIterator {
 
     /** The underlying iterator. */
-    private final RangeIterator iterator;
+    protected final RangeIterator iterator;
 
     /**
      * Creates a decorating iterator.
@@ -51,8 +48,7 @@ public class DecoratingRangeIterator implements RangeIterator {
      */
     public DecoratingRangeIterator(
             DecoratorFactory factory, Session session, RangeIterator iterator) {
-        this.factory = factory;
-        this.session = session;
+        super(factory, session);
         this.iterator = iterator;
     }
 
@@ -107,15 +103,18 @@ public class DecoratingRangeIterator implements RangeIterator {
      */
     public Object next() {
         Object object = iterator.next();
-        if (object instanceof Node) {
+        if (object instanceof Version) {
+            return factory.getVersionDecorator(session, (Version) object);
+        } else if (object instanceof VersionHistory) {
+            return factory.getVersionHistoryDecorator(session, (VersionHistory) object);
+        } else if (object instanceof Node) {
             return factory.getNodeDecorator(session, (Node) object);
         } else if (object instanceof Property) {
             return factory.getPropertyDecorator(session, (Property) object);
         } else if (object instanceof Item) {
             return factory.getItemDecorator(session, (Item) object);
         } else {
-            throw new UnsupportedOperationException(
-                    "No decorator available for " + object);
+            throw new UnsupportedOperationException("No decorator available for " + object);
         }
     }
 
