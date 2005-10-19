@@ -30,20 +30,49 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
 /**
- * TODO
  */
-public class ItemDecorator implements Item {
+public class ItemDecorator extends AbstractDecorator implements Item {
 
-    private DecoratorFactory factory;
+    /**
+     * The underlying item to decorate.
+     */
+    protected final Item item;
 
-    private Session session;
-
-    private Item item;
 
     public ItemDecorator(DecoratorFactory factory, Session session, Item item) {
-        this.factory = factory;
-        this.session = session;
+        super(factory, session);
         this.item = item;
+    }
+
+    /**
+     * Returns the underlying item that <code>this</code>
+     * <code>ItemDecorator</code> decorates.
+     *
+     * @return the underlying item.
+     */
+    public Item unwrap() {
+        return item;
+    }
+
+    /**
+     * Returns the underlying <code>item</code> of the <code>item</code>
+     * that decorates it. Unwrapping <code>null</code> returns <code>null</code>.
+     *
+     * @param item decorates the underlying item.
+     * @return the underlying item.
+     * @throws IllegalStateException if <code>item</code> is not of type
+     *                               {@link ItemDecorator}.
+     */
+    public static Item unwrap(Item item) {
+        if (item == null) {
+            return null;
+        }
+        if (item instanceof ItemDecorator) {
+            item = ((ItemDecorator) item).unwrap();
+        } else {
+            throw new IllegalStateException("item is not of type ItemDecorator");
+        }
+        return item;
     }
 
     /**
@@ -101,14 +130,13 @@ public class ItemDecorator implements Item {
     }
 
     /** {@inheritDoc} */
-    public boolean isSame(Item otherItem) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean isSame(Item otherItem) throws RepositoryException {
+        return item.isSame(unwrap(otherItem));
     }
 
     /** {@inheritDoc} */
     public void accept(ItemVisitor visitor) throws RepositoryException {
-        item.accept(visitor);
+        item.accept(factory.getItemVisitorDecorator(session, visitor));
     }
 
     /** {@inheritDoc} */
@@ -131,4 +159,15 @@ public class ItemDecorator implements Item {
         item.remove();
     }
 
+    public boolean equals(Object obj) {
+        if (obj instanceof ItemDecorator) {
+            ItemDecorator other = (ItemDecorator)obj;
+            return item.equals(other.unwrap());
+        }
+        return false;
+    }
+
+    public int hashCode() {
+        return item.hashCode();
+    }
 }

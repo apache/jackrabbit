@@ -22,6 +22,13 @@ import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
+import javax.jcr.ValueFactory;
+import javax.jcr.ItemVisitor;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 import javax.jcr.lock.Lock;
 
 /**
@@ -72,6 +79,9 @@ public interface DecoratorFactory {
 
     /**
      * Creates a node decorator.
+     * <p/>
+     * Note: this method must also take care to create appropriate decorators
+     * for subtypes of node: Version and VersionHistory!
      *
      * @param session the session (decorator) instance used to create the
      *                node decorator
@@ -103,10 +113,81 @@ public interface DecoratorFactory {
     /**
      * Creates a lock decorator.
      *
-     * @param node the node (decorator) instance to which the lock is bound
-     * @param lock the underlying lock instance
+     * @param session the session (decorator) instance used to create the
+     *                lock decorator
+     * @param lock    the underlying lock instance
      * @return lock decorator
      */
-    Lock getLockDecorator(Node node, Lock lock);
+    Lock getLockDecorator(Session session, Lock lock);
 
+    /**
+     * Creates a version decorator.
+     *
+     * @param session the session (decorator) instance used to create the version
+     *                decorator
+     * @param version the underlying version instance
+     * @return version decorator
+     */
+    Version getVersionDecorator(Session session, Version version);
+
+    /**
+     * Creates a version history decorator.
+     *
+     * @param session        the session (decorator) instance used to create the
+     *                       version history decorator.
+     * @param versionHistory the underlying version history instance
+     * @return version history decorator
+     */
+    VersionHistory getVersionHistoryDecorator(Session session,
+                                              VersionHistory versionHistory);
+
+    /**
+     * Creates a query manager decorator.
+     *
+     * @param session      the session (decorator) instance used to create the
+     *                     query manager decorator.
+     * @param queryManager the underlying query manager instance.
+     * @return query manager decorator.
+     */
+    QueryManager getQueryManagerDecorator(Session session, QueryManager queryManager);
+
+    /**
+     * Creates a query decorator.
+     *
+     * @param session the session (decorator) instance used to create the query
+     *                decorator.
+     * @param query   the underlying query instance.
+     * @return query decorator.
+     */
+    Query getQueryDecorator(Session session, Query query);
+
+    /**
+     * Creates a query result decorator.
+     *
+     * @param session the session (decorator) instance used to create the query
+     *                result decorator.
+     * @param result  the underlying query result instance.
+     * @return query result decorator.
+     */
+    QueryResult getQueryResultDecorator(Session session, QueryResult result);
+
+    /**
+     * Creates a value factory decorator.
+     *
+     * @param session      the session (decorator) instance used to create the
+     *                     value factory decorator.
+     * @param valueFactory the underlying value factory instance.
+     * @return value factory decorator.
+     */
+    ValueFactory getValueFactoryDecorator(Session session, ValueFactory valueFactory);
+
+    /**
+     * Creates a item visitor decorator.
+     *
+     * @param session the session (decorator) instance used to create the item
+     *                visitor decorator.
+     * @param visitor the underlying item visitor instance.
+     * @return item visitor decorator.
+     */
+    ItemVisitor getItemVisitorDecorator(Session session, ItemVisitor visitor);
 }

@@ -18,46 +18,68 @@ package org.apache.jackrabbit.decorator;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 
-public class LockDecorator implements Lock {
+/**
+ *
+ */
+public class LockDecorator extends AbstractDecorator implements Lock {
 
-    private final Node node;
+    protected final Lock lock;
 
-    private final Lock lock;
-
-    public LockDecorator(Node node, Lock lock) {
-        this.node = node;
+    public LockDecorator(DecoratorFactory factory, Session session, Lock lock) {
+        super(factory, session);
         this.lock = lock;
     }
 
+    /**
+     * @inheritDoc
+     */
     public Node getNode() {
-        return node;
+        return factory.getNodeDecorator(session, lock.getNode());
     }
 
+    /**
+     * @inheritDoc
+     */
     public String getLockOwner() {
         return lock.getLockOwner();
     }
 
+    /**
+     * @inheritDoc
+     */
     public boolean isDeep() {
         return lock.isDeep();
     }
 
+    /**
+     * @inheritDoc
+     */
     public String getLockToken() {
         return lock.getLockToken();
     }
 
+    /**
+     * @inheritDoc
+     */
     public boolean isLive() throws RepositoryException {
         return lock.isLive();
     }
 
+    /**
+     * @inheritDoc
+     */
     public boolean isSessionScoped() {
         return lock.isSessionScoped();
     }
 
+    /**
+     * @inheritDoc
+     */
     public void refresh() throws LockException, RepositoryException {
         lock.refresh();
     }
-
 }

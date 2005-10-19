@@ -16,40 +16,35 @@
  */
 package org.apache.jackrabbit.decorator;
 
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
+import org.apache.jackrabbit.decorator.DecoratorFactory;
+import org.apache.jackrabbit.decorator.DecoratingRangeIterator;
+
+import javax.jcr.version.VersionIterator;
+import javax.jcr.version.Version;
 import javax.jcr.Session;
 
 /**
- * Node iterator that decorates all iterated nodes. This utility class is
- * used by the decorator layer to manage the decoration of all the nodes
- * returned by an underlying node iterator. This class delegates
- * all method calls to the underlying node iterator and uses the given
- * decorator factory to decorate all the returned node instances.
  */
-public class DecoratingNodeIterator extends DecoratingRangeIterator
-        implements NodeIterator {
+public class DecoratingVersionIterator extends DecoratingRangeIterator
+        implements VersionIterator {
 
     /**
-     * Creates a decorating node iterator.
+     * Creates a decorating version iterator.
      *
      * @param factory decorator factory
      * @param session decorated session
-     * @param iterator underlying node iterator
+     * @param iterator underlying version iterator
      */
-    public DecoratingNodeIterator(
-            DecoratorFactory factory, Session session, NodeIterator iterator) {
+    public DecoratingVersionIterator(DecoratorFactory factory,
+                 Session session,
+                 VersionIterator iterator) {
         super(factory, session, iterator);
     }
 
     /**
-     * Decorates and returns the next node from the underlying node iterator.
-     *
-     * @return next node (decorated)
-     * @see NodeIterator#nextNode()
+     * @inheritDoc
      */
-    public Node nextNode() {
-        return (Node) next();
+    public Version nextVersion() {
+        return (Version) next();
     }
-
 }
