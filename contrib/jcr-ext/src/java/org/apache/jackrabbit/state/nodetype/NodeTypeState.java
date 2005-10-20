@@ -19,7 +19,7 @@ package org.apache.jackrabbit.state.nodetype;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.jackrabbit.name.Name;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * Node type state. Instances of this class are used to hold
@@ -28,7 +28,7 @@ import org.apache.jackrabbit.name.Name;
 public class NodeTypeState {
 
     /** Name of the node type. */
-    private Name name;
+    private QName name;
 
     /** The Mixin node type property. */
     private boolean mixin;
@@ -37,7 +37,7 @@ public class NodeTypeState {
     private boolean hasOrderableChildNodes;
 
     /** Name of the primary item of the node type. */
-    private Name primaryItemName;
+    private QName primaryItemName;
 
     /** Names of the declared supertypes. */
     private Set supertypeNames;
@@ -64,7 +64,7 @@ public class NodeTypeState {
      *
      * @return qualified name
      */
-    public Name getName() {
+    public QName getName() {
         return name;
     }
 
@@ -73,7 +73,7 @@ public class NodeTypeState {
      *
      * @param name new qualified name
      */
-    public void setName(Name name) {
+    public void setName(QName name) {
         this.name = name;
     }
 
@@ -118,7 +118,7 @@ public class NodeTypeState {
      *
      * @return primary item name
      */
-    public Name getPrimaryItemName() {
+    public QName getPrimaryItemName() {
         return primaryItemName;
     }
 
@@ -127,7 +127,7 @@ public class NodeTypeState {
      *
      * @param primaryItemName new primary item name
      */
-    public void setPrimaryItemName(Name primaryItemName) {
+    public void setPrimaryItemName(QName primaryItemName) {
         this.primaryItemName = primaryItemName;
     }
 
@@ -136,9 +136,9 @@ public class NodeTypeState {
      *
      * @return supertype names
      */
-    public Name[] getSupertypeNames() {
-        return (Name[])
-            supertypeNames.toArray(new Name[supertypeNames.size()]);
+    public QName[] getSupertypeNames() {
+        return (QName[])
+            supertypeNames.toArray(new QName[supertypeNames.size()]);
     }
 
     /**
@@ -146,7 +146,7 @@ public class NodeTypeState {
      *
      * @param name supertype name
      */
-    public void addSupertypeName(Name name) {
+    public void addSupertypeName(QName name) {
         supertypeNames.add(name);
     }
 

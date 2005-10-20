@@ -25,7 +25,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.session.SessionHelper;
 import org.apache.jackrabbit.base.nodetype.BaseNodeType;
-import org.apache.jackrabbit.name.Name;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.state.nodetype.NodeDefinitionState;
 import org.apache.jackrabbit.state.nodetype.NodeTypeState;
 import org.apache.jackrabbit.state.nodetype.PropertyDefinitionState;
@@ -108,7 +108,7 @@ final class SessionNodeType extends BaseNodeType implements NodeType {
      * @see NodeType#getPrimaryItemName()
      */
     public String getPrimaryItemName() {
-        Name name = state.getPrimaryItemName();
+        QName name = state.getPrimaryItemName();
         if (name != null) {
             return helper.getName(name);
         } else {
@@ -129,7 +129,7 @@ final class SessionNodeType extends BaseNodeType implements NodeType {
      */
     public NodeType[] getDeclaredSupertypes() {
         Set types = new HashSet();
-        Name[] names = state.getSupertypeNames();
+        QName[] names = state.getSupertypeNames();
         for (int i = 0; i < names.length; i++) {
             types.add(helper.getNodeType(names[i]));
         }

@@ -19,7 +19,7 @@ package org.apache.jackrabbit.state.nodetype;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.jackrabbit.name.Name;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * Node definition state. Instances of this class are used to hold
@@ -28,7 +28,7 @@ import org.apache.jackrabbit.name.Name;
 public class NodeDefinitionState extends ItemDefinitionState {
 
     /** Name of the default primary type of the defined node. */
-    private Name defaultPrimaryTypeName;
+    private QName defaultPrimaryTypeName;
 
     /** Names of the required primary types of the defined node. */
     private Set requiredPrimaryTypeNames;
@@ -49,7 +49,7 @@ public class NodeDefinitionState extends ItemDefinitionState {
      *
      * @return default primary type name
      */
-    public Name getDefaultPrimaryTypeName() {
+    public QName getDefaultPrimaryTypeName() {
         return defaultPrimaryTypeName;
     }
 
@@ -58,7 +58,7 @@ public class NodeDefinitionState extends ItemDefinitionState {
      *
      * @param defaultPrimaryType new default primary type name
      */
-    public void setDefaultPrimaryTypeName(Name defaultPrimaryType) {
+    public void setDefaultPrimaryTypeName(QName defaultPrimaryType) {
         this.defaultPrimaryTypeName = defaultPrimaryType;
     }
 
@@ -67,9 +67,9 @@ public class NodeDefinitionState extends ItemDefinitionState {
      *
      * @return type names
      */
-    public Name[] getRequiredPrimaryTypeNames() {
-        return (Name[]) requiredPrimaryTypeNames.toArray(
-                new Name[requiredPrimaryTypeNames.size()]);
+    public QName[] getRequiredPrimaryTypeNames() {
+        return (QName[]) requiredPrimaryTypeNames.toArray(
+                new QName[requiredPrimaryTypeNames.size()]);
     }
 
     /**
@@ -77,7 +77,7 @@ public class NodeDefinitionState extends ItemDefinitionState {
      *
      * @param requiredPrimaryTypeName type name
      */
-    public void addRequiredPrimaryTypeNames(Name requiredPrimaryTypeName) {
+    public void addRequiredPrimaryTypeName(QName requiredPrimaryTypeName) {
         requiredPrimaryTypeNames.add(requiredPrimaryTypeName);
     }
 

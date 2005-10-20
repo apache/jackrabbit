@@ -22,7 +22,7 @@ import javax.jcr.Session;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.jackrabbit.name.Name;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * Helper class for accessing the namespaces and node types associated
@@ -51,14 +51,14 @@ public final class SessionHelper {
      * @throws IllegalStateException if the namespace does not exist
      * @throws RuntimeException if a repository error occurs
      */
-    public String getName(Name name)
+    public String getName(QName name)
             throws IllegalStateException, RuntimeException {
         try {
             String prefix = session.getNamespacePrefix(name.getNamespaceURI());
             if (prefix.length() > 0) {
-                return prefix + ":" + name.getLocalPart();
+                return prefix + ":" + name.getLocalName();
             } else {
-                return name.getLocalPart();
+                return name.getLocalName();
             }
         } catch (NamespaceException e) {
             throw new IllegalStateException("Expected namespace not found. " + e.getMessage());
@@ -79,7 +79,7 @@ public final class SessionHelper {
      * @throws IllegalStateException if the named node type does not exist
      * @throws RuntimeException      if a repository error occurs
      */
-    public NodeType getNodeType(Name name)
+    public NodeType getNodeType(QName name)
             throws IllegalStateException, RuntimeException {
         return getNodeType(getName(name));
     }

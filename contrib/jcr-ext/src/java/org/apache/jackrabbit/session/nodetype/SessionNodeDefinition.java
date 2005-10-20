@@ -23,7 +23,7 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.session.SessionHelper;
-import org.apache.jackrabbit.name.Name;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.state.nodetype.NodeDefinitionState;
 
 /**
@@ -84,7 +84,7 @@ final class SessionNodeDefinition extends SessionItemDefinition
      */
     public NodeType[] getRequiredPrimaryTypes() {
         Set types = new HashSet();
-        Name[] names = state.getRequiredPrimaryTypeNames();
+        QName[] names = state.getRequiredPrimaryTypeNames();
         for (int i = 0; i < names.length; i++) {
             types.add(helper.getNodeType(names[i]));
         }
