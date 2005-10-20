@@ -33,7 +33,7 @@ import org.apache.log4j.Logger;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Utility class for validating an item against constraints
@@ -54,12 +54,14 @@ public class ItemValidator {
     /**
      * hierarchy manager used for generating error msg's
      * that contain human readable paths
+     *
      * @see #safeGetJCRPath(ItemId)
      */
     protected final HierarchyManager hierMgr;
     /**
      * namespace resolver used for generating error msg's
      * that contain human readable paths
+     *
      * @see #safeGetJCRPath(Path)
      */
     protected final NamespaceResolver nsResolver;
@@ -183,24 +185,23 @@ public class ItemValidator {
      * node type representation of the specified node's primary and mixin
      * node types.
      *
-     * @param state
+     * @param nodeState
      * @return the effective node type
-     * @throws javax.jcr.RepositoryException
+     * @throws RepositoryException
      */
-    public EffectiveNodeType getEffectiveNodeType(NodeState state)
+    public EffectiveNodeType getEffectiveNodeType(NodeState nodeState)
             throws RepositoryException {
-        // build effective node type of mixins & primary type:
-        // existing mixin's
-        HashSet set = new HashSet(state.getMixinTypeNames());
+        // mixin types
+        Set set = nodeState.getMixinTypeNames();
+        QName[] types = new QName[set.size() + 1];
+        set.toArray(types);
         // primary type
-        set.add(state.getNodeTypeName());
+        types[types.length - 1] = nodeState.getNodeTypeName();
         try {
-            QName[] ntNames = (QName[]) set.toArray(new QName[set.size()]);
-            return ntReg.getEffectiveNodeType(ntNames);
+            return ntReg.getEffectiveNodeType(types);
         } catch (NodeTypeConflictException ntce) {
-            String msg =
-                    "internal error: failed to build effective node type for node "
-                    + state.getUUID();
+            String msg = "internal error: failed to build effective node type for node "
+                    + safeGetJCRPath(nodeState.getId());
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }

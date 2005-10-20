@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.ReferentialIntegrityException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -239,13 +240,6 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public void store(NodeReferences refs) throws IllegalStateException {
-        persistentStateMgr.store(refs);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public void destroy(ItemState state) throws IllegalStateException {
         persistentStateMgr.destroy(state);
     }
@@ -260,7 +254,9 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public void update() throws ItemStateException, IllegalStateException {
+    public void update()
+            throws ReferentialIntegrityException, StaleItemStateException,
+            ItemStateException, IllegalStateException {
         persistentStateMgr.update();
     }
 

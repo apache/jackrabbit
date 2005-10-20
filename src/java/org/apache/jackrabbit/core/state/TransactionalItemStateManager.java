@@ -20,6 +20,8 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.log4j.Logger;
 
+import javax.jcr.ReferentialIntegrityException;
+
 /**
  * Extension to <code>LocalItemStateManager</code> that remembers changes on
  * multiple save() requests and commits them only when an associated transaction
@@ -88,11 +90,15 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
         ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
         if (changeLog != null) {
             try {
-                sharedStateMgr.checkTargetsExist(changeLog);
-            } catch (ItemStateException e) {
-                log.error(e);
+                sharedStateMgr.checkReferentialIntegrity(changeLog);
+            } catch (ReferentialIntegrityException rie) {
+                log.error(rie);
                 changeLog.undo(sharedStateMgr);
-                throw new TransactionException("Unable to prepare transaction.", e);
+                throw new TransactionException("Unable to prepare transaction.", rie);
+            } catch (ItemStateException ise) {
+                log.error(ise);
+                changeLog.undo(sharedStateMgr);
+                throw new TransactionException("Unable to prepare transaction.", ise);
             }
         }
     }
@@ -110,10 +116,14 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
                 // set changeLog in ThreadLocal
                 ((CommitLog) commitLog.get()).setChanges(changeLog);
                 super.update(changeLog);
-            } catch (ItemStateException e) {
-                log.error(e);
+            } catch (ReferentialIntegrityException rie) {
+                log.error(rie);
                 changeLog.undo(sharedStateMgr);
-                throw new TransactionException("Unable to commit transaction.", e);
+                throw new TransactionException("Unable to commit transaction.", rie);
+            } catch (ItemStateException ise) {
+                log.error(ise);
+                changeLog.undo(sharedStateMgr);
+                throw new TransactionException("Unable to commit transaction.", ise);
             } finally {
                 ((CommitLog) commitLog.get()).setChanges(null);
             }
@@ -253,12 +263,13 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     /**
      * {@inheritDoc}
      * <p/>
-     * If associated to a transaction, simply merge the changes given to
+     * If associated with a transaction, simply merge the changes given to
      * the ones already known (removing items that were first added and
      * then again deleted).
      */
     protected void update(ChangeLog changeLog)
-            throws StaleItemStateException, ItemStateException {
+            throws ReferentialIntegrityException, StaleItemStateException,
+            ItemStateException {
         if (txLog != null) {
             txLog.merge(changeLog);
         } else {

@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.name.QName;
 
+import javax.jcr.ReferentialIntegrityException;
+
 /**
  * Identifies an <code>ItemStateManager</code> that allows updating
  * items.
@@ -81,14 +83,6 @@ public interface UpdatableItemStateManager extends ItemStateManager {
     void store(ItemState state) throws IllegalStateException;
 
     /**
-     * Store a node references object
-     *
-     * @param refs node references object that should be stored
-     * @throws IllegalStateException if the manager is not in edit mode.
-     */
-    void store(NodeReferences refs) throws IllegalStateException;
-
-    /**
      * Destroy an item state.
      *
      * @param state item state that should be destroyed
@@ -109,13 +103,18 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * added to this update operation in a single step.
      * If this operation fails, no item will have been saved.
      *
-     * @throws StaleItemStateException if at least one of the affected items
-     *                                 has become stale in the meantime 
-     * @throws ItemStateException      if the operation failed for another reason
-     * @throws IllegalStateException   if the manager is not in edit mode.
+     * @throws ReferentialIntegrityException if a new or modified REFERENCE
+     *                                       property refers to a non-existent
+     *                                       target or if a removed node is still
+     *                                       being referenced
+     * @throws StaleItemStateException       if at least one of the affected items
+     *                                       has become stale in the meantime
+     * @throws ItemStateException            if the operation failed for another reason
+     * @throws IllegalStateException         if the manager is not in edit mode.
      */
-    void update() throws StaleItemStateException, ItemStateException,
-            IllegalStateException;
+    void update()
+            throws ReferentialIntegrityException, StaleItemStateException,
+            ItemStateException, IllegalStateException;
 
     /**
      * Disposes this <code>UpdatableItemStateManager</code> and frees resources.
