@@ -16,30 +16,33 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
+import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.io.PrintStream;
-
-import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
+import java.util.Set;
+import java.util.List;
 
 /**
  * Shared <code>ItemStateManager</code>. Caches objects returned from a
@@ -64,6 +67,11 @@ public class SharedItemStateManager
      * Persistence Manager used for loading and storing items
      */
     private final PersistenceManager persistMgr;
+
+    /**
+     * node type registry used for identifying referenceable nodes
+     */
+    private final NodeTypeRegistry ntReg;
 
     /**
      * Keep a hard reference to the root node state
@@ -95,6 +103,7 @@ public class SharedItemStateManager
             throws ItemStateException {
         cache = new ItemStateReferenceCache();
         this.persistMgr = persistMgr;
+        this.ntReg = ntReg;
 
         try {
             root = (NodeState) getNonVirtualItemState(new NodeId(rootNodeUUID));
@@ -294,6 +303,7 @@ public class SharedItemStateManager
      * creation only by the same thread and therefore concurrency issues
      * do not occur. Should this ever change, the synchronization status
      * has to be re-examined.
+     *
      * @param prov
      */
     public void addVirtualItemStateProvider(VirtualItemStateProvider prov) {
@@ -319,18 +329,26 @@ public class SharedItemStateManager
      * @param local  change log containing local items
      * @param obsMgr the observation manager to inform, or <code>null</code> if
      *               no observation manager should be informed.
-     * @throws StaleItemStateException if at least one of the affected item
-     *                                 states has become stale
-     * @throws ItemStateException if another error occurs
+     * @throws ReferentialIntegrityException if a new or modified REFERENCE
+     *                                       property refers to a non-existent
+     *                                       target or if a removed node is still
+     *                                       being referenced
+     * @throws StaleItemStateException       if at least one of the affected item
+     *                                       states has become stale
+     * @throws ItemStateException            if another error occurs
      */
     public void store(ChangeLog local, ObservationManagerImpl obsMgr)
-            throws StaleItemStateException, ItemStateException {
+            throws ReferentialIntegrityException, StaleItemStateException,
+            ItemStateException {
 
         ChangeLog shared = new ChangeLog();
 
-        // set of virtual node references
-        // todo: remember by provider
-        LinkedList virtualRefs = new LinkedList();
+        /**
+         * array of lists of dirty virtual node references
+         * (one array element per provider)
+         * todo: FIXME handling of virtual node references is erm...  messy
+         */
+        List[] virtualNodeReferences = new List[virtualProviders.length];
 
         EventStateCollection events = null;
         if (obsMgr != null) {
@@ -343,33 +361,14 @@ public class SharedItemStateManager
 
         try {
             /**
-             * Validate modified references. Target node of references may
-             * have been deleted in the meantime.
+             * Update node references based on modifications in change log
+             * (added/modified/removed REFERENCE properties)
              */
-            Iterator iter = local.modifiedRefs();
-            while (iter.hasNext()) {
-                NodeReferences refs = (NodeReferences) iter.next();
-                NodeId id = new NodeId(refs.getUUID());
-                // if targetid is in virtual provider, transfer to its modified set
-                for (int i = 0; i < virtualProviders.length; i++) {
-                    VirtualItemStateProvider provider = virtualProviders[i];
-                    if (provider.hasItemState(id)) {
-                        virtualRefs.add(refs);
-                        refs = null;
-                        break;
-                    }
-                }
-                if (refs != null) {
-                    if (refs.hasReferences()) {
-                        if (!local.has(id) && !hasItemState(id)) {
-                            String msg = "Target node " + id
-                                    + " of REFERENCE property does not exist";
-                            throw new ItemStateException(msg);
-                        }
-                    }
-                    shared.modified(refs);
-                }
-            }
+            updateReferences(local);
+            /**
+             * Check whether reference targets exist/were not removed
+             */
+            checkReferentialIntegrity(local);
 
             boolean succeeded = false;
 
@@ -379,8 +378,7 @@ public class SharedItemStateManager
                  * respective shared item and add the shared items to a
                  * new change log.
                  */
-                iter = local.modifiedStates();
-                while (iter.hasNext()) {
+                for (Iterator iter = local.modifiedStates(); iter.hasNext();) {
                     ItemState state = (ItemState) iter.next();
                     state.connect(getItemState(state.getId()));
                     if (state.isStale()) {
@@ -390,8 +388,7 @@ public class SharedItemStateManager
                     }
                     shared.modified(state.getOverlayedState());
                 }
-                iter = local.deletedStates();
-                while (iter.hasNext()) {
+                for (Iterator iter = local.deletedStates(); iter.hasNext();) {
                     ItemState state = (ItemState) iter.next();
                     state.connect(getItemState(state.getId()));
                     if (state.isStale()) {
@@ -401,11 +398,32 @@ public class SharedItemStateManager
                     }
                     shared.deleted(state.getOverlayedState());
                 }
-                iter = local.addedStates();
-                while (iter.hasNext()) {
+                for (Iterator iter = local.addedStates(); iter.hasNext();) {
                     ItemState state = (ItemState) iter.next();
                     state.connect(createInstance(state));
                     shared.added(state.getOverlayedState());
+                }
+                // filter out virtual node references for later processing
+                for (Iterator iter = local.modifiedRefs(); iter.hasNext();) {
+                    NodeReferences refs = (NodeReferences) iter.next();
+                    NodeId id = new NodeId(refs.getUUID());
+                    boolean virtual = false;
+                    for (int i = 0; i < virtualProviders.length; i++) {
+                        if (virtualProviders[i].hasItemState(id)) {
+                            List virtualRefs = virtualNodeReferences[i];
+                            if (virtualRefs == null) {
+                                virtualRefs = new LinkedList();
+                                virtualNodeReferences[i] = virtualRefs;
+                            }
+                            virtualRefs.add(refs);
+                            virtual = true;
+                            break;
+                        }
+                    }
+                    if (virtual) {
+                        continue;
+                    }
+                    shared.modified(refs);
                 }
 
                 /* create event states */
@@ -435,8 +453,7 @@ public class SharedItemStateManager
                 if (!succeeded) {
                     local.disconnect();
 
-                    iter = shared.modifiedStates();
-                    while (iter.hasNext()) {
+                    for (Iterator iter = shared.modifiedStates(); iter.hasNext();) {
                         ItemState state = (ItemState) iter.next();
                         try {
                             state.copy(loadItemState(state.getId()));
@@ -444,8 +461,7 @@ public class SharedItemStateManager
                             state.discard();
                         }
                     }
-                    iter = shared.deletedStates();
-                    while (iter.hasNext()) {
+                    for (Iterator iter = shared.deletedStates(); iter.hasNext();) {
                         ItemState state = (ItemState) iter.next();
                         try {
                             state.copy(loadItemState(state.getId()));
@@ -453,8 +469,7 @@ public class SharedItemStateManager
                             state.discard();
                         }
                     }
-                    iter = shared.addedStates();
-                    while (iter.hasNext()) {
+                    for (Iterator iter = shared.addedStates(); iter.hasNext();) {
                         ItemState state = (ItemState) iter.next();
                         state.discard();
                     }
@@ -465,12 +480,12 @@ public class SharedItemStateManager
             shared.persisted();
 
             /* notify virtual providers about node references */
-            iter = virtualRefs.iterator();
-            while (iter.hasNext()) {
-                NodeReferences refs = (NodeReferences) iter.next();
-                for (int i = 0; i < virtualProviders.length; i++) {
-                    if (virtualProviders[i].setNodeReferences(refs)) {
-                    break;
+            for (int i = 0; i < virtualNodeReferences.length; i++) {
+                List virtualRefs = virtualNodeReferences[i];
+                if (virtualRefs != null) {
+                    for (Iterator iter = virtualRefs.iterator(); iter.hasNext();) {
+                        NodeReferences refs = (NodeReferences) iter.next();
+                        virtualProviders[i].setNodeReferences(refs);
                     }
                 }
             }
@@ -517,8 +532,9 @@ public class SharedItemStateManager
 
     /**
      * Create root node state
+     *
      * @param rootNodeUUID root node UUID
-     * @param ntReg node type registry
+     * @param ntReg        node type registry
      * @return root node state
      * @throws ItemStateException if an error occurs
      */
@@ -646,6 +662,7 @@ public class SharedItemStateManager
 
     /**
      * Load item state from persistent storage.
+     *
      * @param id item id
      * @return item state
      */
@@ -664,16 +681,237 @@ public class SharedItemStateManager
     }
 
     /**
-     * Check targets of modified node references exist.
-     * @param log change log
-     * @throws ItemStateException if some target was not found
+     * Determines whether the specified node is <i>referenceable</i>, i.e.
+     * whether the mixin type <code>mix:referenceable</code> is either
+     * directly assigned or indirectly inherited.
+     *
+     * @param state node state to check
+     * @return true if the specified node is <i>referenceable</i>, false otherwise.
+     * @throws ItemStateException if an error occurs
      */
-    void checkTargetsExist(ChangeLog log) throws ItemStateException {
-        Iterator iter = log.modifiedRefs();
-        while (iter.hasNext()) {
+    private boolean isReferenceable(NodeState state) throws ItemStateException {
+        // shortcut: check some wellknown built-in types first
+        QName primary = state.getNodeTypeName();
+        Set mixins = state.getMixinTypeNames();
+        if (mixins.contains(QName.MIX_REFERENCEABLE)
+                || mixins.contains(QName.MIX_VERSIONABLE)
+                || primary.equals(QName.NT_RESOURCE)) {
+            return true;
+        }
+        // build effective node type
+        QName[] types = new QName[mixins.size() + 1];
+        mixins.toArray(types);
+        // primary type
+        types[types.length - 1] = primary;
+        try {
+            return ntReg.getEffectiveNodeType(types).includesNodeType(QName.MIX_REFERENCEABLE);
+        } catch (NodeTypeConflictException ntce) {
+            String msg = "internal error: failed to build effective node type for node "
+                    + state.getId();
+            log.debug(msg);
+            throw new ItemStateException(msg, ntce);
+        } catch (NoSuchNodeTypeException nsnte) {
+            String msg = "internal error: failed to build effective node type for node "
+                    + state.getId();
+            log.debug(msg);
+            throw new ItemStateException(msg, nsnte);
+        }
+    }
+
+    /**
+     * Updates the target node references collections based on the modifications
+     * in the change log (i.e. added/removed/modified <code>REFERENCE</code>
+     * properties).
+     * <p/>
+     * <b>Important node:</b> For consistency reasons this method must only be
+     * called <i>once</i> per change log and the change log should not be modified
+     * anymore afterwards.
+     *
+     * @param changes change log
+     * @throws ItemStateException if an error occurs
+     */
+    protected void updateReferences(ChangeLog changes) throws ItemStateException {
+
+        // process added REFERENCE properties
+        for (Iterator iter = changes.addedStates(); iter.hasNext();) {
+            ItemState state = (ItemState) iter.next();
+            if (!state.isNode()) {
+                PropertyState prop = (PropertyState) state;
+                if (prop.getType() == PropertyType.REFERENCE) {
+                    // this is a new REFERENCE property:
+                    // add the new 'reference'
+                    InternalValue[] vals = prop.getValues();
+                    for (int i = 0; vals != null && i < vals.length; i++) {
+                        String uuid = vals[i].toString();
+                        NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        NodeReferences refs =
+                                getOrCreateNodeReferences(refsId, changes);
+                        // add reference
+                        refs.addReference((PropertyId) prop.getId());
+                        // update change log
+                        changes.modified(refs);
+                    }
+                }
+            }
+        }
+
+        // process modified REFERENCE properties
+        for (Iterator iter = changes.modifiedStates(); iter.hasNext();) {
+            ItemState state = (ItemState) iter.next();
+            if (!state.isNode()) {
+                PropertyState newProp = (PropertyState) state;
+                PropertyState oldProp =
+                        (PropertyState) getItemState(state.getId());
+                // check old type
+                if (oldProp.getType() == PropertyType.REFERENCE) {
+                    // this is a modified REFERENCE property:
+                    // remove the old 'reference' from the target
+                    InternalValue[] vals = oldProp.getValues();
+                    for (int i = 0; vals != null && i < vals.length; i++) {
+                        String uuid = vals[i].toString();
+                        NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        // either get node references from change log or load from
+                        // persistence manager
+                        NodeReferences refs = changes.get(refsId);
+                        if (refs == null) {
+                            refs = getNodeReferences(refsId);
+                        }
+                        // remove reference
+                        refs.removeReference((PropertyId) oldProp.getId());
+                        // update change log
+                        changes.modified(refs);
+                    }
+                }
+                // check new type
+                if (newProp.getType() == PropertyType.REFERENCE) {
+                    // this is a modified REFERENCE property:
+                    // add the new 'reference' to the target
+                    InternalValue[] vals = newProp.getValues();
+                    for (int i = 0; vals != null && i < vals.length; i++) {
+                        String uuid = vals[i].toString();
+                        NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        NodeReferences refs =
+                                getOrCreateNodeReferences(refsId, changes);
+                        // add reference
+                        refs.addReference((PropertyId) newProp.getId());
+                        // update change log
+                        changes.modified(refs);
+                    }
+                }
+            }
+        }
+
+        // process removed REFERENCE properties
+        for (Iterator iter = changes.deletedStates(); iter.hasNext();) {
+            ItemState state = (ItemState) iter.next();
+            if (!state.isNode()) {
+                PropertyState prop = (PropertyState) state;
+                if (prop.getType() == PropertyType.REFERENCE) {
+                    // this is a removed REFERENCE property:
+                    // remove the 'reference' from the target
+                    InternalValue[] vals = prop.getValues();
+                    for (int i = 0; vals != null && i < vals.length; i++) {
+                        String uuid = vals[i].toString();
+                        NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        // either get node references from change log or
+                        // load from persistence manager
+                        NodeReferences refs = changes.get(refsId);
+                        if (refs == null) {
+                            refs = getNodeReferences(refsId);
+                        }
+                        // remove reference
+                        refs.removeReference((PropertyId) prop.getId());
+                        // update change log
+                        changes.modified(refs);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns a node references object using the following rules:<p/>
+     * <ul>
+     * <li>1. return a modified instance from the change log (if one exists)</li>
+     * <li>2. return an existing instance from <i>this</i> item state manager
+     * (if one exists)</li>
+     * <li>3. create and return a new instance</li>
+     * </ul>
+     *
+     * @param refsId  node references id
+     * @param changes change log
+     * @return a node references object
+     * @throws ItemStateException if an error occurs
+     */
+    private NodeReferences getOrCreateNodeReferences(NodeReferencesId refsId,
+                                                     ChangeLog changes)
+            throws ItemStateException {
+        // check change log
+        NodeReferences refs = changes.get(refsId);
+        if (refs == null) {
+            // not yet in change log:
+            // either load existing or create new
+            if (hasNodeReferences(refsId)) {
+                refs = getNodeReferences(refsId);
+            } else {
+                refs = new NodeReferences(refsId);
+            }
+        }
+        return refs;
+    }
+
+    /**
+     * Verifies that
+     * <ul>
+     * <li>no referenceable nodes are deleted if they are still being referenced</li>
+     * <li>targets of modified node references exist</li>
+     * </ul>
+     *
+     * @param changes change log
+     * @throws ReferentialIntegrityException if a new or modified REFERENCE
+     *                                       property refers to a non-existent
+     *                                       target or if a removed node is still
+     *                                       being referenced
+     * @throws ItemStateException            if another error occurs
+     */
+    protected void checkReferentialIntegrity(ChangeLog changes)
+            throws ReferentialIntegrityException, ItemStateException {
+
+        // check whether removed referenceable nodes are still being referenced
+        for (Iterator iter = changes.deletedStates(); iter.hasNext();) {
+            ItemState state = (ItemState) iter.next();
+            if (state.isNode()) {
+                NodeState node = (NodeState) state;
+                if (isReferenceable(node)) {
+                    NodeReferencesId refsId = new NodeReferencesId(node.getUUID());
+                    // either get node references from change log or
+                    // load from persistence manager
+                    NodeReferences refs = changes.get(refsId);
+                    if (refs == null) {
+                        if (!hasNodeReferences(refsId)) {
+                            continue;
+                        }
+                        refs = getNodeReferences(refsId);
+                    }
+                    if (refs.hasReferences()) {
+                        String msg = node.getId()
+                                + ": the node cannot be removed because it is still being referenced.";
+                        log.debug(msg);
+                        throw new ReferentialIntegrityException(msg);
+                    }
+                }
+            }
+        }
+
+        // check whether targets of modified node references exist
+        for (Iterator iter = changes.modifiedRefs(); iter.hasNext();) {
             NodeReferences refs = (NodeReferences) iter.next();
             NodeId id = new NodeId(refs.getUUID());
-
+            if (!refs.hasReferences()) {
+                // no need to check existence of target if there are
+                // no references
+                continue;
+            }
             for (int i = 0; i < virtualProviders.length; i++) {
                 VirtualItemStateProvider provider = virtualProviders[i];
                 if (provider.hasItemState(id)) {
@@ -681,11 +919,12 @@ public class SharedItemStateManager
                     break;
                 }
             }
-            if (refs != null && refs.hasReferences()) {
-                if (!log.has(id) && !hasItemState(id)) {
+            if (refs != null) {
+                if (!changes.has(id) && !hasItemState(id)) {
                     String msg = "Target node " + id
                             + " of REFERENCE property does not exist";
-                    throw new ItemStateException(msg);
+                    log.debug(msg);
+                    throw new ReferentialIntegrityException(msg);
                 }
             }
         }
@@ -693,6 +932,7 @@ public class SharedItemStateManager
 
     /**
      * Acquires the read lock on this item state manager.
+     *
      * @throws ItemStateException if the read lock cannot be acquired.
      */
     private void acquireReadLock() throws ItemStateException {
@@ -705,6 +945,7 @@ public class SharedItemStateManager
 
     /**
      * Acquires the write lock on this item state manager.
+     *
      * @throws ItemStateException if the write lock cannot be acquired.
      */
     private void acquireWriteLock() throws ItemStateException {

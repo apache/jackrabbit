@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
 
@@ -274,16 +275,6 @@ public class LocalItemStateManager
     /**
      * {@inheritDoc}
      */
-    public void store(NodeReferences refs) throws IllegalStateException {
-        if (!editMode) {
-            throw new IllegalStateException("Not in edit mode");
-        }
-        changeLog.modified(refs);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public void destroy(ItemState state) throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
@@ -307,8 +298,8 @@ public class LocalItemStateManager
      * {@inheritDoc}
      */
     public void update()
-            throws StaleItemStateException, ItemStateException,
-            IllegalStateException {
+            throws ReferentialIntegrityException, StaleItemStateException,
+            ItemStateException, IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
@@ -325,12 +316,17 @@ public class LocalItemStateManager
      * items with our copies.
      *
      * @param changeLog change log containing local states and references
-     * @throws StaleItemStateException if at least one of the affected item
-     *                                 states has become stale in the meantime
-     * @throws ItemStateException if an error occurs
+     * @throws ReferentialIntegrityException if a new or modified REFERENCE
+     *                                       property refers to a non-existent
+     *                                       target or if a removed node is still
+     *                                       being referenced
+     * @throws StaleItemStateException       if at least one of the affected item
+     *                                       states has become stale in the meantime
+     * @throws ItemStateException            if an error occurs
      */
     protected void update(ChangeLog changeLog)
-            throws StaleItemStateException, ItemStateException {
+            throws ReferentialIntegrityException, StaleItemStateException,
+            ItemStateException {
 
         ObservationManagerImpl obsMgr = null;
 

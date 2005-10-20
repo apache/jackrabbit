@@ -24,6 +24,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Collections;
 
 /**
  * <code>IteratorHelper</code> is a utility class which
@@ -34,6 +35,9 @@ public class IteratorHelper
         implements NodeIterator, PropertyIterator, NodeTypeIterator {
 
     static final long UNDETERMINED_SIZE = -1;
+
+    public static final IteratorHelper EMPTY =
+            new IteratorHelper(Collections.EMPTY_LIST);
 
     private final Iterator iter;
     private long size;

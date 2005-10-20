@@ -27,15 +27,12 @@ import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.StaleItemStateException;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -65,7 +62,6 @@ import javax.jcr.version.VersionHistory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -655,200 +651,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         }
     }
 
-    /**
-     * Get or create a node references object for a given target id.
-     *
-     * @param id target id
-     * @return node references object
-     * @throws ItemStateException if an error occurs
-     */
-    protected NodeReferences getOrCreateNodeReferences(NodeReferencesId id)
-            throws ItemStateException {
-
-        if (stateMgr.hasNodeReferences(id)) {
-            return stateMgr.getNodeReferences(id);
-        }
-        return new NodeReferences(id);
-    }
-
-    private Collection checkReferences(Iterator iterDirty, Iterator iterRemoved)
-            throws ReferentialIntegrityException, RepositoryException {
-
-        // map of target (node) id's and modified NodeReferences objects
-        HashMap dirtyNodeRefs = new HashMap();
-
-        // walk through dirty items and process REFERENCE properties:
-        // 1. verify that target node exists
-        // 2. update and collect the affected NodeReferences objects of the
-        //    target nodes in the dirtyNodeRefs map
-        while (iterDirty.hasNext()) {
-            ItemState transientState = (ItemState) iterDirty.next();
-            if (!transientState.isNode()) {
-                PropertyState propState = (PropertyState) transientState;
-                int type = propState.getType();
-                if (propState.getStatus() == ItemState.STATUS_EXISTING_MODIFIED) {
-                    // this is a modified property, check old type...
-                    PropertyState oldPropState = (PropertyState) propState.getOverlayedState();
-                    int oldType = oldPropState.getType();
-                    if (oldType == PropertyType.REFERENCE) {
-                        // this is a modified REFERENCE property:
-                        // remove the 'reference' stored in the old value
-                        InternalValue[] vals = oldPropState.getValues();
-                        for (int i = 0; vals != null && i < vals.length; i++) {
-                            String uuid = vals[i].toString();
-                            NodeReferencesId id = new NodeReferencesId(uuid);
-                            NodeReferences refs;
-                            if (dirtyNodeRefs.containsKey(id)) {
-                                refs = (NodeReferences) dirtyNodeRefs.get(id);
-                            } else {
-                                try {
-                                    refs = getOrCreateNodeReferences(id);
-                                } catch (ItemStateException e) {
-                                    String msg = itemMgr.safeGetJCRPath(id)
-                                            + ": failed to load node references";
-                                    log.debug(msg);
-                                    throw new RepositoryException(msg, e);
-                                }
-                                dirtyNodeRefs.put(id, refs);
-                            }
-                            // remove reference from target node
-                            refs.removeReference((PropertyId) propState.getId());
-                        }
-                    }
-                }
-                if (type == PropertyType.REFERENCE) {
-                    // this is a modified REFERENCE property:
-                    // add the 'reference' stored in the new value
-                    InternalValue[] vals = propState.getValues();
-                    for (int i = 0; vals != null && i < vals.length; i++) {
-                        String uuid = vals[i].toString();
-                        NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        NodeId targetId = new NodeId(uuid);
-                        // verify that target exists
-                        if (!itemMgr.itemExists(targetId)) {
-                            String msg = itemMgr.safeGetJCRPath(propState.getId())
-                                    + ": target node of REFERENCE property does not exist";
-                            log.warn(msg);
-                            throw new ReferentialIntegrityException(msg);
-                        }
-                        // target is a new (unsaved) node; make sure that it is
-                        // within the scope of the current save operation
-                        // (by veryfying that it is a descendant of 'this' item)
-                        NodeImpl target = (NodeImpl) itemMgr.getItem(targetId);
-                        if (target.isNew()) {
-                            try {
-                                if (!target.getPrimaryPath().isDescendantOf(getPrimaryPath())) {
-                                    String msg = itemMgr.safeGetJCRPath(propState.getId())
-                                            + ": target node of REFERENCE property is a new node and must"
-                                            + " therefore either be saved first or be within the scope of"
-                                            + " the current save operation.";
-                                    log.warn(msg);
-                                    throw new ReferentialIntegrityException(msg);
-                                }
-                            } catch (MalformedPathException mpe) {
-                                // should never get here...
-                                String msg = itemMgr.safeGetJCRPath(propState.getId())
-                                        + ": failed to verify existence of target node";
-                                log.debug(msg);
-                                throw new RepositoryException(msg, mpe);
-                            }
-                        }
-                        NodeReferences refs;
-                        if (dirtyNodeRefs.containsKey(refsId)) {
-                            refs = (NodeReferences) dirtyNodeRefs.get(refsId);
-                        } else {
-                            try {
-                                refs = getOrCreateNodeReferences(refsId);
-                            } catch (ItemStateException e) {
-                                String msg = itemMgr.safeGetJCRPath(targetId)
-                                        + ": failed to load node references";
-                                log.debug(msg);
-                                throw new RepositoryException(msg, e);
-                            }
-                            dirtyNodeRefs.put(refsId, refs);
-                        }
-                        // add reference to target node
-                        refs.addReference((PropertyId) propState.getId());
-                    }
-                }
-            }
-        }
-
-        // walk through 'removed' items:
-        // 1. build list of removed nodes
-        // 2. process REFERENCE properties (update and collect the affected
-        //    NodeReferences objects of the target nodes)
-        ArrayList removedNodes = new ArrayList();
-        while (iterRemoved.hasNext()) {
-            ItemState transientState = (ItemState) iterRemoved.next();
-            if (transientState.isNode()) {
-                // removed node: collect for later processing
-                removedNodes.add(transientState);
-            } else {
-                PropertyState propState = (PropertyState) transientState;
-                if (propState.getType() == PropertyType.REFERENCE) {
-                    // this is a removed REFERENCE property:
-                    // remove the 'reference' stored in the value
-                    InternalValue[] vals = propState.getValues();
-                    for (int i = 0; i < vals.length; i++) {
-                        String uuid = vals[i].toString();
-                        NodeReferencesId id = new NodeReferencesId(uuid);
-                        NodeReferences refs;
-                        if (dirtyNodeRefs.containsKey(id)) {
-                            refs = (NodeReferences) dirtyNodeRefs.get(id);
-                        } else {
-                            try {
-                                refs = getOrCreateNodeReferences(id);
-                            } catch (ItemStateException e) {
-                                String msg = itemMgr.safeGetJCRPath(id)
-                                        + ": failed to load node references";
-                                log.debug(msg);
-                                throw new RepositoryException(msg, e);
-                            }
-                            dirtyNodeRefs.put(id, refs);
-                        }
-                        // remove reference to target node
-                        refs.removeReference((PropertyId) propState.getId());
-                    }
-                }
-            }
-        }
-
-        // now that all NodeReferences objects have been updated,
-        // walk through 'removed' nodes and verify that no node that is still
-        // being referenced is removed
-        Iterator iter = removedNodes.iterator();
-        while (iter.hasNext()) {
-            NodeState nodeState = (NodeState) iter.next();
-            // check if node is referenced
-            NodeReferencesId id = new NodeReferencesId(nodeState.getUUID());
-            NodeReferences refs = null;
-            if (dirtyNodeRefs.containsKey(id)) {
-                refs = (NodeReferences) dirtyNodeRefs.get(id);
-            } else {
-                try {
-                    if (stateMgr.hasNodeReferences(id)) {
-                        refs = stateMgr.getNodeReferences(id);
-                    }
-                } catch (ItemStateException e) {
-                    String msg = itemMgr.safeGetJCRPath(id)
-                            + ": failed to load node references";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, e);
-                }
-            }
-            if (refs != null && refs.hasReferences()) {
-                String msg = nodeState.getId()
-                        + ": the node cannot be removed because it is being referenced.";
-                log.warn(msg);
-                throw new ReferentialIntegrityException(msg);
-            }
-        }
-
-        // return dirty NodeReferences objects
-        return dirtyNodeRefs.values();
-    }
-
     private void removeTransientItems(Iterator iter) {
 
         /**
@@ -1308,14 +1110,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
              */
             validateTransientItems(dirty.iterator(), removed.iterator());
 
-            /**
-             * referential integrity checks:
-             * make sure that a referenced node cannot be removed and
-             * that all references are updated and persisted
-             */
-            Collection dirtyRefs =
-                    checkReferences(dirty.iterator(), removed.iterator());
-
             // start the update operation
             try {
                 stateMgr.edit();
@@ -1337,9 +1131,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     // re-build the list of transient states because the previous call
                     // generated new transient state
                     dirty = getTransientStates();
-
-                    // and the references as well
-                    dirtyRefs = checkReferences(dirty.iterator(), removed.iterator());
                 }
 
                 // process 'new' or 'modified' transient states
@@ -1356,11 +1147,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     ItemState transientState = (ItemState) it.next();
                     // dispose the transient state, it is no longer used
                     stateMgr.disposeTransientItemState(transientState);
-                }
-
-                // store the references calculated above
-                for (Iterator it = dirtyRefs.iterator(); it.hasNext();) {
-                    stateMgr.store((NodeReferences) it.next());
                 }
 
                 // end update operation

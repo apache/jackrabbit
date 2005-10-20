@@ -828,19 +828,22 @@ public class NodeImpl extends ItemImpl implements Node {
      * of this node's primary and mixin node types.
      *
      * @return the effective node type
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     public EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
         // build effective node type of mixins & primary type
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
-        // existing mixin's
-        HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
+        // mixin types
+        Set set = ((NodeState) state).getMixinTypeNames();
+        QName[] types = new QName[set.size() + 1];
+        set.toArray(types);
         // primary type
-        set.add(primaryTypeName);
+        types[types.length - 1] = primaryTypeName;
         try {
-            return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
+            return ntReg.getEffectiveNodeType(types);
         } catch (NodeTypeConflictException ntce) {
-            String msg = "internal error: failed to build effective node type for node " + safeGetJCRPath();
+            String msg = "internal error: failed to build effective node type for node "
+                    + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
@@ -935,8 +938,8 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Same as {@link Node#addMixin(String)}, but takes a <code>QName</code>
-     * instad of a <code>String</code>.
+     * Same as {@link Node#addMixin(String)} except that it takes a
+     * <code>QName</code> instead of a <code>String</code>.
      *
      * @see Node#addMixin(String)
      */
@@ -1042,8 +1045,8 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Same as {@link Node#removeMixin(String)}, but takes a <code>QName</code>
-     * instad of a <code>String</code>.
+     * Same as {@link Node#removeMixin(String)} except that it takes a
+     * <code>QName</code> instead of a <code>String</code>.
      *
      * @see Node#removeMixin(String)
      */
@@ -1163,8 +1166,8 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Same as {@link Node#isNodeType(String)}, but takes a <code>QName</code>
-     * instad of a <code>String</code>.
+     * Same as {@link Node#isNodeType(String)} except that it takes a
+     * <code>QName</code> instead of a <code>String</code>.
      *
      * @param ntName name of node type
      * @return <code>true</code> if this node is of the specified node type;
@@ -1178,31 +1181,12 @@ public class NodeImpl extends ItemImpl implements Node {
         if (ntName.equals(primaryTypeName)) {
             return true;
         }
-
         if (((NodeState) state).getMixinTypeNames().contains(ntName)) {
             return true;
         }
 
-        // build effective node type representing primary type incl. mixin's
-        // and check whether it includes the specified node type
-        NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
-        // mixin's
-        Set typeSet = ((NodeState) state).getMixinTypeNames();
-        QName[] types = new QName[typeSet.size() + 1];
-        typeSet.toArray(types);
-        // primary type
-        types[types.length - 1] = primaryTypeName;
-
-        try {
-            EffectiveNodeType ent =
-                    ntReg.getEffectiveNodeType(types);
-            return ent.includesNodeType(ntName);
-        } catch (NodeTypeConflictException ntce) {
-            String msg = "internal error: failed to build effective node type of "
-                    + Arrays.asList(types);
-            log.debug(msg);
-            throw new RepositoryException(msg, ntce);
-        }
+        // check effective node type
+        return getEffectiveNodeType().includesNodeType(ntName);
     }
 
     /**
@@ -2531,10 +2515,15 @@ public class NodeImpl extends ItemImpl implements Node {
 
         try {
             NodeReferencesId targetId = new NodeReferencesId(((NodeId) id).getUUID());
-            NodeReferences refs = getOrCreateNodeReferences(targetId);
-            // refs.getReferences() returns a list of PropertyId's
-            List idList = refs.getReferences();
-            return new LazyItemIterator(itemMgr, idList);
+            if (stateMgr.hasNodeReferences(targetId)) {
+                NodeReferences refs = stateMgr.getNodeReferences(targetId);
+                // refs.getReferences() returns a list of PropertyId's
+                List idList = refs.getReferences();
+                return new LazyItemIterator(itemMgr, idList);
+            } else {
+                // there are no references, return empty iterator
+                return IteratorHelper.EMPTY;
+            }
         } catch (ItemStateException e) {
             String msg = "Unable to retrieve REFERENCE properties that refer to " + id;
             log.debug(msg);
