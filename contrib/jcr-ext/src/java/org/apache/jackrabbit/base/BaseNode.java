@@ -363,12 +363,15 @@ public class BaseNode extends BaseItem implements Node {
      */
     public Node getNode(String relPath) throws PathNotFoundException,
             RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+        /* TODO: Path.resolve is no longer available
         Item item = Path.resolve(this, relPath);
         if (item.isNode()) {
             return (Node) item;
         } else {
             throw new PathNotFoundException("Node not found: " + relPath);
         }
+        */
     }
 
     /** Not implemented. {@inheritDoc} */
@@ -390,12 +393,15 @@ public class BaseNode extends BaseItem implements Node {
      */
     public Property getProperty(String relPath) throws PathNotFoundException,
             RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+        /* TODO: Path.resolve is no longer available
         Item item = Path.resolve(this, relPath);
         if (item.isNode()) {
             throw new PathNotFoundException("Property not found: " + relPath);
         } else {
             return (Property) item;
         }
+        */
     }
 
     /** Not implemented. {@inheritDoc} */

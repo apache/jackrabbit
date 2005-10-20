@@ -34,7 +34,11 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.jackrabbit.name.Name;
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.SessionNamespaceResolver;
+import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.xerces.util.XMLChar;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -127,15 +131,6 @@ import org.xml.sax.helpers.AttributesImpl;
  */
 public class DocumentViewExportVisitor implements ItemVisitor {
 
-    /** The JCR namespace URI. */
-    private static final String JCR_URI = "http://www.jcp.org/jcr/1.0";
-
-    /** The special jcr:xmltext property name. */
-    private static final Name XMLTEXT = new Name(JCR_URI, "xmltext");
-
-    /** The special jcr:xmlcharacters property name. */
-    private static final Name XMLCHARACTERS = new Name(JCR_URI, "xmlcharacters");
-
     /**
      * The SAX content handler for the serialized XML stream.
      */
@@ -215,7 +210,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
             }
 
             // export current node
-            if (!node.getName().equals(XMLTEXT)) {
+            if (!node.getName().equals(QName.JCR_XMLTEXT)) {
                 exportNode(node);
             } else if (node != root) {
                 exportText(node);
@@ -279,10 +274,14 @@ public class DocumentViewExportVisitor implements ItemVisitor {
     private void exportText(Node node)
             throws SAXException, RepositoryException {
         try {
-            Property property =
-                node.getProperty(XMLCHARACTERS.toJCRName(node.getSession()));
+            Property property = node.getProperty(
+                    QName.JCR_XMLCHARACTERS.toJCRName(
+                            new SessionNamespaceResolver(node.getSession())));
             char[] characters = property.getString().toCharArray();
             handler.characters(characters, 0, characters.length);
+        } catch (NoPrefixDeclaredException ex) {
+            throw new RepositoryException(
+                    "The JCR namespace prefix is not available", ex);
         } catch (PathNotFoundException ex) {
             // ignore empty jcr:xmltext nodes
         } catch (ValueFormatException ex) {
@@ -302,8 +301,8 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      */
     private void exportNode(Node node)
             throws SAXException, RepositoryException {
-        Name name = getName(node);
-        String localName = escapeName(name.getLocalPart());
+        QName name = getName(node);
+        String localName = escapeName(name.getLocalName());
         String prefixedName =
             node.getSession().getNamespacePrefix(name.getNamespaceURI())
             + ":" + localName;
@@ -326,7 +325,7 @@ public class DocumentViewExportVisitor implements ItemVisitor {
 
         // End element
         handler.endElement(
-                name.getNamespaceURI(), name.getLocalPart(), node.getName());
+                name.getNamespaceURI(), name.getLocalName(), node.getName());
     }
 
     /**
@@ -339,26 +338,31 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      * @throws RepositoryException on repository errors
      */
     private Attributes getAttributes(Node node) throws RepositoryException {
-        AttributesImpl attributes = new AttributesImpl();
-
-        PropertyIterator properties = node.getProperties();
-        while (properties.hasNext()) {
-            Property property = properties.nextProperty();
-            /*
-            return !property.getName().equals(XMLCHARACTERS)
-            && (!skipBinary || property.getType() != PropertyType.BINARY);
-            */
-            if (includeProperty(property)) {
-                Name name = getName(property);
-                attributes.addAttribute(
-                        name.getNamespaceURI(),
-                        escapeName(name.getLocalPart()),
-                        escapeName(name.toJCRName(property.getSession())),
-                        "CDATA", escapeValue(property));
+        try {
+            AttributesImpl attributes = new AttributesImpl();
+            
+            PropertyIterator properties = node.getProperties();
+            while (properties.hasNext()) {
+                Property property = properties.nextProperty();
+                /*
+                 return !property.getName().equals(XMLCHARACTERS)
+                 && (!skipBinary || property.getType() != PropertyType.BINARY);
+                 */
+                if (includeProperty(property)) {
+                    QName name = getName(property);
+                    attributes.addAttribute(
+                            name.getNamespaceURI(),
+                            escapeName(name.getLocalName()),
+                            escapeName(name.toJCRName(
+                                    new SessionNamespaceResolver(property.getSession()))),
+                                    "CDATA", escapeValue(property));
+                }
             }
+            
+            return attributes;
+        } catch (NoPrefixDeclaredException e) {
+            throw new RepositoryException(e);
         }
-
-        return attributes;
     }
 
     /**
@@ -378,12 +382,18 @@ public class DocumentViewExportVisitor implements ItemVisitor {
      * @throws RepositoryException on repository errors
      * @see Name
      */
-    private Name getName(Item item) throws RepositoryException {
-        String name = item.getName();
-        if (name.length() > 0) {
-            return Name.fromJCRName(item.getSession(), name);
-        } else {
-            return new Name("http://www.jcp.org/jcr/1.0", "root");
+    private QName getName(Item item) throws RepositoryException {
+        try {
+            String name = item.getName();
+            if (name.length() > 0) {
+                return QName.fromJCRName(name, new SessionNamespaceResolver(item.getSession()));
+            } else {
+                return QName.JCR_ROOT;
+            }
+        } catch (IllegalNameException e) {
+            throw new RepositoryException(e);
+        } catch (UnknownPrefixException e) {
+            throw new RepositoryException(e);
         }
     }
 

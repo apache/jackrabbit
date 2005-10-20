@@ -18,7 +18,7 @@ package org.apache.jackrabbit.state.nodetype;
 
 import javax.jcr.version.OnParentVersionAction;
 
-import org.apache.jackrabbit.name.Name;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * Item definition state. This base class contains the common
@@ -27,7 +27,7 @@ import org.apache.jackrabbit.name.Name;
 public class ItemDefinitionState {
 
     /** The qualified name of the defined item. */
-    private Name name;
+    private QName name;
 
     /** The AutoCreated item definition property. */
     private boolean autoCreated;
@@ -58,7 +58,7 @@ public class ItemDefinitionState {
      *
      * @return qualified name
      */
-    public Name getName() {
+    public QName getName() {
         return name;
     }
 
@@ -67,7 +67,7 @@ public class ItemDefinitionState {
      *
      * @param name new qualified name
      */
-    public void setName(Name name) {
+    public void setName(QName name) {
         this.name = name;
     }
 
