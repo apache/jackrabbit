@@ -111,14 +111,44 @@ public abstract class AbstractNamespaceResolver implements NamespaceResolver {
     }
 
     /**
-     * Notifies listeners that a prefix has been remapped.
+     * Notifies the listeners that a new namespace <code>uri</code> has been
+     * added and mapped to <code>prefix</code>.
      *
-     * @param prefix the new prefix.
-     * @param uri the according namespace uri.
+     * @param prefix the prefix.
+     * @param uri    the namespace uri.
      */
-    protected void notifyPrefixRemapped(String prefix, String uri) {
+    protected void notifyNamespaceAdded(String prefix, String uri) {
         if (listeners == null) {
-            throw new UnsupportedOperationException("notifyPrefixRemapped");
+            throw new UnsupportedOperationException("notifyNamespaceAdded");
+        }
+        // addition is infrequent compared to listener registration
+        // -> use copy-on-read
+        NamespaceListener[] currentListeners;
+        synchronized (listeners) {
+            int i = 0;
+            currentListeners = new NamespaceListener[listeners.size()];
+            for (Iterator it = listeners.iterator(); it.hasNext(); ) {
+                currentListeners[i++] = (NamespaceListener) it.next();
+            }
+        }
+        for (int i = 0; i < currentListeners.length; i++) {
+            currentListeners[i].namespaceAdded(prefix, uri);
+        }
+    }
+
+    /**
+     * Notifies listeners that an existing namespace uri has been remapped
+     * to a new prefix.
+     *
+     * @param oldPrefix the old prefix.
+     * @param newPrefix the new prefix.
+     * @param uri the associated namespace uri.
+     */
+    protected void notifyNamespaceRemapped(String oldPrefix,
+                                           String newPrefix,
+                                           String uri) {
+        if (listeners == null) {
+            throw new UnsupportedOperationException("notifyNamespaceRemapped");
         }
         // remapping is infrequent compared to listener registration
         // -> use copy-on-read
@@ -131,7 +161,7 @@ public abstract class AbstractNamespaceResolver implements NamespaceResolver {
             }
         }
         for (int i = 0; i < currentListeners.length; i++) {
-            currentListeners[i].prefixRemapped(prefix, uri);
+            currentListeners[i].namespaceRemapped(oldPrefix, newPrefix, uri);
         }
     }
 }

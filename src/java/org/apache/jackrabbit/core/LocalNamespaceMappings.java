@@ -46,7 +46,7 @@ import java.util.Set;
  * underlying namespace registry.
  */
 class LocalNamespaceMappings extends AbstractNamespaceResolver
-        implements NamespaceListener{
+        implements NamespaceListener {
 
     /** The underlying global and persistent namespace registry. */
     private final NamespaceRegistryImpl nsReg;
@@ -124,7 +124,9 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
                 // we don't allow to hide a namespace because we can't
                 // guarantee that there are no references to it
                 // (in names of nodes/properties/node types etc.)
-                throw new NamespaceException(prefix + ": prefix is already mapped to the namespace: " + globalURI);
+                throw new NamespaceException(prefix
+                        + ": prefix is already mapped to the namespace: "
+                        + globalURI);
             }
         }
 
@@ -193,6 +195,34 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
         nsReg.removeListener(this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public QName getQName(String name)
+            throws IllegalNameException, UnknownPrefixException {
+        if (prefixToURI.isEmpty()) {
+            // shortcut
+            return nsReg.getQName(name);
+        }
+        try {
+            // first try registry, this might result in a wrong QName because
+            // of locally overlayed mappings
+            QName candidate = nsReg.getQName(name);
+            // check if valid
+            String prefix = nsReg.getPrefix(candidate.getNamespaceURI());
+            if (!hiddenPrefixes.contains(prefix)) {
+                return candidate;
+            }
+        } catch (UnknownPrefixException e) {
+            // try using local mappings
+        } catch (NamespaceException e) {
+            // may be thrown by nsReg.getPrefix() but should never happend
+            // because we got the namespace from the nsReg itself
+            throw new UnknownPrefixException(name);
+        }
+        return super.getQName(name);
+    }
+
     //----------------------------------------------------< NamespaceResolver >
     /**
      * {@inheritDoc}
@@ -238,34 +268,6 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
     /**
      * {@inheritDoc}
      */
-    public QName getQName(String name)
-            throws IllegalNameException, UnknownPrefixException {
-        if (prefixToURI.isEmpty()) {
-            // shortcut
-            return nsReg.getQName(name);
-        }
-        try {
-            // first try registry, this might result in a wrong QName because
-            // of locally overlayed mappings
-            QName candidate = nsReg.getQName(name);
-            // check if valid
-            String prefix = nsReg.getPrefix(candidate.getNamespaceURI());
-            if (!hiddenPrefixes.contains(prefix)) {
-                return candidate;
-            }
-        } catch (UnknownPrefixException e) {
-            // try using local mappings
-        } catch (NamespaceException e) {
-            // may be thrown by nsReg.getPrefix() but should never happend
-            // because we got the namespace from the nsReg itself
-            throw new UnknownPrefixException(name);
-        }
-        return super.getQName(name);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public String getJCRName(QName name)
             throws NoPrefixDeclaredException {
         if (uriToPrefix.isEmpty()) {
@@ -281,12 +283,52 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
         }
     }
 
+    //----------------------------------------------------< NamespaceListener >
     /**
      * @inheritDoc
-     * This method gets called when the NamespaceRegistry remapped a namespace
-     * to a new prefix or if a new namespace is registered.
+     * This method gets called when a new namespace is registered in
+     * the global NamespaceRegistry. Overridden in order to check for/resolve
+     * collision of new global prefix with existing local prefix.
      */
-    public void prefixRemapped(String prefix, String uri) {
-        // todo check overlayed mappings and adjust prefixes if necessary
+    public void namespaceAdded(String prefix, String uri) {
+        if (prefixToURI.containsKey(prefix)) {
+            // the new global prefix is already in use locally;
+            // need to change it locally by appending underscore(s)
+            // in order to guarantee unambiguous mappings
+            String uniquePrefix = prefix + "_";
+            while (prefixToURI.containsKey(uniquePrefix)) {
+                uniquePrefix += "_";
+            }
+            // add new local mapping
+            prefixToURI.put(uniquePrefix, uri);
+            uriToPrefix.put(uri, uniquePrefix);
+        }
+    }
+
+    /**
+     * @inheritDoc
+     * This method gets called when an existing namespace is remapped to a new
+     * prefix in the global NamespaceRegistry. Overridden in order to check
+     * for/resolve collision of new global prefix with existing local prefix.
+     */
+    public void namespaceRemapped(String oldPrefix, String newPrefix, String uri) {
+        if (prefixToURI.containsKey(newPrefix)) {
+            // the new global prefix is already in use locally;
+            // check uri
+            if (uriToPrefix.containsKey(uri)) {
+                // since namespace is already remapped locally to
+                // a different prefix there's no collision
+                return;
+            }
+            // need to change enw prefix locally by appending underscore(s)
+            // in order to guarantee unambiguous mappings
+            String uniquePrefix = newPrefix + "_";
+            while (prefixToURI.containsKey(uniquePrefix)) {
+                uniquePrefix += "_";
+            }
+            // add new local mapping
+            prefixToURI.put(uniquePrefix, uri);
+            uriToPrefix.put(uri, uniquePrefix);
+        }
     }
 }
