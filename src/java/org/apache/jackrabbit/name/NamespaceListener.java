@@ -22,11 +22,21 @@ package org.apache.jackrabbit.name;
 public interface NamespaceListener {
 
     /**
-     * Notifies the listener that the namespace <code>uri</code> has been
-     * re-mapped to the new <code>prefix</code>.
+     * Notifies the listeners that an existing namespace <code>uri</code> has
+     * been re-mapped from <code>oldPrefix</code> to <code>newPrefix</code>.
      *
-     * @param prefix the new prefix for <code>uri</code>.
+     * @param oldPrefix the old prefix.
+     * @param newPrefix the new prefix.
+     * @param uri       the associated namespace uri.
+     */
+    public void namespaceRemapped(String oldPrefix, String newPrefix, String uri);
+
+    /**
+     * Notifies the listeners that a new namespace <code>uri</code> has been
+     * added and mapped to <code>prefix</code>.
+     *
+     * @param prefix the prefix.
      * @param uri    the namespace uri.
      */
-    public void prefixRemapped(String prefix, String uri);
+    public void namespaceAdded(String prefix, String uri);
 }

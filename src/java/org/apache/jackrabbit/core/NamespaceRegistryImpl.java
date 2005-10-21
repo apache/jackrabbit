@@ -270,7 +270,13 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         store();
 
         // notify listeners
-        notifyPrefixRemapped(prefix, uri);
+        if (oldPrefix != null) {
+            // remapped existing namespace uri to new prefix
+            notifyNamespaceRemapped(oldPrefix, prefix, uri);
+        } else {
+            // added new namespace uri mapped to prefix
+            notifyNamespaceAdded(prefix, uri);
+        }
     }
 
     /**

@@ -113,12 +113,19 @@ class CachingNamespaceResolver
     }
 
     //----------------------------------------------------< NamespaceListener >
+    /**
+     * @inheritDoc
+     */
+    public void namespaceAdded(String prefix, String uri) {
+        // since it is a new namespace there's no need to flush the
+        // cached mappings 
+    }
 
     /**
      * @inheritDoc
      * Invalidates all cached mappings.
      */
-    public synchronized void prefixRemapped(String prefix, String uri) {
+    public void namespaceRemapped(String oldPrefix, String newPrefix, String uri) {
         qnameToJCRName.clear();
         jcrNameToQName.clear();
     }
