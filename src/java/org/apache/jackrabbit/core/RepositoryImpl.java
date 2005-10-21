@@ -94,7 +94,15 @@ public class RepositoryImpl implements Repository, SessionListener,
     private static final String VERSION_STORAGE_NODE_UUID = "deadbeef-face-babe-cafe-babecafebabe";
     private static final String NODETYPES_NODE_UUID = "deadbeef-cafe-cafe-cafe-babecafebabe";
 
+    /**
+     * the name of the filesystem resource containing the properties of the
+     * repository.
+     */
     private static final String PROPERTIES_RESOURCE = "rep.properties";
+
+    /**
+     * the repository properties.
+     */
     private final Properties repProps;
 
     /**
@@ -180,8 +188,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         rootNodeUUID = loadRootNodeUUID(metaDataStore);
 
         // load repository properties
-        repProps = new Properties();
-        loadRepProps();
+        repProps = loadRepProps();
         nodesCount = Long.parseLong(repProps.getProperty(STATS_NODE_COUNT_PROPERTY, "0"));
         propsCount = Long.parseLong(repProps.getProperty(STATS_PROP_COUNT_PROPERTY, "0"));
 
@@ -732,7 +739,7 @@ public class RepositoryImpl implements Repository, SessionListener,
 
         // persist repository properties
         try {
-            storeRepProps();
+            storeRepProps(repProps);
         } catch (RepositoryException e) {
             log.error("failed to persist repository properties", e);
         }
@@ -767,53 +774,73 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * Returns an <code>InputStream</code> on a <code>Properties</code> resource
-     * which contains the default properties for the repository. This method is
-     * only called once during repository initialization.
+     * Sets the default properties of the repository.
      * <p/>
-     * The <code>InputStream</code> returned is closed by the caller.
-     * <p/>
-     * This method returns an <code>InputStream</code> on the
-     * <code>org/apache/jackrabbit/core/repository.properties</code> resource
-     * found in the class path.
+     * This method loads the <code>Properties</code> from the
+     * <code>com/day/crx/core/repository.properties</code> resource
+     * found in the class path and (re)sets the statistics properties, if not
+     * present.
      *
-     * @return <code>InputStream</code> on a <code>Properties</code> resource
-     *         or <code>null</code> if the resource does not exist.
+     * @param props the properties object to load
+     *
+     * @throws RepositoryException if the properties can not be aquired
      */
-    protected InputStream getDefaultRepositoryProperties() {
-        return RepositoryImpl.class.getResourceAsStream("repository.properties");
+    protected void setDefaultRepositoryProperties(Properties props)
+            throws RepositoryException {
+        InputStream in = RepositoryImpl.class.getResourceAsStream("repository.properties");
+        try {
+            props.load(in);
+            in.close();
+
+            // set counts
+            if (!props.containsKey(STATS_NODE_COUNT_PROPERTY)) {
+                props.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
+            }
+            if (!props.containsKey(STATS_PROP_COUNT_PROPERTY)) {
+                props.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
+            }
+        } catch (IOException e) {
+            String msg = "Failed to load repository properties: " +e.toString();
+            log.error(msg);
+            throw new RepositoryException(msg, e);
+        }
     }
 
-    private void loadRepProps() throws RepositoryException {
+
+    /**
+     * Loads the repository properties by the following steps:
+     * 1. if the {@link #PROPERTIES_RESOURCE} exists in the meta data store,
+     *    the properties are loaded from that resource.
+     * 2. the {@link #setDefaultRepositoryProperties(Properties)} is called,
+     *    in order to set the repository properties. they could be newer than
+     *    the ones stored in the resource.
+     * 3. the {@link #storeRepProps(Properties)} is called, in order to persist
+     *    the generated properties.
+     *
+     * @return the newly loaded repository properties
+     *
+     * @throws RepositoryException
+     */
+    protected Properties loadRepProps() throws RepositoryException {
         FileSystemResource propFile = new FileSystemResource(metaDataStore, PROPERTIES_RESOURCE);
         try {
-            repProps.clear();
-            if (!propFile.exists() || propFile.length() == 0) {
-                // initialize properties with pre-defined values
-                InputStream in = getDefaultRepositoryProperties();
-                if (in != null) {
-                    try {
-                        repProps.load(in);
-                    } finally {
-                        in.close();
-                    }
+            Properties props = new Properties();
+            if (propFile.exists()) {
+                InputStream in = propFile.getInputStream();
+                try {
+                    props.load(in);
+                } finally {
+                    in.close();
                 }
-
-                // set counts
-                repProps.setProperty(STATS_NODE_COUNT_PROPERTY, Long.toString(nodesCount));
-                repProps.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
-
-                // persist properties
-                storeRepProps();
-                return;
             }
+            // now set the default props
+            setDefaultRepositoryProperties(props);
 
-            InputStream in = propFile.getInputStream();
-            try {
-                repProps.load(in);
-            } finally {
-                in.close();
-            }
+            // and store
+            storeRepProps(props);
+
+            return props;
+
         } catch (Exception e) {
             String msg = "failed to load repository properties";
             log.debug(msg);
@@ -821,13 +848,18 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
     }
 
-    private void storeRepProps() throws RepositoryException {
+    /**
+     * Stores the properties to a persistent resource in the meta filesytem.
+     *
+     * @throws RepositoryException
+     */
+    protected void storeRepProps(Properties props) throws RepositoryException {
         FileSystemResource propFile = new FileSystemResource(metaDataStore, PROPERTIES_RESOURCE);
         try {
             propFile.makeParentDirs();
             OutputStream os = propFile.getOutputStream();
             try {
-                repProps.store(os, null);
+                props.store(os, null);
             } finally {
                 // make sure stream is closed
                 os.close();
