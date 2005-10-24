@@ -1,20 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <Workspace name="test">
   <!--
       virtual file system of the workspace:
       class: FQN of class implementing FileSystem interface
   -->
-  <FileSystem class="com.day.jackrabbit.fs.cq.CQFileSystem">
-    <param name="path" value="${wsp.home}/data/wspStore.dat"/>
-    <param name="autoRepair" value="false"/>
-    <param name="blockSize" value="128"/>
-    <param name="autoSync" value="false"/>
+  <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+    <param name="path" value="${wsp.home}" />
   </FileSystem>
   <!--
       persistence of the workspace:
       class: FQN of class implementing PersistenceManager interface
   -->
-  <PersistenceManager class="org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager"/>
+  <PersistenceManager class="org.apache.jackrabbit.core.state.db.DerbyPersistenceManager">
+     <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
+     <param name="schemaObjectPrefix" value="${wsp.name}_"/>
+  </PersistenceManager>
   <!--
       Search index and the file system it uses.
   -->

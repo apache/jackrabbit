@@ -63,7 +63,7 @@
       <version>1.0-SNAPSHOT</version>
     </dependency>
 
-    <!--d Runtime dependencies needed by Jackrabbit -->
+    <!-- Runtime dependencies needed by Jackrabbit -->
     <dependency>
       <groupId>concurrent</groupId>
       <artifactId>concurrent</artifactId>
@@ -98,28 +98,6 @@
       <groupId>xerces</groupId>
       <artifactId>xmlParserAPIs</artifactId>
       <version>2.0.2</version>
-    </dependency>
-    <!--
-      cqfs-jackrabbit and cqfs are optional runtime dependencies 
-      (an alternative FileSystem implementation); 
-      commons-logging is a dependency of cqfs
-    -->
-    <dependency>
-      <groupId>cqfs</groupId>
-      <artifactId>cqfs-jackrabbit</artifactId>
-      <version>3.5.6-SNAPSHOT</version>
-      <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6-SNAPSHOT.jar</url>
-    </dependency>
-    <dependency>
-      <groupId>cqfs</groupId>
-      <artifactId>cqfs</artifactId>
-      <version>3.5.6-SNAPSHOT</version>
-      <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6-SNAPSHOT.jar</url>
-    </dependency>
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>1.0</version>
     </dependency>
   </dependencies>
 

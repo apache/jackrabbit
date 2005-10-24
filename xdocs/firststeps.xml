@@ -152,9 +152,8 @@ org.apache.jackrabbit.core.security.SimpleLoginModule required anonymousId="anon
     repository implementation (named something like 
     <code>jackrabbit-x.xx-xxx-dev.jar</code>) that has been built by Maven
     into the <code>target</code> directory of your checkout.
-    By executing <code>maven copy-deps</code> all dependencies except
-    the optional runtime <code>cqfs-*</code> libaries are
-    being copied to the <code>target/lib</code> directory. I addition
+    By executing <code>maven copy-deps</code> all dependencies are
+    being copied to the <code>target/lib</code> directory. In addition
     to setting up the classpath, you need to include the JAAS configuration
     option <code>-Djava.security.auth.login.config==jaas.config</code>
     (note the double equal sign <code>==</code>) to the <code>java</code>
