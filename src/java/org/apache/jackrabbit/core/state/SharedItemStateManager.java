@@ -45,9 +45,65 @@ import java.util.Set;
 import java.util.List;
 
 /**
- * Shared <code>ItemStateManager</code>. Caches objects returned from a
+ * Shared <code>ItemStateManager</code> (SISM). Caches objects returned from a
  * <code>PersistenceManager</code>. Objects returned by this item state
  * manager are shared among all sessions.
+ * <p/>
+ * A shared item state manager operates on a <code>PersistenceManager</code>
+ * (PM) that is used to load and store the item states. Additionally, a SISM can
+ * have <code>VirtualItemStateProvider</code>s (VISP) that are used to provide
+ * additional, non-persistent, read-only states. Examples of VISP are the
+ * content representation of the NodeTypes (/jcr:system/jcr:nodeTypes) and the
+ * version store (/jcr:system/jcr:versionStore). those 2 VISP are added to the
+ * SISM during initialization of a workspace. i.e. they are 'mounted' to all
+ * workspaces. we assume, that VISP cannot be added dynamically, neither during
+ * runtime nor by configuration.
+ * <p/>
+ * The states from the VISP are readonly. by the exception for node references.
+ * remember that the referrers are stored in a {@link NodeReferences} state,
+ * having the ID of the target state.
+ * <br/>
+ * there are 5 types of referential relations to be distinguished:
+ * <ol>
+ * <li> normal --> normal (references from 'normal' states to 'normal' states)
+ *      this is the normal case and will be handled by the SISM.
+ *
+ * <li> normal --> virtual (references from 'normal' states to 'virtual' states)
+ *      those references should be handled by the VISP rather by the SISM.
+ *
+ * <li> virtual --> normal (references from 'virtual' states to 'normal' states)
+ *      such references are not supported. eg. references of versioned nodes do
+ *      not impose any constraints on the referenced nodes.
+ *
+ * <li> virtual --> virtual (references from 'virtual' states to 'virtual'
+ *      states of the same VISP).
+ *      intra-virtual references are handled by the item state manager of the VISP.
+ *
+ * <li> virtual --> virtual' (references from 'virtual' states to 'virtual'
+ *      states of different VISP).
+ *      those do currently not occurr and are therfor not supported.
+ * </ol>
+ * <p/>
+ * if VISP are not dynamic, there is not risk that NV-type references can dangle
+ * (since a VISP cannot be 'unmounted', leaving eventual references dangling).
+ * although multi-workspace-referrers are not explicitelt supported, the
+ * architecture of <code>NodeReferences</code> support multiple referrers with
+ * the same PropertyId. So the number of references can be tracked (an example
+ * of multi-workspace-refferres is a version referenced by the jcr:baseVersion
+ * of several (corresponding) nodes in multiple workspaces).
+ * <br/>
+ * As mentioned, VN-type references should not impose any constraints on the
+ * referrers (e.g. a normal node referenced by a versioned reference property).
+ * In case of the version store, the VN-type references are not stored at
+ * all, but reinforced as NN-type references in the normal states in case of a
+ * checkout operation.
+ * <br/>
+ * VV-type references should be handled by the respective VISP. they look as
+ * NN-type references in the scope if the VISP anyway...so no special treatment
+ * should be neccessairy.
+ * <br/>
+ * VV'-type references are currently not possible, since the version store and
+ * virtual nodetype representation don't allow such references.
  */
 public class SharedItemStateManager
         implements ItemStateManager, ItemStateListener, Dumpable {
@@ -344,9 +400,14 @@ public class SharedItemStateManager
         ChangeLog shared = new ChangeLog();
 
         /**
-         * array of lists of dirty virtual node references
-         * (one array element per provider)
+         * array of lists of dirty virtual node references per virtual provider.
+         * since NV-type references must be persisted via the respective VISP
+         * and not by the SISM, they are filtered out below.
+         *
          * todo: FIXME handling of virtual node references is erm...  messy
+         *       VISP are eventually replaced by a more general 'mounting'
+         *       mechanism, probably on the API level and not on the item state
+         *       layer.
          */
         List[] virtualNodeReferences = new List[virtualProviders.length];
 
@@ -403,11 +464,13 @@ public class SharedItemStateManager
                     state.connect(createInstance(state));
                     shared.added(state.getOverlayedState());
                 }
+
                 // filter out virtual node references for later processing
+                // (see comment above)
                 for (Iterator iter = local.modifiedRefs(); iter.hasNext();) {
                     NodeReferences refs = (NodeReferences) iter.next();
-                    NodeId id = new NodeId(refs.getUUID());
                     boolean virtual = false;
+                    NodeId id = new NodeId(refs.getUUID());
                     for (int i = 0; i < virtualProviders.length; i++) {
                         if (virtualProviders[i].hasItemState(id)) {
                             List virtualRefs = virtualNodeReferences[i];
@@ -420,10 +483,11 @@ public class SharedItemStateManager
                             break;
                         }
                     }
-                    if (virtual) {
-                        continue;
+                    if (!virtual) {
+                        // if target of node reference does not lie in a virtual
+                        // space, add to modified set of normal provider.
+                        shared.modified(refs);
                     }
-                    shared.modified(refs);
                 }
 
                 /* create event states */
@@ -907,19 +971,10 @@ public class SharedItemStateManager
         for (Iterator iter = changes.modifiedRefs(); iter.hasNext();) {
             NodeReferences refs = (NodeReferences) iter.next();
             NodeId id = new NodeId(refs.getUUID());
-            if (!refs.hasReferences()) {
-                // no need to check existence of target if there are
-                // no references
-                continue;
-            }
-            for (int i = 0; i < virtualProviders.length; i++) {
-                VirtualItemStateProvider provider = virtualProviders[i];
-                if (provider.hasItemState(id)) {
-                    refs = null;
-                    break;
-                }
-            }
-            if (refs != null) {
+            // no need to check existence of target if there are no references
+            if (refs.hasReferences()) {
+                // please note:
+                // virtual providers are indirectly checked via 'hasItemState()'
                 if (!changes.has(id) && !hasItemState(id)) {
                     String msg = "Target node " + id
                             + " of REFERENCE property does not exist";

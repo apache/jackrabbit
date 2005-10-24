@@ -778,7 +778,8 @@ public class VersionManagerImpl implements VersionManager {
 
     //--------------------------------------------------------< inner classes >
     /**
-     * todo FIXME quick&dirty workaround for failing referential integrity-related junit tests
+     * Spezialized SharedItemStateManager that filters out NodeReferences to
+     * non-versioning states.
      */
     class VersionItemStateManager extends SharedItemStateManager {
 
@@ -789,14 +790,22 @@ public class VersionManagerImpl implements VersionManager {
             super(persistMgr, rootNodeUUID, ntReg);
         }
 
-        protected void updateReferences(ChangeLog changes)
-                throws ItemStateException {
-            //super.updateReferences(changes);
-        }
-
         protected void checkReferentialIntegrity(ChangeLog changes)
                 throws ReferentialIntegrityException, ItemStateException {
-            //super.checkReferentialIntegrity(changes);
+            // only store VV-type references and NV-type references
+
+            // check whether targets of modified node references exist
+            for (Iterator iter = changes.modifiedRefs(); iter.hasNext();) {
+                NodeReferences refs = (NodeReferences) iter.next();
+                NodeId id = new NodeId(refs.getUUID());
+                // no need to check existence of target if there are no references
+                if (refs.hasReferences()) {
+                    if (!changes.has(id) && !hasItemState(id)) {
+                        // remove references
+                        iter.remove();
+                    }
+                }
+            }
         }
 
     }
