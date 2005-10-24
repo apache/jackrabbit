@@ -432,7 +432,14 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         exceptions.add(new InvalidQueryException("LocationStep only allows integer literal as position index"));
                     }
                 } else {
-                    exceptions.add(new InvalidQueryException("Internal error: data is not a RelationQueryNode"));
+                    exceptions.add(new InvalidQueryException("Parse error: data is not a RelationQueryNode"));
+                }
+                break;
+            case JJTUNARYMINUS:
+                if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                    ((RelationQueryNode) queryNode).setUnaryMinus(true);
+                } else {
+                    exceptions.add(new InvalidQueryException("Parse error: data is not a RelationQueryNode"));
                 }
                 break;
             case JJTFUNCTIONCALL:
