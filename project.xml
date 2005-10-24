@@ -356,36 +356,10 @@
             <artifactId>xmlParserAPIs</artifactId>
             <version>2.0.2</version>
         </dependency>
-        <!--
-          cqfs-jackrabbit and cqfs are optional runtime dependencies 
-          (an alternative FileSystem implementation); 
-          commons-logging is a dependency of cqfs
-        -->
         <dependency>
-            <groupId>cqfs</groupId>
-            <artifactId>cqfs-jackrabbit</artifactId>
-            <version>3.5.6-SNAPSHOT</version>
-            <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6-SNAPSHOT.jar</url>
-            <properties>
-                <scope>runtime</scope>
-            </properties>
-        </dependency>
-        <dependency>
-            <groupId>cqfs</groupId>
-            <artifactId>cqfs</artifactId>
-            <version>3.5.6-SNAPSHOT</version>
-            <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6-SNAPSHOT.jar</url>
-            <properties>
-                <scope>runtime</scope>
-            </properties>
-        </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.0</version>
-            <properties>
-                <scope>runtime</scope>
-            </properties>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>10.1.1.0</version>
         </dependency>
     </dependencies>
 
@@ -428,6 +402,7 @@
                 <includes>
                     <include>**/*.xml</include>
                     <include>**/*.properties</include>
+                    <include>**/*.ddl</include>
                     <include>META-INF/services/*</include>
                 </includes>
             </resource>

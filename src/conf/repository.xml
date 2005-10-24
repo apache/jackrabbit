@@ -165,32 +165,17 @@
             virtual file system of the workspace:
             class: FQN of class implementing the FileSystem interface
         -->
-        <FileSystem class="com.day.jackrabbit.fs.cq.CQFileSystem">
-            <param name="path" value="${wsp.home}/wspStore.dat"/>
-            <param name="autoRepair" value="false"/>
-            <param name="blockSize" value="128"/>
-            <param name="autoSync" value="false"/>
-        </FileSystem>
-        <!--
         <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
             <param name="path" value="${wsp.home}"/>
         </FileSystem>
-        -->
         <!--
             persistence manager of the workspace:
             class: FQN of class implementing the PersistenceManager interface
         -->
-        <!--
-        <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager"/>
-        -->
-        <!--
-        <PersistenceManager class="org.apache.jackrabbit.core.state.mem.InMemPersistenceManager">
-            <param name="initialCapacity" value="100000"/>
-            <param name="loadFactor" value="0.3"/>
-            <param name="persistent" value="true"/>
+        <PersistenceManager class="org.apache.jackrabbit.core.state.db.DerbyPersistenceManager">
+            <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
+            <param name="schemaObjectPrefix" value="${wsp.name}_"/>
         </PersistenceManager>
-        -->
-        <PersistenceManager class="org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager"/>
         <!--
             Search index and the file system it uses.
             class: FQN of class implementing the QueryHandler interface
@@ -241,18 +226,9 @@
             Configures the filesystem to use for versioning for the respective
             persistence manager
         -->
-        <FileSystem class="com.day.jackrabbit.fs.cq.CQFileSystem">
-            <param name="path" value="${rep.home}/version/version.dat"/>
-            <param name="autoRepair" value="false"/>
-            <param name="blockSize" value="128"/>
-            <param name="autoSync" value="false"/>
+        <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+            <param name="path" value="${rep.home}/version"/>
         </FileSystem>
-    
-        <!--
-            <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-                <param name="path" value="${rep.home}/version"/>
-            </FileSystem>
-        -->
         
         <!--
             Configures the perisistence manager to be used for persisting version state.
@@ -260,7 +236,10 @@
             a 'normal' persistence manager, but this could change in future
             implementations.
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager"/>
+        <PersistenceManager class="org.apache.jackrabbit.core.state.db.DerbyPersistenceManager">
+            <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
+            <param name="schemaObjectPrefix" value="version_"/>
+        </PersistenceManager>
 
     </Versioning>
 </Repository>

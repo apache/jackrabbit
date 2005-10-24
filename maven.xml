@@ -175,10 +175,9 @@
 
     <!--
         Copies all dependencies to ./target/lib
-        (except the optional runtime dependencies cqfs and cqfs-jackrabbit)
     -->
     <goal name="copy-deps">
-        <deploy:copy-deps todir="./target/lib" excludes="cqfs,cqfs-jackrabbit"/>
+        <deploy:copy-deps todir="./target/lib"/>
     </goal>
 
     <!--
