@@ -28,28 +28,21 @@
 
     <!-- deletes the test data -->
     <goal name="test:clean">
-
         <ant:delete includeEmptyDirs="true">
             <ant:fileset dir="applications/test/repository">
                 <ant:include name="**/*"/>
                 <ant:exclude name="**/custom_nodetypes.xml"/>
             </ant:fileset>
         </ant:delete>
-
         <ant:delete includeEmptyDirs="true">
             <ant:fileset dir="applications/test/workspaces">
                 <ant:include name="**/*"/>
                 <ant:exclude name="**/workspace.xml"/>
             </ant:fileset>
         </ant:delete>
-
-        <ant:delete includeEmptyDirs="true">
-            <ant:fileset dir="applications/test/version">
-                <ant:include name="**/*"/>
-            </ant:fileset>
-        </ant:delete>        
-
         <ant:delete dir="applications/test/tx"/>
+        <ant:delete dir="applications/test/version"/>
+        <ant:delete file="applications/test/.lock"/>
     </goal>
     
     <!--
