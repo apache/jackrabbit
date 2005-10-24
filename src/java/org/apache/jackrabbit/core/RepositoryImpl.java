@@ -777,13 +777,13 @@ public class RepositoryImpl implements Repository, SessionListener,
      * Sets the default properties of the repository.
      * <p/>
      * This method loads the <code>Properties</code> from the
-     * <code>com/day/crx/core/repository.properties</code> resource
+     * <code>org/apache/jackrabbit/core/repository.properties</code> resource
      * found in the class path and (re)sets the statistics properties, if not
      * present.
      *
      * @param props the properties object to load
      *
-     * @throws RepositoryException if the properties can not be aquired
+     * @throws RepositoryException if the properties can not be loaded
      */
     protected void setDefaultRepositoryProperties(Properties props)
             throws RepositoryException {
@@ -806,18 +806,19 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
     }
 
-
     /**
-     * Loads the repository properties by the following steps:
-     * 1. if the {@link #PROPERTIES_RESOURCE} exists in the meta data store,
-     *    the properties are loaded from that resource.
-     * 2. the {@link #setDefaultRepositoryProperties(Properties)} is called,
-     *    in order to set the repository properties. they could be newer than
-     *    the ones stored in the resource.
-     * 3. the {@link #storeRepProps(Properties)} is called, in order to persist
-     *    the generated properties.
+     * Loads the repository properties by executing the following steps:
+     * <ul>
+     * <li> if the {@link #PROPERTIES_RESOURCE} exists in the meta data store,
+     * the properties are loaded from that resource.</li>
+     * <li> {@link #setDefaultRepositoryProperties(Properties)} is called
+     * afterwards in order to initialize/update the repository properties
+     * since some default properties might have changed and need updating.</li>
+     * <li> finally {@link #storeRepProps(Properties)} is called in order to
+     * persist the newly generated properties.</li>
+     * </ul>
      *
-     * @return the newly loaded repository properties
+     * @return the newly loaded/initialized repository properties
      *
      * @throws RepositoryException
      */
@@ -895,7 +896,6 @@ public class RepositoryImpl implements Repository, SessionListener,
             throw new RepositoryException(msg, e);
         }
     }
-
 
     //-----------------------------------------------------------< Repository >
     /**
