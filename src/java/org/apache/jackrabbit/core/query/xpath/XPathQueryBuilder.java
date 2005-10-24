@@ -634,13 +634,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      */
     private void assignValue(SimpleNode node, RelationQueryNode queryNode) {
         if (node.getId() == JJTSTRINGLITERAL) {
-            String value = node.getValue().substring(1, node.getValue().length() - 1);
-            if (node.getValue().charAt(0) == '"') {
-                value = value.replaceAll("\"\"", "\"");
-            } else {
-                value = value.replaceAll("''", "'");
-            }
-            queryNode.setStringValue(value);
+            queryNode.setStringValue(unescapeQuotes(node.getValue()));
         } else if (node.getId() == JJTDECIMALLITERAL) {
             queryNode.setDoubleValue(Double.parseDouble(node.getValue()));
         } else if (node.getId() == JJTDOUBLELITERAL) {
@@ -718,15 +712,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     if (queryNode instanceof NAryQueryNode) {
                         SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
                         if (literal.getId() == JJTSTRINGLITERAL) {
-                            String value = literal.getValue();
-                            if (value.charAt(0) == '"') {
-                                value = value.replaceAll("\"\"", "\"");
-                            } else {
-                                value = value.replaceAll("''", "'");
-                            }
-                            // strip quotes
-                            value = value.substring(1, value.length() - 1);
-                            TextsearchQueryNode contains = new TextsearchQueryNode(queryNode, value);
+                            TextsearchQueryNode contains = new TextsearchQueryNode(queryNode,
+                                    unescapeQuotes(literal.getValue()));
                             // assign property name
                             SimpleNode path = (SimpleNode) node.jjtGetChild(1);
                             path.jjtAccept(this, contains);
@@ -755,10 +742,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
                         SimpleNode literal = (SimpleNode) node.jjtGetChild(2).jjtGetChild(0);
                         if (literal.getId() == JJTSTRINGLITERAL) {
-                            String value = literal.getValue();
-                            // strip quotes
-                            value = value.substring(1, value.length() - 1);
-                            like.setStringValue(value);
+                            like.setStringValue(unescapeQuotes(literal.getValue()));
                         } else {
                             exceptions.add(new InvalidQueryException("Wrong second argument type for jcr:like"));
                         }
@@ -904,4 +888,31 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         return false;
     }
 
+    /**
+     * Unescapes single or double quotes depending on how <code>literal</code>
+     * is enclosed and strips enclosing quotes.
+     *
+     * </p>
+     * Examples:</br>
+     * <code>"foo""bar"</code> -&gt; <code>foo"bar</code></br>
+     * <code>'foo''bar'</code> -&gt; <code>foo'bar</code></br>
+     * but:</br>
+     * <code>'foo""bar'</code> -&gt; <code>foo""bar</code>
+     *
+     * @param literal the string literal to unescape
+     * @return the unescaped and stripped literal.
+     */
+    private String unescapeQuotes(String literal) {
+        String value = literal.substring(1, literal.length() - 1);
+        if (value.length() == 0) {
+            // empty string
+            return value;
+        }
+        if (literal.charAt(0) == '"') {
+            value = value.replaceAll("\"\"", "\"");
+        } else {
+            value = value.replaceAll("''", "'");
+        }
+        return value;
+    }
 }

@@ -369,6 +369,33 @@ public class SimpleQueryTest extends AbstractQueryTest {
         checkResult(result, 2);
     }
 
+    public void testQuotes() throws Exception {
+        Node foo = testRootNode.addNode("foo");
+        foo.setProperty("foo", "bar'bar");
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:unstructured WHERE foo = 'bar''bar'";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+
+        String xpath = "//*[@jcr:primaryType='nt:unstructured' and @foo ='bar''bar']";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        result = q.execute();
+        checkResult(result, 1);
+
+        xpath = "//*[@jcr:primaryType='nt:unstructured' and jcr:like(@foo,'%ar''ba%')]";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        result = q.execute();
+        checkResult(result, 1);
+
+        xpath = "//*[@jcr:primaryType='nt:unstructured' and jcr:like(@foo,\"%ar'ba%\")]";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        result = q.execute();
+        checkResult(result, 1);
+    }
+
     public void testGeneralComparison() throws Exception {
         Node foo = testRootNode.addNode("foo");
         foo.setProperty("text", new String[]{"foo", "bar"}); // mvp
