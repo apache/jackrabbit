@@ -340,6 +340,35 @@ public class SimpleQueryTest extends AbstractQueryTest {
         checkResult(result, 1);
     }
 
+    public void testNegativeNumber() throws Exception {
+        Node foo = testRootNode.addNode("foo");
+        foo.setProperty("number", -10);
+        Node bar = testRootNode.addNode("bar");
+        bar.setProperty("number", -20);
+
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:unstructured WHERE number = -10";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        QueryResult result = q.execute();
+        checkResult(result, 1);
+
+        String xpath = "//*[@jcr:primaryType='nt:unstructured' and @number = -10]";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        result = q.execute();
+        checkResult(result, 1);
+
+        sql = "SELECT * FROM nt:unstructured WHERE number <= -10";
+        q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        result = q.execute();
+        checkResult(result, 2);
+
+        xpath = "//*[@jcr:primaryType='nt:unstructured' and @number <= -10]";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        result = q.execute();
+        checkResult(result, 2);
+    }
+
     public void testGeneralComparison() throws Exception {
         Node foo = testRootNode.addNode("foo");
         foo.setProperty("text", new String[]{"foo", "bar"}); // mvp

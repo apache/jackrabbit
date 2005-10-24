@@ -31,6 +31,12 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
     private QName property;
 
     /**
+     * If <code>true</code> this relation query node contains a value preceded
+     * with an unary minus.
+     */
+    private boolean unaryMinus;
+
+    /**
      * The <code>long</code> value of the relation if this is a query is of type
      * <code>long</code>
      */
@@ -167,6 +173,16 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
     }
 
     /**
+     * If <code>b</code> is <code>true</code> then the value in this relation
+     * node contains a receding unary minus.
+     *
+     * @param b <code>true</code> if this relation contains a unary minus.
+     */
+    public void setUnaryMinus(boolean b) {
+        unaryMinus = b;
+    }
+
+    /**
      * Returns the type of the value.
      *
      * @return the type of the value.
@@ -209,7 +225,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
      * @param value the new value.
      */
     public void setLongValue(long value) {
-        valueLong = value;
+        valueLong = unaryMinus ? -value : value;
         type = TYPE_LONG;
     }
 
@@ -248,7 +264,7 @@ public class RelationQueryNode extends QueryNode implements QueryConstants {
      * @param value the new value.
      */
     public void setDoubleValue(double value) {
-        valueDouble = value;
+        valueDouble = unaryMinus ? -value : value;
         type = TYPE_DOUBLE;
     }
 
