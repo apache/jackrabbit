@@ -291,7 +291,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             while (iter.hasNext()) {
                 PathMap.Element child = (PathMap.Element) iter.next();
                 NodeState.ChildNodeEntry cne = modified.getChildNodeEntry(
-                        child.getName(), child.getIndex() + 1);
+                        child.getName(), child.getNormalizedIndex());
                 if (cne == null) {
                     // Item does not exist, remove
                     child.remove();

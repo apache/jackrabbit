@@ -154,7 +154,8 @@ public class PathMap {
         private QName name;
 
         /**
-         * index associated with this element
+         * 1-based index associated with this element where index=0 is
+         * equivalent to index=1)
          */
         private int index;
 
@@ -184,6 +185,7 @@ public class PathMap {
          * @param nameIndex position where child is inserted
          */
         public void insert(Path.PathElement nameIndex) {
+            // convert 1-based index value to 0-base value
             int index = getOneBasedIndex(nameIndex) - 1;
             if (children != null) {
                 ArrayList list = (ArrayList) children.get(nameIndex.getName());
@@ -206,6 +208,7 @@ public class PathMap {
          *         none exists.
          */
         private Element getChild(Path.PathElement nameIndex) {
+            // convert 1-based index value to 0-base value
             int index = getOneBasedIndex(nameIndex) - 1;
             Element element = null;
 
@@ -224,6 +227,7 @@ public class PathMap {
          * @param element element to add
          */
         public void put(Path.PathElement nameIndex, Element element) {
+            // convert 1-based index value to 0-base value
             int index = getOneBasedIndex(nameIndex) - 1;
             if (children == null) {
                 children = new HashMap();
@@ -259,6 +263,7 @@ public class PathMap {
          * @return removed child, may be <code>null</code>
          */
         public Element remove(Path.PathElement nameIndex) {
+            // convert 1-based index value to 0-base value
             int index = getOneBasedIndex(nameIndex) - 1;
             if (children != null) {
                 ArrayList list = (ArrayList) children.get(nameIndex.getName());
@@ -321,11 +326,27 @@ public class PathMap {
         }
 
         /**
-         * Return the index of this element
+         * Return the non-normalized 1-based index of this element. Note that
+         * this method can return a value of 0 which should be treated as 1.
          * @return index
+         * @see #getNormalizedIndex()
          */
         public int getIndex() {
             return index;
+        }
+
+        /**
+         * Return the 1-based index of this element.
+         * Same as {@link #getIndex()} except that an index value of 0
+         * is automatically converted to 1.
+         * @return 1-based index
+         */
+        public int getNormalizedIndex() {
+            if (index == 0) {
+                return 1;
+            } else {
+                return index;
+            }
         }
 
         /**
