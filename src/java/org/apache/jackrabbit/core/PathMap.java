@@ -155,7 +155,7 @@ public class PathMap {
 
         /**
          * 1-based index associated with this element where index=0 is
-         * equivalent to index=1)
+         * equivalent to index=1.
          */
         private int index;
 
