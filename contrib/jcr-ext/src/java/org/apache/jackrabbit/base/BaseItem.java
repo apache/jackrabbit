@@ -16,28 +16,18 @@
  */
 package org.apache.jackrabbit.base;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.VersionException;
 
 /**
  * Item base class.
  */
 public class BaseItem implements Item {
-
-    /** Protected constructor. This class is only useful when extended. */
-    protected BaseItem() {
-    }
 
     /**
      * Implemented by calling <code>getParent().getPath()</code> and
@@ -73,8 +63,7 @@ public class BaseItem implements Item {
      * given depth.
      * {@inheritDoc}
      */
-    public Item getAncestor(int depth) throws ItemNotFoundException,
-            AccessDeniedException, RepositoryException {
+    public Item getAncestor(int depth) throws RepositoryException {
         int thisDepth = getDepth();
         if (thisDepth == depth) {
             return this;
@@ -88,8 +77,7 @@ public class BaseItem implements Item {
     }
 
     /** Not implemented. {@inheritDoc} */
-    public Node getParent() throws ItemNotFoundException,
-            AccessDeniedException, RepositoryException {
+    public Node getParent() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
@@ -120,17 +108,21 @@ public class BaseItem implements Item {
 
     /** Not implemented. {@inheritDoc} */
     public boolean isNew() {
-        throw new UnsupportedOperationException();
+        return false;
     }
 
     /** Not implemented. {@inheritDoc} */
     public boolean isModified() {
-        throw new UnsupportedOperationException();
+        return false;
     }
 
     /** Not implemented. {@inheritDoc} */
     public boolean isSame(Item otherItem) {
-        throw new UnsupportedOperationException();
+        try {
+            return getPath().equals(otherItem.getPath());
+        } catch (RepositoryException e) {
+            return false;
+        }
     }
 
     /** Does nothing. {@inheritDoc} */
@@ -138,22 +130,17 @@ public class BaseItem implements Item {
     }
 
     /** Not implemented. {@inheritDoc} */
-    public void save() throws AccessDeniedException,
-            ConstraintViolationException, InvalidItemStateException,
-            ReferentialIntegrityException, VersionException, LockException,
-            RepositoryException {
+    public void save() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
     /** Not implemented. {@inheritDoc} */
-    public void refresh(boolean keepChanges) throws InvalidItemStateException,
-            RepositoryException {
+    public void refresh(boolean keepChanges) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
     /** Not implemented. {@inheritDoc} */
-    public void remove() throws VersionException, LockException,
-            RepositoryException {
+    public void remove() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 

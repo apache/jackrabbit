@@ -24,10 +24,6 @@ import javax.jcr.nodetype.NodeType;
  */
 public class BaseNodeDefinition extends BaseItemDefinition implements NodeDefinition {
 
-    /** Protected constructor. This class is only useful when extended. */
-    protected BaseNodeDefinition() {
-    }
-
     /** Always returns an empty node type array. {@inheritDoc} */
     public NodeType[] getRequiredPrimaryTypes() {
         return new NodeType[0];

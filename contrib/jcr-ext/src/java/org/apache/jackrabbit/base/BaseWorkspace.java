@@ -51,9 +51,8 @@ import org.xml.sax.ContentHandler;
  */
 public class BaseWorkspace implements Workspace {
 
-    /** Protected constructor. This class is only useful when extended. */
-    protected BaseWorkspace() {
-    }
+    private static final NamespaceRegistry NAMESPACE_REGISTRY =
+        new BaseNamespaceRegistry();
 
     /** Not implemented. {@inheritDoc} */
     public Session getSession() {
@@ -116,7 +115,7 @@ public class BaseWorkspace implements Workspace {
 
     /** Not implemented. {@inheritDoc} */
     public NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        return NAMESPACE_REGISTRY;
     }
 
     /** Not implemented. {@inheritDoc} */
@@ -132,7 +131,7 @@ public class BaseWorkspace implements Workspace {
 
     /** Not implemented. {@inheritDoc} */
     public String[] getAccessibleWorkspaceNames() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        return new String[] { getName() };
     }
 
     /** Not implemented. {@inheritDoc} */

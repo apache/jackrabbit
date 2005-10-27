@@ -18,6 +18,8 @@ package org.apache.jackrabbit.base;
 
 import java.io.InputStream;
 import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -25,6 +27,7 @@ import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
+import javax.jcr.NamespaceException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -33,6 +36,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
@@ -43,20 +47,23 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 
+import org.apache.jackrabbit.iterator.ArrayNodeIterator;
+import org.apache.jackrabbit.iterator.ArrayPropertyIterator;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.SessionNamespaceResolver;
 
 /**
  * Node base class.
  */
 public class BaseNode extends BaseItem implements Node {
-
-    /** Protected constructor. This class is only useful when extended. */
-    protected BaseNode() {
-    }
 
     /**
      * Implemented by calling <code>super.getPath()</code>
@@ -88,9 +95,7 @@ public class BaseNode extends BaseItem implements Node {
     }
 
     /** Not implemented. {@inheritDoc} */
-    public Node addNode(String relPath) throws ItemExistsException,
-            PathNotFoundException, VersionException,
-            ConstraintViolationException, LockException, RepositoryException {
+    public Node addNode(String relPath) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
@@ -102,21 +107,22 @@ public class BaseNode extends BaseItem implements Node {
      * {@inheritDoc}
      */
     public Node addNode(String relPath, String primaryNodeTypeName)
-            throws ItemExistsException, PathNotFoundException,
-            NoSuchNodeTypeException, LockException, VersionException,
-            ConstraintViolationException, RepositoryException {
+            throws RepositoryException {
         Node node = addNode(relPath);
-        String prefix =
-            getSession().getNamespacePrefix("http://www.jcp.org/jcr/1.0");
-        node.setProperty(prefix + ":primaryType", primaryNodeTypeName);
+        String primaryType;
+        String prefix = getSession().getNamespacePrefix(QName.NS_JCR_URI);
+        if (prefix.length() > 0) {
+            primaryType = prefix + ":primaryType";
+        } else {
+            primaryType = "primaryType";
+        }
+        node.setProperty(primaryType, primaryNodeTypeName);
         return node;
     }
 
     /** Not implemented. {@inheritDoc} */
     public void orderBefore(String srcChildRelPath, String destChildRelPath)
-            throws UnsupportedRepositoryOperationException, VersionException,
-            ConstraintViolationException, ItemNotFoundException, LockException,
-            RepositoryException {
+            throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
@@ -127,8 +133,7 @@ public class BaseNode extends BaseItem implements Node {
      * {@inheritDoc}
      */
     public Property setProperty(String name, Value value)
-            throws ValueFormatException, VersionException, LockException,
-            RepositoryException {
+            throws RepositoryException {
         try {
             Property property = getProperty(name);
             property.setValue(value);
@@ -376,7 +381,7 @@ public class BaseNode extends BaseItem implements Node {
 
     /** Not implemented. {@inheritDoc} */
     public NodeIterator getNodes() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        return new ArrayNodeIterator(new Node[0]);
     }
 
     /** Not implemented. {@inheritDoc} */
@@ -406,7 +411,7 @@ public class BaseNode extends BaseItem implements Node {
 
     /** Not implemented. {@inheritDoc} */
     public PropertyIterator getProperties() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        return new ArrayPropertyIterator(new Property[0]);
     }
 
     /** Not implemented. {@inheritDoc} */
@@ -485,12 +490,37 @@ public class BaseNode extends BaseItem implements Node {
 
     /** Not implemented. {@inheritDoc} */
     public NodeType getPrimaryNodeType() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        try {
+            Session session = getSession();
+            NamespaceResolver resolver = new SessionNamespaceResolver(session);
+            Property property = getProperty(QName.JCR_PRIMARYTYPE.toJCRName(resolver));
+            NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
+            return manager.getNodeType(property.getString());
+        } catch (NoPrefixDeclaredException e) {
+            throw new NamespaceException("jcr:primaryType", e);
+        }
     }
 
     /** Not implemented. {@inheritDoc} */
     public NodeType[] getMixinNodeTypes() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        List types = new LinkedList();
+
+        Session session = getSession();
+        NamespaceResolver resolver = new SessionNamespaceResolver(session);
+        try {
+            Property property = getProperty(QName.JCR_MIXINTYPES.toJCRName(resolver));
+            Value[] values = property.getValues();
+            NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
+          for (int i = 0; i < values.length; i++) {
+                types.add(manager.getNodeType(values[i].getString()));
+            }
+        } catch (NoPrefixDeclaredException e) {
+            throw new NamespaceException("jcr:mixinTypes", e);
+        } catch (PathNotFoundException e) {
+            // jcr:mixinTypes not found, fall through with no mixin types
+        }
+
+        return (NodeType[]) types.toArray(new NodeType[types.size()]);
     }
 
     /**
@@ -660,12 +690,12 @@ public class BaseNode extends BaseItem implements Node {
 
     /** Not implemented. {@inheritDoc} */
     public boolean holdsLock() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        return false;
     }
 
     /** Not implemented. {@inheritDoc} */
     public boolean isLocked() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        return false;
     }
 
 }
