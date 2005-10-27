@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.state.nodetype;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.jackrabbit.name.QName;
 
 /**
@@ -28,36 +25,27 @@ import org.apache.jackrabbit.name.QName;
 public class NodeTypeState {
 
     /** Name of the node type. */
-    private QName name;
+    private QName name = null;
 
     /** The Mixin node type property. */
-    private boolean mixin;
+    private boolean mixin = false;
 
     /** The HasOrderableChildNodes node type property. */
-    private boolean hasOrderableChildNodes;
+    private boolean hasOrderableChildNodes = false;
 
     /** Name of the primary item of the node type. */
-    private QName primaryItemName;
+    private QName primaryItemName = null;
 
     /** Names of the declared supertypes. */
-    private Set supertypeNames;
+    private QName[] supertypeNames = new QName[0];
 
     /** Child node definition states. */
-    private Set childNodeDefinitionStates;
+    private NodeDefinitionState[] childNodeDefinitionStates =
+        new NodeDefinitionState[0];
 
     /** Property definition states. */
-    private Set propertyDefinitionStates;
-
-    /** Creates an empty node type state instance. */
-    public NodeTypeState() {
-        name = null;
-        mixin = false;
-        hasOrderableChildNodes = false;
-        primaryItemName = null;
-        supertypeNames = new HashSet();
-        childNodeDefinitionStates = new HashSet();
-        propertyDefinitionStates = new HashSet();
-    }
+    private PropertyDefinitionState[] propertyDefinitionStates =
+        new PropertyDefinitionState[0];
 
     /**
      * Returns the node type name.
@@ -100,7 +88,7 @@ public class NodeTypeState {
      *
      * @return HasOrderableChildNodes property value
      */
-    public boolean isHasOrderableChildNodes() {
+    public boolean hasOrderableChildNodes() {
         return hasOrderableChildNodes;
     }
 
@@ -137,17 +125,16 @@ public class NodeTypeState {
      * @return supertype names
      */
     public QName[] getSupertypeNames() {
-        return (QName[])
-            supertypeNames.toArray(new QName[supertypeNames.size()]);
+        return supertypeNames;
     }
 
     /**
-     * Adds a supertype name to the list of declared supertypes.
+     * Sets the list of declared supertypes.
      *
-     * @param name supertype name
+     * @param supertypeNames supertype names
      */
-    public void addSupertypeName(QName name) {
-        supertypeNames.add(name);
+    public void setSupertypeNames(QName[] supertypeNames) {
+        this.supertypeNames = supertypeNames;
     }
 
     /**
@@ -156,18 +143,17 @@ public class NodeTypeState {
      * @return child node definition states
      */
     public NodeDefinitionState[] getChildNodeDefinitionStates() {
-        return (NodeDefinitionState[]) childNodeDefinitionStates.toArray(
-                new NodeDefinitionState[childNodeDefinitionStates.size()]);
+        return childNodeDefinitionStates;
     }
 
     /**
-     * Adds a node definition state to the list of child node definition
-     * states of the node type.
+     * Sets the list of child node definition states of the node type.
      *
-     * @param state child node definition state
+     * @param childNodeDefinitionStates child node definition states
      */
-    public void addChildNodeDefinition(NodeDefinitionState state) {
-        childNodeDefinitionStates.add(state);
+    public void setChildNodeDefinitionStates(
+            NodeDefinitionState[] childNodeDefinitionStates) {
+        this.childNodeDefinitionStates = childNodeDefinitionStates;
     }
 
     /**
@@ -176,18 +162,30 @@ public class NodeTypeState {
      * @return property definition states
      */
     public PropertyDefinitionState[] getPropertyDefinitionStates() {
-        return (PropertyDefinitionState[]) propertyDefinitionStates.toArray(
-                new PropertyDefinitionState[propertyDefinitionStates.size()]);
+        return propertyDefinitionStates;
     }
 
     /**
-     * Adds a property definition state to the list of property definition
-     * states of the node type.
+     * Sets the list of property definition states of the node type.
      *
-     * @param state property definition state
+     * @param propertyDefinitionStates property definition states
      */
-    public void addPropertyDefinitionState(PropertyDefinitionState state) {
-        propertyDefinitionStates.add(state);
+    public void setPropertyDefinitionStates(
+            PropertyDefinitionState[] propertyDefinitionStates) {
+        this.propertyDefinitionStates = propertyDefinitionStates;
+    }
+
+    public boolean equals(Object object) {
+        return (this == object)
+            || (object != null && new StateComparator().compare(this, object) == 0);
+    }
+
+    public int hashCode() {
+        int code = 37;
+        code = code * 17 + ((name != null) ? name.hashCode() : 0);
+        code = code * 17 + (mixin ? 1 : 0);
+        code = code * 17 + (hasOrderableChildNodes ? 1 : 0);
+        return code;
     }
 
 }

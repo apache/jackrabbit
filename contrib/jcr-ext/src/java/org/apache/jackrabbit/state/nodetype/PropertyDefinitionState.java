@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.state.nodetype;
 
-import java.util.List;
-import java.util.Vector;
-
 import javax.jcr.PropertyType;
 
 /**
@@ -28,21 +25,10 @@ import javax.jcr.PropertyType;
 public class PropertyDefinitionState extends ItemDefinitionState {
 
     /** Required type of the defined property. */
-    private int requiredType;
-
-    /** List of value constraint strings. */
-    private List valueConstraints;
+    private int requiredType = PropertyType.UNDEFINED;
 
     /** The Multiple property definition property. */
-    private boolean multiple;
-
-    /** Creates an empty property definition state instance. */
-    public PropertyDefinitionState() {
-        super();
-        requiredType = PropertyType.UNDEFINED;
-        valueConstraints = new Vector();
-        multiple = false;
-    }
+    private boolean multiple = false;
 
     /**
      * Returns the required type of the defined property.
@@ -63,27 +49,6 @@ public class PropertyDefinitionState extends ItemDefinitionState {
     }
 
     /**
-     * Returns the property value constraint strings. The returned
-     * array can be modified freely as it is freshly instantiated and
-     * not a part of the property definition state.
-     *
-     * @return value constraints
-     */
-    public String[] getValueConstraints() {
-        return (String[])
-            valueConstraints.toArray(new String[valueConstraints.size()]);
-    }
-
-    /**
-     * Adds a constraint string to the list of property value constraints.
-     *
-     * @param constraint constraint string
-     */
-    public void addValueConstraints(String constraint) {
-        valueConstraints.add(constraint);
-    }
-
-    /**
      * Returns the value of the Multiple property definition property.
      *
      * @return Multiple property value
@@ -99,6 +64,26 @@ public class PropertyDefinitionState extends ItemDefinitionState {
      */
     public void setMultiple(boolean multiple) {
         this.multiple = multiple;
+    }
+
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        } else if (object instanceof PropertyDefinitionState) {
+            PropertyDefinitionState that = (PropertyDefinitionState) object;
+            return super.equals(that)
+                && this.multiple == that.multiple
+                && this.requiredType == that.requiredType;
+        } else {
+            return false;
+        }
+    }
+
+    public int hashCode() {
+        int code = super.hashCode();
+        code = code * 17 + (multiple ? 1 : 0);
+        code = code * 17 + requiredType;
+        return code;
     }
 
 }
