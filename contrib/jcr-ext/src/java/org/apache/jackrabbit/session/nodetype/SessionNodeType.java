@@ -95,7 +95,7 @@ final class SessionNodeType extends BaseNodeType implements NodeType {
      * @see NodeType#hasOrderableChildNodes()
      */
     public boolean hasOrderableChildNodes() {
-        return state.isHasOrderableChildNodes();
+        return state.hasOrderableChildNodes();
     }
 
     /**

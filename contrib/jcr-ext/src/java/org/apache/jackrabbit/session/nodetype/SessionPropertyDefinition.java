@@ -73,7 +73,7 @@ final class SessionPropertyDefinition extends SessionItemDefinition
      * @see PropertyDef#getValueConstraints()
      */
     public String[] getValueConstraints() {
-        return state.getValueConstraints();
+        return null; // TODO: See PropertyDefinitionState
     }
 
     /**
