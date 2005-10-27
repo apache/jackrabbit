@@ -4,7 +4,7 @@ General base classes for implementing the JCR interfaces.
 This package contains simple base class implementations of the JCR API
 interfaces. These classes implement the API methods either by throwing
 Unsupported(Repository)OperationExceptions or by calling other API methods.
-For example the Property.getString() method is implemented as
+For example the BaseProperty.getString() method is implemented as
 Property.getValue().getString(). See the javadoc comments of each method
 for implementation details.
 </p>
@@ -22,21 +22,18 @@ dependencies or complexities.
 </p>
 <ul>
   <li>
-    No member variables. To avoid introducing any extra memory overhead
-    or complex state and object equality issues, none of these base classes
-    have any member variables, private or otherwise.
+    <strong>No member variables.</strong> To avoid introducing any extra
+    memory overhead or complex state and object equality issues, none of
+    these base classes have <em>any</em> member variables, private or
+    otherwise. However the implemented methods are free to use as many
+    local variables as they like.
   </li>
   <li>
-    Protected default constructors. Each base class contains only an empty
-    protected default constructor. This guarantees that these classes can not
-    be instantiated unless subclassed.
-  </li>
-  <li>
-    No extra methods. The only non-private methods defined in these base
-    classes are the empty protected default constructor and the public
-    methods declared in the JCR interfaces. Private utility methods are
-    allowed to avoid duplicating code, but no protected or public methods
-    other than those declared by the JCR API are allowed.
+    <strong>No extra methods.</strong> The only non-private methods defined
+    in these base classes are the public methods declared in the JCR
+    interfaces. Private utility methods are allowed to avoid duplicating code,
+    but <em>no</em> protected or public methods other than those declared by
+    the JCR API are allowed.
   </li>
 </ul>
 </body>

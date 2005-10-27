@@ -31,10 +31,6 @@ import javax.jcr.nodetype.PropertyDefinition;
  */
 public class BaseNodeType implements NodeType {
 
-    /** Protected constructor. This class is only useful when extended. */
-    protected BaseNodeType() {
-    }
-
     /** Not implemented. {@inheritDoc} */
     public String getName() {
         throw new UnsupportedOperationException();

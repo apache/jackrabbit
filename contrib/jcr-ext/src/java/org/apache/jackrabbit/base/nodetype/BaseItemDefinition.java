@@ -25,10 +25,6 @@ import javax.jcr.version.OnParentVersionAction;
  */
 public class BaseItemDefinition implements ItemDefinition {
 
-    /** Protected constructor. This class is only useful when extended. */
-    protected BaseItemDefinition() {
-    }
-
     /** Not implemented. {@inheritDoc} */
     public NodeType getDeclaringNodeType() {
         throw new UnsupportedOperationException();

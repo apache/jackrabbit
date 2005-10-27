@@ -26,10 +26,6 @@ import javax.jcr.nodetype.PropertyDefinition;
 public class BasePropertyDefinition extends BaseItemDefinition
         implements PropertyDefinition {
 
-    /** Protected constructor. This class is only useful when extended. */
-    protected BasePropertyDefinition() {
-    }
-
     /** Always returns <code>PropertyType.UNDEFINED</code>. {@inheritDoc} */
     public int getRequiredType() {
         return PropertyType.UNDEFINED;

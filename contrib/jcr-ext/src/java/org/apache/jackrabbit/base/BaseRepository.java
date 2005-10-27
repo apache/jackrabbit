@@ -18,68 +18,97 @@ package org.apache.jackrabbit.base;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 
 /**
- * Repository base class.
+ * Repository base class. The dummy repository implemented by this class
+ * contains no descriptors and forwards all login requests to the
+ * canonical {@link #login(Credentials, String)} method.
  */
 public class BaseRepository implements Repository {
 
-    /** Protected constructor. This class is only useful when extended. */
-    protected BaseRepository() {
-    }
-
-    /** Not implemented. {@inheritDoc} */
+    /**
+     * Returns an empty to indicate that no descriptor keys are available.
+     * Subclasses should override this method to return the available
+     * descriptor keys.
+     *
+     * @return empty array
+     * @see Repository#getDescriptorKeys()
+     */
     public String[] getDescriptorKeys() {
-        throw new UnsupportedOperationException();
-    }
-
-    /** Not implemented. {@inheritDoc} */
-    public String getDescriptor(String key) {
-        throw new UnsupportedOperationException();
-    }
-
-    /** Not implemented. {@inheritDoc} */
-    public Session login(Credentials credentials, String workspaceName)
-            throws LoginException, NoSuchWorkspaceException,
-            RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        return new String[0];
     }
 
     /**
-     * Implemented by calling
-     * <code>login(credentials, null)</code>
-     * as suggested by the JCR specification.
-     * {@inheritDoc}
+     * Returns <code>null</code> to indicate that the requested descriptor
+     * does not exist. Subclasses should override this method to return the
+     * actual repository descriptor values.
+     *
+     * @param key descriptor key
+     * @return always <code>null</code>
+     * @see Repository#getDescriptor(String)
      */
-    public Session login(Credentials credentials) throws LoginException,
-            NoSuchWorkspaceException, RepositoryException {
+    public String getDescriptor(String key) {
+        return null;
+    }
+
+    /**
+     * Throws a {@link LoginException} to indicate that logins are
+     * not available. Subclasses should override this method to allow
+     * repository logins. Note that by default the other login methods
+     * invoke this method, so all the login methods can be made to work
+     * by overriding just this method. 
+     *
+     * @param credentials login credentials
+     * @param workspaceName workspace name
+     * @return nothing (throws a LoginException)
+     * @see Repository#login(Credentials, String)
+     */
+    public Session login(Credentials credentials, String workspaceName)
+            throws RepositoryException {
+        throw new LoginException();
+    }
+
+    /**
+     * Implemented by calling {@link #login(Credentials, String)} with a
+     * <code>null</code> workspace name. This default implementation
+     * follows the JCR specification, so there should be little
+     * reason for subclasses to override this method.
+     *
+     * @param credentials login credentials
+     * @return repository session
+     * @see Repository#login(Credentials)
+     */
+    public Session login(Credentials credentials) throws RepositoryException {
         return login(credentials, null);
     }
 
     /**
-     * Implemented by calling
-     * <code>login(null, workspaceName)</code>
-     * as suggested by the JCR specification.
-     * {@inheritDoc}
+     * Implemented by calling {@link #login(Credentials, String)} with
+     * <code>null</code> credentials. This default implementation
+     * follows the JCR specification, so there should be little
+     * reason for subclasses to override this method.
+     *
+     * @param workspaceName workspace name
+     * @return repository session
+     * @see Repository#login(String)
      */
-    public Session login(String workspaceName) throws LoginException,
-            NoSuchWorkspaceException, RepositoryException {
+    public Session login(String workspaceName) throws RepositoryException {
         return login(null, workspaceName);
     }
 
     /**
-     * Implemented by calling
-     * <code>login(null, null)</code>
-     * as suggested by the JCR specification.
-     * {@inheritDoc}
+     * Implemented by calling {@link #login(Credentials, String)} with a
+     * <code>null</code> workspace name and <code>null</code> credentials.
+     * This default implementation follows the JCR specification, so there
+     * should be little reason for subclasses to override this method.
+     *
+     * @return repository session
+     * @see Repository#login()
      */
-    public Session login() throws LoginException, NoSuchWorkspaceException,
-            RepositoryException {
+    public Session login() throws RepositoryException {
         return login(null, null);
     }
 

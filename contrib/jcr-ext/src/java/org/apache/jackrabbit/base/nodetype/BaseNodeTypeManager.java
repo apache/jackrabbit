@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.base.nodetype;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Vector;
 
 import javax.jcr.RepositoryException;
@@ -32,22 +34,29 @@ import org.apache.jackrabbit.iterator.ArrayNodeTypeIterator;
  */
 public class BaseNodeTypeManager implements NodeTypeManager {
 
-    /** Protected constructor. This class is only useful when extended. */
-    protected BaseNodeTypeManager() {
-    }
-
-    /** Not implemented. {@inheritDoc} */
+    /**
+     * Returns an empty node type iterator. Subclasses should override this
+     * method to return the available node types.
+     *
+     * @return empty node type iterator
+     * @see NodeTypeManager#getAllNodeTypes()
+     */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        return new ArrayNodeTypeIterator(new NodeType[0]);
     }
 
     /**
-     * Implemented by calling <code>getAllNodeTypes()</code> and iterating
-     * through the returned node types to find the named node type.
-     * {@inheritDoc}
+     * Iterates through the node types returned by the
+     * {@link #getAllNodeTypes() getAllNodeTypes()} method and returns the
+     * node type with the given name. If a matching node type is not found,
+     * then a {@link NoSuchNodeTypeException} is thrown. Subclasses may
+     * want to override this method for better performance.
+     *
+     * @param node type name
+     * @return named node type
+     * @see NodeTypeManager#getNodeType(String)
      */
-    public NodeType getNodeType(String nodeTypeName)
-            throws NoSuchNodeTypeException, RepositoryException {
+    public NodeType getNodeType(String nodeTypeName) throws RepositoryException {
         NodeTypeIterator types = getAllNodeTypes();
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
@@ -59,12 +68,16 @@ public class BaseNodeTypeManager implements NodeTypeManager {
     }
 
     /**
-     * Implemented by calling <code>getAllNodeTypes()</code> and iterating
-     * through the returned node types to select all primary node types.
-     * {@inheritDoc}
+     * Iterates through the node types returned by the
+     * {@link #getAllNodeTypes() getAllNodeTypes()} method and returns an
+     * {@link ArrayNodeTypeIterator} containing all the primary node types.
+     * Subclasses may want to override this method for better performance.
+     *
+     * @return primary node types
+     * @see NodeTypeManager#getPrimaryNodeTypes()
      */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
-        Vector primaryTypes = new Vector();
+        List primaryTypes = new LinkedList();
 
         NodeTypeIterator types = getAllNodeTypes();
         while (types.hasNext()) {
@@ -78,17 +91,21 @@ public class BaseNodeTypeManager implements NodeTypeManager {
     }
 
     /**
-     * Implemented by calling <code>getAllNodeTypes()</code> and iterating
-     * through the returned node types to select all mixin node types.
-     * {@inheritDoc}
+     * Iterates through the node types returned by the
+     * {@link #getAllNodeTypes() getAllNodeTypes()} method and returns an
+     * {@link ArrayNodeTypeIterator} containing all the mixin node types.
+     * Subclasses may want to override this method for better performance.
+     *
+     * @return mixin node types
+     * @see NodeTypeManager#getMixinNodeTypes()
      */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
-        Vector mixinTypes = new Vector();
+        List mixinTypes = new LinkedList();
 
         NodeTypeIterator types = getAllNodeTypes();
         while (types.hasNext()) {
             NodeType type = types.nextNodeType();
-            if (!type.isMixin()) {
+            if (type.isMixin()) {
                 mixinTypes.add(type);
             }
         }
