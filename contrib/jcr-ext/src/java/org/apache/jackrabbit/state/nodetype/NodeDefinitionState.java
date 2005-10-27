@@ -16,8 +16,7 @@
  */
 package org.apache.jackrabbit.state.nodetype;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
 
 import org.apache.jackrabbit.name.QName;
 
@@ -28,21 +27,13 @@ import org.apache.jackrabbit.name.QName;
 public class NodeDefinitionState extends ItemDefinitionState {
 
     /** Name of the default primary type of the defined node. */
-    private QName defaultPrimaryTypeName;
+    private QName defaultPrimaryTypeName = null;
 
     /** Names of the required primary types of the defined node. */
-    private Set requiredPrimaryTypeNames;
+    private QName[] requiredPrimaryTypeNames = new QName[0];
 
     /** The AllowsSameNameSiblings node definition property. */
-    private boolean allowsSameNameSiblings;
-
-    /** Creates an empty node definition state instance. */
-    public NodeDefinitionState() {
-        super();
-        defaultPrimaryTypeName = null;
-        requiredPrimaryTypeNames = new HashSet();
-        allowsSameNameSiblings = false;
-    }
+    private boolean allowsSameNameSiblings = false;
 
     /**
      * Returns the name of the default primary type of the defined node.
@@ -68,17 +59,17 @@ public class NodeDefinitionState extends ItemDefinitionState {
      * @return type names
      */
     public QName[] getRequiredPrimaryTypeNames() {
-        return (QName[]) requiredPrimaryTypeNames.toArray(
-                new QName[requiredPrimaryTypeNames.size()]);
+        return requiredPrimaryTypeNames;
     }
 
     /**
-     * Adds a type name to the list of required primary types.
+     * Sets the list of required primary types.
      *
-     * @param requiredPrimaryTypeName type name
+     * @param requiredPrimaryTypeNames type names
      */
-    public void addRequiredPrimaryTypeName(QName requiredPrimaryTypeName) {
-        requiredPrimaryTypeNames.add(requiredPrimaryTypeName);
+    public void setRequiredPrimaryTypeName(QName[] requiredPrimaryTypeNames) {
+        this.requiredPrimaryTypeNames = requiredPrimaryTypeNames;
+        Arrays.sort(this.requiredPrimaryTypeNames);
     }
 
     /**
@@ -97,6 +88,21 @@ public class NodeDefinitionState extends ItemDefinitionState {
      */
     public void setAllowsSameNameSiblings(boolean allowsSameNameSiblings) {
         this.allowsSameNameSiblings = allowsSameNameSiblings;
+    }
+
+    public boolean equals(Object object) {
+        return (this == object)
+            || (object != null && new StateComparator().compare(this, object) == 0);
+    }
+
+    public int hashCode() {
+        int code = super.hashCode();
+        code = code * 17 + (allowsSameNameSiblings ? 1 : 0);
+        code = code * 17 + ((defaultPrimaryTypeName != null) ? defaultPrimaryTypeName.hashCode() : 0);
+        for (int i = 0; i < requiredPrimaryTypeNames.length; i++) {
+            code = code * 17 + requiredPrimaryTypeNames[i].hashCode();
+        }
+        return code;
     }
 
 }

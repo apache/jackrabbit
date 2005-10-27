@@ -24,34 +24,22 @@ import org.apache.jackrabbit.name.QName;
  * Item definition state. This base class contains the common
  * state properties used by both property and node definitions.
  */
-public class ItemDefinitionState {
+public class ItemDefinitionState implements Comparable {
 
     /** The qualified name of the defined item. */
-    private QName name;
+    private QName name = null;
 
     /** The AutoCreated item definition property. */
-    private boolean autoCreated;
+    private boolean autoCreated = false;
 
     /** The Mandatory item definition property. */
-    private boolean mandatory;
+    private boolean mandatory = false;
 
     /** The OnParentVersion item definition property. */
-    private int onParentVersion;
+    private int onParentVersion = OnParentVersionAction.COPY;
 
     /** The Protected item definition property. */
-    private boolean isProtected; // avoid the reserved word "protected"
-
-    /**
-     * Creates an empty item definition state instance. This constructor
-     * is protected because this class must only be used through subclasses.
-     */
-    protected ItemDefinitionState() {
-        name = null;
-        autoCreated = false;
-        mandatory = false;
-        onParentVersion = OnParentVersionAction.IGNORE;
-        isProtected = false;
-    }
+    private boolean isProtected = false; // avoid the reserved word "protected"
 
     /**
      * Returns the qualified name of the defined item.
@@ -143,4 +131,46 @@ public class ItemDefinitionState {
         this.isProtected = isProtected;
     }
 
+    public int compareTo(Object object) {
+        ItemDefinitionState that = (ItemDefinitionState) object;
+        if ((this.name == null) != (that.name == null)) {
+            return (name != null) ? -1 : 1;
+        } else if (this.name != null && this.name.compareTo(that.name) != 0) {
+            return this.name.compareTo(that.name);
+        } else if (this.autoCreated != that.autoCreated) {
+            return autoCreated ? -1 : 1;
+        } else if (this.mandatory != that.mandatory) {
+            return mandatory ? -1 : 1;
+        } else if (this.isProtected != that.isProtected) {
+            return isProtected ? -1 : 1;
+        } else {
+            return this.onParentVersion - that.onParentVersion;
+        }
+    }
+
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        } else if (object instanceof ItemDefinitionState) {
+            ItemDefinitionState that = (ItemDefinitionState) object;
+            return ((name != null) ? name.equals(that.name) : (that.name == null))
+                && this.autoCreated == that.autoCreated
+                && this.isProtected == that.isProtected
+                && this.mandatory == that.mandatory
+                && this.onParentVersion == that.onParentVersion;
+        } else {
+            return false;
+        }
+    }
+
+    public int hashCode() {
+        int code = 37;
+        code = code * 17 + ((name != null) ? name.hashCode() : 0);
+        code = code * 17 + (autoCreated ? 1 : 0);
+        code = code * 17 + (isProtected ? 1 : 0);
+        code = code * 17 + (mandatory ? 1 : 0);
+        code = code * 17 + onParentVersion;
+        return code;
+    }
+    
 }

@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.state.nodetype;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * Node type manager state. Instances of this class are used to hold
  * and manage the internal state of node type managers.
@@ -26,12 +23,7 @@ import java.util.Set;
 public class NodeTypeManagerState {
 
     /** Available node type states. */
-    private final Set types;
-
-    /** Creates an empty node type manager state instance. */
-    public NodeTypeManagerState() {
-        types = new HashSet();
-    }
+    private NodeTypeState[] nodeTypeStates;
 
     /**
      * Returns all available node type states.
@@ -39,16 +31,16 @@ public class NodeTypeManagerState {
      * @return node type states
      */
     public NodeTypeState[] getNodeTypeStates() {
-        return (NodeTypeState[]) types.toArray(new NodeTypeState[types.size()]);
+        return nodeTypeStates;
     }
 
     /**
-     * Adds a node type to the node type manager state.
+     * Sets the node type manager state.
      *
-     * @param state node type state
+     * @param nodeTypeStates node type states
      */
-    public void addNodeTypeState(NodeTypeState state) {
-        types.add(state);
+    public void setNodeTypeStates(NodeTypeState[] nodeTypeStates) {
+        this.nodeTypeStates = nodeTypeStates;
     }
 
 }
