@@ -422,7 +422,7 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
         String prefix = TEST_PREFIX;
         int i = 0;
         while (prefixes.contains(prefix)) {
-            prefix += i++;
+            prefix = TEST_PREFIX + i++;
         }
         return prefix;
     }
@@ -438,7 +438,7 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
         String uri = TEST_URI;
         int i = 0;
         while (uris.contains(uri)) {
-            uri += i++;
+            uri = TEST_URI + i++;
         }
         return uri;
     }
