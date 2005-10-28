@@ -14,41 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.state.obj;
+package org.apache.jackrabbit.core.state.util;
 
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 
-import java.io.InputStream;
-
 /**
- * <code>BLOBStore</code> ...
+ * <code>ResourceBasedBLOBStore</code> extends the <code>BLOBStore</code>
+ * interface with the method {@link #getResource(String)}
  */
-public interface BLOBStore {
+public interface ResourceBasedBLOBStore extends BLOBStore {
     /**
+     * Retrieves the BLOB data with the specified id as a permanent resource.
      *
-     * @param id id of the property associated with the blob data
-     * @param index subscript of the value holding the blob data
-     * @param in
-     * @param size
-     * @return a string identifying the blob data
-     * @throws Exception
+     * @param blobId identifier of the BLOB data as returned by
+     *               {@link #createId(PropertyId, int)}
+     * @return a resource representing the BLOB data
+     * @throws Exception if an error occured
      */
-    String put(PropertyId id, int index, InputStream in, long size) throws Exception;
-
-    /**
-     *
-     * @param blobId
-     * @return
-     * @throws Exception
-     */
-    FileSystemResource get(String blobId) throws Exception;
-
-    /**
-     *
-     * @param blobId
-     * @return
-     * @throws Exception
-     */
-    boolean remove(String blobId) throws Exception;
+    FileSystemResource getResource(String blobId) throws Exception;
 }
