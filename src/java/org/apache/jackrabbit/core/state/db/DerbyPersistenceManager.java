@@ -40,6 +40,9 @@ import java.sql.SQLException;
  * (default: <code>"derby"</code>)</li>
  * <li><code>user</code>: the database user (default: <code>""</code>)</li>
  * <li><code>password</code>: the user's password (default: <code>""</code>)</li>
+ * <li><code>externalBLOBs</code>: if <code>true</code> (the default) BINARY
+ * values (BLOBs) are stored in the local file system;
+ * if <code>false</code> BLOBs are stored in the database</li>
  * </ul>
  * See also {@link SimpleDbPersistenceManager}.
  * <p/>
@@ -48,6 +51,7 @@ import java.sql.SQLException;
  *   &lt;PersistenceManager class="org.apache.jackrabbit.core.state.db.DerbyPersistenceManager"&gt;
  *       &lt;param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
+ *       &lt;param name="externalBLOBs" value="false"/&gt;
  *  &lt;/PersistenceManager&gt;
  * </pre>
  */

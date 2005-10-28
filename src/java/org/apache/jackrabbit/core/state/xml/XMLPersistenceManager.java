@@ -84,6 +84,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     private static final String NODETYPE_ATTRIBUTE = "nodeType";
     private static final String PARENTUUID_ATTRIBUTE = "parentUUID";
     private static final String DEFINITIONID_ATTRIBUTE = "definitionId";
+    private static final String MODCOUNT_ATTRIBUTE = "modCount";
 
     private static final String MIXINTYPES_ELEMENT = "mixinTypes";
     private static final String MIXINTYPE_ELEMENT = "mixinType";
@@ -209,6 +210,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         String definitionId = walker.getAttribute(DEFINITIONID_ATTRIBUTE);
         state.setDefinitionId(NodeDefId.valueOf(definitionId));
 
+        // modification count
+        String modCount = walker.getAttribute(MODCOUNT_ATTRIBUTE);
+        // @todo set modCount
+        //state.setModCount(Integer.parseInt(modCount));
+
         // mixin types
         if (walker.enterElement(MIXINTYPES_ELEMENT)) {
             Set mixins = new HashSet();
@@ -284,6 +290,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         // definition id
         String definitionId = walker.getAttribute(DEFINITIONID_ATTRIBUTE);
         state.setDefinitionId(PropDefId.valueOf(definitionId));
+
+        // modification count
+        String modCount = walker.getAttribute(MODCOUNT_ATTRIBUTE);
+        // @todo set modCount
+        //state.setModCount(Integer.parseInt(modCount));
 
         // values
         ArrayList values = new ArrayList();
@@ -505,6 +516,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                         + UUID_ATTRIBUTE + "=\"" + state.getUUID() + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + (state.getParentUUID() == null ? "" : state.getParentUUID()) + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
+                        // @todo store real modCount
+                        + MODCOUNT_ATTRIBUTE + "=\"" + /*state.getModCount()*/ 0 + "\" "
                         + NODETYPE_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getNodeTypeName().toString()) + "\">\n");
 
                 // mixin types
@@ -592,6 +605,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                         + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentUUID() + "\" "
                         + MULTIVALUED_ATTRIBUTE + "=\"" + Boolean.toString(state.isMultiValued()) + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
+                        // @todo store real modCount
+                        + MODCOUNT_ATTRIBUTE + "=\"" + /*state.getModCount()*/ 0 + "\" "
                         + TYPE_ATTRIBUTE + "=\"" + typeName + "\">\n");
                 // values
                 writer.write("\t<" + VALUES_ELEMENT + ">\n");

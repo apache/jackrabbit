@@ -31,8 +31,9 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.obj.BLOBStore;
-import org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager;
+import org.apache.jackrabbit.core.state.util.BLOBStore;
+import org.apache.jackrabbit.core.state.util.FileSystemBLOBStore;
+import org.apache.jackrabbit.core.state.util.Serializer;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
@@ -46,8 +47,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -56,7 +55,7 @@ import java.util.Map;
  * <code>InMemPersistenceManager</code> is a very simple <code>HashMap</code>-based
  * <code>PersistenceManager</code> for Jackrabbit that keeps all data in memory
  * and that is capable of storing and loading its contents using a simple custom
- * serialization format.
+ * binary serialization format (see {@link Serializer}).
  * <p/>
  * It is configured through the following properties:
  * <ul>
@@ -68,8 +67,7 @@ import java.util.Map;
  * </ul>
  * <b>Please note that this class should only be used for testing purposes.</b>
  */
-public class InMemPersistenceManager extends AbstractPersistenceManager
-        implements BLOBStore {
+public class InMemPersistenceManager extends AbstractPersistenceManager {
 
     private static Logger log = Logger.getLogger(InMemPersistenceManager.class);
 
@@ -89,6 +87,8 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
 
     // file system where BLOB data is stored
     protected FileSystem blobFS;
+    // BLOBStore that manages BLOB data in the file system
+    protected BLOBStore blobStore;
 
     /**
      * file system where the content of the hash maps are read from/written to
@@ -193,9 +193,9 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
                     String s = in.readUTF();    // id
                     id = NodeId.valueOf(s);
                 } else {
-                    // entry type: node
+                    // entry type: property
                     String s = in.readUTF();    // id
-                    id = NodeId.valueOf(s);
+                    id = PropertyId.valueOf(s);
                 }
                 int length = in.readInt();  // data length
                 byte[] data = new byte[length];
@@ -283,48 +283,6 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         }
     }
 
-    //------------------------------------------------------------< BLOBStore >
-    /**
-     * {@inheritDoc}
-     */
-    public FileSystemResource get(String blobId) throws Exception {
-        return new FileSystemResource(blobFS, blobId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String put(PropertyId id, int index, InputStream in, long size) throws Exception {
-        String path = buildBlobFilePath(id.getParentUUID(), id.getName(), index);
-        OutputStream out = null;
-        FileSystemResource internalBlobFile = new FileSystemResource(blobFS, path);
-        internalBlobFile.makeParentDirs();
-        try {
-            out = new BufferedOutputStream(internalBlobFile.getOutputStream());
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = in.read(buffer)) > 0) {
-                out.write(buffer, 0, read);
-            }
-        } finally {
-            out.close();
-        }
-        return path;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean remove(String blobId) throws Exception {
-        FileSystemResource res = new FileSystemResource(blobFS, blobId);
-        if (!res.exists()) {
-            return false;
-        }
-        // delete resource and prune empty parent folders
-        res.delete(true);
-        return true;
-    }
-
     //---------------------------------------------------< PersistenceManager >
     /**
      * {@inheritDoc}
@@ -340,13 +298,14 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         wspFS = context.getFileSystem();
 
         /**
-         * store blob's in local file system in a sub directory
+         * store BLOB data in local file system in a sub directory
          * of the workspace home directory
          */
         LocalFileSystem blobFS = new LocalFileSystem();
         blobFS.setRoot(new File(context.getHomeDir(), "blobs"));
         blobFS.init();
         this.blobFS = blobFS;
+        blobStore = new FileSystemBLOBStore(blobFS);
 
         if (persistent) {
             // deserialize contents of state and refs stores
@@ -369,7 +328,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
                 // serialize contents of state and refs stores
                 storeContents();
             } else {
-                // clean out blob store
+                // clear out blob store
                 try {
                     String[] folders = blobFS.listFolders("/");
                     for (int i = 0; i < folders.length; i++) {
@@ -384,9 +343,10 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
                 }
             }
 
-            // close blob store
+            // close BLOB file system
             blobFS.close();
             blobFS = null;
+            blobStore = null;
 
             stateStore.clear();
             stateStore = null;
@@ -415,7 +375,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
             NodeState state = createNew(id);
-            ObjectPersistenceManager.deserialize(state, in);
+            Serializer.deserialize(state, in);
             return state;
         } catch (Exception e) {
             String msg = "failed to read node state: " + id;
@@ -442,7 +402,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
             PropertyState state = createNew(id);
-            ObjectPersistenceManager.deserialize(state, in, this);
+            Serializer.deserialize(state, in, blobStore);
             return state;
         } catch (Exception e) {
             String msg = "failed to read property state: " + id;
@@ -460,9 +420,10 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         }
 
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
+            ByteArrayOutputStream out =
+                    new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
             // serialize node state
-            ObjectPersistenceManager.serialize(state, out);
+            Serializer.serialize(state, out);
 
             // store in serialized format in map for better memory efficiency
             stateStore.put(state.getId(), out.toByteArray());
@@ -484,9 +445,10 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         }
 
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
+            ByteArrayOutputStream out =
+                    new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
             // serialize property state
-            ObjectPersistenceManager.serialize(state, out, this);
+            Serializer.serialize(state, out, blobStore);
 
             // store in serialized format in map for better memory efficiency
             stateStore.put(state.getId(), out.toByteArray());
@@ -556,7 +518,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
             NodeReferences refs = new NodeReferences(id);
-            ObjectPersistenceManager.deserialize(refs, in);
+            Serializer.deserialize(refs, in);
             return refs;
         } catch (Exception e) {
             String msg = "failed to load references: " + id.getUUID();
@@ -574,9 +536,10 @@ public class InMemPersistenceManager extends AbstractPersistenceManager
         }
 
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
+            ByteArrayOutputStream out =
+                    new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
             // serialize references
-            ObjectPersistenceManager.serialize(refs, out);
+            Serializer.serialize(refs, out);
 
             // store in serialized format in map for better memory efficiency
             stateStore.put(refs.getTargetId(), out.toByteArray());

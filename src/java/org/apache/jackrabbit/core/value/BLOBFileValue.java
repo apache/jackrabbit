@@ -126,6 +126,7 @@ public class BLOBFileValue implements Value {
                     // threshold for keeping data in memory exceeded;
                     // create temp file and spool buffer contents
                     spoolFile = File.createTempFile("bin", null);
+                    // @todo FIXME see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4513817http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4513817
                     spoolFile.deleteOnExit();
                     out = new FileOutputStream(spoolFile);
                     out.write(buffer, 0, len);
@@ -214,33 +215,6 @@ public class BLOBFileValue implements Value {
         file = null;
         // this instance is not backed by temporarily allocated resource/buffer
         temp = false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof BLOBFileValue) {
-            BLOBFileValue other = (BLOBFileValue) obj;
-            return ((file == null ? other.file == null : file.equals(other.file))
-                    && (fsResource == null ? other.fsResource == null : fsResource.equals(other.fsResource))
-                    && Arrays.equals(buffer, other.buffer));
-        }
-        return false;
-    }
-
-    /**
-     * Returns zero to satisfy the Object equals/hashCode contract.
-     * This class is mutable and not meant to be used as a hash key.
-     *
-     * @return always zero
-     * @see Object#hashCode()
-     */
-    public int hashCode() {
-        return 0;
     }
 
     /**
@@ -401,6 +375,33 @@ public class BLOBFileValue implements Value {
             // this instance is backed by a in-memory buffer
             return buffer.toString();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof BLOBFileValue) {
+            BLOBFileValue other = (BLOBFileValue) obj;
+            return ((file == null ? other.file == null : file.equals(other.file))
+                    && (fsResource == null ? other.fsResource == null : fsResource.equals(other.fsResource))
+                    && Arrays.equals(buffer, other.buffer));
+        }
+        return false;
+    }
+
+    /**
+     * Returns zero to satisfy the Object equals/hashCode contract.
+     * This class is mutable and not meant to be used as a hash key.
+     *
+     * @return always zero
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return 0;
     }
 
     //----------------------------------------------------------------< Value >
