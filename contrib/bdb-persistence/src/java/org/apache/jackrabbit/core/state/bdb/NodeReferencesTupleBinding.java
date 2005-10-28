@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.core.state.bdb;
 
-import java.util.Collection;
-import java.util.Iterator;
-
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
-
 import com.sleepycat.bind.tuple.TupleBinding;
 import com.sleepycat.bind.tuple.TupleInput;
 import com.sleepycat.bind.tuple.TupleOutput;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.util.Serializer;
 
 public class NodeReferencesTupleBinding extends TupleBinding {
+
+    private Log log = LogFactory.getLog(NodeReferencesTupleBinding.class);
 
     private NodeReferencesId id;
 
@@ -41,29 +41,29 @@ public class NodeReferencesTupleBinding extends TupleBinding {
     public Object entryToObject(TupleInput in) {
 
         NodeReferences refs = new NodeReferences(id);
-        refs.clearAllReferences();
 
-        // references
-        int count = in.readInt(); // count
-        for (int i = 0; i < count; i++) {
-            refs.addReference(PropertyId.valueOf(in.readString())); // propertyId
+        try {
+            Serializer.deserialize(refs, in);
+        } catch (Exception e) {
+            // since the TupleInput methods do not throw any
+            // exceptions the above call should neither...
+            String msg = "error while deserializing node references";
+            log.debug(msg);
+            throw new RuntimeException(msg, e);
         }
 
         return refs;
     }
 
     public void objectToEntry(Object o, TupleOutput out) {
-
-        NodeReferences refs = (NodeReferences) o;
-
-        // references
-        Collection c = refs.getReferences();
-        out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
-            PropertyId propId = (PropertyId) iter.next();
-            out.writeString(propId.toString()); // propertyId
+        try {
+            Serializer.serialize((NodeReferences) o, out);
+        } catch (Exception e) {
+            // since the TupleOutput methods do not throw any
+            // exceptions the above call should neither...
+            String msg = "error while serializing node references";
+            log.debug(msg);
+            throw new RuntimeException(msg, e);
         }
-
     }
-
 }

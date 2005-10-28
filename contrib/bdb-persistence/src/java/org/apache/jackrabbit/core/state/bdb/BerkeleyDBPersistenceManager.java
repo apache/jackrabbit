@@ -16,18 +16,19 @@
  */
 package org.apache.jackrabbit.core.state.bdb;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-
+import com.sleepycat.je.Database;
+import com.sleepycat.je.DatabaseConfig;
+import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.Environment;
+import com.sleepycat.je.EnvironmentConfig;
+import com.sleepycat.je.LockMode;
+import com.sleepycat.je.OperationStatus;
+import com.sleepycat.je.Transaction;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.state.AbstractPersistenceManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -38,18 +39,12 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.core.state.util.BLOBStore;
+import org.apache.jackrabbit.core.state.util.FileSystemBLOBStore;
 
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseConfig;
-import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.Environment;
-import com.sleepycat.je.EnvironmentConfig;
-import com.sleepycat.je.LockMode;
-import com.sleepycat.je.OperationStatus;
-import com.sleepycat.je.Transaction;
+import java.io.File;
 
-public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager implements BLOBStore {
+public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
 
     private static Log log = LogFactory.getLog(BerkeleyDBPersistenceManager.class);
 
@@ -58,7 +53,11 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
     private boolean initialized = false;
     private Environment environment;
     private Database database;
+    // file system where BLOB data is stored
     private FileSystem blobFS;
+    // BLOBStore that manages BLOB data in the file system
+    private BLOBStore blobStore;
+
     private ThreadLocal localTransaction = new ThreadLocal(); // ?? are persistence managers thread-safes ???
 
     //
@@ -70,8 +69,9 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
 
         // prepare the db directory
         File envDir = new File(context.getHomeDir(), "db");
-        if (!envDir.exists())
+        if (!envDir.exists()) {
             envDir.mkdirs();
+        }
 
         log.debug("init berkeleyDb environment at " + envDir.getAbsolutePath());
 
@@ -89,13 +89,14 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         database = environment.openDatabase(null, "jcrStore", dbConfig);
 
         /**
-         * store blob's in local file system in a sub directory
+         * store BLOB data in local file system in a sub directory
          * of the workspace home directory
          */
         LocalFileSystem blobFS = new LocalFileSystem();
         blobFS.setRoot(new File(context.getHomeDir(), "blobs"));
         blobFS.init();
         this.blobFS = blobFS;
+        blobStore = new FileSystemBLOBStore(blobFS);
 
         initialized = true;
     }
@@ -113,9 +114,10 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         // close environnement
         environment.close();
 
-        // close blob store
+        // close BLOB file system
         blobFS.close();
         blobFS = null;
+        blobStore = null;
 
         initialized = false;
     }
@@ -127,10 +129,11 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
             NodeStateTupleBinding tupleBinding = new NodeStateTupleBinding(id);
-            key.setData(id.toString().getBytes("UTF-8"));
+            key.setData(id.toString().getBytes(ENCODING));
             OperationStatus operationStatus = database.get(null, key, value, LockMode.DEFAULT);
-            if (operationStatus.equals(OperationStatus.NOTFOUND))
+            if (operationStatus.equals(OperationStatus.NOTFOUND)) {
                 throw new NoSuchItemStateException();
+            }
             return (NodeState) tupleBinding.entryToObject(value);
         } catch (NoSuchItemStateException e) {
             throw e;
@@ -144,11 +147,12 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         try {
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
-            PropertyStateTupleBinding tupleBinding = new PropertyStateTupleBinding(id, this);
-            key.setData(id.toString().getBytes("UTF-8"));
+            PropertyStateTupleBinding tupleBinding = new PropertyStateTupleBinding(id, blobStore);
+            key.setData(id.toString().getBytes(ENCODING));
             OperationStatus operationStatus = database.get(null, key, value, LockMode.DEFAULT);
-            if (operationStatus.equals(OperationStatus.NOTFOUND))
+            if (operationStatus.equals(OperationStatus.NOTFOUND)) {
                 throw new NoSuchItemStateException();
+            }
             return (PropertyState) tupleBinding.entryToObject(value);
         } catch (NoSuchItemStateException e) {
             throw e;
@@ -163,10 +167,11 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
             NodeReferencesTupleBinding tupleBinding = new NodeReferencesTupleBinding(id);
-            key.setData((id.toString() + ".references").getBytes("UTF-8"));
+            key.setData((id.toString() + ".references").getBytes(ENCODING));
             OperationStatus operationStatus = database.get(null, key, value, LockMode.DEFAULT);
-            if (operationStatus.equals(OperationStatus.NOTFOUND))
+            if (operationStatus.equals(OperationStatus.NOTFOUND)) {
                 throw new NoSuchItemStateException();
+            }
             return (NodeReferences) tupleBinding.entryToObject(value);
         } catch (NoSuchItemStateException e) {
             throw e;
@@ -180,7 +185,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         try {
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
-            key.setData(id.toString().getBytes("UTF-8"));
+            key.setData(id.toString().getBytes(ENCODING));
             OperationStatus operationStatus = database.get(null, key, value, LockMode.DEFAULT);
             return operationStatus.equals(OperationStatus.SUCCESS);
         } catch (Exception e) {
@@ -193,7 +198,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         try {
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
-            key.setData(id.toString().getBytes("UTF-8"));
+            key.setData(id.toString().getBytes(ENCODING));
             OperationStatus operationStatus = database.get(null, key, value, LockMode.DEFAULT);
             return operationStatus.equals(OperationStatus.SUCCESS);
         } catch (Exception e) {
@@ -206,7 +211,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         try {
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
-            key.setData((targetId.toString() + ".references").getBytes("UTF-8"));
+            key.setData((targetId.toString() + ".references").getBytes(ENCODING));
             OperationStatus operationStatus = database.get(null, key, value, LockMode.DEFAULT);
             return operationStatus.equals(OperationStatus.SUCCESS);
         } catch (Exception e) {
@@ -244,11 +249,12 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
             NodeStateTupleBinding tupleBinding = new NodeStateTupleBinding();
-            key.setData(state.getId().toString().getBytes("UTF-8"));
+            key.setData(state.getId().toString().getBytes(ENCODING));
             tupleBinding.objectToEntry(state, value);
             OperationStatus operationStatus = database.put(transaction, key, value);
-            if (!operationStatus.equals(OperationStatus.SUCCESS))
+            if (!operationStatus.equals(OperationStatus.SUCCESS)) {
                 throw new ItemStateException(operationStatus.toString());
+            }
         } catch (Exception e) {
             log.error(e);
             throw new ItemStateException(e);
@@ -260,12 +266,13 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
             Transaction transaction = (Transaction) localTransaction.get();
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
-            PropertyStateTupleBinding tupleBinding = new PropertyStateTupleBinding(this);
-            key.setData(state.getId().toString().getBytes("UTF-8"));
+            PropertyStateTupleBinding tupleBinding = new PropertyStateTupleBinding(blobStore);
+            key.setData(state.getId().toString().getBytes(ENCODING));
             tupleBinding.objectToEntry(state, value);
             OperationStatus operationStatus = database.put(transaction, key, value);
-            if (!operationStatus.equals(OperationStatus.SUCCESS))
+            if (!operationStatus.equals(OperationStatus.SUCCESS)) {
                 throw new ItemStateException(operationStatus.toString());
+            }
         } catch (Exception e) {
             log.error(e);
             throw new ItemStateException(e);
@@ -278,11 +285,12 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
             NodeReferencesTupleBinding tupleBinding = new NodeReferencesTupleBinding();
-            key.setData((refs.getTargetId().toString() + ".references").getBytes("UTF-8"));
+            key.setData((refs.getTargetId().toString() + ".references").getBytes(ENCODING));
             tupleBinding.objectToEntry(refs, value);
             OperationStatus operationStatus = database.put(transaction, key, value);
-            if (!operationStatus.equals(OperationStatus.SUCCESS))
+            if (!operationStatus.equals(OperationStatus.SUCCESS)) {
                 throw new ItemStateException(operationStatus.toString());
+            }
         } catch (Exception e) {
             log.error(e);
             throw new ItemStateException(e);
@@ -293,10 +301,11 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         try {
             Transaction transaction = (Transaction) localTransaction.get();
             DatabaseEntry key = new DatabaseEntry();
-            key.setData(state.getId().toString().getBytes("UTF-8"));
+            key.setData(state.getId().toString().getBytes(ENCODING));
             OperationStatus operationStatus = database.delete(transaction, key);
-            if (!operationStatus.equals(OperationStatus.SUCCESS))
+            if (!operationStatus.equals(OperationStatus.SUCCESS)) {
                 throw new ItemStateException(operationStatus.toString());
+            }
         } catch (Exception e) {
             log.error(e);
             throw new ItemStateException(e);
@@ -307,10 +316,11 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         try {
             Transaction transaction = (Transaction) localTransaction.get();
             DatabaseEntry key = new DatabaseEntry();
-            key.setData(state.getId().toString().getBytes("UTF-8"));
+            key.setData(state.getId().toString().getBytes(ENCODING));
             OperationStatus operationStatus = database.delete(transaction, key);
-            if (!operationStatus.equals(OperationStatus.SUCCESS))
+            if (!operationStatus.equals(OperationStatus.SUCCESS)) {
                 throw new ItemStateException(operationStatus.toString());
+            }
         } catch (Exception e) {
             log.error(e);
             throw new ItemStateException(e);
@@ -321,65 +331,14 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager imp
         try {
             Transaction transaction = (Transaction) localTransaction.get();
             DatabaseEntry key = new DatabaseEntry();
-            key.setData((refs.getTargetId().toString() + ".references").getBytes("UTF-8"));
+            key.setData((refs.getTargetId().toString() + ".references").getBytes(ENCODING));
             OperationStatus operationStatus = database.delete(transaction, key);
-            if (!operationStatus.equals(OperationStatus.SUCCESS))
+            if (!operationStatus.equals(OperationStatus.SUCCESS)) {
                 throw new ItemStateException(operationStatus.toString());
+            }
         } catch (Exception e) {
             log.error(e);
             throw new ItemStateException(e);
         }
     }
-
-    // blobs
-
-    public FileSystemResource get(String blobId) throws Exception {
-        return new FileSystemResource(blobFS, blobId);
-    }
-
-    public String put(PropertyId id, int index, InputStream in, long size) throws Exception {
-        String path = buildBlobFilePath(id.getParentUUID(), id.getName(), index);
-        OutputStream out = null;
-        FileSystemResource internalBlobFile = new FileSystemResource(blobFS, path);
-        internalBlobFile.makeParentDirs();
-        try {
-            out = new BufferedOutputStream(internalBlobFile.getOutputStream());
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = in.read(buffer)) > 0) {
-                out.write(buffer, 0, read);
-            }
-        } finally {
-            out.close();
-        }
-        return path;
-    }
-
-    public boolean remove(String blobId) throws Exception {
-        FileSystemResource res = new FileSystemResource(blobFS, blobId);
-        if (!res.exists()) {
-            return false;
-        }
-        // delete resource and prune empty parent folders
-        res.delete(true);
-        return true;
-    }
-
-    private static String buildBlobFilePath(String parentUUID, QName propName, int it) {
-        StringBuffer sb = new StringBuffer();
-        char[] chars = parentUUID.toCharArray();
-        int cnt = 0;
-        for (int i = 0; i < chars.length; i++) {
-            if (chars[i] == '-') {
-                continue;
-            }
-            if (cnt == 2 || cnt == 4) {
-                sb.append(FileSystem.SEPARATOR_CHAR);
-            }
-            sb.append(chars[i]);
-            cnt++;
-        }
-        return sb.toString() + FileSystem.SEPARATOR + FileSystemPathUtil.escapeName(propName.toString()) + "." + it + ".bin";
-    }
-
 }
