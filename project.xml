@@ -247,6 +247,33 @@
 
     <contributors>
         <contributor>
+            <name>Lydia Balazs</name>
+            <email/>
+            <organization>Day Software</organization>
+            <roles>
+                <role>Unit Tests</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
+        <contributor>
+            <name>Guillaume Bort</name>
+            <email>guillaume.bort@zenexity.fr</email>
+            <organization>zenexity.fr</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
+        <contributor>
+            <name>Norbert Braeker</name>
+            <email/>
+            <organization>Day Software</organization>
+            <roles>
+                <role>Unit Tests</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
+        <contributor>
             <name>Serge Huber</name>
             <email/>
             <organization/>
@@ -265,20 +292,20 @@
             <timezone>+1</timezone>
         </contributor>
         <contributor>
-            <name>Angela Schreiber</name>
-            <email/>
-            <organization>Day Software</organization>
+            <name>Brian Moseley</name>
+            <email>bcm@osafoundation.org</email>
+            <organization>Open Source Applications Foundation (OSAF)</organization>
             <roles>
                 <role>Java Developer</role>
             </roles>
-            <timezone>+1</timezone>
+            <timezone>-8</timezone>
         </contributor>
         <contributor>
-            <name>Guillaume Bort</name>
-            <email>guillaume.bort@zenexity.fr</email>
-            <organization>zenexity.fr</organization>
+            <name>Mike Pfaff</name>
+            <email/>
+            <organization>Day Software</organization>
             <roles>
-                <role>Java Developer</role>
+                <role>Unit Tests</role>
             </roles>
             <timezone>+1</timezone>
         </contributor>
@@ -292,13 +319,22 @@
             <timezone>+1</timezone>
         </contributor>
         <contributor>
-            <name>Brian Moseley</name>
-            <email>bcm@osafoundation.org</email>
-            <organization>Open Source Applications Foundation (OSAF)</organization>
+            <name>Angela Schreiber</name>
+            <email/>
+            <organization>Day Software</organization>
             <roles>
                 <role>Java Developer</role>
             </roles>
-            <timezone>-8</timezone>
+            <timezone>+1</timezone>
+        </contributor>
+        <contributor>
+            <name>Vinzenz Wyser</name>
+            <email/>
+            <organization>Day Software</organization>
+            <roles>
+                <role>Unit Tests</role>
+            </roles>
+            <timezone>+1</timezone>
         </contributor>
     </contributors>
 
