@@ -23,16 +23,22 @@
 
 <section name="Apache Jackrabbit">
 <p>
-The Jackrabbit Project has been formed to develop an open source implementation
-of the Content Repository for Java Technology API (JCR), being specified within
-the Java Community Process as
-<a href="http://www.jcp.org/en/jsr/detail?id=170">JSR-170</a>.
-<a href="http://www.day.com/">Day Software</a>, the JSR-170 specification lead,
+<a href="http://www.apachecon.com/2005/US/index.html"
+   class="externalLink" title="External Link"><img
+   src="http://www.apache.org/images/ac2005us_white_184x80.jpg"
+   width="184" height="80" border="0" title="ApacheCon US 2005"
+   align="right" valign="top" alt="ApacheCon 2005 US"></img></a>
+The Apache Jackrabbit Project has been formed to develop an open source
+implementation of the Content Repository for Java Technology API (JCR),
+as specified within the Java Community Process as
+<a href="http://www.jcp.org/en/jsr/detail?id=170">JSR 170</a> and
+<a href="http://www.jcp.org/en/jsr/detail?id=170">JSR 283</a>.
+<a href="http://www.day.com/">Day Software</a>, the JCR specification lead,
 has licensed an initial implementation of the JCR reference implementation for
 use as seed code for this project.  JCR specifies an API for application
 developers (and application frameworks) to use for interaction with modern
-content repositories that provide content services such as searching, versioning, 
-transactions, etc.
+content repositories that provide content services such as searching,
+versioning, transactions, etc.
 </p>
 <p>
 Jackrabbit's implementation began as a proposal within the
@@ -44,7 +50,7 @@ integration with projects such as Beehive, Maven, and Portals.
 </p>
 <p>
 The purpose of this incubation period is to attract additional contributors
-from other Apache projects and from the various JSR-170 expert group companies,
+from other Apache projects and from the various expert group companies,
 learn the Apache way of doing things, and allow the developers to focus on this
 interface/implementation rather than all of the existing projects that might
 want to use it.  We hope to improve collaboration on the code base by moving
