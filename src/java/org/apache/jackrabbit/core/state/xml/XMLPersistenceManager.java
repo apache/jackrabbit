@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -34,6 +33,9 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.util.BLOBStore;
+import org.apache.jackrabbit.core.state.util.FileSystemBLOBStore;
+import org.apache.jackrabbit.core.state.util.ResourceBasedBLOBStore;
 import org.apache.jackrabbit.core.util.DOMWalker;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -112,9 +114,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     private boolean initialized;
 
     // file system where the item state is stored
-    private FileSystem itemStateStore;
+    private FileSystem itemStateFS;
     // file system where BLOB data is stored
-    private FileSystem blobStore;
+    private FileSystem blobFS;
+    // BLOBStore that manages BLOB data in the file system
+    private BLOBStore blobStore;
 
     /**
      * Creates a new <code>XMLPersistenceManager</code> instance.
@@ -163,11 +167,6 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         return buildNodeFolderPath(parentUUID) + "/" + fileName;
     }
 
-    private String buildBlobFilePath(String parentUUID, QName propName, int i) {
-        return buildNodeFolderPath(parentUUID) + "/"
-                + FileSystemPathUtil.escapeName(propName.toString()) + "." + i + ".bin";
-    }
-
     private String buildNodeFilePath(String uuid) {
         return buildNodeFolderPath(uuid) + "/" + NODEFILENAME;
     }
@@ -180,7 +179,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throws ItemStateException {
         // first do some paranoid sanity checks
         if (!walker.getName().equals(NODE_ELEMENT)) {
-            String msg = "invalid serialization format (unexpected element: " + walker.getName() + ")";
+            String msg = "invalid serialization format (unexpected element: "
+                    + walker.getName() + ")";
             log.debug(msg);
             throw new ItemStateException(msg);
         }
@@ -212,8 +212,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         // modification count
         String modCount = walker.getAttribute(MODCOUNT_ATTRIBUTE);
-        // @todo set modCount
-        //state.setModCount(Integer.parseInt(modCount));
+        state.setModCount(Short.parseShort(modCount));
 
         // mixin types
         if (walker.enterElement(MIXINTYPES_ELEMENT)) {
@@ -252,7 +251,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throws ItemStateException {
         // first do some paranoid sanity checks
         if (!walker.getName().equals(PROPERTY_ELEMENT)) {
-            String msg = "invalid serialization format (unexpected element: " + walker.getName() + ")";
+            String msg = "invalid serialization format (unexpected element: "
+                    + walker.getName() + ")";
             log.debug(msg);
             throw new ItemStateException(msg);
         }
@@ -293,8 +293,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         // modification count
         String modCount = walker.getAttribute(MODCOUNT_ATTRIBUTE);
-        // @todo set modCount
-        //state.setModCount(Integer.parseInt(modCount));
+        state.setModCount(Short.parseShort(modCount));
 
         // values
         ArrayList values = new ArrayList();
@@ -308,18 +307,27 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 } else if (content.length() > 0) {
                     // non-empty non-STRING value
                     if (type == PropertyType.BINARY) {
-                        // special handling required for binary value:
-                        // the value stores the path to the actual binary file
-                        // in the blob store
                         try {
-                            values.add(InternalValue.create(
-                                    new FileSystemResource(blobStore, content)));
-                        } catch (IOException ioe) {
+                            // special handling required for binary value:
+                            // the value stores the id of the BLOB data
+                            // in the BLOB store
+                            if (blobStore instanceof ResourceBasedBLOBStore) {
+                                // optimization: if the BLOB store is resource-based
+                                // retrieve the resource directly rather than having
+                                // to read the BLOB from an input stream
+                                FileSystemResource fsRes =
+                                        ((ResourceBasedBLOBStore) blobStore).getResource(content);
+                                values.add(InternalValue.create(fsRes));
+                            } else {
+                                values.add(InternalValue.create(blobStore.get(content)));
+                            }
+                        } catch (Exception e) {
                             String msg = "error while reading serialized binary value";
                             log.debug(msg);
-                            throw new ItemStateException(msg, ioe);
+                            throw new ItemStateException(msg, e);
                         }
                     } else {
+                        // non-empty non-STRING non-BINARY value
                         values.add(InternalValue.valueOf(content, type));
                     }
                 } else {
@@ -367,18 +375,17 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("already initialized");
         }
 
-        itemStateStore = new BasedFileSystem(context.getFileSystem(), "/data");
+        itemStateFS = new BasedFileSystem(context.getFileSystem(), "/data");
 
-        //blobStore = new BasedFileSystem(wspFS, "/blobs");
         /**
-         * store blob's in local file system in a sub directory
+         * store BLOB data in local file system in a sub directory
          * of the workspace home directory
-         * todo make blob store configurable
          */
         LocalFileSystem blobFS = new LocalFileSystem();
         blobFS.setRoot(new File(context.getHomeDir(), "blobs"));
         blobFS.init();
-        blobStore = blobFS;
+        this.blobFS = blobFS;
+        blobStore = new FileSystemBLOBStore(blobFS);
 
         initialized = true;
     }
@@ -392,8 +399,9 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         }
 
         try {
-            // close blob store
-            blobStore.close();
+            // close BLOB file system
+            blobFS.close();
+            blobFS = null;
             blobStore = null;
             /**
              * there's no need close the item state store because it
@@ -419,10 +427,10 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         String nodeFilePath = buildNodeFilePath(id.getUUID());
 
         try {
-            if (!itemStateStore.isFile(nodeFilePath)) {
+            if (!itemStateFS.isFile(nodeFilePath)) {
                 throw new NoSuchItemStateException(id.toString());
             }
-            InputStream in = itemStateStore.getInputStream(nodeFilePath);
+            InputStream in = itemStateFS.getInputStream(nodeFilePath);
 
             try {
                 DOMWalker walker = new DOMWalker(in);
@@ -461,10 +469,10 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         String propFilePath = buildPropFilePath(id.getParentUUID(), id.getName());
 
         try {
-            if (!itemStateStore.isFile(propFilePath)) {
+            if (!itemStateFS.isFile(propFilePath)) {
                 throw new NoSuchItemStateException(id.toString());
             }
-            InputStream in = itemStateStore.getInputStream(propFilePath);
+            InputStream in = itemStateFS.getInputStream(propFilePath);
             try {
                 DOMWalker walker = new DOMWalker(in);
                 PropertyState state = createNew(id);
@@ -495,7 +503,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         String uuid = state.getUUID();
         String nodeFilePath = buildNodeFilePath(uuid);
-        FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
+        FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
         try {
             nodeFile.makeParentDirs();
             OutputStream os = nodeFile.getOutputStream();
@@ -516,8 +524,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                         + UUID_ATTRIBUTE + "=\"" + state.getUUID() + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + (state.getParentUUID() == null ? "" : state.getParentUUID()) + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
-                        // @todo store real modCount
-                        + MODCOUNT_ATTRIBUTE + "=\"" + /*state.getModCount()*/ 0 + "\" "
+                        + MODCOUNT_ATTRIBUTE + "=\"" + state.getModCount() + "\" "
                         + NODETYPE_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getNodeTypeName().toString()) + "\">\n");
 
                 // mixin types
@@ -573,7 +580,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         }
 
         String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
-        FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
+        FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
         try {
             propFile.makeParentDirs();
             OutputStream os = propFile.getOutputStream();
@@ -605,8 +612,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                         + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentUUID() + "\" "
                         + MULTIVALUED_ATTRIBUTE + "=\"" + Boolean.toString(state.isMultiValued()) + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
-                        // @todo store real modCount
-                        + MODCOUNT_ATTRIBUTE + "=\"" + /*state.getModCount()*/ 0 + "\" "
+                        + MODCOUNT_ATTRIBUTE + "=\"" + state.getModCount() + "\" "
                         + TYPE_ATTRIBUTE + "=\"" + typeName + "\">\n");
                 // values
                 writer.write("\t<" + VALUES_ELEMENT + ">\n");
@@ -618,31 +624,25 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                         if (val != null) {
                             if (type == PropertyType.BINARY) {
                                 // special handling required for binary value:
-                                // spool binary value to file in blob store
+                                // put binary value in BLOB store
                                 BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
-                                String binPath = buildBlobFilePath(state.getParentUUID(), state.getName(), i);
-                                OutputStream binOut = null;
-                                FileSystemResource internalBlobFile = new FileSystemResource(blobStore, binPath);
-                                internalBlobFile.makeParentDirs();
+                                InputStream in = blobVal.getStream();
+                                String blobId = blobStore.createId((PropertyId) state.getId(), i);
                                 try {
-                                    binOut = internalBlobFile.getOutputStream();
-                                    blobVal.spool(binOut);
+                                    blobStore.put(blobId, in, blobVal.getLength());
                                 } finally {
                                     try {
-                                        if (binOut != null) {
-                                            binOut.close();
-                                        }
-                                    } catch (IOException ioe) {
+                                        in.close();
+                                    } catch (IOException e) {
+                                        // ignore
                                     }
                                 }
-                                // store path to binary file as property value
-                                writer.write(binPath);
-                                // FIXME: hack!
-                                // replace value instance with value
-                                // backed by internal file and delete temp file
-                                values[i] = InternalValue.create(internalBlobFile);
+                                // store id of BLOB as property value
+                                writer.write(blobId);
+                                // replace value instance with value backed by resource
+                                // in BLOB store and discard old value instance (e.g. temp file)
+                                values[i] = InternalValue.create(blobStore.get(blobId));
                                 blobVal.discard();
-                                blobVal = null; // gc hint
                             } else {
                                 writer.write(Text.encodeIllegalXMLCharacters(val.toString()));
                             }
@@ -672,7 +672,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         String uuid = state.getUUID();
         String nodeFilePath = buildNodeFilePath(uuid);
-        FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
+        FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
         try {
             if (nodeFile.exists()) {
                 // delete resource and prune empty parent folders
@@ -709,7 +709,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         }
         // delete property file
         String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
-        FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
+        FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
         try {
             if (propFile.exists()) {
                 // delete resource and prune empty parent folders
@@ -737,11 +737,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         String refsFilePath = buildNodeReferencesFilePath(uuid);
         try {
-            if (!itemStateStore.isFile(refsFilePath)) {
+            if (!itemStateFS.isFile(refsFilePath)) {
                 throw new NoSuchItemStateException(uuid);
             }
 
-            InputStream in = itemStateStore.getInputStream(refsFilePath);
+            InputStream in = itemStateFS.getInputStream(refsFilePath);
 
             try {
                 DOMWalker walker = new DOMWalker(in);
@@ -773,7 +773,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         String uuid = refs.getUUID();
         String refsFilePath = buildNodeReferencesFilePath(uuid);
-        FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
+        FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             refsFile.makeParentDirs();
             OutputStream os = refsFile.getOutputStream();
@@ -819,7 +819,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         String uuid = refs.getUUID();
         String refsFilePath = buildNodeReferencesFilePath(uuid);
-        FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
+        FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             if (refsFile.exists()) {
                 // delete resource and prune empty parent folders
@@ -842,7 +842,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         try {
             String nodeFilePath = buildNodeFilePath(id.getUUID());
-            FileSystemResource nodeFile = new FileSystemResource(itemStateStore, nodeFilePath);
+            FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
             return nodeFile.exists();
         } catch (FileSystemException fse) {
             String msg = "failed to check existence of item state: " + id;
@@ -861,7 +861,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         try {
             String propFilePath = buildPropFilePath(id.getParentUUID(), id.getName());
-            FileSystemResource propFile = new FileSystemResource(itemStateStore, propFilePath);
+            FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
             return propFile.exists();
         } catch (FileSystemException fse) {
             String msg = "failed to check existence of item state: " + id;
@@ -883,7 +883,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         try {
             String uuid = id.getUUID();
             String refsFilePath = buildNodeReferencesFilePath(uuid);
-            FileSystemResource refsFile = new FileSystemResource(itemStateStore, refsFilePath);
+            FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
             return refsFile.exists();
         } catch (FileSystemException fse) {
             String msg = "failed to check existence of references: " + id;
