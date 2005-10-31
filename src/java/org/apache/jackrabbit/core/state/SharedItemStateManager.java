@@ -447,6 +447,10 @@ public class SharedItemStateManager
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
+
+                    // update modification count (will be persisted as well)
+                    state.getOverlayedState().touch();
+
                     shared.modified(state.getOverlayedState());
                 }
                 for (Iterator iter = local.deletedStates(); iter.hasNext();) {
@@ -739,8 +743,6 @@ public class SharedItemStateManager
         } else {
             state = persistMgr.load((PropertyId) id);
         }
-        // init modification counter
-        state.touch();
         return state;
     }
 

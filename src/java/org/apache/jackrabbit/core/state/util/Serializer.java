@@ -85,8 +85,8 @@ public final class Serializer {
         for (Iterator iter = c.iterator(); iter.hasNext();) {
             out.writeUTF(iter.next().toString());   // name
         }
-        // modCount @todo store real modCount
-        out.writeInt(0);
+        // modCount
+        out.writeShort(state.getModCount());
         // properties (names)
         c = state.getPropertyNames();
         out.writeInt(c.size()); // count
@@ -140,9 +140,8 @@ public final class Serializer {
             state.setMixinTypeNames(set);
         }
         // modCount
-        int modCount = in.readInt();
-        // @todo set modCount
-        //state.setModCount(modCount);
+        short modCount = in.readShort();
+        state.setModCount(modCount);
         // properties (names)
         count = in.readInt();   // count
         for (int i = 0; i < count; i++) {
@@ -182,8 +181,8 @@ public final class Serializer {
         out.writeBoolean(state.isMultiValued());
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
-        // modCount @todo store real modCount
-        out.writeInt(0);
+        // modCount
+        out.writeShort(state.getModCount());
         // values
         InternalValue[] values = state.getValues();
         out.writeInt(values.length); // count
@@ -250,9 +249,8 @@ public final class Serializer {
         String s = in.readUTF();
         state.setDefinitionId(PropDefId.valueOf(s));
         // modCount
-        int modCount = in.readInt();
-        // @todo set modCount
-        //state.setModCount(modCount);
+        short modCount = in.readShort();
+        state.setModCount(modCount);
         // values
         int count = in.readInt();   // count
         InternalValue[] values = new InternalValue[count];

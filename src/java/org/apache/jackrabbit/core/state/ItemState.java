@@ -38,8 +38,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
 
     private static Logger log = Logger.getLogger(ItemState.class);
 
-    private static long LAST_MOD_COUNT = 1;
-
     /**
      * flags defining the current status of this <code>ItemState</code> instance
      */
@@ -80,7 +78,10 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected String parentUUID;
 
-    private transient long modCount;
+    /**
+     * a modification counter used to prevent concurrent modifications
+     */
+    private short modCount;
 
     protected ItemId id;
 
@@ -159,23 +160,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Returns the modification count.
-     * @return the modification count.
-     */
-    long getModCount() {
-        return modCount;
-    }
-
-    /**
-     * Updates the modification count.
-     */
-    void touch() {
-        synchronized (ItemState.class) {
-            modCount = LAST_MOD_COUNT++;
-        }
-    }
-
-    /**
      * Pull state information from overlayed state.
      */
     void pull() {
@@ -238,10 +222,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
         if (overlayedState != null) {
             // de-register listener on overlayed state...
             overlayedState.removeListener(this);
-            // ...but still keep reference to overlayed state to allow
-            // reconnecting at a later stage and to make sure
-            // it is not accidentally collected by the gc
-            //overlayedState = null;
+            overlayedState = null;
         }
     }
 
@@ -417,6 +398,31 @@ public abstract class ItemState implements ItemStateListener, Serializable {
                 log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
+    }
+
+    /**
+     * Returns the modification count.
+     *
+     * @return the modification count.
+     */
+    public short getModCount() {
+        return modCount;
+    }
+
+    /**
+     * Sets the modification count.
+     *
+     * @param modCount the modification count of this item
+     */
+    public void setModCount(short modCount) {
+        this.modCount = modCount;
+    }
+
+    /**
+     * Updates the modification count.
+     */
+    synchronized void touch() {
+        modCount++;
     }
 
     /**
