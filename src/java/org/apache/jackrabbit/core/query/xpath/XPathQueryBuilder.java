@@ -591,26 +591,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         // traverse
         node.childrenAccept(this, rqn);
 
-        // if property name is jcr:primaryType treat special
-        if (QName.JCR_PRIMARYTYPE.equals(rqn.getProperty())) {
-            if (rqn.getValueType() == RelationQueryNode.TYPE_STRING) {
-                try {
-                    QName ntName = QName.fromJCRName(rqn.getStringValue(), resolver);
-                    NodeTypeQueryNode ntNode = new NodeTypeQueryNode(queryNode, ntName);
-                    queryNode.addOperand(ntNode);
-                } catch (IllegalNameException e) {
-                    exceptions.add(new InvalidQueryException("Not a valid name: " + rqn.getStringValue()));
-                } catch (UnknownPrefixException e) {
-                    exceptions.add(new InvalidQueryException("Unknown prefix in name: " + rqn.getStringValue()));
-                }
-            } else {
-                // value is not of type string
-                exceptions.add(new InvalidQueryException("Invalid type: jcr:primaryType must be a string"));
-            }
-        } else {
-            // property name is <> jcr:primaryType
-            queryNode.addOperand(rqn);
-        }
+        queryNode.addOperand(rqn);
     }
 
     /**
