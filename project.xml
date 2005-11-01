@@ -114,6 +114,15 @@
             <timezone>+1</timezone>
         </developer>
         <developer>
+            <name>Serge Huber</name>
+            <email/>
+            <organization/>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
             <name>Stefano Mazzocchi</name>
             <id>stefano</id>
             <email/>
@@ -122,6 +131,24 @@
                 <role>Java Developer</role>
             </roles>
             <timezone>-5</timezone>
+        </developer>
+        <developer>
+            <name>Felix Meschberger</name>
+            <email/>
+            <organization>Day Software</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Brian Moseley</name>
+            <email>bcm@osafoundation.org</email>
+            <organization>Open Source Applications Foundation (OSAF)</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>-8</timezone>
         </developer>
         <developer>
             <name>David Nuescheler</name>
@@ -204,6 +231,15 @@
             <timezone>+0</timezone>
         </developer>
         <developer>
+            <name>Angela Schreiber</name>
+            <email/>
+            <organization>Day Software</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
             <name>Tobias Strasser</name>
             <id>tripod</id>
             <email/>
@@ -274,15 +310,6 @@
             <timezone>+1</timezone>
         </contributor>
         <contributor>
-            <name>Serge Huber</name>
-            <email/>
-            <organization/>
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </contributor>
-        <contributor>
             <name>Philipp Koch</name>
             <email/>
             <organization>Day Software</organization>
@@ -290,24 +317,6 @@
                 <role>TCK Webapp</role>
             </roles>
             <timezone>+1</timezone>
-        </contributor>
-        <contributor>
-            <name>Felix Meschberger</name>
-            <email/>
-            <organization>Day Software</organization>
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </contributor>
-        <contributor>
-            <name>Brian Moseley</name>
-            <email>bcm@osafoundation.org</email>
-            <organization>Open Source Applications Foundation (OSAF)</organization>
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>-8</timezone>
         </contributor>
         <contributor>
             <name>Mike Pfaff</name>
@@ -322,15 +331,6 @@
             <name>Sten Roger Sandvik</name>
             <email>srs@x3m.com</email>
             <organization>x3m.com</organization>
-            <roles>
-                <role>Java Developer</role>
-            </roles>
-            <timezone>+1</timezone>
-        </contributor>
-        <contributor>
-            <name>Angela Schreiber</name>
-            <email/>
-            <organization>Day Software</organization>
             <roles>
                 <role>Java Developer</role>
             </roles>
