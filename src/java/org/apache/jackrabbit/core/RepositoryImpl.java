@@ -715,19 +715,9 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         // close active user sessions
-        // (copy sessions to array to avoid ConcurrentModificationException)
-        int cnt = 0;
-        SessionImpl[] sa = new SessionImpl[activeSessions.size()];
-        for (Iterator it = activeSessions.values().iterator(); it.hasNext(); cnt++) {
-            sa[cnt] = (SessionImpl) it.next();
-        }
-        for (int i = 0; i < sa.length; i++) {
-            if (sa[i] != null) {
-                sa[i].removeListener(this);
-                sa[i].logout();
-            }
-        }
-        activeSessions.clear();
+        while (!activeSessions.isEmpty()) {
+           ((Session) activeSessions.values().iterator().next()).logout();
+       }
 
         // shut down workspaces
         for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
