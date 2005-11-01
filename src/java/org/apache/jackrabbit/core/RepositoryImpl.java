@@ -705,10 +705,7 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * Shuts down this repository. Note that this method is called automatically
-     * through a shutdown hook.
-     *
-     * @see Runtime#addShutdownHook(Thread)
+     * Shuts down this repository.
      */
     public synchronized void shutdown() {
         // check status of this instance
@@ -718,10 +715,17 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         // close active user sessions
-        for (Iterator it = activeSessions.values().iterator(); it.hasNext();) {
-            SessionImpl session = (SessionImpl) it.next();
-            session.removeListener(this);
-            session.logout();
+        // (copy sessions to array to avoid ConcurrentModificationException)
+        int cnt = 0;
+        SessionImpl[] sa = new SessionImpl[activeSessions.size()];
+        for (Iterator it = activeSessions.values().iterator(); it.hasNext(); cnt++) {
+            sa[cnt] = (SessionImpl) it.next();
+        }
+        for (int i = 0; i < sa.length; i++) {
+            if (sa[i] != null) {
+                sa[i].removeListener(this);
+                sa[i].logout();
+            }
         }
         activeSessions.clear();
 
