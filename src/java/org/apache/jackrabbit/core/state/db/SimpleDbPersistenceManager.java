@@ -768,7 +768,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public boolean exists(NodeId id) throws ItemStateException {
+    public synchronized boolean exists(NodeId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
@@ -795,7 +795,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public boolean exists(PropertyId id) throws ItemStateException {
+    public synchronized boolean exists(PropertyId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
