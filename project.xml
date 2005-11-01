@@ -283,6 +283,15 @@
             <timezone>+1</timezone>
         </contributor>
         <contributor>
+            <name>Philipp Koch</name>
+            <email/>
+            <organization>Day Software</organization>
+            <roles>
+                <role>TCK Webapp</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
+        <contributor>
             <name>Felix Meschberger</name>
             <email/>
             <organization>Day Software</organization>
