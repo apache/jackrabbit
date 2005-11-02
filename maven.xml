@@ -22,7 +22,7 @@
     xmlns:ant="jelly:ant"
     xmlns:maven="jelly:maven">
 
-    <postGoal name="javadoc:generate">
+    <postGoal name="maven-javadoc-plugin:report">
         <attainGoal name="jackrabbit:post-javadoc"/>
     </postGoal>
 
