@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
+import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
@@ -43,6 +44,9 @@ import java.io.IOException;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringTokenizer;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Implements a {@link org.apache.jackrabbit.core.query.QueryHandler} using
@@ -69,6 +73,11 @@ public class SearchIndex extends AbstractQueryHandler {
     public static final int DEFAULT_MERGE_FACTOR = 10;
 
     /**
+     * Default text filters.
+     */
+    public static final String DEFAULT_TEXT_FILTERS = TextPlainTextFilter.class.getName();
+
+    /**
      * The actual index
      */
     private MultiIndex index;
@@ -77,6 +86,11 @@ public class SearchIndex extends AbstractQueryHandler {
      * The analyzer we use for indexing.
      */
     private Analyzer analyzer;
+
+    /**
+     * List of {@link org.apache.jackrabbit.core.query.TextFilter} instance.
+     */
+    private List textFilters;
 
     /**
      * The location of the search index.
@@ -149,6 +163,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public SearchIndex() {
         this.analyzer = new StandardAnalyzer(new String[]{});
+        setTextFilterClasses(DEFAULT_TEXT_FILTERS);
     }
 
     /**
@@ -333,6 +348,16 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * Returns an unmodifiable list of {@link TextFilter} configured for
+     * this search index.
+     *
+     * @return unmodifiable list of text filters.
+     */
+    List getTextFilters() {
+        return textFilters;
+    }
+
+    /**
      * Returns the namespace mappings for the internal representation.
      * @return the namespace mappings for the internal representation.
      */
@@ -353,7 +378,7 @@ public class SearchIndex extends AbstractQueryHandler {
     protected Document createDocument(NodeState node, NamespaceMappings nsMappings)
             throws RepositoryException {
         return NodeIndexer.createDocument(node, getContext().getItemStateManager(),
-                nsMappings);
+                nsMappings, textFilters);
     }
 
     //--------------------------< properties >----------------------------------
@@ -542,5 +567,50 @@ public class SearchIndex extends AbstractQueryHandler {
 
     public int getCacheSize() {
         return cacheSize;
+    }
+
+    /**
+     * Sets a new set of text filter classes that are in use for indexing
+     * binary properties. The <code>filterClasses</code> must be a comma
+     * separated <code>String</code> of fully qualified class names implementing
+     * {@link org.apache.jackrabbit.core.query.TextFilter}. Each class must
+     * provide a default constructor.
+     * </p>
+     * Filter class names that cannot be resolved are skipped and a warn message
+     * is logged.
+     *
+     * @param filterClasses comma separated list of filter class names
+     */
+    public void setTextFilterClasses(String filterClasses) {
+        List filters = new ArrayList();
+        StringTokenizer tokenizer = new StringTokenizer(filterClasses, ", \t\n\r\f");
+        while (tokenizer.hasMoreTokens()) {
+            String className = tokenizer.nextToken();
+            try {
+                Class filterClass = Class.forName(className);
+                TextFilter filter = (TextFilter) filterClass.newInstance();
+                filters.add(filter);
+            } catch (Exception e) {
+                log.warn("Invalid TextFilter class: " + className, e);
+            }
+        }
+        textFilters = Collections.unmodifiableList(filters);
+    }
+
+    /**
+     * Returns the fully qualified class names of the text filter instances
+     * currently in use. The names are comma separated.
+     *
+     * @return class names of the text filters in use.
+     */
+    public String getTextFilterClasses() {
+        StringBuffer names = new StringBuffer();
+        String delim = "";
+        for (Iterator it = textFilters.iterator(); it.hasNext(); ) {
+            names.append(delim);
+            names.append(it.next().getClass().getName());
+            delim = ",";
+        }
+        return names.toString();
     }
 }

@@ -11,10 +11,19 @@ following binary formats:
 
 How to register in jackrabbit?
 Build the jar file and place it in the Jackrabbit 
-classpath. The filters will be automatically loaded 
-on startup.
+classpath together with the dependencies of these text
+filters.
+Configure them in the SearchIndex element of the workspace.xml
+
+Sample:
+
+...
+  <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
+    <param name="path" value="${wsp.home}/index" />
+    <param name="textFilterClasses" value="org.apache.jackrabbit.core.query.MsExcelTextFilter,org.apache.jackrabbit.core.query.MsPowerPointTextFilter,org.apache.jackrabbit.core.query.MsWordTextFilter,org.apache.jackrabbit.core.query.PdfTextFilter" />
+  </SearchIndex>
+...
 
 For further information, see the javadocs for:
 org.apache.jackrabbit.core.query.TextFilter
-org.apache.jackrabbit.core.query.TextFilterService
 

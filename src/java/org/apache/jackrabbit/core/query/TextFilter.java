@@ -24,8 +24,11 @@ import java.util.Map;
 /**
  * Defines an interface for extracting text out of binary properties according
  * to their mime-type.
- *
- * @see TextFilterService
+ * </p>
+ * {@link TextFilter} implementations are asked if they can handle a certain
+ * mime type ({@link #canFilter(String)} and if one of them returns
+ * <code>true</code> the text representation is created with
+ * {@link #doFilter(PropertyState, String)}
  */
 public interface TextFilter {
 

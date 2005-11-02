@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.query.TextFilterService;
+import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -40,6 +40,8 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
+import java.util.Collections;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -68,18 +70,26 @@ public class NodeIndexer {
     protected final NamespaceMappings mappings;
 
     /**
+     * List of text filters in use.
+     */
+    protected final List textFilters;
+
+    /**
      * Creates a new node indexer.
      *
      * @param node          the node state to index.
      * @param stateProvider the persistent item state manager to retrieve properties.
      * @param mappings      internal namespace mappings.
+     * @param textFilters   List of {@link org.apache.jackrabbit.core.query.TextFilter}s.
      */
     protected NodeIndexer(NodeState node,
                           ItemStateManager stateProvider,
-                          NamespaceMappings mappings) {
+                          NamespaceMappings mappings,
+                          List textFilters) {
         this.node = node;
         this.stateProvider = stateProvider;
         this.mappings = mappings;
+        this.textFilters = textFilters;
     }
 
     /**
@@ -88,15 +98,18 @@ public class NodeIndexer {
      * @param node          the node state to index.
      * @param stateProvider the state provider to retrieve property values.
      * @param mappings      internal namespace mappings.
+     * @param textFilters   list of text filters to use for indexing binary
+     *                      properties.
      * @return the lucene Document.
      * @throws RepositoryException if an error occurs while reading property
      *                             values from the <code>ItemStateProvider</code>.
      */
     public static Document createDocument(NodeState node,
                                           ItemStateManager stateProvider,
-                                          NamespaceMappings mappings)
+                                          NamespaceMappings mappings,
+                                          List textFilters)
             throws RepositoryException {
-        NodeIndexer indexer = new NodeIndexer(node, stateProvider, mappings);
+        NodeIndexer indexer = new NodeIndexer(node, stateProvider, mappings, textFilters);
         return indexer.createDoc();
     }
 
@@ -240,8 +253,7 @@ public class NodeIndexer {
      * <p/>
      * This implementation checks if this {@link #node} is of type nt:resource
      * and if that is the case, tries to extract text from the data atom using
-     * {@link TextFilterService}add a {@link FieldNames#FULLTEXT} field
-     * .
+     * the {@link #textFilters}.
      *
      * @param doc           The document to which to add the field
      * @param fieldName     The name of the field to add
@@ -268,9 +280,17 @@ public class NodeIndexer {
                     encodingProp.getValues()[0].internalValue().toString();
                 }
 
-                Map fields = TextFilterService.extractText(dataProp,
-                        mimeTypeProp.getValues()[0].internalValue().toString(),
-                        encoding);
+                String mimeType = mimeTypeProp.getValues()[0].internalValue().toString();
+                Map fields = Collections.EMPTY_MAP;
+                for (Iterator it = textFilters.iterator(); it.hasNext(); ) {
+                    TextFilter filter = (TextFilter) it.next();
+                    // use the first filter that can handle the mimeType
+                    if (filter.canFilter(mimeType)) {
+                        fields = filter.doFilter(dataProp, encoding);
+                        break;
+                    }
+                }
+
                 for (Iterator it = fields.keySet().iterator(); it.hasNext();) {
                     String field = (String) it.next();
                     Reader r = (Reader) fields.get(field);
