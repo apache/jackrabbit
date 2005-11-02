@@ -25,26 +25,26 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.jcr.version.VersionException;
-import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
-import javax.jcr.Workspace;
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.Repository;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.InvalidSerializedDataException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Workspace;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.Reader;
-import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 
 /**
  * <code>SerializationTest</code> contains the test cases for the method
@@ -122,7 +122,7 @@ public class SerializationTest extends AbstractJCRTest {
     }
 
     public void doTestVersioningExceptionFileParent(boolean useWorkspace, boolean useHandler)
-        throws RepositoryException, NotExecutableException, IOException, SAXException {
+            throws RepositoryException, NotExecutableException, IOException, SAXException {
         Node n = initVersioningException(true);
 
         FileInputStream in = new FileInputStream(file);
@@ -131,11 +131,13 @@ public class SerializationTest extends AbstractJCRTest {
             fail("Importing to a checked-in node must throw a ConstraintViolationException.");
         } catch (VersionException e) {
             // success
+        } finally {
+            in.close();
         }
     }
 
     public void doTestVersioningExceptionFileChild(boolean useWorkspace, boolean useHandler)
-        throws RepositoryException, NotExecutableException, IOException, SAXException {
+            throws RepositoryException, NotExecutableException, IOException, SAXException {
         Node n = initVersioningException(false);
 
         FileInputStream in = new FileInputStream(file);
@@ -144,6 +146,8 @@ public class SerializationTest extends AbstractJCRTest {
             fail("Importing to a child of a checked-in node must throw a ConstraintViolationException.");
         } catch (VersionException e) {
             // success
+        } finally {
+            in.close();
         }
     }
 
@@ -207,6 +211,8 @@ public class SerializationTest extends AbstractJCRTest {
                 doImport(lNode.getPath(), in, useWorkspace, useHandler);
             } catch (LockException e) {
                 // success
+            } finally {
+                in.close();
             }
         } else {
             log.println("Locking not supported.");
@@ -258,7 +264,7 @@ public class SerializationTest extends AbstractJCRTest {
         helpTestSaxException(ih, in, "workspace");
     }
 
-  /**
+    /**
      * Helper method for testSaxException.
      *
      * @param ih
@@ -282,12 +288,11 @@ public class SerializationTest extends AbstractJCRTest {
     }
 
     /**
-     *
      * Tests whether importing an invalid XML file throws a InvalidSerializedDataException.
      * The file used here is more or less garbage.
      */
     public void testInvalidXmlThrowsInvalidSerializedDataException()
-            throws RepositoryException, IOException{
+            throws RepositoryException, IOException {
 
         String data = "<this is not a <valid> <xml> file/>";
         ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());
@@ -353,6 +358,8 @@ public class SerializationTest extends AbstractJCRTest {
             fail("Importing to a non-existing node does not throw a PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // success
+        } finally {
+            in.close();
         }
     }
 
@@ -370,6 +377,8 @@ public class SerializationTest extends AbstractJCRTest {
             fail("Importing to a non-existing node does not throw a PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // success
+        } finally {
+            in.close();
         }
     }
 
@@ -389,28 +398,35 @@ public class SerializationTest extends AbstractJCRTest {
 
         session.save();
         FileOutputStream out = new FileOutputStream(file);
-        session.exportSystemView(subfolder.getPath(), out, true, true);
+        try {
+            session.exportSystemView(subfolder.getPath(), out, true, true);
+        } finally {
+            out.close();
+        }
 
         FileInputStream in = new FileInputStream(file);
-        if (useHandler) {
-            try {
-            doImport(folder.getPath(), in, useWorkspace, useHandler);
-            fail("Overwriting an existing node during import must throw a SAXException");
-            } catch (SAXException e) {
-            // success
+        try {
+            if (useHandler) {
+                try {
+                    doImport(folder.getPath(), in, useWorkspace, useHandler);
+                    fail("Overwriting an existing node during import must throw a SAXException");
+                } catch (SAXException e) {
+                    // success
+                }
+            } else {
+                try {
+                    doImport(folder.getPath(), in, useWorkspace, useHandler);
+                    fail("Overwriting an existing node during import must throw an ItemExistsException");
+                } catch (ItemExistsException e) {
+                    // success
+                }
             }
-        }
-        else {
-            try {
-                doImport(folder.getPath(), in, useWorkspace, useHandler);
-                fail("Overwriting an existing node during import must throw an ItemExistsException");
-            } catch (ItemExistsException e) {
-                     // success
-            }
+        } finally {
+            in.close();
         }
     }
 
-   public void testOverwriteExceptionWorkspaceWithHandler()
+    public void testOverwriteExceptionWorkspaceWithHandler()
             throws RepositoryException, NotExecutableException, IOException, SAXException {
         doTestOverwriteException(WORKSPACE, CONTENTHANDLER);
     }
@@ -430,11 +446,12 @@ public class SerializationTest extends AbstractJCRTest {
         doTestOverwriteException(SESSION, STREAM);
     }
 
-  // ------------------< Node type constraint violation tests >--------------------------------
+    // ------------------< Node type constraint violation tests >--------------------------------
     /**
      * Create a node named ntBase with node type nt:base
      * and creates a tree in the repository which will be exported
      * and reimported below the node ntBase.
+     *
      * @param useWorkspace
      * @param useHandler
      * @throws RepositoryException
@@ -442,36 +459,39 @@ public class SerializationTest extends AbstractJCRTest {
      * @throws IOException
      */
     public void doTestNodeTypeConstraintViolation(boolean useWorkspace, boolean useHandler)
-          throws RepositoryException, FileNotFoundException, IOException, SAXException {
+            throws RepositoryException, FileNotFoundException, IOException, SAXException {
 
         treeComparator.createExampleTree();
         Node node = testRootNode.addNode("ntBase", ntBase);
         session.save();
 
         FileInputStream in = new FileInputStream(file);
-        if (useHandler) {
-            try {
-                doImport(node.getPath(), in, useWorkspace, useHandler);
-                fail("Node type constraint violation should throw a SAXException " +
-                        "during xml import using a Contenthandler.");
-            }  catch (SAXException se) {
-                // ok
+        try {
+            if (useHandler) {
+                try {
+                    doImport(node.getPath(), in, useWorkspace, useHandler);
+                    fail("Node type constraint violation should throw a SAXException " +
+                            "during xml import using a Contenthandler.");
+                } catch (SAXException se) {
+                    // ok
+                }
+            } else {
+                try {
+                    doImport(node.getPath(), in, useWorkspace, useHandler);
+                    fail("Node type constraint violation should throw a  " +
+                            " InvalidSerializedDataException during xml import " +
+                            "using a Contenthandler.");
+                } catch (InvalidSerializedDataException isde) {
+                    // ok
+                }
             }
-        }
-        else {
-            try {
-                doImport(node.getPath(), in, useWorkspace, useHandler);
-                 fail("Node type constraint violation should throw a  " +
-                        " InvalidSerializedDataException during xml import " +
-                         "using a Contenthandler.");
-            } catch (InvalidSerializedDataException isde) {
-            // ok
-            }
+        } finally {
+            in.close();
         }
     }
 
 
-  public void testNodeTypeConstraintViolationWorkspaceWithHandler()
+    public void testNodeTypeConstraintViolationWorkspaceWithHandler()
             throws RepositoryException, NotExecutableException, IOException, SAXException {
         doTestNodeTypeConstraintViolation(WORKSPACE, CONTENTHANDLER);
     }
@@ -498,9 +518,13 @@ public class SerializationTest extends AbstractJCRTest {
      */
     public void testSessionImportXml() throws RepositoryException, IOException {
         FileInputStream in = new FileInputStream(file);
-        exportRepository(SAVEBINARY, RECURSE);
-        session.importXML(treeComparator.targetFolder, in,
-                ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+        try {
+            exportRepository(SAVEBINARY, RECURSE);
+            session.importXML(treeComparator.targetFolder, in,
+                    ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+        } finally {
+            in.close();
+        }
 
         // after logout/login, no nodes are in the session
         session.logout();
@@ -518,8 +542,12 @@ public class SerializationTest extends AbstractJCRTest {
      */
     public void testSessionGetContentHandler() throws RepositoryException, IOException, SAXException {
         FileInputStream in = new FileInputStream(file);
-        exportRepository(SAVEBINARY, RECURSE);
-        doImportNoSave(treeComparator.targetFolder, in, CONTENTHANDLER);
+        try {
+            exportRepository(SAVEBINARY, RECURSE);
+            doImportNoSave(treeComparator.targetFolder, in, CONTENTHANDLER);
+        } finally {
+            in.close();
+        }
 
         // after logout/login, no nodes are in the session
         session.logout();
@@ -571,7 +599,7 @@ public class SerializationTest extends AbstractJCRTest {
         }
     }
 
-   public void doImportNoSave(String absPath, FileInputStream in, boolean useHandler)
+    public void doImportNoSave(String absPath, FileInputStream in, boolean useHandler)
             throws RepositoryException, IOException, SAXException {
         if (useHandler) {
             ContentHandler ih = session.getImportContentHandler(absPath, 0);
@@ -580,8 +608,7 @@ public class SerializationTest extends AbstractJCRTest {
             parser.setContentHandler(ih);
             parser.setErrorHandler((ErrorHandler) ih);
             parser.parse(new InputSource(in));
-        }
-        else {
+        } else {
             session.importXML(absPath, in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         }
     }
@@ -682,14 +709,14 @@ public class SerializationTest extends AbstractJCRTest {
      * @throws IOException
      */
     private void exportRepository(boolean skipBinary, boolean noRecurse) throws IOException {
-        FileOutputStream out;
+        FileOutputStream out = new FileOutputStream(file);
         try {
-            //File file = new File("C:\\exportTestOutput");
-            out = new FileOutputStream(file);
             session.refresh(false); //move the workspace into the session, then save it. The workspace is always valid, the session not necessarily.
             session.exportSystemView(treeComparator.getSourceRootPath(), out, skipBinary, noRecurse);
         } catch (RepositoryException e) {
             fail("Could not export the repository: " + e);
+        } finally {
+            out.close();
         }
     }
 
@@ -709,38 +736,42 @@ public class SerializationTest extends AbstractJCRTest {
             fail("Input file not opened: " + e);
         }
 
-        if (useHandler) {
-            if (workspace) {
-                ContentHandler ih = this.workspace.getImportContentHandler(treeComparator.targetFolder, 0);
-                try {
-                    XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-                    parser.setContentHandler(ih);
-                    parser.setErrorHandler((ErrorHandler) ih);
-                    parser.parse(new InputSource(in));
-                } catch (SAXException e) {
-                    fail("Error while parsing the imported repository: " + e);
+        try {
+            if (useHandler) {
+                if (workspace) {
+                    ContentHandler ih = this.workspace.getImportContentHandler(treeComparator.targetFolder, 0);
+                    try {
+                        XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
+                        parser.setContentHandler(ih);
+                        parser.setErrorHandler((ErrorHandler) ih);
+                        parser.parse(new InputSource(in));
+                    } catch (SAXException e) {
+                        fail("Error while parsing the imported repository: " + e);
+                    }
+                } else {
+                    ContentHandler ih = session.getImportContentHandler(treeComparator.targetFolder,
+                            ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+                    try {
+                        XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
+                        parser.setContentHandler(ih);
+                        parser.setErrorHandler((ErrorHandler) ih);
+                        parser.parse(new InputSource(in));
+                        session.save();
+                    } catch (SAXException e) {
+                        fail("Error while parsing the imported repository: " + e);
+                    }
                 }
             } else {
-                ContentHandler ih = session.getImportContentHandler(treeComparator.targetFolder,
-                        ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-                try {
-                    XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-                    parser.setContentHandler(ih);
-                    parser.setErrorHandler((ErrorHandler) ih);
-                    parser.parse(new InputSource(in));
+                if (workspace) {
+                    this.workspace.importXML(treeComparator.targetFolder, in, 0);
+                } else {
+                    session.importXML(treeComparator.targetFolder, in,
+                            ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
                     session.save();
-                } catch (SAXException e) {
-                    fail("Error while parsing the imported repository: " + e);
                 }
             }
-        } else {
-            if (workspace) {
-                this.workspace.importXML(treeComparator.targetFolder, in, 0);
-            } else {
-                session.importXML(treeComparator.targetFolder, in,
-                        ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-                session.save();
-            }
+        } finally {
+            in.close();
         }
     }
 }

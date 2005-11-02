@@ -200,12 +200,16 @@ public class ExportDocViewTest extends AbstractJCRTest {
         this.noRecurse = noRecurse;
         this.withHandler = withHandler;
         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
-        if (withHandler) {
-            ContentHandler handler =
-                    new org.apache.xml.serialize.XMLSerializer(os, null).asContentHandler();
-            session.exportDocumentView(testPath, handler, skipBinary, noRecurse);
-        } else {
-            session.exportDocumentView(testPath, os, skipBinary, noRecurse);
+        try {
+            if (withHandler) {
+                ContentHandler handler =
+                        new org.apache.xml.serialize.XMLSerializer(os, null).asContentHandler();
+                session.exportDocumentView(testPath, handler, skipBinary, noRecurse);
+            } else {
+                session.exportDocumentView(testPath, os, skipBinary, noRecurse);
+            }
+        } finally {
+            os.close();
         }
 
         // build the DOM tree
