@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.log4j.Logger;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -51,6 +50,7 @@ abstract class TargetImportHandler extends DefaultHandler {
     /**
      * Disposes all instances of <code>AppendableValue</code> contained in the
      * given property info's value array.
+     *
      * @param prop property info
      */
     protected void disposePropertyValues(Importer.PropInfo prop) {
@@ -79,8 +79,9 @@ abstract class TargetImportHandler extends DefaultHandler {
     public interface AppendableValue extends Importer.TextValue {
         /**
          * Append a portion of an array of characters.
-         * @param chars the characters to be appended
-         * @param start the index of the first character to append
+         *
+         * @param chars  the characters to be appended
+         * @param start  the index of the first character to append
          * @param length the number of characters to append
          * @throws IOException if an I/O error occurs
          */
