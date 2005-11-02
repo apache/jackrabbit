@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.util.TransientFileFactory;
+import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.log4j.Logger;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -71,7 +73,7 @@ abstract class TargetImportHandler extends DefaultHandler {
      * appendable.
      * <p/>
      * <b>Important:</b> Note that in order to free resources
-     * <code>{@link #dispose()}</code> should be called as soon as an an
+     * <code>{@link #dispose()}</code> should be called as soon as an
      * <code>AppendableValue</code> object is not used anymore.
      */
     public interface AppendableValue extends Importer.TextValue {
@@ -149,7 +151,7 @@ abstract class TargetImportHandler extends DefaultHandler {
      * by a temporary file if its size exceeds a certain limit.
      * <p/>
      * <b>Important:</b> Note that in order to free resources
-     * <code>{@link #dispose()}</code> should be called as soon as an
+     * <code>{@link #dispose()}</code> should be called as soon as
      * <code>BufferedStringValue</code> instance is not used anymore.
      */
     protected class BufferedStringValue implements AppendableValue {
@@ -258,7 +260,8 @@ abstract class TargetImportHandler extends DefaultHandler {
                 if (bufferPos + length > MAX_BUFFER_SIZE) {
                     // threshold for keeping data in memory exceeded;
                     // create temp file and spool buffer contents
-                    tmpFile = File.createTempFile("txt", null);
+                    TransientFileFactory fileFactory = TransientFileFactory.getInstance();
+                    tmpFile = fileFactory.createTransientFile("txt", null, null);
                     writer = new FileWriter(tmpFile);
                     writer.write(buffer, 0, bufferPos);
                     writer.write(chars, start, length);
@@ -304,7 +307,6 @@ abstract class TargetImportHandler extends DefaultHandler {
                 bufferPos = 0;
             } else if (tmpFile != null) {
                 writer.close();
-                tmpFile.delete();
                 tmpFile = null;
                 writer = null;
             } else {

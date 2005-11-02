@@ -18,7 +18,9 @@ package org.apache.jackrabbit.core.value;
 
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
@@ -125,9 +127,8 @@ public class BLOBFileValue implements Value {
                 } else if (len + read > MAX_BUFFER_SIZE) {
                     // threshold for keeping data in memory exceeded;
                     // create temp file and spool buffer contents
-                    spoolFile = File.createTempFile("bin", null);
-                    // @todo FIXME see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4513817http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4513817
-                    spoolFile.deleteOnExit();
+                    TransientFileFactory fileFactory = TransientFileFactory.getInstance();
+                    spoolFile = fileFactory.createTransientFile("bin", null, null);
                     out = new FileOutputStream(spoolFile);
                     out.write(buffer, 0, len);
                     out.write(spoolBuffer, 0, read);
