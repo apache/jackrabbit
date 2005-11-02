@@ -200,6 +200,7 @@
               detects a prior forced shutdown.
             - autoRepair: errors detected by a consistency check are automatically
               repaired. If false, errors are only written to the log.
+            - analyzer: class name of a lucene analyzer to use for fulltext indexing of text.
 
             Note: all parameters (except path) in this SearchIndex config are default
             values and can be omitted.
@@ -215,6 +216,7 @@
             <param name="cacheSize" value="1000"/>
             <param name="forceConsistencyCheck" value="false"/>
             <param name="autoRepair" value="true"/>
+            <param name="analyzer" value="org.apache.lucene.analysis.standard.StandardAnalyzer"/>
         </SearchIndex>
     </Workspace>
 
