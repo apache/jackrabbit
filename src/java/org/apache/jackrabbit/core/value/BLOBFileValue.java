@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.value;
 
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.log4j.Logger;
@@ -48,7 +47,7 @@ import java.util.Calendar;
  * <p/>
  * <b>Important Note:</b><p/>
  * This is class is for Jackrabbit-internal use only. Applications should
- * use <code>javax.jcr.ValueFactory</code> to create binary values. 
+ * use <code>javax.jcr.ValueFactory</code> to create binary values.
  */
 public class BLOBFileValue implements Value {
 
@@ -162,7 +161,7 @@ public class BLOBFileValue implements Value {
      * <code>byte[]</code> array.
      *
      * @param bytes byte array to be represented as a <code>BLOBFileValue</code>
-     * instance
+     *              instance
      */
     public BLOBFileValue(byte[] bytes) {
         buffer = bytes;
