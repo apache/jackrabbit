@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.state.AbstractPersistenceManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
@@ -423,9 +422,9 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
                 } catch (SQLException e) {
                     String msg = "rollback of change log failed";
                     log.error(msg, e);
-                    // re-throw original exception
-                    throw ise;
                 }
+                // re-throw original exception
+                throw ise;
             }
         }
     }
@@ -433,78 +432,82 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeState load(NodeId id)
+    public NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         PreparedStatement stmt = nodeStateSelect;
-        ResultSet rs = null;
-        InputStream in = null;
-        try {
-            stmt.setString(1, id.toString());
-            stmt.execute();
-            rs = stmt.getResultSet();
-            if (!rs.next()) {
-                throw new NoSuchItemStateException(id.toString());
-            }
+        synchronized(stmt) {
+            ResultSet rs = null;
+            InputStream in = null;
+            try {
+                stmt.setString(1, id.toString());
+                stmt.execute();
+                rs = stmt.getResultSet();
+                if (!rs.next()) {
+                    throw new NoSuchItemStateException(id.toString());
+                }
 
-            in = rs.getBinaryStream(1);
-            NodeState state = createNew(id);
-            Serializer.deserialize(state, in);
+                in = rs.getBinaryStream(1);
+                NodeState state = createNew(id);
+                Serializer.deserialize(state, in);
 
-            return state;
-        } catch (Exception e) {
-            if (e instanceof NoSuchItemStateException) {
-                throw (NoSuchItemStateException) e;
+                return state;
+            } catch (Exception e) {
+                if (e instanceof NoSuchItemStateException) {
+                    throw (NoSuchItemStateException) e;
+                }
+                String msg = "failed to read node state: " + id;
+                log.error(msg, e);
+                throw new ItemStateException(msg, e);
+            } finally {
+                closeStream(in);
+                closeResultSet(rs);
+                resetStatement(stmt);
             }
-            String msg = "failed to read node state: " + id;
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
-        } finally {
-            closeStream(in);
-            closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized PropertyState load(PropertyId id)
+    public PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         PreparedStatement stmt = propertyStateSelect;
-        ResultSet rs = null;
-        InputStream in = null;
-        try {
-            stmt.setString(1, id.toString());
-            stmt.execute();
-            rs = stmt.getResultSet();
-            if (!rs.next()) {
-                throw new NoSuchItemStateException(id.toString());
-            }
+        synchronized(stmt) {
+            ResultSet rs = null;
+            InputStream in = null;
+            try {
+                stmt.setString(1, id.toString());
+                stmt.execute();
+                rs = stmt.getResultSet();
+                if (!rs.next()) {
+                    throw new NoSuchItemStateException(id.toString());
+                }
 
-            in = rs.getBinaryStream(1);
-            PropertyState state = createNew(id);
-            Serializer.deserialize(state, in, blobStore);
+                in = rs.getBinaryStream(1);
+                PropertyState state = createNew(id);
+                Serializer.deserialize(state, in, blobStore);
 
-            return state;
-        } catch (Exception e) {
-            if (e instanceof NoSuchItemStateException) {
-                throw (NoSuchItemStateException) e;
+                return state;
+            } catch (Exception e) {
+                if (e instanceof NoSuchItemStateException) {
+                    throw (NoSuchItemStateException) e;
+                }
+                String msg = "failed to read property state: " + id;
+                log.error(msg, e);
+                throw new ItemStateException(msg, e);
+            } finally {
+                closeStream(in);
+                closeResultSet(rs);
+                resetStatement(stmt);
             }
-            String msg = "failed to read property state: " + id;
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
-        } finally {
-            closeStream(in);
-            closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 
@@ -523,8 +526,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         }
 
         // check if insert or update
-        //boolean update = exists((NodeId) state.getId());
-        boolean update = state.getStatus() != ItemState.STATUS_NEW;
+        boolean update = exists((NodeId) state.getId());
         PreparedStatement stmt = (update) ? nodeStateUpdate : nodeStateInsert;
 
         try {
@@ -567,8 +569,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         }
 
         // check if insert or update
-        //boolean update = exists((PropertyId) state.getId());
-        boolean update = state.getStatus() != ItemState.STATUS_NEW;
+        boolean update = exists((PropertyId) state.getId());
         PreparedStatement stmt = (update) ? propertyStateUpdate : propertyStateInsert;
 
         try {
@@ -664,39 +665,41 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences load(NodeReferencesId targetId)
+    public NodeReferences load(NodeReferencesId targetId)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         PreparedStatement stmt = nodeReferenceSelect;
-        ResultSet rs = null;
-        InputStream in = null;
-        try {
-            stmt.setString(1, targetId.toString());
-            stmt.execute();
-            rs = stmt.getResultSet();
-            if (!rs.next()) {
-                throw new NoSuchItemStateException(targetId.toString());
-            }
+        synchronized(stmt) {
+            ResultSet rs = null;
+            InputStream in = null;
+            try {
+                stmt.setString(1, targetId.toString());
+                stmt.execute();
+                rs = stmt.getResultSet();
+                if (!rs.next()) {
+                    throw new NoSuchItemStateException(targetId.toString());
+                }
 
-            in = rs.getBinaryStream(1);
-            NodeReferences refs = new NodeReferences(targetId);
-            Serializer.deserialize(refs, in);
+                in = rs.getBinaryStream(1);
+                NodeReferences refs = new NodeReferences(targetId);
+                Serializer.deserialize(refs, in);
 
-            return refs;
-        } catch (Exception e) {
-            if (e instanceof NoSuchItemStateException) {
-                throw (NoSuchItemStateException) e;
+                return refs;
+            } catch (Exception e) {
+                if (e instanceof NoSuchItemStateException) {
+                    throw (NoSuchItemStateException) e;
+                }
+                String msg = "failed to read references: " + targetId;
+                log.error(msg, e);
+                throw new ItemStateException(msg, e);
+            } finally {
+                closeStream(in);
+                closeResultSet(rs);
+                resetStatement(stmt);
             }
-            String msg = "failed to read references: " + targetId;
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
-        } finally {
-            closeStream(in);
-            closeResultSet(rs);
-            resetStatement(stmt);
         }
     }
 
@@ -768,83 +771,88 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean exists(NodeId id) throws ItemStateException {
+    public boolean exists(NodeId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         PreparedStatement stmt = nodeStateSelectExist;
-        ResultSet rs = null;
-        try {
-            stmt.setString(1, id.toString());
-            stmt.execute();
-            rs = stmt.getResultSet();
+        synchronized(stmt) {
+            ResultSet rs = null;
+            try {
+                stmt.setString(1, id.toString());
+                stmt.execute();
+                rs = stmt.getResultSet();
 
-            // a node state exists if the result has at least one entry
-            return rs.next();
-        } catch (Exception e) {
-            String msg = "failed to check existence of node state: " + id;
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
-        } finally {
-            closeResultSet(rs);
-            resetStatement(stmt);
+                // a node state exists if the result has at least one entry
+                return rs.next();
+            } catch (Exception e) {
+                String msg = "failed to check existence of node state: " + id;
+                log.error(msg, e);
+                throw new ItemStateException(msg, e);
+            } finally {
+                closeResultSet(rs);
+                resetStatement(stmt);
+            }
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean exists(PropertyId id) throws ItemStateException {
+    public boolean exists(PropertyId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         PreparedStatement stmt = propertyStateSelectExist;
-        ResultSet rs = null;
-        try {
-            stmt.setString(1, id.toString());
-            stmt.execute();
-            rs = stmt.getResultSet();
+        synchronized(stmt) {
+            ResultSet rs = null;
+            try {
+                stmt.setString(1, id.toString());
+                stmt.execute();
+                rs = stmt.getResultSet();
 
-            // a property state exists if the result has at least one entry
-            return rs.next();
-        } catch (Exception e) {
-            String msg = "failed to check existence of property state: " + id;
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
-        } finally {
-            closeResultSet(rs);
-            resetStatement(stmt);
+                // a property state exists if the result has at least one entry
+                return rs.next();
+            } catch (Exception e) {
+                String msg = "failed to check existence of property state: " + id;
+                log.error(msg, e);
+                throw new ItemStateException(msg, e);
+            } finally {
+                closeResultSet(rs);
+                resetStatement(stmt);
+            }
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean exists(NodeReferencesId targetId)
-            throws ItemStateException {
+    public boolean exists(NodeReferencesId targetId) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         PreparedStatement stmt = nodeReferenceSelectExist;
-        ResultSet rs = null;
-        try {
-            stmt.setString(1, targetId.toString());
-            stmt.execute();
-            rs = stmt.getResultSet();
+        synchronized(stmt) {
+            ResultSet rs = null;
+            try {
+                stmt.setString(1, targetId.toString());
+                stmt.execute();
+                rs = stmt.getResultSet();
 
-            // a reference exists if the result has at least one entry
-            return rs.next();
-        } catch (Exception e) {
-            String msg = "failed to check existence of node references: "
-                    + targetId;
-            log.error(msg, e);
-            throw new ItemStateException(msg, e);
-        } finally {
-            closeResultSet(rs);
-            resetStatement(stmt);
+                // a reference exists if the result has at least one entry
+                return rs.next();
+            } catch (Exception e) {
+                String msg = "failed to check existence of node references: "
+                        + targetId;
+                log.error(msg, e);
+                throw new ItemStateException(msg, e);
+            } finally {
+                closeResultSet(rs);
+                resetStatement(stmt);
+            }
         }
     }
 
@@ -972,62 +980,64 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         /**
          * {@inheritDoc}
          */
-        public synchronized InputStream get(String blobId) throws Exception {
+        public InputStream get(String blobId) throws Exception {
             PreparedStatement stmt = blobSelect;
-            try {
-                stmt.setString(1, blobId);
-                stmt.execute();
-                final ResultSet rs = stmt.getResultSet();
-                if (!rs.next()) {
-                    throw new Exception("no such BLOB: " + blobId);
+            synchronized(stmt) {
+                try {
+                    stmt.setString(1, blobId);
+                    stmt.execute();
+                    final ResultSet rs = stmt.getResultSet();
+                    if (!rs.next()) {
+                        throw new Exception("no such BLOB: " + blobId);
+                    }
+                    final InputStream in = rs.getBinaryStream(1);
+
+                    /**
+                     * return an InputStream wrapper in order to
+                     * close the ResultSet when the stream is closed
+                     */
+                    return new InputStream() {
+                        public int read() throws IOException {
+                            return in.read();
+                        }
+
+                        public void close() throws IOException {
+                            in.close();
+                            // close ResultSet
+                            closeResultSet(rs);
+                        }
+
+                        public int available() throws IOException {
+                            return in.available();
+                        }
+
+                        public void mark(int readlimit) {
+                            in.mark(readlimit);
+                        }
+
+                        public boolean markSupported() {
+                            return in.markSupported();
+                        }
+
+                        public int read(byte b[]) throws IOException {
+                            return in.read(b);
+                        }
+
+                        public int read(byte b[], int off, int len) throws IOException {
+                            return in.read(b, off, len);
+                        }
+
+                        public void reset() throws IOException {
+                            in.reset();
+                        }
+
+                        public long skip(long n) throws IOException {
+                            return in.skip(n);
+                        }
+                    };
+                } finally {
+                    resetStatement(stmt);
                 }
-                final InputStream in = rs.getBinaryStream(1);
-
-                /**
-                 * return an InputStream wrapper in order to
-                 * close the ResultSet when the stream is closed
-                 */
-                return new InputStream() {
-                    public int read() throws IOException {
-                        return in.read();
-                    }
-
-                    public void close() throws IOException {
-                        in.close();
-                        // close ResultSet
-                        closeResultSet(rs);
-                    }
-
-                    public int available() throws IOException {
-                        return in.available();
-                    }
-
-                    public void mark(int readlimit) {
-                        in.mark(readlimit);
-                    }
-
-                    public boolean markSupported() {
-                        return in.markSupported();
-                    }
-
-                    public int read(byte b[]) throws IOException {
-                        return in.read(b);
-                    }
-
-                    public int read(byte b[], int off, int len) throws IOException {
-                        return in.read(b, off, len);
-                    }
-
-                    public void reset() throws IOException {
-                        in.reset();
-                    }
-
-                    public long skip(long n) throws IOException {
-                        return in.skip(n);
-                    }
-                };
-            } finally {
-                resetStatement(stmt);
             }
         }
 
