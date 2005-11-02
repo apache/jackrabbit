@@ -146,7 +146,7 @@ class QueryImpl implements ExecutableQuery {
         // build lucene query
         Query query = LuceneQueryBuilder.createQuery(root, session,
                 index.getContext().getItemStateManager(), index.getNamespaceMappings(),
-                index.getAnalyzer(), propReg);
+                index.getTextAnalyzer(), propReg);
 
         OrderQueryNode orderNode = root.getOrderNode();
 
