@@ -67,6 +67,14 @@ or with viewcvs at
 
    http://svn.apache.org/viewcvs/incubator/jackrabbit/trunk/
 
+The Jackrabbit main project is located in the "jacrabbit" subdirectory
+and the "contrib" subdirectory contains various additional modules and
+contributed projects.
+
+To checkout the main Jackrabbit source tree, run
+
+   svn checkout http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit
+
 Once you have a copy of the source code tree, you can use Apache Maven
 
    http://maven.apache.org/
