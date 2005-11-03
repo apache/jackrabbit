@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.util;
+package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.name.QName;
 import org.apache.xerces.util.XMLChar;
 
 import java.util.regex.Matcher;
