@@ -14,10 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query;
+package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.core.util.ISO9075;
 import org.apache.xerces.util.XMLChar;
 import junit.framework.TestCase;
 
