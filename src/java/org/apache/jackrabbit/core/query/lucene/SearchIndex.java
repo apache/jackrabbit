@@ -353,7 +353,7 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @return unmodifiable list of text filters.
      */
-    List getTextFilters() {
+    protected List getTextFilters() {
         return textFilters;
     }
 
