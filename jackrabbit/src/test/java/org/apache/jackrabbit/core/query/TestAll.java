@@ -35,7 +35,6 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("Search tests");
 
-        suite.addTestSuite(ISO9075Test.class);
         suite.addTestSuite(SimpleQueryTest.class);
         suite.addTestSuite(FulltextQueryTest.class);
         suite.addTestSuite(SelectClauseTest.class);

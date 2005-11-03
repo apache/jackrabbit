@@ -35,6 +35,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("name tests");
 
+        suite.addTestSuite(ISO9075Test.class);
         suite.addTestSuite(PathTest.class);
         suite.addTestSuite(QNameTest.class);
 
