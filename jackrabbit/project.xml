@@ -412,8 +412,8 @@
     <!-- B U I L D  D E S C R I P T I O N                                       -->
     <!-- ====================================================================== -->
     <build>
-        <sourceDirectory>src/java</sourceDirectory>
-        <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
         <unitTest>
             <includes>
                 <include>**/*TestAll.java</include>
@@ -430,7 +430,7 @@
                     </includes>
                 </resource>
                 <resource>
-                    <directory>src/test</directory>
+                    <directory>src/test/java</directory>
                     <includes>
                         <include>**/*.xml</include>
                         <include>**/*.txt</include>
@@ -443,7 +443,7 @@
         <!-- Resources that are packaged up inside the JAR file -->
         <resources>
             <resource>
-                <directory>src/java</directory>
+                <directory>src/main/java</directory>
                 <includes>
                     <include>**/*.xml</include>
                     <include>**/*.properties</include>
