@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--========================================================================
+    DTD (Document Type Definition) for grammar definition originally created 
+    by James Clark.  The idea is to define an abstract grammar in XML than 
+    may then be used by documentation, directly by parser generators, 
+    or via an XSLT stylesheet or other transformation, may generate 
+    a parser compiler specification such as for YACC or JavaCC.
+
+Norm and Scott moved this file, and added an explicit prefix, as part of the
+transition toward a unified build process for last call and beyond. This involved
+moving the location of the CVS repository, For earlier history information,
+see /WWW/XML/Group/xpath-query-src/grammar.dtd
+
+=========================================================================-->
+<!-- The root element of the definition -->
+<!ELEMENT g:grammar ((g:language)+, (g:start)+, (g:token | g:skip)*, (g:state-list)?,
+                   (g:exprProduction | g:production | g:exposition-production)+)>
+<!ATTLIST g:grammar
+  xmlns:g CDATA #FIXED "http://www.w3.org/2001/03/XPath/grammar"
+>
+
+<!-- Declare a language subset or superset, if they are used in the 
+     if attributes.
+     Attributes:
+         id -> the id of the language. 'if' attributes should map to these ids.
+         display-name -> The name to use for the descriptive name of the language.
+-->
+<!ELEMENT g:language EMPTY>
+<!ATTLIST g:language
+  id ID #REQUIRED
+  if IDREFS #IMPLIED
+  display-name CDATA #REQUIRED
+>
+
+<!-- The grammar must say where the start point is.
+     Attributes:
+         name -> the name of the starting production. 
+         state -> the start state for lexical matching.
+         if -> space separated list of tokens for conditional processing.
+-->
+<!ELEMENT g:start EMPTY>
+<!ATTLIST g:start
+  name IDREF #REQUIRED
+  state CDATA #IMPLIED
+  if IDREFS #IMPLIED
+  sub-spec CDATA #IMPLIED
+>
+
+<!-- ============= Lexical Specifications (terminals) ==============-->
+<!-- Define a token.
+     Attributes:
+         name -> the name of the token. 
+         if -> space separated list of tokens for conditional processing.
+         inline -> tell if the BNF description should expand this token inline.
+         override -> (not sure what this does yet. -sb)
+         recognize -> The state where this token will be recognized.
+         is-macro -> "yes" if this token can be used just as a macro, 
+                     and not as a true token.
+         value-type -> If just a grammatical token, use "none", 
+                       or use "string" for a string value
+                       or use "number" for a number value
+                       or use "id" if it is a token value with meaning.
+-->
+<!ELEMENT g:token (g:string | g:emph | g:zeroOrMore | g:charClass | g:char | g:requiredSkip | g:optional | g:ref | g:xref | g:choice | g:optionalSkip | g:oneOrMore | g:sequence | g:complement)*>
+<!ATTLIST g:token
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  inline CDATA #IMPLIED
+  override (no | yes) #IMPLIED
+  recognize CDATA #IMPLIED
+  is-macro (yes | no) #IMPLIED
+  is-xml (yes | no) #IMPLIED
+  xhref CDATA #IMPLIED
+  special (no | yes) #IMPLIED
+  more (no | yes) #IMPLIED
+  skip (no | yes) #IMPLIED
+  value-type (none | string | number | id) #IMPLIED
+  type (none | literal | skip-token) #IMPLIED
+  whitespace-spec (not-significant | significant | explicit) #IMPLIED
+  node-type CDATA #IMPLIED
+  show (yes | no) #IMPLIED
+  visible (true | false) #IMPLIED
+  force-delimiting (yes | no) #IMPLIED
+  sub-spec CDATA #IMPLIED
+  alias-for IDREF #IMPLIED
+  subtract-reg-expr CDATA #IMPLIED
+  comment-id CDATA #IMPLIED
+  exposition-only (no | yes) #IMPLIED
+>
+
+<!-- Specification of a single character token. -->
+<!ELEMENT g:char (#PCDATA)>
+<!ATTLIST g:char
+  if IDREFS #IMPLIED
+  complement (no | yes) #IMPLIED
+  force-quote (single | double) #IMPLIED
+>
+
+<!-- SGML mode in emacs doesn't like this, so I'm avoiding it for now. -->
+<!-- ATTLIST char
+	xml:space CDATA #IMPLIED
+-->
+
+<!ELEMENT g:charClass (g:charCode | g:char | g:charCodeRange | g:charRange)+>
+<!ATTLIST g:charClass
+  if IDREFS #IMPLIED
+>
+<!ELEMENT g:charCode EMPTY>
+<!ATTLIST g:charCode
+  value CDATA #REQUIRED
+  if IDREFS #IMPLIED
+>
+
+<!ELEMENT g:charCodeRange EMPTY>
+<!ATTLIST g:charCodeRange
+  minValue CDATA #REQUIRED
+  maxValue CDATA #REQUIRED
+  if IDREFS #IMPLIED
+>
+
+<!ELEMENT g:charRange EMPTY>
+<!ATTLIST g:charRange
+  minChar (0 | A | a) #REQUIRED
+  maxChar (0 | 9 | F | f | z | Z) #REQUIRED
+  if IDREFS #IMPLIED
+>
+
+<!-- Defines a character that must be complemented by another character of 
+     the same value, such as a quote. -->
+<!ELEMENT g:complement (g:charClass)>
+<!ATTLIST g:complement
+  if IDREFS #IMPLIED
+>
+
+<!-- Defines a string token. -->
+<!ELEMENT g:string (#PCDATA)>
+<!ATTLIST g:string
+  ignoreCase CDATA #IMPLIED
+  if IDREFS #IMPLIED
+>
+
+<!-- Talk to FS folks about what this is really supposed to mean.  -sb -->
+<!ELEMENT g:emph (#PCDATA)>
+<!ATTLIST g:emph
+  ignoreCase CDATA #IMPLIED
+  if IDREFS #IMPLIED
+>
+
+<!ELEMENT g:skip (g:choice | g:ref | g:xref | g:oneOrMore)>
+<!ATTLIST g:skip
+  recognize CDATA #IMPLIED
+  if IDREFS #IMPLIED
+>
+
+<!ELEMENT g:requiredSkip EMPTY>
+<!ATTLIST g:requiredSkip
+  recognize CDATA #IMPLIED
+  if IDREFS #IMPLIED
+  show (yes | no) #IMPLIED
+>
+
+<!--=================== Lexical State Transitions =================== -->
+
+<!ELEMENT g:state-list (g:state)+>
+<!ATTLIST g:state-list
+  if IDREFS #IMPLIED
+>
+
+<!ELEMENT g:state (g:description?, (g:transition)+)>
+<!ATTLIST g:state
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  show (yes | no) #IMPLIED
+>
+
+<!ELEMENT g:tref EMPTY>
+<!ATTLIST g:tref
+  name IDREF #REQUIRED
+  if IDREFS #IMPLIED
+  show (yes | no) #IMPLIED
+>
+
+<!ELEMENT g:description ANY>
+<!ATTLIST g:description
+  if IDREFS #IMPLIED
+>
+
+
+<!-- Define a transition table for lexical states.  Using this is more 
+     convenient and cleaner than defining transitions for each token. 
+     Attributes:
+         if -> space separated list of tokens for conditional processing.
+               (Not currently used by the stylesheet!)
+-->
+<!ELEMENT g:lexical-state-transitions (g:transition-default?, g:transition+)>
+<!ATTLIST g:lexical-state-transitions
+  if IDREFS #REQUIRED
+>
+
+<!-- Define the default transition for all tokens not defined by the 
+     transition element.
+     Attributes:
+         if -> space separated list of tokens for conditional processing.
+               (Not currently used by the stylesheet!)
+         recognize -> The state where the tokens will be recognized.
+         nextState -> The next state to transition to. Invalid if popState us 
+                      used for the action.
+         action -> State stack action.
+-->
+<!ELEMENT g:transition-default EMPTY>
+<!ATTLIST g:transition-default
+  if IDREFS #IMPLIED
+>
+
+<!-- Define a transition for a token or set of tokens.
+     Attributes:
+         refs -> IDREFS list of the tokens for which this transition applies. 
+         if -> space separated list of tokens for conditional processing.
+               (Not currently used by the stylesheet!)
+         recognize -> The state where the tokens will be recognized.
+         nextState -> The next state to transition to. Invalid if popState us 
+                      used for the action.
+         action -> State stack action.
+-->
+<!ELEMENT g:transition (g:description?, (g:tref | g:transition-default)+)>
+<!ATTLIST g:transition
+  if IDREFS #IMPLIED
+  next-state IDREF #IMPLIED
+  action CDATA #IMPLIED
+>
+
+<!--=================== Parser Production Specifications ===============-->
+<!-- A production that defines a "cascade" of productions that define 
+     operator precedence.
+         name -> the ID of the production. 
+         if -> space separated list of tokens for conditional processing.
+-->
+<!ELEMENT g:exprProduction (g:level+)>
+<!ATTLIST g:exprProduction
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  node-type CDATA #IMPLIED
+  condition CDATA #IMPLIED
+>
+
+<!ELEMENT g:level (g:postfix | g:binary | g:prefix | g:primary)+>
+<!ATTLIST g:level
+  if IDREFS #IMPLIED
+  node-type CDATA #IMPLIED
+  level-user-action CDATA #IMPLIED
+>
+
+<!-- Basic non-terminal production.  
+         name -> the ID of the production. 
+         if -> space separated list of tokens for conditional processing.
+         show -> Don't show in the BNF if this value is "no".
+-->
+<!ELEMENT g:production (g:optional | g:ref |g:xref | g:choice | g:zeroOrMore | g:oneOrMore)+>
+<!ATTLIST g:production
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  show (yes | no) #IMPLIED
+  sub-spec CDATA #IMPLIED
+  node-type CDATA #IMPLIED
+  is-binary (no | yes) #IMPLIED
+  whitespace-spec (not-significant | significant | explicit) #IMPLIED
+  comment-id CDATA #IMPLIED
+  condition CDATA #IMPLIED
+  prod-user-action CDATA #IMPLIED
+>
+
+<!ELEMENT g:exposition-production (g:optional | g:ref | g:xref | g:choice | g:sequence | g:zeroOrMore | g:oneOrMore)+>
+<!ATTLIST g:exposition-production
+  name CDATA #REQUIRED
+  if IDREFS #IMPLIED
+  show (yes | no) #IMPLIED
+  sub-spec CDATA #IMPLIED
+  node-type CDATA #IMPLIED
+  is-binary (no | yes) #IMPLIED
+  whitespace-spec (not-significant | significant | explicit) #IMPLIED
+  comment-id CDATA #IMPLIED
+>
+
+<!-- Defines a binary operator.  
+         name -> the ID of the production. 
+         if -> space separated list of tokens for conditional processing.
+       Example:
+       		<binary name="EqualityExpr">
+				<choice>
+					<ref name="Equals"/>
+					<ref name="NotEquals"/>
+				</choice>
+			</binary>
+-->
+<!ELEMENT g:binary (g:ref | g:xref | g:choice)>
+<!ATTLIST g:binary
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  prefix-seq-type CDATA #IMPLIED
+  condition CDATA #IMPLIED
+>
+
+<!ELEMENT g:optionalSkip EMPTY>
+<!ATTLIST g:optionalSkip
+  if IDREFS #IMPLIED
+>
+
+<!ELEMENT g:postfix (g:ref | g:xref | g:optional | g:sequence)+>
+<!ATTLIST g:postfix
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  prefix-seq-type CDATA #IMPLIED
+  condition CDATA #IMPLIED
+  node-type CDATA #IMPLIED
+>
+
+<!ELEMENT g:prefix (g:optional | g:ref | g:xref | g:choice | g:zeroOrMore | g:oneOrMore | g:sequence | g:next)+>
+<!ATTLIST g:prefix
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  prefix-seq-type CDATA "*"
+  condition CDATA #IMPLIED
+  node-type CDATA #IMPLIED
+>
+
+<!-- This element is used in exprProduction to control where the next production 
+     will be called from.  If it is not used, the next production will automatically be 
+     called.
+-->
+<!ELEMENT g:next EMPTY>
+<!ATTLIST g:next
+  if IDREFS #IMPLIED
+>
+
+<!ELEMENT g:primary (g:optional | g:ref | g:xref | g:choice | 
+                   g:zeroOrMore | g:oneOrMore | g:sequence)+>
+<!ATTLIST g:primary
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  condition CDATA #IMPLIED
+  node-type CDATA #IMPLIED
+>
+
+<!ELEMENT g:ref EMPTY>
+<!ATTLIST g:ref
+  name IDREF #REQUIRED
+  if IDREFS #IMPLIED
+  orig IDREF #IMPLIED
+  node-type CDATA #IMPLIED
+  sub-spec CDATA #IMPLIED
+  show (no | yes) #IMPLIED
+  notational-only (no | yes) #IMPLIED
+  needs-exposition-parens (no | yes) #IMPLIED
+  token-user-action CDATA #IMPLIED
+  nt-user-action-end CDATA #IMPLIED
+  nt-user-action-start CDATA #IMPLIED
+  subtract-reg-expr CDATA #IMPLIED
+>
+
+<!ELEMENT g:xref EMPTY>
+<!ATTLIST g:xref
+  name CDATA #REQUIRED
+  if IDREFS #IMPLIED
+  orig IDREF #IMPLIED
+  node-type CDATA #IMPLIED
+  sub-spec CDATA #IMPLIED
+  show (no | yes) #IMPLIED
+  notational-only (no | yes) #IMPLIED
+  needs-exposition-parens (no | yes) #IMPLIED
+>
+
+<!--================ General Constructs =================-->
+<!ELEMENT g:zeroOrMore (g:string | g:charClass | g:optional | g:ref | g:xref | 
+          g:choice | g:optional | g:zeroOrMore | g:oneOrMore | g:complement)+>
+<!ATTLIST g:zeroOrMore
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  subtract-reg-expr CDATA #IMPLIED
+>
+
+<!ELEMENT g:oneOrMore (g:string | g:charClass | g:optional | g:ref | g:xref |
+          g:choice | g:optional | g:zeroOrMore | g:oneOrMore | g:complement)+>
+<!ATTLIST g:oneOrMore
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+  subtract-reg-expr CDATA #IMPLIED
+>
+
+<!ELEMENT g:optional (g:string | g:charClass | g:optional | g:ref | g:xref |
+          g:choice | g:optional | g:requiredSkip | g:zeroOrMore | g:oneOrMore | g:sequence | g:complement)+>
+<!ATTLIST g:optional
+  name ID #REQUIRED
+  if IDREFS #IMPLIED
+>
+
+<!-- Maybe should be divided into a choice-token, and choice? -->
+<!ELEMENT g:choice (g:ref | g:xref | g:string | g:sequence | g:complement)+>
+<!ATTLIST g:choice
+  name ID #REQUIRED
+  break CDATA #IMPLIED
+  if IDREFS #IMPLIED
+>
+
+<!ELEMENT g:sequence (g:string | g:ref | g:xref | g:optional | 
+                    g:zeroOrMore | g:oneOrMore | g:choice |  
+                    g:next | g:char | g:optionalSkip | g:requiredSkip)+>
+<!ATTLIST g:sequence
+  name ID #IMPLIED
+  if IDREFS #IMPLIED
+>

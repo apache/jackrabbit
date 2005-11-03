@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!--
+   Copyright 2004-2005 The Apache Software Foundation or its licensors,
+                       as applicable.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<document>
+ <properties>
+  <title>Overview</title>
+ </properties>
+ <body>
+
+<section name="Apache Jackrabbit">
+<p>
+<a href="http://www.apachecon.com/2005/US/index.html"
+   class="externalLink" title="External Link"><img
+   src="http://www.apache.org/images/ac2005us_white_184x80.jpg"
+   width="184" height="80" border="0" title="ApacheCon US 2005"
+   align="right" valign="top" alt="ApacheCon 2005 US"></img></a>
+The Apache Jackrabbit Project has been formed to develop an open source
+implementation of the Content Repository for Java Technology API (JCR),
+as specified within the Java Community Process as
+<a href="http://www.jcp.org/en/jsr/detail?id=170">JSR 170</a> and
+<a href="http://www.jcp.org/en/jsr/detail?id=170">JSR 283</a>.
+<a href="http://www.day.com/">Day Software</a>, the JCR specification lead,
+has licensed an initial implementation of the JCR reference implementation for
+use as seed code for this project.  JCR specifies an API for application
+developers (and application frameworks) to use for interaction with modern
+content repositories that provide content services such as searching,
+versioning, transactions, etc.
+</p>
+<p>
+Jackrabbit's implementation began as a proposal within the
+<a href="http://jakarta.apache.org/slide/index.html">Jakarta Slide</a>project,
+but has since attracted interest from multiple projects with the
+<a href="http://www.apache.org/">Apache Software Foundation</a>, including
+Slide, Cocoon, Lenya, XML Indexing, Axion, and Derby.  We are also looking at
+integration with projects such as Beehive, Maven, and Portals.
+</p>
+<p>
+The purpose of this incubation period is to attract additional contributors
+from other Apache projects and from the various expert group companies,
+learn the Apache way of doing things, and allow the developers to focus on this
+interface/implementation rather than all of the existing projects that might
+want to use it.  We hope to improve collaboration on the code base by moving
+all of the active developers and authors to Apache, bring in as many of the
+Apache veterans as wish to get involved, and open it up to all of the 22 expert
+group companies.  Development of the JCR RI and TCK will occur in this project
+-- Day Software plans to continue participation in Jackrabbit and use the code
+in the official (binary) RI and TCK releases, allowing developers to beta test
+against the open source versions as well as the official versions.
+</p>
+</section>
+<section name="Releases">
+<p>
+See the <a href="downloads.html">downloads</a> page for information on
+obtaining releases.
+</p>
+</section>
+
+<section name="Documentation">
+<p>
+The <a href="apidocs/index.html">JavaDoc API documents</a> are available online.
+</p>
+</section>
+
+</body>
+</document>

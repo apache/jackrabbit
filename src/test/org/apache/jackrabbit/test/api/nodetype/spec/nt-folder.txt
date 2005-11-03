@@ -1,0 +1,19 @@
+NodeTypeName
+  nt:folder
+Supertypes
+  nt:hierarchyNode
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+ChildNodeDefinition
+  Name "*"
+  RequiredPrimaryTypes [nt:hierarchyNode]
+  DefaultPrimaryType null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion VERSION
+  Protected false
+  SameNameSiblings false

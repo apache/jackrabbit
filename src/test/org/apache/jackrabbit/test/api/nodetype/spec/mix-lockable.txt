@@ -1,0 +1,30 @@
+NodeTypeName
+  mix:lockable
+Supertypes
+  []
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:lockIsDeep
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion IGNORE
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:lockOwner
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion IGNORE
+  Protected true
+  Multiple false

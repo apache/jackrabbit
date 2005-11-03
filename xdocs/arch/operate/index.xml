@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+   Copyright 2004-2005 The Apache Software Foundation or its licensors,
+                       as applicable.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<document>
+ <properties>
+  <title>Jackrabbit operations explained</title>
+ </properties>
+ <body>
+<section name="Core Content Repository Operations">
+<p>
+This section describes how the Core Repository of Jackrabbit
+operates, segmented into a number of common operations.
+</p>
+<p>
+<a href="startup.html">Start-up, Initialize and Configration</a><br/>
+What happens on start-up? What can be configured? <a href="startup.html">more...</a>
+</p>
+<p>
+<a href="query.html">QueryManager implementation</a><br/>
+How is query support implemented in Jackrabbit? <a href="query.html">more...</a>
+</p>
+</section>
+</body>
+</document>

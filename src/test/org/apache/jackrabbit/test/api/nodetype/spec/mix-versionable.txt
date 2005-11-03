@@ -1,0 +1,60 @@
+NodeTypeName
+  mix:versionable
+Supertypes
+  mix:referenceable
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:baseVersion
+  RequiredType REFERENCE
+  ValueConstraints [nt:version]
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion IGNORE
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:isCheckedOut
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues [true]
+  AutoCreated true
+  Mandatory true
+  OnParentVersion IGNORE
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:mergeFailed
+  RequiredType REFERENCE
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  Multiple true
+PropertyDefinition
+  Name jcr:predecessors
+  RequiredType REFERENCE
+  ValueConstraints [nt:version]
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected true
+  Multiple true
+PropertyDefinition
+  Name jcr:versionHistory
+  RequiredType REFERENCE
+  ValueConstraints [nt:versionHistory]
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected true
+  Multiple false

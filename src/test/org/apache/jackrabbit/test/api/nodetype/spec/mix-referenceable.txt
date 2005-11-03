@@ -1,0 +1,20 @@
+NodeTypeName
+  mix:referenceable
+Supertypes
+  []
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:uuid
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated true
+  Mandatory true
+  OnParentVersion INITIALIZE
+  Protected true
+  Multiple false

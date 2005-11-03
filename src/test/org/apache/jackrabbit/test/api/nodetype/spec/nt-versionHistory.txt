@@ -1,0 +1,48 @@
+NodeTypeName
+  nt:versionHistory
+Supertypes
+  nt:base
+  mix:referenceable
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+ChildNodeDefinition
+  Name jcr:rootVersion
+  RequiredPrimaryTypes [nt:version]
+  DefaultPrimaryType nt:version
+  AutoCreated true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  SameNameSiblings false
+ChildNodeDefinition
+  Name jcr:versionLabels
+  RequiredPrimaryTypes [nt:versionLabels]
+  DefaultPrimaryType nt:versionLabels
+  AutoCreated true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  SameNameSiblings false
+ChildNodeDefinition
+  Name "*"
+  RequiredPrimaryTypes [nt:version]
+  DefaultPrimaryType nt:version
+  AutoCreated false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  SameNameSiblings false
+PropertyDefinition
+  Name jcr:versionableUuid
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  Multiple false

@@ -1,0 +1,30 @@
+NodeTypeName
+  nt:query
+Supertypes
+  nt:base
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:language
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:statement
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple false

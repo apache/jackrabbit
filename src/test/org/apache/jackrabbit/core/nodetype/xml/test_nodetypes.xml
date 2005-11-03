@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<!--
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ -->
+<nodeTypes xmlns:test="test-namespace"
+           xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
+
+  <nodeType name="test:emptyNodeType"
+            isMixin="false" hasOrderableChildNodes="false" primaryItemName=""/>
+
+  <nodeType name="test:mixinNodeType"
+            isMixin="true" hasOrderableChildNodes="false" primaryItemName=""/>
+
+  <nodeType name="test:orderedNodeType"
+            isMixin="false" hasOrderableChildNodes="true" primaryItemName=""/>
+
+  <nodeType name="test:itemNodeType"
+            isMixin="false" hasOrderableChildNodes="false"
+            primaryItemName="test:emptyItem">
+    <propertyDefinition name="*"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
+    <propertyDefinition name="test:emptyItem"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
+    <propertyDefinition name="test:autoCreatedItem"
+                 requiredType="undefined" autoCreated="true" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
+    <propertyDefinition name="test:mandatoryItem"
+                 requiredType="undefined" autoCreated="false" mandatory="true"
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
+    <propertyDefinition name="test:copyItem"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="COPY" protected="false" multiple="false"/>
+    <propertyDefinition name="test:versionItem"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="VERSION" protected="false" multiple="false"/>
+    <propertyDefinition name="test:initializeItem"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="INITIALIZE" protected="false" multiple="false"/>
+    <propertyDefinition name="test:computeItem"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="COMPUTE" protected="false" multiple="false"/>
+    <propertyDefinition name="test:abortItem"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="ABORT" protected="false" multiple="false"/>
+    <propertyDefinition name="test:protectedItem"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="true" multiple="false"/>
+  </nodeType>
+
+  <nodeType name="test:propertyNodeType"
+            isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <propertyDefinition name="test:emptyProperty"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false"/>
+    <propertyDefinition name="test:binaryProperty"
+                 requiredType="Binary" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>[0,)</valueConstraint>
+      </valueConstraints>
+    </propertyDefinition>
+    <propertyDefinition name="test:booleanProperty"
+                 requiredType="Boolean" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>true</valueConstraint>
+        <valueConstraint>false</valueConstraint>
+      </valueConstraints>
+      <defaultValues>
+        <defaultValue>true</defaultValue>
+      </defaultValues>
+    </propertyDefinition>
+    <propertyDefinition name="test:dateProperty"
+                 requiredType="Date" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>
+          [2005-01-01T00:00:00.000Z,2006-01-01T00:00:00.000Z)
+        </valueConstraint>
+      </valueConstraints>
+      <defaultValues>
+        <defaultValue>2005-01-01T00:00:00.000Z</defaultValue>
+      </defaultValues>
+    </propertyDefinition>
+    <propertyDefinition name="test:doubleProperty"
+                 requiredType="Double" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>[,0.0)</valueConstraint>
+        <valueConstraint>(1.0,2.0)</valueConstraint>
+        <valueConstraint>(3.0,]</valueConstraint>
+      </valueConstraints>
+      <defaultValues>
+        <defaultValue>1.5</defaultValue>
+      </defaultValues>
+    </propertyDefinition>
+    <propertyDefinition name="test:longProperty"
+                 requiredType="Long" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>(-10,0]</valueConstraint>
+        <valueConstraint>[1,2]</valueConstraint>
+        <valueConstraint>[10,100)</valueConstraint>
+      </valueConstraints>
+      <defaultValues>
+        <defaultValue>25</defaultValue>
+      </defaultValues>
+    </propertyDefinition>
+    <propertyDefinition name="test:nameProperty"
+                 requiredType="Name" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>test:testName</valueConstraint>
+      </valueConstraints>
+      <defaultValues>
+        <defaultValue>test:testName</defaultValue>
+      </defaultValues>
+    </propertyDefinition>
+    <propertyDefinition name="test:pathProperty"
+                 requiredType="Path" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>/test:testPath</valueConstraint>
+      </valueConstraints>
+    </propertyDefinition>
+    <propertyDefinition name="test:referenceProperty"
+                 requiredType="Reference" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>test:testType</valueConstraint>
+      </valueConstraints>
+    </propertyDefinition>
+    <propertyDefinition name="test:stringProperty"
+                 requiredType="String" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="true">
+      <valueConstraints>
+        <valueConstraint>bananas?</valueConstraint>
+      </valueConstraints>
+      <defaultValues>
+        <defaultValue>banana</defaultValue>
+        <defaultValue>bananas</defaultValue>
+      </defaultValues>
+    </propertyDefinition>
+    <propertyDefinition name="test:multipleProperty"
+                 requiredType="undefined" autoCreated="false" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="true"/>
+  </nodeType>
+
+  <nodeType name="test:childNodeType"
+            isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <childNodeDefinition name="test:emptyNode"
+                  defaultPrimaryType="" sameNameSiblings="false"
+                  autoCreated="false" mandatory="false"
+                  onParentVersion="IGNORE" protected="false"/>
+    <childNodeDefinition name="test:siblingNode"
+                  defaultPrimaryType="" sameNameSiblings="true"
+                  autoCreated="false" mandatory="false"
+                  onParentVersion="IGNORE" protected="false"/>
+    <childNodeDefinition name="test:defaultTypeNode"
+                  defaultPrimaryType="test:testType" sameNameSiblings="false"
+                  autoCreated="false" mandatory="false"
+                  onParentVersion="IGNORE" protected="false"/>
+    <childNodeDefinition name="test:requiredTypeNode"
+                  defaultPrimaryType="" sameNameSiblings="false"
+                  autoCreated="false" mandatory="false"
+                  onParentVersion="IGNORE" protected="false">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>test:baseType</requiredPrimaryType>
+        <requiredPrimaryType>test:testType</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDefinition>
+  </nodeType>
+
+</nodeTypes>

@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Copyright 2004-2005 The Apache Software Foundation or its licensors,
+                       as applicable.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<faqs title="Frequently Asked Questions">
+
+  <part id="general">
+    <title>General</title>
+
+    <faq id="whats-jcr">
+      <question>
+        What is JCR?
+      </question>
+      <answer>
+        <p>
+          JCR is the acronym of the
+          <a href="http://jcp.org/en/jsr/detail?id=170">JSR 170: Content
+          Repository for Java&#8482; technology API</a>. The JCR API is
+          a standardized interface for accessing a content repository.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="whats-cr">
+      <question>
+        What is a content repository?
+      </question>
+      <answer>
+        <p>
+          A content repository is an information management system that
+          provides various services for storing, accessing, and managing
+          content. In addition to a hierarchically structured storage system,
+          common services of a content repository are versioning,
+          access control, full text searching, and event monitoring.
+        </p>
+        <p>
+          A content repository is <em>not</em> a content management
+          system (CMS), although most of the existing CMSs contain a
+          more or less featured custom content repository implementation.
+          A CMS uses a content repository as an underlying component
+          for presentation, business logic, and other features.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="whats-jackrabbit">
+      <question>
+        What is Jackrabbit?
+      </question>
+      <answer>
+        <p>
+          The Apache Jackrabbit is a fully featured content repository
+          implementation of the JCR API. The Jackrabbit project was started
+          when the <a href="http://www.day.com/">Day Software</a>, the JSR-170
+          specification lead, licensed their initial implementation of the
+          JCR reference implementation. Since then the Jackrabbit codebase
+          has been used for the official reference implementation (RI) and 
+          technology compatibility kit (TCK) released along with the final
+          JCR API.
+        </p>
+        <p>
+          The Jackrabbit project is currently <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">working towards</a>
+          making the first official release and is aiming to graduate from
+          the <a href="http://incubator.apache.org/">Apache Incubator</a>
+          shortly before or after the first release.
+        </p>
+      </answer>
+    </faq>
+  </part>
+
+  <part id="using">
+    <title>Using Jackrabbit</title>
+
+    <faq id="howto-jcr">
+      <question>
+        How do I do X with JCR/Jackrabbit?
+      </question>
+      <answer>
+        <p>
+          See the <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html">JCR specification</a>,
+          the <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/">JCR API documentation</a>,
+          or the <a href="http://wiki.apache.org/jackrabbit/ExamplesPage">Examples page</a>
+          on the <a href="http://wiki.apache.org/jackrabbit/FrontPage">Jackrabbit wiki</a>
+          for information on how to perform various operation using the JCR API.
+        </p>
+        <p>
+          For Jackrabbit features (like access control and node type management)
+          not covered by the JCR API, see the
+          <a href="http://wiki.apache.org/jackrabbit/ExamplesPage">Examples page</a>
+          on the wiki, the Jackrabbit javadocs (to be published on the web),
+          or contact the <a href="http://incubator.apache.org/jackrabbit/mail-lists.html">Jackrabbit mailing list</a>.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="using-jta">
+      <question>
+        How do I use transactions with JCR?
+      </question>
+      <answer>
+        <p>
+          See the 
+          <a href="http://article.gmane.org/gmane.comp.apache.jackrabbit.devel/446">mailing list announcement</a>
+          for a simple example on using the <a href="http://java.sun.com/products/jta/">JTA</a>
+          support in Jackrabbit.
+        </p>
+        <p>
+          For a more complete explanation of the transaction features, please
+          see section 8.1 Transactions of the
+          <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html">JCR specification</a>.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="create-workspace">
+      <question>
+        How do I create new workspaces in Jackrabbit?
+      </question>
+      <answer>
+        <p>
+          The JCR API does not contain features for creating or managing
+          workspaces, so you need to use Jackrabbit-specific functionality
+          for creating new workspaces. See the related
+          <a href="http://thread.gmane.org/gmane.comp.apache.jackrabbit.devel/2660">mailing list thread</a>
+          for more instructions.
+        </p>
+      </answer>
+    </faq>
+  </part>
+
+  <part id="pms">
+    <title>Persistence managers</title>
+
+    <faq id="whats-pm">
+      <question>
+        What is a persistence manager?
+      </question>
+      <answer>
+        <p>
+          A persistence manager (PM) is an <em>internal</em> Jackrabbit
+          component that handles the persistent storage of content nodes
+          and properties. Each workspace of a Jackrabbit content repository
+          uses a separate persistence manager to store the content in that
+          workspace. Also the Jackrabbit version handler uses a separate
+          persistence manager.
+        </p>
+        <p>
+          The persistence manager sits at the very bottom layer of the
+          Jackrabbit system architecture. Reliability, integrity and
+          performance of the PM are <em>crucial</em> to the overall
+          stability and performance of the repository. If e.g. the data
+          that a PM is based upon is allowed to change through external
+          means the integrity of the repository would be at risk
+          (think of referential integrity / node references e.g.).
+        </p>
+        <p>
+          In practice, a persistence manager is any Java class that
+          implements the PersistenceManager <!-- TODO: add JavaDoc link -->
+          interface and the associated behavioural contracts. Jackrabbit
+          contains a set of built-in persistence manager classes that cover
+          most of the deployment needs. There are also a few contributed
+          persistence managers that give additional flexibility.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="whats-fs">
+      <question>
+        What is a Jackrabbit file system?
+      </question>
+      <answer>
+        <p>
+          A Jackrabbbit file system (FS) is an internal component that
+          implements standard file system operations on top of some underlying
+          storage mechanism (a normal file system, a database, a webdav server,
+          or a custom file format). A file system component is any Java class
+          that implements the FileSystem <!-- TODO: add JavaDoc link -->
+          interface and the associated behavioural contracts. File systems
+          are used in Jackrabbit both as subcomponents of the persistence
+          managers and for general storage needs (for example to store the
+          full text indexes).
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="pm-abuse">
+      <question>
+        Can I use a persistence manager to access an existing data source?
+      </question>
+      <answer>
+        <p>
+          No. The persistence manager interface was never intended as being
+          a general SPI that you could implement in order to integrate
+          external data sources with proprietary formats (e.g. a customers
+          database). The reason why we abstracted the PM interface was
+          to leave room for future performance optimizations that would
+          not affect the rest of the implementation (e.g. by storing the
+          raw data in a b-tree based database instead of individual file).
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="pm-smart">
+      <question>
+        How &quot;smart&quot; should a persistence manager be?
+      </question>
+      <answer>
+        <p>
+          A persistence manager should not be <em>intelligent</em>, i.e.
+          it should not <em>interpret</em> the content it is managing.
+          The only thing it should care about is to efficiently,
+          consistently, and reliably store and read the content encapsulated
+          in the passed NodeState and PropertyState objects. Though it
+          might be feasible to write a custom persistence manager to
+          represent existing legacy data in a level-1 (read-only) repository,
+          I don't think the same is possible for a level-2 repository and
+          I certainly would not recommend it.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="pm-available">
+      <question>
+        What persistence managers are available?
+      </question>
+      <answer>
+        <p>
+          The table below lists the currently available persistence managers,
+          along with the status and pros and cons of each PM.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Persistence manager</th>
+              <th>Status</th>
+              <th>Pros</th>
+              <th>Cons</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ObjectPersistenceManager</td>
+              <td>mature</td>
+              <td>
+                <ul>
+                  <li>Simple</li>
+                  <li>Easy to configure</li>
+                  <li>Write operations are synchronized</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>Not human readable</li>
+                  <li>An inconsistency is hard to fix without a tool</li>
+                  <li>If the JVM process is killed the repository might turn inconsistent</li>
+                  <li>Not transactional</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>XMLPersistenceManager</td>
+              <td>mature</td>
+              <td>
+                <ul>
+                  <li>Not so simple but human readable</li>
+                  <li>Easy to configure</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>If the JVM process is killed the repository might turn inconsistent</li>
+                  <li>Not transactional</li>
+                  <li>Write operations are synchronized</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>ORM persistence manager</td>
+              <td>work in progress</td>
+              <td>
+                <ul>
+                  <li>RDBMS referencial integrity (possible, but not implemented yet)</li>
+                  <li>Transactional</li>
+                  <li>Multithreaded friendly. Write operations don't need to be synchronized.</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>Not so simple</li>
+                  <li>Not so easy to configure</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </answer>
+    </faq>
+  
+    <faq id="fs-available">
+      <question>
+        What Jackrabbit file systems are available?
+      </question>
+      <answer>
+        <p>
+          The table below lists the currently available Jackrabbit file systems,
+          along with the status and pros and cons of each FS.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>File system</th>
+              <th>Status</th>
+              <th>Pros</th>
+              <th>Cons</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>LocalFileSystem</td>
+              <td>mature</td>
+              <td></td>
+              <td>
+                <ul>
+                  <li>Slow on Windows boxes</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>CQFS file system</td>
+              <td>mature</td>
+              <td>
+                <ul>
+                  <li>Fast on Windows boxes</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>Undocumented configuration options</li>
+                  <li>Proprietary binary format</li>
+                  <li>Not open source</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </answer>
+    </faq>
+
+    <faq id="which-pm-fs">
+      <question>
+        Which persistence manager and file systems should I use?
+      </question>
+      <answer>
+        <p>
+          The answer depends on your priorities. If you want to store
+          your data in an accessible format (just in case or for manual
+          debugging), you might want to try the XMLPersistenceManager
+          and the LocalFileSystem. If you use Windows and performance is
+          a must, you might want to try the ObjectPersistenceManager and
+          the proprietary CQFS.
+        </p>
+      </answer>
+    </faq>
+  </part>
+
+</faqs>

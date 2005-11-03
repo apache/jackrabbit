@@ -1,0 +1,20 @@
+NodeTypeName
+  nt:versionLabels
+Supertypes
+  nt:base
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name "*"
+  RequiredType REFERENCE
+  ValueConstraints [nt:version]
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  Multiple false

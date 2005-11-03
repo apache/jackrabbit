@@ -1,0 +1,96 @@
+/*
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.query;
+
+import org.apache.jackrabbit.name.QName;
+
+/**
+ * Implements a query node that defines an exact match of a property and a
+ * value.
+ */
+public class ExactQueryNode extends QueryNode {
+
+    /**
+     * The name of the property to match
+     */
+    private final QName property;
+
+    /**
+     * The value of the property to match
+     */
+    private final QName value;
+
+    /**
+     * Creates a new <code>ExactQueryNode</code> instance.
+     *
+     * @param parent   the parent node for this <code>ExactQueryNode</code>.
+     * @param property the name of the property to match.
+     * @param value    the value of the property to match.
+     */
+    public ExactQueryNode(QueryNode parent, QName property, QName value) {
+        super(parent);
+        if (parent == null) {
+            throw new NullPointerException("parent");
+        }
+        this.property = property;
+        this.value = value;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Object accept(QueryNodeVisitor visitor, Object data) {
+        return visitor.visit(this, data);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int getType() {
+        return QueryNode.TYPE_EXACT;
+    }
+
+    /**
+     * Returns the name of the property to match.
+     *
+     * @return the name of the property to match.
+     */
+    public QName getPropertyName() {
+        return property;
+    }
+
+    /**
+     * Returns the value of the property to match.
+     *
+     * @return the value of the property to match.
+     */
+    public QName getValue() {
+        return value;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof ExactQueryNode) {
+            ExactQueryNode other = (ExactQueryNode) obj;
+            return (value == null ? other.value == null : value.equals(other.value))
+                    && (property == null ? other.property == null : property.equals(other.property));
+        }
+        return false;
+    }
+}

@@ -1,0 +1,100 @@
+NodeTypeName
+  nt:propertyDefinition
+Supertypes
+  nt:base
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:autoCreated
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:defaultValues
+  RequiredType UNDEFINED
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple true
+PropertyDefinition
+  Name jcr:mandatory
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:multiple
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:name
+  RequiredType NAME
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:onParentVersion
+  RequiredType STRING
+  ValueConstraints [COPY,VERSION,INITIALIZE,COMPUTE,IGNORE,ABORT]
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:protected
+  RequiredType BOOLEAN
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:requiredType
+  RequiredType STRING
+  ValueConstraints [STRING,BINARY,LONG,DOUBLE,BOOLEAN,DATE,NAME,PATH,REFERENCE,UNDEFINED]
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:valueConstraints
+  RequiredType STRING
+  ValueConstraints []
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected false
+  Multiple true

@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<!--
+   Copyright 2004-2005 The Apache Software Foundation or its licensors,
+                       as applicable.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<document>
+   <properties>
+      <title>Downloads</title>
+   </properties>
+
+   <body>
+      <section name="Releases">
+         <p>
+           There are no releases available yet. See the
+           <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">Jira Road Map</a>
+           for the issues remaining before the first release is made.
+         </p>
+
+<!--
+         <p>The following releases are available:</p>
+         <ul>
+           <li>Version 1.1 - 20 October 2003</li>
+           <li>Version 1.0 - 12 August 2002</li>
+         </ul>
+         <br/>
+         <p>
+            The latest binary release is always available on the 
+            <a href="http://jakarta.apache.org/site/binindex.cgi#commons-uid">
+            Jakarta Binary Downloads page</a>,
+            its source is available from 
+            <a href="http://jakarta.apache.org/site/sourceindex.cgi#commons-uid">
+            Jakarta Source Downloads page</a>.
+         </p>
+         <p>
+            Older releases are retained by the Apache Software Foundation but are 
+            moved into a
+            <a href="http://archive.apache.org/dist/jakarta/commons/uid/">
+            special archive area</a>.
+         </p>
+         <p>
+           <a href="http://cvs.apache.org/builds/jakarta-commons/nightly/commons-uid/">
+           Nightly source and binary drops</a> are also available.
+         </p>
+-->
+      </section>
+      
+      <section name="Source code">
+         <p>
+            Access to the source tree to see the latest and greatest code is possible
+            through <!-- a href="cvs-usage.html" -->anonymous SVN access<!-- /a --> at
+            <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>.
+            The source tree can also be browsed using ViewCVS at
+            <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/">http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/</a>.
+         </p>
+         <p>
+            The latest Jackrabbit sources can be downloaded using the following
+            command (or it's equivalent in your Subversion client):
+         </p>
+         <source>svn co http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk jackrabbit</source>
+         <p>
+            You need version 1.0.2 of the
+            <a href="http://maven.apache.org/">Apache Maven</a> tool to build
+            the Jackrabbit sources. Maven will automatically download all
+            Jackrabbit dependencies and compile the Jackrabbit sources when
+            you run the following command:
+         </p>
+         <source>maven</source>
+         <p>
+            By default the command will build all the Jackrabbit main components and
+            install the resulting jar files into your local Maven repository.
+            For other build options, please see the
+            <a href="http://maven.apache.org/start/use.html">Maven documentation</a>
+            and the <a href="http://maven.apache.org/reference/plugins/multiproject/goals.html">Maven Multi-Project goals</a>.
+         </p>
+         <p>
+            <strong>NOTE:</strong>
+            JDK 1.5 users need to download the <code>xalan.jar</code> file
+            that contains the Xalan Interpretive Processor from
+            <a href="http://xml.apache.org/xalan-j/">Xalan-Java</a> and place
+            it in <code>$MAVEN_HOME/lib/endorsed</code> (or
+            <code>$JRE/lib/endorsed</code> if using Maven 1.1) to build the
+            Jackrabbit sources. The reason for this workaround is explained in
+            <a href="http://issues.apache.org/jira/browse/JCR-46">JCR-46</a>.
+         </p>
+      </section>
+
+<!--
+      <section name="Release Candidate">
+         <p>
+            Release candidates for the upcoming 1.1 release can be downloaded 
+            <a href="http://cvs.apache.org/~psteitz/builds/">here</a>.
+         </p>
+         <p>
+            Please review and report any problem on the 
+            <a href="mail-lists.html">mailing list</a>.
+         </p>
+         <p>
+            Final release target is 20 October 2003. 
+         </p>
+      </section>
+-->
+   </body>
+</document>

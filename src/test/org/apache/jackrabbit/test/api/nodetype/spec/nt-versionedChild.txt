@@ -1,0 +1,20 @@
+NodeTypeName
+  nt:versionedChild
+Supertypes
+  nt:base
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:childVersionHistory
+  RequiredType REFERENCE
+  ValueConstraints [nt:versionHistory]
+  DefaultValues null
+  AutoCreated true
+  Mandatory true
+  OnParentVersion ABORT
+  Protected true
+  Multiple false
