@@ -67,7 +67,7 @@
         <ant:condition property="sqlparser_stale">
             <ant:not>
                 <ant:uptodate targetfile="${maven.gen.src}/java/org/apache/jackrabbit/core/query/sql/JCRSQLParser.java">
-                    <ant:srcfiles dir="${maven.src.dir}/grammar/sql">
+                    <ant:srcfiles dir="${maven.src.dir}/main/javacc/sql">
                         <ant:include name="JCRSQL.jjt"/>
                     </ant:srcfiles>
                 </ant:uptodate>
@@ -79,7 +79,7 @@
         <ant:condition property="xpathparser_stale">
             <ant:not>
                 <ant:uptodate targetfile="${maven.gen.src}/java/org/apache/jackrabbit/core/query/xpath/XPath.java">
-                    <ant:srcfiles dir="${maven.src.dir}/grammar/xpath">
+                    <ant:srcfiles dir="${maven.src.dir}/main/javacc/xpath">
                         <ant:include name="javacc.xsl"/>
                         <ant:include name="jjtree.xsl"/>
                         <ant:include name="jjtree-jackrabbit.xsl"/>
@@ -95,7 +95,7 @@
         <ant:condition property="fulltextparser_stale">
             <ant:not>
                 <ant:uptodate targetfile="${maven.gen.src}/java/org/apache/jackrabbit/core/query/lucene/fulltext/QueryParser.java">
-                    <ant:srcfiles dir="${maven.src.dir}/grammar/fulltext">
+                    <ant:srcfiles dir="${maven.src.dir}/main/javacc/fulltext">
                         <ant:include name="QueryParser.jjt"/>
                     </ant:srcfiles>
                 </ant:uptodate>
@@ -117,7 +117,7 @@
         <j:set var="maven.javacc.javacc.package"
                value="${maven.javacc.jjtree.package}"/>
         <j:set var="maven.javacc.jjtree.grammar"
-               value="${maven.src.dir}/grammar/sql/JCRSQL.jjt"/>
+               value="${maven.src.dir}/main/javacc/sql/JCRSQL.jjt"/>
         <attainGoal name="javacc"/>
         <!-- Remove files that have been customized in Jackrabbit. -->
         <ant:delete>
@@ -136,12 +136,12 @@
         <ant:mkdir dir="${maven.gen.src}/javacc"/>
         <!-- The following is a hack to get xslt work with maven (See: http://maven.apache.org/faq.html#BadXSLT ) -->
         ${systemScope.setProperty('javax.xml.transform.TransformerFactory','org.apache.xalan.processor.TransformerFactoryImpl')}
-        <ant:xslt style="${maven.src.dir}/grammar/xpath/strip.xsl"
-            in="${maven.src.dir}/grammar/xpath/xpath-grammar.xml"
+        <ant:xslt style="${maven.src.dir}/main/javacc/xpath/strip.xsl"
+            in="${maven.src.dir}/main/javacc/xpath/xpath-grammar.xml"
             out="${maven.gen.src}/javacc/stripped-xpath-grammar.xml"
             force="yes">
         </ant:xslt>
-        <ant:xslt style="${maven.src.dir}/grammar/xpath/jjtree-jackrabbit.xsl"
+        <ant:xslt style="${maven.src.dir}/main/javacc/xpath/jjtree-jackrabbit.xsl"
             in="${maven.gen.src}/javacc/stripped-xpath-grammar.xml"
             out="${maven.gen.src}/javacc/XPath.jjt"
             force="yes">
@@ -169,7 +169,7 @@
         <j:set var="maven.javacc.javacc.package"
                value="${maven.javacc.jjtree.package}"/>
         <j:set var="maven.javacc.jjtree.grammar"
-               value="${maven.src.dir}/grammar/fulltext/QueryParser.jjt"/>
+               value="${maven.src.dir}/main/javacc/fulltext/QueryParser.jjt"/>
         <attainGoal name="javacc"/>
     </goal>
 
