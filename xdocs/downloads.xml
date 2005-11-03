@@ -68,7 +68,7 @@
             The latest Jackrabbit sources can be downloaded using the following
             command (or it's equivalent in your Subversion client):
          </p>
-         <source>svn co http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk jackrabbit</source>
+         <source>svn checkout http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit</source>
          <p>
             You need version 1.0.2 of the
             <a href="http://maven.apache.org/">Apache Maven</a> tool to build
