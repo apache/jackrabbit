@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.util.BLOBStore;
 import org.apache.jackrabbit.core.state.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.state.util.Serializer;
@@ -526,7 +527,8 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         }
 
         // check if insert or update
-        boolean update = exists((NodeId) state.getId());
+        boolean update = state.getStatus() != ItemState.STATUS_NEW;
+        //boolean update = exists((NodeId) state.getId());
         PreparedStatement stmt = (update) ? nodeStateUpdate : nodeStateInsert;
 
         try {
@@ -569,7 +571,8 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         }
 
         // check if insert or update
-        boolean update = exists((PropertyId) state.getId());
+        boolean update = state.getStatus() != ItemState.STATUS_NEW;
+        //boolean update = exists((PropertyId) state.getId());
         PreparedStatement stmt = (update) ? propertyStateUpdate : propertyStateInsert;
 
         try {

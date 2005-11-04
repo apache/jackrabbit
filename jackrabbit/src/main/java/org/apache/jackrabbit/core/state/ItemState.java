@@ -34,7 +34,7 @@ import java.util.Map;
 public abstract class ItemState implements ItemStateListener, Serializable {
 
     /** Serialization UID of this class. */
-    static final long serialVersionUID = -337199573967324199L;
+    static final long serialVersionUID = 2017294661624942639L;
 
     private static Logger log = Logger.getLogger(ItemState.class);
 
