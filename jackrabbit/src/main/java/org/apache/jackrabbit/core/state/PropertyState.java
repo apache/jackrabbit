@@ -21,25 +21,23 @@ import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.util.Base64;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.StringWriter;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
  */
 public class PropertyState extends ItemState {
 
-    /** Serialization UID of this class. */
-    static final long serialVersionUID = 8960688206140247183L;
+    /**
+     * Serialization UID of this class.
+     */
+    static final long serialVersionUID = 4569719974514326906L;
 
     protected QName name;
     protected InternalValue[] values;
@@ -194,14 +192,13 @@ public class PropertyState extends ItemState {
     private void writeObject(ObjectOutputStream out) throws IOException {
         // important: fields must be written in same order as they are
         // read in readObject(ObjectInputStream)
-        //out.writeObject(name);
         out.writeUTF(name.toString());
         out.writeInt(type);
         out.writeBoolean(multiValued);
         if (values == null) {
-            out.writeObject(null);
+            out.writeShort(-1);
         } else {
-            String[] strings = new String[values.length];
+            out.writeShort(values.length);
             for (int i = 0; i < values.length; i++) {
                 InternalValue val = values[i];
                 try {
@@ -209,18 +206,18 @@ public class PropertyState extends ItemState {
                         // special handling required for binary value
                         BLOBFileValue blob = (BLOBFileValue) val.internalValue();
                         InputStream in = blob.getStream();
-                        // use 32k initial buffer size as binary data is
-                        // probably not just a couple of bytes
-                        StringWriter writer = new StringWriter(32768);
+                        out.writeLong(blob.getLength());
+                        byte[] buf = new byte[0x2000];
                         try {
-                            Base64.encode(in, writer);
+                            int read;
+                            while ((read = in.read(buf)) > 0) {
+                                out.write(buf, 0, read);
+                            }
                         } finally {
                             in.close();
-                            writer.close();
                         }
-                        strings[i] = writer.toString();
                     } else {
-                        strings[i] = val.toString();
+                        out.writeUTF(val.toString());
                     }
                 } catch (IllegalStateException ise) {
                     throw new IOException(ise.getMessage());
@@ -228,34 +225,69 @@ public class PropertyState extends ItemState {
                     throw new IOException(re.getMessage());
                 }
             }
-            out.writeObject(strings);
         }
     }
 
-    private void readObject(ObjectInputStream in)
-            throws IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream in) throws IOException {
         // important: fields must be read in same order as they are
         // written in writeObject(ObjectOutputStream)
-        //name = (QName) in.readObject();
         name = QName.valueOf(in.readUTF());
         type = in.readInt();
         multiValued = in.readBoolean();
-        Object obj = in.readObject();
-        if (obj == null) {
+        short count = in.readShort(); // # of values
+        if (count < 0) {
             values = null;
         } else {
-            String[] strings = (String[]) obj;
-            values = new InternalValue[strings.length];
-            for (int i = 0; i < strings.length; i++) {
-                String str = strings[i];
+            values = new InternalValue[count];
+            for (int i = 0; i < values.length; i++) {
                 if (type == PropertyType.BINARY) {
                     // special handling required for binary value
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream(str.length());
-                    Base64.decode(str, bos);
-                    bos.close();
-                    values[i] = InternalValue.create(new ByteArrayInputStream(bos.toByteArray()));
+                    final long length = in.readLong();
+                    final InputStream stream = in;
+                    // create InputStream wrapper of size 'length'
+                    values[i] = InternalValue.create(new InputStream() {
+
+                        long consumed = 0;
+
+                        public int read() throws IOException {
+                            if (consumed >= length) {
+                                return -1;  // eof
+                            }
+                            int b = stream.read();
+                            consumed++;
+                            return b;
+                        }
+
+                        public int read(byte b[], int off, int len) throws IOException {
+                            if (consumed >= length) {
+                                return -1;  // eof
+                            }
+                            if ((consumed + len) > length) {
+                                len = (int) (length - consumed);
+                            }
+                            int read = super.read(b, off, len);
+                            consumed += read;
+                            return read;
+                        }
+
+                        public long skip(long n) throws IOException {
+                            if (consumed >= length && n > 0) {
+                                return -1;  // eof
+                            }
+                            if ((consumed + n) > length) {
+                                n = length - consumed;
+                            }
+                            long skipped = super.skip(n);
+                            consumed += skipped;
+                            return skipped;
+                        }
+
+                        public void close() {
+                            // nop
+                        }
+                    });
                 } else {
-                    values[i] = InternalValue.valueOf(str, type);
+                    values[i] = InternalValue.valueOf(in.readUTF(), type);
                 }
             }
         }
