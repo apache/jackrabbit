@@ -181,19 +181,19 @@ public class ChangeLog {
     }
 
     /**
-     * Merge another change log to this change log
+     * Merge another change log with this change log
      *
      * @param other other change log
      */
     public void merge(ChangeLog other) {
-        // Remove all states from our added set that have now been deleted
+        // Remove all states from our 'added' set that have now been deleted
         Iterator iter = other.deletedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             if (addedStates.remove(state.getId()) == null) {
                 deletedStates.put(state.getId(), state);
             }
-            // also remove from eventual modified state
+            // also remove from possibly modified state
             modifiedStates.remove(state.getId());
         }
 
@@ -203,6 +203,10 @@ public class ChangeLog {
             ItemState state = (ItemState) iter.next();
             if (!addedStates.containsKey(state.getId())) {
                 modifiedStates.put(state.getId(), state);
+            } else {
+                // adapt status and replace 'added'
+                state.setStatus(ItemState.STATUS_NEW);
+                addedStates.put(state.getId(), state);
             }
         }
 
@@ -210,8 +214,18 @@ public class ChangeLog {
         iter = other.addedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
-            addedStates.put(state.getId(), state);
-            deletedStates.remove(state.getId());
+            ItemState deletedState = (ItemState) deletedStates.remove(state.getId());
+            if (deletedState != null) {
+                // the newly 'added' state had previously been deleted;
+                // merging those two operations results in a modified state
+
+                // adapt status/modCount and add to modified
+                state.setStatus(deletedState.getStatus());
+                state.setModCount(deletedState.getModCount());
+                modifiedStates.put(state.getId(), state);
+            } else {
+                addedStates.put(state.getId(), state);
+            }
         }
 
         // add refs

@@ -44,7 +44,7 @@ import java.util.Set;
 public class NodeState extends ItemState {
 
     /** Serialization UID of this class. */
-    static final long serialVersionUID = -764076390011517389L;
+    static final long serialVersionUID = -4116945555530446652L;
 
     /** the uuid of this node */
     protected String uuid;
@@ -1041,25 +1041,22 @@ public class NodeState extends ItemState {
         private void writeObject(ObjectOutputStream out) throws IOException {
             // important: fields must be written in same order as they are
             // read in readObject(ObjectInputStream)
-            out.writeInt(size()); // count
+            out.writeShort(size()); // count
             for (Iterator iter = iterator(); iter.hasNext();) {
                 NodeState.ChildNodeEntry entry =
                         (NodeState.ChildNodeEntry) iter.next();
-                //out.writeObject(entry.getName());   // name
                 out.writeUTF(entry.getName().toString());   // name
                 out.writeUTF(entry.getUUID());  // uuid
             }
         }
 
-        private void readObject(ObjectInputStream in)
-                throws IOException, ClassNotFoundException {
+        private void readObject(ObjectInputStream in) throws IOException {
             entries = new LinkedMap();
             nameMap = new HashMap();
             // important: fields must be read in same order as they are
             // written in writeObject(ObjectOutputStream)
-            int count = in.readInt();   // count
+            short count = in.readShort();   // count
             for (int i = 0; i < count; i++) {
-                //QName name = (QName) in.readObject();    // name
                 QName name = QName.valueOf(in.readUTF());    // name
                 String s = in.readUTF();   // uuid
                 add(name, s);
