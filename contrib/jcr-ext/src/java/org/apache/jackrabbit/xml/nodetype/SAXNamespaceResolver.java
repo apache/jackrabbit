@@ -23,7 +23,11 @@ import java.util.Map;
 
 import javax.jcr.NamespaceException;
 
+import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
 
 /**
  * TODO
@@ -31,6 +35,14 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 public class SAXNamespaceResolver implements NamespaceResolver {
 
     private final LinkedList stack = new LinkedList();
+
+    public String getJCRName(QName qname) throws NoPrefixDeclaredException {
+        return qname.toJCRName(this);
+    }
+
+    public QName getQName(String name) throws IllegalNameException, UnknownPrefixException {
+        return QName.fromJCRName(name, this);
+    }
 
     public void startDocument() {
         stack.addFirst(new HashMap());
