@@ -51,7 +51,7 @@ public class NodeTypeXML {
             throws TransformerConfigurationException, TransformerException {
         NodeTypeXMLReader reader = new NodeTypeXMLReader();
         TransformerFactory factory = TransformerFactory.newInstance();
-        factory.setFeature("http://xml.org/sax/features/namespaces", true);
+        // factory.setFeature("http://xml.org/sax/features/namespaces", true);
         Transformer transformer = factory.newTransformer();
         transformer.transform(source, new SAXResult(reader));
         return reader.getNodeTypeManagerState();
@@ -61,7 +61,7 @@ public class NodeTypeXML {
             throws IOException, ParserConfigurationException, SAXException {
         NodeTypeXMLReader reader = new NodeTypeXMLReader();
         SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setFeature("http://xml.org/sax/features/namespaces", true);
+        // factory.setFeature("http://xml.org/sax/features/namespaces", true);
         SAXParser parser = factory.newSAXParser();
         parser.parse(source, reader);
         return reader.getNodeTypeManagerState();
@@ -71,7 +71,7 @@ public class NodeTypeXML {
             throws IOException, ParserConfigurationException, SAXException {
         NodeTypeXMLReader reader = new NodeTypeXMLReader();
         SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setFeature("http://xml.org/sax/features/namespaces", true);
+        // factory.setFeature("http://xml.org/sax/features/namespaces", true);
         SAXParser parser = factory.newSAXParser();
         parser.parse(file, reader);
         return reader.getNodeTypeManagerState();
@@ -81,7 +81,7 @@ public class NodeTypeXML {
             throws IOException, ParserConfigurationException, SAXException {
         NodeTypeXMLReader reader = new NodeTypeXMLReader();
         SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setFeature("http://xml.org/sax/features/namespaces", true);
+        // factory.setFeature("http://xml.org/sax/features/namespaces", true);
         SAXParser parser = factory.newSAXParser();
         parser.parse(input, reader);
         return reader.getNodeTypeManagerState();
@@ -101,6 +101,7 @@ public class NodeTypeXML {
         handler.setResult(result);
         write(state, handler);
     }
+
 
     public static void write(NodeTypeManagerState state, OutputStream output)
             throws TransformerConfigurationException, SAXException {
