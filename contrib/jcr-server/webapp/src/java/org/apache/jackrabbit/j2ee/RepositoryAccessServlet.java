@@ -17,23 +17,14 @@
 package org.apache.jackrabbit.j2ee;
 
 import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
-import org.apache.jackrabbit.util.Base64;
 import org.apache.log4j.Logger;
 
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -60,9 +51,6 @@ public class RepositoryAccessServlet extends HttpServlet {
 
     /** the 'missing-auth-mapping' init parameter */
     public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
-
-    /** Authorization header name */
-    private static final String HEADER_AUTHORIZATION = "Authorization";
 
     private static final String CTX_ATTR_REPOSITORY = "jcr.repository";
 
@@ -180,99 +168,6 @@ public class RepositoryAccessServlet extends HttpServlet {
      */
     public static Repository getRepository(ServletContext ctx) {
 	return (Repository) ctx.getAttribute(CTX_ATTR_REPOSITORY);
-    }
-
-    /**
-     * Build a {@link Credentials} object for the given authorization header.
-     * The creds may be used to login to the repository. If the specified header
-     * string is <code>null</code> or not of the required format the behaviour
-     * depends on the {@link #INIT_PARAM_MISSING_AUTH_MAPPING} param:<br>
-     * <ul>
-     * <li> if this init-param is missing, a LoginException is thrown.
-     *      This is suiteable for clients (eg. webdav clients) for with
-     *      sending a proper authorization header is not possible, if the
-     *      server never send a 401.
-     * <li> if this init-param is present, but with an empty value,
-     *      null-credentials are returned, thus forcing an null login
-     *      on the repository
-     * <li> if this init-param has a 'user:password' value, the respective
-     *      simple credentials are generated.
-     * </ul>
-     *
-     * @param authHeader Authorization header as present in the Http request
-     * @return credentials or <code>null</code>.
-     * @throws ServletException If an IOException occured while decoding the
-     * Authorization header.
-     * @throws LoginException if no suitable auth header and missing-auth-mapping
-     * is not present
-     * @see #getRepository(ServletContext)
-     */
-    public static Credentials getCredentialsFromHeader(ServletContext ctx,
-                                                       String authHeader)
-	    throws ServletException, LoginException {
-	try {
-	    if (authHeader != null) {
-		String[] authStr = authHeader.split(" ");
-		if (authStr.length >= 2 && authStr[0].equalsIgnoreCase(HttpServletRequest.BASIC_AUTH)) {
-		    ByteArrayOutputStream out = new ByteArrayOutputStream();
-		    Base64.decode(authStr[1].toCharArray(), out);
-		    String decAuthStr = out.toString("ISO-8859-1");
-		    int pos = decAuthStr.indexOf(':');
-		    String userid = decAuthStr.substring(0, pos);
-		    String passwd = decAuthStr.substring(pos + 1);
-		    return new SimpleCredentials(userid, passwd.toCharArray());
-		}
-	    }
-            // check special handling
-            String missingAuthMapping = ctx.getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING);
-            if (missingAuthMapping == null) {
-                throw new LoginException();
-            } else if (missingAuthMapping.equals("")) {
-                return null;
-            } else {
-                int pos = missingAuthMapping.indexOf(':');
-                if (pos<0) {
-                    return new SimpleCredentials(missingAuthMapping, null);
-                } else {
-                    return new SimpleCredentials(
-                            missingAuthMapping.substring(0, pos),
-                            missingAuthMapping.substring(pos+1).toCharArray()
-                    );
-                }
-            }
-	} catch (IOException e) {
-	    throw new ServletException("Unable to decode authorization: " + e.toString());
-	}
-    }
-
-    /**
-     * Simple login to the {@link Repository} accessed by this servlet using the
-     * Authorization header present in the given request.<p/>
-     * Please note, that no workspace information is provided to the repository
-     * login ({@link Repository#login(javax.jcr.Credentials)}), thus the default
-     * workspace will be selected. In order to provide a specific workspace name,
-     * manual {@link Repository#login(Credentials, String) login} is required (see
-     * also {@link #getRepository(ServletContext)}).
-     *
-     * @param request
-     * @return  Session object obtained upon {@link Repository#login(javax.jcr.Credentials)}.
-     * @throws ServletException
-     * @throws LoginException if credentials are invalid
-     * @see #getRepository(ServletContext) in order to be able to login to a specific workspace.
-     * @see #getCredentialsFromHeader(ServletContext, String) for a utility method to retrieve
-     * credentials from the Authorization header string.
-     */
-    public static Session login(ServletContext ctx, HttpServletRequest request)
-            throws LoginException, ServletException {
-        String authHeader = request.getHeader(HEADER_AUTHORIZATION);
-	try {
-            Repository rep = getRepository(ctx);
-	    return rep.login(getCredentialsFromHeader(ctx, authHeader));
-        } catch (LoginException e) {
-            throw e;
-	} catch (RepositoryException e) {
-	    throw new ServletException("Failed to login to the repository: " + e.toString());
-	}
     }
 }
 

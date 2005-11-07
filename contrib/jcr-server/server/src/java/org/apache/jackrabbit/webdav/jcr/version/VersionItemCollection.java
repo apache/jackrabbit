@@ -68,7 +68,7 @@ public class VersionItemCollection extends DefaultItemCollection
 
     //------------------------------------------< VersionResource interface >---
     /**
-     * Modify the labels defined for the underlaying repository version.
+     * Modify the labels defined for the underlying repository version.
      *
      * @param labelInfo
      * @throws DavException

@@ -22,16 +22,13 @@ import org.apache.jackrabbit.webdav.jcr.*;
 import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionManagerImpl;
 import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
 import org.apache.jackrabbit.server.jcr.JCRWebdavServer;
-import org.apache.jackrabbit.server.CredentialsProvider;
 import org.apache.jackrabbit.server.SessionProviderImpl;
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
+import org.apache.jackrabbit.server.BasicCredentialsProvider;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 import javax.jcr.Repository;
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
 
 /**
  * JCRWebdavServerServlet provides request/response handling for the JCRWebdavServer.
@@ -47,6 +44,9 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
      * Init parameter specifying the prefix used with the resource path.
      */
     public static final String INIT_PARAM_PREFIX = "resource-path-prefix";
+
+    /** the 'missing-auth-mapping' init parameter */
+    public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
 
     private String pathPrefix;
     private JCRWebdavServer server;
@@ -77,13 +77,10 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
 	if (repository == null) {
 	    throw new ServletException("Repository could not be retrieved. Check config of 'RepositoryAccessServlet'.");
 	}
-        CredentialsProvider cp = new CredentialsProvider() {
-            public Credentials getCredentials(HttpServletRequest request) throws LoginException, ServletException {
-                return RepositoryAccessServlet.getCredentialsFromHeader(ctx, request.getHeader(DavConstants.HEADER_AUTHORIZATION));
-            }
-        };
-
-	server = new JCRWebdavServer(repository, new SessionProviderImpl(cp));
+	server = new JCRWebdavServer(repository, new SessionProviderImpl(
+                new BasicCredentialsProvider(
+                        getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING)))
+        );
         txMgr = new TxLockManagerImpl();
         subscriptionMgr = new SubscriptionManagerImpl();
 
@@ -97,7 +94,7 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
      * {@link WebdavRequest#matchesIfHeader(DavResource) If header} and validation
      * of {@link org.apache.jackrabbit.webdav.transaction.TransactionConstants#HEADER_TRANSACTIONID
      * TransactionId header}. This method will also return false if the requested
-     * resource lays within a differenct workspace as is assigned to the repository
+     * resource resides within a differenct workspace as is assigned to the repository
      * session attached to the given request.
      *
      * @see AbstractWebdavServlet#isPreconditionValid(WebdavRequest, DavResource)

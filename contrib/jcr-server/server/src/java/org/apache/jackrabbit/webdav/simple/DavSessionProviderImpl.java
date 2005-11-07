@@ -87,10 +87,10 @@ public class DavSessionProviderImpl implements DavSessionProvider {
 
     /**
      * Only removes the <code>DavSession</code> object from the given request object.
-     * and remove all the lock tokens from the underlaying repository session
+     * and remove all the lock tokens from the underlying repository session
      * in order make sure they can be reset when attaching a session to the
-     * next request. Finally the session is logged-out. The latter is a workaround
-     * only, since the SessionProvider may not clean up unused sessions properly.
+     * next request. Finally the session provider is informed, that the
+     * session is no longer used.
      *
      * @param request
      * @see DavSessionProvider#releaseSession(org.apache.jackrabbit.webdav.WebdavRequest)
@@ -103,8 +103,7 @@ public class DavSessionProviderImpl implements DavSessionProvider {
             for (int i = 0; i < lockTokens.length; i++) {
                 repSession.removeLockToken(lockTokens[i]);
             }
-            // TODO: not quite correct. the SessionProvider should take care of removing session.
-            repSession.logout();
+            sesProvider.releaseSession(repSession);
             log.debug("Releasing session '"+ ds + "' from request '" + request + "'");
         } else {
             // session is null. nothing to be done.

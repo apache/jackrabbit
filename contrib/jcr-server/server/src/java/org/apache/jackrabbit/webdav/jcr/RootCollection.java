@@ -121,15 +121,7 @@ public class RootCollection extends AbstractResource implements DavResource {
      * Throws exception: 403 Forbidden.
      * @see DavResource#addMember(DavResource, InputContext)
      */
-    public void addMember(DavResource resource, InputContext inputCxt) throws DavException {
-        throw new DavException(DavServletResponse.SC_FORBIDDEN);
-    }
-
-    /**
-     * Throws exception: 403 Forbidden.
-     * @see DavResource#addMember(org.apache.jackrabbit.webdav.DavResource)
-     */
-    public void addMember(DavResource resource) throws DavException {
+    public void addMember(DavResource resource, InputContext inputContext) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
 
@@ -189,7 +181,7 @@ public class RootCollection extends AbstractResource implements DavResource {
     /**
      * Since the root resource does not represent a repository item and therefore
      * is not member of a workspace resource, the workspace href is calculated
-     * from the workspace name retrieved from the underlaying repository session.
+     * from the workspace name retrieved from the underlying repository session.
      *
      * @return workspace href build from workspace name.
      * @see AbstractResource#getWorkspaceHref()

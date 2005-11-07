@@ -1,5 +1,6 @@
 /*
- * Copyright 2005 The Apache Software Foundation.
+ * Copyright 2004-2005 The Apache Software Foundation or its licensors,
+ *                     as applicable.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,69 +19,60 @@ package org.apache.jackrabbit.webdav.io;
 import java.io.InputStream;
 
 /**
- * <code>InputContext</code> class encapsulates the <code>InputStream</code>
- * and some header values as present in the POST, PUT or MKCOL request.
+ * <code>InputContext</code>...
  */
-public class InputContext {
-
-    private InputStream inputStream;
-    private String contentType;
-    private String contentLanguage;
+public interface InputContext {
 
     /**
-     * Returns the input stream to be imported or <code>null</code> if no stream
-     * has been set or if the stream has been consumed.
+     * Return true, if there are any data to be imported (and not only properties)
+     *
+     * @return
+     */
+    public boolean hasStream();
+
+    /**
+     * Returns the input stream of the resource to import.
      *
      * @return the input stream.
      */
-    public InputStream getInputStream() {
-        return inputStream;
-    }
+    public InputStream getInputStream();
 
     /**
-     * Sets the input stream to be imported. The input stream should be set to
-     * <code>null</code> if it has been consumed.
+     * Returns the modification time of the resource or the current time if
+     * the modification time has not been set.
      *
-     * @param inputStream the input stream
+     * @return the modification time.
      */
-    public void setInputStream(InputStream inputStream) {
-        this.inputStream = inputStream;
-    }
+    public long getModificationTime();
 
     /**
-     * Returns the content type of the resource to be imported or null, if
-     * no has previously been set.
-     *
-     * @return the content type of the resource
-     */
-    public String getContentType() {
-        return contentType;
-    }
-
-    /**
-     * Sets the content type of the resource.
-     *
-     * @param contentType the content type.
-     */
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
-    /**
-     * Returns the content language or <code>null</code>.
+     * Returns the content language or <code>null</code>
      *
      * @return contentLanguage
      */
-    public String getContentLanguage() {
-        return contentLanguage;
-    }
+    public String getContentLanguage();
 
     /**
-     * Sets the content language.
+     * Returns the length of the data or -1 if the contentlength could not be
+     * determined.
      *
-     * @param contentLanguage
+     * @return the content length
      */
-    public void setContentLanguage(String contentLanguage) {
-        this.contentLanguage = contentLanguage;
-    }
+    public long getContentLength();
+
+    /**
+     * Return the content type or <code>null</code>
+     *
+     * @return
+     */
+    public String getContentType();
+
+    /**
+     * Returns the value of the given property or <code>null</code> if this property does
+     * not exist.
+     *
+     * @param propertyName
+     * @return String property value or <code>null</code>
+     */
+    public String getProperty(String propertyName);
 }

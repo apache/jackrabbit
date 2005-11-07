@@ -90,10 +90,10 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
     //-----------------------------------< VersionHistoryResource interface >---
     /**
      * Return an array of {@link VersionResource}s representing all versions
-     * present in the underlaying JCR version history.
+     * present in the underlying JCR version history.
      *
      * @return array of {@link VersionResource}s representing all versions
-     * present in the underlaying JCR version history.
+     * present in the underlying JCR version history.
      * @throws DavException
      * @see org.apache.jackrabbit.webdav.version.VersionHistoryResource#getVersions()
      */

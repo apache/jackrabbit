@@ -94,7 +94,7 @@ public class SearchResourceImpl implements SearchResource {
      * @throws RepositoryException the query manager cannot be accessed or if
      * another error occurs.
      * @throws DavException if <code>sInfo</code> is <code>null</code> and
-     * the underlaying repository item is not an nt:query node or if an error
+     * the underlying repository item is not an nt:query node or if an error
      * occurs when calling {@link Query#storeAsNode(String)}/
      */
     private Query getQuery(SearchInfo sInfo)

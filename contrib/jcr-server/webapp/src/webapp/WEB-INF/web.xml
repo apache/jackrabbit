@@ -52,13 +52,34 @@
         </init-param>
 
         <!--
+            the following 3 parameters deal with registering the repository to
+            a RMI registry. if all parameters are omitted, the repository will
+            not be registered.
+        -->
+        <!--
         <init-param>
             <param-name>rmi-port</param-name>
             <param-value>0</param-value>
             <description>
                 The RMI port for registering the repository in the RMI Registry.
-                If equals 0, the default port is used. Omit this parameter, to
-                disable RMI server completely.
+                If equals 0, the default port is used.
+            </description>
+        </init-param>
+        <init-param>
+            <param-name>rmi-host</param-name>
+            <param-value>localhost</param-value>
+            <description>
+                The RMI host for registering the repository in the RMI Registry.
+                If equals "" or missing, the default host is used.
+            </description>
+        </init-param>
+        <init-param>
+            <param-name>rmi-uri</param-name>
+            <param-value></param-value>
+            <description>
+                The RMI uri for registering the repository in the RMI Registry.
+                If missing, the uri is composed using the other rmi parameters
+                and will have the format: //{rmi-host}:{rmi-port}/{repository-name}
             </description>
         </init-param>
         -->
@@ -171,13 +192,6 @@
             </description>
         </init-param>
         -->
-        <init-param>
-            <param-name>chain-catalog</param-name>
-            <param-value>/WEB-INF/catalog.xml</param-value>
-            <description>
-                the defines the commons-chain catalog for server tasks.
-            </description>
-        </init-param>
         <!--
             Parameter used to configure behaviour of webdav resources such as:
             - destinction between collections and non-collections

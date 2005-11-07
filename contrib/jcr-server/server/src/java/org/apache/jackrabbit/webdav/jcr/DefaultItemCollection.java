@@ -42,7 +42,7 @@ public class DefaultItemCollection extends AbstractItemResource
 
     private static Logger log = Logger.getLogger(DefaultItemCollection.class);
 
-    private InputStream in;
+    private File content;
 
     /**
      * Create a new <code>DefaultItemCollection</code>.
@@ -93,20 +93,27 @@ public class DefaultItemCollection extends AbstractItemResource
 
     /**
      * Returns an {@link java.io.InputStream} to the content of this collection.
-     *
-     * @return
-     * @see org.apache.jackrabbit.webdav.DavResource#getStream()
      */
     public InputStream getStream() {
+        if (!initedProps)  {
         initProperties();
-        return in;
+        }
+        if (content != null) {
+            try {
+                return new FileInputStream(content);
+            } catch (FileNotFoundException e) {
+                // should not occur
+                log.error(e.getMessage());
+            }
+        }
+        return null;
     }
 
     /**
      * This implementation of the <code>DavResource</code> does only allow
      * to set the mixinnodetypes property. Please note that the existing list of
      * mixin nodetypes will be completely replaced.<br>
-     * In order to add / set any other repository property on the underlaying
+     * In order to add / set any other repository property on the underlying
      * {@link javax.jcr.Node} use <code>addMember(DavResource)</code> or
      * <code>addMember(DavResource, InputStream)</code> or modify the value
      * of the corresponding resource.
@@ -263,13 +270,13 @@ public class DefaultItemCollection extends AbstractItemResource
      * changed/set to type {@link PropertyType#BINARY binary}.
      *
      * @param resource
-     * @param inputCxt
+     * @param inputContext
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource, InputContext)
      * @see Node#addNode(String)
      * @see Node#setProperty(String, java.io.InputStream)
      */
-    public void addMember(DavResource resource, InputContext inputCxt)
+    public void addMember(DavResource resource, InputContext inputContext)
             throws DavException {
 
         /* RFC 2815 states that all 'parents' must exist in order all addition of members */
@@ -279,12 +286,13 @@ public class DefaultItemCollection extends AbstractItemResource
 
         try {
             Node n = (Node) item;
-            InputStream in = (inputCxt != null) ? inputCxt.getInputStream() : null;
+            InputStream in = (inputContext != null) ? inputContext.getInputStream() : null;
             String itemPath = getLocator().getJcrPath();
+            String memberName = getItemName(resource.getLocator().getJcrPath());
             if (resource.isCollection()) {
                 if (in == null) {
                     // MKCOL without a request body, try if a default-primary-type is defined.
-                    n.addNode(getItemName(itemPath));
+                    n.addNode(memberName);
                 } else {
                     // MKCOL, which is not allowed for existing resources
                     if (getTransactionId() == null) {
@@ -305,7 +313,7 @@ public class DefaultItemCollection extends AbstractItemResource
                     // TODO: find a way to create non-binary and multivalue properties
                     // PUT : create new or overwrite existing property.
                     // NOTE: will fail for multivalue properties.
-                    n.setProperty(getItemName(itemPath), in);
+                    n.setProperty(memberName, in);
                 }
             }
             complete();
@@ -317,15 +325,6 @@ public class DefaultItemCollection extends AbstractItemResource
         } catch (IOException e) {
             throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, e.getMessage());
         }
-    }
-
-    /**
-     * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource)
-     */
-    public void addMember(DavResource resource) throws DavException {
-        InputContext ctx = new InputContext();
-        ctx.setInputStream(resource.getStream());
-        addMember(resource, ctx);
     }
 
     /**
@@ -366,7 +365,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * resource.
      *
      * @throws DavException if this resource does not exist or if an error occurs
-     * while deleting the underlaying item.
+     * while deleting the underlying item.
      * @see DavResource#removeMember(DavResource)
      * @see javax.jcr.Item#remove()
      */
@@ -418,7 +417,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param scope
      * @return lock with the specified type and scope is present on this
      * resource or <code>null</code>. NOTE: If retrieving the write lock present
-     * on the underlaying repository item fails, <code>null</code> is return.
+     * on the underlying repository item fails, <code>null</code> is return.
      * @see org.apache.jackrabbit.webdav.DavResource#getLock(org.apache.jackrabbit.webdav.lock.Type, org.apache.jackrabbit.webdav.lock.Scope)
      * @see javax.jcr.Node#getLock() for the write locks.
      */
@@ -449,7 +448,7 @@ public class DefaultItemCollection extends AbstractItemResource
     }
 
     /**
-     * Creates a lock on this resource by locking the underlaying
+     * Creates a lock on this resource by locking the underlying
      * {@link javax.jcr.Node node}. Except for the {@link org.apache.jackrabbit.webdav.lock.LockInfo#isDeep()} }
      * all information included in the <code>LockInfo</code> object is ignored.
      * Lock timeout is defined by JCR implementation.
@@ -487,7 +486,7 @@ public class DefaultItemCollection extends AbstractItemResource
 
     /**
      * Refreshes the lock on this resource. With this implementation the
-     * {@link javax.jcr.lock lock} present on the underlaying {@link javax.jcr.Node node}
+     * {@link javax.jcr.lock lock} present on the underlying {@link javax.jcr.Node node}
      * is refreshed. The timeout indicated by the <code>LockInfo</code>
      * object is ignored.
      *
@@ -530,7 +529,7 @@ public class DefaultItemCollection extends AbstractItemResource
     }
 
     /**
-     * Remove the write lock from this resource by unlocking the underlaying
+     * Remove the write lock from this resource by unlocking the underlying
      * {@link javax.jcr.Node node}.
      *
      * @param lockToken
@@ -573,7 +572,7 @@ public class DefaultItemCollection extends AbstractItemResource
     //-----------------------------------------< OrderingResource interface >---
     /**
      * Returns true if this resource exists and the nodetype defining the
-     * underlaying repository node allow to reorder this nodes children.
+     * underlying repository node allow to reorder this nodes children.
      *
      * @return true if {@link #orderMembers(OrderPatch)} can be called on this
      * resource.
@@ -673,7 +672,7 @@ public class DefaultItemCollection extends AbstractItemResource
     //--------------------------------------------------------------------------
     /**
      * Extend the general {@link #supportedLock} field by lock entries specific for this
-     * resource: write locks (exclusive or exclusive session-scoped) in case the underlaying
+     * resource: write locks (exclusive or exclusive session-scoped) in case the underlying
      * node has the node type mix:lockable.
      *
      * @see org.apache.jackrabbit.JcrConstants#MIX_LOCKABLE
@@ -719,14 +718,12 @@ public class DefaultItemCollection extends AbstractItemResource
             try {
                 String prefix = "_tmp_" + item.getName();
                 // create tmpFile in default system-tmp directory
-                File tmpfile = File.createTempFile(prefix, null, null);
-                tmpfile.deleteOnExit();
-                FileOutputStream out = new FileOutputStream(tmpfile);
+                content = File.createTempFile(prefix, null, null);
+                content.deleteOnExit();
+                FileOutputStream out = new FileOutputStream(content);
                 getSession().getRepositorySession().exportSystemView(item.getPath(), out, false, true);
                 out.close();
-                in = new FileInputStream(tmpfile);
-
-                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, new Long(tmpfile.length())));
+                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, new Long(content.length())));
                 properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, "text/xml"));
 
             } catch (IOException e) {

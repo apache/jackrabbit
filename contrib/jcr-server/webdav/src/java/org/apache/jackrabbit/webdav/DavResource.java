@@ -18,8 +18,9 @@ package org.apache.jackrabbit.webdav;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.lock.*;
 import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.jackrabbit.webdav.io.OutputContext;
 
-import java.io.InputStream;
+import java.io.IOException;
 
 /**
  * <code>DavResource</code> provides standard WebDAV functionality as specified
@@ -37,11 +38,6 @@ public interface DavResource {
      * String constant representing the WebDAV 1 and 2 method set.
      */
     public static final String METHODS = "OPTIONS, GET, HEAD, POST, TRACE, PROPFIND, PROPPATCH, COPY, PUT, DELETE, MOVE, LOCK, UNLOCK";
-
-    /**
-     * Constant indicating the undefined modification time.
-     */
-    public static final long UNDEFINED_MODIFICATIONTIME = -1;
 
     /**
      * Returns a comma separted list of all compliance classes the given
@@ -115,12 +111,14 @@ public interface DavResource {
     public long getModificationTime();
 
     /**
-     * Returns a stream to the resource content in order to respond to a 'GET'
-     * request.
+     * Spools the resource properties and ev. content to the specified context
+     * (e.g. to respond to a 'GET' or 'HEAD' request). The context could e.g.
+     * wrap the servlet response.
      *
-     * @return stream to the resource content.
+     * @param outputContext
+     * @throws IOException
      */
-    public InputStream getStream();
+    public void spool(OutputContext outputContext) throws IOException;
 
     /**
      * Returns an array of all {@link DavPropertyName property names} available
@@ -190,18 +188,11 @@ public interface DavResource {
      * Add the given resource as an internal member to this resource.
      *
      * @param resource {@link DavResource} to be added as internal member.
-     * @param inputCxt Context providing the content for the internal member.
+     * @param inputContext Context providing the properties and content for the
+     * internal member to be created or replaced.
      * @throws DavException
      */
-    public void addMember(DavResource resource, InputContext inputCxt) throws DavException;
-
-    /**
-     * Add the given resource as an internal member to this resource.
-     *
-     * @param resource webdav resource to be added as member.
-     * @throws DavException
-     */
-    public void addMember(DavResource resource) throws DavException;
+    public void addMember(DavResource resource, InputContext inputContext) throws DavException;
 
     /**
      * Returns an iterator over all internal members.

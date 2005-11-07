@@ -26,7 +26,7 @@ import javax.jcr.Item;
 import java.util.*;
 
 /**
- * <code>RootItemCollection</code> represents the root node of the underlaying
+ * <code>RootItemCollection</code> represents the root node of the underlying
  * repository. However, the display name the name of the workspace is returned
  * the root node is located.
  *
@@ -49,7 +49,7 @@ public class RootItemCollection extends VersionControlledItemCollection {
 
     //----------------------------------------------< DavResource interface >---
     /**
-     * Returns the name of the workspace the underlaying root item forms part of.
+     * Returns the name of the workspace the underlying root item forms part of.
      *
      * @return The workspace name
      * @see org.apache.jackrabbit.webdav.DavResource#getDisplayName()
