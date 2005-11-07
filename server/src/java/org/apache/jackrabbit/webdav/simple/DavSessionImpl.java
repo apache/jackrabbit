@@ -27,7 +27,7 @@ import java.util.HashSet;
  */
 public class DavSessionImpl implements DavSession {
 
-    /** the underlaying jcr session */
+    /** the underlying jcr session */
     private final Session session;
 
     /** the lock tokens of this session */

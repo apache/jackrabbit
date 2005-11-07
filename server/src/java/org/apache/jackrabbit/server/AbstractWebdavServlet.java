@@ -16,7 +16,11 @@
 package org.apache.jackrabbit.server;
 
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.server.io.IOUtil;
+import org.apache.jackrabbit.webdav.io.InputContextImpl;
+import org.apache.jackrabbit.webdav.io.OutputContextImpl;
 import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
@@ -51,8 +55,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -356,69 +360,21 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             return;
         }
 
+        long modSince = request.getDateHeader("If-Modified-Since");
+        if (modSince > IOUtil.UNDEFINED_TIME) {
+            // test if resource has been modified
         long modTime = resource.getModificationTime();
-        if (modTime != DavResource.UNDEFINED_MODIFICATIONTIME && modTime <= request.getDateHeader("If-Modified-Since")) {
+            if (modTime != IOUtil.UNDEFINED_TIME && modTime <= modSince) {
             // resource has not been modified since the time indicated in the
             // 'If-Modified-Since' header.
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             return;
         }
-
-        DavProperty lastMod = resource.getProperty(DavPropertyName.GETLASTMODIFIED);
-        if (lastMod != null) {
-            response.setHeader(HEADER_LAST_MODIFIED, String.valueOf(lastMod.getValue()));
         }
 
-        DavProperty etag = resource.getProperty(DavPropertyName.GETETAG);
-        if (etag != null) {
-            response.setHeader(HEADER_ETAG, String.valueOf(etag.getValue()));
-        }
-
-        DavProperty contentType = resource.getProperty(DavPropertyName.GETCONTENTTYPE);
-        if (contentType != null) {
-            response.setHeader(HEADER_CONTENT_TYPE, String.valueOf(contentType.getValue()));
-        }
-
-        DavProperty contentLength = resource.getProperty(DavPropertyName.GETCONTENTLENGTH);
-        if (contentLength != null) {
-            try {
-                int length = Integer.parseInt(contentLength.getValue() + "");
-                if (length > 0) {
-                    response.setIntHeader(HEADER_CONTENT_LENGTH, length);
-                }
-            } catch (NumberFormatException e) {
-                log.error("Could not build content length from property value '" + contentLength.getValue() + "'");
-            }
-        }
-
-        DavProperty contentLanguage = resource.getProperty(DavPropertyName.GETCONTENTLANGUAGE);
-        if (contentLanguage != null) {
-            response.setHeader(HEADER_CONTENT_LANGUAGE, contentLanguage.getValue().toString());
-        }
-
-        // spool content in case of 'GET' request
-        InputStream in = resource.getStream();
-        try {
-            if (sendContent) {
-                if (in != null) {
-                    OutputStream out = response.getOutputStream();
-                    byte[] buffer = new byte[8192];
-                    int read;
-                    while ((read = in.read(buffer)) >= 0) {
-                        out.write(buffer, 0, read);
-                    }
-                }
-            }
-        } finally {
-            // also close stream if not sending content
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-        }
+        // spool resource properties and ev. resource content.
+        OutputStream out = (sendContent) ? response.getOutputStream() : null;
+        resource.spool(getOutputContext(response, out));
         response.flushBuffer();
     }
 
@@ -522,7 +478,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             status = DavServletResponse.SC_CREATED;
         }
 
-        parentResource.addMember(resource, getInputContext(request));
+        parentResource.addMember(resource, getInputContext(request, request.getInputStream()));
         response.setStatus(status);
     }
 
@@ -550,26 +506,11 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
 
         if (request.getContentLength() > 0 || request.getHeader("Transfer-Encoding") != null) {
-            parentResource.addMember(resource, getInputContext(request));
+            parentResource.addMember(resource, getInputContext(request, request.getInputStream()));
         } else {
-            parentResource.addMember(resource);
+            parentResource.addMember(resource, getInputContext(request, null));
         }
         response.setStatus(DavServletResponse.SC_CREATED);
-    }
-
-    /**
-     * Build an InputContext for the given request
-     *
-     * @param request
-     * @return
-     * @throws IOException
-     */
-    protected InputContext getInputContext(WebdavRequest request) throws IOException {
-        InputContext cxt = new InputContext();
-        cxt.setContentType(request.getHeader(DavConstants.HEADER_CONTENT_TYPE));
-        cxt.setContentLanguage(request.getHeader(DavConstants.HEADER_CONTENT_LANGUAGE));
-        cxt.setInputStream(request.getInputStream());
-        return cxt;
     }
 
     /**
@@ -1075,5 +1016,32 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             response.sendError(DavServletResponse.SC_BAD_REQUEST);
             return;
         }
+    }
+
+    /**
+     * Return a new <code>InputContext</code> used for adding resource members
+     *
+     * @param request
+     * @param in
+     * @return
+     * @see #spoolResource(WebdavRequest, WebdavResponse, DavResource, boolean)
+     */
+    protected InputContext getInputContext(DavServletRequest request, InputStream in) {
+        return new InputContextImpl(request, in);
+    }
+
+    /**
+     * Return a new <code>OutputContext</code> used for spooling resource properties and
+     * the resource content
+     *
+     * @param response
+     * @param out
+     * @return
+     * @see #doPut(WebdavRequest, WebdavResponse, DavResource)
+     * @see #doPost(WebdavRequest, WebdavResponse, DavResource)
+     * @see #doMkCol(WebdavRequest, WebdavResponse, DavResource)
+     */
+    protected OutputContext getOutputContext(DavServletResponse response, OutputStream out) {
+        return new OutputContextImpl(response, out);
     }
 }

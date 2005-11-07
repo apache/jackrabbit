@@ -16,8 +16,11 @@
 package org.apache.jackrabbit.webdav.simple;
 
 import org.apache.log4j.Logger;
+import org.apache.jackrabbit.server.io.IOManager;
+import org.apache.jackrabbit.server.io.DefaultIOManager;
 import org.jdom.Document;
 import org.jdom.Element;
+import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
 import javax.jcr.Item;
@@ -26,6 +29,7 @@ import javax.jcr.RepositoryException;
 import java.net.URL;
 import java.util.List;
 import java.util.Iterator;
+import java.io.IOException;
 
 /**
  * <code>ResourceConfig</code>...
@@ -35,6 +39,7 @@ public class ResourceConfig {
     private static Logger log = Logger.getLogger(ResourceConfig.class);
 
     private ResourceFilter resourceFilter;
+    private IOManager ioManager;
     private String[] nodetypeNames = new String[0];
     private boolean collectionNames = false;
 
@@ -42,7 +47,8 @@ public class ResourceConfig {
      * Tries to parse the given xml configuration file.
      * The xml must match the following structure:<br>
      * <pre>
-     * &lt;!ELEMENT config ((collection | noncollection)?, filter?) &gt;
+     * &lt;!ELEMENT config (iomanager, (collection | noncollection)?, filter?) &gt;
+     * &lt;!ELEMENT iomanager (class) &gt;
      * &lt;!ELEMENT collection (nodetypes) &gt;
      * &lt;!ELEMENT noncollection (nodetypes) &gt;
      * &lt;!ELEMENT filter (class, namespaces?, nodetypes?) &gt;
@@ -64,6 +70,16 @@ public class ResourceConfig {
             Document doc = new SAXBuilder().build(configURL);
             Element root = doc.getRootElement();
 
+            Element ioElem = root.getChild("iomanager");
+            if (ioElem != null) {
+                Object inst = buildClassFromConfig(ioElem.getChild("class"));
+                if (inst != null && inst instanceof IOManager) {
+                   ioManager = (IOManager)inst;
+                }
+            } else {
+                log.error("Resource configuration: mandatory 'iomanager' element is missing.");
+            }
+
             Element collection = root.getChild("collection");
             Element noncollection = root.getChild("noncollection");
             if (collection != null && noncollection != null) {
@@ -82,7 +98,10 @@ public class ResourceConfig {
 
             Element filter = root.getChild("filter");
             if (filter != null) {
-                resourceFilter = buildResourceFilter(filter.getChild("class"));
+                Object inst = buildClassFromConfig(filter.getChild("class"));
+                if (inst != null && inst instanceof ResourceFilter) {
+                    resourceFilter = (ResourceFilter)inst;
+                }
                 if (resourceFilter != null) {
                     Element nts = filter.getChild("nodetypes");
                     resourceFilter.setFilteredNodetypes(parseNodeTypesEntry(nts));
@@ -91,36 +110,30 @@ public class ResourceConfig {
             } else {
                 log.debug("Resource configuration: no 'filter' element specified.");
             }
-        } catch (Exception e) {
-            log.warn("Error while reading resource configuration: " + e.getMessage());
+        } catch (IOException e) {
+            log.error("Invalid resource configuration: " + e.getMessage());
+        } catch (JDOMException e) {
+            log.error("Invalid resource configuration: " + e.getMessage());
         }
     }
 
-    private ResourceFilter buildResourceFilter(Element classElement) {
+    private Object buildClassFromConfig(Element classElement) {
+        Object instance = null;
         if (classElement == null) {
-            return null;
+            return instance;
         }
         try {
             String className = classElement.getAttributeValue("name");
             if (className != null) {
-                Class cl = Class.forName(className);
-                Class[] interfaces = cl.getInterfaces();
-                boolean isfilterClass = false;
-                for (int i = 0; i < interfaces.length && !isfilterClass; i++) {
-                    isfilterClass = (interfaces[i].equals(ResourceFilter.class));
-                }
-                if (isfilterClass) {
-                    return (ResourceFilter) cl.newInstance();
+                Class c = Class.forName(className);
+                instance = c.newInstance();
                 } else {
-                    log.warn("Class '" + className + "' specified does not represent a resource filter > using default.");
-                }
-            } else {
-                log.warn("Invalid filter configuration: missing 'class' element");
+                log.error("Invalid configuration: missing 'class' element");
             }
         } catch (Exception e) {
-            log.warn("Error while reading filter configuration. Using empty filter instead.");
+            log.error("Error while create class instance: " + e.getMessage());
         }
-        return null;
+        return instance;
     }
 
     private void parseNamespacesEntry(Element child, ResourceFilter filter) {
@@ -159,6 +172,15 @@ public class ResourceConfig {
             ntNames[i++] = ((Element) it.next()).getText();
         }
         return ntNames;
+    }
+
+
+    public IOManager getIOManager() {
+        if (ioManager == null) {
+            log.debug("ResourceConfig: missing io-manager > building DefaultIOManager ");
+            ioManager = new DefaultIOManager();
+        }
+        return ioManager;
     }
 
     /**

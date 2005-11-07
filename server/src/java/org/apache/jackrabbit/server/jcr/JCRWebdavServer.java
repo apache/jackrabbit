@@ -92,7 +92,7 @@ public class JCRWebdavServer implements DavSessionProvider {
      */
     private class DavSessionImpl implements DavSession {
 
-        /** the underlaying jcr session */
+        /** the underlying jcr session */
         private final Session session;
 
         /**
@@ -128,8 +128,8 @@ public class JCRWebdavServer implements DavSessionProvider {
         /**
          * Removes the reference from this <code>DavSession</code>. If no
          * more references are present, this <code>DavSession</code> is removed
-         * from the internal cache and the underlaying session is released by calling
-         * {@link javax.jcr.Session#logout()}.
+         * from the internal cache and the underlying session is released by
+         * calling {@link SessionProvider#releaseSession(javax.jcr.Session)} 
          *
          * @see DavSession#removeReference(Object)
          */
@@ -248,8 +248,8 @@ public class JCRWebdavServer implements DavSessionProvider {
                 if (referenceSet.isEmpty()) {
                     log.info("No more references present on webdav session -> clean up.");
                     sessionMap.remove(session);
+                    sessionProvider.releaseSession(session.getRepositorySession());
                     log.info("Login: User '" + session.getRepositorySession().getUserID() + "' logged out");
-                    session.getRepositorySession().logout();
                 } else {
                     log.debug(referenceSet.size() + " references remaining on webdav session " + session);
                 }

@@ -17,6 +17,8 @@ package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.server.io.IOUtil;
+import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
@@ -40,6 +42,8 @@ import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.Item;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -59,7 +63,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     private TxLockManagerImpl txMgr;
     private String transactionId;
 
-    private long modificationTime = DavResource.UNDEFINED_MODIFICATIONTIME;
+    private long modificationTime = new Date().getTime();
 
     protected boolean initedProps;
     protected DavPropertySet properties = new DavPropertySet();
@@ -90,11 +94,11 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     }
 
     /**
-     * Returns the path of the underlaying repository item or the item to
+     * Returns the path of the underlying repository item or the item to
      * be created (PUT/MKCOL). If the resource exists but does not represent
      * a repository item <code>null</code> is returned.
      *
-     * @return path of the underlaying repository item.
+     * @return path of the underlying repository item.
      * @see DavResource#getResourcePath()
      * @see org.apache.jackrabbit.webdav.DavResourceLocator#getResourcePath()
      */
@@ -134,10 +138,60 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      * Returns <code>null</code>
      *
      * @return Always returns <code>null</code>
-     * @see org.apache.jackrabbit.webdav.DavResource#getStream()
      */
-    public InputStream getStream() {
+    InputStream getStream() {
         return null;
+    }
+
+    /**
+     * @see DavResource#spool(OutputContext)
+     */
+    public void spool(OutputContext outputContext) throws IOException {
+        if (!initedProps) {
+            initProperties();
+        }
+
+        // export properties
+        outputContext.setModificationTime(getModificationTime());
+        DavProperty etag = getProperty(DavPropertyName.GETETAG);
+        if (etag != null) {
+            outputContext.setETag(String.valueOf(etag.getValue()));
+        }
+        DavProperty contentType = getProperty(DavPropertyName.GETCONTENTTYPE);
+        if (contentType != null) {
+            outputContext.setContentType(String.valueOf(contentType.getValue()));
+        }
+        DavProperty contentLength = getProperty(DavPropertyName.GETCONTENTLENGTH);
+        if (contentLength != null) {
+            try {
+                long length = Long.parseLong(contentLength.getValue() + "");
+                if (length > 0) {
+                    outputContext.setContentLength(length);
+                }
+            } catch (NumberFormatException e) {
+                log.error("Could not build content length from property value '" + contentLength.getValue() + "'");
+            }
+        }
+        DavProperty contentLanguage = getProperty(DavPropertyName.GETCONTENTLANGUAGE);
+        if (contentLanguage != null) {
+            outputContext.setContentLanguage(contentLanguage.getValue().toString());
+        }
+
+        // spool content
+        InputStream in = getStream();
+        OutputStream out = outputContext.getOutputStream();
+        if (in != null && out != null) {
+            try {
+                IOUtil.spool(in, out);
+            } finally {
+                // also close stream if not sending content
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        }
     }
 
     /**

@@ -63,6 +63,12 @@ public class RepositoryStartupServlet extends HttpServlet {
     /** initial param name for the rmi port */
     public final static String INIT_PARAM_RMI_PORT = "rmi-port";
 
+    /** initial param name for the rmi host */
+    public final static String INIT_PARAM_RMI_HOST = "rmi-host";
+
+    /** initial param name for the rmi uri */
+    public final static String INIT_PARAM_RMI_URI = "rmi-uri";
+
     /** initial param name for the log4j config properties */
     public final static String INIT_PARAM_LOG4J_CONFIG = "log4j-config";
 
@@ -75,7 +81,7 @@ public class RepositoryStartupServlet extends HttpServlet {
     /** the jndi context, created base on configuration */
     private InitialContext jndiContext;
 
-    /** the rmi uri, in the form of  '//:${rmi-port}/${repository-name}' */
+    /** the rmi uri, in the form of  '//${rmi-host}:${rmi-port}/${repository-name}' */
     private String rmiURI;
 
     /**
@@ -227,21 +233,27 @@ public class RepositoryStartupServlet extends HttpServlet {
     private void registerRMI() throws ServletException {
 	// check registering via RMI
 	String rmiPortStr = getServletConfig().getInitParameter(INIT_PARAM_RMI_PORT);
+        String rmiHost = getServletConfig().getInitParameter(INIT_PARAM_RMI_HOST);
+        rmiURI = getServletConfig().getInitParameter(INIT_PARAM_RMI_URI);
+        if (rmiPortStr == null && rmiHost == null && rmiURI == null) {
+            return;
+        }
+        int rmiPort = Registry.REGISTRY_PORT;
 	if (rmiPortStr != null) {
-	    int rmiPort = 0;
 	    try {
 		rmiPort = Integer.parseInt(rmiPortStr);
 	    } catch (NumberFormatException e) {
-		log.warn("Invalid port in rmi-port param: " + e);
+                log.warn("Invalid port in rmi-port param: " + e + ". using default port.");
+            }
 	    }
-	    if (rmiPort == 0) {
-		rmiPort = Registry.REGISTRY_PORT;
+        if (rmiHost == null) {
+            rmiHost = "";
 	    }
 
 	    // try to create remote repository
 	    Remote remote;
 	    try {
-		Class clazz = Class.forName("org.apache.jackrabbit.j2ee.RMIRemoteFactoryDelegater");
+            Class clazz = Class.forName(getRemoteFactoryDelegaterClass());
 		RemoteFactoryDelegater rmf = (RemoteFactoryDelegater) clazz.newInstance();
 		remote = rmf.createRemoteRepository(repository);
 	    } catch (RemoteException e) {
@@ -262,7 +274,9 @@ public class RepositoryStartupServlet extends HttpServlet {
 		} catch (RemoteException e) {
 		    // ignore
 		}
-		rmiURI = "//:" + rmiPort + "/" + repositoryName;
+            if (rmiURI == null) {
+                rmiURI = "//" + rmiHost + ":" + rmiPort + "/" + repositoryName;
+            }
 		Naming.bind(rmiURI, remote);
 
 		log.info("Repository bound via RMI with name: " + rmiURI);
@@ -274,6 +288,14 @@ public class RepositoryStartupServlet extends HttpServlet {
 		throw new ServletException("Unable to bind repository via RMI: " + e.toString(), e);
 	    }
 	}
+
+    /**
+     * Return the fully qualified name of the class providing the remote
+     * repository. The class whose name is returned must implement the
+     * {@link RemoteFactoryDelegater} interface.
+     */
+    protected String getRemoteFactoryDelegaterClass() {
+        return "org.apache.jackrabbit.j2ee.RMIRemoteFactoryDelegater";
     }
 
     /**

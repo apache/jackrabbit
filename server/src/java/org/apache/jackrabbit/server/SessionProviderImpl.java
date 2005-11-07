@@ -51,4 +51,11 @@ public class SessionProviderImpl implements SessionProvider {
         Credentials creds = cp.getCredentials(request);
         return repository.login(creds, workspace);
     }
+
+    /**
+     * {@inheritDoc }
+     */
+    public void releaseSession(Session session) {
+        session.logout();
+    }
 }

@@ -15,38 +15,23 @@
  */
 package org.apache.jackrabbit.j2ee;
 
-import org.apache.commons.chain.Catalog;
-import org.apache.commons.chain.config.ConfigParser;
-import org.apache.commons.chain.impl.CatalogFactoryBase;
-import org.apache.jackrabbit.server.CredentialsProvider;
 import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.server.SessionProviderImpl;
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavLocatorFactory;
-import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavResourceFactory;
-import org.apache.jackrabbit.webdav.DavSessionProvider;
-import org.apache.jackrabbit.webdav.WebdavRequest;
-import org.apache.jackrabbit.webdav.WebdavResponse;
+import org.apache.jackrabbit.server.BasicCredentialsProvider;
+import org.apache.jackrabbit.webdav.jcr.DavLocatorFactoryImpl;
 import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
 import org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl;
-import org.apache.jackrabbit.webdav.simple.LocatorFactoryImpl;
 import org.apache.jackrabbit.webdav.simple.ResourceFactoryImpl;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
+import org.apache.jackrabbit.webdav.*;
 import org.apache.log4j.Logger;
 
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.servlet.ServletException;
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.net.URL;
 import java.net.MalformedURLException;
 
 /**
@@ -81,6 +66,9 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      */
     public static final String INIT_PARAM_AUTHENTICATE_HEADER = "authenticate-header";
 
+    /** the 'missing-auth-mapping' init parameter */
+    public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
+
     /**
      * Name of the init parameter that specify a separate configuration used
      * for filtering the resources displayed.
@@ -100,18 +88,13 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     private String resourcePathPrefix;
 
     /**
-     * the chain catalog for i/o operations
-     */
-    private Catalog chainCatalog;
-
-    /**
      * Header value as specified in the {@link #INIT_PARAM_AUTHENTICATE_HEADER} parameter.
      */
     private String authenticate_header;
 
     /**
      * Map used to remember any webdav lock created without being reflected
-     * in the underlaying repository.
+     * in the underlying repository.
      * This is needed because some clients rely on a successful locking
      * mechanism in order to perform properly (e.g. mac OSX built-in dav client)
      */
@@ -166,17 +149,6 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
         getServletContext().setAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX, resourcePathPrefix);
         log.info(INIT_PARAM_RESOURCE_PATH_PREFIX + " = '" + resourcePathPrefix + "'");
 
-        try {
-            String chain = getInitParameter(INIT_PARAM_CHAIN_CATALOG);
-            URL chainUrl = getServletContext().getResource(chain);
-            ConfigParser parser = new ConfigParser();
-            parser.parse(chainUrl);
-            chainCatalog = CatalogFactoryBase.getInstance().getCatalog();
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-        log.info(INIT_PARAM_CHAIN_CATALOG + " = '" + chainCatalog + "'");
-
         authenticate_header = getInitParameter(INIT_PARAM_AUTHENTICATE_HEADER);
         if (authenticate_header == null) {
             authenticate_header = DEFAULT_AUTHENTICATE_HEADER;
@@ -206,7 +178,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      * @return
      * @throws ServletException
      * @throws IOException
-     * @throws DavException
+     * @throws org.apache.jackrabbit.webdav.DavException
      */
     protected boolean execute(WebdavRequest request, WebdavResponse response,
                               int method, DavResource resource)
@@ -296,7 +268,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      */
     public DavLocatorFactory getLocatorFactory() {
         if (locatorFactory == null) {
-            locatorFactory = new LocatorFactoryImpl(resourcePathPrefix);
+            locatorFactory = new DavLocatorFactoryImpl(resourcePathPrefix);
         }
         return locatorFactory;
     }
@@ -366,16 +338,13 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      * returned.
      *
      * @return the session provider
-     * @see RepositoryAccessServlet#getCredentialsFromHeader(ServletContext, String)
      */
     public synchronized SessionProvider getSessionProvider() {
         if (sessionProvider == null) {
-            CredentialsProvider cp = new CredentialsProvider() {
-                public Credentials getCredentials(HttpServletRequest request) throws LoginException, ServletException {
-                    return RepositoryAccessServlet.getCredentialsFromHeader(getServletContext(), request.getHeader(DavConstants.HEADER_AUTHORIZATION));
-                }
-            };
-            sessionProvider = new SessionProviderImpl(cp);
+            sessionProvider = new SessionProviderImpl(
+                new BasicCredentialsProvider(
+                    getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING))
+            );
         }
         return sessionProvider;
     }

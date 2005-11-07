@@ -9,17 +9,15 @@ installed the parent project Jackrabbit and the contrib project jcr-rmi
 into your maven repository. If this is not the case, go back to the root
 project and launch
 
-  api:      maven jar:install
   commons:  maven jar:install
-  core:     maven jar:install
 
-which will build and copy Jackrabbit into ~/.maven/repository/jackrabbit/jars
+which will build and copy Jackrabbit into ~/.maven/repository/org.apache.jackrabbit/jars
 
 Also go to the contrib project jcr-rmi and launch
 
   maven jar:install
 
-which will build and copy jcr-rmi to ~/.maven/repository/jcr-rmi/jars
+which will build and copy jcr-rmi to ~/.maven/repository/org.apache.jackrabbit/jars
 
 After building all dependencies one can build the actual server webapp
 

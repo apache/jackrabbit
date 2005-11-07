@@ -135,12 +135,10 @@ public interface DavConstants {
     /**
      * modificationDate date format per RFC 1123
      */
-    public static SimpleDateFormat modificationDateFormat =
-	new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+    public static SimpleDateFormat modificationDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 
     /**
      * Simple date format for the creation date ISO representation (partial).
      */
-    public static SimpleDateFormat creationDateFormat =
-	new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    public static SimpleDateFormat creationDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 }
