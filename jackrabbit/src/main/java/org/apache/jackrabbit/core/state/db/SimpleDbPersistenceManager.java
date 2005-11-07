@@ -52,6 +52,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.DatabaseMetaData;
 
 /**
  * <code>SimpleDbPersistenceManager</code> is a generic JDBC-based
@@ -927,8 +928,14 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
      * @throws Exception if an error occurs
      */
     protected void checkSchema() throws Exception {
-        ResultSet rs = con.getMetaData().getTables(null, null,
-                schemaObjectPrefix + "NODE", null);
+        DatabaseMetaData metaData = con.getMetaData();
+        String tableName = schemaObjectPrefix + "NODE";
+        if (metaData.storesLowerCaseIdentifiers()) {
+            tableName = tableName.toLowerCase();
+        } else if (metaData.storesUpperCaseIdentifiers()) {
+            tableName = tableName.toUpperCase();
+        }
+        ResultSet rs = metaData.getTables(null, null, tableName, null);
         boolean schemaExists;
         try {
             schemaExists = rs.next();
