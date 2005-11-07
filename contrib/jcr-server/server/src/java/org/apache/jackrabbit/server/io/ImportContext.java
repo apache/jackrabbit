@@ -16,139 +16,21 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import javax.jcr.Node;
+import javax.jcr.Item;
 import java.io.InputStream;
 
 /**
- * This Class implements an import context which is passed to the respective
- * import commands. An import command can alter the current node for creating
- * a recursive structure, thus is can lead to errors, if the configuration
- * is not done properly. A import command should clear the input stream,
- * after having processed it.
- * </p>
- * Please note, that this import context lacks an explicit
- * {@link org.apache.jackrabbit.webdav.DavResource} member. Currently, this
- * information is not needed in any of the known import commands but leaves this
- * I/O framework more generic.
+ * <code>ImportContext</code>...
  */
-public class ImportContext extends AbstractContext {
+public interface ImportContext extends IOContext {
 
     /**
-     * The import root node, i.e. the parent node of the new content.
-     */
-    private final Node importRoot;
-
-    /**
-     * The 'current' node.
-     */
-    private Node node = null;
-
-    /**
-     * The input stream of the resource data
-     */
-    private InputStream inputStream;
-
-    /**
-     * The systemid of the resource, eg. the display name of a dav resource,
-     * the filename of a file, etc.
-     */
-    private String systemId;
-
-    /**
-     * The content type of the resource to be imported.
-     */
-    private String contentType;
-
-    /**
-     * The content language of the resource to be imported.
-     */
-    private String contentLanguage;
-
-    /**
-     * The modification time of the resource, if known
-     */
-    private long modificationTime;
-
-    /**
-     * Creates a new import context with the given root node
-     *
-     * @param importRoot the import root node
-     */
-    public ImportContext(Node importRoot) {
-        this(null, importRoot);
-    }
-
-    /**
-     * Creats a new import context with the given root node and property defaults.
-     *
-     * @param base
-     * @param importRoot
-     */
-    public ImportContext(ImportContext base, Node importRoot) {
-        super(base);
-        if (importRoot == null) {
-            throw new IllegalArgumentException("importRoot can not be null.");
-        }
-        this.importRoot = importRoot;
-    }
-
-    /**
-     * Creates a new sub context which bases on this contexts properties
-     *
-     * @param importRoot
-     * @return
-     */
-    public ImportContext createSubContext(Node importRoot) {
-        return new ImportContext(this, importRoot);
-    }
-
-    /**
-     * Retruns the input stream of the resource to import.
-     *
-     * @return the input stream.
-     */
-    public InputStream getInputStream() {
-        return inputStream;
-    }
-
-    /**
-     * Sets the inpurt stream of the resource to import. A import command that
-     * consumed the input stream should set this member to <code>null</code>.
-     *
-     * @param inputStream the input stream
-     */
-    public void setInputStream(InputStream inputStream) {
-        this.inputStream = inputStream;
-    }
-
-    /**
-     * Returns the import root of the resource to import.
+     * Returns the import root of the resource to import, i.e. the parent node
+     * of the new content to be created.
      *
      * @return the import root of the resource to import.
      */
-    public Node getImportRoot() {
-        return importRoot;
-    }
-
-    /**
-     * Returns the current parent node of the resource to import. If no current
-     * parent node is defined, the import root is returned.
-     *
-     * @return the parent node.
-     */
-    public Node getNode() {
-        return node == null ? importRoot : node;
-    }
-
-    /**
-     * Sets the current parent node of the resource to import. A command can
-     * set this member in order to generate recursive structured.
-     *
-     * @param node
-     */
-    public void setNode(Node node) {
-        this.node = node;
-    }
+    public Item getImportRoot();
 
     /**
      * Returns the system id of the resource to be imported. This id depends on
@@ -157,71 +39,61 @@ public class ImportContext extends AbstractContext {
      *
      * @return the system id of the resource to import
      */
-    public String getSystemId() {
-        return systemId;
-    }
+    public String getSystemId();
 
     /**
-     * sets the system id of this resource.
+     * Returns the input stream of the data to import or <code>null</code> if
+     * there are none.
      *
-     * @param systemId
+     * @return the input stream.
+     * @see #hasStream()
      */
-    public void setSystemId(String systemId) {
-        this.systemId = systemId;
-    }
+    public InputStream getInputStream();
 
     /**
-     * Returns the content type of the resource to be imported or null, if
-     * no contenttype was defined.
+     * Returns the modification time of the resource or the current time if
+     * the modification time has not been set.
      *
-     * @return the content type of the resource
+     * @return the modification time.
      */
-    public String getContentType() {
-        return contentType;
-    }
-
-    /**
-     * Sets the content type of the resource.
-     *
-     * @param contentType the content type.
-     */
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
+    public long getModificationTime();
 
     /**
      * Returns the content language or <code>null</code>
      *
      * @return contentLanguage
      */
-    public String getContentLanguage() {
-        return contentLanguage;
-    }
+    public String getContentLanguage();
 
     /**
-     * Sets the content language.
+     * Returns the length of the data or {@link IOUtil#UNDEFINED_LENGTH -1} if
+     * the content length could not be determined.
      *
-     * @param contentLanguage
+     * @return the content length
      */
-    public void setContentLanguage(String contentLanguage) {
-        this.contentLanguage = contentLanguage;
-    }
+    public long getContentLength();
 
     /**
-     * Returns the modification time of the resource
+     * Returns the main media type. It should be retrieved from a content type
+     * (as present in a http request) or from the systemId. If either value
+     * is indefined <code>null</code> should be returned.
      *
-     * @return the modification time.
+     * @return the mimetype of the resource to be imported
      */
-    public long getModificationTime() {
-        return modificationTime;
-    }
+    public String getMimeType();
 
     /**
-     * Sets the modification time of the resource
+     * Returns the encoding extracted from a content type as present in a
+     * request header or <code>null</code>
      *
-     * @param modificationTime the modification time
+     * @return the encoding to be used for importing
      */
-    public void setModificationTime(long modificationTime) {
-        this.modificationTime = modificationTime;
-    }
+    public String getEncoding();
+
+    /**
+     *
+     * @param propertyName
+     * @return
+     */
+    public Object getProperty(Object propertyName);
 }

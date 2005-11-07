@@ -423,7 +423,7 @@ public class TxLockManagerImpl implements TxLockManager {
 
         /**
          * @return true if this transaction is used to allow for transient changes
-         *         on the underlaying repository, that may be persisted with the final
+         *         on the underlying repository, that may be persisted with the final
          *         UNLOCK request only.
          */
         boolean isLocal();

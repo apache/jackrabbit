@@ -192,7 +192,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * version control, this method has no effect.
      *
      * @throws org.apache.jackrabbit.webdav.DavException if this resource does not
-     * exist yet or if an error occurs while making the underlaying node versionable.
+     * exist yet or if an error occurs while making the underlying node versionable.
      * @see org.apache.jackrabbit.webdav.version.VersionableResource#addVersionControl()
      */
     public void addVersionControl() throws DavException {
@@ -210,7 +210,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
     }
 
     /**
-     * Calls {@link javax.jcr.Node#checkin()} on the underlaying repository node.
+     * Calls {@link javax.jcr.Node#checkin()} on the underlying repository node.
      *
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#checkin()
@@ -233,7 +233,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
     }
 
     /**
-     * Calls {@link javax.jcr.Node#checkout()} on the underlaying repository node.
+     * Calls {@link javax.jcr.Node#checkout()} on the underlying repository node.
      *
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#checkout()

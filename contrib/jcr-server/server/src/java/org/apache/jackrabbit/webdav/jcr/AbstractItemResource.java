@@ -122,7 +122,7 @@ abstract class AbstractItemResource extends AbstractResource implements
     }
 
     /**
-     * Moves the underlaying repository item to the indicated destination.
+     * Moves the underlying repository item to the indicated destination.
      *
      * @param destination
      * @throws DavException
@@ -158,7 +158,7 @@ abstract class AbstractItemResource extends AbstractResource implements
     }
 
     /**
-     * Copies the underlaying repository item to the indicated destination. If
+     * Copies the underlying repository item to the indicated destination. If
      * the locator of the specified destination resource indicates a different
      * workspace, {@link Workspace#copy(String, String, String)} is used to perform
      * the copy operation, {@link Workspace#copy(String, String)} otherwise.
@@ -282,7 +282,7 @@ abstract class AbstractItemResource extends AbstractResource implements
 
     /**
      * If this resource exists but does not contain a transaction id, complete
-     * will try to persist any modifications present on the underlaying
+     * will try to persist any modifications present on the underlying
      * repository item.
      *
      * @throws DavException if calling {@link Item#save()} fails

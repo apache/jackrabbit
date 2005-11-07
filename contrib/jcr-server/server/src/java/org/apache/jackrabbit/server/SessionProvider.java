@@ -41,4 +41,11 @@ public interface SessionProvider {
     public Session getSession(HttpServletRequest request, Repository rep, String workspace)
             throws LoginException, ServletException, RepositoryException;
 
+    /**
+     * Informs this provider that the session aquired by a previous
+     * {@link #getSession} call is no longer needed.
+     *
+     * @param session
+     */
+    public void releaseSession(Session session);
 }

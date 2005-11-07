@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 <!DOCTYPE config [
-        <!ELEMENT config ((collection | noncollection)? , filter?) >
+        <!ELEMENT config (iomanager , (collection | noncollection)? , filter?) >
+
+        <!ELEMENT iomanager (class) >
 
         <!ELEMENT collection (nodetypes) >
         <!ELEMENT noncollection (nodetypes) >
@@ -22,6 +24,15 @@
 -->
 
 <config>
+    <!--
+    Defines the IOManager implementation that is responsible for passing import/export
+    request to the individual IO-handlers.
+    -->
+    <iomanager>
+        <!-- class element defines the manager to be used. The specified class
+             must implement the IOManager interface -->
+        <class name="org.apache.jackrabbit.server.io.DefaultIOManager" />
+    </iomanager>
     <!--
     Defines nodetypes, that should always be displayed as 'collection'.
     -->

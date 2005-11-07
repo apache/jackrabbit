@@ -30,7 +30,7 @@ public interface SearchConstants {
      * Namespace definition.<br>
      * NOTE: For convenience reasons, the namespace is defined to be the default
      * {@link  DavConstants#NAMESPACE DAV:} namespace. This is not correct for the
-     * underlaying specification is still in a draft state. See also the editorial
+     * underlying specification is still in a draft state. See also the editorial
      * note inside the
      * <a href="http://greenbytes.de/tech/webdav/draft-reschke-webdav-search-latest.html#rfc.section.1.5">Internet Draft WebDAV Search</a>
      * document.

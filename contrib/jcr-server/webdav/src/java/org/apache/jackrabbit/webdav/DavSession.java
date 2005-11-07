@@ -21,13 +21,13 @@ import javax.jcr.Session;
  * <code>DavSession</code> wraps a {@link Session repository session}
  * object, that is obtained on
  * {@link javax.jcr.Repository#login(javax.jcr.Credentials, String) login} to
- * the underlaying repository.
+ * the underlying repository.
  */
 public interface DavSession {
 
     /**
      * Adds a reference to this <code>DavSession</code> indicating that
-     * the underlaying {@link Session} object is needed for actions spanning over
+     * the underlying {@link Session} object is needed for actions spanning over
      * multiple requests.
      *
      * @param reference to be added.
@@ -36,8 +36,7 @@ public interface DavSession {
 
     /**
      * Releasing a reference to this <code>DavSession</code>. If no more
-     * references are present, the underlaying {@link Session} may be discarded
-     * (e.g by calling {@link Session#logout()}.
+     * references are present, the underlying {@link Session} may be discarded.
      *
      * @param reference to be removed.
      */

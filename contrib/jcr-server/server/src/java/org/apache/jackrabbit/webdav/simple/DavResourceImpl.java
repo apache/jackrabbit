@@ -22,7 +22,7 @@ import java.util.*;
 import java.io.*;
 
 import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
@@ -30,16 +30,21 @@ import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.lock.*;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.server.io.IOManager;
+import org.apache.jackrabbit.server.io.ExportContext;
+import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.server.io.ImportContext;
-import org.apache.jackrabbit.server.io.ImportResourceChain;
-import org.apache.jackrabbit.server.io.ImportCollectionChain;
+import org.apache.jackrabbit.server.io.ExportContextImpl;
+import org.apache.jackrabbit.server.io.ImportContextImpl;
+import org.apache.jackrabbit.server.io.AbstractExportContext;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.log4j.Logger;
 import org.jdom.Namespace;
 
 /**
- * DavResourceImpl imeplements a DavResource.
+ * DavResourceImpl implements a DavResource.
  */
 public class DavResourceImpl implements DavResource, JcrConstants {
 
@@ -63,14 +68,12 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     private DavResourceLocator locator;
 
     private DavPropertySet properties = new DavPropertySet();
+    private boolean inited = false;
     private boolean isCollection = true;
-
-    /**
-     * is created on initProperties
-     */
-    private NodeResource nodeResource;
+    private long modificationTime = IOUtil.UNDEFINED_TIME;
 
     private ResourceFilter filter;
+    private IOManager ioManager;
 
     /**
      * Create a new {@link DavResource}.
@@ -80,23 +83,19 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param session
      */
     public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory,
-                           DavSession session, ResourceConfig config)
-            throws RepositoryException, DavException {
+                           DavSession session, ResourceConfig config) throws RepositoryException {
         this.session = session;
         this.factory = factory;
         this.locator = locator;
         this.filter = config.getResourceFilter();
+        this.ioManager = config.getIOManager();
 
         if (locator != null && locator.getResourcePath() != null) {
             try {
                 Item item = session.getRepositorySession().getItem(locator.getJcrPath());
                 if (item != null && item.isNode()) {
                     node = (Node) item;
-                    if (isFilteredNode(node)) {
-                        log.debug("Cannot to access resource based on a filtered repository item: " + locator.getResourcePath());
-                        throw new DavException(DavServletResponse.SC_FORBIDDEN);
-                    }
-                    // define what is a resource in webdav
+                    // define what is a collection in webdav
                     isCollection = config.isCollectionResource(node);
                 }
             } catch (PathNotFoundException e) {
@@ -168,7 +167,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
     /**
      * Returns the the last segment of the resource path.<p>
-     * Note that this must not correspond to the name of the underlaying
+     * Note that this must not correspond to the name of the underlying
      * repository item for two reasons:<ul>
      * <li>SameNameSiblings have an index appended to their item name.</li>
      * <li>the resource path may differ from the item path.</li>
@@ -188,15 +187,27 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      */
     public long getModificationTime() {
         initProperties();
-        return nodeResource == null ? 0 : nodeResource.getModificationTime();
+        return modificationTime;
     }
 
     /**
-     * @see org.apache.jackrabbit.webdav.DavResource#getStream()
+     * If this resource exists and the specified context is not <code>null</code>
+     * this implementation build a new {@link ExportContext} based on the specified
+     * context and forwards the export to its <code>IOManager</code>. If the
+     * {@link IOManager#exportContent(ExportContext, DavResource)} fails,
+     * an <code>IOException</code> is thrown.
+     *
+     * @see DavResource#spool(OutputContext)
+     * @see ResourceConfig#getIOManager()
+     * @throws IOException if the export fails.
      */
-    public InputStream getStream() {
-        initProperties();
-        return nodeResource == null ? null : nodeResource.getStream();
+    public void spool(OutputContext outputContext) throws IOException {
+        if (exists() && outputContext != null) {
+            ExportContext exportCtx = getExportContext(outputContext);
+            if (!ioManager.exportContent(exportCtx, this)) {
+                throw new IOException("Unexpected Error while spooling resource.");
+            }
+        }
     }
 
     /**
@@ -226,19 +237,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * Fill the set of properties
      */
     private void initProperties() {
-        if (!exists() || nodeResource != null) {
+        if (!exists() || inited) {
             return;
         }
 
         try {
-            nodeResource = new NodeResource(this, node);
-            properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, nodeResource.getContentLength() + ""));
-            properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, nodeResource.getCreationDate()));
-            properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, nodeResource.getLastModified()));
-            setContentType(nodeResource.getContentType());
-            setContentLanguage(nodeResource.getContentLanguage());
-            properties.add(new DefaultDavProperty(DavPropertyName.GETETAG, nodeResource.getETag()));
-        } catch (RepositoryException e) {
+            ioManager.exportContent(new PropertyExportCtx(), this);
+        } catch (IOException e) {
             // should not occure....
         }
 
@@ -264,7 +269,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         supportedLock.addEntry(Type.WRITE, Scope.EXCLUSIVE);
         properties.add(supportedLock);
 
-        // non-protected JCR properties defined on the underlaying jcr node
+        // non-protected JCR properties defined on the underlying jcr node
         try {
             // todo: should filter be respected for properties as well?
             PropertyIterator it = node.getProperties();
@@ -283,6 +288,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         } catch (RepositoryException e) {
             log.error("Unexpected error while retrieving properties: " + e.getMessage());
         }
+
+        inited = true;
     }
 
     /**
@@ -417,28 +424,6 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
-     * Set the content type.
-     *
-     * @param contentType
-     */
-    private void setContentType(String contentType) {
-        if (contentType != null) {
-            properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, contentType));
-        }
-    }
-
-    /**
-     * Set the content language.
-     *
-     * @param contentLanguage
-     */
-    private void setContentLanguage(String contentLanguage) {
-        if (contentLanguage != null) {
-            properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLANGUAGE, contentLanguage));
-        }
-    }
-
-    /**
      * @see DavResource#getCollection()
      */
     public DavResource getCollection() {
@@ -488,9 +473,9 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     /**
      * Adds a new member to this resource.
      *
-     * @see DavResource#addMember(DavResource, InputContext)
+     * @see DavResource#addMember(DavResource, org.apache.jackrabbit.webdav.io.InputContext)
      */
-    public void addMember(DavResource member, InputContext inputCxt) throws DavException {
+    public void addMember(DavResource member, InputContext inputContext) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
@@ -503,53 +488,22 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
         try {
-            ImportContext ctx = new ImportContext(node);
-            String sysId = Text.getName(member.getLocator().getJcrPath());
-            ctx.setSystemId(sysId);
-            boolean hasContent = inputCxt != null && inputCxt.getInputStream() != null;
-            if (hasContent) {
-                ctx.setInputStream(inputCxt.getInputStream());
-                ctx.setContentType(inputCxt.getContentType());
-                ctx.setContentLanguage(inputCxt.getContentLanguage());
-            }
-            if (member.isCollection()) {
-                ImportCollectionChain.getChain().execute(ctx);
-            } else {
-                ImportResourceChain.getChain().execute(ctx);
-            }
-            // if an input stream was present and was not consumed during the
-            // import the request must fail.
-            if (hasContent && ctx.getInputStream() != null) {
+            ImportContext ctx = getImportContext(inputContext, Text.getName(member.getLocator().getJcrPath()));
+            if (!ioManager.importContent(ctx, member)) {
                 // undo all changes
                 node.refresh(false);
                 throw new DavException(DavServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
             }
+
             // persist changes after successful import
             node.save();
-        } catch (ItemExistsException e) {
-            // should only be thrown by the ImportCollectionChain
-            log.error("Error while executing import chain: " + e.toString());
-            throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
         } catch (RepositoryException e) {
-            log.error("Error while executing import chain: " + e.toString());
+            log.error("Error while importing resource: " + e.toString());
             throw new JcrDavException(e);
-        } catch (DavException e) {
-            // TODO: hack needed in order not to fall into the general Exception
-            throw e;
-        } catch (Exception e) {
-            // TODO: remove this! why do the commands throw an unspecific exception?
-            log.error("Error while executing import chain: " + e.toString());
+        } catch (IOException e) {
+            log.error("Error while importing resource: " + e.toString());
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-    }
-
-    /**
-     * Creates a new member of this resource.
-     *
-     * @see DavResource#addMember(DavResource)
-     */
-    public void addMember(DavResource member) throws DavException {
-        addMember(member, null);
     }
 
     /**
@@ -792,7 +746,30 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
-     * Returns true, if the underlaying node is nodetype jcr:lockable,
+     * Returns a new <code>ImportContext</code>
+     *
+     * @param inputCtx
+     * @param systemId
+     * @return
+     * @throws IOException
+     */
+    protected ImportContext getImportContext(InputContext inputCtx, String systemId) throws IOException {
+        return new ImportContextImpl(node, systemId, inputCtx);
+    }
+
+    /**
+     * Returns a new <code>ExportContext</code>
+     *
+     * @param outputCtx
+     * @return
+     * @throws IOException
+     */
+    protected ExportContext getExportContext(OutputContext outputCtx) throws IOException {
+        return new ExportContextImpl(node, outputCtx);
+    }
+
+    /**
+     * Returns true, if the underlying node is nodetype jcr:lockable,
      * without checking its current lock status. If the node is not jcr-lockable
      * an attempt is made to add the mix:lockable mixin type.
      *
@@ -931,5 +908,71 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
     private boolean isFilteredNode(Node n) {
         return filter != null && filter.isFilteredItem(n);
+    }
+
+    //--------------------------------------------------------< inner class >---
+    /**
+     * ExportContext that writes the properties of this <code>DavResource</code>
+     * and provides not stream.
+     */
+    private class PropertyExportCtx extends AbstractExportContext {
+
+        private PropertyExportCtx() {
+            super(node, false, null);
+            // set defaults:
+            setCreationTime(IOUtil.UNDEFINED_TIME);
+            setModificationTime(IOUtil.UNDEFINED_TIME);
+        }
+
+        public OutputStream getOutputStream() {
+            return null;
+        }
+
+        public void setContentLanguage(String contentLanguage) {
+            if (contentLanguage != null) {
+                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLANGUAGE, contentLanguage));
+            }
+        }
+
+        public void setContentLength(long contentLength) {
+            if (contentLength > IOUtil.UNDEFINED_LENGTH) {
+                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, contentLength + ""));
+            }
+        }
+
+        public void setContentType(String mimeType, String encoding) {
+            String contentType = IOUtil.buildContentType(mimeType, encoding);
+            if (contentType != null) {
+                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, contentType));
+            }
+        }
+
+        public void setCreationTime(long creationTime) {
+            String created = IOUtil.getCreated(creationTime);
+            properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, created));
+        }
+
+        public void setModificationTime(long modTime) {
+            if (modificationTime <= IOUtil.UNDEFINED_TIME) {
+                modificationTime = new Date().getTime();
+            } else {
+                modificationTime = modTime;
+            }
+            String lastModified = IOUtil.getLastModified(modificationTime);
+            properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, lastModified));
+        }
+
+        public void setETag(String etag) {
+            if (etag != null) {
+                properties.add(new DefaultDavProperty(DavPropertyName.GETETAG, etag));
+            }
+        }
+
+        public void setProperty(Object propertyName, Object propertyValue) {
+            if (propertyName instanceof DavPropertyName) {
+                DavPropertyName pName = (DavPropertyName)propertyName;
+                properties.add(new DefaultDavProperty(pName, propertyValue));
+            }
+        }
     }
 }

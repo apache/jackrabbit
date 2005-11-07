@@ -40,8 +40,6 @@ general
 
 - undo incomplete changes in case of exception
 - review GET/PUT for JCR properties
-- etag property on resources
-- use strong etag for comparison in ifHeader!
 - multistatus fuer lock, copy, move, delete, proppatch wherever required.
 - DAV:supported-live-property-set
 - timeout: remove expired locks/subscriptions

@@ -60,7 +60,7 @@ public class DefaultItemResource extends AbstractItemResource {
     }
 
     /**
-     * In case an underlaying repository {@link Property property} exists the following
+     * In case an underlying repository {@link Property property} exists the following
      * logic is applyed to obtain the stream:<ul>
      * <li>Property is not multivalue: Return the {@link javax.jcr.Value#getStream()
      * stream representation} of the property value.</li>
@@ -69,9 +69,8 @@ public class DefaultItemResource extends AbstractItemResource {
      * </ul>
      *
      * @return
-     * @see DavResource#getStream()
      */
-    public InputStream getStream() {
+    InputStream getStream() {
         InputStream in = null;
         if (exists()) {
             try {
@@ -190,16 +189,7 @@ public class DefaultItemResource extends AbstractItemResource {
      *
      * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource, InputContext)
      */
-    public void addMember(DavResource resource, InputContext inputCxt) throws DavException {
-        throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED, "Cannot add members to a non-collection resource");
-    }
-
-    /**
-     * Method is not allowed.
-     *
-     * @see DavResource#addMember(DavResource)
-     */
-    public void addMember(DavResource resource) throws DavException {
+    public void addMember(DavResource resource, InputContext inputContext) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED, "Cannot add members to a non-collection resource");
     }
 
@@ -282,7 +272,7 @@ public class DefaultItemResource extends AbstractItemResource {
      * value property. Note: if this resource does not exist or if the definition
      * could not be retrieved false is returned.
      *
-     * @return true if the underlaying resource is a multi value property.
+     * @return true if the underlying resource is a multi value property.
      */
     private boolean isMultiple() {
         try {

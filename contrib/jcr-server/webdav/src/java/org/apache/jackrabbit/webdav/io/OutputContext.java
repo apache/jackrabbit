@@ -14,37 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.server.io;
+package org.apache.jackrabbit.webdav.io;
 
-import javax.jcr.Item;
 import java.io.OutputStream;
 
 /**
- * <code>ExportContext</code>...
+ * <code>OutputContext</code>...
  */
-public interface ExportContext extends IOContext {
+public interface OutputContext {
 
     /**
-     * Returns the item to be exported
-     *
-     * @return
+     * Return true if the given export context can provide an output stream
      */
-    public Item getExportRoot();
+    public boolean hasStream();
 
     /**
      * Return the output stream to be used for the export or <code>null</code>
      *
-     * @return output stream or <code>null</code>
+     * @return
      */
     public OutputStream getOutputStream();
-
-    /**
-     * Set the content type for the resource content
-     *
-     * @param mimeType
-     * @param encoding
-     */
-    public void setContentType(String mimeType, String encoding);
 
     /**
      * Sets the content language.
@@ -61,13 +50,12 @@ public interface ExportContext extends IOContext {
     public void setContentLength(long contentLength);
 
     /**
-     * Sets the creation time of the resource. A successful properties export may
-     * set this member.
+     * Set the content type for the resource content
      *
-     * @param creationTime the creation time
+     * @param contentType
      */
-    public void setCreationTime(long creationTime);
-
+    public void setContentType(String contentType);
+    
     /**
      * Sets the modification time of the resource
      *
@@ -78,16 +66,17 @@ public interface ExportContext extends IOContext {
     /**
      * Sets the ETag of the resource. A successfull export command
      * may set this member.
-     * 
+     *
      * @param etag the ETag
      */
     public void setETag(String etag);
 
     /**
-     * Sets an arbitrary property to this export context.
+     * Allows to set additional properties that are not covered by an extra setter
+     * method.
      *
      * @param propertyName
      * @param propertyValue
      */
-    public void setProperty(Object propertyName, Object propertyValue);
+    public void setProperty(String propertyName, String propertyValue);
 }
