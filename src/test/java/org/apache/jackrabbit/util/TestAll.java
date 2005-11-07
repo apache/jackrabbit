@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.name;
+package org.apache.jackrabbit.util;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all testcases for the Core module.
+ * Test suite that includes all testcases for utility classes.
  */
 public class TestAll extends TestCase {
 
@@ -33,10 +33,9 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("name tests");
+        TestSuite suite = new TestSuite("util tests");
 
-        suite.addTestSuite(PathTest.class);
-        suite.addTestSuite(QNameTest.class);
+        suite.addTestSuite(ISO9075Test.class);
 
         return suite;
     }
