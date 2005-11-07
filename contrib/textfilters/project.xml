@@ -212,7 +212,7 @@
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>textmining</groupId>
+      <groupId>org.textmining</groupId>
       <artifactId>tm-extractors</artifactId>
       <version>0.4</version>
       <type>jar</type>
