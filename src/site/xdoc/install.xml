@@ -1,0 +1,677 @@
+<?xml version="1.0"?>
+<!--
+   Copyright 2004-2005 The Apache Software Foundation or its licensors,
+                       as applicable.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<document>
+  <properties>
+    <title>Jackrabbit Installation Guide</title>
+  </properties>
+  <body>
+    <section name="Jackrabbit Installation Guide">
+      <p>
+        TODO
+      </p>
+    </section>
+    <section name="Building Jackrabbit">
+      <p>
+        As the Jackrabbit project has yet to make its first binary releases,
+        you need to build Jackrabbit from sources to install it. Luckily the
+        <a href="http://maven.apache.org/maven-1.x/">Maven</a> build environment
+        makes it very easy to build Jackrabbit.
+      </p>
+      <p>
+        The first step in building Jackrabbit is to check out the Jackrabbit
+        sources from the <a href="http://subversion.tigris.org/">Subversion</a>
+        source repository at
+        <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/">http://svn.apache.org/repos/af/incubator/jackrabbit/</a>.
+        The trunk of the source repository is divided in two parts:
+      </p>
+      <dl>
+        <dt><a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit/">trunk/jackrabbit</a></dt>
+        <dd>
+          This is the main Jackrabbit source tree that contains everything you
+          need for a fully functional Jackrabbit installation. This source tree
+          is often referred to as "the Jackrabbit core". In addition to the
+          main Jackrabbit jar library, this source tree is also contains the
+          sources of the "jackrabbit-commons" utility library used also in
+          other JCR tools and implementations.
+        </dd>
+        <dt><a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/contrib/">trunk/contrib</a></dt>
+        <dd>
+          This is a collection of additional Jackrabbit modules and other
+          contributed subprojects like the RMI and WebDAV network layers for
+          the JCR API. See the individual contrib projects for installation
+          and usage instructions.
+        </dd>
+      </dl>
+      <subsection name="Checking out the sources with Subversion">
+        <p>
+          You need a <a href="http://subversion.tigris.org/">Subversion</a>
+          client to access the Jackrabbit source repository. Take a look at the
+          <a href="http://subversion.tigris.org/project_links.html#clients">Subversion client list</a>
+          unless you already have a one installed. Once you have the Subversion
+          client installed you can checkout the main Jackrabbit source tree
+          with the following command or its equivalent in the client you are using:
+        </p>
+<source>svn checkout http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit</source>
+        <p>
+          The above checkout will create a subdirectory named
+          <code>jackrabbit</code> that contains the latest Jackrabbit sources.
+          See the <a href="http://svnbook.red-bean.com/">Subversion book</a> or
+          the documentation of your Subversion client for more information on
+          how to manage your source tree and keep it up to date with latest
+          developments.
+        </p>
+      </subsection>
+      <subsection name="Building the sources with Maven">
+        <p>
+          Jackrabbit uses <a href="http://maven.apache.org/maven-1.x/">Maven</a>
+          version 1.x as the build system and the source tree is mostly
+          organized according to the Maven
+          <a href="http://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html">Standard Directory Layout</a>.
+          The Maven version 1.0.2 and Java Development Kit (JDK) version 1.4
+          are the standard build environment, but you should be quite fine also
+          with Maven 1.1 and JDK 5.
+        </p>
+        <p>
+          <strong>Note for JDK 5 users:</strong>
+          As discussed in
+          <a href="http://issues.apache.org/jira/browse/JCR-46">JCR-46</a>, you
+          need to <a href="http://xml.apache.org/xalan-j/downloads.html">download</a>
+          the <a href="http://xml.apache.org/xalan-j/">Xalan-Java</a> files
+          <code>xalan.jar</code> and <code>serializer.jar</code> and place them
+          in <code>$MAVEN_HOME/lib/endorsed</code> (or <code>$JRE/lib/endorsed</code>
+          if you're using Maven 1.1) to avoid problems in generating the JavaCC
+          grammar files used by Jackrabbit.
+        </p>
+        <p>
+          See the Maven
+          <a href="http://maven.apache.org/maven-1.x/start/install.html">installation</a>
+          and <a href="http://maven.apache.org/maven-1.x/start/quick-start.html">quick-start</a>
+          guides for instructions on how to use Maven with Jackrabbit. You
+          may also want to check for
+          <a href="http://mevenide.codehaus.org/">Maven integration</a>
+          with your favourite Integrated Development Environment (IDE).
+          Common operations to run within the checked out
+          <code>jackrabbit</code> directory are:
+        </p>
+        <dl>
+          <dt><code>maven jar</code></dt>
+          <dd>
+            Compiles the Jackrabbit source files, runs all unit tests and
+            packages the Jackrabbit classes into a jar library. This is the
+            standard "build all" operation for Jackrabbit. The resulting
+            jar package is located in <code>target/jackrabbit-*.jar</code>.
+            This operation also generates the <code>jackrabbit-commons</code>
+            jar package within the <code>modules/commons</code> subdirectory.
+          </dd>
+          <dt><code>maven jar:install</code></dt>
+          <dd>
+            Executes the <code>jar</code> goal and installs the resulting jar
+            packages into the local Maven repository. This operation is used
+            when you want to make Jackrabbit available as a dependency for
+            other local Maven projects. The Maven groupId for Jackrabbit is
+            <code>org.apache.jackrabbit</code> and the artifactId is
+            <code>jackrabbit</code>.
+          </dd>
+          <dt><code>maven clean</code></dt>
+          <dd>
+            Removes the <code>target</code> directory that contains all
+            compiled classes and other files generated by the Maven builds.
+            This operation is used to clean up the build environment. The
+            Maven build system is quite good in keeping all the classes
+            and other generated files up to date but every now and then
+            you may want to run <code>maven clean jar</code> to do a fresh
+            build of the entire project.
+          </dd>
+          <dt><code>maven copy-deps</code></dt>
+          <dd>
+            Copies all the Jackrabbit dependencies into the
+            <code>target/lib</code> directory. This operation is used as a
+            convenient way to get all the Jackrabbit dependencies instead of
+            downloading them from the net or looking for them in the local
+            Maven repository. Note however that the copied dependencies will
+            contain the compile and unit test dependencies in addition to the
+            real runtime dependencies of Jackrabbit.
+          </dd>
+        </dl>
+      </subsection>
+    </section>
+    <section name="Jackrabbit dependencies">
+      <p>
+        Jackrabbit is designed to run on version 1.4 or higher of the
+        <a href="http://java.sun.com/j2se/">Java 2 Standard Edition</a> (J2SE)
+        platform with a relatively small set of dependency libraries.
+      </p>
+      <p>
+        The following list describes the APIs and libraries that Jackrabbit
+        depends on during runtime in addition to the standard J2SE platform.
+        Please see the <a href="dependencies.html">Dependencies</a> page for
+        a detailed listing of the latest versions of the dependency libraries.
+      </p>
+      <dl>
+        <dt><a href="http://jcp.org/en/jsr/detail?id=170">Content Repository for Java(TM) Technology API</a></dt>
+        <dd>
+          The <a href="http://jcp.org/en/jsr/detail?id=170">Content Repository
+          for Java(TM) Technology API</a> (JCR) interfaces implemented by
+          Jackrabbit.
+        </dd>
+        <dt><a href="http://java.sun.com/products/jta/">Java Transaction API</a></dt>
+        <dd>
+          The <a href="http://java.sun.com/products/jta/">Java Transaction API</a>
+          (JTA) classes not available in J2SE 1.4.
+        </dd>
+        <dt><a href="http://lucene.apache.org/java/">Apache Lucene</a></dt>
+        <dd>
+          The full text search engine library used to implement much of the
+          query features of Jackrabbit.
+        </dd>
+        <dt><a href="http://db.apache.org/derby/">Apache Derby</a></dt>
+        <dd>
+          The pure Java database implementation used by Jackrabbit as the
+          default backend for the database persistence manager.
+        </dd>
+        <dt><a href="http://logging.apache.org/log4j">log4j</a></dt>
+        <dd>
+          The logging framework used to output messages of varying importance
+          during runtime.
+        </dd>
+        <dt><a href="http://xerces.apache.org/xerces2-j/">Xerces2 Java Parser</a></dt>
+        <dd>
+          The XML parser APIs and implementation used directly for features
+          not included in the standard XML APIs in J2SE 1.4.
+        </dd>
+        <dt><a href="http://jakarta.apache.org/commons/collections/">Commons Collections</a></dt>
+        <dd>
+          Advanced collection classes, utilities and data structures used
+          internally by Jackrabbit.
+        </dd>
+        <dt><a href="http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html">util.concurrent</a></dt>
+        <dd>
+          Advanced concurrent programming classes not available in J2SE 1.4.
+        </dd>
+      </dl>
+      <p>
+        There is no need to download these dependencies manually, as Maven
+        will automatically download and cache the dependency jar files
+        specified in the Jackrabbit project descriptor. You can also use
+        the <code>maven copy-deps</code> command to copy all the dependency
+        jar files into <code>target/lib</code> when you need to deploy
+        Jackrabbit along with its dependencies.
+      </p>
+    </section>
+    <section name="Jackrabbit deployment models">
+      <p>
+        See the <a href="arch/deploy.html">Jackrabbit Example Deployment Models</a>
+        document and the associated deployment model HOWTOs for instructions on
+        how to install Jackrabbit in the different deployment models.
+      </p>
+      <p>TODO: Integrate the deployment model HOWTOs into this document</p>
+    </section>
+    <section name="Repository configuration">
+      <p>
+        Jackrabbit needs two pieces of information to set up a runtime
+        content repository instance:
+      </p>
+      <dl>
+        <dt>Repository home directory</dt>
+        <dd>
+          The filesystem path of the directory containing the content
+          repository accessed by the runtime instance of Jackrabbit. This
+          directory usually contains all the repository content, search indexes,
+          internal configuration, and other persistent information managed
+          within the content repository. Note that this is not absolutely
+          required and some persistence managers and other Jackrabbit components
+          may well be configured to access files and even other resources
+          (like remote databases) outside the repository home directory.
+          A designated repository home directory is however always needed even
+          if some components choose to not use it. Jackrabbit will automatically
+          fill in the repository home directory with all the required files and
+          subdirectories when the repository is first instantiated.
+        </dd>
+        <dt>Repository configuration file</dt>
+        <dd>
+          The filesystem path of the repository configuration XML file.
+          This file specifies the class names and properties of the various
+          Jackrabbit components used to manage and access the content repository.
+          Jackrabbit parses this configuration file and instantiates the
+          specified components when the runtime content repository instance
+          is created.
+        </dd>
+      </dl>
+      <p>
+        These to configuration parameters are passed either directly to
+        Jackrabbit when creating a repository instance or indirectly through
+        settings for a JNDI object factory or some other component management
+        system.
+      </p>
+      <subsection name="Repository configuration file">
+        <p>
+          The repository configuration file is an XML file that specifies
+          the components and configuration of a Jackrabbit content repository.
+          The configuration file has the following overall outline:
+        </p>
+<source><![CDATA[<Repository>
+    <FileSystem class="...">...</FileSystem>
+    <Security>
+        <AccessManager class="...">...</AccessManager>
+        [ <LoginModule class="...">...</LoginModule> ]
+    </Security>
+    <Workspaces rootPath="..." defaultWorkspace="..."/>
+    <Workspace name="...">
+        <FileSystem class="...">...</FileSystem>
+        <PersistenceManager class="...">...</PersistenceManager>
+        [ <SearchIndex class="...">
+            ...
+            [ <FileSystem class="...">...</FileSystem> ]
+          </SearcIndex> ]
+    </Workspace>
+    <Versioning rootPath="...">
+        <FileSystem class="...">...</FileSystem>
+        <PersistenceManager class="...">...</PersistenceManager>
+    </Versioning>
+</Repository>
+]]></source>
+        <p>
+          See <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/jackrabbit/src/main/config/repository.xml?view=markup">src/main/config/repository.xml</a>
+          file for a working example configuration file. The file also contains
+          a commented Document Type Definition (DTD) for the XML configuration
+          file format.
+        </p>
+      </subsection>
+      <subsection name="Configuration variables">
+        <p>
+          The values in the configuration file are interpreted as plain
+          strings except for a few special variables. The following variables
+          of the form <code>${variable}</code> are replaced by the variable
+          value before the string is interpreted as a configuration value.
+        </p>
+        <dl>
+          <dt><code>${rep.home}</code></dt>
+          <dd>
+            Repository home directory. This variable is replaced by the
+            repository home directory path given when the repository was
+            instantiated. This variable makes it possible to use a single
+            configuration file for multiple different repositories.
+          </dd>
+          <dt><code>${wsp.name}</code></dt>
+          <dd>
+            Workspace name. This variable is only available within the
+            <code>Workspace</code> template element and is replaced by
+            the name of the workspace being configured.
+          </dd>
+          <dt><code>${wsp.home}</code></dt>
+          <dd>
+            Workspace home directory. This variable is only available within
+            the <code>Workspace</code> template element and is replaced by the
+            directory path assigned to the workspace being configured.
+          </dd>
+        </dl>
+      </subsection>
+      <subsection name="Security configuration">
+        <p>TODO</p>
+      </subsection>
+      <subsection name="Workspace configuration">
+        <p>
+          The <code>Workspace</code> element is used as a template for
+          separate <em>workspace configuration files</em> created for each
+          new workspace. Because of this the <code>Workspace</code> element
+          is not interpreted directly from the repository configuration file.
+          Instead the workspace configuration template is first copied into
+          the workspace configuration file which is then interpreted to
+          set up the configured workspace components. Thus modifying the
+          workspace configuration template in the repository configuration
+          file will not affect existing workspace configurations.
+        </p>
+        <p>
+          The workspace configuration consists of a virtual file system,
+          a persistence manager, and an optional search index component.
+          The <a href="#PersistenceManager">persistence manager</a> component
+          is used to store the content of the workspace. The
+          <a href="#FileSystem">virtual file system</a> component is used
+          as the base file system for the persistence manager in case
+          file system access is needed. The optional
+          <a href="#QueryHandler">search index</a> component takes care of
+          indexing and querying the content of the workspace. If a search
+          index component is not specified, then the workspace will not
+          be searchable. An optional virtual file system component can
+          be specified for the search index as well.
+        </p>
+        <p>
+          A common workspace configuration example using the
+          <a href="#LocalFileSystem">LocalFileSystem</a>,
+          <a href="#DerbyPersistenceManager">DerbyPersistenceManager</a>, and
+          <a href="#SearchIndex">Lucene SearchIndex</a> components
+          is shown below.
+        </p>
+<source><![CDATA[<Workspace name="${wsp.name}">
+    <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+        <param name="path" value="${wsp.home}"/>
+    </FileSystem>
+    <PersistenceManager class="org.apache.jackrabbit.core.state.db.DerbyPersistenceManager">
+        <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
+        <param name="schemaObjectPrefix" value="${wsp.name}_"/>
+    </PersistenceManager>
+    <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
+        <param name="path" value="${wsp.home}/index"/>
+        <param name="useCompoundFile" value="true"/>
+        <param name="minMergeDocs" value="100"/>
+        <param name="volatileIdleTime" value="3"/>
+        <param name="maxMergeDocs" value="100000"/>
+        <param name="mergeFactor" value="10"/>
+        <param name="bufferSize" value="10"/>
+        <param name="cacheSize" value="1000"/>
+        <param name="forceConsistencyCheck" value="false"/>
+        <param name="autoRepair" value="true"/>
+        <param name="analyzer" value="org.apache.lucene.analysis.standard.StandardAnalyzer"/>
+    </SearchIndex>
+</Workspace>
+]]></source>
+       </subsection>
+      <subsection name="Versioning configuration">
+        <p>
+          The <code>Versioning</code> configuration element specifies the
+          virtual file system and the persistence manager used to manage
+          the version histories of all the nodes within the content repository.
+          The version storage is much like a normal workspace without
+          a search index. Instead of a workspace name, the version storage
+          is given a root directory path using the <code>rootPath</code>
+          attribute.
+        </p>
+        <p>
+          An common versioning configuration example using the
+          <a href="#LocalFileSystem">LocalFileSystem</a> and
+          <a href="#DerbyPersistenceManager">DerbyPersistenceManager</a>
+          components is shown below.
+        </p>
+<source><![CDATA[<Versioning rootPath="${rep.home}/version">
+    <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+        <param name="path" value="${rep.home}/version"/>
+    </FileSystem>
+    <PersistenceManager class="org.apache.jackrabbit.core.state.db.DerbyPersistenceManager">
+        <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
+        <param name="schemaObjectPrefix" value="version_"/>
+    </PersistenceManager>
+</Versioning>
+]]></source>
+      </subsection>
+      <subsection name="Modifying the repository configuration">
+        <p>
+          In general you should be very careful when modifying a repository
+          configuration file once the repository has been initialized. Usually
+          (but not always!) it is safe to change the authentication and
+          access control settings within the <code>Security</code> element and
+          some of the parameters of the other components. See the documentation
+          of individual components for more information on the use of specific
+          configuration parameters.
+        </p>
+      </subsection>
+    </section>
+    <section name="Access managers" id="AccessManager">
+      <p>TODO</p>
+    </section>
+    <section name="Login modules" id="LoginModule">
+      <p>TODO</p>
+    </section>
+    <section name="Persistence managers" id="PersistenceManager">
+      <p>
+        Persistence managers are Jackrabbit components that manage the
+        persistent storage of content nodes and properties. 
+        The <code>org.apache.jackrabbit.core.state.PersistenceManger</code>
+      </p>
+      <p>
+        A separate persistence manager is assigned to each workspace and the
+        global versioning store. The persistence manager implementations to
+        use are configured using the <code>PersistenceManager</code>
+        configuration element within the <code>Workspace</code> configuration
+        template (and the instantiated workspace configuration files) and the
+        <code>Versioning</code> configuration element. The layout of a
+        <code>PersistenceManager</code> configuration element is shown below.
+      </p>
+<source><![CDATA[<PersistenceManager class="...">
+    <param name="...">...</param>
+    ...
+</PersistenceManager>
+]]></source>
+      <p>
+        The <code>class</code> attribute of the <code>PersistenceManager</code>
+        element contains the fully qualified class name of the persistence
+        manager implementation class. The class must implement the
+        <code>org.apache.jackrabbit.core.state.PersistenceManager</code>
+        interface and have an empty default constructor. String properties
+        can be assigned using the <code>param</code> elements according to
+        the JavaBean conventions.
+      </p>
+      <p>
+        See the <a href="apidocs/org/apache/jackrabbit/core/state/PersistenceManager.html">PersistenceManager javadocs</a>
+        for more details.
+      </p>
+      <subsection name="InMemPersistenceManager" id="InMemPersistenceManager">
+        <p>
+          The <code>org.apache.jackrabbit.core.state.mem.InMemPersistenceManager</code>
+          class implements a simple persistence manager that keeps all content
+          in memory. A custom binary serializer is optionally used to load
+          and store the persistent state during initialization and shutdown
+          of the persistence maanger.
+        </p>
+        <p>
+          This persistence manager is best suited for testing and for small
+          workspaces that need extra performance at the cost of reliable
+          persistence. The configuration parameters for the
+          <code>InMemPersistenceManager</code> class are:
+        </p>
+        <dl>
+          <dt><code>persistent</code></dt>
+          <dd>
+            Set to <code>true</code> to enable the use of the binary
+            serializer to persistently load and store the managed content
+            during startup and shutdown.
+          </dd>
+          <dt><code>initialCapacity</code></dt>
+          <dd>
+            The initial capacity of the hash maps used to store the
+            content items. The default value should be fine for almost
+            all uses of this persistence manager.
+          </dd>
+          <dt><code>loadFactory</code></dt>
+          <dd>
+            The load factor of the hash maps. The default value should be
+            fine for almost all uses fo this persistence manager.
+          </dd>
+        </dl>
+        <p>
+          See the <a href="apidocs/org/apache/jackrabbit/core/state/db/InMemPersistenceManager.html">InMemPersistenceManager javadocs</a>
+          for more details.
+        </p>
+      </subsection>
+      <subsection name="ObjectPersistenceManager" id="ObjectPersistenceManager">
+        <p>
+          The <code>org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager</code>
+          class implements a persistence manager that uses a custom binary
+          serialization format to store the managed content directly in
+          the underlying virtual file system. The virtual file system is
+          expected to perform well with a large number of small files.
+        </p>
+        <p>
+          There are no configuration parameters for the
+          <code>ObjectPersistenceManager</code> class.
+        </p>
+        <p>
+          See the <a href="apidocs/org/apache/jackrabbit/core/state/obj/ObjectPersistenceManager.html">ObjectPersistenceManager javadocs</a>
+          for more details.
+        </p>
+      </subsection>
+      <subsection name="XMLPersistenceManager" id="XMLPersistenceManager">
+        <p>
+          The <code>org.apache.jackrabbit.core.state.xml.XMLPersistenceManager</code>
+          class implements a persistence manager that uses XML files stored
+          in the underlying virtual file system. The difference between this
+          persistence manager and the ObjectPersistenceManager is the storage
+          format used. The XMLPersistenceManager is best suited for testing
+          and debugging where readability of the content files is more
+          important than repository performance.
+        </p>
+        <p>
+          There are no configuration parameters for the
+          <code>XMLPersistenceManager</code> class.
+        </p>
+        <p>
+          See the <a href="apidocs/org/apache/jackrabbit/core/state/xml/XMLPersistenceManager.html">XMLPersistenceManager javadocs</a>
+          for more details.
+        </p>
+      </subsection>
+      <subsection name="SimpleDbPersistenceManager" id="SimpleDbPersistenceManager">
+        <p>
+          The <code>org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager</code>
+          class implements a generic Java Database Connectivity (JDBC) -based
+          persistence manager. Content is stored in a set of simple
+          non-normalized tables that are created automatically unless they
+          already exist. The configuration parameters for the
+          <code>SimpleDbPersistenceManager</code> class are:
+        </p>
+        <dl>
+          <dt><code>driver</code></dt>
+          <dd>
+            The fully qualified name of the JDBC driver class.
+          </dd>
+          <dt><code>url</code></dt>
+          <dd>
+            The JDBC database URL.
+          </dd>
+          <dt><code>user</code></dt>
+          <dd>
+            The database user. The user should have full access to the
+            content tables and administrative access to create the tables
+            if the tables have not already been created.
+          </dd>
+          <dt><code>password</code></dt>
+          <dd>
+            The password of the database user.
+          </dd>
+          <dt><code>schema</code></dt>
+          <dd>
+            The type of database schema to use for creating the content tables
+            if needed. (<code>mysql</code>, <code>mssql</code>, etc.)
+          </dd>
+          <dt><code>schemaObjectPrefix</code></dt>
+          <dd>
+            The prefix to use for the names of the content tables.
+          </dd>
+          <dt><code>externalBLOBs</code></dt>
+          <dd>
+            Set to <code>true</code> (the default) to store binary properties
+            in the underlying virtual file system. Set to <code>false</code>
+            to store binary properties in the database.
+          </dd>
+        </dl>
+        <p>
+          See the <a href="apidocs/org/apache/jackrabbit/core/state/db/SimpleDbPersistenceManager.html">SimpleDbPersistenceManager javadocs</a>
+          for more details.
+        </p>
+      </subsection>
+      <subsection name="DerbyPersistenceManager" id="DerbyPersistenceManager">
+        <p>
+          The <code>org.apache.jackrabbit.core.state.db.DerbyPersistenceManager</code>
+          is a subclass of the <code>SimpleDbPersistenceManager</code>. It
+          implements a persistence manager that uses an embedded
+          <a href="http://db.apache.org/derby/">Apache Derby</a> database
+          to manage content.
+        </p>
+        <p>
+          The <code>DerbyPersistenceManager</code> class has the same
+          configuration parameters as the
+          <code>SimpleDbPersistenceManager</code>, but provides Derby-specific
+          defaults for the <code>driver</code> and <code>schema</code>
+          parameters. The <code>url</code> parameter should normally be
+          something like <code>jdbc:derby:${wsp.home}/db;create=true</code>
+          and the <code>user</code> and <code>password</code> parameters can
+          be ignored. As Derby has reasonable support for binary content,
+          it often makes sense to set the <code>externalBLOBs</code> parameter
+          to <code>false</code>.
+        </p>
+        <p>
+          See the <a href="apidocs/org/apache/jackrabbit/core/state/db/DerbyPersistenceManager.html">DerbyPersistenceManager javadocs</a>
+          for more details.
+        </p>
+      </subsection>
+    </section>
+    <section name="Query handlers" id="QueryHandler">
+      <p>TODO</p>
+    </section>
+    <section name="Virtual file systems" id="FileSystem">
+      <p>
+        Jackrabbit uses the <code>org.apache.jackrabbit.core.fs.FileSystem</code>
+        interface as a virtual file system abstraction. Although this interface
+        does not cover all direct file system use of Jackrabbit, it still allows
+        for flexibility in selecting where and how to store various parts of the
+        persistent repository state. For example in some cases it might make
+        sense to store the search indexes on a fast disk and the archived node
+        versions on a slower but more reliable disk.
+      </p>
+      <p>
+        It is possible to configure separate virtual file systems for the global
+        repository state, workspaces, search indexes, and versioning.
+        A virtual file system is configured using the <code>FileSystem</code>
+        configuration element:
+      </p>
+<source><![CDATA[<FileSystem class="...">
+    <param name="...">...</param>
+    ...
+</FileSystem>
+]]></source>
+      <p>
+        The <code>class</code> attribute of the <code>FileSystem</code> element
+        contains the fully qualified class name of the file system
+        implementation class. The class must implement the
+        <code>org.apache.jackrabbit.core.fs.FileSystem</code> interface and
+        have an empty default constructor. String properties can be assigned
+        using the <code>param</code> elements according to the JavaBean
+        conventions.
+      </p>
+      <p>
+        See the <a href="apidocs/org/apache/jackrabbit/core/fs/FileSystem.html">FileSystem javadocs</a>
+        for more details.
+      </p>
+      <subsection name="LocalFileSystem" id="LocalFileSystem">
+        <p>
+          The <code>org.apache.jackrabbit.core.fs.local.LocalFileSystem</code>
+          class implements a simple virtual file system based on a directory
+          within the local file system. The configuration parameters for the
+          <code>LocalFileSystem</code> class are:
+        </p>
+        <dl>
+          <dt><code>path</code></dt>
+          <dd>
+            The path of the local directory that is used to contain the
+            virtual file system. Uses "<code>/</code>" as the path separator
+            regardless of the underlying operating system.
+          </dd>
+          <dt><code>enableHandleMonitor</code></dt>
+          <dd>
+            Set to <code>true</code> to enable tracking of open file handles.
+          </dd>
+        </dl>
+        <p>
+          See the <a href="apidocs/org/apache/jackrabbit/core/fs/local/LocalFileSystem.html">LocalFileSystem javadocs</a>
+          for more details.
+        </p>
+      </subsection>
+    </section>
+    <section name="Contributed subprojects" id="contrib">
+      <p>TODO</p>
+    </section>
+  </body>
+</document>
