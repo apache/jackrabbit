@@ -86,8 +86,6 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
     private final ItemStateManager itemStateProvider;
     private final HierarchyManager hierMgr;
 
-    private NodeImpl root;
-
     /**
      * A cache for item instances created by this <code>ItemManager</code>
      */
@@ -112,29 +110,6 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
         rootNodeId = new NodeId(rootNodeUUID);
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
-    }
-
-    /**
-     * Returns the root node instance of the repository.
-     *
-     * @return the root node.
-     * @throws RepositoryException
-     */
-    private synchronized NodeImpl getRoot() throws RepositoryException {
-        // lazy instantiation of root node
-        // to avoid chicken & egg kind of problems
-        if (root == null) {
-            try {
-                NodeState rootState = (NodeState) itemStateProvider.getItemState(rootNodeId);
-                // keep a hard reference to root node
-                root = createNodeInstance(rootState, rootNodeDef);
-            } catch (ItemStateException ise) {
-                String msg = "failed to retrieve state of root node";
-                log.debug(msg);
-                throw new RepositoryException(msg, ise);
-            }
-        }
-        return root;
     }
 
     /**
@@ -300,7 +275,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
      * @throws RepositoryException
      */
     NodeImpl getRootNode() throws RepositoryException {
-        return getRoot();
+        return (NodeImpl) getItem(rootNodeId);
     }
 
     /**
@@ -340,13 +315,8 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
         // check cache
         ItemImpl item = retrieveItem(id);
         if (item == null) {
-            // shortcut
-            if (id.denotesNode() && id.equals(rootNodeId)) {
-                item = getRoot();
-            } else {
-                // create instance of item using its state object
-                item = createItemInstance(id);
-            }
+            // create instance of item
+            item = createItemInstance(id);
         }
         return item;
     }
@@ -501,7 +471,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
             throw new RepositoryException(msg, ise);
         }
 
-        if (state.isNode()) {
+        if (id.equals(rootNodeId)) {
+            // special handling required for root node
+            item = createNodeInstance((NodeState) state, rootNodeDef);
+        } else if (state.isNode()) {
             item = createNodeInstance((NodeState) state);
         } else {
             item = createPropertyInstance((PropertyState) state);

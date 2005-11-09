@@ -130,9 +130,9 @@ public class SharedItemStateManager
     private final NodeTypeRegistry ntReg;
 
     /**
-     * Keep a hard reference to the root node state
+     * uuid of root node
      */
-    private NodeState root;
+    private final String rootNodeUUID;
 
     /**
      * Virtual item state providers
@@ -160,12 +160,10 @@ public class SharedItemStateManager
         cache = new ItemStateReferenceCache();
         this.persistMgr = persistMgr;
         this.ntReg = ntReg;
-
-        try {
-            root = (NodeState) getNonVirtualItemState(new NodeId(rootNodeUUID));
-        } catch (NoSuchItemStateException e) {
-            // create root node
-            root = createRootNodeState(rootNodeUUID, ntReg);
+        this.rootNodeUUID = rootNodeUUID;
+        // create root node state if it doesn't yet exist
+        if (!hasNonVirtualItemState(new NodeId(rootNodeUUID))) {
+            createRootNodeState(rootNodeUUID, ntReg);
         }
     }
 
@@ -496,7 +494,7 @@ public class SharedItemStateManager
 
                 /* create event states */
                 if (events != null) {
-                    events.createEventStates(root.getUUID(), local, this);
+                    events.createEventStates(rootNodeUUID, local, this);
                 }
 
                 /* Push all changes from the local items to the shared items */
