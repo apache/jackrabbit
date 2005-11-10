@@ -91,7 +91,9 @@ before running one of the maven commands listed at
 
 to build the Jackrabbit project and/or documentation.
 
-NOTE: JDK 1.5 users need to download xalan.jar and place it in
+NOTE: Java 5 users need to download the xalan.jar and serializer.jar
+libraries from the Xalan-Java binary distribution at 
+http://xml.apache.org/xalan-j/downloads.html and place them in
 $MAVEN_HOME/lib/endorsed (or $JRE/lib/endorsed if using Maven 1.1)
 to build the Jackrabbit sources. The reason for this workaround is
 explained in
