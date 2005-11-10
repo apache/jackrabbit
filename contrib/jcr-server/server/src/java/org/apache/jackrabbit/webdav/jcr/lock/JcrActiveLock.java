@@ -78,7 +78,7 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
      */
     public boolean isExpired() {
         try {
-            return lock.isLive();
+            return !lock.isLive();
         } catch (RepositoryException e) {
             log.error("Unexpected error: " + e.getMessage());
             return false;
@@ -115,17 +115,19 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
     }
 
     /**
-     * Always returns {@link DavConstants#UNDEFINED_TIMEOUT} for the timeout
-     * cannot be retrieved from the JCR lock.
+     * Since jcr locks do not reveal the time left until they expire, {@link #INFINITE_TIMEOUT}
+     * is returned. A missing timeout causes problems with Microsoft clients.
      * 
+     * @return Always returns {@link #INFINITE_TIMEOUT}
      * @see ActiveLock#getTimeout()
-     * @see DavConstants#UNDEFINED_TIMEOUT
      */
     public long getTimeout() {
-        return UNDEFINED_TIMEOUT;
+        return INFINITE_TIMEOUT;
     }
 
     /**
+     * Throws <code>UnsupportedOperationException</code>
+     *
      * @see ActiveLock#setTimeout(long)
      */
     public void setTimeout(long timeout) {

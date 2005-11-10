@@ -48,7 +48,7 @@ public abstract class AbstractActiveLock implements ActiveLock, DavConstants {
         // timeout
         long timeout = getTimeout();
         if (!isExpired() && timeout != UNDEFINED_TIMEOUT) {
-            activeLock.addContent(XmlUtil.timeoutToXml(getTimeout()));
+            activeLock.addContent(XmlUtil.timeoutToXml(timeout));
         }
 
         // owner
