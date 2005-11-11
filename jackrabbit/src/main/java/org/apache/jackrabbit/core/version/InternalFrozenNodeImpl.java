@@ -260,9 +260,7 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
         NodeStateEx node = parent.addNode(name, QName.NT_FROZENNODE, null, true);
 
         // initialize the internal properties
-        if (src.isNodeType(QName.MIX_REFERENCEABLE)) {
-            node.setPropertyValue(QName.JCR_FROZENUUID, InternalValue.create(src.getUUID()));
-        }
+        node.setPropertyValue(QName.JCR_FROZENUUID, InternalValue.create(src.internalGetUUID()));
         node.setPropertyValue(QName.JCR_FROZENPRIMARYTYPE,
                 InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
         if (src.hasProperty(QName.JCR_MIXINTYPES)) {
@@ -299,7 +297,7 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
             }
         }
 
-        // add the frozen children and vistories
+        // add the frozen children and histories
         NodeIterator niter = src.getNodes();
         while (niter.hasNext()) {
             NodeImpl child = (NodeImpl) niter.nextNode();
