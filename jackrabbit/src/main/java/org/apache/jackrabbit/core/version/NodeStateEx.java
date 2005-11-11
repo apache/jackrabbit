@@ -565,9 +565,13 @@ class NodeStateEx {
             } else {
                 type = prop.getDefinition().getRequiredType();
             }
-            setPropertyValues(prop.getQName(), type, values);
+            InternalValue[] copiedValues = new InternalValue[values.length];
+            for (int i = 0; i < values.length; i++) {
+                copiedValues[i] = values[i].createCopy();
+            }
+            setPropertyValues(prop.getQName(), type, copiedValues);
         } else {
-            setPropertyValue(prop.getQName(), prop.internalGetValue());
+            setPropertyValue(prop.getQName(), prop.internalGetValue().createCopy());
         }
     }
 
