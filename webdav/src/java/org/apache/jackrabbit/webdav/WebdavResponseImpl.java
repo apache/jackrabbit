@@ -240,7 +240,7 @@ public class WebdavResponseImpl implements WebdavResponse {
     }
 
     public void setContentLength(int i) {
-
+        httpResponse.setContentLength(i);
     }
 
     public void setContentType(String s) {
