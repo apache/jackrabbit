@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.core.NodeImpl;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;
@@ -100,14 +98,16 @@ class LockImpl implements Lock {
 
     /**
      * {@inheritDoc}
+     * @throws LockException if this <code>Session</code> is not the lock holder
+     * or if this <code>Lock</code> is not alive.
      */
     public void refresh() throws LockException, RepositoryException {
-        if (isLive()) {
-            throw new LockException("Lock still alive.");
+        if (!isLive()) {
+            throw new LockException("Lock is not live any more.");
         }
         if (getLockToken() == null) {
             throw new LockException("Session does not hold lock.");
         }
-        info.refresh((NodeImpl) node);
+        // since a lock has no expiration date no other action is required
     }
 }

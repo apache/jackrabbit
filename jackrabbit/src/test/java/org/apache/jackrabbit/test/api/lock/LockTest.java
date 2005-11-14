@@ -484,13 +484,30 @@ public class LockTest extends AbstractJCRTest {
         // assert: lock must be alive
         assertTrue("lock must be alive", lock.isLive());
 
-        // assert: refresh must fail, since lock is still alive
-        try {
-            lock.refresh();
-            fail("refresh must fail, since lock is still alive");
-        } catch (LockException e) {
-            // expected
-        }
+        // assert: refresh must succeed
+        lock.refresh();
+
+        // unlock node
+        n.unlock();
+
+        // assert: lock must not be alive
+        assertFalse("lock must not be alive", lock.isLive());
+    }
+
+    /**
+     * Test refresh
+     */
+    public void testRefreshNotLive() throws Exception {
+        // create new node
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixLockable);
+        testRootNode.save();
+
+        // lock node and get lock token
+        Lock lock = n.lock(false, true);
+
+        // assert: lock must be alive
+        assertTrue("lock must be alive", lock.isLive());
 
         // unlock node
         n.unlock();
@@ -499,10 +516,12 @@ public class LockTest extends AbstractJCRTest {
         assertFalse("lock must not be alive", lock.isLive());
 
         // refresh
-        lock.refresh();
-
-        // assert: lock must again be alive
-        assertTrue("lock must again be alive", lock.isLive());
+        try {
+            lock.refresh();
+            fail("Refresh on a lock that is not alive must fail");
+        } catch (LockException e) {
+            // success
+        }
     }
 
     /**

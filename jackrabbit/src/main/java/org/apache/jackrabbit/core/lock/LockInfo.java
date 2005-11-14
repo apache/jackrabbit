@@ -16,14 +16,11 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
 import org.apache.log4j.Logger;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.lock.LockException;
 
 /**
  * Contains information about a lock and gets placed inside the child
@@ -156,19 +153,6 @@ class LockInfo implements SessionListener {
         return sessionScoped;
     }
 
-    /**
-     * Refresh a lock. Will try to re-insert this lock info into the lock
-     * manager's path map, provided the node is not already locked.
-     *
-     * @param node node to lock again
-     * @throws LockException       if the node is already locked
-     * @throws RepositoryException if some other error occurs
-     * @see javax.jcr.Node#refresh
-     */
-    public void refresh(NodeImpl node) throws LockException, RepositoryException {
-        lockMgr.lock(node, this);
-    }
-
     //-------------------------------------------------------< SessionListener >
 
     /**
@@ -178,7 +162,7 @@ class LockInfo implements SessionListener {
      * operations depending on the lock type.
      * (1) If the lock was session-scoped, we unlock the node.
      * (2) If the lock was open-scoped, we remove the lock token
-     *     from the session.
+     *     from the session and set the lockHolder field to <code>null</code>.
      */
     public void loggingOut(SessionImpl session) {
         if (live) {
@@ -186,6 +170,7 @@ class LockInfo implements SessionListener {
                 lockMgr.unlock(this);
             } else {
                 if (session.equals(lockHolder)) {
+                    session.removeLockToken(lockToken.toString());
                     lockHolder = null;
                 }
             }
