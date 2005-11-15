@@ -109,6 +109,17 @@ public final class EventStateCollection {
                 new ChangeLogBasedHierarchyMgr(rootNodeUUID, provider, changes,
                         session.getNamespaceResolver());
 
+        /**
+         * Important:
+         * Do NOT change the sequence of events generated unless there's
+         * a very good reason for it! Some internal SynchronousEventListener
+         * implementations depend on the order of the events fired.
+         * LockManagerImpl for example expects that for any given path a
+         * childNodeRemoved event is fired before a childNodeAdded event.  
+         */
+
+        // 1. modified items
+
         for (Iterator it = changes.modifiedStates(); it.hasNext();) {
             ItemState state = (ItemState) it.next();
             if (state.isNode()) {
@@ -289,6 +300,48 @@ public final class EventStateCollection {
                         session));
             }
         }
+
+        // 2. removed items
+
+        for (Iterator it = changes.deletedStates(); it.hasNext();) {
+            ItemState state = (ItemState) it.next();
+            if (state.isNode()) {
+                // node deleted
+                NodeState n = (NodeState) state;
+                NodeState parent = (NodeState) provider.getItemState(new NodeId(n.getParentUUID()));
+                NodeTypeImpl nodeType = getNodeType(parent, session);
+                Set mixins = parent.getMixinTypeNames();
+                Path path = getZombiePath(state.getId(), hmgr);
+                events.add(EventState.childNodeRemoved(n.getParentUUID(),
+                        getParent(path),
+                        n.getUUID(),
+                        path.getNameElement(),
+                        nodeType,
+                        mixins,
+                        session));
+            } else {
+                // property removed
+                // only create an event if node still exists
+                try {
+                    NodeState n = (NodeState) changes.get(new NodeId(state.getParentUUID()));
+                    // node state exists -> only property removed
+                    NodeTypeImpl nodeType = getNodeType(n, session);
+                    Set mixins = n.getMixinTypeNames();
+                    Path path = getZombiePath(state.getId(), hmgr);
+                    events.add(EventState.propertyRemoved(state.getParentUUID(),
+                            getParent(path),
+                            path.getNameElement(),
+                            nodeType,
+                            mixins,
+                            session));
+                } catch (NoSuchItemStateException e) {
+                    // node removed as well -> do not create an event
+                }
+            }
+        }
+
+        // 3. added items
+
         for (Iterator it = changes.addedStates(); it.hasNext();) {
             ItemState state = (ItemState) it.next();
             if (state.isNode()) {
@@ -324,42 +377,6 @@ public final class EventStateCollection {
                         nodeType,
                         mixins,
                         session));
-            }
-        }
-        for (Iterator it = changes.deletedStates(); it.hasNext();) {
-            ItemState state = (ItemState) it.next();
-            if (state.isNode()) {
-                // node deleted
-                NodeState n = (NodeState) state;
-                NodeState parent = (NodeState) provider.getItemState(new NodeId(n.getParentUUID()));
-                NodeTypeImpl nodeType = getNodeType(parent, session);
-                Set mixins = parent.getMixinTypeNames();
-                Path path = getZombiePath(state.getId(), hmgr);
-                events.add(EventState.childNodeRemoved(n.getParentUUID(),
-                        getParent(path),
-                        n.getUUID(),
-                        path.getNameElement(),
-                        nodeType,
-                        mixins,
-                        session));
-            } else {
-                // property removed
-                // only create an event if node still exists
-                try {
-                    NodeState n = (NodeState) changes.get(new NodeId(state.getParentUUID()));
-                    // node state exists -> only property removed
-                    NodeTypeImpl nodeType = getNodeType(n, session);
-                    Set mixins = n.getMixinTypeNames();
-                    Path path = getZombiePath(state.getId(), hmgr);
-                    events.add(EventState.propertyRemoved(state.getParentUUID(),
-                            getParent(path),
-                            path.getNameElement(),
-                            nodeType,
-                            mixins,
-                            session));
-                } catch (NoSuchItemStateException e) {
-                    // node removed as well -> do not create an event
-                }
             }
         }
     }

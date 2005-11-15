@@ -193,7 +193,7 @@ public class PathMap {
                     for (int i = index; i < list.size(); i++) {
                         Element element = (Element) list.get(i);
                         if (element != null) {
-                            element.index++;
+                            element.index = element.getNormalizedIndex() + 1;
                         }
                     }
                     list.add(index, null);
