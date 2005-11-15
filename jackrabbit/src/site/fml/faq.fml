@@ -81,6 +81,53 @@
     </faq>
   </part>
 
+  <part id="build">
+    <title>Building Jackrabbit</title>
+
+    <faq id="build-missing-pom">
+      <question>
+        Why does the Maven build fail with the message
+        "You must define currentVersion in your POM."?
+      </question>
+      <answer>
+        <p>
+          You are most probably running Maven from a wrong directory.
+          Maven expects to find the file <code>project.xml</code> in the
+          current directory (unless the <code>-d</code>, <code>-p</code>,
+          or <code>-f</code> option is given). Please check that you
+          are in the correct directory and try running Maven again.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="build-java5">
+      <question>
+        Why does the Maven build fail with the message
+        "Provider org.apache.xalan.processor.TransformerFactoryImpl not found"?
+      </question>
+      <answer>
+        <p>
+          This error message comes from the Jackrabbit build environment
+          trying to generate the XPath grammar files with an XSLT
+          transformation when using Java 5. Due to a Maven limitation (see
+          <a href="http://jira.codehaus.org/secure/ViewIssue.jspa?key=MAVEN-156">MAVEN-156</a>)
+          the class name of the XSLT transformer factory has been hardcoded
+          in the Jackrabbit build environment. This solution works well with
+          JDK 1.4, but fails with Java 5 that uses a different XSLT transformer.
+        </p>
+        <p>
+          To work around this problem, Java 5 users need to download the
+          <code>xalan.jar</code> and <code>serializer.jar</code> files from
+          the <a href="http://xml.apache.org/xalan-j/downloads.html">Xalan-Java binary distribution</a>
+          and place them in the <code>$MAVEN_HOME/lib/endorsed</code> directory.
+          Maven 1.1 users need to place the files in
+          <code>$JRE/lib/endorsed</code> as Maven 1.1 does not have a private
+          endorsed library directory.
+        </p>
+      </answer>
+    </faq>
+  </part>
+
   <part id="using">
     <title>Using Jackrabbit</title>
 
