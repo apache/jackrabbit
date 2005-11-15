@@ -83,7 +83,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     private final Object contentMonitor = new Object();
 
     /**
-     * Name space resolver
+     * Namespace resolver
      */
     private final NamespaceResolver nsResolver;
 
@@ -119,13 +119,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * Close this lock manager. Writes back all changes.
      */
     public void close() {
-        try {
-            save();
-        } catch (IOException e) {
-            log.warn("I/O error while saving locks to '"
-                    + locksFile.getPath() + "': " + e.getMessage());
-            log.debug("Root cause: ", e);
-        }
+        save();
     }
 
     /**
@@ -180,7 +174,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     /**
      * Write locks to locks file
      */
-    private void save() throws IOException {
+    private void save() {
         final ArrayList list = new ArrayList();
 
         lockMap.traverse(new PathMap.ElementVisitor() {
@@ -202,6 +196,10 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                 writer.write(info.lockToken.toString());
                 writer.newLine();
             }
+        } catch (IOException e) {
+            log.warn("I/O error while saving locks to '"
+                    + locksFile.getPath() + "': " + e.getMessage());
+            log.debug("Root cause: ", e);
         } finally {
             if (writer != null) {
                 try {
@@ -257,6 +255,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                 session.addLockToken(info.lockToken.toString(), false);
                 lockMap.put(path, info);
                 lock = new LockImpl(info, node);
+
+                // persist lockMap
+                save();
             }
 
             // add properties to content
@@ -300,6 +301,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
                     // set live flag to false
                     info.setLive(false);
+
+                    // persist lockMap
+                    save();
                 }
 
                 // remove properties in content
@@ -316,7 +320,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
     }
 
-    //-----------------------------------------------------------< LockManager >
+    //----------------------------------------------------------< LockManager >
 
     /**
      * {@inheritDoc}
