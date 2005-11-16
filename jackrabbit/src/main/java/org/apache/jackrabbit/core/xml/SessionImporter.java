@@ -322,10 +322,19 @@ public class SessionImporter implements Importer {
                     // session's namespace mappings
                     va[i] = ival.toJCRValue(session.getNamespaceResolver());
                 } else if (targetType == PropertyType.BINARY) {
-                    // deserialize BINARY type using Reader
                     try {
-                        Reader reader = tv.reader();
-                        va[i] = ValueHelper.deserialize(reader, targetType, false);
+                        if (tv.length() < 0x10000) {
+                            // < 65kb: deserialize BINARY type using String
+                            va[i] = ValueHelper.deserialize(tv.retrieve(), targetType, false);
+                        } else {
+                            // >= 65kb: deserialize BINARY type using Reader
+                            Reader reader = tv.reader();
+                            try {
+                                va[i] = ValueHelper.deserialize(reader, targetType, false);
+                            } finally {
+                                reader.close();
+                            }
+                        }
                     } catch (IOException ioe) {
                         String msg = "failed to deserialize binary value";
                         log.debug(msg, ioe);
