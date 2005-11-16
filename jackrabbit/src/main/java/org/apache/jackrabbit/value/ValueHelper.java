@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.util.TransientFileFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -33,6 +34,9 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
 
 /**
  * The <code>ValueHelper</code> class provides several <code>Value</code>
@@ -50,7 +54,7 @@ public class ValueHelper {
      * @param srcValue
      * @param targetType
      * @return
-     * @throws javax.jcr.ValueFormatException
+     * @throws ValueFormatException
      * @throws IllegalArgumentException
      */
     public static Value convert(String srcValue, int targetType)
@@ -66,7 +70,7 @@ public class ValueHelper {
      * @param srcValues
      * @param targetType
      * @return
-     * @throws javax.jcr.ValueFormatException
+     * @throws ValueFormatException
      * @throws IllegalArgumentException
      */
     public static Value[] convert(String[] srcValues, int targetType)
@@ -85,7 +89,7 @@ public class ValueHelper {
      * @param srcValues
      * @param targetType
      * @return
-     * @throws javax.jcr.ValueFormatException
+     * @throws ValueFormatException
      * @throws IllegalArgumentException
      */
     public static Value[] convert(Value[] srcValues, int targetType)
@@ -119,7 +123,7 @@ public class ValueHelper {
      * @param srcValue
      * @param targetType
      * @return
-     * @throws javax.jcr.ValueFormatException
+     * @throws ValueFormatException
      * @throws IllegalStateException
      * @throws IllegalArgumentException
      */
@@ -417,14 +421,14 @@ public class ValueHelper {
      * Serializes the given value to a <code>String</code>. The serialization
      * format is the same as used by Document & System View XML, i.e.
      * binary values will be Base64-encoded whereas for all others
-     * <code>{@link javax.jcr.Value#getString()}</code> will be used.
+     * <code>{@link Value#getString()}</code> will be used.
      *
      * @param value        the value to be serialized
      * @param encodeBlanks if <code>true</code> space characters will be encoded
      *                     as <code>"_x0020_"</code> within he output string.
      * @return a string representation of the given value.
      * @throws IllegalStateException if the given value is in an illegal state
-     * @throws javax.jcr.RepositoryException   if an error occured during the serialization.
+     * @throws RepositoryException   if an error occured during the serialization.
      */
     public static String serialize(Value value, boolean encodeBlanks)
             throws IllegalStateException, RepositoryException {
@@ -442,17 +446,16 @@ public class ValueHelper {
      * Outputs the serialized value to a <code>Writer</code>. The serialization
      * format is the same as used by Document & System View XML, i.e.
      * binary values will be Base64-encoded whereas for all others
-     * <code>{@link javax.jcr.Value#getString()}</code> will be used for
-     * serialization.
+     * <code>{@link Value#getString()}</code> will be used for serialization.
      *
      * @param value        the value to be serialized
      * @param encodeBlanks if <code>true</code> space characters will be encoded
      *                     as <code>"_x0020_"</code> within he output string.
      * @param writer       writer to output the encoded data
      * @throws IllegalStateException if the given value is in an illegal state
-     * @throws java.io.IOException           if an i/o error occured during the
+     * @throws IOException           if an i/o error occured during the
      *                               serialization
-     * @throws javax.jcr.RepositoryException   if an error occured during the serialization.
+     * @throws RepositoryException   if an error occured during the serialization.
      */
     public static void serialize(Value value, boolean encodeBlanks,
                                  Writer writer)
@@ -492,9 +495,9 @@ public class ValueHelper {
      *                     character sequences will be decoded to single space
      *                     characters each.
      * @return the deserialized <code>Value</code>
-     * @throws javax.jcr.ValueFormatException if the string data is not of the required
+     * @throws ValueFormatException if the string data is not of the required
      *                              format
-     * @throws javax.jcr.RepositoryException  if an error occured during the
+     * @throws RepositoryException  if an error occured during the
      *                              deserialization.
      */
     public static Value deserialize(String value, int type,
@@ -533,11 +536,11 @@ public class ValueHelper {
      *                     character sequences will be decoded to single space
      *                     characters each.
      * @return the deserialized <code>Value</code>
-     * @throws java.io.IOException          if an i/o error occured during the
+     * @throws IOException          if an i/o error occured during the
      *                              serialization
-     * @throws javax.jcr.ValueFormatException if the string data is not of the required
+     * @throws ValueFormatException if the string data is not of the required
      *                              format
-     * @throws javax.jcr.RepositoryException  if an error occured during the
+     * @throws RepositoryException  if an error occured during the
      *                              deserialization.
      */
     public static Value deserialize(Reader reader, int type,
@@ -547,20 +550,63 @@ public class ValueHelper {
             // base64 encoded binary value;
             // the encodeBlanks flag can be ignored since base64-encoded
             // data cannot contain encoded space characters
-/*
-            // @todo decode to temp file and pass FileInputStream to BinaryValue constructor
-            File tmpFile = File.createTempFile("bin", null);
+
+            // decode to temp file
+            TransientFileFactory fileFactory = TransientFileFactory.getInstance();
+            final File tmpFile = fileFactory.createTransientFile("bin", null, null);
             FileOutputStream out = new FileOutputStream(tmpFile);
-            tmpFile.deleteOnExit();
-            Base64.decode(reader, out);
-            out.close();
-            return new BinaryValue(new FileInputStream(tmpFile));
-*/
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            Base64.decode(reader, baos);
-            // no need to close ByteArrayOutputStream
-            //baos.close();
-            return new BinaryValue(baos.toByteArray());
+            try {
+                Base64.decode(reader, out);
+            } finally {
+                out.close();
+            }
+
+            // create an InputStream that keeps a hard reference to the temp file
+            // in order to prevent its automatic deletion once the associated
+            // File object is reclaimed by the garbage collector;
+            // pass InputStream to BinaryValue constructor
+            return new BinaryValue(new InputStream() {
+                File f = tmpFile;
+                InputStream in = new FileInputStream(f);
+
+                public int available() throws IOException {
+                    return in.available();
+                }
+
+                public void close() throws IOException {
+                    in.close();
+                    // now it's safe to prepare temp file to be gc'ed
+                    f = null;
+                }
+
+                public synchronized void mark(int readlimit) {
+                    in.mark(readlimit);
+                }
+
+                public boolean markSupported() {
+                    return in.markSupported();
+                }
+
+                public int read(byte b[]) throws IOException {
+                    return in.read(b);
+                }
+
+                public int read(byte b[], int off, int len) throws IOException {
+                    return in.read(b, off, len);
+                }
+
+                public synchronized void reset() throws IOException {
+                    in.reset();
+                }
+
+                public long skip(long n) throws IOException {
+                    return in.skip(n);
+                }
+
+                public int read() throws IOException {
+                    return in.read();
+                }
+            });
         } else {
             char[] chunk = new char[8192];
             int read;

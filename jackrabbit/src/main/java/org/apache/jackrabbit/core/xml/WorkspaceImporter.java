@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
-import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -32,11 +31,13 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.Base64;
+import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
@@ -50,9 +51,11 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -573,34 +576,29 @@ public class WorkspaceImporter implements Importer {
                     if (targetType == PropertyType.BINARY) {
                         // base64 encoded BINARY type;
                         // decode using Reader
-/*
-                        // @todo decode to temp file and pass FileInputStream to InternalValue factory method
-                        File tmpFile = null;
                         try {
-                            tmpFile = File.createTempFile("bin", null);
-                            FileOutputStream out = new FileOutputStream(tmpFile);
-                            Base64.decode(tv.reader(), out);
-                            out.close();
-                            iva[i] = InternalValue.create(new FileInputStream(tmpFile));
-                        } catch (IOException ioe) {
-                            String msg = "failed to decode binary value";
-                            log.debug(msg, ioe);
-                            throw new RepositoryException(msg, ioe);
-                        } finally {
-                            // the temp file can be deleted because
-                            // the InternalValue instance has spooled
-                            // its contents
-                            if (tmpFile != null) {
-                                tmpFile.delete();
+                            if (tv.length() < 0x10000) {
+                                // < 65kb: deserialize BINARY type in memory
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                Base64.decode(tv.retrieve(), baos);
+                                // no need to close ByteArrayOutputStream
+                                //baos.close();
+                                iva[i] = InternalValue.create(baos.toByteArray());
+                            } else {
+                                // >= 65kb: deserialize BINARY type
+                                // using Reader and temporay file
+                                TransientFileFactory fileFactory = TransientFileFactory.getInstance();
+                                File tmpFile = fileFactory.createTransientFile("bin", null, null);
+                                FileOutputStream out = new FileOutputStream(tmpFile);
+                                Reader reader = tv.reader();
+                                try {
+                                    Base64.decode(reader, out);
+                                } finally {
+                                    reader.close();
+                                    out.close();
+                                }
+                                iva[i] = InternalValue.create(tmpFile);
                             }
-                        }
-*/
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        try {
-                            Base64.decode(tv.reader(), baos);
-                            // no need to close ByteArrayOutputStream
-                            //baos.close();
-                            iva[i] = InternalValue.create(new ByteArrayInputStream(baos.toByteArray()));
                         } catch (IOException ioe) {
                             String msg = "failed to decode binary value";
                             log.debug(msg, ioe);

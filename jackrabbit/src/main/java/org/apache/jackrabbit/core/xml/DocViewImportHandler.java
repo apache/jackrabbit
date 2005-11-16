@@ -27,6 +27,7 @@ import org.xml.sax.SAXException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Stack;
 
@@ -99,14 +100,25 @@ class DocViewImportHandler extends TargetImportHandler {
                 // there is character data that needs to be added to
                 // the current node
 
-                String text = textHandler.retrieve();
-                if (text.trim().length() == 0) {
-                    // ignore whitespace-only character data
-                    log.debug("ignoring whitespace character data: " + text);
-                    // reset handler
-                    textHandler.dispose();
-                    textHandler = null;
-                    return;
+                // check for pure whitespace character data
+                Reader reader = textHandler.reader();
+                try {
+                    int ch;
+                    while ((ch = reader.read()) != -1) {
+                        if (ch > 0x20) {
+                            break;
+                        }
+                    }
+                    if (ch == -1) {
+                        // the character data consists of pure whitespace, ignore
+                        log.debug("ignoring pure whitespace character data...");
+                        // reset handler
+                        textHandler.dispose();
+                        textHandler = null;
+                        return;
+                    }
+                } finally {
+                    reader.close();
                 }
 
                 Importer.NodeInfo node =
