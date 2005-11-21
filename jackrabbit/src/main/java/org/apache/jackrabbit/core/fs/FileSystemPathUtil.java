@@ -137,6 +137,51 @@ public final class FileSystemPathUtil {
     }
 
     /**
+     * Tests whether the specified path represents the root path, i.e. "/".
+     *
+     * @param path path to test
+     * @return true if the specified path represents the root path; false otherwise.
+     */
+    public static boolean denotesRoot(String path) {
+        return path.equals(FileSystem.SEPARATOR);
+    }
+
+    /**
+     * Checks if <code>path</code> is a valid path.
+     *
+     * @param path the path to be checked
+     * @throws FileSystemException If <code>path</code> is not a valid path
+     */
+    public static void checkFormat(String path) throws FileSystemException {
+        if (path == null) {
+            throw new FileSystemException("null path");
+        }
+
+        // path must be absolute, i.e. starting with '/'
+        if (!path.startsWith(FileSystem.SEPARATOR)) {
+            throw new FileSystemException("not an absolute path: " + path);
+        }
+
+        // trailing '/' is not allowed (except for root path)
+        if (path.endsWith(FileSystem.SEPARATOR) && path.length() > 1) {
+            throw new FileSystemException("malformed path: " + path);
+        }
+
+        String[] names = path.split(FileSystem.SEPARATOR);
+        for (int i = 1; i < names.length; i++) {
+            // name must not be empty
+            if (names[i].length() == 0) {
+                throw new FileSystemException("empty name: " + path);
+            }
+            // leading/trailing whitespace is not allowed
+            String trimmed = names[i].trim();
+            if (!trimmed.equals(names[i])) {
+                throw new FileSystemException("illegal leading or trailing whitespace in name: " + path);
+            }
+        }
+    }
+
+    /**
      * Returns the parent directory of the specified <code>path</code>.
      *
      * @param path a file system path denoting a directory or a file.

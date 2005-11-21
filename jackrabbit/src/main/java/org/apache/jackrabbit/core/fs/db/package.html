@@ -1,0 +1,17 @@
+<body>
+This package contains the class <code>{@link DbFileSystem}</code>,
+a simple generic JDBC-based <code>FileSystem</code> implementation
+for Jackrabbit.
+<p/>
+It also contains [schemaName].ddl files which are read by
+<code>{@link DbFileSystem}</code>  in order to automatically
+create the required schema objects on the target database. Every line in a
+[schemaName].ddl file is executed separatly by calling
+<code>java.sql.Statement.execute(String)</code> where every occurence of the
+the string <code>"${schemaObjectPrefix}"</code> has been replaced with the
+value of the property <code>schemaObjectPrefix</code> (see
+ <code>{@link DbFileSystem#setSchemaObjectPrefix(String)}</code>).
+The schema name is either set programmtically by calling
+<code>{@link DbFileSystem#setSchema(String)}</code> or configured
+through the <code>schema</code> bean property.
+</body>
