@@ -29,7 +29,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -37,6 +36,8 @@ import java.io.Writer;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.FilterInputStream;
 
 /**
  * The <code>ValueHelper</code> class provides several <code>Value</code>
@@ -564,49 +565,25 @@ public class ValueHelper {
             // create an InputStream that keeps a hard reference to the temp file
             // in order to prevent its automatic deletion once the associated
             // File object is reclaimed by the garbage collector;
-            // pass InputStream to BinaryValue constructor
-            return new BinaryValue(new InputStream() {
-                File f = tmpFile;
-                InputStream in = new FileInputStream(f);
+            // pass InputStream wrapper to BinaryValue constructor
+            return new BinaryValue(new FilterInputStream(new FileInputStream(tmpFile)) {
 
-                public int available() throws IOException {
-                    return in.available();
-                }
+                File f = tmpFile;
 
                 public void close() throws IOException {
                     in.close();
-                    // now it's safe to prepare temp file to be gc'ed
+                    // temp file can now safely be removed
+                    f.delete();
                     f = null;
                 }
-
-                public synchronized void mark(int readlimit) {
-                    in.mark(readlimit);
-                }
-
-                public boolean markSupported() {
-                    return in.markSupported();
-                }
-
-                public int read(byte b[]) throws IOException {
-                    return in.read(b);
-                }
-
-                public int read(byte b[], int off, int len) throws IOException {
-                    return in.read(b, off, len);
-                }
-
-                public synchronized void reset() throws IOException {
-                    in.reset();
-                }
-
-                public long skip(long n) throws IOException {
-                    return in.skip(n);
-                }
-
-                public int read() throws IOException {
-                    return in.read();
-                }
             });
+/*
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Base64.decode(reader, baos);
+            // no need to close ByteArrayOutputStream
+            //baos.close();
+            return new BinaryValue(baos.toByteArray());
+*/
         } else {
             char[] chunk = new char[8192];
             int read;

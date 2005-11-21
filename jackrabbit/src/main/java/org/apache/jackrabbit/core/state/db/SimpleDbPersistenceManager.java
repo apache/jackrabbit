@@ -46,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.FilterInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -1000,49 +1001,17 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
                     if (!rs.next()) {
                         throw new Exception("no such BLOB: " + blobId);
                     }
-                    final InputStream in = rs.getBinaryStream(1);
+                    InputStream in = rs.getBinaryStream(1);
 
                     /**
                      * return an InputStream wrapper in order to
                      * close the ResultSet when the stream is closed
                      */
-                    return new InputStream() {
-                        public int read() throws IOException {
-                            return in.read();
-                        }
-
+                    return new FilterInputStream(in) {
                         public void close() throws IOException {
                             in.close();
                             // close ResultSet
                             closeResultSet(rs);
-                        }
-
-                        public int available() throws IOException {
-                            return in.available();
-                        }
-
-                        public void mark(int readlimit) {
-                            in.mark(readlimit);
-                        }
-
-                        public boolean markSupported() {
-                            return in.markSupported();
-                        }
-
-                        public int read(byte b[]) throws IOException {
-                            return in.read(b);
-                        }
-
-                        public int read(byte b[], int off, int len) throws IOException {
-                            return in.read(b, off, len);
-                        }
-
-                        public void reset() throws IOException {
-                            in.reset();
-                        }
-
-                        public long skip(long n) throws IOException {
-                            return in.skip(n);
                         }
                     };
                 } finally {
