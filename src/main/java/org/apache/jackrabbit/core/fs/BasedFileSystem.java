@@ -58,7 +58,11 @@ public class BasedFileSystem implements FileSystem {
 
     protected String buildBasePath(String path) {
         if (path.startsWith(SEPARATOR)) {
-            return basePath + path;
+            if (path.length() == 1) {
+                return basePath;
+            } else {
+                return basePath + path;
+            }
         } else {
             return basePath + SEPARATOR + path;
         }

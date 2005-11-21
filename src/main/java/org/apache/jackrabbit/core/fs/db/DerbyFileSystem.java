@@ -14,20 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.state.db;
+package org.apache.jackrabbit.core.fs.db;
 
+import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.log4j.Logger;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * <code>DerbyPersistenceManager</code> is a JDBC-based
- * <code>PersistenceManager</code> for Jackrabbit that persists
- * <code>ItemState</code> and <code>NodeReferences</code> objects in an
- * embedded Derby database using a simple custom serialization format and a
- * very basic non-normalized database schema (in essence tables with one 'key'
- * and one 'data' column).
+ * <code>DerbyFileSystem</code> is a JDBC-based <code>FileSystem</code>
+ * implementation for Jackrabbit that persists file system entries in an
+ * embedded Derby database.
  * <p/>
  * It is configured through the following properties:
  * <ul>
@@ -40,32 +38,28 @@ import java.sql.SQLException;
  * (default: <code>"derby"</code>)</li>
  * <li><code>user</code>: the database user (default: <code>""</code>)</li>
  * <li><code>password</code>: the user's password (default: <code>""</code>)</li>
- * <li><code>externalBLOBs</code>: if <code>true</code> (the default) BINARY
- * values (BLOBs) are stored in the local file system;
- * if <code>false</code> BLOBs are stored in the database</li>
  * </ul>
- * See also {@link SimpleDbPersistenceManager}.
+ * See also {@link DbFileSystem}.
  * <p/>
  * The following is a fragment from a sample configuration:
  * <pre>
- *   &lt;PersistenceManager class="org.apache.jackrabbit.core.state.db.DerbyPersistenceManager"&gt;
- *       &lt;param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/&gt;
- *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
- *       &lt;param name="externalBLOBs" value="false"/&gt;
- *  &lt;/PersistenceManager&gt;
+ *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DerbyFileSystem"&gt;
+ *       &lt;param name="url" value="jdbc:derby:${rep.home}/db;create=true"/&gt;
+ *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
+ *  &lt;/FileSystem&gt;
  * </pre>
  */
-public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
+public class DerbyFileSystem extends DbFileSystem {
 
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(DerbyPersistenceManager.class);
+    private static Logger log = Logger.getLogger(DerbyFileSystem.class);
 
     /**
-     * Creates a new <code>SimpleDbPersistenceManager</code> instance.
+     * Creates a new <code>DerbyFileSystem</code> instance.
      */
-    public DerbyPersistenceManager() {
+    public DerbyFileSystem() {
         // preset some attributes to reasonable defaults
         schema = "derby";
         driver = "org.apache.derby.jdbc.EmbeddedDriver";
@@ -75,31 +69,31 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
         initialized = false;
     }
 
-    //---------------------------------< SimpleDbPersistenceManager overrides >
+    //-----------------------------------------------< DbFileSystem overrides >
     /**
      * {@inheritDoc}
-     * <p/>
-     * Overridden in order to properly shutdown the embedded Derby database.
      */
-    public synchronized void close() throws Exception {
+    public void close() throws FileSystemException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         // prepare connection url for issuing shutdown command
-        String url = con.getMetaData().getURL();
+        String url;
+        try {
+            url = con.getMetaData().getURL();
+        } catch (SQLException e) {
+            String msg = "error closing file system";
+            log.error(msg, e);
+            throw new FileSystemException(msg, e);
+        }
+
         int pos = url.lastIndexOf(';');
         if (pos != -1) {
             // strip any attributes from connection url
             url = url.substring(0, pos);
         }
         url += ";shutdown=true";
-
-        // we have to reset the connection to 'autoCommit=true' before closing it;
-        // otherwise Derby would mysteriously complain about some pending uncommitted
-        // changes which can't possibly be true.
-        // @todo further investigate
-        con.setAutoCommit(true);
 
         // call base class implementation
         super.close();
