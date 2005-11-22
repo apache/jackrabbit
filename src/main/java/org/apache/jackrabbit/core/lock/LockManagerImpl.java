@@ -17,11 +17,14 @@
 package org.apache.jackrabbit.core.lock;
 
 import org.apache.commons.collections.map.LinkedMap;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PathMap;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -31,22 +34,21 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.AccessDeniedException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -62,6 +64,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     private static final Logger log = Logger.getLogger(LockManagerImpl.class);
 
     /**
+     * Name of the lock file
+     */
+    private static final String LOCKS_FILE = "locks";
+
+    /**
      * Path map containing all locks at the leaves
      */
     private final PathMap lockMap = new PathMap();
@@ -74,7 +81,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     /**
      * Locks file
      */
-    private final File locksFile;
+    private final FileSystemResource locksFile;
 
     /**
      * Monitor used when modifying content, too, in order to make modifications
@@ -89,29 +96,29 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
     /**
      * Create a new instance of this class.
+     *
      * @param session system session
-     * @param locksFile file locks file to use
+     * @param fs      file system for persisting locks
      * @throws RepositoryException if an error occurs
      */
-    public LockManagerImpl(SessionImpl session, File locksFile)
+    public LockManagerImpl(SessionImpl session, FileSystem fs)
             throws RepositoryException {
 
         this.session = session;
         this.nsResolver = session.getNamespaceResolver();
-        this.locksFile = locksFile;
+        this.locksFile = new FileSystemResource(fs, FileSystem.SEPARATOR + LOCKS_FILE);
 
         session.getWorkspace().getObservationManager().
                 addEventListener(this, Event.NODE_ADDED | Event.NODE_REMOVED,
                         "/", true, null, null, true);
 
-        if (locksFile.exists()) {
-            try {
+        try {
+            if (locksFile.exists()) {
                 load();
-            } catch (IOException e) {
-                throw new RepositoryException(
-                        "I/O error while reading locks from '"
-                        + locksFile.getPath() + "'", e);
             }
+        } catch (FileSystemException e) {
+            throw new RepositoryException("I/O error while reading locks from '"
+                    + locksFile.getPath() + "'", e);
         }
     }
 
@@ -125,11 +132,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     /**
      * Read locks from locks file and populate path map
      */
-    private void load() throws IOException {
+    private void load() throws FileSystemException {
         BufferedReader reader = null;
 
         try {
-            reader = new BufferedReader(new FileReader(locksFile));
+            reader = new BufferedReader(
+                    new InputStreamReader(locksFile.getInputStream()));
             while (true) {
                 String s = reader.readLine();
                 if (s == null || s.equals("")) {
@@ -137,6 +145,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                 }
                 reapplyLock(LockToken.parse(s));
             }
+        } catch (IOException e) {
+            throw new FileSystemException("error while reading locks file", e);
         } finally {
             if (reader != null) {
                 try {
@@ -150,6 +160,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
     /**
      * Reapply a lock given a lock token that was read from the locks file
+     *
      * @param lockToken lock token to apply
      */
     private void reapplyLock(LockToken lockToken) {
@@ -190,16 +201,21 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         BufferedWriter writer = null;
 
         try {
-            writer = new BufferedWriter(new FileWriter(locksFile));
+            writer = new BufferedWriter(
+                    new OutputStreamWriter(locksFile.getOutputStream()));
             for (int i = 0; i < list.size(); i++) {
                 LockInfo info = (LockInfo) list.get(i);
                 writer.write(info.lockToken.toString());
                 writer.newLine();
             }
-        } catch (IOException e) {
+        } catch (FileSystemException fse) {
             log.warn("I/O error while saving locks to '"
-                    + locksFile.getPath() + "': " + e.getMessage());
-            log.debug("Root cause: ", e);
+                    + locksFile.getPath() + "': " + fse.getMessage());
+            log.debug("Root cause: ", fse);
+        } catch (IOException ioe) {
+            log.warn("I/O error while saving locks to '"
+                    + locksFile.getPath() + "': " + ioe.getMessage());
+            log.debug("Root cause: ", ioe);
         } finally {
             if (writer != null) {
                 try {
@@ -217,14 +233,15 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * In order to prevent deadlocks from within the synchronous dispatching of
      * events, content modifications should not be made from within code
      * sections that hold monitors. (see #JCR-194)
+     *
      * @param node node to lock
      * @param info lock info
-     * @throws LockException if the node is already locked
-     * @throws RepositoryException if another error occurs
      * @return lock
+     * @throws LockException       if the node is already locked
+     * @throws RepositoryException if another error occurs
      */
     Lock lock(NodeImpl node, LockInfo info)
-            throws LockException,  RepositoryException {
+            throws LockException, RepositoryException {
 
         Lock lock;
 
@@ -277,6 +294,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * In order to prevent deadlocks from within the synchronous dispatching of
      * events, content modifications should not be made from within code
      * sections that hold monitors. (see #JCR-194)
+     *
      * @param info lock info
      */
     void unlock(LockInfo info) {
@@ -289,8 +307,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         try {
             synchronized (contentMonitor) {
                 // get node's path and remove child in path map
-                NodeImpl node = (NodeImpl) session.getItemManager().getItem(
-                        new NodeId(info.getUUID()));
+                NodeImpl node = (NodeImpl) session.getItemManager().getItem(new NodeId(info.getUUID()));
                 Path path = getPath(node.getId());
 
                 synchronized (lockMap) {
@@ -350,8 +367,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             }
             if (element.hasPath(path) || info.deep) {
                 SessionImpl session = (SessionImpl) node.getSession();
-                Node lockHolder = (Node) session.getItemManager().getItem(
-                        new NodeId(info.getUUID()));
+                Node lockHolder = (Node) session.getItemManager().getItem(new NodeId(info.getUUID()));
                 return new LockImpl(info, lockHolder);
             } else {
                 throw new LockException("Node not locked: " + node.safeGetJCRPath());
@@ -361,7 +377,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
     /**
      * {@inheritDoc}
-     *
+     * <p/>
      * In order to prevent deadlocks from within the synchronous dispatching of
      * events, content modifications should not be made from within code
      * sections that hold monitors. (see #JCR-194)
@@ -521,7 +537,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      */
     private Path getPath(ItemId id)
             throws ItemNotFoundException, AccessDeniedException,
-                   RepositoryException {
+            RepositoryException {
 
         return session.getHierarchyManager().getPath(id);
     }
@@ -561,6 +577,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
         /**
          * Create a new instance of this class.
+         *
          * @param uuid uuid
          * @param path path
          * @param type event type
@@ -574,6 +591,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         /**
          * Merge this event with another event. The result will be stored in
          * this event
+         *
          * @param event other event to merge with
          */
         public void merge(HierarchyEvent event) {
@@ -590,6 +608,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         /**
          * Return the event type. May be {@link Event#NODE_ADDED},
          * {@link Event#NODE_REMOVED} or a combination of both.\
+         *
          * @return event type
          */
         public int getType() {
@@ -598,6 +617,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
         /**
          * Return the old path if this is a move operation
+         *
          * @return old path
          */
         public Path getOldPath() {
@@ -606,6 +626,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
         /**
          * Return the new path if this is a move operation
+         *
          * @return new path
          */
         public Path getNewPath() {
@@ -672,6 +693,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * Invoked when some node has been added. If the parent of that node
      * exists, shift all name siblings of the new node having an index greater
      * or equal.
+     *
      * @param path path of added node
      */
     private void nodeAdded(Path path) {
@@ -691,6 +713,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     /**
      * Invoked when some node has been moved. Relink the child inside our
      * map to the new parent.
+     *
      * @param oldPath old path
      */
     private void nodeMoved(Path oldPath, Path newPath) {
@@ -718,6 +741,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     /**
      * Invoked when some node has been removed. Remove the child from our
      * path map. Disable all locks contained in that subtree.
+     *
      * @param path path of removed node
      */
     private void nodeRemoved(Path path) {

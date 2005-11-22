@@ -105,11 +105,6 @@ public class RepositoryImpl implements Repository, SessionListener,
      */
     private final Properties repProps;
 
-    /**
-     * Name of the lock file, relative to the workspace home directory
-     */
-    private static final String LOCKS_FILE = "locks";
-
     // names of well-known repository properties
     public static final String STATS_NODE_COUNT_PROPERTY = "jcr.repository.stats.nodes.count";
     public static final String STATS_PROP_COUNT_PROPERTY = "jcr.repository.stats.properties.count";
@@ -419,7 +414,6 @@ public class RepositoryImpl implements Repository, SessionListener,
     /**
      * Creates a new <code>RepositoryImpl</code> instance.
      * <p/>
-     * todo prevent multiple instantiation from same configuration as this could lead to data corruption/loss
      *
      * @param config the configuration of the repository
      * @return a new <code>RepositoryImpl</code> instance
@@ -869,7 +863,7 @@ public class RepositoryImpl implements Repository, SessionListener,
     /**
      * Creates a workspace persistence manager based on the given
      * configuration. The persistence manager is instantiated using
-     * information in the given persistencem manager configuration and
+     * information in the given persistence manager configuration and
      * initialized with a persistence manager context containing the other
      * arguments.
      *
@@ -1274,8 +1268,7 @@ public class RepositoryImpl implements Repository, SessionListener,
          */
         synchronized LockManager getLockManager() throws RepositoryException {
             if (lockMgr == null) {
-                lockMgr = new LockManagerImpl(getSystemSession(),
-                        new File(config.getHomeDir(), LOCKS_FILE));
+                lockMgr = new LockManagerImpl(getSystemSession(), config.getFileSystem());
             }
             return lockMgr;
         }
