@@ -505,8 +505,8 @@ public class SharedItemStateManager
                 persistMgr.store(shared);
                 succeeded = true;
                 long t1 = System.currentTimeMillis();
-                if (log.isInfoEnabled()) {
-                    log.info("persisting change log " + shared + " took " + (t1 - t0) + "ms");
+                if (log.isDebugEnabled()) {
+                    log.debug("persisting change log " + shared + " took " + (t1 - t0) + "ms");
                 }
 
             } finally {
