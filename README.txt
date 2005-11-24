@@ -67,7 +67,7 @@ or with viewcvs at
 
    http://svn.apache.org/viewcvs/incubator/jackrabbit/trunk/
 
-The Jackrabbit main project is located in the "jacrabbit" subdirectory
+The Jackrabbit main project is located in the "jackrabbit" subdirectory
 and the "contrib" subdirectory contains various additional modules and
 contributed projects.
 
