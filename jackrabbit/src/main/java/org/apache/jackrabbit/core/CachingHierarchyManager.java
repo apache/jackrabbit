@@ -175,6 +175,15 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     public ItemId resolvePath(Path path)
             throws PathNotFoundException, RepositoryException {
 
+        // Run base class shortcut and sanity checks first
+        if (path.denotesRoot()) {
+            return rootNodeId;
+        } else if (!path.isCanonical()) {
+            String msg = "path is not canonical";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
         PathMap.Element element = map(path);
         if (element == null) {
             return super.resolvePath(path);
