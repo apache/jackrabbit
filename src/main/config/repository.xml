@@ -17,7 +17,9 @@
             in the JAAS config and the access manager
 
             a Workspaces element that specifies to the location of
-            workspaces root directory and the name of default workspace
+            workspaces root directory, the name of default workspace
+            and optionally the workspace configuration root directory
+            within the virtual repository file system
 
             a Workspace element that is used as a workspace configuration
             template; it is used to create the initial workspace if there's
@@ -41,7 +43,7 @@
 
     <!--
         the Security element specifies the name (appName attribute)
-        of the JAAS configuration app-entry for this repository. 
+        of the JAAS configuration app-entry for this repository.
 
         it also specifies the access manager to be used (AccessManager element).
     -->
@@ -66,7 +68,7 @@
       name CDATA #REQUIRED
       value CDATA #REQUIRED>
 
-     <!--
+    <!--
         the LoginModule element optionally specifies a JAAS login module to
         authenticate users. This feature allows the use of Jackrabbit in a
         non-JAAS environment.
@@ -76,17 +78,26 @@
       class CDATA #REQUIRED>
 
     <!--
-        the Workspaces element specifies the workspaces root directory
-        (rootPath attribute) and the name of the default workspace
-        (defaultWorkspace attribute).
+        the Workspaces element specifies the physical workspaces root directory
+        (rootPath attribute), the name of the default workspace
+        (defaultWorkspace attribute) and optionally the workspace configuration
+        root directory within the virtual repository file system (configRootPath
+        attribute).
 
         individual workspaces are configured through individual workspace.xml
-        files located in a subfolder each of the workspaces root directory.
+        files located in a subfolder each of either
+
+        a) the physical workspaces root directory
+
+        or, if configRootPath had been specified,
+
+        b) the configuration root directory within the virtual repository file system.
     -->
     <!ELEMENT Workspaces EMPTY>
     <!ATTLIST Workspaces
-      rootPath CDATA #REQUIRED
-      defaultWorkspace CDATA #REQUIRED>
+        rootPath CDATA #REQUIRED
+        defaultWorkspace CDATA #REQUIRED
+        configRootPath CDATA #IMPLIED>
 
     <!--
         the Workspace element serves as a workspace configuration template;
