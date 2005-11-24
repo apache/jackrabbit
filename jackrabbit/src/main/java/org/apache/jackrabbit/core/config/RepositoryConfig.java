@@ -20,6 +20,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Writer;
+import java.io.OutputStreamWriter;
+import java.io.FileWriter;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,6 +41,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
@@ -171,11 +179,20 @@ public class RepositoryConfig {
     private final ConfigurationParser parser;
 
     /**
-     * Workspace root directory. This directory contains a subdirectory for
-     * each workspace in this repository. Each workspace is configured by
-     * a workspace configuration file contained in the workspace subdirectory.
+     * Workspace physical root directory. This directory contains a subdirectory
+     * for each workspace in this repository, i.e. the physical workspace home
+     * directory. Each workspace is configured by a workspace configuration file
+     * either contained in the workspace home directory or, optionally, located
+     * in a subdirectory of {@link #workspaceConfigDirectory} within the
+     * repository file system if such has been specified.
      */
     private final String workspaceDirectory;
+
+    /**
+     * Path to workspace configuration root directory within the
+     * repository file system or null if none was specified.
+     */
+    private final String workspaceConfigDirectory;
 
     /**
      * The workspace configuration template. Used in creating new workspace
@@ -198,14 +215,16 @@ public class RepositoryConfig {
      * @param lmc login module configuration (can be <code>null</code>)
      * @param fsc file system configuration
      * @param workspaceDirectory workspace root directory
+     * @param workspaceConfigDirectory optional workspace configuration directory
      * @param defaultWorkspace name of the default workspace
      * @param vc versioning configuration
      * @param parser the ConfigurationParser that servers as config factory
      */
     RepositoryConfig(String home, String name,
             AccessManagerConfig amc, LoginModuleConfig lmc, FileSystemConfig fsc,
-            String workspaceDirectory, String defaultWorkspace,
-            Element template, VersioningConfig vc, ConfigurationParser parser) {
+            String workspaceDirectory, String workspaceConfigDirectory,
+            String defaultWorkspace, Element template, VersioningConfig vc,
+            ConfigurationParser parser) {
         this.workspaces = new HashMap();
         this.home = home;
         this.name = name;
@@ -213,6 +232,7 @@ public class RepositoryConfig {
         this.lmc = lmc;
         this.fsc = fsc;
         this.workspaceDirectory = workspaceDirectory;
+        this.workspaceConfigDirectory = workspaceConfigDirectory;
         this.defaultWorkspace = defaultWorkspace;
         this.template = template;
         this.vc = vc;
@@ -230,24 +250,54 @@ public class RepositoryConfig {
         fsc.init();
         vc.init();
 
-        // Get the workspace root directory (create it if not found)
+        // Get the physical workspace root directory (create it if not found)
         File directory = new File(workspaceDirectory);
         if (!directory.exists()) {
             directory.mkdirs();
         }
 
         // Get all workspace subdirectories
-        File[] files = directory.listFiles();
-        if (files == null) {
-            throw new ConfigurationException(
-                    "Invalid workspace root directory: " + workspaceDirectory);
-        }
+        if (workspaceConfigDirectory != null) {
+            // a configuration directoy had been specified; search for
+            // workspace configurations in virtual repository file system
+            // rather than in physical workspace root directory on disk
+            FileSystem fs = fsc.getFileSystem();
+            try {
+                if (!fs.exists(workspaceConfigDirectory)) {
+                    fs.createFolder(workspaceConfigDirectory);
+                } else {
+                    String[] dirNames = fs.listFolders(workspaceConfigDirectory);
+                    for (int i = 0; i < dirNames.length; i++) {
+                        String configDir = workspaceConfigDirectory
+                                + FileSystem.SEPARATOR + dirNames[i];
+                        WorkspaceConfig wc = loadWorkspaceConfig(fs, configDir);
+                        if (wc != null) {
+                            wc.init();
+                            addWorkspaceConfig(wc);
+                        }
+                    }
 
-        for (int i = 0; i < files.length; i++) {
-            WorkspaceConfig wc = loadWorkspaceConfig(files[i]);
-            if (wc != null) {
-                wc.init();
-                addWorkspaceConfig(wc);
+                }
+            } catch (FileSystemException e) {
+                throw new ConfigurationException(
+                        "error while loading workspace configurations from path "
+                        + workspaceConfigDirectory, e);
+            }
+        } else {
+            // search for workspace configurations in physical workspace root
+            // directory on disk
+            File[] files = directory.listFiles();
+            if (files == null) {
+                throw new ConfigurationException(
+                        "Invalid workspace root directory: " + workspaceDirectory);
+            }
+
+            for (int i = 0; i < files.length; i++) {
+                WorkspaceConfig wc = loadWorkspaceConfig(files[i]);
+                if (wc != null) {
+                    wc.init();
+                    addWorkspaceConfig(wc);
+                }
             }
         }
 
@@ -262,18 +312,18 @@ public class RepositoryConfig {
     }
 
     /**
-     * Attempts to load a workspace configuration from the given workspace
-     * subdirectory. If the directory contains a valid workspace configuration
-     * file, then the configuration is parsed and returned as a workspace
-     * configuration object. The returned configuration object has not been
-     * initialized.
+     * Attempts to load a workspace configuration from the given physical
+     * workspace subdirectory. If the directory contains a valid workspace
+     * configuration file, then the configuration is parsed and returned as a
+     * workspace configuration object. The returned configuration object has not
+     * been initialized.
      * <p>
      * This method returns <code>null</code>, if the given directory does
      * not exist or does not contain a workspace configuration file. If an
      * invalid configuration file is found, then a
      * {@link ConfigurationException ConfigurationException} is thrown.
      *
-     * @param directory workspace configuration directory
+     * @param directory physical workspace configuration directory on disk
      * @return workspace configuration
      * @throws ConfigurationException if the workspace configuration is invalid
      */
@@ -292,6 +342,60 @@ public class RepositoryConfig {
             return localParser.parseWorkspaceConfig(xml);
         } catch (FileNotFoundException e) {
             return null;
+        }
+    }
+
+    /**
+     * Attempts to load a workspace configuration from the given workspace
+     * subdirectory within the repository file system. If the directory contains
+     * a valid workspace configuration file, then the configuration is parsed
+     * and returned as a workspace configuration object. The returned
+     * configuration object has not been initialized.
+     * <p>
+     * This method returns <code>null</code>, if the given directory does
+     * not exist or does not contain a workspace configuration file. If an
+     * invalid configuration file is found, then a
+     * {@link ConfigurationException ConfigurationException} is thrown.
+     *
+     * @param fs virtual file system where to look for the configuration file
+     * @param configDir workspace configuration directory in virtual file system
+     * @return workspace configuration
+     * @throws ConfigurationException if the workspace configuration is invalid
+     */
+    private WorkspaceConfig loadWorkspaceConfig(FileSystem fs, String configDir)
+            throws ConfigurationException {
+        Reader configReader = null;
+        try {
+            String configPath = configDir + FileSystem.SEPARATOR + WORKSPACE_XML;
+            if (!fs.exists(configPath)) {
+                // no configuration file in this directory
+                return null;
+            }
+
+            configReader = new InputStreamReader(fs.getInputStream(configPath));
+            InputSource xml = new InputSource(configReader);
+            xml.setSystemId(configPath);
+
+            // the physical workspace home directory (TODO encode name?)
+            File homeDir = new File(
+                    workspaceDirectory, FileSystemPathUtil.getName(configDir));
+            if (!homeDir.exists()) {
+                homeDir.mkdir();
+            }
+            Properties variables = new Properties();
+            variables.setProperty(
+                    ConfigurationParser.WORKSPACE_HOME_VARIABLE,
+                    homeDir.getPath());
+            ConfigurationParser localParser = parser.createSubParser(variables);
+            return localParser.parseWorkspaceConfig(xml);
+        } catch (FileSystemException e) {
+            throw new ConfigurationException("Failed to load workspace configuration", e);
+        } finally {
+            if (configReader != null) {
+                try {
+                    configReader.close();
+                } catch (IOException ignore) {}
+            }
         }
     }
 
@@ -328,10 +432,12 @@ public class RepositoryConfig {
      */
     public synchronized WorkspaceConfig createWorkspaceConfig(String name)
             throws ConfigurationException {
-        // The workspace directory (TODO encode name?)
+
+        // The physical workspace home directory on disk (TODO encode name?)
         File directory = new File(workspaceDirectory, name);
 
-        // Create the directory, fail if it exists or cannot be created
+        // Create the physical workspace directory, fail if it exists
+        // or cannot be created
         if (!directory.mkdir()) {
             if (directory.exists()) {
                 throw new ConfigurationException(
@@ -342,28 +448,70 @@ public class RepositoryConfig {
             }
         }
 
-        // Create the workspace.xml file using the configuration template.
+        Writer configWriter;
+
+        // get a writer for the workspace configuration file
+        if (workspaceConfigDirectory != null) {
+            // a configuration directoy had been specified; create workspace
+            // configuration in virtual repository file system rather than
+            // on disk
+            FileSystem fs = fsc.getFileSystem();
+            String configDir = workspaceConfigDirectory
+                    + FileSystem.SEPARATOR + name;
+            String configFile = configDir + FileSystem.SEPARATOR + WORKSPACE_XML;
+            try {
+                // Create the directory
+                fs.createFolder(configDir);
+                configWriter = new OutputStreamWriter(
+                        fs.getOutputStream(configFile));
+            } catch (FileSystemException e) {
+                throw new ConfigurationException(
+                        "failed to create workspace configuration at path "
+                        + configFile, e);
+            }
+        } else {
+            File file = new File(directory, WORKSPACE_XML);
+            try {
+                configWriter = new FileWriter(file);
+            } catch (IOException e) {
+                throw new ConfigurationException(
+                        "failed to create workspace configuration at path "
+                        + file.getPath(), e);
+            }
+        }
+
+        // Create the workspace.xml file using the configuration template and
+        // the configuration writer.
         try {
             template.setAttribute("name", name);
-            File xml = new File(directory, WORKSPACE_XML);
 
             TransformerFactory factory = TransformerFactory.newInstance();
             Transformer transformer = factory.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            // NOTE: The StreamResult instance below is constructed using the
-            // file path instead of the file object. See JCR-222 for details.
             transformer.transform(
-                    new DOMSource(template), new StreamResult(xml.getPath()));
+                    new DOMSource(template), new StreamResult(configWriter));
         } catch (TransformerConfigurationException e) {
             throw new ConfigurationException(
                     "Cannot create a workspace configuration writer", e);
         } catch (TransformerException e) {
             throw new ConfigurationException(
                     "Cannot create a workspace configuration file", e);
+        } finally {
+            try {
+                configWriter.close();
+            } catch (IOException ignore) {}
         }
 
         // Load the created workspace configuration.
-        WorkspaceConfig wc = loadWorkspaceConfig(directory);
+        WorkspaceConfig wc;
+        if (workspaceConfigDirectory != null) {
+            FileSystem fs = fsc.getFileSystem();
+            String configDir = workspaceConfigDirectory
+                    + FileSystem.SEPARATOR + name;
+            wc = loadWorkspaceConfig(fs, configDir);
+        } else {
+            wc = loadWorkspaceConfig(directory);
+        }
         if (wc != null) {
             wc.init();
             addWorkspaceConfig(wc);

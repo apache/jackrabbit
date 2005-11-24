@@ -97,6 +97,9 @@ public class ConfigurationParser {
     /** Name of the root path configuration attribute. */
     public static final String ROOT_PATH_ATTRIBUTE = "rootPath";
 
+    /** Name of the config root path configuration attribute. */
+    public static final String CONFIG_ROOT_PATH_ATTRIBUTE = "configRootPath";
+
     /** Name of the default workspace configuration attribute. */
     public static final String DEFAULT_WORKSPACE_ATTRIBUTE =
         "defaultWorkspace";
@@ -218,6 +221,10 @@ public class ConfigurationParser {
         Element workspaces = getElement(root, WORKSPACES_ELEMENT);
         String workspaceDirectory = replaceVariables(
                 getAttribute(workspaces, ROOT_PATH_ATTRIBUTE));
+
+        String workspaceConfigDirectory =
+                getAttribute(workspaces, CONFIG_ROOT_PATH_ATTRIBUTE, null);
+
         String defaultWorkspace = replaceVariables(
                 getAttribute(workspaces, DEFAULT_WORKSPACE_ATTRIBUTE));
 
@@ -228,7 +235,8 @@ public class ConfigurationParser {
         VersioningConfig vc = parseVersioningConfig(root);
 
         return new RepositoryConfig(home, appName, amc, lmc, fsc,
-                workspaceDirectory, defaultWorkspace, template, vc, this);
+                workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
+                template, vc, this);
     }
 
     /**
