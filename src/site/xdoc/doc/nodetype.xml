@@ -17,22 +17,15 @@
   -->
 <document>
  <properties>
-  <title>Jackrabbit operations explained</title>
+  <title>Nodetype Modelling</title>
  </properties>
  <body>
-<section name="Core Content Repository Operations">
+
+<section name="Nodetype Modelling Guidelines">
 <p>
-This section describes how the Core Repository of Jackrabbit
-operates, segmented into a number of common operations.
-</p>
-<p>
-<a href="startup.html">Start-up, Initialize and Configration</a><br/>
-What happens on start-up? What can be configured? <a href="startup.html">more...</a>
-</p>
-<p>
-<a href="query.html">QueryManager implementation</a><br/>
-How is query support implemented in Jackrabbit? <a href="query.html">more...</a>
+... under construction ...
 </p>
 </section>
+
 </body>
 </document>

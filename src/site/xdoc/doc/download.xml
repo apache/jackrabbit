@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!--
+   Copyright 2004-2005 The Apache Software Foundation or its licensors,
+                       as applicable.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<document>
+ <properties>
+  <title>Download and Install</title>
+ </properties>
+ <body>
+
+<section name="Download and Install">
+<p>
+The Jackrabbit source code is available via Subversion at
+<a href="https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>
+</p>
+<p>
+and anonymous access is available at
+<a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>
+</p>
+<p>or with viewcvs at
+<a href="http://svn.apache.org/viewcvs/incubator/jackrabbit/trunk/">http://svn.apache.org/viewcvs/incubator/jackrabbit/trunk/</a>
+</p>
+<p>The Jackrabbit main project is located in the "jackrabbit" subdirectory
+and the "contrib" subdirectory contains various additional modules and
+contributed projects.</p>
+
+<p>To checkout the main Jackrabbit source tree, run
+<source>
+   svn checkout http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit
+</source>
+</p>
+<p>
+Once you have a copy of the source code tree, you can use Apache Maven
+
+   <a href="http://maven.apache.org/">http://maven.apache.org/</a>
+
+to build the project.  After installing Maven 1.0, be sure to download the
+latest release of the Ant plugin (1.8.1 or later) using a command like
+<source>
+   maven plugin:download -DgroupId=maven \
+         -DartifactId=maven-ant-plugin -Dversion=1.8.1
+</source>
+
+before running one of the maven commands listed at
+
+   <a href="http://maven.apache.org/start/use.html">http://maven.apache.org/start/use.html</a>
+
+to build the Jackrabbit project and/or documentation.
+</p>
+<p>
+<b>NOTE:</b> Java 5 users need to download the xalan.jar and serializer.jar
+libraries from the Xalan-Java binary distribution at 
+http://xml.apache.org/xalan-j/downloads.html and place them in
+$MAVEN_HOME/lib/endorsed (or $JRE/lib/endorsed if using Maven 1.1)
+to build the Jackrabbit sources. The reason for this workaround is
+explained in
+   <a href="http://issues.apache.org/jira/browse/JCR-46">http://issues.apache.org/jira/browse/JCR-46</a>
+</p>
+</section>
+
+</body>
+</document>
