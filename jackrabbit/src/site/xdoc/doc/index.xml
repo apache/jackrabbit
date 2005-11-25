@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+   Copyright 2004-2005 The Apache Software Foundation or its licensors,
+                       as applicable.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<document>
+ <properties>
+  <title>Documentation</title>
+ </properties>
+ <body>
+
+<section name="Getting Started">
+<p>
+Since Jackrabbit is currently not yet released the quickest way to get 
+your hands on a running Jackrabbit instance are found in the 
+<a href="download.html">Download and Install</a> section.
+Once Jackrabbit is up and running you may try your 
+<a href="firststeps.html">first Steps</a> with JCR.
+</p>
+</section>
+<section name="Content Repository for Java Technology API (JCR)">
+<p>
+<a href="arch\overview\jcrlevels.html"><img align="left" style="margin:10px;padding:1px;border:1px solid black" src="../images/arch/thumb_jcr.jpg" /></a>
+Jackrabbit is a complete implementation of the JCR API, so the
+primary API for Jackrabbit application developers is to be found
+in the <a href="arch\overview\jcrlevels.html">JCR section</a> of the 
+Documentation.<br clear="all"/>
+</p>
+</section>
+<section name="Jackrabbit architecture and Deployment Models">
+<p>
+<a href="arch\operate\index.html"><img align="left" style="margin:10px;padding:1px;border:1px solid black" src="../images/arch/thumb_ism.jpg" /></a>
+Find out more about the <a href="arch\overview.html">Jackrabbit Architecture</a> or
+learn more about the <a href="arch\deploy.html">Jackrabbit deployment Options</a> be
+it as an <a href="arch\deploy\howto-model1.html">embedded content repository</a> to be 
+delivered with you are application, a <a href="arch\deploy\howto-model2.html">shared repository</a> 
+for example in a J2EE environment or a classical <a href="arch\deploy\howto-model3.html">content repository server</a> setup.
+<br clear="all"/>
+</p>
+</section>
+<section name="Nodetype Modelling Guide">
+<p>
+</p>
+</section>
+</body>
+</document>

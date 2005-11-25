@@ -21,6 +21,26 @@
  </properties>
  <body>
 
+<section name="Content Repository API for Java Technology">
+<p>
+Jackrabbit is a complete, and fully compliant implementation of 
+the Content Repository API for Java Technology (JCR) and therefore
+its primary API is defined by JCR. For a developer this means that
+most operations required are defined by the JCR API:
+</p>
+<p>
+Browse JCR v1.0 Javadoc: <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/">http://www.day.com/maven/jsr170/javadocs/jcr-1.0/</a><br />
+Download zipped JCR v1.0 Javadoc:<a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0.javadoc">http://www.day.com/maven/jsr170/javadocs/jcr-1.0.javadoc</a>
+</p>
+<p>
+Beyond the JCR API Jackrabbit features numerous extensions and
+admistrational features that are needed to run a repository 
+but are not (yet) specified by JCR. (see <a href="arch\overview.html">Architecture Overview</a>)
+</p>
+<p>
+Browse current Jackrabbit API: <a href="http://incubator.apache.org/jackrabbit/apidocs/index.html">http://incubator.apache.org/jackrabbit/apidocs/index.html</a>
+</p>
+</section>
 <section name="JSR-170 Levels">
 <p>
 The Content Repository API for Java Technology (JSR-170) is split into different
@@ -45,7 +65,7 @@ Level 1 specifies a read-only API that allows to
 introspect Node and Property-types and offers hierarchical
 read access to content stored in a repository.
 </p>
-<img src="../../images/arch/level-1.jpg"/>
+<img src="../../../images/arch/level-1.jpg"/>
 <p>
 Level 1 of JSR-170 is geared to allow people to write 
 applications such as search and display Portlets, 
@@ -62,7 +82,7 @@ capabilities need to bi-directionally interact with a
 content repository in a fine and coarse grained 
 fashion.
 </p>
-<img src="../../images/arch/level-2.jpg"/>
+<img src="../../../images/arch/level-2.jpg"/>
 <p>
 Applications written against Level 2 of JSR-170 include
 management applications or generally speaking any 
@@ -79,7 +99,7 @@ This includes functions like: Versioning,
 (JTA) Transactions, Query using SQL, Explicit 
 Locking and Content Observation.
 </p>
-<img src="../../images/arch/level-adv.jpg" />
+<img src="../../../images/arch/level-adv.jpg" />
 <p>
 A fully JSR-170 compliant repository like Jackrabbit
 encompasses all the functionalities and therefore

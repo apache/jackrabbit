@@ -22,7 +22,7 @@
 
  <body>
   <section name="Download and Build Jackrabbit">
-   <p>Please refer to the <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/README.txt">README.txt</a>
+   <p>Please refer to the <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit/README.txt">README.txt</a>
       to find details on how to build Jackrabbit using Maven.
    </p>
   </section>
