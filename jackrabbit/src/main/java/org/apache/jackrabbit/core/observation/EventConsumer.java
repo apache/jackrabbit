@@ -215,7 +215,7 @@ class EventConsumer {
         // Set of ItemIds of denied ItemStates
         Set denied = (Set) accessDenied.remove(events);
         // check permissions
-        for (Iterator it = events.iterator(); it.hasNext();) {
+        for (Iterator it = events.iterator(); it.hasNext() && session.isLive();) {
             EventState state = (EventState) it.next();
             if (state.getType() == Event.NODE_ADDED
                     || state.getType() == Event.PROPERTY_ADDED
@@ -235,6 +235,10 @@ class EventConsumer {
                     denied.add(state.getId());
                 }
             }
+        }
+        // only deliver if session is still live
+        if (!session.isLive()) {
+            return;
         }
         // check if filtered iterator has at least one event
         EventIterator it = new FilteredEventIterator(events, filter, denied);
