@@ -1287,8 +1287,8 @@ public class DbFileSystem implements FileSystem {
         PreparedStatement stmt = copyFilesStmt;
         synchronized (stmt) {
             try {
-                stmt.setString(1, srcPath);
-                stmt.setString(2, destPath);
+                stmt.setString(1, destPath);
+                stmt.setString(2, srcPath);
                 stmt.executeUpdate();
             } catch (Exception e) {
                 String msg = "failed to copy file entries from " + srcPath + " to " + destPath;
