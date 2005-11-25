@@ -23,6 +23,7 @@ import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Collections;
 
 /**
  * The <code>TransientFileFactory</code> utility class can be used to create
@@ -50,7 +51,7 @@ public class TransientFileFactory {
      * Collection of <code>MoribundFileReference</code> instances currently
      * being tracked.
      */
-    private Collection trackedRefs = new ArrayList();
+    private Collection trackedRefs = Collections.synchronizedList(new ArrayList());
 
     /**
      * The reaper thread responsible for removing files awaiting deletion
