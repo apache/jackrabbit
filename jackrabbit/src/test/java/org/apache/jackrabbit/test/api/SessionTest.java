@@ -62,7 +62,7 @@ public class SessionTest extends AbstractJCRTest {
         // create parent node
         Node srcParentNode = defaultRootNode.addNode(nodeName1, testNodeType);
         // create node to move
-        Node moveNode = srcParentNode.addNode(nodeName2, testNodeType);
+        Node moveNode = srcParentNode.addNode(nodeName2, getProperty("nodetype3"));
 
         // create a second node that will serve as new parent, must use a nodetype that does not allow
         // same name siblings
