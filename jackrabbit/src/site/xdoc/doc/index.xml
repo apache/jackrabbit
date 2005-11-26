@@ -32,21 +32,21 @@ Once Jackrabbit is up and running you may try your
 </section>
 <section name="Content Repository for Java Technology API (JCR)">
 <p>
-<a href="arch\overview\jcrlevels.html"><img align="left" style="margin:10px;padding:1px;border:1px solid black" src="../images/arch/thumb_jcr.jpg" /></a>
+<a href="arch/overview/jcrlevels.html"><img align="left" style="margin:10px;padding:1px;border:1px solid black" src="../images/arch/thumb_jcr.jpg" /></a>
 Jackrabbit is a complete implementation of the JCR API, so the
 primary API for Jackrabbit application developers is to be found
-in the <a href="arch\overview\jcrlevels.html">JCR section</a> of the 
+in the <a href="arch/overview/jcrlevels.html">JCR section</a> of the 
 Documentation.<br clear="all"/>
 </p>
 </section>
 <section name="Jackrabbit architecture and Deployment Models">
 <p>
-<a href="arch\operate\index.html"><img align="left" style="margin:10px;padding:1px;border:1px solid black" src="../images/arch/thumb_ism.jpg" /></a>
-Find out more about the <a href="arch\overview.html">Jackrabbit Architecture</a> or
-learn more about the <a href="arch\deploy.html">Jackrabbit deployment Options</a> be
-it as an <a href="arch\deploy\howto-model1.html">embedded content repository</a> to be 
-delivered with you are application, a <a href="arch\deploy\howto-model2.html">shared repository</a> 
-for example in a J2EE environment or a classical <a href="arch\deploy\howto-model3.html">content repository server</a> setup.
+<a href="arch/operate/index.html"><img align="left" style="margin:10px;padding:1px;border:1px solid black" src="../images/arch/thumb_ism.jpg" /></a>
+Find out more about the <a href="arch/overview.html">Jackrabbit Architecture</a> or
+learn more about the <a href="arch/deploy.html">Jackrabbit deployment Options</a> be
+it as an <a href="arch/deploy/howto-model1.html">embedded content repository</a> to be 
+delivered with you are application, a <a href="arch/deploy/howto-model2.html">shared repository</a> 
+for example in a J2EE environment or a classical <a href="arch/deploy/howto-model3.html">content repository server</a> setup.
 <br clear="all"/>
 </p>
 </section>

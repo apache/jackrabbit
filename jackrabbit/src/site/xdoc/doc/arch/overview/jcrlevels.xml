@@ -35,7 +35,7 @@ Download zipped JCR v1.0 Javadoc:<a href="http://www.day.com/maven/jsr170/javado
 <p>
 Beyond the JCR API Jackrabbit features numerous extensions and
 admistrational features that are needed to run a repository 
-but are not (yet) specified by JCR. (see <a href="arch\overview.html">Architecture Overview</a>)
+but are not (yet) specified by JCR. (see <a href="arch/overview.html">Architecture Overview</a>)
 </p>
 <p>
 Browse current Jackrabbit API: <a href="http://incubator.apache.org/jackrabbit/apidocs/index.html">http://incubator.apache.org/jackrabbit/apidocs/index.html</a>
