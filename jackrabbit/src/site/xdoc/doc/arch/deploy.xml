@@ -71,7 +71,7 @@ into a .war file which is deployed into a WebContainer, which not only
 contains the application but also the actual content repository.
 </p>
 <p>
-<img src="../images/arch/deploy-1.png" />
+<img src="../../images/arch/deploy-1.png" />
 </p>
 <p>
 Application1 and Application2 both contain their own instances of a Content 
@@ -101,7 +101,7 @@ The repository is started and stopped with the Application Server but is
 visible to all the applications to connect to.
 </p>
 <p>
-<img src="../images/arch/deploy-2.png" />
+<img src="../../images/arch/deploy-2.png" />
 </p>
 <p>
 This setup also allows to take advantage of the XA facilities of the 
@@ -125,7 +125,7 @@ or presentation layer, so the content repository can be
 used from many different applications, physically and can be scaled 
 individually.
 </p>
-<img src="../images/arch/deploy-3.png" />
+<img src="../../images/arch/deploy-3.png" />
 <p>
 This deployment model assumes that there is a network layer between the 
 content repository server and the respective content repository client.
