@@ -23,11 +23,12 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 
 /**
  * <code>TargetImportHandler</code> serves as the base class for the concrete
@@ -203,6 +204,7 @@ abstract class TargetImportHandler extends DefaultHandler {
             if (buffer != null) {
                 return bufferPos;
             } else if (tmpFile != null) {
+                // flush writer first
                 writer.flush();
                 return tmpFile.length();
             } else {
@@ -217,7 +219,9 @@ abstract class TargetImportHandler extends DefaultHandler {
             if (buffer != null) {
                 return new String(buffer, 0, bufferPos);
             } else if (tmpFile != null) {
-                if (length() > Integer.MAX_VALUE) {
+                // flush writer first
+                writer.flush();
+                if (tmpFile.length() > Integer.MAX_VALUE) {
                     throw new IOException("size of value is too big, use reader()");
                 }
                 StringBuffer sb = new StringBuffer((int) tmpFile.length());
@@ -244,6 +248,7 @@ abstract class TargetImportHandler extends DefaultHandler {
             if (buffer != null) {
                 return new StringReader(new String(buffer, 0, bufferPos));
             } else if (tmpFile != null) {
+                // flush writer first
                 writer.flush();
                 return new FileReader(tmpFile);
             } else {
@@ -263,7 +268,15 @@ abstract class TargetImportHandler extends DefaultHandler {
                     // create temp file and spool buffer contents
                     TransientFileFactory fileFactory = TransientFileFactory.getInstance();
                     tmpFile = fileFactory.createTransientFile("txt", null, null);
-                    writer = new FileWriter(tmpFile);
+                    final FileOutputStream fout = new FileOutputStream(tmpFile);
+                    writer = new OutputStreamWriter(fout) {
+                        public void flush() throws IOException {
+                            // flush this writer
+                            super.flush();
+                            // force synchronization with underlying file
+                            fout.getFD().sync();
+                        }
+                    };
                     writer.write(buffer, 0, bufferPos);
                     writer.write(chars, start, length);
                     // reset fields
@@ -308,6 +321,7 @@ abstract class TargetImportHandler extends DefaultHandler {
                 bufferPos = 0;
             } else if (tmpFile != null) {
                 writer.close();
+                tmpFile.delete();
                 tmpFile = null;
                 writer = null;
             } else {
