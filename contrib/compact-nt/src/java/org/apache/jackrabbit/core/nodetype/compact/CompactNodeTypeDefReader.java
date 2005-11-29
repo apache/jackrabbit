@@ -48,55 +48,77 @@ import java.util.Arrays;
  * can then be used to register node types.
  * <p/>
  * The BNF grammar of the compact node type definition:<br>
- * <xmp>
- * node_type_defs ::= { ns_mapping | node_type_def };
- * ns_mapping     ::= "<" string "=" string ">";
- * node_type_def  ::= node_type [super_types] options item_defs;
- * node_type      ::= "[" string "]";
- * super_types    ::= ">" string_list;
- * options        ::= [ "orderable" | "ord" | "o" | "mixin" | "mix" | "m" ];
- * item_defs      ::= { item_def };
- * item_def       ::= property_def | node_def;
- * property_def   ::= "-" string property_type_decl [default_values]
- *                        [value_constraints] attributes;
- * property_type_decl ::= "(" property_type ")";
- * default_values ::= "=" string_list;
- * value_constraints ::= "<" string_list;
- * node_def       ::= "+" string [required_types] [default_type] attributes;
- * required_types ::= "(" string_list ")";
- * default_type   ::= "=" string;
- * attributes     ::= [ attr_primary ]
- *                    [ attr_autocreat ]
- *                    [ attr_mandatory ]
- *                    [ attr_protected ]
- *                    [ attr_multiple ]
- *                    [ attr_onversion ];
- * attr_primary   ::= "primary" | "pri" | "!";
- * attr_autocreat ::= "autocreated" | "aut" | "a";
- * attr_mandatory ::= "mandatory" | "man" | "m";
- * attr_protected ::= "protected" | "pro" | "p";
- * attr_multiple  ::= "multiple" | "mul" | "*";
- * attr_onversion ::= "COPY" | "Copy" | "copy"
- *                  | "VERSION" | "Version" | "version"
- *                  | "INITIALIZE" | "Initialize" | "initialize"
- *                  | "COMPUTE" | "Compute" | "compute"
- *                  | "IGNORE" | "Ignore" | "ignore"
- *                  | "ABORT" | "Abort" | "abort";
- * property_type  ::= "STRING" | "String |"string"
- *                  | "BINARY" | "Binary" | "binary"
- *                  | "LONG" | "Long" | "long"
- *                  | "DOUBLE" | "Double" | "double"
- *                  | "BOOLEAN" | "Boolean" | "boolean"
- *                  | "DATE" | "Date" | "date"
- *                  | "NAME | "Name | "name
- *                  | "PATH" | "Path" | "path"
- *                  | "REFERENCE" | "Reference" | "reference"
- *                  | "UNDEFINED" | "Undefined" | "undefined" | "*";
- * string_list    ::= string { "," string };
- * string         ::= quoted_string | unquoted_string;
- * quoted_string :: = "'" unquoted_string "'";
- * unquoted_string ::= ...a string...;
- * </xmp>
+ * <pre>
+ * cnd ::= {ns_mapping | node_type_def}
+ *
+ * ns_mapping ::= "&lt;" prefix "=" namespace "&gt;"
+ *
+ * prefix ::= string
+ *
+ * namespace ::= string
+ *
+ * node_type_def ::= node_type_name [super_types] [options] {property_def | node_def}
+ *
+ * node_type_name ::= "[" string "]"
+ *
+ * super_types ::= "&gt;" string_list
+ *
+ * options ::= orderable_opt | mixin_opt | orderable_opt mixin_opt | mixin_opt orderable_opt
+ *
+ * orderable_opt ::= "orderable" | "ord" | "o"
+ *
+ * mixin_opt ::= "mixin" | "mix" | "m"
+ *
+ * property_def ::= "-" property_name [property_type_decl] [default_values] [attributes] [value_constraints]
+ *
+ * property_name ::= string
+ *
+ * property_type_decl ::= "(" property_type ")"
+ *
+ * property_type ::= "STRING" | "String |"string" |
+ *                   "BINARY" | "Binary" | "binary" |
+ *                   "LONG" | "Long" | "long" |
+ *                   "DOUBLE" | "Double" | "double" |
+ *                   "BOOLEAN" | "Boolean" | "boolean" |
+ *                   "DATE" | "Date" | "date" |
+ *                   "NAME | "Name | "name |
+ *                   "PATH" | "Path" | "path" |
+ *                   "REFERENCE" | "Reference" | "reference" |
+ *                   "UNDEFINED" | "Undefined" | "undefined" | "*"
+ *
+ *
+ * default_values ::= "=" string_list
+ *
+ * value_constraints ::= "&lt;" string_list
+ *
+ * node_def ::= "+" node_name [required_types] [default_type] [attributes]
+ *
+ * node_name ::= string
+ *
+ * required_types ::= "(" string_list ")"
+ *
+ * default_type ::= "=" string
+ *
+ * attributes ::= "primary" | "pri" | "!" |
+ *                "autocreated" | "aut" | "a" |
+ *                "mandatory" | "man" | "m" |
+ *                "protected" | "pro" | "p" |
+ *                "multiple" | "mul" | "*" |
+ *                "COPY" | "Copy" | "copy" |
+ *                "VERSION" | "Version" | "version" |
+ *                "INITIALIZE" | "Initialize" | "initialize" |
+ *                "COMPUTE" | "Compute" | "compute" |
+ *                "IGNORE" | "Ignore" | "ignore" |
+ *                "ABORT" | "Abort" | "abort"
+ *
+ * string_list ::= string {"," string}
+ *
+ * string ::= quoted_string | unquoted_string
+ *
+ * quoted_string :: = "'" unquoted_string "'"
+ *
+ * unquoted_string ::= ...a string...
+ * </pre>
  */
 public class CompactNodeTypeDefReader {
 
