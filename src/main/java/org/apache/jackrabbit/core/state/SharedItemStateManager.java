@@ -144,7 +144,16 @@ public class SharedItemStateManager
      * Read-/Write-Lock to synchronize access on this item state manager.
      */
     private final ReadWriteLock rwLock =
-            new ReentrantWriterPreferenceReadWriteLock();
+            new ReentrantWriterPreferenceReadWriteLock() {
+                /**
+                 * Allow reader when there is no active writer, or current
+                 * thread owns the write lock (reentrant).
+                 */
+                protected boolean allowReader() {
+                    return activeWriter_ == null ||
+                      activeWriter_ == Thread.currentThread();
+                }
+            };
 
     /**
      * Creates a new <code>SharedItemStateManager</code> instance.
