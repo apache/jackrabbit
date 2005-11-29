@@ -174,7 +174,7 @@ public class RepositoryImpl implements Repository, SessionListener,
             }
         } catch (FileSystemException fse) {
             String msg = "failed to create folder for repository meta data";
-            log.debug(msg);
+            log.fatal(msg, fse);
             throw new RepositoryException(msg, fse);
         }
         metaDataStore = new BasedFileSystem(repStore, fsRootPath);
@@ -215,15 +215,17 @@ public class RepositoryImpl implements Repository, SessionListener,
                 delegatingDispatcher, NODETYPES_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
 
         // initialize workspaces
+        String wspName = "";
         try {
             iter = wspInfos.keySet().iterator();
             while (iter.hasNext()) {
-                String wspName = (String) iter.next();
+                wspName = (String) iter.next();
                 initWorkspace(wspName);
             }
         } catch (RepositoryException e) {
             // if any workspace failed to initialize, shutdown again
-            log.error("Unable to start repository. forcing shutdown.");
+            log.fatal("Failed to initialize workspace '" + wspName + "'", e);
+            log.fatal("Unable to start repository, forcing shutdown...");
             shutdown();
             throw e;
         }
@@ -880,7 +882,6 @@ public class RepositoryImpl implements Repository, SessionListener,
             return pm;
         } catch (Exception e) {
             String msg = "Cannot instantiate persistence manager " + pmConfig.getClassName();
-            log.error(msg, e);
             throw new RepositoryException(msg, e);
         }
     }
