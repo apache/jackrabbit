@@ -239,18 +239,12 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
                     + prefix + " -> " + uri + ": invalid prefix");
         }
 
+        // check existing mappings
         String oldPrefix = (String) uriToPrefix.get(uri);
-        if (oldPrefix != null) {
-            // existing namespace
-            if (oldPrefix.equals(prefix)) {
-                throw new NamespaceException("failed to register namespace "
-                        + prefix + " -> " + uri + ": mapping already exists");
-            }
-            // remove old prefix
-            prefixToURI.remove(oldPrefix);
-            uriToPrefix.remove(uri);
+        if (prefix.equals(oldPrefix)) {
+            throw new NamespaceException("failed to register namespace "
+                    + prefix + " -> " + uri + ": mapping already exists");
         }
-
         if (prefixToURI.containsKey(prefix)) {
             /**
              * prevent remapping of existing prefixes because this would in effect
@@ -263,6 +257,13 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
                     + ": remapping existing prefixes is not supported.");
         }
 
+        if (oldPrefix != null) {
+            // remove old prefix mapping
+            prefixToURI.remove(oldPrefix);
+            uriToPrefix.remove(uri);
+        }
+
+        // add new prefix mapping
         prefixToURI.put(prefix, uri);
         uriToPrefix.put(uri, prefix);
 
