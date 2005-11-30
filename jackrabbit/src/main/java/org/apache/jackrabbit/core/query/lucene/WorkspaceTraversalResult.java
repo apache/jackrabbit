@@ -38,7 +38,7 @@ import java.util.NoSuchElementException;
  * Implements a query result that traverses the whole workspace and returns
  * the nodes in document order.
  */
-class WorkspaceTraversalResult implements QueryResult {
+public class WorkspaceTraversalResult implements QueryResult {
 
     /**
      * The session that issued the query.
@@ -62,7 +62,7 @@ class WorkspaceTraversalResult implements QueryResult {
      * @param properties the select properties.
      * @param resolver   the namespace resolver of the session.
      */
-    WorkspaceTraversalResult(Session session,
+    public WorkspaceTraversalResult(Session session,
                              QName[] properties,
                              NamespaceResolver resolver) {
         this.session = session;

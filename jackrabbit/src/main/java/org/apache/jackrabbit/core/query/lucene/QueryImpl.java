@@ -48,7 +48,7 @@ import java.util.List;
 /**
  * Implements the {@link ExecutableQuery} interface.
  */
-class QueryImpl implements ExecutableQuery {
+public class QueryImpl implements ExecutableQuery {
 
     /**
      * The logger instance for this class
@@ -58,7 +58,7 @@ class QueryImpl implements ExecutableQuery {
     /**
      * Represents a query that selects all nodes. E.g. in XPath: //*
      */
-    private static final QueryRootNode ALL_NODES = new QueryRootNode();
+    protected static final QueryRootNode ALL_NODES = new QueryRootNode();
 
     static {
         PathQueryNode pathNode = new PathQueryNode(ALL_NODES);
@@ -70,27 +70,27 @@ class QueryImpl implements ExecutableQuery {
     /**
      * The root node of the query tree
      */
-    private final QueryRootNode root;
+    protected final QueryRootNode root;
 
     /**
      * The session of the user executing this query
      */
-    private final SessionImpl session;
+    protected final SessionImpl session;
 
     /**
      * The item manager of the user executing this query
      */
-    private final ItemManager itemMgr;
+    protected final ItemManager itemMgr;
 
     /**
      * The actual search index
      */
-    private final SearchIndex index;
+    protected final SearchIndex index;
 
     /**
      * The property type registry for type lookup.
      */
-    private final PropertyTypeRegistry propReg;
+    protected final PropertyTypeRegistry propReg;
 
     /**
      * If <code>true</code> the default ordering of the result nodes is in
@@ -171,7 +171,7 @@ class QueryImpl implements ExecutableQuery {
         // execute it
         QueryHits result = null;
         try {
-            result = index.executeQuery(query, orderProperties, ascSpecs);
+            result = index.executeQuery(this, query, orderProperties, ascSpecs);
             uuids = new ArrayList(result.length());
             scores = new ArrayList(result.length());
 
@@ -197,6 +197,49 @@ class QueryImpl implements ExecutableQuery {
             }
         }
 
+        // return QueryResult
+        return new QueryResultImpl(itemMgr,
+                (String[]) uuids.toArray(new String[uuids.size()]),
+                (Float[]) scores.toArray(new Float[scores.size()]),
+                getSelectProperties(),
+                session.getNamespaceResolver(),
+                orderNode == null && documentOrder);
+    }
+
+    /**
+     * If set <code>true</code> the result nodes will be in document order
+     * per default (if no order by clause is specified). If set to
+     * <code>false</code> the result nodes are returned in whatever sequence
+     * the index has stored the nodes. That sequence is stable over multiple
+     * invocations of the same query, but will change when nodes get added or
+     * removed from the index.
+     * <p/>
+     * The default value for this property is <code>true</code>.
+     * @return the current value of this property.
+     */
+    public boolean getRespectDocumentOrder() {
+        return documentOrder;
+    }
+
+    /**
+     * Sets a new value for this property.
+     *
+     * @param documentOrder if <code>true</code> the result nodes are in
+     * document order per default.
+     *
+     * @see #getRespectDocumentOrder()
+     */
+    public void setRespectDocumentOrder(boolean documentOrder) {
+        this.documentOrder = documentOrder;
+    }
+
+    /**
+     * Returns the select properties for this query.
+     *
+     * @return array of select property names.
+     * @throws RepositoryException if an error occurs.
+     */
+    protected QName[] getSelectProperties() throws RepositoryException {
         // get select properties
         List selectProps = new ArrayList();
         selectProps.addAll(Arrays.asList(root.getSelectProperties()));
@@ -231,39 +274,6 @@ class QueryImpl implements ExecutableQuery {
             selectProps.add(QName.JCR_SCORE);
         }
 
-        // return QueryResult
-        return new QueryResultImpl(itemMgr,
-                (String[]) uuids.toArray(new String[uuids.size()]),
-                (Float[]) scores.toArray(new Float[scores.size()]),
-                (QName[]) selectProps.toArray(new QName[selectProps.size()]),
-                session.getNamespaceResolver(),
-                orderNode == null && documentOrder);
-    }
-
-    /**
-     * If set <code>true</code> the result nodes will be in document order
-     * per default (if no order by clause is specified). If set to
-     * <code>false</code> the result nodes are returned in whatever sequence
-     * the index has stored the nodes. That sequence is stable over multiple
-     * invocations of the same query, but will change when nodes get added or
-     * removed from the index.
-     * <p/>
-     * The default value for this property is <code>true</code>.
-     * @return the current value of this property.
-     */
-    public boolean getRespectDocumentOrder() {
-        return documentOrder;
-    }
-
-    /**
-     * Sets a new value for this property.
-     *
-     * @param documentOrder if <code>true</code> the result nodes are in
-     * document order per default.
-     *
-     * @see #getRespectDocumentOrder()
-     */
-    public void setRespectDocumentOrder(boolean documentOrder) {
-        this.documentOrder = documentOrder;
+        return (QName[]) selectProps.toArray(new QName[selectProps.size()]);
     }
 }

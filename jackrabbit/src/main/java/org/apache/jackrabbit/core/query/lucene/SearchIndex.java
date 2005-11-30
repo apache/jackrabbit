@@ -298,6 +298,7 @@ public class SearchIndex extends AbstractQueryHandler {
 
     /**
      * Executes the query on the search index.
+     * @param queryImpl the query impl.
      * @param query the lucene query.
      * @param orderProps name of the properties for sort order.
      * @param orderSpecs the order specs for the sort order properties.
@@ -306,27 +307,11 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return the lucene Hits object.
      * @throws IOException if an error occurs while searching the index.
      */
-    QueryHits executeQuery(Query query,
-                             QName[] orderProps,
-                             boolean[] orderSpecs) throws IOException {
-        SortField[] sortFields = new SortField[orderProps.length];
-        for (int i = 0; i < orderProps.length; i++) {
-            String prop = null;
-            if (QName.JCR_SCORE.equals(orderProps[i])) {
-                // order on jcr:score does not use the natural order as
-                // implemented in lucene. score ascending in lucene means that
-                // higher scores are first. JCR specs that lower score values
-                // are first.
-                sortFields[i] = new SortField(null, SortField.SCORE, orderSpecs[i]);
-            } else {
-                try {
-                    prop = orderProps[i].toJCRName(getNamespaceMappings());
-                } catch (NoPrefixDeclaredException e) {
-                    // will never happen
-                }
-                sortFields[i] = new SortField(prop, SharedFieldSortComparator.PROPERTIES, !orderSpecs[i]);
-            }
-        }
+    public QueryHits executeQuery(QueryImpl queryImpl,
+                                  Query query,
+                                  QName[] orderProps,
+                                  boolean[] orderSpecs) throws IOException {
+        SortField[] sortFields = createSortFields(orderProps, orderSpecs);
 
         IndexReader reader = index.getIndexReader();
         IndexSearcher searcher = new IndexSearcher(reader);
@@ -343,7 +328,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * Returns the analyzer in use for indexing.
      * @return the analyzer in use for indexing.
      */
-    Analyzer getTextAnalyzer() {
+    public Analyzer getTextAnalyzer() {
         return analyzer;
     }
 
@@ -361,8 +346,38 @@ public class SearchIndex extends AbstractQueryHandler {
      * Returns the namespace mappings for the internal representation.
      * @return the namespace mappings for the internal representation.
      */
-    NamespaceMappings getNamespaceMappings() {
+    public NamespaceMappings getNamespaceMappings() {
         return index.getNamespaceMappings();
+    }
+
+    /**
+     * Creates the SortFields for the order properties.
+     *
+     * @param orderProps the order properties.
+     * @param orderSpecs the order specs for the properties.
+     * @return an array of sort fields
+     */
+    protected SortField[] createSortFields(QName[] orderProps,
+                                           boolean[] orderSpecs) {
+        List sortFields = new ArrayList();
+        for (int i = 0; i < orderProps.length; i++) {
+            String prop = null;
+            if (QName.JCR_SCORE.equals(orderProps[i])) {
+                // order on jcr:score does not use the natural order as
+                // implemented in lucene. score ascending in lucene means that
+                // higher scores are first. JCR specs that lower score values
+                // are first.
+                sortFields.add(new SortField(null, SortField.SCORE, orderSpecs[i]));
+            } else {
+                try {
+                    prop = orderProps[i].toJCRName(getNamespaceMappings());
+                } catch (NoPrefixDeclaredException e) {
+                    // will never happen
+                }
+                sortFields.add(new SortField(prop, SharedFieldSortComparator.PROPERTIES, !orderSpecs[i]));
+            }
+        }
+        return (SortField[]) sortFields.toArray(new SortField[sortFields.size()]);
     }
 
     /**
@@ -379,6 +394,15 @@ public class SearchIndex extends AbstractQueryHandler {
             throws RepositoryException {
         return NodeIndexer.createDocument(node, getContext().getItemStateManager(),
                 nsMappings, textFilters);
+    }
+
+    /**
+     * Returns the actual index.
+     *
+     * @return the actual index.
+     */
+    protected MultiIndex getIndex() {
+        return index;
     }
 
     //--------------------------< properties >----------------------------------

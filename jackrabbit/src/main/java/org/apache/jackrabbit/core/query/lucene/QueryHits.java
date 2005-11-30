@@ -27,7 +27,7 @@ import java.io.IOException;
  * to release resources after a query has been executed and the results have
  * been read completely.
  */
-class QueryHits {
+public class QueryHits {
 
     /**
      * The lucene hits we wrap.
@@ -49,7 +49,7 @@ class QueryHits {
      * @param hits the lucene hits.
      * @param reader the IndexReader in use by <code>hits</code>.
      */
-    QueryHits(Hits hits, IndexReader reader) {
+    public QueryHits(Hits hits, IndexReader reader) {
         this.hits = hits;
         this.reader = reader;
         this.length = hits.length();

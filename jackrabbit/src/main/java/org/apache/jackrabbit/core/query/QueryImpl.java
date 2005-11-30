@@ -33,82 +33,79 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
 
 /**
- * Implements the {@link Query} interface.
+ * Provides the default implementation for a JCR query.
  */
-public class QueryImpl implements Query {
+public class QueryImpl extends AbstractQueryImpl {
 
     /**
      * The session of the user executing this query
      */
-    private final SessionImpl session;
+    protected SessionImpl session;
 
     /**
      * The query statement
      */
-    private final String statement;
+    protected String statement;
 
     /**
      * The syntax of the query statement
      */
-    private final String language;
+    protected String language;
 
     /**
      * The actual query implementation that can be executed
      */
-    private final ExecutableQuery query;
+    protected ExecutableQuery query;
 
     /**
      * The node where this query is persisted. Only set when this is a persisted
      * query.
      */
-    private Node node;
+    protected Node node;
 
     /**
-     * Creates a new query instance from a query string.
-     *
-     * @param session   the session of the user executing this query.
-     * @param itemMgr   the item manager of the session executing this query.
-     * @param handler   the query handler of the search index.
-     * @param statement the query statement.
-     * @param language  the syntax of the query statement.
-     * @throws InvalidQueryException if the query statement is invalid according
-     *                               to the specified <code>language</code>.
+     * The query handler for this query.
      */
-    public QueryImpl(SessionImpl session,
+    protected QueryHandler handler;
+
+    /**
+     * Flag indicating whether this query is initialized.
+     */
+    private boolean initialized = false;
+
+    /**
+     * @inheritDoc
+     */
+    public void init(SessionImpl session,
                      ItemManager itemMgr,
                      QueryHandler handler,
                      String statement,
                      String language) throws InvalidQueryException {
+        checkNotInitialized();
         this.session = session;
         this.statement = statement;
         this.language = language;
+        this.handler = handler;
         this.query = handler.createExecutableQuery(session, itemMgr, statement, language);
+        initialized = true;
     }
 
     /**
-     * Create a new query instance from a nt:query node.
-     *
-     * @param session the session of the user executing this query.
-     * @param itemMgr the item manager of the session executing this query.
-     * @param handler the query handler of the search index.
-     * @param node    a node of type <code>nt:query</code>.
-     * @throws InvalidQueryException If <code>node</code> is not a valid persisted query
-     *                               (that is, a node of type <code>nt:query</code>).
-     * @throws RepositoryException   if another error occurs
+     * @inheritDoc
      */
-    public QueryImpl(SessionImpl session,
+    public void init(SessionImpl session,
                      ItemManager itemMgr,
                      QueryHandler handler,
                      Node node)
             throws InvalidQueryException, RepositoryException {
-
+        checkNotInitialized();
         this.session = session;
         this.node = node;
+        this.handler = handler;
 
         try {
             if (!node.isNodeType(QName.NT_QUERY.toJCRName(session.getNamespaceResolver()))) {
@@ -120,6 +117,7 @@ public class QueryImpl implements Query {
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
+        initialized = true;
     }
 
     /**
@@ -129,6 +127,7 @@ public class QueryImpl implements Query {
      * {@inheritDoc}
      */
     public QueryResult execute() throws RepositoryException {
+        checkInitialized();
         return query.execute();
     }
 
@@ -136,6 +135,7 @@ public class QueryImpl implements Query {
      * {@inheritDoc}
      */
     public String getStatement() {
+        checkInitialized();
         return statement;
     }
 
@@ -143,6 +143,7 @@ public class QueryImpl implements Query {
      * {@inheritDoc}
      */
     public String getLanguage() {
+        checkInitialized();
         return language;
     }
 
@@ -151,6 +152,7 @@ public class QueryImpl implements Query {
      */
     public String getStoredQueryPath()
             throws ItemNotFoundException, RepositoryException {
+        checkInitialized();
         if (node == null) {
             throw new ItemNotFoundException("not a persistent query");
         }
@@ -168,6 +170,8 @@ public class QueryImpl implements Query {
             LockException,
             UnsupportedRepositoryOperationException,
             RepositoryException {
+
+        checkInitialized();
         try {
             NamespaceResolver resolver = session.getNamespaceResolver();
             Path p = Path.create(absPath, resolver, true);
@@ -192,6 +196,28 @@ public class QueryImpl implements Query {
             throw new RepositoryException(e.getMessage(), e);
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);
+        }
+    }
+
+    //-----------------------------< internal >---------------------------------
+
+    /**
+     * Checks if this query is not yet initialized and throws an
+     * <code>IllegalStateException</code> if it is already initialized.
+     */
+    protected void checkNotInitialized() {
+        if (initialized) {
+            throw new IllegalStateException("already initialized");
+        }
+    }
+
+    /**
+     * Checks if this query is initialized and throws an
+     * <code>IllegalStateException</code> if it is not yet initialized.
+     */
+    protected void checkInitialized() {
+        if (!initialized) {
+            throw new IllegalStateException("not initialized");
         }
     }
 }
