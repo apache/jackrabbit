@@ -177,6 +177,18 @@ abstract class DocId {
         private final String uuid;
 
         /**
+         * The index reader that was used to calculate the document number.
+         * If <code>null</code> then the document number has not yet been
+         * calculated.
+         */
+        private IndexReader reader;
+
+        /**
+         * The previously calculated document number.
+         */
+        private int docNumber;
+
+        /**
          * Creates a <code>DocId</code> based on a Node uuid.
          *
          * @param uuid the Node uuid.
@@ -189,6 +201,11 @@ abstract class DocId {
          * @inheritDoc
          */
         final int getDocumentNumber(IndexReader reader) throws IOException {
+            synchronized (this) {
+                if (reader == this.reader) {
+                    return docNumber;
+                }
+            }
             Term id = new Term(FieldNames.UUID, uuid);
             TermDocs docs = reader.termDocs(id);
             int doc = -1;
@@ -198,6 +215,10 @@ abstract class DocId {
                 }
             } finally {
                 docs.close();
+            }
+            synchronized (this) {
+                docNumber = doc;
+                this.reader = reader;
             }
             return doc;
         }
