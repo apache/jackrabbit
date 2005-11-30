@@ -16,9 +16,16 @@
 
 package org.apache.jackrabbit.webdav.simple;
 
-import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.lock.LockManager;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavSession;
 
 import javax.jcr.RepositoryException;
 
@@ -31,8 +38,8 @@ public class ResourceFactoryImpl implements DavResourceFactory {
     private final ResourceConfig resourceConfig;
 
     /**
-     * Create a new <code>ResourceFactory</code> that uses the given lock manager
-     * and the default {@link DefaultResourceFilter resource filter}.
+     * Create a new <code>ResourceFactory</code> that uses the given lock
+     * manager and the default {@link DefaultResourceFilter resource filter}.
      *
      * @param lockMgr
      */
@@ -42,8 +49,8 @@ public class ResourceFactoryImpl implements DavResourceFactory {
     }
 
     /**
-     * Create a new <code>ResourceFactory</code> that uses the given lock manager
-     * and resource filter.
+     * Create a new <code>ResourceFactory</code> that uses the given lock
+     * manager and resource filter.
      *
      * @param lockMgr
      * @param resourceConfig
@@ -54,14 +61,16 @@ public class ResourceFactoryImpl implements DavResourceFactory {
     }
 
     /**
-     * Create a new <code>DavResource</code> from the given locator and request.
+     * Create a new <code>DavResource</code> from the given locator and
+     * request.
      *
      * @param locator
      * @param request
      * @param response
      * @return
      * @throws DavException
-     * @see DavResourceFactory#createResource(DavResourceLocator, DavServletRequest, DavServletResponse)
+     * @see DavResourceFactory#createResource(DavResourceLocator,
+     *      DavServletRequest, DavServletResponse)
      */
     public DavResource createResource(DavResourceLocator locator, DavServletRequest request,
                                       DavServletResponse response) throws DavException {

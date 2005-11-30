@@ -70,10 +70,11 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     private DavPropertySet properties = new DavPropertySet();
     private boolean inited = false;
     private boolean isCollection = true;
-    private long modificationTime = IOUtil.UNDEFINED_TIME;
 
     private ResourceFilter filter;
     private IOManager ioManager;
+
+    private long modificationTime = IOUtil.UNDEFINED_TIME;
 
     /**
      * Create a new {@link DavResource}.
@@ -83,7 +84,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param session
      */
     public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory,
-                           DavSession session, ResourceConfig config) throws RepositoryException {
+                           DavSession session, ResourceConfig config) throws RepositoryException, DavException {
         this.session = session;
         this.factory = factory;
         this.locator = locator;
@@ -101,6 +102,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             } catch (PathNotFoundException e) {
                 // ignore: exists field evaluates to false
             }
+        } else {
+            throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
     }
 
@@ -490,11 +493,9 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         try {
             ImportContext ctx = getImportContext(inputContext, Text.getName(member.getLocator().getJcrPath()));
             if (!ioManager.importContent(ctx, member)) {
-                // undo all changes
-                node.refresh(false);
+                // any changes should have been reverted in the importer
                 throw new DavException(DavServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
             }
-
             // persist changes after successful import
             node.save();
         } catch (RepositoryException e) {
@@ -953,7 +954,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         }
 
         public void setModificationTime(long modTime) {
-            if (modificationTime <= IOUtil.UNDEFINED_TIME) {
+            if (modTime <= IOUtil.UNDEFINED_TIME) {
                 modificationTime = new Date().getTime();
             } else {
                 modificationTime = modTime;

@@ -30,17 +30,19 @@ public class XmlUtil implements DavConstants {
     /**
      * Converts the given timeout (long value defining the number of milli-
      * second until timeout is reached) to its Xml representation as defined
-     * by RTF 2518.
+     * by RTF 2518.<br>
+     * Note, that {@link #INFINITE_TIMEOUT} is not represented by the String
+     * {@link #TIMEOUT_INFINITE 'Infinite'} defined by RFC 2518, due to a known
+     * issue with Microsoft Office that opens the document "read only" and
+     * never unlocks the resource if the timeout is missing or 'Infinite'.
      *
      * @param timeout number of milli-seconds until timeout is reached.
      * @return 'timeout' JDOM element
      */
     public static Element timeoutToXml(long timeout) {
-        // TODO: check if 'infinite' would be better to return for infinite timeout.
-        String expString = "Second-"+ timeout/1000;
-        Element exp = new Element(XML_TIMEOUT, NAMESPACE);
-        exp.setText(expString);
-        return exp;
+        Element el = new Element(XML_TIMEOUT, NAMESPACE);
+        el.setText("Second-"+ timeout/1000);
+        return el;
     }
 
     /**
