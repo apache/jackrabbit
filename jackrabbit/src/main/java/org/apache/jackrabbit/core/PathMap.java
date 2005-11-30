@@ -256,36 +256,56 @@ public class PathMap {
         /**
          * Remove a child. Will shift all children having an index greater than
          * the child removed to the left. If there are no more children left in
-         * this child and no object is associated with this child, the child
-         * itself gets removed.
+         * this element and no object is associated with this element, the
+         * element itself gets removed.
          *
          * @param nameIndex child's path element
          * @return removed child, may be <code>null</code>
          */
         public Element remove(Path.PathElement nameIndex) {
+            return remove(nameIndex, true);
+        }
+
+        /**
+         * Remove a child. If <code>shift</code> is set to <code>true</code>,
+         * will shift all children having an index greater than the child
+         * removed to the left. If there are no more children left in
+         * this element and no object is associated with this element, the
+         * element itself gets removed.
+         *
+         * @param nameIndex child's path element
+         * @param shift whether to shift same name siblings having a greater
+         *              index to the left
+         * @return removed child, may be <code>null</code>
+         */
+        private Element remove(Path.PathElement nameIndex, boolean shift) {
             // convert 1-based index value to 0-base value
             int index = getOneBasedIndex(nameIndex) - 1;
-            if (children != null) {
-                ArrayList list = (ArrayList) children.get(nameIndex.getName());
-                if (list != null && list.size() > index) {
-                    for (int i = index + 1; i < list.size(); i++) {
-                        Element element = (Element) list.get(i);
-                        if (element != null) {
-                            element.index--;
-                        }
-                    }
-                    Element element = (Element) list.remove(index);
-                    if (element != null) {
-                        element.parent = null;
-                        childrenCount--;
-                    }
-                    if (childrenCount == 0 && obj == null) {
-                        remove();
-                    }
-                    return element;
-                }
+            if (children == null) {
+                return null;
             }
-            return null;
+            ArrayList list = (ArrayList) children.get(nameIndex.getName());
+            if (list == null || list.size() <= index) {
+                return null;
+            }
+            Element element = (Element) list.set(index, null);
+            if (shift) {
+                for (int i = index + 1; i < list.size(); i++) {
+                    Element sibling = (Element) list.get(i);
+                    if (sibling != null) {
+                        sibling.index--;
+                    }
+                }
+                list.remove(index);
+            }
+            if (element != null) {
+                element.parent = null;
+                childrenCount--;
+            }
+            if (childrenCount == 0 && obj == null && parent != null) {
+                parent.remove(getPathElement(), shift);
+            }
+            return element;
         }
 
         /**
@@ -312,8 +332,8 @@ public class PathMap {
         public void set(Object obj) {
             this.obj = obj;
 
-            if (obj == null && childrenCount == 0) {
-                remove();
+            if (obj == null && childrenCount == 0 && parent != null) {
+                parent.remove(getPathElement(), false);
             }
         }
 

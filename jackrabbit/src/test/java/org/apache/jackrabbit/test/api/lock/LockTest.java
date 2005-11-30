@@ -661,6 +661,36 @@ public class LockTest extends AbstractJCRTest {
     }
 
     /**
+     * Tests if unlocking the first of two locked same-name sibling nodes does
+     * not unlock the second (JIRA issue JCR-284).
+     */
+    public void testUnlockSameNameSibling() throws RepositoryException {
+        Session session = testRootNode.getSession();
+
+        // create two same-name sibling nodes
+        Node n1 = testRootNode.addNode(nodeName1);
+        n1.addMixin("mix:lockable");
+        Node n2 = testRootNode.addNode(nodeName1);
+        n2.addMixin("mix:lockable");
+        session.save();
+
+        // lock both nodes
+        n1.lock(true, true);
+        n2.lock(true, true);
+
+        // assert: both nodes are locked
+        assertTrue("First node locked: ", n1.isLocked());
+        assertTrue("Second node locked: ", n2.isLocked());
+
+        // unlock first sibling
+        n1.unlock();
+
+        // assert: first node unlocked, second node still locked
+        assertFalse("First node unlocked: ", n1.isLocked());
+        assertTrue("Second node locked: ", n2.isLocked());
+    }
+
+    /**
      * Return a flag indicating whether the indicated session contains
      * a specific lock token
      */
