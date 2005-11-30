@@ -66,8 +66,14 @@ public class DavSessionProviderImpl implements DavSessionProvider {
      */
     public boolean attachSession(WebdavRequest request) throws DavException {
         try {
+            // retrieve the workspace name
+            String workspaceName = request.getRequestLocator().getWorkspaceName();
+            // empty workspaceName rather means default -> must be 'null'
+            if (workspaceName != null && "".equals(workspaceName)) {
+                workspaceName = null;
+            }
             // login to repository
-            Session repSession = sesProvider.getSession(request, repository, null);
+            Session repSession = sesProvider.getSession(request, repository, workspaceName);
             if (repSession == null) {
                 log.debug("Could not to retrieve a repository session.");
                 return false;
@@ -76,8 +82,10 @@ public class DavSessionProviderImpl implements DavSessionProvider {
             log.debug("Attaching session '"+ ds + "' to request '" + request + "'");
             request.setDavSession(ds);
             return true;
-        } catch (LoginException e) {
-	    throw new JcrDavException(e);
+        } catch (NoSuchWorkspaceException e) {
+            // the default error-code for NoSuchWorkspaceException is 409 conflict
+            // which seems not appropriate here
+            throw new JcrDavException(e, DavServletResponse.SC_NOT_FOUND);
         } catch (RepositoryException e) {
 	    throw new JcrDavException(e);
 	} catch (ServletException e) {

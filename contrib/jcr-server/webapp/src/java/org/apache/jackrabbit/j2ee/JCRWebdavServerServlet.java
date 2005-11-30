@@ -15,20 +15,25 @@
  */
 package org.apache.jackrabbit.j2ee;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.observation.*;
-import org.apache.jackrabbit.webdav.jcr.*;
-import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionManagerImpl;
-import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
-import org.apache.jackrabbit.server.jcr.JCRWebdavServer;
-import org.apache.jackrabbit.server.SessionProviderImpl;
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
+import org.apache.jackrabbit.server.SessionProviderImpl;
+import org.apache.jackrabbit.server.jcr.JCRWebdavServer;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavLocatorFactory;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavSessionProvider;
+import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.jcr.DavLocatorFactoryImpl;
+import org.apache.jackrabbit.webdav.jcr.DavResourceFactoryImpl;
+import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionManagerImpl;
+import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
+import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
+import org.apache.log4j.Logger;
 
-import javax.servlet.ServletException;
-import javax.servlet.ServletContext;
 import javax.jcr.Repository;
+import javax.servlet.ServletException;
 
 /**
  * JCRWebdavServerServlet provides request/response handling for the JCRWebdavServer.
@@ -71,16 +76,6 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
 	pathPrefix = getInitParameter(INIT_PARAM_PREFIX);
 	log.debug(INIT_PARAM_PREFIX + " = " + pathPrefix);
 
-        final ServletContext ctx = getServletContext();
-
-	Repository repository = RepositoryAccessServlet.getRepository(ctx);
-	if (repository == null) {
-	    throw new ServletException("Repository could not be retrieved. Check config of 'RepositoryAccessServlet'.");
-	}
-	server = new JCRWebdavServer(repository, new SessionProviderImpl(
-                new BasicCredentialsProvider(
-                        getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING)))
-        );
         txMgr = new TxLockManagerImpl();
         subscriptionMgr = new SubscriptionManagerImpl();
 
@@ -114,11 +109,7 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
 
         // make sure, the TransactionId header is valid
         String txId = request.getTransactionId();
-        if (txId != null && !txMgr.hasLock(txId, resource)) {
-           return false;
-        }
-
-        return true;
+        return txId == null || txMgr.hasLock(txId, resource);
     }
 
     /**
@@ -128,6 +119,13 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
      * @see AbstractWebdavServlet#getDavSessionProvider()
      */
     public DavSessionProvider getDavSessionProvider() {
+        if (server == null) {
+            Repository repository = RepositoryAccessServlet.getRepository(getServletContext());
+            server = new JCRWebdavServer(repository, new SessionProviderImpl(
+                    new BasicCredentialsProvider(
+                            getInitParameter(INIT_PARAM_MISSING_AUTH_MAPPING)))
+            );
+        }
         return server;
     }
 

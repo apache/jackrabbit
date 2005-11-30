@@ -40,9 +40,6 @@ public class RepositoryAccessServlet extends HttpServlet {
     /** default logger */
     private static final Logger log = Logger.getLogger(RepositoryAccessServlet.class);
 
-    // todo: implement correctly
-    public final static String INIT_PARAM_LOG4J_CONFIG = "log4j-config";
-
     /** the 'repository-name' init parameter */
     public final static String INIT_PARAM_REPOSITORY_NAME = "repository-name";
 
@@ -50,11 +47,15 @@ public class RepositoryAccessServlet extends HttpServlet {
     public final static String INIT_PARAM_RMI_URI = "rmi-uri";
 
     /** the 'missing-auth-mapping' init parameter */
-    public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
+    //public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
 
     private static final String CTX_ATTR_REPOSITORY = "jcr.repository";
 
-    private String repositoryName;
+    private static final String CTX_ATTR_REPOSITORY_NAME = "jcr.repository.name";
+
+    private static final String CTX_ATTR_REPOSITORY_RMI_URI = "jcr.repository.rmiURI";
+
+    private static final String CTX_ATTR_REPOSITORY_JNDI_CONTEXT = "jcr.repository.jndiContext";
 
     /**
      * Initializes this servlet
@@ -63,38 +64,23 @@ public class RepositoryAccessServlet extends HttpServlet {
      */
     public void init() throws ServletException {
 	log.info("RepositoryAccessServlet initializing...");
-        repositoryName = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_NAME);
+        // fetching the name
+        String repositoryName = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_NAME);
         if (repositoryName==null) {
             repositoryName="default";
         }
-        Repository repository = null;
+        getServletContext().setAttribute(CTX_ATTR_REPOSITORY_NAME, repositoryName);
 
-        // try to retrieve via rmi
-        if (repository == null) {
-            String rmiURI = getRMIUri();
-            if (rmiURI != null) {
-                repository = getRepositoryByRMI(rmiURI);
-            }
-        }
-        // try to retrieve via jndi
-        if (repository == null) {
-            InitialContext context = getInitialContext();
-            if (context != null) {
-                repository = getRepositoryByJNDI(context);
-            }
-        }
-        // error
-        if (repository == null) {
-            log.error("Unable to retrieve repository");
-            throw new ServletException("Unable to retrieve repository");
-        }
-        getServletContext().setAttribute(CTX_ATTR_REPOSITORY, repository);
-        log.info(repository.getDescriptor(Repository.REP_NAME_DESC) + " v" + repository.getDescriptor(Repository.REP_VERSION_DESC));
+        // fetching the rmiuri
+        getServletContext().setAttribute(CTX_ATTR_REPOSITORY_RMI_URI, getRMIUri());
+
+        // setup initial context
+        getServletContext().setAttribute(CTX_ATTR_REPOSITORY_JNDI_CONTEXT, getInitialContext());
 
 	log.info("RepositoryAccessServlet initialized.");
     }
 
-    private InitialContext getInitialContext() throws ServletException {
+    private InitialContext getInitialContext() {
 	// retrieve JNDI Context environment
 	try {
 	    Properties env = new Properties();
@@ -109,7 +95,7 @@ public class RepositoryAccessServlet extends HttpServlet {
 	    return new InitialContext(env);
 	} catch (NamingException e) {
 	    log.error("Create initial context: " + e.toString());
-	    throw new ServletException(e);
+	    return null;
 	}
     }
 
@@ -121,8 +107,13 @@ public class RepositoryAccessServlet extends HttpServlet {
     /**
      * tries to retrieve the repository using RMI
      */
-    private Repository getRepositoryByJNDI(InitialContext jndiContext) {
+    private static Repository getRepositoryByJNDI(ServletContext ctx) {
         // acquire via JNDI
+        String repositoryName = (String) ctx.getAttribute(CTX_ATTR_REPOSITORY_NAME);
+        InitialContext jndiContext = (InitialContext) ctx.getAttribute(CTX_ATTR_REPOSITORY_JNDI_CONTEXT);
+        if (jndiContext == null) {
+            return null;
+        }
         try {
             Repository r = (Repository) jndiContext.lookup(repositoryName);
             log.info("Acquired repository via JNDI.");
@@ -136,8 +127,12 @@ public class RepositoryAccessServlet extends HttpServlet {
     /**
      * tries to retrieve the repository using RMI
      */
-    private Repository getRepositoryByRMI(String rmiURI) {
+    private static Repository getRepositoryByRMI(ServletContext ctx) {
         // acquire via RMI
+        String rmiURI = (String) ctx.getAttribute(CTX_ATTR_REPOSITORY_RMI_URI);
+        if (rmiURI == null) {
+            return null;
+        }
         log.info("  trying to retrieve repository using rmi. uri=" + rmiURI);
         ClientFactoryDelegater cfd;
         try {
@@ -165,9 +160,28 @@ public class RepositoryAccessServlet extends HttpServlet {
      * Returns the JSR170 repository
      *
      * @return a jsr170 repository
+     * @throws IllegalStateException if the repository is not available in the context.
      */
     public static Repository getRepository(ServletContext ctx) {
-	return (Repository) ctx.getAttribute(CTX_ATTR_REPOSITORY);
+        Repository repository = (Repository) ctx.getAttribute(CTX_ATTR_REPOSITORY);
+        if (repository != null) {
+            return repository;
+        } else {
+            repository = getRepositoryByRMI(ctx);
+        }
+        // try to retrieve via jndi
+        if (repository == null) {
+            repository = getRepositoryByJNDI(ctx);
+        }
+        // error
+        if (repository == null) {
+            log.fatal("The repository is not available. Check config of 'RepositoryAccessServlet'.");
+            throw new IllegalStateException("The repository is not available.");
+        } else {
+            ctx.setAttribute(CTX_ATTR_REPOSITORY, repository);
+            log.info(repository.getDescriptor(Repository.REP_NAME_DESC) + " v" + repository.getDescriptor(Repository.REP_VERSION_DESC));
+            return repository;
+        }
     }
 }
 
