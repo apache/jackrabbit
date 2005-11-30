@@ -92,4 +92,17 @@ public class QueryHits {
     public final float score(int n) throws IOException {
       return hits.score(n);
     }
+
+    /**
+     * Returns the document number for the <code>n</code><sup>th</sup> document
+     * in this QueryHits.
+     *
+     * @param n index.
+     * @return the document number for the <code>n</code><sup>th</sup>
+     *         document.
+     * @throws IOException if an error occurs.
+     */
+    public final int id(int n) throws IOException {
+        return hits.id(n);
+    }
 }
