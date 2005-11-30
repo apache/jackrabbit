@@ -63,7 +63,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     private TxLockManagerImpl txMgr;
     private String transactionId;
 
-    private long modificationTime = new Date().getTime();
+    private long modificationTime = IOUtil.UNDEFINED_TIME;
 
     protected boolean initedProps;
     protected DavPropertySet properties = new DavPropertySet();
@@ -122,15 +122,16 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     }
 
     /**
-     * Set the modificationTime field and adds the {@link DavPropertyName.GETLASTMODIFIED}
+     * Set the modificationTime field and adds the {@link DavPropertyName#GETLASTMODIFIED}
      * property to the set of properties.
+     *
      * @param modificationTime
      */
     void setModificationTime(long modificationTime) {
+        if (modificationTime > IOUtil.UNDEFINED_TIME) {
         this.modificationTime = modificationTime;
-        if (this.modificationTime >= 0) {
-            properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED,
-                    DavConstants.modificationDateFormat.format(new Date(modificationTime))));
+            String lastModified = IOUtil.getLastModified(modificationTime);
+            properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, lastModified));
         }
     }
 

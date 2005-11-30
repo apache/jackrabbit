@@ -362,9 +362,10 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         long modSince = request.getDateHeader("If-Modified-Since");
         if (modSince > IOUtil.UNDEFINED_TIME) {
-            // test if resource has been modified
         long modTime = resource.getModificationTime();
-            if (modTime != IOUtil.UNDEFINED_TIME && modTime <= modSince) {
+            // test if resource has been modified. note that formatted modification
+            // time lost the milli-second precision
+            if (modTime != IOUtil.UNDEFINED_TIME && (modTime / 1000 * 1000) <= modSince) {
             // resource has not been modified since the time indicated in the
             // 'If-Modified-Since' header.
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);

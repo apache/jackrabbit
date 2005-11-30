@@ -181,9 +181,12 @@ public class DefaultHandler implements IOHandler {
     protected boolean importData(ImportContext context, boolean isCollection, Node contentNode) throws IOException, RepositoryException {
         InputStream in = context.getInputStream();
         if (in != null) {
+            // NOTE: with the default folder-nodetype (nt:folder) no inputstream
+            // is allowed. setting the property would therefore fail.
+            if (isCollection) {
+                return false;
+            }
             try {
-                // NOTE: with the default folder-nodetype (nt:folder) no inputstream
-                // is allowed. setting the property will therefore fail.
                 contentNode.setProperty(JcrConstants.JCR_DATA, in);
             } finally {
                 in.close();

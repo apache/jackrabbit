@@ -16,8 +16,9 @@
 package org.apache.jackrabbit.webdav;
 
 import org.jdom.Namespace;
+import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 
-import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 
 /**
  * <code>DavConstants</code> provide constants for request and response
@@ -48,8 +49,9 @@ public interface DavConstants {
     //------------------------------------------------------- Timeout header ---
     public static final String HEADER_TIMEOUT = "Timeout";
     public static final String TIMEOUT_INFINITE = "Infinite";
-    public static final long INFINITE_TIMEOUT = Long.MAX_VALUE;
-    public static final long UNDEFINED_TIMEOUT = Long.MIN_VALUE;
+    // RFC 2518: timeout value for TimeType "Second" MUST NOT be greater than 2^32-1
+    public static final long INFINITE_TIMEOUT = Integer.MAX_VALUE;
+    public static final long UNDEFINED_TIMEOUT = Integer.MIN_VALUE;
     
     //----------------------------------------------------- Overwrite header ---
     public static final String HEADER_OVERWRITE = "Overwrite";
@@ -135,10 +137,10 @@ public interface DavConstants {
     /**
      * modificationDate date format per RFC 1123
      */
-    public static SimpleDateFormat modificationDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+    public static DateFormat modificationDateFormat = new HttpDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
 
     /**
      * Simple date format for the creation date ISO representation (partial).
      */
-    public static SimpleDateFormat creationDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    public static DateFormat creationDateFormat = new HttpDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 }

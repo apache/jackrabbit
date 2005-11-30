@@ -400,7 +400,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * Returns the resource configuration to be applied
      *
-     * @return
+     * @return the resource configuration.
      */
     public ResourceConfig getResourceConfig() {
         // fallback if no config present
@@ -430,9 +430,6 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     public Repository getRepository() {
         if (repository == null) {
             repository = RepositoryAccessServlet.getRepository(getServletContext());
-            if (repository == null) {
-                throw new IllegalStateException("Repository could not be retrieved. Check config of 'RepositoryAccessServlet'.");
-            }
         }
         return repository;
     }
