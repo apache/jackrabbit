@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryImpl;
+import org.apache.jackrabbit.core.query.AbstractQueryImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -71,6 +72,16 @@ public class SearchManager implements SynchronousEventListener {
     public static final String NS_XS_URI = "http://www.w3.org/2001/XMLSchema";
 
     /**
+     * Name of the parameter that indicates the query implementation class.
+     */
+    private static final String PARAM_QUERY_IMPL = "queryClass";
+
+    /**
+     * Name of the default query implementation class.
+     */
+    private static final String DEFAULT_QUERY_IMPL_CLASS = QueryImpl.class.getName();
+
+    /**
      * The shared item state manager instance for the workspace.
      */
     private final ItemStateManager itemMgr;
@@ -84,6 +95,12 @@ public class SearchManager implements SynchronousEventListener {
      * QueryHandler where query execution is delegated to
      */
     private final QueryHandler handler;
+
+    /**
+     * Fully qualified name of the query implementation class.
+     * This class must extend {@link org.apache.jackrabbit.core.query.AbstractQueryImpl}!
+     */
+    private final String queryImplClassName;
 
     /**
      * Creates a new <code>SearchManager</code>.
@@ -114,6 +131,8 @@ public class SearchManager implements SynchronousEventListener {
             // not yet known
             nsReg.registerNamespace(NS_FN_PREFIX, NS_FN_URI);
         }
+
+        queryImplClassName = config.getParameters().getProperty(PARAM_QUERY_IMPL, DEFAULT_QUERY_IMPL_CLASS);
 
         // initialize query handler
         try {
@@ -162,7 +181,9 @@ public class SearchManager implements SynchronousEventListener {
                              String statement,
                              String language)
             throws InvalidQueryException, RepositoryException {
-        return new QueryImpl(session, itemMgr, handler, statement, language);
+        AbstractQueryImpl query = createQueryInstance();
+        query.init(session, itemMgr, handler, statement, language);
+        return query;
     }
 
     /**
@@ -181,7 +202,9 @@ public class SearchManager implements SynchronousEventListener {
                              ItemManager itemMgr,
                              Node node)
             throws InvalidQueryException, RepositoryException {
-        return new QueryImpl(session, itemMgr, handler, node);
+        AbstractQueryImpl query = createQueryInstance();
+        query.init(session, itemMgr, handler, node);
+        return query;
     }
 
     //---------------< EventListener interface >--------------------------------
@@ -259,4 +282,25 @@ public class SearchManager implements SynchronousEventListener {
         }
     }
 
+    /**
+     * Creates a new instance of an {@link AbstractQueryImpl} which is not
+     * initialized.
+     *
+     * @return an new query instance.
+     * @throws RepositoryException if an error occurs while creating a new query
+     *                             instance.
+     */
+    protected AbstractQueryImpl createQueryInstance() throws RepositoryException {
+        try {
+            Object obj = Class.forName(queryImplClassName).newInstance();
+            if (obj instanceof AbstractQueryImpl) {
+                return (AbstractQueryImpl) obj;
+            } else {
+                throw new IllegalArgumentException(queryImplClassName +
+                        " is not of type " + AbstractQueryImpl.class.getName());
+            }
+        } catch (Throwable t) {
+            throw new RepositoryException("Unable to create query: " + t.toString());
+        }
+    }
 }

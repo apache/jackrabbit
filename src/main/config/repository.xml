@@ -212,6 +212,8 @@
             - autoRepair: errors detected by a consistency check are automatically
               repaired. If false, errors are only written to the log.
             - analyzer: class name of a lucene analyzer to use for fulltext indexing of text.
+            - queryClass: class name that implements the javax.jcr.query.Query interface.
+              this class must extend the class: org.apache.jackrabbit.core.query.AbstractQueryImpl
 
             Note: all parameters (except path) in this SearchIndex config are default
             values and can be omitted.
@@ -228,6 +230,7 @@
             <param name="forceConsistencyCheck" value="false"/>
             <param name="autoRepair" value="true"/>
             <param name="analyzer" value="org.apache.lucene.analysis.standard.StandardAnalyzer"/>
+            <param name="queryClass" value="org.apache.jackrabbit.core.query.QueryImpl"/>
         </SearchIndex>
     </Workspace>
 

@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Implements a variant of the lucene class <code>org.apache.lucene.search.FieldCacheImpl</code>.
@@ -65,6 +67,7 @@ class SharedFieldCache {
      * @param field      name of the shared field.
      * @param prefix     the property name, will be used as term prefix.
      * @param comparator the sort comparator instance.
+     * @param includeLookup if <code>true</code> provides term lookup in StringIndex.
      * @return a StringIndex that contains the field values and order
      *         information.
      * @throws IOException if an error occurs while reading from the index.
@@ -72,18 +75,26 @@ class SharedFieldCache {
     public FieldCache.StringIndex getStringIndex(IndexReader reader,
                                                  String field,
                                                  String prefix,
-                                                 SortComparator comparator)
+                                                 SortComparator comparator,
+                                                 boolean includeLookup)
             throws IOException {
         field = field.intern();
         FieldCache.StringIndex ret = lookup(reader, field, prefix, comparator);
         if (ret == null) {
             final int[] retArray = new int[reader.maxDoc()];
+            List mterms = null;
+            if (includeLookup) {
+                mterms = new ArrayList();
+            }
             if (retArray.length > 0) {
                 TermDocs termDocs = reader.termDocs();
                 TermEnum termEnum = reader.terms(new Term(field, prefix));
                 // documents without a term will have a term number = 0
                 // thus will be at the top, this needs to be in sync with
                 // the implementation of FieldDocSortedHitQueue
+                if (includeLookup) {
+                    mterms.add(null); // for documents with term number 0
+                }
                 int t = 1;  // current term number
 
                 try {
@@ -94,6 +105,11 @@ class SharedFieldCache {
                         Term term = termEnum.term();
                         if (term.field() != field || !term.text().startsWith(prefix)) {
                             break;
+                        }
+
+                        // store term text
+                        if (includeLookup) {
+                            mterms.add(term.text().substring(prefix.length()));
                         }
 
                         termDocs.seek(termEnum);
@@ -108,7 +124,11 @@ class SharedFieldCache {
                     termEnum.close();
                 }
             }
-            FieldCache.StringIndex value = new FieldCache.StringIndex(retArray, null);
+            String[] lookup = null;
+            if (includeLookup) {
+                lookup = (String[]) mterms.toArray(new String[mterms.size()]);
+            }
+            FieldCache.StringIndex value = new FieldCache.StringIndex(retArray, lookup);
             store(reader, field, prefix, comparator, value);
             return value;
         }

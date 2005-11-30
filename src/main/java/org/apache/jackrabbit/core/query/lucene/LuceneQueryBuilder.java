@@ -70,7 +70,7 @@ import java.util.List;
  * on an index.
  * todo introduce a node type hierarchy for efficient translation of NodeTypeQueryNode
  */
-class LuceneQueryBuilder implements QueryNodeVisitor {
+public class LuceneQueryBuilder implements QueryNodeVisitor {
 
     /**
      * Logger for this class

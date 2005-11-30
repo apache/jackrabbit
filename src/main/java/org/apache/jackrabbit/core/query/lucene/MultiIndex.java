@@ -69,7 +69,7 @@ import java.util.Collection;
  * thread and reader threads is done using {@link #updateMonitor} and
  * {@link #updateInProgress}.
  */
-class MultiIndex {
+public class MultiIndex {
 
     /**
      * The logger instance for this class
@@ -531,7 +531,7 @@ class MultiIndex {
      * @return an <code>IndexReader</code>.
      * @throws IOException if an error occurs constructing the <code>IndexReader</code>.
      */
-    IndexReader getIndexReader() throws IOException {
+    public IndexReader getIndexReader() throws IOException {
         synchronized (updateMonitor) {
             if (multiReader != null) {
                 multiReader.incrementRefCount();

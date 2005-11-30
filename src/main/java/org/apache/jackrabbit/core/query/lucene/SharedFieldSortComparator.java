@@ -20,7 +20,7 @@ import java.io.IOException;
  * are executed with a <code>MultiSearcher</code>, which is currently not the
  * case in Jackrabbit.
  */
-class SharedFieldSortComparator extends SortComparator {
+public class SharedFieldSortComparator extends SortComparator {
 
     /**
      * A <code>SharedFieldSortComparator</code> that is based on
@@ -34,12 +34,34 @@ class SharedFieldSortComparator extends SortComparator {
     private final String field;
 
     /**
+     * If <code>true</code> <code>ScoreDocComparator</code> will returns term
+     * values when {@link org.apache.lucene.search.ScoreDocComparator#sortValue(org.apache.lucene.search.ScoreDoc)}
+     * is called, otherwise only a dummy value is returned.
+     */
+    private final boolean createComparatorValues;
+
+    /**
      * Creates a new <code>SharedFieldSortComparator</code> for a given shared
      * field.
+     *
      * @param fieldname the shared field.
      */
     public SharedFieldSortComparator(String fieldname) {
+        this(fieldname, false);
+    }
+
+    /**
+     * Creates a new <code>SharedFieldSortComparator</code> for a given shared
+     * field.
+     *
+     * @param fieldname              the shared field.
+     * @param createComparatorValues if <code>true</code> creates values
+     * for the <code>ScoreDocComparator</code>s.
+     * @see #createComparatorValues
+     */
+    public SharedFieldSortComparator(String fieldname, boolean createComparatorValues) {
         this.field = fieldname;
+        this.createComparatorValues = createComparatorValues;
     }
 
     /**
@@ -55,7 +77,9 @@ class SharedFieldSortComparator extends SortComparator {
         // get the StringIndex for propertyName
         final FieldCache.StringIndex index
                 = SharedFieldCache.INSTANCE.getStringIndex(reader, field,
-                        propertyName, SharedFieldSortComparator.this);
+                        FieldNames.createNamedValue(propertyName, ""),
+                        SharedFieldSortComparator.this,
+                        createComparatorValues);
 
         return new ScoreDocComparator() {
             public final int compare(final ScoreDoc i, final ScoreDoc j) {
@@ -71,13 +95,19 @@ class SharedFieldSortComparator extends SortComparator {
             }
 
             /**
-             * Always returns an empty String.
+             * Returns an empty if no lookup table is available otherwise
+             * the index term for the score doc <code>i</code>.
+             *
              * @param i the score doc.
-             * @return an empty String.
+             * @return the sort value if available.
              */
             public Comparable sortValue(final ScoreDoc i) {
-                // return dummy value
-                return "";
+                if (index.lookup != null) {
+                    return index.lookup[index.order[i.doc]];
+                } else {
+                    // return dummy value
+                    return "";
+                }
             }
 
             public int sortType() {
