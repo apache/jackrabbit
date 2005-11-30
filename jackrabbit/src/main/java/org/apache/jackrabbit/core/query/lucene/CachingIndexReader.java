@@ -88,9 +88,7 @@ class CachingIndexReader extends FilterIndexReader {
     DocId getParent(int n, BitSet deleted) throws IOException {
         DocId parent;
         boolean existing = false;
-        synchronized (parents) {
-            parent = parents[n];
-        }
+        parent = parents[n];
 
         if (parent != null) {
             existing = true;
@@ -135,9 +133,7 @@ class CachingIndexReader extends FilterIndexReader {
             }
 
             // finally put to cache
-            synchronized (parents) {
-                parents[n] = parent;
-            }
+            parents[n] = parent;
         }
         return parent;
     }

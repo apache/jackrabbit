@@ -35,9 +35,19 @@ final class DocNumberCache {
     private static final long LOG_INTERVAL = 1000 * 10;
 
     /**
-     * LRU Map where key=uuid value=reader;docNumber
+     * The number of cache segments.
      */
-    private final LRUMap docNumbers;
+    private static final int CACHE_SEGMENTS = 0x10;
+
+    /**
+     * Mask to calculate segment number.
+     */
+    private static final int CACHE_SEGMENTS_MASK = CACHE_SEGMENTS - 1;
+
+    /**
+     * LRU Maps where key=uuid value=reader;docNumber
+     */
+    private final LRUMap[] docNumbers = new LRUMap[CACHE_SEGMENTS];
 
     /**
      * Timestamp of the last cache statistics log.
@@ -61,7 +71,14 @@ final class DocNumberCache {
      * @param size the cache limit.
      */
     DocNumberCache(int size) {
-        docNumbers = new LRUMap(size);
+        size = size % CACHE_SEGMENTS;
+        if (size < 0x40) {
+            // minimum size is 0x40 * 0x10 = 1024
+            size = 0x40;
+        }
+        for (int i = 0; i < docNumbers.length; i++) {
+            docNumbers[i] = new LRUMap(size);
+        }
     }
 
     /**
@@ -73,26 +90,29 @@ final class DocNumberCache {
      * @param reader the index reader from where the document number was read.
      * @param n the document number.
      */
-    synchronized void put(String uuid, CachingIndexReader reader, int n) {
-        Entry e = (Entry) docNumbers.get(uuid);
-        if (e != null) {
-            // existing entry
-            // ignore if reader is older than the one in entry
-            if (reader.getCreationTick() <= e.reader.getCreationTick()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Ignoring put(). New entry is not from a newer reader. " +
-                            "existing: " + e.reader.getCreationTick() +
-                            ", new: " + reader.getCreationTick());
+    void put(String uuid, CachingIndexReader reader, int n) {
+        LRUMap cacheSegment = docNumbers[getSegmentIndex(uuid.charAt(0))];
+        synchronized (cacheSegment) {
+            Entry e = (Entry) cacheSegment.get(uuid);
+            if (e != null) {
+                // existing entry
+                // ignore if reader is older than the one in entry
+                if (reader.getCreationTick() <= e.reader.getCreationTick()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Ignoring put(). New entry is not from a newer reader. " +
+                                "existing: " + e.reader.getCreationTick() +
+                                ", new: " + reader.getCreationTick());
+                    }
+                    e = null;
                 }
-                e = null;
+            } else {
+                // entry did not exist
+                e = new Entry(reader, n);
             }
-        } else {
-            // entry did not exist
-            e = new Entry(reader, n);
-        }
 
-        if (e != null) {
-            docNumbers.put(uuid, e);
+            if (e != null) {
+                cacheSegment.put(uuid, e);
+            }
         }
     }
 
@@ -103,8 +123,12 @@ final class DocNumberCache {
      * @param uuid the key.
      * @return cache entry or <code>null</code>.
      */
-    synchronized Entry get(String uuid) {
-        Entry entry = (Entry) docNumbers.get(uuid);
+    Entry get(String uuid) {
+        LRUMap cacheSegment = docNumbers[getSegmentIndex(uuid.charAt(0))];
+        Entry entry;
+        synchronized (cacheSegment) {
+            entry = (Entry) cacheSegment.get(uuid);
+        }
         if (log.isInfoEnabled()) {
             accesses++;
             if (entry == null) {
@@ -117,8 +141,12 @@ final class DocNumberCache {
                     ratio -= misses * 100L / accesses;
                 }
                 StringBuffer statistics = new StringBuffer();
-                statistics.append("size=").append(docNumbers.size());
-                statistics.append("/").append(docNumbers.maxSize());
+                int inUse = 0;
+                for (int i = 0; i < docNumbers.length; i++) {
+                    inUse += docNumbers[i].size();
+                }
+                statistics.append("size=").append(inUse);
+                statistics.append("/").append(docNumbers[0].maxSize() * CACHE_SEGMENTS);
                 statistics.append(", #accesses=").append(accesses);
                 statistics.append(", #hits=").append((accesses - misses));
                 statistics.append(", #misses=").append(misses);
@@ -130,6 +158,16 @@ final class DocNumberCache {
             }
         }
         return entry;
+    }
+
+    /**
+     * Returns the segment index for character c.
+     */
+    private static final int getSegmentIndex(char c) {
+        if (c > '9') {
+            c += 9;
+        }
+        return c & CACHE_SEGMENTS_MASK;
     }
 
     public static final class Entry {
