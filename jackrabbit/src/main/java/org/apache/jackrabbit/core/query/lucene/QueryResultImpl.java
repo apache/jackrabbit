@@ -30,7 +30,7 @@ import javax.jcr.query.RowIterator;
 /**
  * Implements the <code>javax.jcr.query.QueryResult</code> interface.
  */
-class QueryResultImpl implements QueryResult {
+public class QueryResultImpl implements QueryResult {
 
     /**
      * The logger instance for this class
