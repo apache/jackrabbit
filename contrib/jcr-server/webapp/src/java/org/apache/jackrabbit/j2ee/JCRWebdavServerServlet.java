@@ -34,6 +34,7 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.Repository;
 import javax.servlet.ServletException;
+import javax.servlet.ServletContext;
 
 /**
  * JCRWebdavServerServlet provides request/response handling for the JCRWebdavServer.
@@ -48,10 +49,17 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
     /**
      * Init parameter specifying the prefix used with the resource path.
      */
-    public static final String INIT_PARAM_PREFIX = "resource-path-prefix";
+    public static final String INIT_PARAM_RESOURCE_PATH_PREFIX = "resource-path-prefix";
 
     /** the 'missing-auth-mapping' init parameter */
     public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
+
+    /**
+     * Servlet context attribute used to store the path prefix instead of
+     * having a static field with this servlet. The latter causes problems
+     * when running multiple
+     */
+    public static final String CTX_ATTR_RESOURCE_PATH_PREFIX = "jackrabbit.webdav.jcr.resourcepath";
 
     private String pathPrefix;
     private JCRWebdavServer server;
@@ -73,8 +81,9 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
         super.init();
 
 	// set resource path prefix
-	pathPrefix = getInitParameter(INIT_PARAM_PREFIX);
-	log.debug(INIT_PARAM_PREFIX + " = " + pathPrefix);
+        pathPrefix = getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX);
+        getServletContext().setAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX, pathPrefix);
+        log.debug(INIT_PARAM_RESOURCE_PATH_PREFIX + " = " + pathPrefix);
 
         txMgr = new TxLockManagerImpl();
         subscriptionMgr = new SubscriptionManagerImpl();
@@ -187,5 +196,15 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
      */
     public String getAuthenticateHeaderValue() {
         return DEFAULT_AUTHENTICATE_HEADER;
+    }
+
+    /**
+     * Returns the configured path prefix
+     *
+     * @return resourcePathPrefix
+     * @see #INIT_PARAM_RESOURCE_PATH_PREFIX
+     */
+    public static String getPathPrefix(ServletContext ctx) {
+        return (String) ctx.getAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX);
     }
 }
