@@ -236,6 +236,9 @@ public class WorkspaceImpl implements Workspace {
             log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
+        if (!srcPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + srcAbsPath);
+        }
 
         Path destPath;
         try {
@@ -244,6 +247,9 @@ public class WorkspaceImpl implements Workspace {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
             throw new RepositoryException(msg, mpe);
+        }
+        if (!destPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
         BatchedItemOperations ops =
@@ -457,6 +463,9 @@ public class WorkspaceImpl implements Workspace {
             log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
+        if (!srcPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + srcAbsPath);
+        }
 
         Path destPath;
         try {
@@ -465,6 +474,9 @@ public class WorkspaceImpl implements Workspace {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
             throw new RepositoryException(msg, mpe);
+        }
+        if (!destPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + destAbsPath);
         }
 
         BatchedItemOperations ops =
@@ -662,6 +674,9 @@ public class WorkspaceImpl implements Workspace {
             String msg = "invalid path: " + parentAbsPath;
             log.debug(msg);
             throw new RepositoryException(msg, mpe);
+        }
+        if (!parentPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + parentAbsPath);
         }
 
         Importer importer = new WorkspaceImporter(parentPath, this,

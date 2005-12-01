@@ -522,7 +522,18 @@ public class SessionImpl implements Session, Dumpable {
             set.add(strings[i]);
         }
 
-        Path targetPath = null;
+        Path targetPath;
+        try {
+            targetPath = Path.create(absPath, getNamespaceResolver(), true);
+        } catch (MalformedPathException mpe) {
+            String msg = "invalid path: " + absPath;
+            log.debug(msg, mpe);
+            throw new RepositoryException(msg);
+        }
+        if (!targetPath.isAbsolute()) {
+            throw new RepositoryException("not an absolute path: " + absPath);
+        }
+
         ItemId targetId = null;
 
         /**
@@ -531,16 +542,11 @@ public class SessionImpl implements Session, Dumpable {
          */
         if (set.contains(READ_ACTION)) {
             try {
-                targetPath = Path.create(absPath, getNamespaceResolver(), true);
                 targetId = hierMgr.resolvePath(targetPath);
                 accessMgr.checkPermission(targetId, AccessManager.READ);
             } catch (PathNotFoundException pnfe) {
                 // target does not exist, throw exception
                 throw new AccessControlException(READ_ACTION);
-            } catch (MalformedPathException mpe) {
-                String msg = "invalid path: " + absPath;
-                log.warn(msg, mpe);
-                throw new RepositoryException(msg);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
@@ -557,19 +563,12 @@ public class SessionImpl implements Session, Dumpable {
          */
         if (set.contains(ADD_NODE_ACTION)) {
             try {
-                if (targetPath == null) {
-                    targetPath = Path.create(absPath, getNamespaceResolver(), true);
-                }
                 parentPath = targetPath.getAncestor(1);
                 parentId = hierMgr.resolvePath(parentPath);
                 accessMgr.checkPermission(parentId, AccessManager.WRITE);
             } catch (PathNotFoundException pnfe) {
                 // parent does not exist (i.e. / was specified), throw exception
                 throw new AccessControlException(ADD_NODE_ACTION);
-            } catch (MalformedPathException mpe) {
-                String msg = "invalid path: " + absPath;
-                log.warn(msg, mpe);
-                throw new RepositoryException(msg);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
@@ -583,9 +582,6 @@ public class SessionImpl implements Session, Dumpable {
          */
         if (set.contains(REMOVE_ACTION)) {
             try {
-                if (targetPath == null) {
-                    targetPath = Path.create(absPath, getNamespaceResolver(), true);
-                }
                 if (targetId == null) {
                     targetId = hierMgr.resolvePath(targetPath);
                 }
@@ -593,10 +589,6 @@ public class SessionImpl implements Session, Dumpable {
             } catch (PathNotFoundException pnfe) {
                 // parent does not exist, throw exception
                 throw new AccessControlException(REMOVE_ACTION);
-            } catch (MalformedPathException mpe) {
-                String msg = "invalid path: " + absPath;
-                log.warn(msg, mpe);
-                throw new RepositoryException(msg);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
@@ -612,9 +604,6 @@ public class SessionImpl implements Session, Dumpable {
          */
         if (set.contains(SET_PROPERTY_ACTION)) {
             try {
-                if (targetPath == null) {
-                    targetPath = Path.create(absPath, getNamespaceResolver(), true);
-                }
                 if (targetId == null) {
                     try {
                         targetId = hierMgr.resolvePath(targetPath);
@@ -636,10 +625,6 @@ public class SessionImpl implements Session, Dumpable {
             } catch (PathNotFoundException pnfe) {
                 // parent does not exist, throw exception
                 throw new AccessControlException(SET_PROPERTY_ACTION);
-            } catch (MalformedPathException mpe) {
-                String msg = "invalid path: " + absPath;
-                log.warn(msg, mpe);
-                throw new RepositoryException(msg);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
                 // log a warn message, which is not appropriate in this case.
@@ -725,7 +710,11 @@ public class SessionImpl implements Session, Dumpable {
         sanityCheck();
 
         try {
-            return getItemManager().getItem(Path.create(absPath, getNamespaceResolver(), true));
+            Path p = Path.create(absPath, getNamespaceResolver(), true);
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + absPath);
+            }
+            return getItemManager().getItem(p);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(absPath);
         } catch (MalformedPathException mpe) {
@@ -743,7 +732,11 @@ public class SessionImpl implements Session, Dumpable {
         sanityCheck();
 
         try {
-            return getItemManager().itemExists(Path.create(absPath, getNamespaceResolver(), true));
+            Path p = Path.create(absPath, getNamespaceResolver(), true);
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + absPath);
+            }
+            return getItemManager().itemExists(p);
         } catch (MalformedPathException mpe) {
             String msg = "invalid path:" + absPath;
             log.debug(msg);
@@ -809,6 +802,9 @@ public class SessionImpl implements Session, Dumpable {
         NodeImpl srcParentNode;
         try {
             srcPath = Path.create(srcAbsPath, getNamespaceResolver(), true);
+            if (!srcPath.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + srcAbsPath);
+            }
             srcName = srcPath.getNameElement();
             srcParentPath = srcPath.getAncestor(1);
             ItemImpl item = getItemManager().getItem(srcPath);
@@ -831,6 +827,9 @@ public class SessionImpl implements Session, Dumpable {
         NodeImpl destParentNode;
         try {
             destPath = Path.create(destAbsPath, getNamespaceResolver(), true);
+            if (!destPath.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + destAbsPath);
+            }
             if (srcPath.isAncestorOf(destPath)) {
                 String msg = destAbsPath + ": invalid destination path (cannot be descendant of source path)";
                 log.debug(msg);
@@ -957,7 +956,11 @@ public class SessionImpl implements Session, Dumpable {
 
         Item item;
         try {
-            item = getItemManager().getItem(Path.create(parentAbsPath, getNamespaceResolver(), true));
+            Path p = Path.create(parentAbsPath, getNamespaceResolver(), true);
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + parentAbsPath);
+            }
+            item = getItemManager().getItem(p);
         } catch (MalformedPathException mpe) {
             String msg = parentAbsPath + ": invalid path";
             log.debug(msg);
