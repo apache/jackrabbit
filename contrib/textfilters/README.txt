@@ -20,7 +20,7 @@ Sample:
 ...
   <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
     <param name="path" value="${wsp.home}/index" />
-    <param name="textFilterClasses" value="org.apache.jackrabbit.core.query.MsExcelTextFilter,org.apache.jackrabbit.core.query.MsPowerPointTextFilter,org.apache.jackrabbit.core.query.MsWordTextFilter,org.apache.jackrabbit.core.query.PdfTextFilter" />
+    <param name="textFilterClasses" value="org.apache.jackrabbit.core.query.MsExcelTextFilter,org.apache.jackrabbit.core.query.MsPowerPointTextFilter,org.apache.jackrabbit.core.query.MsWordTextFilter,org.apache.jackrabbit.core.query.PdfTextFilter,org.apache.jackrabbit.core.query.HTMLTextFilter,org.apache.jackrabbit.core.query.XMLTextFilter,org.apache.jackrabbit.core.query..RTFTextFilter" />
   </SearchIndex>
 ...
 
