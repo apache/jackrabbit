@@ -29,7 +29,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
 
 /**
  * Manager for local session namespace mappings. This class is
@@ -56,9 +56,6 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
 
     /** URI to prefix mappings of local namespaces. */
     private final HashMap uriToPrefix = new HashMap();
-
-    /** The global namespace prefixes hidden by local namespace mappings. */
-    private Set hiddenPrefixes = new HashSet();
 
     /**
      * Creates a local namespace manager with the given underlying
@@ -101,72 +98,38 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
             throw new NamespaceException("invalid prefix: " + prefix);
         }
 
-        // check if namespace exists (the following call will
+        // verify that namespace exists (the following call will
         // trigger a NamespaceException if it doesn't)
-        String globalPrefix = nsReg.getPrefix(uri);
+        nsReg.getPrefix(uri);
 
         // check new prefix for collision
-        String globalURI = null;
-        try {
-            globalURI = nsReg.getURI(prefix);
-        } catch (NamespaceException nse) {
-            // ignore
-        }
-        if (globalURI != null) {
-            // prefix is already mapped in global namespace registry;
-            // check if it is redundant or if it refers to a namespace
-            // that has been locally remapped, thus hiding it
-            if (!hiddenPrefixes.contains(prefix)) {
-                if (uri.equals(globalURI) && prefix.equals(globalPrefix)) {
-                    // redundant mapping, silently ignore
-                    return;
-                }
-                // we don't allow to hide a namespace because we can't
-                // guarantee that there are no references to it
-                // (in names of nodes/properties/node types etc.)
-                throw new NamespaceException(prefix
-                        + ": prefix is already mapped to the namespace: "
-                        + globalURI);
+        if (Arrays.asList(getPrefixes()).contains(prefix)) {
+            // prefix is already in use
+            if (getURI(prefix).equals(uri)) {
+                // redundant mapping, silently ignore
+                return;
             }
+            throw new NamespaceException("prefix already in use: " + prefix);
         }
 
         // check if namespace is already locally mapped
         String oldPrefix = (String) uriToPrefix.get(uri);
         if (oldPrefix != null) {
-            if (oldPrefix.equals(prefix)) {
-                // redundant mapping, silently ignore
-                return;
-            }
-            // resurrect hidden global prefix
-            hiddenPrefixes.remove(nsReg.getPrefix(uri));
             // remove old mapping
             uriToPrefix.remove(uri);
             prefixToURI.remove(oldPrefix);
         }
 
-        // check if prefix is already locally mapped
-        String oldURI = (String) prefixToURI.get(prefix);
-        if (oldURI != null) {
-            // resurrect hidden global prefix
-            hiddenPrefixes.remove(nsReg.getPrefix(oldURI));
-            // remove old mapping
-            uriToPrefix.remove(oldURI);
-            prefixToURI.remove(prefix);
-        }
-
-        if (!prefix.equals(globalPrefix)) {
-            // store new mapping
-            prefixToURI.put(prefix, uri);
-            uriToPrefix.put(uri, prefix);
-            hiddenPrefixes.add(globalPrefix);
-        }
+        // store new mapping
+        prefixToURI.put(prefix, uri);
+        uriToPrefix.put(uri, prefix);
     }
 
     /**
-     * Returns all prefixes.
+     * Returns all prefixes currently mapped.
      *
-     * @return
-     * @throws RepositoryException
+     * @return an array holding all currently mapped prefixes
+     * @throws RepositoryException if an error occurs
      */
     String[] getPrefixes() throws RepositoryException {
         if (prefixToURI.isEmpty()) {
@@ -175,15 +138,16 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
         }
 
         HashSet prefixes = new HashSet();
-        // global prefixes
-        String[] globalPrefixes = nsReg.getPrefixes();
-        for (int i = 0; i < globalPrefixes.length; i++) {
-            if (!hiddenPrefixes.contains(globalPrefixes[i])) {
-                prefixes.add(globalPrefixes[i]);
+        String[] uris = nsReg.getURIs();
+        for (int i = 0; i < uris.length; i++) {
+            // check local mapping
+            String prefix = (String) uriToPrefix.get(uris[i]);
+            if (prefix == null) {
+                // globally mapped
+                prefix = nsReg.getPrefix(uris[i]);
             }
+            prefixes.add(prefix);
         }
-        // local prefixes
-        prefixes.addAll(prefixToURI.keySet());
 
         return (String[]) prefixes.toArray(new String[prefixes.size()]);
     }
@@ -208,17 +172,13 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
             // first try registry, this might result in a wrong QName because
             // of locally overlayed mappings
             QName candidate = nsReg.getQName(name);
-            // check if valid
-            String prefix = nsReg.getPrefix(candidate.getNamespaceURI());
-            if (!hiddenPrefixes.contains(prefix)) {
+            // make sure global prefix is not hidden because of
+            // locally remapped uri
+            if (!uriToPrefix.containsKey(candidate.getNamespaceURI())) {
                 return candidate;
             }
         } catch (UnknownPrefixException e) {
             // try using local mappings
-        } catch (NamespaceException e) {
-            // may be thrown by nsReg.getPrefix() but should never happend
-            // because we got the namespace from the nsReg itself
-            throw new UnknownPrefixException(name);
         }
         return super.getQName(name);
     }
@@ -239,8 +199,13 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
         }
 
         // check global mappings
-        if (!hiddenPrefixes.contains(prefix)) {
-            return nsReg.getURI(prefix);
+        uri = nsReg.getURI(prefix);
+        if (uri != null) {
+            // make sure global prefix is not hidden because of
+            // locally remapped uri
+            if (!uriToPrefix.containsKey(uri)) {
+                return uri;
+            }
         }
 
         throw new NamespaceException(prefix + ": unknown prefix");
@@ -275,7 +240,7 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
             return nsReg.getJCRName(name);
         }
         if (uriToPrefix.containsKey(name.getNamespaceURI())) {
-            // locally re-mappped
+            // locally remappped
             return super.getJCRName(name);
         } else {
             // use global mapping
