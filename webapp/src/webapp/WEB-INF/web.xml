@@ -186,7 +186,7 @@
         <!--
         <init-param>
             <param-name>authenticate-header</param-name>
-            <param-value>Basic Realm=Jackrabbit Webdav Server</param-value>
+            <param-value>Basic realm="Jackrabbit Webdav Server"</param-value>
             <description>
                 Defines the value of the 'WWW-Authenticate' header.
             </description>
