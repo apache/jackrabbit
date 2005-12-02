@@ -79,7 +79,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      *
      * @see #getAuthenticateHeaderValue()
      */
-    public static final String DEFAULT_AUTHENTICATE_HEADER = "Basic Realm=Jackrabbit Webdav Server";
+    public static final String DEFAULT_AUTHENTICATE_HEADER = "Basic realm=\"Jackrabbit Webdav Server\"";
 
     /**
      * Checks if the precondition for this request and resource is valid.
