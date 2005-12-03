@@ -112,7 +112,7 @@ Dominique Pfister       transactions
 Peeter Piegaze          api
 Tim Reilly              mavenize
 Marcel Reutegger        observation, query
-Tobias Strasser         versioning
+Tobias Bocanegra        versioning
 
 
 Changes
