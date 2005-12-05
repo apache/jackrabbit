@@ -319,6 +319,13 @@
             <timezone>+1</timezone>
         </contributor>
         <contributor>
+            <name>Martin Perez</name>
+            <email>mpermar@gmail.com</email>
+            <roles>
+                <role>Text Filters</role>
+            </roles>
+        </contributor>
+        <contributor>
             <name>Mike Pfaff</name>
             <email/>
             <organization>Day Software</organization>
