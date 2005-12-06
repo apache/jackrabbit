@@ -21,7 +21,7 @@
   <menu name="Apache Jackrabbit">
     <item name="About"                                   href="/about.html" />
     <item name="Documentation"                           href="/doc/index.html"  collapse="true">
-      <item name="Download&#xA0;&amp;&#xA0;Install"      href="/doc/download.html" />
+      <item name="Building Jackrabbit"                   href="/doc/build.html" />
       <item name="First&#xA0;Steps"                      href="/doc/firststeps.html" />
       <item name="JCR&#xA0;&amp;&#xA0;API"               href="/doc/arch/overview/jcrlevels.html"/>
       <item name="Jackrabbit&#xA0;Architecture"          href="/doc/arch/overview.html" collapse="true">

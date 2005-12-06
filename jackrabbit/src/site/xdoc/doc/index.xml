@@ -25,7 +25,7 @@
 <p>
 Since Jackrabbit is currently not yet released the quickest way to get 
 your hands on a running Jackrabbit instance are found in the 
-<a href="download.html">Download and Install</a> section.
+<a href="build.html">Building Jackrabbit</a> section.
 Once Jackrabbit is up and running you may try your 
 <a href="firststeps.html">first Steps</a> with JCR.
 </p>
