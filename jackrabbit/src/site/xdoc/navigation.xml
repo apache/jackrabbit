@@ -29,11 +29,11 @@
         <item name="Start-up,&#xA0;Initialize"           href="/doc/arch/operate/startup.html"/>
         <item name="QueryManager"                        href="/doc/arch/operate/query.html"/>
       </item>
-      <item name="Deployment&#xA0;Models"                href="/doc/arch/deploy.html" collapse="true">
-        <item name="Application"                         href="/doc/arch/deploy/howto-client.html"/>
-        <item name="Model 1 (Embedded)"                  href="/doc/arch/deploy/howto-model1.html"/>
-        <item name="Model 2 (Shared)"                    href="/doc/arch/deploy/howto-model2.html"/>
-        <item name="Model 3 (Server)"                    href="/doc/arch/deploy/howto-model3.html"/>
+      <item name="Deployment&#xA0;Models"                href="/doc/deploy.html" collapse="true">
+        <item name="Application"                         href="/doc/deploy/howto-client.html"/>
+        <item name="Model 1 (Embedded)"                  href="/doc/deploy/howto-model1.html"/>
+        <item name="Model 2 (Shared)"                    href="/doc/deploy/howto-model2.html"/>
+        <item name="Model 3 (Server)"                    href="/doc/deploy/howto-model3.html"/>
       </item>
       <item name="Nodetype Modelling"                    href="/doc/nodetype.html" />
     </item>
