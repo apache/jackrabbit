@@ -245,6 +245,45 @@
     </faq>
   </part>
 
+  <part id="access">
+    <title>Access control</title>
+
+    <faq id="access-authentication">
+      <question>
+        How do I use LDAP, Kerberos, or some other authentication mechanism
+        with Jackrabbit?
+      </question>
+      <answer>
+        <p>
+          Jackrabbit uses the
+          <a href="http://java.sun.com/products/jaas/">Java Authentication and Authorization Service</a>
+          (JAAS) for authenticating users. You should be able to use any
+          JAAS LoginModule implementation (e.g. the LoginModules in the
+          <a href="http://java.sun.com/j2se/1.4.2/docs/guide/security/jaas/spec/com/sun/security/auth/module/package-summary.html">com.sum.security.auth.module</a>
+          package) for authentication. See the JAAS documentation for
+          configuration instructions.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="access-authorization">
+      <question>
+        How do I manage the access rights of authenticated users?
+      </question>
+      <answer>
+        <p>
+          The current Jackrabbit
+          <a href="apidocs/org/apache/jackrabbit/core/security/SimpleAccessManager.html">SimpleAccessManager</a>
+          class only supports three access levels: anonymous, normal, and
+          system. Anonymous users have read access while normal and system
+          users have full read-write access. You need to implement a custom
+          <a href="apidocs/org/apache/jackrabbit/core/security/AccessManager.html">AccessManager</a>
+          class to get more fine-grained access control.
+        </p>
+      </answer>
+    </faq>
+  </part>
+
   <part id="pms">
     <title>Persistence managers</title>
 
