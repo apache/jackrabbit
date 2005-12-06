@@ -254,7 +254,7 @@ public class WorkspaceImpl implements Workspace {
 
         BatchedItemOperations ops =
                 new BatchedItemOperations(stateMgr, rep.getNodeTypeRegistry(),
-                        getLockManager(), session, hierMgr,
+                        session.getLockManager(), session, hierMgr,
                         session.getNamespaceResolver());
 
         try {
@@ -481,7 +481,7 @@ public class WorkspaceImpl implements Workspace {
 
         BatchedItemOperations ops =
                 new BatchedItemOperations(stateMgr, rep.getNodeTypeRegistry(),
-                        getLockManager(), session, hierMgr,
+                        session.getLockManager(), session, hierMgr,
                         session.getNamespaceResolver());
 
         try {

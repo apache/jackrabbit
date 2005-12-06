@@ -30,7 +30,7 @@ class LockImpl implements Lock {
     /**
      * Lock info containing latest information
      */
-    private final LockInfo info;
+    private final AbstractLockInfo info;
 
     /**
      * Node holding lock
@@ -43,7 +43,7 @@ class LockImpl implements Lock {
      * @param info lock information
      * @param node node holding lock
      */
-    public LockImpl(LockInfo info, Node node) {
+    public LockImpl(AbstractLockInfo info, Node node) {
         this.info = info;
         this.node = node;
     }

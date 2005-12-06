@@ -17,69 +17,54 @@
 package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.SessionListener;
-import org.apache.log4j.Logger;
 
 import javax.jcr.Session;
 
 /**
- * Contains information about a lock and gets placed inside the child
- * information of a {@link org.apache.jackrabbit.core.PathMap}.
+ * Common information about a lock.
  */
-class LockInfo implements SessionListener {
-
-    /**
-     * Logger
-     */
-    private static final Logger log = Logger.getLogger(LockInfo.class);
-
-    /**
-     * Lock manager
-     */
-    private final LockManagerImpl lockMgr;
+abstract class AbstractLockInfo {
 
     /**
      * Lock token
      */
-    final LockToken lockToken;
+    protected final LockToken lockToken;
 
     /**
      * Flag indicating whether lock is session scoped
      */
-    final boolean sessionScoped;
+    protected final boolean sessionScoped;
 
     /**
      * Flag indicating whether lock is deep
      */
-    final boolean deep;
+    protected final boolean deep;
 
     /**
      * Lock owner, determined on creation time
      */
-    final String lockOwner;
+    protected final String lockOwner;
 
     /**
      * Session currently holding lock
      */
-    private SessionImpl lockHolder;
+    protected SessionImpl lockHolder;
 
     /**
      * Flag indicating whether this lock is live
      */
-    private boolean live;
+    protected boolean live;
 
     /**
      * Create a new instance of this class.
      *
-     * @param lockMgr       lock manager
      * @param lockToken     lock token
      * @param sessionScoped whether lock token is session scoped
      * @param deep          whether lock is deep
      * @param lockOwner     owner of lock
      */
-    public LockInfo(LockManagerImpl lockMgr, LockToken lockToken,
-                    boolean sessionScoped, boolean deep, String lockOwner) {
-        this.lockMgr = lockMgr;
+    public AbstractLockInfo(LockToken lockToken, boolean sessionScoped, boolean deep,
+                    String lockOwner) {
         this.lockToken = lockToken;
         this.sessionScoped = sessionScoped;
         this.deep = deep;
@@ -88,7 +73,6 @@ class LockInfo implements SessionListener {
 
     /**
      * Set the live flag
-     *
      * @param live live flag
      */
     public void setLive(boolean live) {
@@ -97,7 +81,6 @@ class LockInfo implements SessionListener {
 
     /**
      * Return the UUID of the lock holding node
-     *
      * @return uuid
      */
     public String getUUID() {
@@ -151,35 +134,5 @@ class LockInfo implements SessionListener {
      */
     public boolean isSessionScoped() {
         return sessionScoped;
-    }
-
-    //-------------------------------------------------------< SessionListener >
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * When the owning session is logging out, we have to perform some
-     * operations depending on the lock type.
-     * (1) If the lock was session-scoped, we unlock the node.
-     * (2) If the lock was open-scoped, we remove the lock token
-     *     from the session and set the lockHolder field to <code>null</code>.
-     */
-    public void loggingOut(SessionImpl session) {
-        if (live) {
-            if (sessionScoped) {
-                lockMgr.unlock(this);
-            } else {
-                if (session.equals(lockHolder)) {
-                    session.removeLockToken(lockToken.toString());
-                    lockHolder = null;
-                }
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void loggedOut(SessionImpl session) {
     }
 }

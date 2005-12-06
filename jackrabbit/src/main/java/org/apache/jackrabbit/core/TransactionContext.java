@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.state;
+package org.apache.jackrabbit.core;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,11 +26,6 @@ import java.util.Map;
  * explictely demarcate transcation boundaries.
  */
 public class TransactionContext {
-
-    /**
-     * Transaction listeners
-     */
-    private final List listeners = new ArrayList();
 
     /**
      * Transaction attributes
@@ -70,66 +65,5 @@ public class TransactionContext {
      */
     public void removeAttribute(String name) {
         attributes.remove(name);
-    }
-
-    /**
-     * Add a transaction listener. This listener will be invoked when the
-     * transaction is either committed or rolled back.
-     *
-     * @param listener listener to add
-     */
-    public void addListener(TransactionListener listener) {
-        synchronized (listeners) {
-            listeners.add(listener);
-        }
-    }
-
-    /**
-     * Remove a transaction listener previously added with {@link #addListener}
-     *
-     * @param listener listener to remove
-     */
-    public void removeListener(TransactionListener listener) {
-        synchronized (listeners) {
-            listeners.remove(listener);
-        }
-    }
-
-    /**
-     * Notify listeners that transaction was committed. Since there is at most
-     * one commit and one rollback event to be reported, the listeners can
-     * safely be cleared at the same time.
-     */
-    void notifyCommitted() {
-        TransactionListener[] al;
-
-        synchronized (listeners) {
-            al = new TransactionListener[listeners.size()];
-            listeners.toArray(al);
-            listeners.clear();
-        }
-
-        for (int i = 0; i < al.length; i++) {
-            al[i].transactionCommitted(this);
-        }
-    }
-
-    /**
-     * Notify listeners that transaction was rolled back. Since there is at most
-     * one commit and one rollback event to be reported, the listeners can
-     * safely be cleared at the same time.
-     */
-    void notifyRolledBack() {
-        TransactionListener[] al;
-
-        synchronized (listeners) {
-            al = new TransactionListener[listeners.size()];
-            listeners.toArray(al);
-            listeners.clear();
-        }
-
-        for (int i = 0; i < al.length; i++) {
-            al[i].transactionRolledBack(this);
-        }
     }
 }

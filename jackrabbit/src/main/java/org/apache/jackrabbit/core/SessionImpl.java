@@ -38,6 +38,7 @@ import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
@@ -400,16 +401,6 @@ public class SessionImpl implements Session, Dumpable {
      */
     public VersionManager getVersionManager() {
         return versionMgr;
-    }
-
-    /**
-     * Dispatch events belonging to a save operation.
-     *
-     * @param events events to dispatch as result of a successful save
-     *               operation
-     */
-    protected void dispatch(EventStateCollection events) {
-        events.dispatch();
     }
 
     /**
@@ -1240,7 +1231,7 @@ public class SessionImpl implements Session, Dumpable {
         synchronized (lockTokens) {
             if (lockTokens.add(lt) && notify) {
                 try {
-                    wsp.getLockManager().lockTokenAdded(this, lt);
+                    getLockManager().lockTokenAdded(this, lt);
                 } catch (RepositoryException e) {
                     log.error("Lock manager not available.", e);
                 }
@@ -1275,12 +1266,23 @@ public class SessionImpl implements Session, Dumpable {
         synchronized (lockTokens) {
             if (lockTokens.remove(lt) && notify) {
                 try {
-                    wsp.getLockManager().lockTokenRemoved(this, lt);
+                    getLockManager().lockTokenRemoved(this, lt);
                 } catch (RepositoryException e) {
                     log.error("Lock manager not available.", e);
                 }
             }
         }
+    }
+
+    /**
+     * Return the lock manager for this session. In a non-transactional
+     * environment, this is simply the lock manager shared by all sessions
+     * on this workspace.
+     * @return lock manager for this session
+     * @throws RepositoryException if an error occurs
+     */
+    public LockManager getLockManager() throws RepositoryException {
+        return wsp.getLockManager();
     }
 
     //-------------------------------------------------------------< Dumpable >
