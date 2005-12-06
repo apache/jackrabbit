@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.TransactionContext;
+import org.apache.jackrabbit.core.TransactionException;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ReferentialIntegrityException;
@@ -30,12 +32,12 @@ import javax.jcr.ReferentialIntegrityException;
 public class TransactionalItemStateManager extends LocalItemStateManager {
 
     /**
-     * Logger instance
+     * Logger instance.
      */
     private static Logger log = Logger.getLogger(TransactionalItemStateManager.class);
 
     /**
-     * Known attribute name
+     * Known attribute name inside the {@link TransactionContext}.
      */
     private static final String ATTRIBUTE_CHANGE_LOG = "ChangeLog";
 
@@ -50,7 +52,7 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     };
 
     /**
-     * Current transactional change log
+     * Current instance-local change log
      */
     private transient ChangeLog txLog;
 
@@ -59,45 +61,41 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
      *
      * @param sharedStateMgr shared state manager
      */
-    public TransactionalItemStateManager(SharedItemStateManager sharedStateMgr, WorkspaceImpl wspImpl) {
+    public TransactionalItemStateManager(SharedItemStateManager sharedStateMgr,
+                                         WorkspaceImpl wspImpl) {
         super(sharedStateMgr, wspImpl);
     }
 
     /**
-     * Set transaction context.
-     *
-     * @param tx transaction context.
+     * Set transactional change log to use.
+     * @param txLog change log, may be <code>null</code>.
+     * @param threadLocal if <code>true</code> set thread-local change log;
+     *                    otherwise set instance-local change log
      */
-    public void setTransactionContext(TransactionContext tx) {
-        txLog = null;
-
-        if (tx != null) {
-            txLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
-            if (txLog == null) {
-                txLog = new ChangeLog();
-                tx.setAttribute(ATTRIBUTE_CHANGE_LOG, txLog);
-            }
+    public void setChangeLog(ChangeLog txLog, boolean threadLocal) {
+        if (threadLocal) {
+            ((CommitLog) commitLog.get()).setChanges(txLog);
+        } else {
+            this.txLog = txLog;
         }
     }
 
     /**
-     * Prepare a transaction
-     *
-     * @param tx transaction context
+     * Prepare a transaction.
      * @throws TransactionException if an error occurs
      */
-    public void prepare(TransactionContext tx) throws TransactionException {
-        ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
-        if (changeLog != null) {
+    public void prepare() throws TransactionException {
+        ChangeLog txLog = ((CommitLog) commitLog.get()).getChanges();
+        if (txLog != null) {
             try {
-                sharedStateMgr.checkReferentialIntegrity(changeLog);
+                sharedStateMgr.checkReferentialIntegrity(txLog);
             } catch (ReferentialIntegrityException rie) {
                 log.error(rie);
-                changeLog.undo(sharedStateMgr);
+                txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to prepare transaction.", rie);
             } catch (ItemStateException ise) {
                 log.error(ise);
-                changeLog.undo(sharedStateMgr);
+                txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to prepare transaction.", ise);
             }
         }
@@ -105,44 +103,34 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
 
     /**
      * Commit changes made within a transaction
-     *
-     * @param tx transaction context
      * @throws TransactionException if an error occurs
      */
-    public void commit(TransactionContext tx) throws TransactionException {
-        ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
-        if (changeLog != null) {
+    public void commit() throws TransactionException {
+        ChangeLog txLog = ((CommitLog) commitLog.get()).getChanges();
+        if (txLog != null) {
             try {
-                // set changeLog in ThreadLocal
-                ((CommitLog) commitLog.get()).setChanges(changeLog);
-                super.update(changeLog);
+                super.update(txLog);
             } catch (ReferentialIntegrityException rie) {
                 log.error(rie);
-                changeLog.undo(sharedStateMgr);
+                txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to commit transaction.", rie);
             } catch (ItemStateException ise) {
                 log.error(ise);
-                changeLog.undo(sharedStateMgr);
+                txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to commit transaction.", ise);
-            } finally {
-                ((CommitLog) commitLog.get()).setChanges(null);
             }
-            changeLog.reset();
-            tx.notifyCommitted();
+            txLog.reset();
         }
     }
 
     /**
      * Rollback changes made within a transaction
-     *
-     * @param tx transaction context
      */
-    public void rollback(TransactionContext tx) {
-        ChangeLog changeLog = (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
-        if (changeLog != null) {
-            changeLog.undo(sharedStateMgr);
+    public void rollback() {
+        ChangeLog txLog = ((CommitLog) commitLog.get()).getChanges();
+        if (txLog != null) {
+            txLog.undo(sharedStateMgr);
         }
-        tx.notifyRolledBack();
     }
 
     //-----------------------------------------------------< ItemStateManager >

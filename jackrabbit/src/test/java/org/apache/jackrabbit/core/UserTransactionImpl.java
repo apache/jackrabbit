@@ -31,7 +31,7 @@ import javax.jcr.Session;
 /**
  * Internal {@link javax.transaction.UserTransaction} implementation.
  */
-class UserTransactionImpl implements UserTransaction {
+public class UserTransactionImpl implements UserTransaction {
 
     /**
      * Global transaction id counter

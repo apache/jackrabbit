@@ -17,11 +17,12 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.security.AuthContext;
-import org.apache.jackrabbit.core.state.TransactionContext;
-import org.apache.jackrabbit.core.state.TransactionException;
-import org.apache.jackrabbit.core.state.TransactionListener;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.lock.TxLockManager;
+import org.apache.jackrabbit.core.lock.SharedLockManager;
+import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
@@ -48,6 +49,16 @@ public class XASessionImpl extends SessionImpl
      * Global transactions
      */
     private static final Map txGlobal = new HashMap();
+
+    /**
+     * Known attribute name.
+     */
+    private static final String ATTRIBUTE_CHANGE_LOG = "ChangeLog";
+
+    /**
+     * Known attribute name.
+     */
+    private static final String ATTRIBUTE_LOCK_MANAGER = "LockManager";
 
     /**
      * Currently associated transaction
@@ -227,7 +238,33 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        return XA_OK;
+
+        TransactionalItemStateManager stateMgr = wsp.getItemStateManager();
+        stateMgr.setChangeLog(getChangeLog(tx), true);
+
+        try {
+            // 1. Prepare state manager
+            try {
+                stateMgr.prepare();
+            } catch (TransactionException e) {
+                throw new ExtendedXAException(XAException.XA_RBOTHER, e);
+            }
+
+            // 2. Prepare lock manager
+            try {
+                TxLockManager lockMgr = getTxLockManager(tx);
+                if (lockMgr != null) {
+                    lockMgr.prepare();
+                }
+            } catch (TransactionException e) {
+                stateMgr.rollback();
+                throw new ExtendedXAException(XAException.XA_RBOTHER, e);
+            }
+            return XA_OK;
+
+        } finally {
+            stateMgr.setChangeLog(null, true);
+        }
     }
 
     /**
@@ -238,7 +275,23 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        wsp.getItemStateManager().rollback(tx);
+
+        TransactionalItemStateManager stateMgr = wsp.getItemStateManager();
+        stateMgr.setChangeLog(getChangeLog(tx), true);
+
+        try {
+            // 1. Rollback changes on lock manager
+            TxLockManager lockMgr = getTxLockManager(tx);
+            if (lockMgr != null) {
+                lockMgr.rollback();
+            }
+
+            // 2. Rollback changes on state manager
+            stateMgr.rollback();
+
+        } finally {
+            stateMgr.setChangeLog(null, true);
+        }
     }
 
     /**
@@ -250,10 +303,28 @@ public class XASessionImpl extends SessionImpl
             throw new XAException(XAException.XAER_NOTA);
         }
 
+        TransactionalItemStateManager stateMgr = wsp.getItemStateManager();
+        stateMgr.setChangeLog(getChangeLog(tx), true);
+
+        TxLockManager lockMgr = getTxLockManager(tx);
+
         try {
-            wsp.getItemStateManager().commit(tx);
-        } catch (TransactionException e) {
-            throw new ExtendedXAException(XAException.XA_RBOTHER, e);
+            // 1. Commit changes on state manager
+            try {
+                stateMgr.commit();
+            } catch (TransactionException e) {
+                if (lockMgr != null) {
+                    lockMgr.rollback();
+                }
+                throw new ExtendedXAException(XAException.XA_RBOTHER, e);
+            }
+
+            // 2. Commit changes on lock manager
+            if (lockMgr != null) {
+                lockMgr.commit();
+            }
+        } finally {
+            stateMgr.setChangeLog(null, true);
         }
     }
 
@@ -282,7 +353,12 @@ public class XASessionImpl extends SessionImpl
     void associate(TransactionContext tx) {
         this.tx = tx;
 
-        wsp.getItemStateManager().setTransactionContext(tx);
+        ChangeLog txLog = getChangeLog(tx);
+        if (txLog == null) {
+            txLog = new ChangeLog();
+            tx.setAttribute(ATTRIBUTE_CHANGE_LOG, txLog);
+        }
+        wsp.getItemStateManager().setChangeLog(txLog, false);
     }
 
     /**
@@ -303,59 +379,7 @@ public class XASessionImpl extends SessionImpl
     void disassociate() {
         tx = null;
 
-        wsp.getItemStateManager().setTransactionContext(null);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * If we are currently associated with a transaction, the dispatch operation
-     * will be postponed until commit.
-     */
-    protected void dispatch(EventStateCollection events) {
-        if (tx != null) {
-            tx.addListener(new EventDispatcher(events));
-            return;
-        }
-        super.dispatch(events);
-    }
-
-    /**
-     * Internal {@link TransactionListener} implementation that will dispatch
-     * events only when a transaction has actually been committed.
-     */
-    static class EventDispatcher implements TransactionListener {
-
-        /**
-         * Events to dispatch if transaction is committed
-         */
-        private final EventStateCollection events;
-
-        /**
-         * Create a new instance of this class.
-         *
-         * @param events events to dispatch on commit
-         */
-        public EventDispatcher(EventStateCollection events) {
-            this.events = events;
-        }
-
-        /**
-         * {@inheritDoc}
-         * <p/>
-         * Dispatch events.
-         */
-        public void transactionCommitted(TransactionContext tx) {
-            events.dispatch();
-        }
-
-        /**
-         * {@inheritDoc}
-         * <p/>
-         * Nothing to do.
-         */
-        public void transactionRolledBack(TransactionContext tx) {
-        }
+        wsp.getItemStateManager().setChangeLog(null, false);
     }
 
     /**
@@ -391,5 +415,48 @@ public class XASessionImpl extends SessionImpl
                 initCause(cause);
             }
         }
+    }
+
+    //-------------------------------------------------------< locking support >
+
+    /**
+     * Return the lock manager for this session. In a transactional environment,
+     * this is a session-local object that records locking/unlocking operations
+     * until final commit.
+     *
+     * @return lock manager for this session
+     * @throws javax.jcr.RepositoryException if an error occurs
+     */
+    public LockManager getLockManager() throws RepositoryException {
+        if (tx != null) {
+            TxLockManager lockMgr = (TxLockManager) tx.getAttribute(ATTRIBUTE_LOCK_MANAGER);
+            if (lockMgr == null) {
+                lockMgr = new TxLockManager(
+                        (SharedLockManager) super.getLockManager());
+                tx.setAttribute(ATTRIBUTE_LOCK_MANAGER, lockMgr);
+            }
+            return lockMgr;
+        }
+        return super.getLockManager();
+    }
+
+    /**
+     * Return the transactional change log for this session.
+     *
+     * @param tx transactional context
+     * @return change log for this session, may be <code>null</code>
+     */
+    private static ChangeLog getChangeLog(TransactionContext tx) {
+        return (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
+    }
+
+    /**
+     * Return the transactional lock manager for this session. Returns
+     * <code>null</code> if no lock manager has been used yet.
+     *
+     * @return lock manager for this session
+     */
+    private static TxLockManager getTxLockManager(TransactionContext tx) {
+        return (TxLockManager) tx.getAttribute(ATTRIBUTE_LOCK_MANAGER);
     }
 }
