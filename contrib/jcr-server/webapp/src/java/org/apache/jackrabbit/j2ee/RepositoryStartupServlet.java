@@ -191,26 +191,30 @@ public class RepositoryStartupServlet extends HttpServlet {
 
     /**
      * Registers the repository in the JNDI context
-     * @throws ServletException
      */
-    private void registerJNDI() throws ServletException {
+    private void registerJNDI() {
 	// registering via jndi
 	Properties env = new Properties();
 	Enumeration names = getServletConfig().getInitParameterNames();
 	while (names.hasMoreElements()) {
 	    String name = (String) names.nextElement();
 	    if (name.startsWith("java.naming.")) {
-		env.put(name, getServletConfig().getInitParameter(name));
-		log.info("  adding property to JNDI environment: " + name + "=" + env.getProperty(name));
+                String initParam = getServletConfig().getInitParameter(name);
+                if (initParam.equals("")) {
+                    log.info("  ignoring empty JNDI init param: " + name);
+                } else {
+                    env.put(name, initParam);
+                    log.info("  adding property to JNDI environment: " + name + "=" + initParam);
+                }
 	    }
 	}
 	try {
 	    jndiContext = new InitialContext(env);
 	    jndiContext.bind(repositoryName, repository);
+            log.info("Repository bound to JNDI with name: " + repositoryName);
 	} catch (NamingException e) {
-	    throw new ServletException(e);
+            log.error("Unable to bind repository using JNDI: " + e, e);
 	}
-	log.info("Repository bound to JNDI with name: " + repositoryName);
     }
 
     /**
@@ -228,9 +232,8 @@ public class RepositoryStartupServlet extends HttpServlet {
 
     /**
      * Registers the repositroy to the RMI registry
-     * @throws ServletException
      */
-    private void registerRMI() throws ServletException {
+    private void registerRMI() {
 	// check registering via RMI
 	String rmiPortStr = getServletConfig().getInitParameter(INIT_PARAM_RMI_PORT);
         String rmiHost = getServletConfig().getInitParameter(INIT_PARAM_RMI_HOST);
@@ -257,7 +260,8 @@ public class RepositoryStartupServlet extends HttpServlet {
 		RemoteFactoryDelegater rmf = (RemoteFactoryDelegater) clazz.newInstance();
 		remote = rmf.createRemoteRepository(repository);
 	    } catch (RemoteException e) {
-		throw new ServletException("Unable to create remote repository: " + e.toString(), e);
+            log.error("Unable to create remote repository: " + e, e);
+            return;
 	    } catch (NoClassDefFoundError e) {
 		log.warn("Unable to create RMI repository. jcr-rmi.jar might be missing.: " + e.toString());
 		return;
@@ -281,11 +285,11 @@ public class RepositoryStartupServlet extends HttpServlet {
 
 		log.info("Repository bound via RMI with name: " + rmiURI);
 	    } catch (MalformedURLException e) {
-		throw new ServletException("Unable to bind repository via RMI: " + e.toString(), e);
+            log.error("Unable to bind repository via RMI: " + e, e);
 	    } catch (RemoteException e) {
-		throw new ServletException("Unable to bind repository via RMI: " + e.toString(), e);
+            log.error("Unable to bind repository via RMI: " + e, e);
 	    } catch (AlreadyBoundException e) {
-		throw new ServletException("Unable to bind repository via RMI: " + e.toString(), e);
+            log.error("Unable to bind repository via RMI: " + e, e);
 	    }
 	}
 
