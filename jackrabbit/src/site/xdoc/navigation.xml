@@ -35,6 +35,7 @@
         <item name="Model 2 (Shared)"                    href="/doc/deploy/howto-model2.html"/>
         <item name="Model 3 (Server)"                    href="/doc/deploy/howto-model3.html"/>
       </item>
+      <item name="Configuring Jackrabbit"                href="/doc/config.html" />
       <item name="Nodetype Modelling"                    href="/doc/nodetype.html" />
     </item>
     <item name="Layout"                 href="/layout.html"/>
