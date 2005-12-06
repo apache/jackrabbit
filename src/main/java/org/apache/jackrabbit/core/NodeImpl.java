@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.BaseException;
-import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -3730,8 +3729,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         checkLockable();
 
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
-        return lockMgr.lock(this, isDeep, isSessionScoped);
+        return session.getLockManager().lock(this, isDeep, isSessionScoped);
     }
 
     /**
@@ -3743,13 +3741,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // todo: fixme for transactions
-        if (isTransactionalNew()) {
+        if (isNew()) {
             throw new LockException("Node not locked: " + safeGetJCRPath());
         }
-
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
-        return lockMgr.getLock(this);
+        return session.getLockManager().getLock(this);
     }
 
     /**
@@ -3770,9 +3765,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         checkLockable();
-
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
-        lockMgr.unlock(this);
+        session.getLockManager().unlock(this);
     }
 
     /**
@@ -3782,14 +3775,11 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // todo: fixme for transactions
-        if (!isNodeType(QName.MIX_LOCKABLE) || isTransactionalNew()) {
+        if (!isNodeType(QName.MIX_LOCKABLE) || isNew()) {
             // a node that is new or not lockable never holds a lock
             return false;
         }
-
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
-        return lockMgr.holdsLock(this);
+        return session.getLockManager().holdsLock(this);
     }
 
     /**
@@ -3799,13 +3789,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // todo: fixme for transactions
-        if (isTransactionalNew()) {
+        if (isNew()) {
             return false;
         }
-
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
-        return lockMgr.isLocked(this);
+        return session.getLockManager().isLocked(this);
     }
 
     /**
@@ -3830,14 +3817,11 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException if some other error occurs
      */
     protected void checkLock() throws LockException, RepositoryException {
-        // todo: fixme for transactions
-        if (isTransactionalNew()) {
-            // a new node must not be checked
+        if (isNew()) {
+            // a new node needs no check
             return;
         }
-
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
-        lockMgr.checkLock(this);
+        session.getLockManager().checkLock(this);
     }
 
     //--------------------------------------------------------< inner classes >

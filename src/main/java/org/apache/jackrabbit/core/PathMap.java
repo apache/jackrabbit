@@ -318,6 +318,19 @@ public class PathMap {
         }
 
         /**
+         * Remove all children of this element. Removes this element itself
+         * if this element does not contain associated information.
+         */
+        public void removeAll() {
+            children = null;
+            childrenCount = 0;
+
+            if (obj == null && parent != null) {
+                parent.remove(getPathElement(), false);
+            }
+        }
+
+        /**
          * Return the object associated with this element
          * @return object associated with this element
          */

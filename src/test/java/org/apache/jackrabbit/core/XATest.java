@@ -555,4 +555,191 @@ public class XATest extends AbstractJCRTest {
         // logout
         otherSuperuser.logout();
     }
+
+    /**
+     * Test locking a node in one session. Verify that node is not locked
+     * in other session until commit.
+     * @throws Exception
+     */
+    public void testLockCommit() throws Exception {
+        Session other = helper.getSuperuserSession();
+
+        // add node that is both lockable and referenceable, save
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        // reference node in second session
+        Node nOther = other.getNodeByUUID(n.getUUID());
+
+        // verify node is not locked in either session
+        assertFalse("Node not locked in session 1", n.isLocked());
+        assertFalse("Node not locked in session 2", nOther.isLocked());
+
+        // get user transaction object, start and lock node
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+        n.lock(false, true);
+
+        // verify node is locked in first session only
+        assertTrue("Node locked in session 1", n.isLocked());
+        assertFalse("Node not locked in session 2", nOther.isLocked());
+
+        // commit in first session
+        utx.commit();
+
+        // verify node is locked in both sessions
+        assertTrue("Node locked in session 1", n.isLocked());
+        assertTrue("Node locked in session 2", nOther.isLocked());
+
+        // logout
+        other.logout();
+    }
+
+    /**
+     * Test locking a node in one session. Verify that node is not locked
+     * in session after rollback.
+     * @throws Exception
+     */
+    public void testLockRollback() throws Exception {
+        Session other = helper.getSuperuserSession();
+
+        // add node that is both lockable and referenceable, save
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        // reference node in second session
+        Node nOther = other.getNodeByUUID(n.getUUID());
+
+        // verify node is not locked in either session
+        assertFalse("Node not locked in session 1", n.isLocked());
+        assertFalse("Node not locked in session 2", nOther.isLocked());
+
+        // get user transaction object, start and lock node
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+        n.lock(false, true);
+
+        // verify node is locked in first session only
+        assertTrue("Node locked in session 1", n.isLocked());
+        assertFalse("Node not locked in session 2", nOther.isLocked());
+
+        // rollback in first session
+        utx.rollback();
+
+        // verify node is not locked in either session
+        assertFalse("Node not locked in session 1", n.isLocked());
+        assertFalse("Node not locked in session 2", nOther.isLocked());
+
+        // logout
+        other.logout();
+    }
+
+    /**
+     * Test locking a node inside a transaction that has been locked in another
+     * session, which leads to a failure when committing.
+     * @throws Exception
+     */
+    public void testLockTwice() throws Exception {
+        Session other = helper.getSuperuserSession();
+
+        // add node that is both lockable and referenceable, save
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        // reference node in second session
+        Node nOther = other.getNodeByUUID(n.getUUID());
+
+        // verify node is not locked in either session
+        assertFalse("Node not locked in session 1", n.isLocked());
+        assertFalse("Node not locked in session 2", nOther.isLocked());
+
+        // get user transaction object, start and lock node
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+        n.lock(false, true);
+
+        // lock node in non-transactional session, too
+        nOther.lock(false, true);
+
+        // verify node is locked in both sessions
+        assertTrue("Node locked in session 1", n.isLocked());
+        assertTrue("Node locked in session 2", nOther.isLocked());
+
+        // assertion: commit must fail since node has already been locked
+        try {
+            utx.commit();
+            fail("Commit succeeds with double locking");
+        } catch (RollbackException e) {
+            /* expected */
+        }
+
+        // verify node is locked in both sessions
+        assertTrue("Node locked in session 1", n.isLocked());
+        assertTrue("Node locked in session 2", nOther.isLocked());
+
+        // logout
+        other.logout();
+    }
+
+    /**
+     * Test locking a new node inside a transaction.
+     * @throws Exception
+     */
+    public void testLockNewNode() throws Exception {
+        // get user transaction object, start
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+
+        // add node that is both lockable and referenceable, save
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        // lock this new node
+        n.lock(false, true);
+
+        // commit
+        utx.commit();
+    }
+
+    /**
+     * Test locking/unlocking a node inside a transaction which should be a
+     * no-op.
+     * @throws Exception
+     */
+    public void testLockUnlock() throws Exception {
+        // add node that is both lockable and referenceable, save
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        // verify node is not locked in this session
+        assertFalse("Node not locked", n.isLocked());
+
+        // get user transaction object, start and lock node
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+        n.lock(false, true);
+
+        // verify node is locked
+        assertTrue("Node locked", n.isLocked());
+
+        // unlock node
+        n.unlock();
+
+        // commit
+        utx.commit();
+
+        // verify node is not locked
+        assertFalse("Node not locked", n.isLocked());
+    }
+
 }
