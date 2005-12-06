@@ -261,6 +261,9 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         con = DriverManager.getConnection(url, user, password);
         con.setAutoCommit(false);
 
+        // make sure schemaObjectPrefix consists of legal name characters only
+        prepareSchemaObjectPrefix();
+
         // check if schema objects exist and create them if necessary
         checkSchema();
 
@@ -923,6 +926,35 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
     }
 
     /**
+     * Makes sure that <code>schemaObjectPrefix</code> does only consist of
+     * characters that are allowed in names on the target database. Illegal
+     * characters will be escaped as necessary.
+     *
+     * @throws Exception if an error occurs
+     */
+    protected void prepareSchemaObjectPrefix() throws Exception {
+        DatabaseMetaData metaData = con.getMetaData();
+        String legalChars = metaData.getExtraNameCharacters();
+        legalChars += "ABCDEFGHIJKLMNOPQRSTUVWXZY0123456789_";
+
+        String prefix = schemaObjectPrefix.toUpperCase();
+        StringBuffer escaped = new StringBuffer();
+        for (int i = 0; i < prefix.length(); i++) {
+            char c = prefix.charAt(i);
+            if (legalChars.indexOf(c) == -1) {
+                escaped.append("_x");
+                String hex = Integer.toHexString(c);
+                escaped.append("0000".toCharArray(), 0, 4 - hex.length());
+                escaped.append(hex);
+                escaped.append("_");
+            } else {
+                escaped.append(c);
+            }
+        }
+        schemaObjectPrefix = escaped.toString();
+    }
+
+    /**
      * Checks if the required schema objects exist and creates them if they
      * don't exist yet.
      *
@@ -936,6 +968,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         } else if (metaData.storesUpperCaseIdentifiers()) {
             tableName = tableName.toUpperCase();
         }
+
         ResultSet rs = metaData.getTables(null, null, tableName, null);
         boolean schemaExists;
         try {
