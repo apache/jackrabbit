@@ -16,60 +16,143 @@
    limitations under the License.
   -->
 <document>
- <properties>
-  <title>Download and Install</title>
- </properties>
- <body>
+  <properties>
+    <title>Building Jackrabbit</title>
+  </properties>
+  <body>
+    <section name="Building Jackrabbit">
+      <p>
+        As the Jackrabbit project has yet to make its first binary releases,
+        you need to build Jackrabbit from sources to install it. The
+        <a href="http://maven.apache.org/maven-1.x/">Maven</a> build environment
+        makes it very easy to build Jackrabbit.
+      </p>
+      <p>
+        The first step in building Jackrabbit is to check out the Jackrabbit
+        sources from the <a href="http://subversion.tigris.org/">Subversion</a>
+        source repository at
+        <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/">http://svn.apache.org/repos/af/incubator/jackrabbit/</a>.
+        The trunk of the source repository is divided in two parts:
+      </p>
+      <dl>
+        <dt><a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit/">trunk/jackrabbit</a></dt>
+        <dd>
+          This is the main Jackrabbit source tree that contains everything you
+          need for a fully functional Jackrabbit installation. This source tree
+          is often referred to as "the Jackrabbit core". In addition to the
+          main Jackrabbit jar library, this source tree is also used for the
+          "jackrabbit-commons" utility library used also in other JCR tools
+          and implementations.
+        </dd>
+        <dt><a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/contrib/">trunk/contrib</a></dt>
+        <dd>
+          This is a collection of additional Jackrabbit modules and other
+          contributed subprojects like the RMI and WebDAV network layers for
+          the JCR API. See the individual contrib projects for installation
+          and usage instructions.
+        </dd>
+      </dl>
 
-<section name="Download and Install">
-<p>
-The Jackrabbit source code is available via Subversion at
-<a href="https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>
-</p>
-<p>
-and anonymous access is available at
-<a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>
-</p>
-<p>or with viewcvs at
-<a href="http://svn.apache.org/viewcvs/incubator/jackrabbit/trunk/">http://svn.apache.org/viewcvs/incubator/jackrabbit/trunk/</a>
-</p>
-<p>The Jackrabbit main project is located in the "jackrabbit" subdirectory
-and the "contrib" subdirectory contains various additional modules and
-contributed projects.</p>
+      <subsection name="Checking out the sources with Subversion">
+        <p>
+          You need a <a href="http://subversion.tigris.org/">Subversion</a>
+          client to access the Jackrabbit source repository. Take a look at the
+          <a href="http://subversion.tigris.org/project_links.html#clients">Subversion client list</a>
+          unless you already have a one installed. Once you have the Subversion
+          client installed you can checkout the main Jackrabbit source tree
+          with the following command or its equivalent in the client you are using:
+        </p>
+  <source>svn checkout http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit</source>
+        <p>
+          The above checkout will create a subdirectory named
+          <code>jackrabbit</code> that contains the latest Jackrabbit sources.
+          See the <a href="http://svnbook.red-bean.com/">Subversion book</a> or
+          the documentation of your Subversion client for more information on
+          how to manage your source tree and keep it up to date with latest
+          development.
+        </p>
+      </subsection>
 
-<p>To checkout the main Jackrabbit source tree, run
-<source>
-   svn checkout http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit
-</source>
-</p>
-<p>
-Once you have a copy of the source code tree, you can use Apache Maven
-
-   <a href="http://maven.apache.org/">http://maven.apache.org/</a>
-
-to build the project.  After installing Maven 1.0, be sure to download the
-latest release of the Ant plugin (1.8.1 or later) using a command like
-<source>
-   maven plugin:download -DgroupId=maven \
-         -DartifactId=maven-ant-plugin -Dversion=1.8.1
-</source>
-
-before running one of the maven commands listed at
-
-   <a href="http://maven.apache.org/start/use.html">http://maven.apache.org/start/use.html</a>
-
-to build the Jackrabbit project and/or documentation.
-</p>
-<p>
-<b>NOTE:</b> Java 5 users need to download the xalan.jar and serializer.jar
-libraries from the Xalan-Java binary distribution at 
-http://xml.apache.org/xalan-j/downloads.html and place them in
-$MAVEN_HOME/lib/endorsed (or $JRE/lib/endorsed if using Maven 1.1)
-to build the Jackrabbit sources. The reason for this workaround is
-explained in
-   <a href="http://issues.apache.org/jira/browse/JCR-46">http://issues.apache.org/jira/browse/JCR-46</a>
-</p>
-</section>
-
-</body>
+      <subsection name="Building the sources with Maven">
+        <p>
+          Jackrabbit uses <a href="http://maven.apache.org/maven-1.x/">Maven</a>
+          version 1.x as the build system and the source tree is mostly
+          organized according to the Maven
+          <a href="http://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html">Standard Directory Layout</a>.
+          The Maven version 1.0.2 and Java Development Kit (JDK) version 1.4
+          are the standard build environment, but you should be quite fine also
+          with Maven 1.1 and Java 5.
+        </p>
+        <p>
+          <strong>Note for Java 5 users:</strong>
+          As discussed in
+          <a href="http://issues.apache.org/jira/browse/JCR-46">JCR-46</a>, you
+          need to <a href="http://xml.apache.org/xalan-j/downloads.html">download</a>
+          the <a href="http://xml.apache.org/xalan-j/">Xalan-Java</a> files
+          <code>xalan.jar</code> and <code>serializer.jar</code> and place them
+          in <code>$MAVEN_HOME/lib/endorsed</code> (or <code>$JAVA_HOME/jre/lib/endorsed</code>
+          if you use Maven 1.1) to avoid problems in generating the JavaCC
+          grammar files used by Jackrabbit.
+        </p>
+        <p>
+          See the Maven 1.x
+          <a href="http://maven.apache.org/maven-1.x/start/install.html">installation</a>
+          and <a href="http://maven.apache.org/maven-1.x/start/quick-start.html">quick-start</a>
+          guides for instructions on how to use Maven with Jackrabbit. You
+          may also want to check for
+          <a href="http://mevenide.codehaus.org/">Maven integration</a>
+          with your favourite Integrated Development Environment (IDE).
+          Common operations to run within the checked out
+          <code>jackrabbit</code> directory are:
+        </p>
+        <dl>
+          <dt><code>maven jar</code></dt>
+          <dd>
+            Compiles the Jackrabbit source files, runs all unit tests and
+            packages the Jackrabbit classes into a jar library. This is the
+            standard "build all" operation for Jackrabbit. The resulting
+            jar package is located in <code>target/jackrabbit-*.jar</code>.
+            This operation also generates the <code>jackrabbit-commons</code>
+            jar package within the <code>modules/commons</code> subdirectory.
+          </dd>
+          <dt><code>maven jar:install</code></dt>
+          <dd>
+            Executes the <code>jar</code> goal and installs the resulting jar
+            packages into the local Maven repository. This operation is used
+            when you want to make Jackrabbit available as a dependency for
+            other local Maven projects. The Maven groupId for Jackrabbit is
+            <code>org.apache.jackrabbit</code> and the artifactId is
+            <code>jackrabbit</code>.
+          </dd>
+          <dt><code>maven clean</code></dt>
+          <dd>
+            Removes the <code>target</code> directory that contains all
+            compiled classes and other files generated by the Maven builds.
+            This operation is used to clean up the build environment. The
+            Maven build system is quite good in keeping all the classes
+            and other generated files up to date but every now and then
+            you may want to run <code>maven clean jar</code> to do a fresh
+            build of the entire project.
+          </dd>
+          <dt><code>maven copy-deps</code></dt>
+          <dd>
+            Copies all the Jackrabbit dependencies into the
+            <code>target/lib</code> directory. This operation is used as a
+            convenient way to get all the Jackrabbit dependencies instead of
+            downloading them from the net or looking for them in the local
+            Maven repository. Note however that the copied dependencies will
+            contain the compile and unit test dependencies in addition to the
+            real runtime dependencies of Jackrabbit.
+          </dd>
+        </dl>
+        <p>
+          The Jackrabbit test suite is quite extensive, so running
+          <code>maven jar</code> may take a while due to the unit tests being
+          run. Use <code>maven jar -Dmaven.test.skip=true</code> to skip
+          running the unit tests. Note that skipping the unit tests is not
+          recommended in general.
+        </p>
+      </subsection>
+    </section>
+  </body>
 </document>
