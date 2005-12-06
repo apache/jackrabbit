@@ -37,16 +37,24 @@ import java.util.Properties;
  */
 public class RepositoryAccessServlet extends HttpServlet {
 
-    /** default logger */
+    /**
+     * default logger
+     */
     private static final Logger log = Logger.getLogger(RepositoryAccessServlet.class);
 
-    /** the 'repository-name' init parameter */
+    /**
+     * the 'repository-name' init parameter
+     */
     public final static String INIT_PARAM_REPOSITORY_NAME = "repository-name";
 
-    /** the 'rmi-uri' init parameter */
+    /**
+     * the 'rmi-uri' init parameter
+     */
     public final static String INIT_PARAM_RMI_URI = "rmi-uri";
 
-    /** the 'missing-auth-mapping' init parameter */
+    /**
+     * the 'missing-auth-mapping' init parameter
+     */
     //public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
 
     private static final String CTX_ATTR_REPOSITORY = "jcr.repository";
@@ -66,8 +74,8 @@ public class RepositoryAccessServlet extends HttpServlet {
 	log.info("RepositoryAccessServlet initializing...");
         // fetching the name
         String repositoryName = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_NAME);
-        if (repositoryName==null) {
-            repositoryName="default";
+        if (repositoryName == null) {
+            repositoryName = "default";
         }
         getServletContext().setAttribute(CTX_ATTR_REPOSITORY_NAME, repositoryName);
 
@@ -88,8 +96,13 @@ public class RepositoryAccessServlet extends HttpServlet {
 	    while (names.hasMoreElements()) {
 		String name = (String) names.nextElement();
 		if (name.startsWith("java.naming.")) {
-		    env.put(name, getServletConfig().getInitParameter(name));
-		    log.info("  adding property to JNDI environment: " + name + "=" + env.getProperty(name));
+                    String initParam = getServletConfig().getInitParameter(name);
+                    if (initParam.equals("")) {
+                        log.info("  ignoring empty JNDI init param: " + name);
+                    } else {
+                        env.put(name, initParam);
+                        log.info("  adding property to JNDI environment: " + name + "=" + initParam);
+                    }
 		}
 	    }
 	    return new InitialContext(env);
@@ -119,7 +132,7 @@ public class RepositoryAccessServlet extends HttpServlet {
             log.info("Acquired repository via JNDI.");
             return r;
         } catch (NamingException e) {
-            log.error("Error while retrieving repository using JNDI (name=" + repositoryName +"): " + e);
+            log.error("Error while retrieving repository using JNDI (name=" + repositoryName + "): " + e);
             return null;
         }
     }
