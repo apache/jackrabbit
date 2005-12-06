@@ -20,7 +20,7 @@
     <title>Configuring Jackrabbit</title>
   </properties>
   <body>
-    <section name="Configuring Jakcrabbit">
+    <section name="Configuring Jackrabbit">
       <p>
         Jackrabbit needs two pieces of information to set up a runtime
         content repository instance:
