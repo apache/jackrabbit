@@ -15,10 +15,7 @@
  */
 package org.apache.jackrabbit.webdav.util;
 
-import org.apache.log4j.Logger;
-
 import java.text.SimpleDateFormat;
-import java.text.DateFormatSymbols;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -27,26 +24,11 @@ import java.util.TimeZone;
  */
 public class HttpDateFormat extends SimpleDateFormat {
 
-    private static Logger log = Logger.getLogger(HttpDateFormat.class);
     private static final TimeZone GMT_TIMEZONE = TimeZone.getTimeZone("GMT");
 
-    public HttpDateFormat() {
-        super();
-        super.setTimeZone(GMT_TIMEZONE);
-    }
-
     public HttpDateFormat(String pattern) {
-        super(pattern);
+        super(pattern, Locale.ENGLISH);
         super.setTimeZone(GMT_TIMEZONE);
     }
 
-    public HttpDateFormat(String pattern, DateFormatSymbols formatSymbols) {
-        super(pattern, formatSymbols);
-        super.setTimeZone(GMT_TIMEZONE);
-    }
-
-    public HttpDateFormat(String pattern, Locale locale) {
-        super(pattern, locale);
-        super.setTimeZone(GMT_TIMEZONE);
-    }
 }
