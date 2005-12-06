@@ -20,48 +20,54 @@ import java.io.ByteArrayOutputStream;
 import java.util.BitSet;
 
 /**
- * The <code>FileSystemPathUtil</code> utility class ...
+ * Utility class for handling paths in a file system.
  */
 public final class FileSystemPathUtil {
 
-    private static final char[] hexTable = "0123456789abcdef".toCharArray();
+    /**
+     * Array of lowercase hexadecimal characters used in creating hex escapes.
+     */
+    private static final char[] HEX_TABLE = "0123456789abcdef".toCharArray();
 
+    /**
+     * The escape character used to mark hex escape sequences. 
+     */
     private static final char ESCAPE_CHAR = '%';
 
     /**
      * The list of characters that are not encoded by the <code>escapeName(String)</code>
      * and <code>unescape(String)</code> methods. They contains the characters
-     * which can savely be used in file names:
+     * which can safely be used in file names:
      */
-    public static final BitSet SAVE_NAMECHARS;
+    public static final BitSet SAFE_NAMECHARS;
 
     /**
      * The list of characters that are not encoded by the <code>escapePath(String)</code>
      * and <code>unescape(String)</code> methods. They contains the characters
-     * which can savely be used in file paths:
+     * which can safely be used in file paths:
      */
-    public static final BitSet SAVE_PATHCHARS;
+    public static final BitSet SAFE_PATHCHARS;
 
     static {
         // build list of valid name characters
-        SAVE_NAMECHARS = new BitSet(256);
+        SAFE_NAMECHARS = new BitSet(256);
         int i;
         for (i = 'a'; i <= 'z'; i++) {
-            SAVE_NAMECHARS.set(i);
+            SAFE_NAMECHARS.set(i);
         }
         for (i = 'A'; i <= 'Z'; i++) {
-            SAVE_NAMECHARS.set(i);
+            SAFE_NAMECHARS.set(i);
         }
         for (i = '0'; i <= '9'; i++) {
-            SAVE_NAMECHARS.set(i);
+            SAFE_NAMECHARS.set(i);
         }
-        SAVE_NAMECHARS.set('-');
-        SAVE_NAMECHARS.set('_');
-        SAVE_NAMECHARS.set('.');
+        SAFE_NAMECHARS.set('-');
+        SAFE_NAMECHARS.set('_');
+        SAFE_NAMECHARS.set('.');
 
         // build list of valid path characters (inlcudes name characters)
-        SAVE_PATHCHARS = (BitSet) SAVE_NAMECHARS.clone();
-        SAVE_PATHCHARS.set(FileSystem.SEPARATOR_CHAR);
+        SAFE_PATHCHARS = (BitSet) SAFE_NAMECHARS.clone();
+        SAFE_PATHCHARS.set(FileSystem.SEPARATOR_CHAR);
     }
 
     /**
@@ -70,17 +76,25 @@ public final class FileSystemPathUtil {
     private FileSystemPathUtil() {
     }
 
-    private static String escape(String s, BitSet saveChars) {
+    /**
+     * Escapes the given string using URL encoding for all bytes not included
+     * in the given set of safe characters.
+     *
+     * @param s the string to escape
+     * @param safeChars set of safe characters (bytes)
+     * @return escaped string
+     */
+    private static String escape(String s, BitSet safeChars) {
         byte[] bytes = s.getBytes();
         StringBuffer out = new StringBuffer(bytes.length);
         for (int i = 0; i < bytes.length; i++) {
             int c = bytes[i] & 0xff;
-            if (saveChars.get(c) && c != ESCAPE_CHAR) {
+            if (safeChars.get(c) && c != ESCAPE_CHAR) {
                 out.append((char) c);
             } else {
                 out.append(ESCAPE_CHAR);
-                out.append(hexTable[(c >> 4) & 0x0f]);
-                out.append(hexTable[(c) & 0x0f]);
+                out.append(HEX_TABLE[(c >> 4) & 0x0f]);
+                out.append(HEX_TABLE[(c) & 0x0f]);
             }
         }
         return out.toString();
@@ -96,7 +110,7 @@ public final class FileSystemPathUtil {
      * @return the escaped path
      */
     public static String escapePath(String path) {
-        return escape(path, SAVE_PATHCHARS);
+        return escape(path, SAFE_PATHCHARS);
     }
 
     /**
@@ -109,7 +123,7 @@ public final class FileSystemPathUtil {
      * @return the escaped name
      */
     public static String escapeName(String name) {
-        return escape(name, SAVE_NAMECHARS);
+        return escape(name, SAFE_NAMECHARS);
     }
 
     /**
@@ -208,4 +222,5 @@ public final class FileSystemPathUtil {
         }
         return path;
     }
+
 }
