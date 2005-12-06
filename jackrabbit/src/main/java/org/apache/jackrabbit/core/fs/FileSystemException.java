@@ -19,7 +19,9 @@ package org.apache.jackrabbit.core.fs;
 import org.apache.jackrabbit.BaseException;
 
 /**
- * The <code>FileSystemException</code> ...
+ * The <code>FileSystemException</code> signals an error within a file system
+ * operation. FileSystemExceptions are thrown by {@link FileSystem}
+ * implementations.
  */
 public class FileSystemException extends BaseException {
     /**
