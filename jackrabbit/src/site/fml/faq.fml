@@ -28,8 +28,8 @@
         <p>
           JCR is the acronym of the
           <a href="http://jcp.org/en/jsr/detail?id=170">JSR 170: Content
-          Repository for Java&#8482; technology API</a>. The JCR API is
-          a standardized interface for accessing a content repository.
+          Repository for Java&#8482; technology API</a>, a standard interface
+          for accessing content repositories.
         </p>
       </answer>
     </faq>
@@ -62,8 +62,8 @@
       </question>
       <answer>
         <p>
-          The Apache Jackrabbit is a fully featured content repository
-          implementation of the JCR API. The Jackrabbit project was started
+          The Apache Jackrabbit is a fully featured content repository that
+          implements all of the JCR API. The Jackrabbit project was started
           when the <a href="http://www.day.com/">Day Software</a>, the JSR-170
           specification lead, licensed their initial implementation of the
           JCR reference implementation. Since then the Jackrabbit codebase
@@ -83,6 +83,17 @@
 
   <part id="build">
     <title>Building Jackrabbit</title>
+
+    <faq id="build-how">
+      <question>
+        How do I build the Jackrabbit sources?
+      </question>
+      <answer>
+        See the <a href="doc/building.html">Building Jackrabbit</a> section
+        of the <a href="doc/index.html">Jackrabbit documentation</a> for
+        detailed build instructions.
+      </answer>
+    </faq>
 
     <faq id="build-missing-pom">
       <question>
@@ -121,8 +132,24 @@
           the <a href="http://xml.apache.org/xalan-j/downloads.html">Xalan-Java binary distribution</a>
           and place them in the <code>$MAVEN_HOME/lib/endorsed</code> directory.
           Maven 1.1 users need to place the files in
-          <code>$JRE/lib/endorsed</code> as Maven 1.1 does not have a private
-          endorsed library directory.
+          <code>$AVA_HOME/jre/lib/endorsed</code> as Maven 1.1 does not have
+          a private endorsed library directory.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="build-connect">
+      <question>
+        Why does the Maven build fail with the message
+        "java.net.ConnectException: Connection timed out: connect"?
+      </question>
+      <answer>
+        <p>
+          This error message can appears when one of the Maven repositories
+          used for downloading Jackrabbit dependencies is not available.
+          This can happen if your network connection is broken or if the
+          repository server is down. Please check your network connection
+          or wait a while for the repository to come back online.
         </p>
       </answer>
     </faq>
@@ -147,7 +174,7 @@
           For Jackrabbit features (like access control and node type management)
           not covered by the JCR API, see the
           <a href="http://wiki.apache.org/jackrabbit/ExamplesPage">Examples page</a>
-          on the wiki, the Jackrabbit javadocs (to be published on the web),
+          on the wiki, the <a hŕef="apidocs/index.html">Jackrabbit javadocs</a>,
           or contact the <a href="http://incubator.apache.org/jackrabbit/mail-lists.html">Jackrabbit mailing list</a>.
         </p>
       </answer>
@@ -180,9 +207,39 @@
         <p>
           The JCR API does not contain features for creating or managing
           workspaces, so you need to use Jackrabbit-specific functionality
-          for creating new workspaces. See the related
-          <a href="http://thread.gmane.org/gmane.comp.apache.jackrabbit.devel/2660">mailing list thread</a>
-          for more instructions.
+          for creating new workspaces.
+        </p>
+        <p>
+          You can create a new workspace either manually or programmatically.
+          The manual way is to create a new workspace directory within
+          the repository home directory and to place a new
+          <code>workspace.xml</code> configuration file in that folder.
+          You can use the configuration file of an existing workspace as
+          an example, just remember to change the name of the workspace
+          in the <code>&lt;Workspace name="..."&gt;"</code> tag.
+          See the <a href="doc/config.html">Configuring Jackrabbit</a>
+          page for configuration details. Note also that you need to restart
+          the repository instance to access the new workspace.
+        </p>
+        <p>
+          The programmatic way is to acquire a <code>Workspace</code> instance
+          using the normal JCR API and to cast the instance to the Jackrabbit
+          <code>WorkspaceImpl</code> class. You can then use the
+          <a href="apidocs/org/apache/jackrabbit/core/WorkspaceImpl.html#createWorkspace(java.lang.String)">WorkspaceImpl.createWorkspace(String)</a>
+          method to create new workspaces.
+        </p>
+      </answer>
+    </faq>
+
+    <faq id="create-workspace">
+      <question>
+        How do I delete a workspace in Jackrabbit?
+      </question>
+      <answer>
+        <p>
+          There is currently no programmatic way to delete workspaces.
+          You can delete a workspace by manually removing the workspace
+          directory when the repository instance is not running.
         </p>
       </answer>
     </faq>
