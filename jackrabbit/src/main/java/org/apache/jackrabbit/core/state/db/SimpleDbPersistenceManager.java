@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.FilterInputStream;
+import java.io.ByteArrayInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -1035,6 +1036,10 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
                         throw new Exception("no such BLOB: " + blobId);
                     }
                     InputStream in = rs.getBinaryStream(1);
+                    if (in == null) {
+                        closeResultSet(rs);
+                        return new ByteArrayInputStream(new byte[0]);
+                    }
 
                     /**
                      * return an InputStream wrapper in order to
