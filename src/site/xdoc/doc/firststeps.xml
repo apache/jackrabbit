@@ -21,12 +21,18 @@
  </properties>
 
  <body>
-  <section name="Download and Build Jackrabbit">
-   <p>Please refer to the <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit/README.txt">README.txt</a>
-      to find details on how to build Jackrabbit using Maven.
+  <section name="First Steps">
+   <p>
+     This is a short hands-on introduction to Jackrabbit and the features
+     of the JCR API. See the rest of the Jackrabbit web site and the JCR
+     API specification for more detailed information.
    </p>
-  </section>
-  <section name="Run Jackrabbit">
+   <p>
+     You need to have Jackrabbit locally available to compile and run the
+     examples on this page. See the <a href="building.html">Building Jackrabbit</a>
+     section for instructions to download and build the Jackrabbit sources.
+   </p>
+  <subsection name="Run Jackrabbit">
    <p>
     The following code provides a brief introduction to using Jackrabbit
     in a simple application.  Please note that this example is meant to
@@ -166,8 +172,8 @@ org.apache.jackrabbit.core.security.SimpleLoginModule required anonymousId="anon
 rep:root
     </source>
    </p>
-  </section>
-  <section name="Adding Content">
+  </subsection>
+  <subsection name="Adding Content">
    <p>
     Since an empty repository is not very useful, add the following
     code to the above test class <code>JCRTest</code> to create 
@@ -404,6 +410,7 @@ rep:root
 .   
     </source>
    </p>
+  </subsection>
   </section>
  </body>
 </document>
