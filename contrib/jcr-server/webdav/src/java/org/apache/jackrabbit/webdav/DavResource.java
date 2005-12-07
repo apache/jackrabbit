@@ -37,7 +37,7 @@ public interface DavResource {
     /**
      * String constant representing the WebDAV 1 and 2 method set.
      */
-    public static final String METHODS = "OPTIONS, GET, HEAD, POST, TRACE, PROPFIND, PROPPATCH, COPY, PUT, DELETE, MOVE, LOCK, UNLOCK";
+    public static final String METHODS = "OPTIONS, GET, HEAD, POST, TRACE, PROPFIND, PROPPATCH, MKCOL, COPY, PUT, DELETE, MOVE, LOCK, UNLOCK";
 
     /**
      * Returns a comma separted list of all compliance classes the given
