@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.WorkspaceImpl;
-import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.TransactionException;
 import org.apache.log4j.Logger;
 
@@ -37,13 +36,9 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     private static Logger log = Logger.getLogger(TransactionalItemStateManager.class);
 
     /**
-     * Known attribute name inside the {@link TransactionContext}.
-     */
-    private static final String ATTRIBUTE_CHANGE_LOG = "ChangeLog";
-
-    /**
-     * ThreadLocal that holds the ChangeLog while this item state manager
-     * is in commit().
+     * ThreadLocal that holds the ChangeLog while this state manager is in one
+     * of the {@link #prepare()}, {@link #commit()}, {@link #rollback()}
+     * methods.
      */
     private static ThreadLocal commitLog = new ThreadLocal() {
         protected synchronized Object initialValue() {
@@ -52,7 +47,7 @@ public class TransactionalItemStateManager extends LocalItemStateManager {
     };
 
     /**
-     * Current instance-local change log
+     * Current instance-local change log.
      */
     private transient ChangeLog txLog;
 
