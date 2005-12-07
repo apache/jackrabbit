@@ -200,6 +200,10 @@ public class ResourceConfig {
             boolean isCollection = true;
             Node n = (Node)item;
             try {
+                if (n.getPath().equals("/")) {
+                    // the root node always represents a collection
+                    return true;
+                }
                 for (int i = 0; i < nodetypeNames.length && isCollection; i++) {
                     isCollection = collectionNames ? n.isNodeType(nodetypeNames[i]) : !n.isNodeType(nodetypeNames[i]);
                 }
