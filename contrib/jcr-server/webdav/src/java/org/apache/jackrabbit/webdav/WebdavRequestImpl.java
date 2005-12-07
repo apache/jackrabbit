@@ -260,17 +260,23 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      */
     public Document getRequestDocument() {
         Document requestDocument = null;
-        // try to parse the request body
-        try {
-            InputStream in = httpRequest.getInputStream();
-            if (in != null) {
-                SAXBuilder builder = new SAXBuilder(false);
-                requestDocument = builder.build(in);
+        if (httpRequest.getContentLength() > 0) {
+            // try to parse the request body
+            try {
+                InputStream in = httpRequest.getInputStream();
+                if (in != null) {
+                    SAXBuilder builder = new SAXBuilder(false);
+                    requestDocument = builder.build(in);
+                }
+            } catch (IOException e) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
+                }
+            } catch (JDOMException e) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
+                }
             }
-        } catch (IOException e) {
-            log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
-        } catch (JDOMException e) {
-            log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
         }
         return requestDocument;
     }
