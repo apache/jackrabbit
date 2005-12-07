@@ -239,7 +239,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     /**
      * Fill the set of properties
      */
-    private void initProperties() {
+    protected void initProperties() {
         if (!exists() || inited) {
             return;
         }
@@ -776,7 +776,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      *
      * @return true if this resource is lockable.
      */
-    private boolean isJsrLockable() {
+    protected boolean isJsrLockable() {
         boolean lockable = false;
         if (exists()) {
             try {
@@ -800,7 +800,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      *
      * @return true if this resource cannot be modified due to a write lock
      */
-    private boolean isLocked(DavResource res) {
+    protected boolean isLocked(DavResource res) {
         ActiveLock lock = res.getLock(Type.WRITE, Scope.EXCLUSIVE);
         if (lock == null) {
             return false;
@@ -826,7 +826,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param session
      * @return a <code>DavPropertyName</code> for the given jcr name.
      */
-    private DavPropertyName getDavName(String jcrName, Session session) throws RepositoryException {
+    protected DavPropertyName getDavName(String jcrName, Session session) throws RepositoryException {
         // make sure the local name is xml compliant
         String localName = ISO9075.encode(Text.getLocalName(jcrName));
         String prefix = Text.getNamespacePrefix(jcrName);
@@ -850,7 +850,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @return jcr name
      * @throws RepositoryException
      */
-    private String getJcrName(DavPropertyName propName) throws RepositoryException {
+    protected String getJcrName(DavPropertyName propName) throws RepositoryException {
         // remove any encoding necessary for xml compliance
         String pName = ISO9075.decode(propName.getName());
         String uri = propName.getNamespace().getURI();
@@ -882,7 +882,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param property
      * @throws RepositoryException
      */
-    private void setJcrProperty(DavProperty property) throws RepositoryException {
+    protected void setJcrProperty(DavProperty property) throws RepositoryException {
         // retrieve value
         String value = property.getValue().toString();
         // set value; since multivalued-properties are not listed in the set
@@ -894,7 +894,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param propertyName
      * @throws RepositoryException
      */
-    private void removeJcrProperty(DavPropertyName propertyName) throws RepositoryException {
+    protected void removeJcrProperty(DavPropertyName propertyName) throws RepositoryException {
         String jcrName = getJcrName(propertyName);
         if (node.hasProperty(jcrName)) {
             node.getProperty(jcrName).remove();
@@ -902,12 +902,12 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         // removal of non existing property succeeds
     }
 
-    private boolean isFilteredResource(DavResource resource) {
+    protected boolean isFilteredResource(DavResource resource) {
         // TODO: filtered nodetypes should be checked as well in order to prevent problems.
         return filter != null && filter.isFilteredResource(resource.getDisplayName(), session.getRepositorySession());
     }
 
-    private boolean isFilteredNode(Node n) {
+    protected boolean isFilteredNode(Node n) {
         return filter != null && filter.isFilteredItem(n);
     }
 
