@@ -64,6 +64,9 @@ public class JcrDavException extends DavException {
     public JcrDavException(Exception e, int errorCode) {
         super(errorCode, e.getMessage());
         exceptionClass = e.getClass();
+        if (log.isDebugEnabled()) {
+            log.debug("Handling exception with error code " + errorCode, e);
+        }
     }
 
     public JcrDavException(RepositoryException e) {
