@@ -26,21 +26,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <code>DefaultResourceFilter</code>...
+ * <code>DefaultItemFilter</code>...
  */
-public class DefaultResourceFilter implements ResourceFilter {
+public class DefaultItemFilter implements ItemFilter {
 
-    private static Logger log = Logger.getLogger(DefaultResourceFilter.class);
+    private static Logger log = Logger.getLogger(DefaultItemFilter.class);
 
     private List prefixFilter = new ArrayList();
     private List uriFilter = new ArrayList();
     private List nodetypeFilter = new ArrayList();
 
-    public DefaultResourceFilter() {
+    public DefaultItemFilter() {
     }
 
     /**
-     * @see ResourceFilter#setFilteredURIs(String[])
+     * @see ItemFilter#setFilteredURIs(String[])
      */
     public void setFilteredURIs(String[] uris) {
         if (uris != null) {
@@ -51,7 +51,7 @@ public class DefaultResourceFilter implements ResourceFilter {
     }
 
     /**
-     * @see ResourceFilter#setFilteredPrefixes(String[])
+     * @see ItemFilter#setFilteredPrefixes(String[])
      */
     public void setFilteredPrefixes(String[] prefixes) {
         if (prefixes != null) {
@@ -62,7 +62,7 @@ public class DefaultResourceFilter implements ResourceFilter {
     }
 
     /**
-     * @see ResourceFilter#setFilteredNodetypes(String[])
+     * @see ItemFilter#setFilteredNodetypes(String[])
      */
     public void setFilteredNodetypes(String[] nodetypeNames) {
         if (nodetypeNames != null) {
@@ -76,16 +76,16 @@ public class DefaultResourceFilter implements ResourceFilter {
      * Returns true if the given item matches either one of the namespace or
      * of the the nodetype filters specified.
      *
-     * @see ResourceFilter#isFilteredItem(Item)
+     * @see ItemFilter#isFilteredItem(Item)
      */
     public boolean isFilteredItem(Item item) {
         return isFilteredNamespace(item) || isFilteredNodeType(item);
     }
 
     /**
-     * @see ResourceFilter#isFilteredResource(String, Session)
+     * @see ItemFilter#isFilteredItem(String, Session)
      */
-    public boolean isFilteredResource(String displayName, Session session) {
+    public boolean isFilteredItem(String displayName, Session session) {
         return isFilteredNamespace(displayName, session);
     }
 

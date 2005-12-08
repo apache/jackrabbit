@@ -38,7 +38,7 @@ public class ResourceConfig {
 
     private static Logger log = Logger.getLogger(ResourceConfig.class);
 
-    private ResourceFilter resourceFilter;
+    private ItemFilter itemFilter;
     private IOManager ioManager;
     private String[] nodetypeNames = new String[0];
     private boolean collectionNames = false;
@@ -99,13 +99,13 @@ public class ResourceConfig {
             Element filter = root.getChild("filter");
             if (filter != null) {
                 Object inst = buildClassFromConfig(filter.getChild("class"));
-                if (inst != null && inst instanceof ResourceFilter) {
-                    resourceFilter = (ResourceFilter)inst;
+                if (inst != null && inst instanceof ItemFilter) {
+                    itemFilter = (ItemFilter)inst;
                 }
-                if (resourceFilter != null) {
+                if (itemFilter != null) {
                     Element nts = filter.getChild("nodetypes");
-                    resourceFilter.setFilteredNodetypes(parseNodeTypesEntry(nts));
-                    parseNamespacesEntry(filter.getChild("namespaces"), resourceFilter);
+                    itemFilter.setFilteredNodetypes(parseNodeTypesEntry(nts));
+                    parseNamespacesEntry(filter.getChild("namespaces"), itemFilter);
                 }
             } else {
                 log.debug("Resource configuration: no 'filter' element specified.");
@@ -136,7 +136,7 @@ public class ResourceConfig {
         return instance;
     }
 
-    private void parseNamespacesEntry(Element child, ResourceFilter filter) {
+    private void parseNamespacesEntry(Element child, ItemFilter filter) {
         if (child == null) {
             return;
         }
@@ -200,10 +200,6 @@ public class ResourceConfig {
             boolean isCollection = true;
             Node n = (Node)item;
             try {
-                if (n.getPath().equals("/")) {
-                    // the root node always represents a collection
-                    return true;
-                }
                 for (int i = 0; i < nodetypeNames.length && isCollection; i++) {
                     isCollection = collectionNames ? n.isNodeType(nodetypeNames[i]) : !n.isNodeType(nodetypeNames[i]);
                 }
@@ -217,17 +213,17 @@ public class ResourceConfig {
     }
 
     /**
-     * Returns the resource filter specified with the configuration or {@link DefaultResourceFilter}
+     * Returns the item filter specified with the configuration or {@link DefaultItemFilter}
      * if the configuration was missing the corresponding entry or the parser failed
-     * to build a <code>ResourceFilter</code> instance from the configuration.
+     * to build a <code>ItemFilter</code> instance from the configuration.
      *
-     * @return resource filter as defined by the config or {@link DefaultResourceFilter}
+     * @return item filter as defined by the config or {@link DefaultItemFilter}
      */
-    public ResourceFilter getResourceFilter() {
-        if (resourceFilter == null) {
-            log.debug("ResourceConfig: missing resource filter > building DefaultResourceFilter ");
-            resourceFilter = new DefaultResourceFilter();
+    public ItemFilter getItemFilter() {
+        if (itemFilter == null) {
+            log.debug("ResourceConfig: missing resource filter > building DefaultItemFilter ");
+            itemFilter = new DefaultItemFilter();
         }
-        return resourceFilter;
+        return itemFilter;
     }
 }
