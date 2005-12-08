@@ -16,64 +16,86 @@
    limitations under the License.
   -->
 <document>
- <properties>
-  <title>Overview</title>
- </properties>
- <body>
-
-<section name="Apache Jackrabbit">
-<p>
-<a href="http://www.apachecon.com/2005/US/index.html"
-   class="externalLink" title="External Link"><img
-   src="http://www.apache.org/images/ac2005us_white_184x80.jpg"
-   width="184" height="80" border="0" title="ApacheCon US 2005"
-   align="right" valign="top" alt="ApacheCon 2005 US"></img></a>
-The Apache Jackrabbit Project has been formed to develop an open source
-implementation of the Content Repository for Java Technology API (JCR),
-as specified within the Java Community Process as
-<a href="http://www.jcp.org/en/jsr/detail?id=170">JSR 170</a> and
-<a href="http://www.jcp.org/en/jsr/detail?id=170">JSR 283</a>.
-<a href="http://www.day.com/">Day Software</a>, the JCR specification lead,
-has licensed an initial implementation of the JCR reference implementation for
-use as seed code for this project.  JCR specifies an API for application
-developers (and application frameworks) to use for interaction with modern
-content repositories that provide content services such as searching,
-versioning, transactions, etc.
-</p>
-<p>
-Jackrabbit's implementation began as a proposal within the
-<a href="http://jakarta.apache.org/slide/index.html">Jakarta Slide</a>project,
-but has since attracted interest from multiple projects with the
-<a href="http://www.apache.org/">Apache Software Foundation</a>, including
-Slide, Cocoon, Lenya, XML Indexing, Axion, and Derby.  We are also looking at
-integration with projects such as Beehive, Maven, and Portals.
-</p>
-<p>
-The purpose of this incubation period is to attract additional contributors
-from other Apache projects and from the various expert group companies,
-learn the Apache way of doing things, and allow the developers to focus on this
-interface/implementation rather than all of the existing projects that might
-want to use it.  We hope to improve collaboration on the code base by moving
-all of the active developers and authors to Apache, bring in as many of the
-Apache veterans as wish to get involved, and open it up to all of the 22 expert
-group companies.  Development of the JCR RI and TCK will occur in this project
--- Day Software plans to continue participation in Jackrabbit and use the code
-in the official (binary) RI and TCK releases, allowing developers to beta test
-against the open source versions as well as the official versions.
-</p>
-</section>
-<section name="Releases">
-<p>
-See the <a href="downloads.html">downloads</a> page for information on
-obtaining releases.
-</p>
-</section>
-
-<section name="Documentation">
-<p>
-The <a href="apidocs/index.html">JavaDoc API documents</a> are available online.
-</p>
-</section>
-
-</body>
+    <properties>
+        <title>Welcome to Jackrabbit</title>
+    </properties>
+    <body>
+        <section name="The Open Source Content Repository for Java">
+            <p>
+                The Apache Jackrabbit project is an effort to build and maintain an open source
+                implemention of the Content Repository for Java Technology API (JCR).
+            </p>
+            <p>
+                JCR 1.0 is specifed in
+                <a href="http://jcp.org/en/jsr/detail?id=170" class="externalLink" title="External Link">Java Specification Request 170 (JSR-170)</a>.
+                Work on JCR v2.0 has begun in <a href="http://jcp.org/en/jsr/detail?id=283" class="externalLink" title="External Link">JSR 283</a>.
+            </p>
+        </section>
+        <section name="Releases">
+            <p>
+                There are no releases available yet, but development is progressing quickly.
+                To get Jackrabbit right now you can <a href="doc/building.html">checkout and build</a>
+                your own instance. To see what still needs to be done before the first release, take
+                a look at the  <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">Jira Road Map</a>.
+            </p>
+            <!--
+            <p>
+                The following releases are available:
+            </p>
+            <ul>
+                <li>Version 1.1 - 20 October 2003</li>
+                <li>Version 1.0 - 12 August 2002</li>
+            </ul>
+            <br/>
+            <p>
+                The latest binary release is always available on the
+                <a href="http://jakarta.apache.org/site/binindex.cgi#commons-uid">Jakarta Binary Downloads page</a>,
+                its source is available from
+                <a href="http://jakarta.apache.org/site/sourceindex.cgi#commons-uid">Jakarta Source Downloads page</a>.
+            </p>
+            <p>
+                Older releases are retained by the Apache Software Foundation but are moved into a
+                <a href="http://archive.apache.org/dist/jakarta/commons/uid/">special archive area</a>.
+            </p>
+            <p>
+                <a href="http://cvs.apache.org/builds/jakarta-commons/nightly/commons-uid/">Nightly source and binary drops</a>
+                are also available.
+            </p>
+            -->
+        </section>
+        <section name="Documentation">
+            <p>
+                For a basic overview and details on getting started, have a look at
+                the <a href="doc/index.html">Jackrabbit documention</a> on this site.
+            </p>
+            <p>
+                Jackrabbit exposes most of its functionality to client applications thought that the JCR v1.0 API.
+                If you want more detail on the API you can browse the Javadoc at
+                <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0" class="externalLink" title="External Link">http://www.day.com/maven/jsr170/javadocs/jcr-1.0</a><br/>
+                or download it as a zipped package at <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0.javadoc" class="externalLink" title="External Link">http://www.day.com/maven/jsr170/javadocs/jcr-1.0.javadoc</a>
+            </p>
+            <p>
+                If you really want to know all the details, the best current documentation available
+                is the JCR v1.0 specification itself, which you can get here:
+                <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html" class="externalLink" title="External Link">http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html</a>
+            </p>
+            <p>
+                In addition to implementing the JCR API, Jackrabbit has many extensions and
+                admistrational features that are not (yet) specified by JCR.
+                (see <a href="arch/index.html">Architecture Overview</a>). You can browse the
+                internal Jackrabbit API here: <a href="http://incubator.apache.org/jackrabbit/apidocs/index.html">http://incubator.apache.org/jackrabbit/apidocs/index.html</a>
+            </p>
+        </section>
+        <section name="Downloads">
+            <p>
+                For a quick guide to getting the source code, see the 
+                <a href="downloads.xml">Downloads</a> page.
+            </p> 
+        </section>
+        <section name ="About">
+            <p>
+                Have a look <a href="about.html">here</a> for more project-level details.
+            </p>
+        </section>
+    </body>
 </document>
