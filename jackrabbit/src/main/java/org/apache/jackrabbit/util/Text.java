@@ -266,7 +266,7 @@ public class Text {
     /**
      * The list of characters that are not encoded by the <code>escape()</code>
      * and <code>unescape()</code> METHODS. They contains the characters as
-     * defined 'unreserved' in section 2.3 of the RFC 2396 'URI genric syntax':
+     * defined 'unreserved' in section 2.3 of the RFC 2396 'URI generic syntax':
      * <p/>
      * <pre>
      * unreserved  = alphanum | mark
@@ -309,7 +309,7 @@ public class Text {
     /**
      * Does an URL encoding of the <code>string</code> using the
      * <code>escape</code> character. The characters that don't need encoding
-     * are those defined 'unreserved' in section 2.3 of the 'URI genric syntax'
+     * are those defined 'unreserved' in section 2.3 of the 'URI generic syntax'
      * RFC 2396, but without the escape character.
      *
      * @param string the string to encode.
@@ -324,7 +324,7 @@ public class Text {
     /**
      * Does an URL encoding of the <code>string</code> using the
      * <code>escape</code> character. The characters that don't need encoding
-     * are those defined 'unreserved' in section 2.3 of the 'URI genric syntax'
+     * are those defined 'unreserved' in section 2.3 of the 'URI generic syntax'
      * RFC 2396, but without the escape character. If <code>isPath</code> is
      * <code>true</code>, additionally the slash '/' is ignored, too.
      *
@@ -358,7 +358,7 @@ public class Text {
     /**
      * Does a URL encoding of the <code>string</code>. The characters that
      * don't need encoding are those defined 'unreserved' in section 2.3 of
-     * the 'URI genric syntax' RFC 2396.
+     * the 'URI generic syntax' RFC 2396.
      *
      * @param string the string to encode
      * @return the escaped string
@@ -371,7 +371,7 @@ public class Text {
     /**
      * Does a URL encoding of the <code>path</code>. The characters that
      * don't need encoding are those defined 'unreserved' in section 2.3 of
-     * the 'URI genric syntax' RFC 2396. In contrast to the
+     * the 'URI generic syntax' RFC 2396. In contrast to the
      * {@link #escape(String)} method, not the entire path string is escaped,
      * but every individual part (i.e. the slashes are not escaped).
      *
