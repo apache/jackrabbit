@@ -18,7 +18,7 @@
             <description>initial log4j configuration</description>
         </init-param>
 
-        <load-on-startup>0</load-on-startup>
+        <load-on-startup>1</load-on-startup>
     </servlet>
 
     <!-- ====================================================================== -->
@@ -96,7 +96,7 @@
             <param-value>org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory</param-value>
         </init-param>
 
-        <load-on-startup>1</load-on-startup>
+        <load-on-startup>2</load-on-startup>
     </servlet>
 
 
@@ -160,7 +160,7 @@
         </init-param>
         -->
 
-        <load-on-startup>2</load-on-startup>
+        <load-on-startup>3</load-on-startup>
     </servlet>
 
     <!-- ====================================================================== -->
@@ -204,7 +204,7 @@
                 Defines various dav-resource configuration parameters.
             </description>
         </init-param>
-        <load-on-startup>3</load-on-startup>
+        <load-on-startup>4</load-on-startup>
     </servlet>
 
     <!-- ====================================================================== -->
@@ -224,7 +224,7 @@
                 defines the prefix for spooling resources out of the repository.
             </description>
         </init-param>
-        <load-on-startup>4</load-on-startup>
+        <load-on-startup>5</load-on-startup>
     </servlet>
 
     <!-- ====================================================================== -->
