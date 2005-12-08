@@ -1033,10 +1033,13 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
                     stmt.execute();
                     final ResultSet rs = stmt.getResultSet();
                     if (!rs.next()) {
+                        closeResultSet(rs);
                         throw new Exception("no such BLOB: " + blobId);
                     }
                     InputStream in = rs.getBinaryStream(1);
                     if (in == null) {
+                        // some databases treat zero-length values as NULL;
+                        // return empty InputStream in such a case
                         closeResultSet(rs);
                         return new ByteArrayInputStream(new byte[0]);
                     }
@@ -1048,7 +1051,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
                     return new FilterInputStream(in) {
                         public void close() throws IOException {
                             in.close();
-                            // close ResultSet
+                            // now it's safe to close ResultSet
                             closeResultSet(rs);
                         }
                     };
