@@ -18,6 +18,7 @@ package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.ISO8601;
 import org.apache.jackrabbit.test.api.nodetype.NodeTypeUtil;
 
 import javax.jcr.nodetype.PropertyDefinition;
@@ -27,6 +28,8 @@ import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Property;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * <code>SetPropertyAssumeTypeTest</code> tests if when setting a property
@@ -440,7 +443,10 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
         String testPropName = propDef.getName();
 
         try {
-            testNode.setProperty(testPropName, stringValue, PropertyType.DATE);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(new Date(0));
+            Value v = superuser.getValueFactory().createValue(ISO8601.format(cal));
+            testNode.setProperty(testPropName, v, PropertyType.DATE);
             testRootNode.save();
             fail("Node.setProperty(String, Value, int) must throw a " +
                  "ConstraintViolationExcpetion if the type parameter and the " +
@@ -474,7 +480,9 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
         String testPropName = propDef.getName();
 
         try {
-            testNode.setProperty(testPropName, "abc", PropertyType.DATE);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(new Date(0));
+            testNode.setProperty(testPropName, ISO8601.format(cal), PropertyType.DATE);
             testRootNode.save();
             fail("Node.setProperty(String, Value, int) must throw a " +
                  "ConstraintViolationExcpetion if the type parameter and the " +
