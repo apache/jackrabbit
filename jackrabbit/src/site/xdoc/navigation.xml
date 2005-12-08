@@ -36,7 +36,9 @@
         <item name="Model 3 (Server)"                    href="/doc/deploy/howto-model3.html"/>
       </item>
       <item name="Configuring Jackrabbit"                href="/doc/config.html" />
-      <item name="Nodetype Modelling"                    href="/doc/nodetype.html" />
+      <item name="Node Types"                            href="/doc/nodetype/index.html" collapse="true">
+          <item name="Node Type Notation"                href="/doc/nodetype/cnd.html" />
+      </item>
     </item>
     <item name="Layout"                 href="/layout.html"/>
     <item name="Downloads"              href="/downloads.html"/>

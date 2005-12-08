@@ -43,15 +43,19 @@ Documentation.<br clear="all"/>
 <p>
 <a href="arch/operate/index.html"><img align="left" style="margin:10px;padding:1px;border:1px solid black" src="../images/arch/thumb_ism.jpg" /></a>
 Find out more about the <a href="arch/overview.html">Jackrabbit Architecture</a> or
-learn more about the <a href="arch/deploy.html">Jackrabbit deployment Options</a> be
-it as an <a href="arch/deploy/howto-model1.html">embedded content repository</a> to be 
-delivered with you are application, a <a href="arch/deploy/howto-model2.html">shared repository</a> 
-for example in a J2EE environment or a classical <a href="arch/deploy/howto-model3.html">content repository server</a> setup.
+learn more about the <a href="deploy.html">Jackrabbit deployment Options</a> be
+it as an <a href="deploy/howto-model1.html">embedded content repository</a> to be 
+delivered with you are application, a <a href="deploy/howto-model2.html">shared repository</a> 
+for example in a J2EE environment or a classical <a href="deploy/howto-model3.html">content repository server</a> setup.
 <br clear="all"/>
 </p>
 </section>
-<section name="Nodetype Modelling Guide">
+<section name="Node Types">
 <p>
+<a href="nodetype/index.html"><img align="left" style="margin:10px;padding:1px;border:1px solid black" src="../images/nodetype/thumb_cnd.jpg" /></a>
+To learn about the content modelling system used in Jackrabbit, read the 
+<a href="nodetype/index.html">section on node types</a>.
+<br clear="all"/>
 </p>
 </section>
 </body>
