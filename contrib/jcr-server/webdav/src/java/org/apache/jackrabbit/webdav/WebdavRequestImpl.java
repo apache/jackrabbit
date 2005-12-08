@@ -260,7 +260,6 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      */
     public Document getRequestDocument() {
         Document requestDocument = null;
-        if (httpRequest.getContentLength() > 0) {
             // try to parse the request body
             try {
                 InputStream in = httpRequest.getInputStream();
@@ -275,7 +274,6 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             } catch (JDOMException e) {
                 if (log.isDebugEnabled()) {
                     log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
-                }
             }
         }
         return requestDocument;

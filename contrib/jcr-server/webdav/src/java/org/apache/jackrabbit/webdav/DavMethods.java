@@ -288,8 +288,34 @@ public class DavMethods {
                                    DAV_LABEL, DAV_COPY };
     }
 
-    public static boolean isMethodAffectedByLabel(String method) {
-        int code = getMethodCode(method);
+   /**
+     * Returns <code>true</code> if the request is to create a
+     * resource. True for <code>MKCOL</code>, <code>PUT</code> and
+     * <code>POST</code> requests.
+     */
+    public static boolean isCreateRequest(DavServletRequest request) {
+        int methodCode = getMethodCode(request.getMethod());
+        return (methodCode == DAV_MKCOL ||
+                methodCode == DAV_PUT ||
+                methodCode == DAV_POST);
+    }
+
+    /**
+     * Returns <code>true</code> if the request is to create a
+     * collection resource. True for <code>MKCOL</code> requests.
+     */
+    public static boolean isCreateCollectionRequest(DavServletRequest request) {
+        return (getMethodCode(request.getMethod()) == DAV_MKCOL);
+    }
+
+    /**
+     * Returns true, if the specified method is affected by a Label header
+     *
+     * @param request
+     * @return
+     */
+    public static boolean isMethodAffectedByLabel(DavServletRequest request) {
+        int code = getMethodCode(request.getMethod());
         for (int i = 0; i < labelMethods.length; i++) {
             if (code == labelMethods[i]) {
                 return true;
