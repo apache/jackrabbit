@@ -71,7 +71,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     private boolean inited = false;
     private boolean isCollection = true;
 
-    private ResourceFilter filter;
+    private ItemFilter filter;
     private IOManager ioManager;
 
     private long modificationTime = IOUtil.UNDEFINED_TIME;
@@ -88,7 +88,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         this.session = session;
         this.factory = factory;
         this.locator = locator;
-        this.filter = config.getResourceFilter();
+        this.filter = config.getItemFilter();
         this.ioManager = config.getIOManager();
 
         if (locator != null && locator.getResourcePath() != null) {
@@ -274,14 +274,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
         // non-protected JCR properties defined on the underlying jcr node
         try {
-            // todo: should filter be respected for properties as well?
             PropertyIterator it = node.getProperties();
             while (it.hasNext()) {
                 Property p = it.nextProperty();
                 String pName = p.getName();
                 PropertyDefinition def = p.getDefinition();
-                if (def.isMultiple()) {
-                    log.debug("Multivalue property '" + pName + "' not added to webdav property set.");
+                if (def.isMultiple() || isFilteredItem(p)) {
+                    log.debug("Property '" + pName + "' not added to webdav property set (either multivalue or filtered).");
                     continue;
                 }
                 DavPropertyName name = getDavName(pName, node.getSession());
@@ -291,7 +290,6 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         } catch (RepositoryException e) {
             log.error("Unexpected error while retrieving properties: " + e.getMessage());
         }
-
         inited = true;
     }
 
@@ -456,7 +454,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                 NodeIterator it = node.getNodes();
                 while (it.hasNext()) {
                     Node n = it.nextNode();
-                    if (!isFilteredNode(n)) {
+                    if (!isFilteredItem(n)) {
                         DavResourceLocator resourceLocator = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), n.getPath(), false);
                         DavResource childRes = factory.createResource(resourceLocator, session);
                         list.add(childRes);
@@ -776,7 +774,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      *
      * @return true if this resource is lockable.
      */
-    protected boolean isJsrLockable() {
+    private boolean isJsrLockable() {
         boolean lockable = false;
         if (exists()) {
             try {
@@ -800,7 +798,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      *
      * @return true if this resource cannot be modified due to a write lock
      */
-    protected boolean isLocked(DavResource res) {
+    private boolean isLocked(DavResource res) {
         ActiveLock lock = res.getLock(Type.WRITE, Scope.EXCLUSIVE);
         if (lock == null) {
             return false;
@@ -826,7 +824,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param session
      * @return a <code>DavPropertyName</code> for the given jcr name.
      */
-    protected DavPropertyName getDavName(String jcrName, Session session) throws RepositoryException {
+    private DavPropertyName getDavName(String jcrName, Session session) throws RepositoryException {
         // make sure the local name is xml compliant
         String localName = ISO9075.encode(Text.getLocalName(jcrName));
         String prefix = Text.getNamespacePrefix(jcrName);
@@ -850,7 +848,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @return jcr name
      * @throws RepositoryException
      */
-    protected String getJcrName(DavPropertyName propName) throws RepositoryException {
+    private String getJcrName(DavPropertyName propName) throws RepositoryException {
         // remove any encoding necessary for xml compliance
         String pName = ISO9075.decode(propName.getName());
         String uri = propName.getNamespace().getURI();
@@ -882,7 +880,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param property
      * @throws RepositoryException
      */
-    protected void setJcrProperty(DavProperty property) throws RepositoryException {
+    private void setJcrProperty(DavProperty property) throws RepositoryException {
         // retrieve value
         String value = property.getValue().toString();
         // set value; since multivalued-properties are not listed in the set
@@ -894,7 +892,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param propertyName
      * @throws RepositoryException
      */
-    protected void removeJcrProperty(DavPropertyName propertyName) throws RepositoryException {
+    private void removeJcrProperty(DavPropertyName propertyName) throws RepositoryException {
         String jcrName = getJcrName(propertyName);
         if (node.hasProperty(jcrName)) {
             node.getProperty(jcrName).remove();
@@ -902,13 +900,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         // removal of non existing property succeeds
     }
 
-    protected boolean isFilteredResource(DavResource resource) {
+    private boolean isFilteredResource(DavResource resource) {
         // TODO: filtered nodetypes should be checked as well in order to prevent problems.
-        return filter != null && filter.isFilteredResource(resource.getDisplayName(), session.getRepositorySession());
+        return filter != null && filter.isFilteredItem(resource.getDisplayName(), session.getRepositorySession());
     }
 
-    protected boolean isFilteredNode(Node n) {
-        return filter != null && filter.isFilteredItem(n);
+    private boolean isFilteredItem(Item item) {
+        return filter != null && filter.isFilteredItem(item);
     }
 
     //--------------------------------------------------------< inner class >---

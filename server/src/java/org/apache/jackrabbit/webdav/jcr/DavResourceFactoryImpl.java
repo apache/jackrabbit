@@ -85,7 +85,7 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
                 instead.*/
                 if (request instanceof DeltaVServletRequest && isVersionControlled(resource)) {
                     String labelHeader = ((DeltaVServletRequest)request).getLabel();
-                    if (labelHeader != null && DavMethods.isMethodAffectedByLabel(request.getMethod())) {
+                    if (labelHeader != null && DavMethods.isMethodAffectedByLabel(request)) {
                         Item item = getItem(session, locator);
                         Version v = ((Node)item).getVersionHistory().getVersionByLabel(labelHeader);
                         DavResourceLocator vloc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), v.getPath(), false);

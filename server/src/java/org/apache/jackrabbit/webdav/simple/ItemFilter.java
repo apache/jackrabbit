@@ -19,9 +19,9 @@ import javax.jcr.Item;
 import javax.jcr.Session;
 
 /**
- * <code>ResourceFilter</code> 
+ * <code>ItemFilter</code>
  */
-public interface ResourceFilter {
+public interface ItemFilter {
 
     /**
      * Define the URIs that should be filtered out if present in the prefix
@@ -59,9 +59,9 @@ public interface ResourceFilter {
     /**
      * Returns true if the resouce with the given name should be filtered.
      *
-     * @param displayName to be tested for a filtered namespace prefix
+     * @param name to be tested for a filtered namespace prefix
      * @param session used for looking up namespace mappings
      * @return true if the given resource should be filtered.
      */
-    public boolean isFilteredResource(String displayName, Session session);
+    public boolean isFilteredItem(String name, Session session);
 }

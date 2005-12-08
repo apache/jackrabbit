@@ -34,8 +34,8 @@ import javax.jcr.RepositoryException;
  */
 public class ResourceFactoryImpl implements DavResourceFactory {
 
-    private LockManager lockMgr;
-    private ResourceConfig resourceConfig;
+    private final LockManager lockMgr;
+    private final ResourceConfig resourceConfig;
 
     /**
      * Create a new <code>ResourceFactory</code> that uses the given lock
@@ -75,8 +75,8 @@ public class ResourceFactoryImpl implements DavResourceFactory {
     public DavResource createResource(DavResourceLocator locator, DavServletRequest request,
                                       DavServletResponse response) throws DavException {
         DavResourceImpl resource = (DavResourceImpl)createResource(locator, request.getDavSession());
-        if (isCreateRequest(request) && ! resource.exists()) {
-            resource.setIsCollection(isCreateCollectionRequest(request));
+        if (DavMethods.isCreateRequest(request) && ! resource.exists()) {
+            resource.setIsCollection(DavMethods.isCreateCollectionRequest(request));
         }
         return resource;
     }
@@ -99,50 +99,5 @@ public class ResourceFactoryImpl implements DavResourceFactory {
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
-    }
- 
-    /**
-     * Returns <code>true</code> if the request is to create a
-     * resource. True for <code>MKCOL</code>, <code>PUT</code> and
-     * <code>POST</code> requests.
-     */
-    protected boolean isCreateRequest(DavServletRequest request) {
-        int methodCode = DavMethods.getMethodCode(request.getMethod());
-        return (methodCode == DavMethods.DAV_MKCOL ||
-                methodCode == DavMethods.DAV_PUT ||
-                methodCode == DavMethods.DAV_POST);
-    }
- 
-    /**
-     * Returns <code>true</code> if the request is to create a
-     * collection resource. True for <code>MKCOL</code> requests.
-     */
-    protected boolean isCreateCollectionRequest(DavServletRequest request) {
-        return (DavMethods.getMethodCode(request.getMethod()) ==
-                DavMethods.DAV_MKCOL);
-    }
- 
-    /**
-     */
-    public LockManager getLockManager() {
-        return lockMgr;
-    }
- 
-    /**
-     */
-    public void setLockManager(LockManager lockMgr) {
-        this.lockMgr = lockMgr;
-    }
- 
-    /**
-     */
-    public ResourceConfig getResourceConfig() {
-        return resourceConfig;
-    }
- 
-    /**
-     */
-    public void setResourceConfig(ResourceConfig resourceConfig) {
-        this.resourceConfig = resourceConfig;
     }
 }
