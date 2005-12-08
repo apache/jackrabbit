@@ -82,7 +82,7 @@
             <p>
                 In addition to implementing the JCR API, Jackrabbit has many extensions and
                 admistrational features that are not (yet) specified by JCR.
-                (see <a href="arch/index.html">Architecture Overview</a>). You can browse the
+                (see <a href="doc/arch/overview.html">Architecture Overview</a>). You can browse the
                 internal Jackrabbit API here: <a href="http://incubator.apache.org/jackrabbit/apidocs/index.html">http://incubator.apache.org/jackrabbit/apidocs/index.html</a>
             </p>
         </section>
