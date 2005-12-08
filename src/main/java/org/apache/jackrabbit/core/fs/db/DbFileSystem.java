@@ -379,7 +379,7 @@ public class DbFileSystem implements FileSystem {
 
             // close jdbc connection
             con.close();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             String msg = "error closing file system";
             log.error(msg, e);
             throw new FileSystemException(msg, e);
@@ -425,7 +425,7 @@ public class DbFileSystem implements FileSystem {
                 stmt.setString(1, parentDir);
                 stmt.setString(2, name);
                 count = stmt.executeUpdate();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to delete file: " + filePath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -465,7 +465,7 @@ public class DbFileSystem implements FileSystem {
                 stmt.setString(3, folderPath);
                 stmt.setString(4, folderPath + FileSystem.SEPARATOR + "%");
                 count = stmt.executeUpdate();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to delete folder: " + folderPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -504,7 +504,7 @@ public class DbFileSystem implements FileSystem {
                 // a file system entry exists if the result set
                 // has at least one entry
                 return rs.next();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to check existence of file system entry: " + path;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -539,7 +539,7 @@ public class DbFileSystem implements FileSystem {
 
                 // a file exists if the result set has at least one entry
                 return rs.next();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to check existence of file: " + path;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -574,7 +574,7 @@ public class DbFileSystem implements FileSystem {
 
                 // a folder exists if the result set has at least one entry
                 return rs.next();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to check existence of folder: " + path;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -610,7 +610,7 @@ public class DbFileSystem implements FileSystem {
                     throw new FileSystemException("no such file system entry: " + path);
                 }
                 return rs.getLong(1);
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to determine lastModified of file system entry: " + path;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -646,7 +646,7 @@ public class DbFileSystem implements FileSystem {
                     throw new FileSystemException("no such file: " + filePath);
                 }
                 return rs.getLong(1);
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to determine length of file: " + filePath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -687,7 +687,7 @@ public class DbFileSystem implements FileSystem {
                     count--;
                 }
                 return (count > 0);
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to determine child count of file system entry: " + path;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -730,7 +730,7 @@ public class DbFileSystem implements FileSystem {
                     names.add(name);
                 }
                 return (String[]) names.toArray(new String[names.size()]);
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to list child entries of folder: " + folderPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -767,7 +767,7 @@ public class DbFileSystem implements FileSystem {
                     names.add(rs.getString(1));
                 }
                 return (String[]) names.toArray(new String[names.size()]);
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to list file entries of folder: " + folderPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -810,7 +810,7 @@ public class DbFileSystem implements FileSystem {
                     names.add(name);
                 }
                 return (String[]) names.toArray(new String[names.size()]);
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to list folder entries of folder: " + folderPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -842,7 +842,7 @@ public class DbFileSystem implements FileSystem {
                 stmt.setString(2, parentDir);
                 stmt.setString(3, name);
                 count = stmt.executeUpdate();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to touch file: " + filePath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -891,7 +891,7 @@ public class DbFileSystem implements FileSystem {
                         closeResultSet(rs);
                     }
                 };
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to retrieve data of file: " + filePath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -1243,7 +1243,7 @@ public class DbFileSystem implements FileSystem {
                     // root entry exists
                     return;
                 }
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to check existence of file system root entry";
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -1282,7 +1282,7 @@ public class DbFileSystem implements FileSystem {
                 stmt.setString(2, name);
                 stmt.setLong(3, System.currentTimeMillis());
                 stmt.executeUpdate();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to create folder entry: " + folderPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -1322,7 +1322,7 @@ public class DbFileSystem implements FileSystem {
                 stmt.setString(1, destPath);
                 stmt.setString(2, srcPath);
                 stmt.executeUpdate();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to copy file entries from " + srcPath + " to " + destPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
@@ -1366,7 +1366,7 @@ public class DbFileSystem implements FileSystem {
                 stmt.setString(3, srcParentDir);
                 stmt.setString(4, srcName);
                 stmt.executeUpdate();
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 String msg = "failed to copy file from " + srcPath + " to " + destPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
