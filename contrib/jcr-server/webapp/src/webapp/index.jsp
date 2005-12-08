@@ -37,7 +37,7 @@
             <li><a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518 (WebDAV 1,2)</a></li>
             <li><a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253 (DeltaV)</a></li>
             <li><a href="http://www.ietf.org/rfc/rfc3648.txt">RFC 3648 (Ordering)</a></li>
-            <li><a href="http://greenbytes.de/tech/webdav/draft-reschke-webdav-search-latest.html#rfc.section.1.5">Internet Draft WebDAV Search</a>.</li>
+            <li><a href="http://greenbytes.de/tech/webdav/draft-reschke-webdav-search-latest.html">Internet Draft WebDAV Search</a>.</li>
         </ul>
         <p/>
         Enter the following URL to your WebDAV client:<br>
