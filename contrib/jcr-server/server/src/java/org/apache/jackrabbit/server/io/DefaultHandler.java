@@ -399,7 +399,7 @@ public class DefaultHandler implements IOHandler {
             }
 
             String mimeType = null;
-            String encoding = "UTF-8"; // assume default encoding
+            String encoding = null;
             if (contentNode.hasProperty(JcrConstants.JCR_MIMETYPE)) {
                 mimeType = contentNode.getProperty(JcrConstants.JCR_MIMETYPE).getString();
             }
