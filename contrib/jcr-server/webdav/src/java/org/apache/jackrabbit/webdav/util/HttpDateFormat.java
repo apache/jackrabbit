@@ -30,5 +30,4 @@ public class HttpDateFormat extends SimpleDateFormat {
         super(pattern, Locale.ENGLISH);
         super.setTimeZone(GMT_TIMEZONE);
     }
-
 }
