@@ -1358,6 +1358,7 @@ public class DbFileSystem implements FileSystem {
             deleteFile(destPath);
         }
 
+        int count = 0;
         PreparedStatement stmt = copyFileStmt;
         synchronized (stmt) {
             try {
@@ -1365,7 +1366,7 @@ public class DbFileSystem implements FileSystem {
                 stmt.setString(2, destName);
                 stmt.setString(3, srcParentDir);
                 stmt.setString(4, srcName);
-                stmt.executeUpdate();
+                count = stmt.executeUpdate();
             } catch (SQLException e) {
                 String msg = "failed to copy file from " + srcPath + " to " + destPath;
                 log.error(msg, e);
@@ -1373,6 +1374,10 @@ public class DbFileSystem implements FileSystem {
             } finally {
                 resetStatement(stmt);
             }
+        }
+
+        if (count == 0) {
+            throw new FileSystemException("no such file: " + srcPath);
         }
     }
 
