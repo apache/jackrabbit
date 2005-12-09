@@ -76,7 +76,7 @@
                 </dd>
                 <dt><strong>Supertypes</strong></dt>
                 <dd>
-                    A primary node type (with the exception of nt:base) must extend another node type (and may extend
+                    A primary node type (with the exception of <code>nt:base</code>) must extend another node type (and may extend
                     more than one node type). A mixin node type may extend another node type.
                 </dd>
                 <dt><strong>Mixin Status</strong></dt>
@@ -256,13 +256,13 @@ import java.util.List;
 import java.util.Iterator
 
 public class CustomNodeTypeExample {
-    public static void RegisterCustomNodeTypes(Workspace ws){
+    public static void RegisterCustomNodeTypes(Workspace ws, String cndFileName){
 
         // Read in the CND file
-        FileReader fileReader = new FileReader(fileName);
+        FileReader fileReader = new FileReader(cndFileName);
 
         // Create a CompactNodeTypeDefReader
-        CompactNodeTypeDefReader cndReader = new CompactNodeTypeDefReader(fileReader, fileName);
+        CompactNodeTypeDefReader cndReader = new CompactNodeTypeDefReader(fileReader, cndFileName);
 
         // Get the List of NodeTypeDef objects
         List ntdList = cndReader.getNodeTypeDefs;
@@ -275,7 +275,7 @@ public class CustomNodeTypeExample {
         // Acquire the NodeTypeRegistry
         NodeTypeRegistry ntreg = ntmgr.getNodeTypeRegistry();
 
-        // Loop through the prepared NodeTYpeDefs
+        // Loop through the prepared NodeTypeDefs
         for (Iterator i = ntdList.iterator(); i.hasNext();) {
 
             // Get the NodeTypeDef...

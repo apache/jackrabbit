@@ -19,14 +19,14 @@
  <title>Jackrabbit</title>
  <body>
   <menu name="Apache Jackrabbit">
-    <item name="About"                                   href="/about.html" />
+    <item name="Home"                                    href="/index.html" />
     <item name="Documentation"                           href="/doc/index.html"  collapse="true">
       <item name="Building Jackrabbit"                   href="/doc/building.html" />
-      <item name="First&#xA0;Steps"                      href="/doc/firststeps.html" />
-      <item name="JCR&#xA0;&amp;&#xA0;API"               href="/doc/arch/overview/jcrlevels.html"/>
-      <item name="Jackrabbit&#xA0;Architecture"          href="/doc/arch/overview.html" collapse="true">
-        <item name="How&#xA0;Jackrabbit&#xA0;works"      href="/doc/arch/operate/index.html"/>
-        <item name="Start-up,&#xA0;Initialize"           href="/doc/arch/operate/startup.html"/>
+      <item name="First Hops"                           href="/doc/firststeps.html" />
+      <item name="JCR &amp; API"                         href="/doc/arch/overview/jcrlevels.html"/>
+      <item name="Jackrabbit Architecture"               href="/doc/arch/overview.html" collapse="true">
+        <item name="How Jackrabbit works"                href="/doc/arch/operate/index.html"/>
+        <item name="Start-up, Initialize"                href="/doc/arch/operate/startup.html"/>
         <item name="QueryManager"                        href="/doc/arch/operate/query.html"/>
       </item>
       <item name="Deployment&#xA0;Models"                href="/doc/deploy.html" collapse="true">
@@ -40,9 +40,10 @@
           <item name="Node Type Notation"                href="/doc/nodetype/cnd.html" />
       </item>
     </item>
-    <item name="Layout"                 href="/layout.html"/>
-    <item name="Downloads"              href="/downloads.html"/>
-    <item name="FAQ"                    href="/faq.html"/>
+    <item name="Layout"                                  href="/layout.html"/>
+    <item name="Downloads"                               href="/downloads.html"/>
+    <item name="FAQ"                                     href="/faq.html"/>
+    <item name="About"                                   href="/about.html" />
   </menu>
  </body>
 </project>

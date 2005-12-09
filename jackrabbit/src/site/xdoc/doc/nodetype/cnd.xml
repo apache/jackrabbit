@@ -48,7 +48,7 @@ orderable
 // This is a mixin node type
 mixin
 
-// A property called 'ex:property' of type STRING
+// Nodes of this node type have a property called 'ex:property' of type STRING
 - ex:property (string)
 
 // The default values for this
@@ -70,17 +70,17 @@ version
 // The constraint settings are...
 < 'constraint1', 'constraint2'
 
-// A child node called ns:node which must be of
+// Nodes of this node type have a child node called ns:node which must be of
 // at least the node types ns:reqType1 and ns:reqType2
 + ns:node (ns:reqType1, ns:reqType2)
 
-// with default primary node type is...
+// and the default primary node type of the child node is...
 = ns:defaultType
 
-// This node is...
+// This child node is...
 mandatory autocreated protected
 
-// supports same name siblings
+// and supports same name siblings
 multiple
 
 // and has an on-parent-version setting of ...
@@ -93,7 +93,7 @@ version]]></source>
 [ns:NodeType] > ns:ParentType1, ns:ParentType2
   orderable mixin
   - ex:property (string)
-= 'default1', 'default2'
+  = 'default1', 'default2'
     primary mandatory autocreated protected multiple
     version
     < 'constraint1', 'constraint2'
@@ -112,7 +112,7 @@ version]]></source>
         </section>
         <section name="Grammar">
             <p>
-                The following grammar defines the CND notation. Terminal symbols are bold and in double quotes.
+                The following grammar defines the CND notation. Terminal symbols are in double quotes.
             </p>
 <source><![CDATA[cnd ::= {ns_mapping | node_type_def}
 
@@ -195,8 +195,8 @@ unquoted_string ::= /* a string */]]></source>
 <source><![CDATA[cnd ::= {ns_mapping | node_type_def}]]></source>    
         <p>        
             A CND consists of zero or more blocks, each of which is either namespace declaration or 
-            a node type definition. Namespace prefixes referenced in a node type definition block must 
-            be declared in a preceding namespace declaration block.
+            a node type definition. Namespace prefixes referenced in a node type definition block 
+            must be declared in a preceding namespace declaration block.
         </p>
         <subsection name="Namespace Declaration">
 <source><![CDATA[ns_mapping ::= "<" prefix "=" uri ">"
@@ -299,10 +299,12 @@ property_type ::= "STRING" | "String |"string" |
         </subsection>
         <subsection name="Default Values">
 <source><![CDATA[default_values ::= "=" string_list]]></source>
-        The default value or values, in the case of a multi-value property, are indicated 
-        by an equal sign followed by either a single value in string form or a comma-delimited 
-        list of values. The values may be single-quoted. If the default value definition is 
-        missing then no default value is set.
+            <p>
+                The default value or values, in the case of a multi-value property, are indicated 
+                by an equal sign followed by either a single value in string form or a comma-delimited 
+                list of values. The values may be single-quoted. If the default value definition is 
+                missing then no default value is set.
+            </p>
         </subsection>
         <subsection name="Attributes">
 <source><![CDATA[attributes ::= "primary" | "pri" | "!" |
@@ -389,18 +391,18 @@ property_type ::= "STRING" | "String |"string" |
                "IGNORE" | "Ignore" | "ignore" |
                "ABORT" | "Abort" | "abort"]]></source>
             <p>
-                The attribute indicators describe the characteristics of the property. 
+                The attribute indicators describe the characteristics of the child node. 
                 The presence of an attribute keyword indicates that the corresponding 
-                characteristic applies to this property. It's absence indicates that 
+                characteristic applies to this child node. It's absence indicates that 
                 the corresponding characteristic does not apply.
             </p>
             <p>
-                The primary keyword indicates that this node is the primary item. It 
+                The primary keyword indicates that this child node is the primary item. It 
                 may appear on a maximum of one property or child node definition within 
                 a node type definition.
             </p>
             <p>
-                The multiple keyword indicates that this node may have same-name siblings.
+                The multiple keyword indicates that this child node may have same-name siblings.
             </p>
             <p>
                 A maximum of one on-version indicator may be present. If none is present 
@@ -455,7 +457,7 @@ unquoted_string ::= /* a string */]]></source>
             <p>
                 Additionally, though spaces are required around the keywords 
                 (<code>orderable</code>, <code>mixin</code>, <code>date</code>, 
-                <code>mandatory</code>, etc..), short forms for keywords can be
+                <code>mandatory</code>, etc.), short forms for keywords can be
                  used. So, this:
             </p>
 <source><![CDATA[[x]>y,z o m-p(date)=a,b ! m a p * version <c,d]]></source>

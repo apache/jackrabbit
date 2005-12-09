@@ -17,11 +17,11 @@
   -->
 <document>
  <properties>
-  <title>First Steps</title>
+  <title>First Hops</title>
  </properties>
 
  <body>
-  <section name="First Steps">
+  <section name="First Hops">
    <p>
      This is a short hands-on introduction to Jackrabbit and the features
      of the JCR API. See the rest of the Jackrabbit web site and the JCR
