@@ -23,11 +23,10 @@
 
 <section name="Getting Started">
 <p>
-Since Jackrabbit is currently not yet released the quickest way to get 
-your hands on a running Jackrabbit instance are found in the 
+Since Jackrabbit is not yet released, in order to get your hands on a running Jackrabbit instance
+you have to download and build it yourself. Directions for doing so can be found in the 
 <a href="building.html">Building Jackrabbit</a> section.
-Once Jackrabbit is up and running you may try your 
-<a href="firststeps.html">first Steps</a> with JCR.
+Once Jackrabbit is up and running, you can take your <a href="firststeps.html">first hops</a>.
 </p>
 </section>
 <section name="Content Repository for Java Technology API (JCR)">
