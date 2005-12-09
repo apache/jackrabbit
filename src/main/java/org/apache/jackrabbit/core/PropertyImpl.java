@@ -141,6 +141,21 @@ public class PropertyImpl extends ItemImpl implements Property {
         status = STATUS_NORMAL;
     }
 
+    protected void restoreTransient(PropertyState transientState)
+            throws RepositoryException {
+        PropertyState thisState = (PropertyState) getOrCreateTransientItemState();
+        if (transientState.getStatus() == ItemState.STATUS_NEW
+                && thisState.getStatus() != ItemState.STATUS_NEW) {
+            thisState.setStatus(ItemState.STATUS_NEW);
+            stateMgr.disconnectTransientItemState(thisState);
+        }
+        // reapply transient changes
+        thisState.setDefinitionId(transientState.getDefinitionId());
+        thisState.setType(transientState.getType());
+        thisState.setMultiValued(transientState.isMultiValued());
+        thisState.setValues(transientState.getValues());
+    }
+
     /**
      * Determines the length of the given value.
      *

@@ -936,6 +936,22 @@ public class NodeImpl extends ItemImpl implements Node {
         status = STATUS_NORMAL;
     }
 
+    protected void restoreTransient(NodeState transientState)
+            throws RepositoryException {
+        NodeState thisState = (NodeState) getOrCreateTransientItemState();
+        if (transientState.getStatus() == ItemState.STATUS_NEW
+                && thisState.getStatus() != ItemState.STATUS_NEW) {
+            thisState.setStatus(ItemState.STATUS_NEW);
+            stateMgr.disconnectTransientItemState(thisState);
+        }
+        // reapply transient changes
+        thisState.setParentUUID(transientState.getParentUUID());
+        thisState.setMixinTypeNames(transientState.getMixinTypeNames());
+        thisState.setDefinitionId(transientState.getDefinitionId());
+        thisState.setChildNodeEntries(transientState.getChildNodeEntries());
+        thisState.setPropertyNames(transientState.getPropertyNames());
+    }
+
     /**
      * Same as {@link Node#addMixin(String)} except that it takes a
      * <code>QName</code> instead of a <code>String</code>.
