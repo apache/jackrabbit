@@ -289,23 +289,29 @@ public class DavMethods {
     }
 
    /**
-     * Returns <code>true</code> if the request is to create a
-     * resource. True for <code>MKCOL</code>, <code>PUT</code> and
-     * <code>POST</code> requests.
+     * Returns <code>true</code> if the request is to create a resource.
+     * True for <code>PUT</code>, <code>POST</code>, <code>MKCOL</code>
+     * and <code>MKWORKSPACE</code> requests.
+     *
+     * @return true if request method is to create (or replace) a resource
      */
     public static boolean isCreateRequest(DavServletRequest request) {
         int methodCode = getMethodCode(request.getMethod());
-        return (methodCode == DAV_MKCOL ||
-                methodCode == DAV_PUT ||
-                methodCode == DAV_POST);
+        return ( methodCode == DAV_PUT ||
+                 methodCode == DAV_POST ||
+                 methodCode == DAV_MKCOL ||
+                 methodCode == DAV_MKWORKSPACE);
     }
 
     /**
-     * Returns <code>true</code> if the request is to create a
-     * collection resource. True for <code>MKCOL</code> requests.
+     * Returns <code>true</code> if the request is to create a collection resource.
+     * True for <code>MKCOL</code> and <code>MKWORKSPACE</code> requests.
+     *
+     * @return true if request method is to create a new collection resource
      */
     public static boolean isCreateCollectionRequest(DavServletRequest request) {
-        return (getMethodCode(request.getMethod()) == DAV_MKCOL);
+        int methodCode = getMethodCode(request.getMethod());
+        return (methodCode == DAV_MKCOL || methodCode == DAV_MKWORKSPACE);
     }
 
     /**
