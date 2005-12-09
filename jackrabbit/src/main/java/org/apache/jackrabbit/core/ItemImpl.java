@@ -682,6 +682,26 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         }
     }
 
+    private void restoreTransientItems(Iterator iter)
+            throws RepositoryException {
+
+        // walk through list of transient states and reapply transient changes
+        while (iter.hasNext()) {
+            ItemState itemState = (ItemState) iter.next();
+            ItemImpl item = itemMgr.getItem(itemState.getId());
+            if (!item.isTransient()) {
+                // reapply transient changes (i.e. undo effect of item.makePersistent())
+                if (item.isNode()) {
+                    NodeImpl node = (NodeImpl) item;
+                    node.restoreTransient((NodeState) itemState);
+                } else {
+                    PropertyImpl prop = (PropertyImpl) item;
+                    prop.restoreTransient((PropertyState) itemState);
+                }
+            }
+        }
+    }
+
     /**
      * Initializes the version history of all new nodes of node type
      * <code>mix:versionable</code>.
@@ -1163,6 +1183,13 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 if (!succeeded) {
                     // update operation failed, cancel all modifications
                     stateMgr.cancel();
+
+                    // JCR-288: if an exception has been thrown during
+                    // update() the transient changes have already been
+                    // applied by persistTransientItems() and we need to
+                    // restore transient state, i.e. undo the effect of
+                    // persistTransientItems()
+                    restoreTransientItems(dirty.iterator());
                 }
             }
 
