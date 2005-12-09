@@ -65,36 +65,9 @@
             <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/">http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/</a>.
          </p>
          <p>
-            The latest Jackrabbit sources can be downloaded using the following
-            command (or it's equivalent in your Subversion client):
+            See the <a href="doc/building.html">Building Jackrabbit</a> page
+            for instructions on how to download and build the Jackrabbit sources.
          </p>
-         <source>svn checkout http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit</source>
-         <p>
-            You need version 1.0.2 of the
-            <a href="http://maven.apache.org/">Apache Maven</a> tool to build
-            the Jackrabbit sources. Maven will automatically download all
-            Jackrabbit dependencies and compile the Jackrabbit sources when
-            you run the following command:
-         </p>
-         <source>maven</source>
-         <p>
-            By default the command will build all the Jackrabbit main components and
-            install the resulting jar files into your local Maven repository.
-            For other build options, please see the
-            <a href="http://maven.apache.org/start/use.html">Maven documentation</a>
-            and the <a href="http://maven.apache.org/reference/plugins/multiproject/goals.html">Maven Multi-Project goals</a>.
-         </p>
-         <p>
-            <strong>NOTE:</strong>
-            JDK 1.5 users need to download the <code>xalan.jar</code> and
-            <code>serializer.jar</code> files from
-            <a href="http://xml.apache.org/xalan-j/">Xalan-Java</a> and place
-            them in <code>$MAVEN_HOME/lib/endorsed</code> (or
-            <code>$JRE/lib/endorsed</code> if using Maven 1.1) to build the
-            Jackrabbit sources. The reason for this workaround is explained in
-            <a href="http://issues.apache.org/jira/browse/JCR-46">JCR-46</a>.
-         </p>
-      </section>
 
 <!--
       <section name="Release Candidate">

@@ -77,24 +77,22 @@ To checkout the main Jackrabbit source tree, run
 
 Once you have a copy of the source code tree, you can use Apache Maven
 
-   http://maven.apache.org/
+   http://maven.apache.org/maven-1.x/
 
-to build the project.  After installing Maven 1.0, be sure to download the
-latest release of the Ant plugin (1.8.1 or later) using a command like
+to build the project. You should use Maven version 1.0.2 to build Jackrabbit.
+Maven 1.1 is also known to work, but Maven 2.0 is not supported. The minimal
+command to build and test all the Jackrabbit sources is:
 
-   maven plugin:download -DgroupId=maven \
-         -DartifactId=maven-ant-plugin -Dversion=1.8.1
+   maven
 
-before running one of the maven commands listed at
+For more instructions, please see the documentation at:
 
-   http://maven.apache.org/start/use.html
-
-to build the Jackrabbit project and/or documentation.
+   http://incubator.apache.org/jackrabbit/doc/building.html
 
 NOTE: Java 5 users need to download the xalan.jar and serializer.jar
 libraries from the Xalan-Java binary distribution at 
 http://xml.apache.org/xalan-j/downloads.html and place them in
-$MAVEN_HOME/lib/endorsed (or $JRE/lib/endorsed if using Maven 1.1)
+$MAVEN_HOME/lib/endorsed (or $JAVA_HOME/jre/lib/endorsed if using Maven 1.1)
 to build the Jackrabbit sources. The reason for this workaround is
 explained in
 
