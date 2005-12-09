@@ -58,10 +58,6 @@ public class TransientRepositoryTest extends TestCase {
         String[] keys = repository.getDescriptorKeys();
         assertNotNull(keys);
         assertTrue(keys.length > 0);
-
-        Set keySet = new HashSet();
-        Collections.addAll(keySet, keys);
-        assertTrue(keySet.contains(Repository.SPEC_NAME_DESC));
     }
 
     /**
