@@ -59,7 +59,7 @@
       <section name="Source code">
          <p>
             Access to the source tree to see the latest and greatest code is possible
-            through <!-- a href="cvs-usage.html" -->anonymous SVN access<!-- /a --> at
+            through anonymous SVN access at
             <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>.
             The source tree can also be browsed using ViewCVS at
             <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/">http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/</a>.
@@ -69,6 +69,7 @@
             for instructions on how to download and build the Jackrabbit sources.
          </p>
 
+      </section>
 <!--
       <section name="Release Candidate">
          <p>
