@@ -20,8 +20,7 @@
     <!-- P R O J E C T  D E S C R I P T I O N                                   -->
     <!-- ====================================================================== -->
     <extend>${basedir}/../project.xml</extend>
-    <id>jcr-server</id>
-    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jcr-server</artifactId>
     <name>JCRWebdavServer Server Library</name>
 
     <!-- ====================================================================== -->
