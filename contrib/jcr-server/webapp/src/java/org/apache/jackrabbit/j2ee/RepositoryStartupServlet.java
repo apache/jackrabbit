@@ -174,8 +174,15 @@ public class RepositoryStartupServlet extends HttpServlet {
         super.init();
         log.info("RepositoryStartupServlet initializing...");
         initRepository();
-        registerJNDI();
-        registerRMI();
+        try {
+            registerRMI();
+            registerJNDI();
+        } catch (ServletException e) {
+            // shutdown repository
+            shutdownRepository();
+            log.error("RepositoryStartupServlet initializing failed: "+ e, e);
+            throw e;
+        }
         log.info("RepositoryStartupServlet initialized.");
     }
 
@@ -251,12 +258,16 @@ public class RepositoryStartupServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Shuts down the repository
+     */
     private void shutdownRepository() {
         if (repository instanceof RepositoryImpl) {
             ((RepositoryImpl) repository).shutdown();
             repository = null;
         }
     }
+
     /**
      * Creates the repository for the given config and homedir.
      *
@@ -274,7 +285,7 @@ public class RepositoryStartupServlet extends HttpServlet {
     /**
      * Registers the repository in the JNDI context
      */
-    private void registerJNDI() {
+    private void registerJNDI() throws ServletException {
         // registering via jndi
         Properties env = new Properties();
         Enumeration names = getServletConfig().getInitParameterNames();
@@ -295,7 +306,7 @@ public class RepositoryStartupServlet extends HttpServlet {
             jndiContext.bind(repositoryName, repository);
             log.info("Repository bound to JNDI with name: " + repositoryName);
         } catch (NamingException e) {
-            log.error("Unable to bind repository using JNDI: " + e, e);
+            throw new ServletException("Unable to bind repository using JNDI.", e);
         }
     }
 
@@ -318,13 +329,13 @@ public class RepositoryStartupServlet extends HttpServlet {
      * class documentation for a description of the algorithms used to register
      * the repository with an RMI registry.
      */
-    private void registerRMI() {
+    private void registerRMI() throws ServletException {
         // check registering via RMI
         String rmiPortStr = getServletConfig().getInitParameter(INIT_PARAM_RMI_PORT);
         String rmiHost = getServletConfig().getInitParameter(INIT_PARAM_RMI_HOST);
         String rmiURI = getServletConfig().getInitParameter(INIT_PARAM_RMI_URI);
 
-        // no registration if neither port nor host nore URI is configured
+        // no registration if neither port nor host nor URI is configured
         if (rmiPortStr == null && rmiHost == null && rmiURI == null) {
             return;
         }
@@ -395,14 +406,11 @@ public class RepositoryStartupServlet extends HttpServlet {
             RemoteFactoryDelegater rmf = (RemoteFactoryDelegater) clazz.newInstance();
             remote = rmf.createRemoteRepository(repository);
         } catch (RemoteException e) {
-            log.error("Unable to create remote repository: " + e, e);
-            return;
+            throw new ServletException("Unable to create remote repository.", e);
         } catch (NoClassDefFoundError e) {
-            log.warn("Unable to create RMI repository. jcr-rmi.jar might be missing.: " + e.toString());
-            return;
+            throw new ServletException("Unable to create RMI repository. jcr-rmi.jar might be missing.", e);
         } catch (Exception e) {
-            log.warn("Unable to create RMI repository. jcr-rmi.jar might be missing.: " + e.toString());
-            return;
+            throw new ServletException("Unable to create RMI repository. jcr-rmi.jar might be missing.", e);
         }
 
         try {
@@ -470,9 +478,9 @@ public class RepositoryStartupServlet extends HttpServlet {
             }
 
         } catch (RemoteException e) {
-            log.error("Unable to bind repository via RMI: " + e, e);
+            throw new ServletException("Unable to bind repository via RMI.", e);
         } catch (AlreadyBoundException e) {
-            log.error("Unable to bind repository via RMI: " + e, e);
+            throw new ServletException("Unable to bind repository via RMI.", e);
         }
     }
 
@@ -503,9 +511,6 @@ public class RepositoryStartupServlet extends HttpServlet {
      * @return A new instance of a simple <code>RMIServerSocketFactory</code>
      *      creating <code>java.net.ServerSocket</code> instances bound to
      *      the <code>rmiHost</code>.
-     *
-     * @throws UnknownHostException If the <code>rmiHost</code> is a host name
-     *      which cannot be mapped to an IP address.
      */
     protected RMIServerSocketFactory getRMIServerSocketFactory(
             final InetAddress hostAddress) {
