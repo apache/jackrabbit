@@ -17,7 +17,8 @@
    limitations under the License.
 -->
 
-<project>
+<project
+    default="jar:install">
 
    <!-- Compile the RMI stubs for the JCR-RMI server classes. -->
    <postGoal name="java:compile">
