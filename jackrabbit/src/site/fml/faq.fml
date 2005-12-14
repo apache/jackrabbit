@@ -395,19 +395,51 @@
           </thead>
           <tbody>
             <tr>
-              <td>ObjectPersistenceManager</td>
+              <td>SimpleDbPersistenceManager (and subclasses thereof)</td>
               <td>mature</td>
               <td>
                 <ul>
-                  <li>Simple</li>
-                  <li>Easy to configure</li>
-                  <li>Write operations are synchronized</li>
+                  <li>Jackrabbit's default persistence manager</li>
+                  <li>JDBC based persistence supporting a wide range of RDBMSs</li>
+                  <li>zero-deployment, schema is automatically created</li>
+                  <li>Transactional</li>
                 </ul>
               </td>
               <td>
                 <ul>
-                  <li>Not human readable</li>
-                  <li>An inconsistency is hard to fix without a tool</li>
+                  <li>uses simple non-normalized schema and binary serialization format which might not appeal to relational data modeling fans</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>BerkeleyDBPersistenceManager</td>
+              <td>mature?</td>
+              <td>
+                <ul>
+                  <li>btree-based persistence (BerkeleyDB JE)</li>
+                  <li>zero-deployment</li>
+                  <li>Transactional</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>Uses binary serialization format</li>
+                  <li>Licensing issues</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>ObjectPersistenceManager</td>
+              <td>mature</td>
+              <td>
+                <ul>
+                  <li>File system based persistence</li>
+                  <li>Easy to configure</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>Uses binary serialization format</li>
                   <li>If the JVM process is killed the repository might turn inconsistent</li>
                   <li>Not transactional</li>
                 </ul>
@@ -418,32 +450,32 @@
               <td>mature</td>
               <td>
                 <ul>
-                  <li>Not so simple but human readable</li>
+                  <li>File system based persistence</li>
+                  <li>Uses XML serialization format</li>
                   <li>Easy to configure</li>
                 </ul>
               </td>
               <td>
                 <ul>
                   <li>If the JVM process is killed the repository might turn inconsistent</li>
+                  <li>Poor performance</li>
                   <li>Not transactional</li>
-                  <li>Write operations are synchronized</li>
                 </ul>
               </td>
             </tr>
             <tr>
               <td>ORM persistence manager</td>
-              <td>work in progress</td>
+              <td>experimental &amp; unfinished</td>
               <td>
                 <ul>
-                  <li>RDBMS referencial integrity (possible, but not implemented yet)</li>
+                  <li>ORM-based persistence</li>
                   <li>Transactional</li>
-                  <li>Multithreaded friendly. Write operations don't need to be synchronized.</li>
                 </ul>
               </td>
               <td>
                 <ul>
-                  <li>Not so simple</li>
-                  <li>Not so easy to configure</li>
+                  <li>Complex to configure &amp; setup</li>
+                  <li>Still being maintained?</li>
                 </ul>
               </td>
             </tr>
@@ -482,6 +514,21 @@
               </td>
             </tr>
             <tr>
+              <td>DbFileSystem</td>
+              <td>mature</td>
+              <td>
+                <ul>
+                  <li>JDBC based file system supporting a wide range of RDBMSs</li>
+                  <li>zero-deployment, schema is automatically created</li>
+                </ul>
+              </td>
+              <td>
+                <ul>
+                  <li>Slower than native file systems</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
               <td>CQFS file system</td>
               <td>mature</td>
               <td>
@@ -508,12 +555,14 @@
       </question>
       <answer>
         <p>
-          The answer depends on your priorities. If you want to store
-          your data in an accessible format (just in case or for manual
-          debugging), you might want to try the XMLPersistenceManager
-          and the LocalFileSystem. If you use Windows and performance is
-          a must, you might want to try the ObjectPersistenceManager and
-          the proprietary CQFS.
+          The answer depends on your priorities. If you want to store your 
+          data in a RDBMS, use SimpleDbPersistenceManager and either 
+          LocalFileSystem or DbFileSystem. If you want to store your data 
+          in an accessible format (just in case or for manual debugging), 
+          you might want to try the XMLPersistenceManager and the 
+          LocalFileSystem. If you use Windows and performance is a must, 
+          you might want to try the ObjectPersistenceManager and the 
+          proprietary CQFS.
         </p>
       </answer>
     </faq>
