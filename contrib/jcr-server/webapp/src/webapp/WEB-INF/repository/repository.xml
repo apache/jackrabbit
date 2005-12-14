@@ -125,6 +125,11 @@
         <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager">
             <!-- <param name="config" value="${rep.home}/access.xml"/> -->
         </AccessManager>
+
+        <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule">
+           <!-- anonymous user name ('anonymous' is the default value) -->
+           <param name="anonymousId" value="anonymous"/>
+        </LoginModule>
     </Security>
 
     <!--
