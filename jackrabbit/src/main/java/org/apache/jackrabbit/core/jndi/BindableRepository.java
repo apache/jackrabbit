@@ -55,7 +55,7 @@ import java.io.Serializable;
  * <p>
  * A JVM shutdown hook is used to make sure that the initialized
  * repository is properly closed when the JVM shuts down. The
- * {@link RegistryHelper#unregisterRepository(Context, String)}
+ * {@link RegistryHelper#unregisterRepository(javax.naming.Context, String)}
  * method should be used to explicitly close the repository if
  * needed. 
  */
@@ -82,6 +82,12 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     /** The delegate repository instance. Created by {@link #init() init}. */
     private transient Repository delegatee;
 
+    /**
+     * Thread that is registered as shutdown hook after {@link #init} has been
+     * called.
+     */
+    private transient Thread hook;
+    
     /**
      * Creates a BindableRepository instance with the given configuration
      * information, but does not create the underlying repository instance.
@@ -122,11 +128,13 @@ class BindableRepository implements Repository, Referenceable, Serializable {
         RepositoryConfig config =
             RepositoryConfig.create(configFilePath, repHomeDir);
         delegatee = RepositoryImpl.create(config);
-        Runtime.getRuntime().addShutdownHook(new Thread() {
+        hook = new Thread() {
             public void run() {
                 shutdown();
             }
-        });
+        };
+
+        Runtime.getRuntime().addShutdownHook(hook);
     }
 
     //-----------------------------------------------------------< Repository >
@@ -246,6 +254,11 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      * Delegated to the underlying repository instance.
      */
     void shutdown() {
-    	((RepositoryImpl) delegatee).shutdown() ;
+        ((RepositoryImpl) delegatee).shutdown();
+        try {
+            Runtime.getRuntime().removeShutdownHook(hook);
+        } catch (IllegalStateException e) {
+            // ignore. exception is thrown when hook itself calls shutdown
+        }
     }
 }
