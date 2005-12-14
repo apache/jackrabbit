@@ -360,48 +360,95 @@
 
     <dependencies>
         <dependency>
+            <!-- util.concurrent -->
             <groupId>concurrent</groupId>
             <artifactId>concurrent</artifactId>
             <version>1.3.4</version>
+            <url>http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html</url>
+            <!--
+                Advanced concurrent programming classes not available
+                in J2SE 1.4.
+            -->
         </dependency>
         <dependency>
+            <!-- JUnit -->
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>3.8.1</version>
             <properties>
                 <scope>test</scope>
             </properties>
+            <url>http://www.junit.org/</url>
+            <!--
+                The unit testing framework used by the Jackrabbit and JCR
+                test cases.
+            -->
         </dependency>
         <dependency>
+            <!-- Commons Collections -->
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>3.1</version>
+            <url>http://jakarta.apache.org/commons/collections/</url>
+            <!--
+                Advanced collection classes, utilities and data structures
+                used internally by Jackrabbit.
+            -->
         </dependency>
         <dependency>
+            <!-- The Java Transaction API (JTA) -->
             <groupId>geronimo-spec</groupId>
             <artifactId>geronimo-spec-jta</artifactId>
             <version>1.0-M1</version>
+            <url>http://java.sun.com/products/jta/</url>
+            <!--
+                The Java Transaction API (JTA) classes not available
+                in J2SE 1.4.
+            -->
         </dependency>
         <dependency>
+            <!-- Content Repository for Java(TM) Technology API (JCR) -->
             <groupId>jsr170</groupId>
             <artifactId>jcr</artifactId>
             <version>1.0</version>
             <url>http://jcp.org/en/jsr/detail?id=170</url>
+            <!--
+                The Content Repository for Java(TM) Technology API (JCR)
+                interfaces implemented by Jackrabbit.
+            -->
         </dependency>
         <dependency>
+            <!-- log4j -->
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.8</version>
+            <url>http://logging.apache.org/log4j</url>
+            <!--
+                The logging framework used to output messages of varying
+                importance during runtime.
+            -->
         </dependency>
         <dependency>
+            <!-- Apache Lucene -->
             <groupId>lucene</groupId>
             <artifactId>lucene</artifactId>
             <version>1.4.3</version>
+            <url>http://lucene.apache.org/java/</url>
+            <!--
+                The full text search engine library used to implement much
+                of the query features of Jackrabbit.
+            -->
         </dependency>
         <dependency>
+            <!-- The Xerces XML parser -->
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>2.6.2</version>
+            <url>http://xerces.apache.org/xerces2-j/</url>
+            <!--
+                The XML parser APIs and implementation used directly for
+                features  not included in the standard XML APIs in J2SE 1.4.
+            -->
         </dependency>
         <dependency>
             <groupId>xerces</groupId>
@@ -409,9 +456,15 @@
             <version>2.0.2</version>
         </dependency>
         <dependency>
+            <!-- Apache Derby -->
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
             <version>10.1.1.0</version>
+            <url>http://db.apache.org/derby/</url>
+            <!--
+                The pure Java database implementation used by Jackrabbit
+                as the default backend for the database persistence manager.
+            -->
         </dependency>
     </dependencies>
 
