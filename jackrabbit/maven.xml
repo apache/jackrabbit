@@ -16,7 +16,7 @@
 -->
 
 <project
-    default="jar:jar"
+    default="jar:install"
     xmlns:deploy="deploy"
     xmlns:j="jelly:core"
     xmlns:ant="jelly:ant"

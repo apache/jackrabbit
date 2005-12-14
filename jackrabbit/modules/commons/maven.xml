@@ -14,7 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<project default="jar:jar">
+<project default="jar:install">
   <!-- 
       override compile goal, since we just need the jar from the
       compiled classes of jackrabbit
