@@ -230,8 +230,11 @@ public class RepositoryImpl implements Repository, SessionListener,
             throw e;
         }
 
-        // after the workspaces are initialized, we setup a system session for
-        // the virtual nodetype manager
+        // after the workspaces are initialized we pass a system session to
+        // the virtual node type manager
+
+        // todo FIXME it seems odd that the *global* virtual node type manager 
+        // is using a session that is bound to a single specific workspace
         virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
     }
 
