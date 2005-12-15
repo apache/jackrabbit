@@ -207,11 +207,30 @@ public final class Serializer {
                 out.writeUTF(blobId);   // value
                 // replace value instance with value backed by resource
                 // in BLOB store and discard old value instance (e.g. temp file)
-                values[i] = InternalValue.create(blobStore.get(blobId));
+                if (blobStore instanceof ResourceBasedBLOBStore) {
+                    // optimization: if the BLOB store is resource-based
+                    // retrieve the resource directly rather than having
+                    // to read the BLOB from an input stream
+                    FileSystemResource fsRes =
+                            ((ResourceBasedBLOBStore) blobStore).getResource(blobId);
+                    values[i] = InternalValue.create(fsRes);
+                } else {
+                    in = blobStore.get(blobId);
+                    try {
+                        values[i] = InternalValue.create(in);
+                    } finally {
+                        try {
+                            in.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
+                    }
+                }
                 blobVal.discard();
             } else {
                 /**
                  * because writeUTF(String) has a size limit of 65k,
+                 * Strings are serialized as <length><byte[]>
                  */
                 //out.writeUTF(val.toString());   // value
                 byte[] bytes = val.toString().getBytes(ENCODING);
@@ -269,7 +288,16 @@ public final class Serializer {
                             ((ResourceBasedBLOBStore) blobStore).getResource(s);
                     val = InternalValue.create(fsRes);
                 } else {
-                    val = InternalValue.create(blobStore.get(s));
+                    InputStream is = blobStore.get(s);
+                    try {
+                        val = InternalValue.create(is);
+                    } finally {
+                        try {
+                            is.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
+                    }
                 }
             } else {
                 /**

@@ -92,7 +92,16 @@ public class InternalValue {
                     if (value instanceof BLOBFileValue) {
                         return new InternalValue((BLOBFileValue) value);
                     } else {
-                        return new InternalValue(new BLOBFileValue(value.getStream()));
+                        InputStream stream = value.getStream();
+                        try {
+                            return new InternalValue(new BLOBFileValue(stream));
+                        } finally {
+                            try {
+                                stream.close();
+                            } catch (IOException e) {
+                                // ignore
+                            }
+                        }
                     }
                 } catch (IOException ioe) {
                     throw new ValueFormatException(ioe.getMessage());
@@ -363,7 +372,16 @@ public class InternalValue {
         switch (type) {
             case PropertyType.BINARY:
                 try {
-                    return new InternalValue(new BLOBFileValue(((BLOBFileValue) val).getStream()));
+                    InputStream stream = ((BLOBFileValue) val).getStream();
+                    try {
+                        return new InternalValue(new BLOBFileValue(stream));
+                    } finally {
+                        try {
+                            stream.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
+                    }
                 } catch (IOException ioe) {
                     throw new RepositoryException("failed to copy binary value", ioe);
                 }

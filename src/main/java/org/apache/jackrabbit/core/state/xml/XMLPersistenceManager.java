@@ -319,7 +319,16 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                         ((ResourceBasedBLOBStore) blobStore).getResource(content);
                                 values.add(InternalValue.create(fsRes));
                             } else {
-                                values.add(InternalValue.create(blobStore.get(content)));
+                                InputStream in = blobStore.get(content);
+                                try {
+                                    values.add(InternalValue.create(in));
+                                } finally {
+                                    try {
+                                        in.close();
+                                    } catch (IOException e) {
+                                        // ignore
+                                    }
+                                }
                             }
                         } catch (Exception e) {
                             String msg = "error while reading serialized binary value";
@@ -641,7 +650,25 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                 writer.write(blobId);
                                 // replace value instance with value backed by resource
                                 // in BLOB store and discard old value instance (e.g. temp file)
-                                values[i] = InternalValue.create(blobStore.get(blobId));
+                                if (blobStore instanceof ResourceBasedBLOBStore) {
+                                    // optimization: if the BLOB store is resource-based
+                                    // retrieve the resource directly rather than having
+                                    // to read the BLOB from an input stream
+                                    FileSystemResource fsRes =
+                                            ((ResourceBasedBLOBStore) blobStore).getResource(blobId);
+                                    values[i] = InternalValue.create(fsRes);
+                                } else {
+                                    in = blobStore.get(blobId);
+                                    try {
+                                        values[i] = InternalValue.create(in);
+                                    } finally {
+                                        try {
+                                            in.close();
+                                        } catch (IOException e) {
+                                            // ignore
+                                        }
+                                    }
+                                }
                                 blobVal.discard();
                             } else {
                                 writer.write(Text.encodeIllegalXMLCharacters(val.toString()));
