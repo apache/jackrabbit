@@ -143,7 +143,6 @@ public class BLOBFileValue implements Value {
                 }
             }
         } finally {
-            in.close();
             if (out != null) {
                 out.close();
             }
