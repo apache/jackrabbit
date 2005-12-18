@@ -150,7 +150,7 @@ property_type ::= "STRING" | "String" |"string" |
                   "DOUBLE" | "Double" | "double" |
                   "BOOLEAN" | "Boolean" | "boolean" |
                   "DATE" | "Date" | "date" |
-                  "NAME | "Name | "name |
+                  "NAME | "Name | "name" |
                   "PATH" | "Path" | "path" |
                   "REFERENCE" | "Reference" |
                      "reference" |
@@ -288,7 +288,7 @@ property_type ::= "STRING" | "String |"string" |
                   "DOUBLE" | "Double" | "double" |
                   "BOOLEAN" | "Boolean" | "boolean" |
                   "DATE" | "Date" | "date" |
-                  "NAME | "Name | "name |
+                  "NAME | "Name | "name" |
                   "PATH" | "Path" | "path" |
                   "REFERENCE" | "Reference" | "reference" |
                   "UNDEFINED" | "Undefined" | "undefined" | "*"]]></source>
