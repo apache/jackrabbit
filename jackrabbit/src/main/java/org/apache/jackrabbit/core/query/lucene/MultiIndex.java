@@ -164,7 +164,13 @@ public class MultiIndex {
     /**
      * Timer to schedule flushes of this index after some idle time.
      */
-    private final Timer flushTimer = new Timer(true);
+    private static final Timer FLUSH_TIMER = new Timer(true);
+
+    /**
+     * Task that is periodically called by {@link #FLUSH_TIMER} and checks
+     * if index should be flushed.
+     */
+    private final TimerTask flushTask;
 
     /**
      * The RedoLog of this <code>MultiIndex</code>.
@@ -189,10 +195,10 @@ public class MultiIndex {
     /**
      * Creates a new MultiIndex.
      *
-     * @param indexDir      the base file system
-     * @param handler       the search handler
-     * @param stateMgr      shared item state manager
-     * @param rootUUID      uuid of the root node
+     * @param indexDir the base file system
+     * @param handler the search handler
+     * @param stateMgr shared item state manager
+     * @param rootUUID uuid of the root node
      * @param excludedUUIDs Set&lt;String> that contains uuids that should not
      *                      be indexed nor further traversed.
      * @throws IOException if an error occurs
@@ -206,7 +212,7 @@ public class MultiIndex {
         this.indexDir = indexDir;
         this.handler = handler;
         this.cache = new DocNumberCache(handler.getCacheSize());
-        this.redoLog = new RedoLog(new File(indexDir, REDO_LOG));
+        this.redoLog = new RedoLog(new File(indexDir, REDO_LOG)); 
         this.excludedUUIDs = new HashSet(excludedUUIDs);
 
         if (indexNames.exists(indexDir)) {
@@ -277,7 +283,13 @@ public class MultiIndex {
             throw new IOException("Error indexing root node: " + e.getMessage());
         }
 
-        startFlushTimer();
+        lastFlushTime = System.currentTimeMillis();
+        flushTask = new TimerTask() {
+            public void run() {
+                checkFlush();
+    }
+        };
+        FLUSH_TIMER.schedule(flushTask, 0, 1000);
     }
 
     /**
@@ -596,7 +608,7 @@ public class MultiIndex {
 
         synchronized (this) {
             // stop timer
-            flushTimer.cancel();
+            flushTask.cancel();
 
             // commit / close indexes
             if (multiReader != null) {
@@ -808,7 +820,7 @@ public class MultiIndex {
             resetVolatileIndex();
 
             time = System.currentTimeMillis() - time;
-            log.info("Committed in-memory index in " + time + "ms.");
+            log.debug("Committed in-memory index in " + time + "ms.");
         }
     }
 
@@ -902,19 +914,6 @@ public class MultiIndex {
     }
 
     /**
-     * Starts the flush timer that periodically checks if the index
-     * should be flushed. The timer task will call {@link #checkFlush()}.
-     */
-    private void startFlushTimer() {
-        lastFlushTime = System.currentTimeMillis();
-        flushTimer.schedule(new TimerTask() {
-            public void run() {
-                checkFlush();
-            }
-        }, 0, 1000);
-    }
-
-    /**
      * Checks the duration between the last commit to this index and the
      * current time and flushes the index (if there are changes at all)
      * if the duration (idle time) is more than {@link SearchIndex#getVolatileIdleTime()}
@@ -927,7 +926,7 @@ public class MultiIndex {
                 && idleTime > handler.getVolatileIdleTime() * 1000) {
             try {
                 if (redoLog.hasEntries()) {
-                    log.info("Flushing index after being idle for " +
+                    log.debug("Flushing index after being idle for " +
                             idleTime + " ms.");
                     synchronized (updateMonitor) {
                         updateInProgress = true;
