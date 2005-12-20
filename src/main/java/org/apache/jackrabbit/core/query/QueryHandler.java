@@ -43,6 +43,14 @@ public interface QueryHandler {
     void init(QueryHandlerContext context) throws IOException;
 
     /**
+     * Returns the query handler context that passed in {@link
+     * #init(QueryHandlerContext)}.
+     *
+     * @return the query handler context.
+     */
+    QueryHandlerContext getContext();
+
+    /**
      * Adds a <code>Node</code> to the search index.
      * @param node the NodeState to add.
      * @throws RepositoryException if an error occurs while indexing the node.

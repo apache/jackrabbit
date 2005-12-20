@@ -170,8 +170,8 @@ class DescendantSelfAxisQuery extends Query {
         public Scorer scorer(IndexReader reader) throws IOException {
             contextScorer = contextQuery.weight(searcher).scorer(reader);
             subScorer = subQuery.weight(searcher).scorer(reader);
-            CachingMultiReader index = (CachingMultiReader) reader;
-            return new DescendantSelfAxisScorer(searcher.getSimilarity(), index);
+            HierarchyResolver resolver = (HierarchyResolver) reader;
+            return new DescendantSelfAxisScorer(searcher.getSimilarity(), reader, resolver);
         }
 
         /**
@@ -190,9 +190,9 @@ class DescendantSelfAxisQuery extends Query {
     private class DescendantSelfAxisScorer extends Scorer {
 
         /**
-         * An <code>IndexReader</code> to access the index.
+         * The <code>HierarchyResolver</code> of the index.
          */
-        private final CachingMultiReader reader;
+        private final HierarchyResolver hResolver;
 
         /**
          * BitSet storing the id's of selected documents
@@ -219,10 +219,13 @@ class DescendantSelfAxisQuery extends Query {
          *
          * @param similarity the <code>Similarity</code> instance to use.
          * @param reader     for index access.
+         * @param hResolver  the hierarchy resolver of <code>reader</code>.
          */
-        protected DescendantSelfAxisScorer(Similarity similarity, CachingMultiReader reader) {
+        protected DescendantSelfAxisScorer(Similarity similarity,
+                                           IndexReader reader,
+                                           HierarchyResolver hResolver) {
             super(similarity);
-            this.reader = reader;
+            this.hResolver = hResolver;
             // todo reuse BitSets?
             this.contextHits = new BitSet(reader.maxDoc());
             this.subHits = new BitSet(reader.maxDoc());
@@ -245,10 +248,10 @@ class DescendantSelfAxisQuery extends Query {
                 }
 
                 // check if nextDoc is a descendant of one of the context nodes
-                int parentDoc = reader.getParent(nextDoc);
+                int parentDoc = hResolver.getParent(nextDoc);
                 while (parentDoc != -1 && !contextHits.get(parentDoc)) {
                     // traverse
-                    parentDoc = reader.getParent(parentDoc);
+                    parentDoc = hResolver.getParent(parentDoc);
                 }
 
                 if (parentDoc != -1) {

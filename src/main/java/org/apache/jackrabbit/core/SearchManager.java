@@ -30,7 +30,10 @@ import org.apache.jackrabbit.core.query.AbstractQueryImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.log4j.Logger;
 
 import javax.jcr.NamespaceException;
@@ -97,6 +100,16 @@ public class SearchManager implements SynchronousEventListener {
     private final QueryHandler handler;
 
     /**
+     * Namespace resolver that is based on the namespace registry itself.
+     */
+    private final NamespaceResolver nsResolver;
+
+    /**
+     * Path that will be excluded from indexing.
+     */
+    private Path excludePath;
+
+    /**
      * Fully qualified name of the query implementation class.
      * This class must extend {@link org.apache.jackrabbit.core.query.AbstractQueryImpl}!
      */
@@ -104,21 +117,47 @@ public class SearchManager implements SynchronousEventListener {
 
     /**
      * Creates a new <code>SearchManager</code>.
-     * @param session the system session.
-     * @param config the search configuration.
-     * @param ntReg the node type registry.
-     * @param itemMgr the shared item state manager.
-     * @throws RepositoryException
+     *
+     * @param config           the search configuration.
+     * @param nsReg            the namespace registry.
+     * @param ntReg            the node type registry.
+     * @param itemMgr          the shared item state manager.
+     * @param rootNodeUUID     the uuid of the root node.
+     * @param parentMgr        the parent search manager or <code>null</code> if
+     *                         there is no parent search manager.
+     * @param excludedNodeUUID uuid of the node that should be excluded from
+     *                         indexing. Any descendant of that node will also
+     *                         be excluded from indexing.
+     * @throws RepositoryException if the search manager cannot be initialized
      */
-    public SearchManager(SessionImpl session,
-                         SearchConfig config,
+    public SearchManager(SearchConfig config,
+                         final NamespaceRegistry nsReg,
                          NodeTypeRegistry ntReg,
-                         ItemStateManager itemMgr) throws RepositoryException {
+                         ItemStateManager itemMgr,
+                         String rootNodeUUID,
+                         SearchManager parentMgr,
+                         String excludedNodeUUID) throws RepositoryException {
         this.fs = config.getFileSystem();
         this.itemMgr = itemMgr;
+        this.nsResolver = new AbstractNamespaceResolver() {
+            public String getURI(String prefix) throws NamespaceException {
+                try {
+                    return nsReg.getURI(prefix);
+                } catch (RepositoryException e) {
+                    throw new NamespaceException(e.getMessage());
+                }
+            }
+
+            public String getPrefix(String uri) throws NamespaceException {
+                try {
+                    return nsReg.getPrefix(uri);
+                } catch (RepositoryException e) {
+                    throw new NamespaceException(e.getMessage());
+                }
+            }
+        };
 
         // register namespaces
-        NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
         try {
             nsReg.getPrefix(NS_XS_URI);
         } catch (NamespaceException e) {
@@ -134,12 +173,22 @@ public class SearchManager implements SynchronousEventListener {
 
         queryImplClassName = config.getParameters().getProperty(PARAM_QUERY_IMPL, DEFAULT_QUERY_IMPL_CLASS);
 
+        QueryHandler parentHandler = null;
+        if (parentMgr != null) {
+            parentHandler = parentMgr.handler;
+        }
+
+        if (excludedNodeUUID != null) {
+            HierarchyManagerImpl hmgr = new HierarchyManagerImpl(rootNodeUUID, itemMgr, nsResolver);
+            excludePath = hmgr.getPath(new NodeId(excludedNodeUUID));
+        }
+
         // initialize query handler
         try {
             handler = (QueryHandler) config.newInstance();
-            NodeId rootId = (NodeId) session.getHierarchyManager().resolvePath(Path.ROOT);
             QueryHandlerContext context
-                    = new QueryHandlerContext(fs, itemMgr, rootId.getUUID(), ntReg);
+                    = new QueryHandlerContext(fs, itemMgr, rootNodeUUID, ntReg,
+                            parentHandler, excludedNodeUUID);
             handler.init(context);
         } catch (Exception e) {
             throw new RepositoryException(e.getMessage(), e);
@@ -213,6 +262,15 @@ public class SearchManager implements SynchronousEventListener {
         log.debug("onEvent: indexing started");
         long time = System.currentTimeMillis();
 
+        String exclude = "";
+        if (excludePath != null) {
+            try {
+                exclude = excludePath.toJCRPath(nsResolver);
+            } catch (NoPrefixDeclaredException e) {
+                log.error("Error filtering events.", e);
+            }
+        }
+
         // nodes that need to be removed from the index.
         Set removedNodes = new HashSet();
         // nodes that need to be added to the index.
@@ -222,6 +280,13 @@ public class SearchManager implements SynchronousEventListener {
 
         while (events.hasNext()) {
             EventImpl e = (EventImpl) events.nextEvent();
+            try {
+                if (excludePath != null && e.getPath().startsWith(exclude)) {
+                    continue;
+                }
+            } catch (RepositoryException ex) {
+                log.error("Error filtering events.", ex);
+            }
             long type = e.getType();
             if (type == Event.NODE_ADDED) {
                 addedNodes.add(e.getChildUUID());

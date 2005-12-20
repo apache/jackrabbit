@@ -172,6 +172,11 @@ public class MultiIndex {
     private final RedoLog redoLog;
 
     /**
+     * Set&lt;String> of uuids that should not be indexed.
+     */
+    private final Set excludedUUIDs;
+
+    /**
      * The next transaction id.
      */
     private long nextTransactionId = 0;
@@ -184,21 +189,25 @@ public class MultiIndex {
     /**
      * Creates a new MultiIndex.
      *
-     * @param indexDir the base file system
-     * @param handler the search handler
-     * @param stateMgr shared item state manager
-     * @param rootUUID uuid of the root node
+     * @param indexDir      the base file system
+     * @param handler       the search handler
+     * @param stateMgr      shared item state manager
+     * @param rootUUID      uuid of the root node
+     * @param excludedUUIDs Set&lt;String> that contains uuids that should not
+     *                      be indexed nor further traversed.
      * @throws IOException if an error occurs
      */
     MultiIndex(File indexDir,
                SearchIndex handler,
                ItemStateManager stateMgr,
-               String rootUUID) throws IOException {
+               String rootUUID,
+               Set excludedUUIDs) throws IOException {
 
         this.indexDir = indexDir;
         this.handler = handler;
         this.cache = new DocNumberCache(handler.getCacheSize());
-        this.redoLog = new RedoLog(new File(indexDir, REDO_LOG)); 
+        this.redoLog = new RedoLog(new File(indexDir, REDO_LOG));
+        this.excludedUUIDs = new HashSet(excludedUUIDs);
 
         if (indexNames.exists(indexDir)) {
             indexNames.read(indexDir);
@@ -817,6 +826,9 @@ public class MultiIndex {
     private void createIndex(NodeState node, ItemStateManager stateMgr)
             throws IOException, ItemStateException, RepositoryException {
         String uuid = node.getId().toString();
+        if (excludedUUIDs.contains(uuid)) {
+            return;
+        }
         executeAndLog(new AddNode(getTransactionId(), uuid));
         checkVolatileCommit();
         List children = node.getChildNodeEntries();

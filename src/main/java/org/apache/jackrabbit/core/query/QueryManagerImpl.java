@@ -83,7 +83,7 @@ public class QueryManagerImpl implements QueryManager {
      */
     public Query createQuery(String statement, String language)
             throws InvalidQueryException, RepositoryException {
-
+        sanityCheck();
         return searchMgr.createQuery(session, itemMgr, statement, language);
     }
 
@@ -92,7 +92,7 @@ public class QueryManagerImpl implements QueryManager {
      */
     public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
-
+        sanityCheck();
         return searchMgr.createQuery(session, itemMgr, node);
     }
 
@@ -101,5 +101,18 @@ public class QueryManagerImpl implements QueryManager {
      */
     public String[] getSupportedQueryLanguages() throws RepositoryException {
         return (String[]) SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);
+    }
+
+    /**
+     * Checks if this <code>QueryManagerImpl</code> instance is still usable,
+     * otherwise throws a {@link javax.jcr.RepositoryException}.
+     *
+     * @throws RepositoryException if this query manager is not usable anymore,
+     *                             e.g. the corresponding session is closed.
+     */
+    private void sanityCheck() throws RepositoryException {
+        if (!session.isLive()) {
+            throw new RepositoryException("corresponding session has been closed");
+        }
     }
 }
