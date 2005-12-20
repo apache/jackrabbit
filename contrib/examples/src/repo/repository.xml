@@ -22,4 +22,7 @@
         </FileSystem>
         <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" />
     </Versioning>
+    <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
+        <param name="path" value="${rep.home}/repository/index"/>
+    </SearchIndex>
 </Repository>

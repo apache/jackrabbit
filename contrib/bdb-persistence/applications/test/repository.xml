@@ -30,7 +30,7 @@
             a Versioning element that is used for configuring
             versioning-related settings
     -->
-    <!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning)>
+    <!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?)>
 
     <!--
         a virtual file system
@@ -203,4 +203,18 @@
         <PersistenceManager class="org.apache.jackrabbit.core.state.bdb.BerkeleyDBPersistenceManager"/>
 
     </Versioning>
+
+    <!--
+        Search index for content that is shared repository wide
+        (/jcr:system tree, contains mainly versions)
+        
+        The same parameters are supported as in the search index configuration
+        inside the workspace definition element.
+        
+        This element is optional. If omitted, the /jcr:system tree will not be
+        indexed and no results will be returned for that tree!
+    -->
+    <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
+        <param name="path" value="${rep.home}/repository/index"/>
+    </SearchIndex>
 </Repository>
