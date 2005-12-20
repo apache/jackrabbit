@@ -51,10 +51,11 @@ import org.xml.sax.InputSource;
  * create configured repository objects.
  * <p>
  * The contained configuration information are: the home directory and name
- * of the repository, the access manager, file system, and versioning
- * configurations, the workspace directory, the default workspace name, and
- * the workspace configuration template. In addition the workspace
- * configuration object keeps track of all configured workspaces.
+ * of the repository, the access manager, file system, versioning
+ * configuration, repository index configuration, the workspace directory,
+ * the default workspace name, and the workspace configuration template. In
+ * addition the workspace configuration object keeps track of all configured
+ * workspaces.
  */
 public class RepositoryConfig {
 
@@ -206,6 +207,11 @@ public class RepositoryConfig {
     private final VersioningConfig vc;
 
     /**
+     * Optional search configuration for system search manager.
+     */
+    private final SearchConfig sc;
+
+    /**
      * Creates a repository configuration object.
      *
      * @param template workspace configuration template
@@ -218,13 +224,14 @@ public class RepositoryConfig {
      * @param workspaceConfigDirectory optional workspace configuration directory
      * @param defaultWorkspace name of the default workspace
      * @param vc versioning configuration
+     * @param sc search configuration for system search manager.
      * @param parser the ConfigurationParser that servers as config factory
      */
     RepositoryConfig(String home, String name,
             AccessManagerConfig amc, LoginModuleConfig lmc, FileSystemConfig fsc,
             String workspaceDirectory, String workspaceConfigDirectory,
             String defaultWorkspace, Element template, VersioningConfig vc,
-            ConfigurationParser parser) {
+            SearchConfig sc, ConfigurationParser parser) {
         this.workspaces = new HashMap();
         this.home = home;
         this.name = name;
@@ -236,6 +243,7 @@ public class RepositoryConfig {
         this.defaultWorkspace = defaultWorkspace;
         this.template = template;
         this.vc = vc;
+        this.sc = sc;
         this.parser = parser;
     }
 
@@ -249,6 +257,9 @@ public class RepositoryConfig {
     protected void init() throws ConfigurationException {
         fsc.init();
         vc.init();
+        if (sc != null) {
+            sc.init();
+        }
 
         // Get the physical workspace root directory (create it if not found)
         File directory = new File(workspaceDirectory);
@@ -617,4 +628,13 @@ public class RepositoryConfig {
         return vc;
     }
 
+    /**
+     * Returns the system search index configuration. Returns
+     * <code>null</code> if no search index has been configured.
+     *
+     * @return search index configuration, or <code>null</code>
+     */
+    public SearchConfig getSearchConfig() {
+        return sc;
+    }
 }

@@ -234,9 +234,12 @@ public class ConfigurationParser {
         // Versioning configuration
         VersioningConfig vc = parseVersioningConfig(root);
 
+        // Optional search configuration
+        SearchConfig sc = parseSearchConfig(root);
+
         return new RepositoryConfig(home, appName, amc, lmc, fsc,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
-                template, vc, this);
+                template, vc, sc, this);
     }
 
     /**

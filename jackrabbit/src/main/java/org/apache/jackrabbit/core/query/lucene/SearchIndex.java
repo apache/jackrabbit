@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.query.AbstractQueryHandler;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.TextFilter;
+import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
@@ -31,6 +32,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -47,6 +49,8 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Implements a {@link org.apache.jackrabbit.core.query.QueryHandler} using
@@ -178,8 +182,14 @@ public class SearchIndex extends AbstractQueryHandler {
         if (path == null) {
             throw new IOException("SearchIndex requires 'path' parameter in configuration!");
         }
+
+        Set excludedUUIDs = new HashSet();
+        if (context.getExcludedNodeUUID() != null) {
+            excludedUUIDs.add(context.getExcludedNodeUUID());
+        }
+
         index = new MultiIndex(new File(path), this,
-                context.getItemStateManager(), context.getRootUUID());
+                context.getItemStateManager(), context.getRootUUID(), excludedUUIDs);
         if (index.getRedoLogApplied() || forceConsistencyCheck) {
             log.info("Running consistency check...");
             try {
@@ -311,9 +321,22 @@ public class SearchIndex extends AbstractQueryHandler {
                                   Query query,
                                   QName[] orderProps,
                                   boolean[] orderSpecs) throws IOException {
+        QueryHandler parentHandler = getContext().getParentHandler();
+        IndexReader parentReader = null;
+        if (parentHandler instanceof SearchIndex) {
+            parentReader = ((SearchIndex) parentHandler).index.getIndexReader();
+        }
+
         SortField[] sortFields = createSortFields(orderProps, orderSpecs);
 
         IndexReader reader = index.getIndexReader();
+        if (parentReader != null) {
+            // todo FIXME not type safe
+            CachingMultiReader[] readers = {(CachingMultiReader) reader,
+                                            (CachingMultiReader) parentReader};
+            reader = new CombinedIndexReader(readers);
+        }
+
         IndexSearcher searcher = new IndexSearcher(reader);
         Hits hits;
         if (sortFields.length > 0) {
@@ -403,6 +426,77 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected MultiIndex getIndex() {
         return index;
+    }
+
+    //----------------------------< internal >----------------------------------
+
+    /**
+     * Combines multiple {@link CachingMultiReader} into a <code>MultiReader</code>
+     * with {@link HierarchyResolver} support.
+     */
+    protected static final class CombinedIndexReader extends MultiReader implements HierarchyResolver {
+
+        /**
+         * The sub readers.
+         */
+        private CachingMultiReader[] subReaders;
+
+        /**
+         * Doc number starts for each sub reader
+         */
+        private int[] starts;
+
+        public CombinedIndexReader(CachingMultiReader[] indexReaders) throws IOException {
+            super(indexReaders);
+            this.subReaders = indexReaders;
+            this.starts = new int[subReaders.length + 1];
+
+            int maxDoc = 0;
+            for (int i = 0; i < subReaders.length; i++) {
+                starts[i] = maxDoc;
+                maxDoc += subReaders[i].maxDoc();
+            }
+            starts[subReaders.length] = maxDoc;
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public int getParent(int n) throws IOException {
+            int i = readerIndex(n);
+            DocId id = subReaders[i].getParentDocId(n - starts[i]);
+            id = id.applyOffset(starts[i]);
+            return id.getDocumentNumber(this);
+        }
+
+        /**
+         * Returns the reader index for document <code>n</code>.
+         * Implementation copied from lucene MultiReader class.
+         *
+         * @param n document number.
+         * @return the reader index.
+         */
+        final private int readerIndex(int n) {
+            int lo = 0;                                      // search starts array
+            int hi = subReaders.length - 1;                  // for first element less
+
+            while (hi >= lo) {
+                int mid = (lo + hi) >> 1;
+                int midValue = starts[mid];
+                if (n < midValue) {
+                    hi = mid - 1;
+                } else if (n > midValue) {
+                    lo = mid + 1;
+                } else {                                      // found a match
+                    while (mid + 1 < subReaders.length && starts[mid + 1] == midValue) {
+                        mid++;                                  // scan to last match
+                    }
+                    return mid;
+                }
+            }
+            return hi;
+        }
+
     }
 
     //--------------------------< properties >----------------------------------

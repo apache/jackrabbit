@@ -24,13 +24,13 @@
             no workspace yet and for creating additional workspaces through
             the api
 
-            a SearchIndex element that is used for configuring per workspace
-            Indexing-related settings
-
             a Versioning element that is used for configuring
             versioning-related settings
+
+            a SearchIndex element that is used for configuring Indexing-related
+            settings on the /jcr:system tree.
     -->
-    <!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning)>
+    <!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?)>
 
     <!--
         a virtual file system
@@ -207,6 +207,13 @@
           <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
           <param name="schemaObjectPrefix" value="version_"/>
         </PersistenceManager>
-
     </Versioning>
+
+    <!--
+        Search index for content that is shared repository wide
+        (/jcr:system tree, contains mainly versions)
+    -->
+    <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
+        <param name="path" value="${rep.home}/repository/index"/>
+    </SearchIndex>
 </Repository>
