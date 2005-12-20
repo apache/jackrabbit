@@ -50,6 +50,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Properties;
+import java.util.WeakHashMap;
+import java.util.Map;
+import java.util.Collections;
 
 /**
  * Acts as a global entry point to execute queries and index nodes.
@@ -80,9 +86,41 @@ public class SearchManager implements SynchronousEventListener {
     private static final String PARAM_QUERY_IMPL = "queryClass";
 
     /**
+     * Name of the parameter that specifies the idle time for a query handler.
+     */
+    private static final String PARAM_IDLE_TIME = "idleTime";
+
+    /**
      * Name of the default query implementation class.
      */
     private static final String DEFAULT_QUERY_IMPL_CLASS = QueryImpl.class.getName();
+
+    /**
+     * Class instance that is shared for all <code>SearchManager</code> instances.
+     * Each workspace will schedule a task to check if the query handler can
+     * be shutdown after it had been idle for some time.
+     */
+    private static final Timer IDLE_TIMER = new Timer(true);
+
+    /**
+     * Idle time in seconds after which the query handler is shut down.
+     */
+    private static final int DEFAULT_IDLE_TIME = -1;
+
+    /**
+     * The time when the query handler was last accessed.
+     */
+    private long lastAccess = System.currentTimeMillis();
+
+    /**
+     * The search configuration.
+     */
+    private final SearchConfig config;
+
+    /**
+     * The node type registry.
+     */
+    private final NodeTypeRegistry ntReg;
 
     /**
      * The shared item state manager instance for the workspace.
@@ -95,14 +133,31 @@ public class SearchManager implements SynchronousEventListener {
     private final FileSystem fs;
 
     /**
+     * The root node for this search manager.
+     */
+    private final String rootNodeUUID;
+
+    /**
      * QueryHandler where query execution is delegated to
      */
-    private final QueryHandler handler;
+    private QueryHandler handler;
+
+    /**
+     * QueryHandler of the parent search manager or <code>null</code> if there
+     * is none.
+     */
+    private final QueryHandler parentHandler;
 
     /**
      * Namespace resolver that is based on the namespace registry itself.
      */
     private final NamespaceResolver nsResolver;
+
+    /**
+     * UUID of the node that should be excluded from indexing or <code>null</code>
+     * if no node should be excluded.
+     */
+    private final String excludedNodeUUID;
 
     /**
      * Path that will be excluded from indexing.
@@ -116,12 +171,35 @@ public class SearchManager implements SynchronousEventListener {
     private final String queryImplClassName;
 
     /**
+     * Task that checks if the query handler can be shut down because it
+     * had been idle for {@link #idleTime} seconds.
+     */
+    private final TimerTask idleChecker;
+
+    /**
+     * Idle time in seconds. After the query handler had been idle for this
+     * amount of time it is shut down. Defaults to -1 and causes the search
+     * manager to never shut down.
+     */
+    private int idleTime;
+
+    /**
+     * Weakly references all {@link javax.jcr.query.Query} instances created
+     * by this <code>SearchManager</code>.
+     * If this map is empty and this search manager had been idle for at least
+     * {@link #idleTime} seconds, then the query handler is shut down.
+     */
+    private final Map activeQueries = Collections.synchronizedMap(new WeakHashMap() {
+
+    });
+
+    /**
      * Creates a new <code>SearchManager</code>.
      *
-     * @param config           the search configuration.
+     * @param config the search configuration.
      * @param nsReg            the namespace registry.
-     * @param ntReg            the node type registry.
-     * @param itemMgr          the shared item state manager.
+     * @param ntReg the node type registry.
+     * @param itemMgr the shared item state manager.
      * @param rootNodeUUID     the uuid of the root node.
      * @param parentMgr        the parent search manager or <code>null</code> if
      *                         there is no parent search manager.
@@ -138,7 +216,12 @@ public class SearchManager implements SynchronousEventListener {
                          SearchManager parentMgr,
                          String excludedNodeUUID) throws RepositoryException {
         this.fs = config.getFileSystem();
+        this.config = config;
+        this.ntReg = ntReg;
         this.itemMgr = itemMgr;
+        this.rootNodeUUID = rootNodeUUID;
+        this.parentHandler = (parentMgr != null) ? parentMgr.handler : null;
+        this.excludedNodeUUID = excludedNodeUUID;
         this.nsResolver = new AbstractNamespaceResolver() {
             public String getURI(String prefix) throws NamespaceException {
                 try {
@@ -171,11 +254,13 @@ public class SearchManager implements SynchronousEventListener {
             nsReg.registerNamespace(NS_FN_PREFIX, NS_FN_URI);
         }
 
-        queryImplClassName = config.getParameters().getProperty(PARAM_QUERY_IMPL, DEFAULT_QUERY_IMPL_CLASS);
-
-        QueryHandler parentHandler = null;
-        if (parentMgr != null) {
-            parentHandler = parentMgr.handler;
+        Properties params = config.getParameters();
+        queryImplClassName = params.getProperty(PARAM_QUERY_IMPL, DEFAULT_QUERY_IMPL_CLASS);
+        String idleTimeString = params.getProperty(PARAM_IDLE_TIME, String.valueOf(DEFAULT_IDLE_TIME));
+        try {
+            idleTime = Integer.decode(idleTimeString).intValue();
+        } catch (NumberFormatException e) {
+            idleTime = DEFAULT_IDLE_TIME;
         }
 
         if (excludedNodeUUID != null) {
@@ -184,14 +269,28 @@ public class SearchManager implements SynchronousEventListener {
         }
 
         // initialize query handler
-        try {
-            handler = (QueryHandler) config.newInstance();
-            QueryHandlerContext context
-                    = new QueryHandlerContext(fs, itemMgr, rootNodeUUID, ntReg,
-                            parentHandler, excludedNodeUUID);
-            handler.init(context);
-        } catch (Exception e) {
-            throw new RepositoryException(e.getMessage(), e);
+        initializeQueryHandler();
+
+        idleChecker = new TimerTask() {
+            public void run() {
+                if (lastAccess + (idleTime * 1000) < System.currentTimeMillis()) {
+                    int inUse = activeQueries.size();
+                    if (inUse == 0) {
+                        try {
+                            shutdownQueryHandler();
+                        } catch (IOException e) {
+                            log.warn("Unable to shutdown idle query handler", e);
+                        }
+                    } else {
+                        log.debug("SearchManager is idle but " + inUse +
+                                " queries are still in use.");
+                    }
+                }
+            }
+        };
+
+        if (idleTime > -1) {
+            IDLE_TIMER.schedule(idleChecker, 0, 1000);
         }
     }
 
@@ -201,7 +300,9 @@ public class SearchManager implements SynchronousEventListener {
      */
     public void close() {
         try {
-            handler.close();
+            idleChecker.cancel();
+            shutdownQueryHandler();
+
             if (fs != null) {
                 fs.close();
             }
@@ -230,6 +331,7 @@ public class SearchManager implements SynchronousEventListener {
                              String statement,
                              String language)
             throws InvalidQueryException, RepositoryException {
+        ensureInitialized();
         AbstractQueryImpl query = createQueryInstance();
         query.init(session, itemMgr, handler, statement, language);
         return query;
@@ -251,6 +353,7 @@ public class SearchManager implements SynchronousEventListener {
                              ItemManager itemMgr,
                              Node node)
             throws InvalidQueryException, RepositoryException {
+        ensureInitialized();
         AbstractQueryImpl query = createQueryInstance();
         query.init(session, itemMgr, handler, node);
         return query;
@@ -332,12 +435,15 @@ public class SearchManager implements SynchronousEventListener {
                 return item;
             }
         };
-        try {
-            handler.updateNodes(removedNodes.iterator(), addedStates);
-        } catch (RepositoryException e) {
-            log.error("Error indexing node.", e);
-        } catch (IOException e) {
-            log.error("Error indexing node.", e);
+        if (removedNodes.size() > 0 || addedNodes.size() > 0) {
+            try {
+                ensureInitialized();
+                handler.updateNodes(removedNodes.iterator(), addedStates);
+            } catch (RepositoryException e) {
+                log.error("Error indexing node.", e);
+            } catch (IOException e) {
+                log.error("Error indexing node.", e);
+            }
         }
 
         if (log.isDebugEnabled()) {
@@ -359,6 +465,8 @@ public class SearchManager implements SynchronousEventListener {
         try {
             Object obj = Class.forName(queryImplClassName).newInstance();
             if (obj instanceof AbstractQueryImpl) {
+                // track query instances
+                activeQueries.put(obj, null);
                 return (AbstractQueryImpl) obj;
             } else {
                 throw new IllegalArgumentException(queryImplClassName +
@@ -366,6 +474,53 @@ public class SearchManager implements SynchronousEventListener {
             }
         } catch (Throwable t) {
             throw new RepositoryException("Unable to create query: " + t.toString());
+        }
+    }
+
+    //------------------------< internal >--------------------------------------
+
+    /**
+     * Initializes the query handler.
+     *
+     * @throws RepositoryException if the query handler cannot be initialized.
+     */
+    private void initializeQueryHandler() throws RepositoryException {
+        // initialize query handler
+        try {
+            handler = (QueryHandler) config.newInstance();
+            QueryHandlerContext context
+                    = new QueryHandlerContext(fs, itemMgr, rootNodeUUID,
+                            ntReg, parentHandler, excludedNodeUUID);
+            handler.init(context);
+        } catch (Exception e) {
+            throw new RepositoryException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Shuts down the query handler. If the query handler is already shut down
+     * this method does nothing.
+     *
+     * @throws IOException if an error occurs while shutting down the query
+     *                     handler.
+     */
+    private synchronized void shutdownQueryHandler() throws IOException {
+        if (handler != null) {
+            handler.close();
+            handler = null;
+        }
+    }
+
+    /**
+     * Ensures that the query handler is initialized and updates the last
+     * access to the current time.
+     *
+     * @throws RepositoryException if the query handler cannot be initialized.
+     */
+    private synchronized void ensureInitialized() throws RepositoryException {
+        lastAccess = System.currentTimeMillis();
+        if (handler == null) {
+            initializeQueryHandler();
         }
     }
 }

@@ -214,6 +214,9 @@
             - analyzer: class name of a lucene analyzer to use for fulltext indexing of text.
             - queryClass: class name that implements the javax.jcr.query.Query interface.
               this class must extend the class: org.apache.jackrabbit.core.query.AbstractQueryImpl
+            - idleTime: idle time in seconds after which an unused query handler is shut down.
+              If the query handler is later used again it is automatically started.
+              Default value -1 disables this feature.
 
             Note: all parameters (except path) in this SearchIndex config are default
             values and can be omitted.
@@ -231,6 +234,7 @@
             <param name="autoRepair" value="true"/>
             <param name="analyzer" value="org.apache.lucene.analysis.standard.StandardAnalyzer"/>
             <param name="queryClass" value="org.apache.jackrabbit.core.query.QueryImpl"/>
+            <param name="idleTime" value="-1"/>
         </SearchIndex>
     </Workspace>
 
