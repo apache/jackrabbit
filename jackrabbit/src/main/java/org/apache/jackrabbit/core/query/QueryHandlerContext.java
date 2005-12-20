@@ -53,25 +53,44 @@ public class QueryHandlerContext {
     private final PropertyTypeRegistry propRegistry;
 
     /**
+     * The query handler for the jcr:system tree
+     */
+    private final QueryHandler parentHandler;
+
+    /**
+     * UUID of the node that should be excluded from indexing.
+     */
+    private final String excludedNodeUUID;
+
+    /**
      * Creates a new context instance.
      *
-     * @param fs         a {@link FileSystem} this <code>QueryHandler</code> may
-     *                   use to store its index. If no <code>FileSystem</code>
-     *                   has been configured <code>fs</code> is
-     *                   <code>null</code>.
-     * @param stateMgr   provides persistent item states.
-     * @param rootUUID   the uuid of the root node.
-     * @param ntRegistry the node type registry.
+     * @param fs               a {@link FileSystem} this <code>QueryHandler</code>
+     *                         may use to store its index. If no
+     *                         <code>FileSystem</code> has been configured
+     *                         <code>fs</code> is <code>null</code>.
+     * @param stateMgr         provides persistent item states.
+     * @param rootUUID         the uuid of the root node.
+     * @param ntRegistry       the node type registry.
+     * @param parentHandler    the parent query handler or <code>null</code> it
+     *                         there is no parent handler.
+     * @param excludedNodeUUID uuid of the node that should be excluded from
+     *                         indexing. Any descendant of that node is also
+     *                         excluded from indexing.
      */
     public QueryHandlerContext(FileSystem fs,
                                ItemStateManager stateMgr,
                                String rootUUID,
-                               NodeTypeRegistry ntRegistry) {
+                               NodeTypeRegistry ntRegistry,
+                               QueryHandler parentHandler,
+                               String excludedNodeUUID) {
         this.fs = fs;
         this.stateMgr = stateMgr;
         this.rootUUID = rootUUID;
         this.ntRegistry = ntRegistry;
         propRegistry = new PropertyTypeRegistry(ntRegistry);
+        this.parentHandler = parentHandler;
+        this.excludedNodeUUID = excludedNodeUUID;
         ntRegistry.addListener(propRegistry);
     }
 
@@ -120,6 +139,24 @@ public class QueryHandlerContext {
      */
     public NodeTypeRegistry getNodeTypeRegistry() {
         return ntRegistry;
+    }
+
+    /**
+     * Returns the parent query handler.
+     * @return the parent query handler.
+     */
+    public QueryHandler getParentHandler() {
+        return parentHandler;
+    }
+
+    /**
+     * Returns the uuid of the node that should be excluded from indexing. Any
+     * descendant of this node is also excluded from indexing.
+     *
+     * @return the uuid of the exluded node.
+     */
+    public String getExcludedNodeUUID() {
+        return excludedNodeUUID;
     }
 
     /**

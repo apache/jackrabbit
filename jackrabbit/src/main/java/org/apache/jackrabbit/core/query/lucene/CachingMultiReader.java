@@ -28,7 +28,7 @@ import java.util.IdentityHashMap;
  * Extends a <code>MultiReader</code> with support for cached <code>TermDocs</code>
  * on {@link FieldNames#UUID} field.
  */
-final class CachingMultiReader extends MultiReader {
+public final class CachingMultiReader extends MultiReader implements HierarchyResolver {
 
     /**
      * The sub readers.
@@ -90,10 +90,23 @@ final class CachingMultiReader extends MultiReader {
      * @throws IOException if an error occurs while reading from the index.
      */
     final public int getParent(int n) throws IOException {
+        DocId id = getParentDocId(n);
+        return id.getDocumentNumber(this);
+    }
+
+    /**
+     * Returns the DocId of the parent of <code>n</code> or {@link DocId#NULL}
+     * if <code>n</code> does not have a parent (<code>n</code> is the root
+     * node).
+     *
+     * @param n the document number.
+     * @return the DocId of <code>n</code>'s parent.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    final public DocId getParentDocId(int n) throws IOException {
         int i = readerIndex(n);
         DocId id = subReaders[i].getParent(n - starts[i]);
-        id = id.applyOffset(starts[i]);
-        return id.getDocumentNumber(this);
+        return id.applyOffset(starts[i]);
     }
 
     /**

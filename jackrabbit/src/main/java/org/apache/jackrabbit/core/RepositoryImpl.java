@@ -41,6 +41,7 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
@@ -55,6 +56,7 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
 import javax.security.auth.Subject;
 import java.io.File;
 import java.io.IOException;
@@ -115,6 +117,12 @@ public class RepositoryImpl implements Repository, SessionListener,
     private final NodeTypeRegistry ntReg;
     private final VersionManager vMgr;
     private final VirtualNodeTypeStateManager virtNTMgr;
+
+    /**
+     * Search manager for the jcr:system tree. May be <code>null</code> if
+     * none is configured.
+     */
+    private SearchManager systemSearchMgr;
 
     // configuration of the repository
     protected final RepositoryConfig repConfig;
@@ -493,6 +501,33 @@ public class RepositoryImpl implements Repository, SessionListener,
         delegatingDispatcher.addDispatcher(getObservationManagerFactory(wspName));
     }
 
+    /**
+     * Returns the system search manager or <code>null</code> if none is
+     * configured.
+     */
+    private SearchManager getSystemSearchManager(String wspName) throws RepositoryException {
+        if (systemSearchMgr == null) {
+            try {
+                if (repConfig.getSearchConfig() != null) {
+                    SystemSession defSysSession = getSystemSession(wspName);
+                    systemSearchMgr = new SystemSearchManager(repConfig.getSearchConfig(),
+                            nsReg, ntReg, defSysSession.getItemStateManager(), SYSTEM_ROOT_NODE_UUID);
+                    ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
+                    obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED |
+                            Event.NODE_REMOVED | Event.PROPERTY_ADDED |
+                            Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
+                            "/" + QName.JCR_SYSTEM.toJCRName(defSysSession.getNamespaceResolver()),
+                            true, null, null, false);
+                } else {
+                    systemSearchMgr = null;
+                }
+            } catch (NoPrefixDeclaredException e) {
+                throw new RepositoryException(e);
+            }
+        }
+        return systemSearchMgr;
+    }
+
     NamespaceRegistryImpl getNamespaceRegistry() {
         // check sanity of this instance
         sanityCheck();
@@ -722,6 +757,11 @@ public class RepositoryImpl implements Repository, SessionListener,
         for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
             WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
             wspInfo.dispose();
+        }
+
+        // shutdown system search manager if there is one
+        if (systemSearchMgr != null) {
+            systemSearchMgr.close();
         }
 
         try {
@@ -1256,10 +1296,13 @@ public class RepositoryImpl implements Repository, SessionListener,
                     // no search index configured
                     return null;
                 }
-                searchMgr = new SearchManager(getSystemSession(),
-                        config.getSearchConfig(),
+                searchMgr = new SearchManager(config.getSearchConfig(),
+                        nsReg,
                         ntReg,
-                        getItemStateProvider());
+                        getItemStateProvider(),
+                        rootNodeUUID,
+                        getSystemSearchManager(getName()),
+                        SYSTEM_ROOT_NODE_UUID);
             }
             return searchMgr;
         }
