@@ -163,6 +163,12 @@ public class SearchIndex extends AbstractQueryHandler {
     private int cacheSize = 1000;
 
     /**
+     * Indicates if this <code>SearchIndex</code> is closed and cannot be used
+     * anymore.
+     */
+    private boolean closed = false;
+
+    /**
      * Default constructor.
      */
     public SearchIndex() {
@@ -211,6 +217,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 log.warn("Failed to run consistency check on index: " + e);
             }
         }
+        log.info("Index initialized: " + path);
     }
 
     /**
@@ -247,6 +254,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void updateNodes(Iterator remove, Iterator add)
             throws RepositoryException, IOException {
+        checkOpen();
         index.update(new AbstractIteratorDecorator(remove) {
             public Object next() {
                 String uuid = (String) super.next();
@@ -303,7 +311,8 @@ public class SearchIndex extends AbstractQueryHandler {
     public void close() {
         index.close();
         getContext().destroy();
-        log.info("Search index closed.");
+        closed = true;
+        log.info("Index closed: " + path);
     }
 
     /**
@@ -321,6 +330,7 @@ public class SearchIndex extends AbstractQueryHandler {
                                   Query query,
                                   QName[] orderProps,
                                   boolean[] orderSpecs) throws IOException {
+        checkOpen();
         QueryHandler parentHandler = getContext().getParentHandler();
         IndexReader parentReader = null;
         if (parentHandler instanceof SearchIndex) {
@@ -730,5 +740,19 @@ public class SearchIndex extends AbstractQueryHandler {
             delim = ",";
         }
         return names.toString();
+    }
+
+    //----------------------------< internal >----------------------------------
+
+    /**
+     * Checks if this <code>SearchIndex</code> is open, otherwise throws
+     * an <code>IOException</code>.
+     *
+     * @throws IOException if this <code>SearchIndex</code> had been closed.
+     */
+    private void checkOpen() throws IOException {
+        if (closed) {
+            throw new IOException("query handler closed and cannot be used anymore.");
+}
     }
 }
