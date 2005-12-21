@@ -24,11 +24,11 @@ public class TestAll {
     public static Test suite() {
         TestSuite suite = new TestSuite("Test for Jackrabbit Class Loader");
         //$JUnit-BEGIN$
-        suite.addTest(new AbstractClassLoaderTest("repositoryStart"));
+        suite.addTest(new ClassLoaderTestBase("repositoryStart"));
         suite.addTestSuite(PatternPathTest.class);
         suite.addTestSuite(ExpandingArchiveClassPathEntryTest.class);
         suite.addTestSuite(DynamicRepositoryClassLoaderTest.class);
-        suite.addTest(new AbstractClassLoaderTest("repositoryStop"));
+        suite.addTest(new ClassLoaderTestBase("repositoryStop"));
         //$JUnit-END$
         return suite;
     }

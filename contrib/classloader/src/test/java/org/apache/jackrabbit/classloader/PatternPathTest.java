@@ -37,7 +37,7 @@ import javax.jcr.SimpleCredentials;
  *
  * @author Felix Meschberger
  */
-public class PatternPathTest extends AbstractClassLoaderTest {
+public class PatternPathTest extends ClassLoaderTestBase {
 
     private static final String DUMMY = "/dummy/classes";
     private static final String[] patterns = {
