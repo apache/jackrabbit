@@ -30,7 +30,7 @@ import sun.tools.jar.resources.jar_fr;
  *
  * @author Felix Meschberger
  */
-public class DynamicRepositoryClassLoaderTest extends AbstractClassLoaderTest {
+public class DynamicRepositoryClassLoaderTest extends ClassLoaderTestBase {
 
     private static final String CLASSES_FOLDER = "/node1/classes";
     private static final String JAR_FILE = "/node1/mock.jar";

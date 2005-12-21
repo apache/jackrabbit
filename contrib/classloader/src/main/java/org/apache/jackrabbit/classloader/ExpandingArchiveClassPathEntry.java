@@ -407,20 +407,17 @@ import org.apache.commons.logging.LogFactory;
      * entries in the workspace (and repository) to which the <code>session</code>
      * provides access.
      * <p>
-     * This method works as follows:
-     * <ol>
-     * <li>If the node type <code>rep:jarFile</code> is defined in the session's
-     *      repository, <code>true</code> is immediately returned.
-     * <li>If an error checking for the node type, <code>false</code> is
-     *      immediately returned.
-     * <li>Next would be to try to define the node type, this requires the
-     *      <code>session</code> to be an instance of <code>CRXSession</code>,
-     *      which is required to access the node type registry. If the session
-     *      is not a <code>CRXSession</code>, <code>false</code> is returned.
-     * <li>Finally the node type is defined and <code>true</code> is returned.
-     *      If an error occurrs defining the node type, <code>false</code> is
-     *      returned.
-     * </ol>
+     * This method works as follows. If the node type <code>rep:jarFile</code>
+     * is defined in the session's repository, <code>true</code> is immediately
+     * returned. If an error checking for the node type, <code>false</code> is
+     * immediately returned.
+     * <p>
+     * If the node type is not defined, the
+     * {@link NodeTypeSupport#registerNodeType(Workspace)} method is called
+     * to register the node type. Any errors occurring while calling or
+     * executing this method is logged an <code>false</code> is returned.
+     * Otherwise, if node type registration succeeded, <code>true</code> is
+     * returned.
      * <p>
      * This method is synchronized such that two paralell threads do not try
      * to create the node, which might yield wrong negatives.
