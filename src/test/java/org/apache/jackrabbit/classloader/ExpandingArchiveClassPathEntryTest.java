@@ -27,7 +27,7 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.util.Text;
 
-public class ExpandingArchiveClassPathEntryTest extends AbstractClassLoaderTest {
+public class ExpandingArchiveClassPathEntryTest extends ClassLoaderTestBase {
 
     private static final String NODE_TYPE = "rep:jarFile";
 

@@ -57,12 +57,12 @@ import com.sun.corba.se.ActivationIDL.Repository;
 import com.sun.org.omg.CORBA.ExcDescriptionSeqHelper;
 
 /**
- * The <code>AbstractClassLoaderTest</code> TODO
+ * The <code>ClassLoaderTestBase</code> TODO
  *
  * @author fmeschbe
- * @version $Rev:$, $Date:$
+ * @version $Rev:$, $Date$
  */
-public class AbstractClassLoaderTest extends TestCase {
+public class ClassLoaderTestBase extends TestCase {
 
     /** Logger for test cases */
     protected static final Log log =
@@ -79,11 +79,11 @@ public class AbstractClassLoaderTest extends TestCase {
 
     private Set createdItems = new HashSet();
 
-    public AbstractClassLoaderTest() {
+    public ClassLoaderTestBase() {
         super();
     }
 
-    public AbstractClassLoaderTest(String name) {
+    public ClassLoaderTestBase(String name) {
         super(name);
     }
 
