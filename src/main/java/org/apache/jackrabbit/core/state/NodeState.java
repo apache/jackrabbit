@@ -205,14 +205,7 @@ public class NodeState extends ItemState {
      *         the specified <code>name</code>.
      */
     public synchronized boolean hasChildNodeEntry(QName name) {
-        Iterator iter = childNodeEntries.iterator();
-        while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-            if (name.equals(entry.getName())) {
-                return true;
-            }
-        }
-        return false;
+        return !childNodeEntries.get(name).isEmpty();
     }
 
     /**
@@ -237,20 +230,7 @@ public class NodeState extends ItemState {
      *         the specified <code>name</code> and <code>index</code>.
      */
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
-        if (index < 1) {
-            throw new IllegalArgumentException("index is 1-based");
-        }
-        Iterator iter = childNodeEntries.iterator();
-        int count = 0;
-        while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-            if (name.equals(entry.getName())) {
-                if (++count == index) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return childNodeEntries.get(name, index) != null;
     }
 
     /**
@@ -275,20 +255,7 @@ public class NodeState extends ItemState {
      *         or <code>null</code> if there's no such entry.
      */
     public synchronized ChildNodeEntry getChildNodeEntry(QName nodeName, int index) {
-        if (index < 1) {
-            throw new IllegalArgumentException("index is 1-based");
-        }
-        Iterator iter = childNodeEntries.iterator();
-        int count = 0;
-        while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-            if (nodeName.equals(entry.getName())) {
-                if (++count == index) {
-                    return entry;
-                }
-            }
-        }
-        return null;
+        return childNodeEntries.get(nodeName, index);
     }
 
     /**
@@ -1067,7 +1034,7 @@ public class NodeState extends ItemState {
         class OrderedMapIterator implements ListIterator {
 
             final ListIterator keyIter;
-                final Map entries;
+            final Map entries;
 
             OrderedMapIterator(ListIterator keyIter, Map entries) {
                 this.keyIter = keyIter;
