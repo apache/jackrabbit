@@ -109,7 +109,7 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
             RemoteObservationManager remote) {
         return new ClientObservationManager(workspace, remote);
     }
-    
+
     /**
      * Creates and returns a
      * {@link ClientNamespaceRegistry ClientClientNamespaceRegistry} instance.

@@ -52,10 +52,10 @@ public class ClientObservationManager extends ClientObject implements
 
     /** The remote observation manager */
     private final RemoteObservationManager remote;
-    
+
     /** The <code>Workspace</code> to which this observation manager belongs. */
     private final Workspace workspace;
-    
+
     /** The ClientEventPoll class internally used for event dispatching */
     private ClientEventPoll poller;
 

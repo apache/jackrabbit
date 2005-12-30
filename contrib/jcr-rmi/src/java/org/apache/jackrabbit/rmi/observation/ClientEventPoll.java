@@ -71,13 +71,13 @@ public class ClientEventPoll extends Thread {
 
     /** The {@link RemoteObservationManager} called for the new events. */
     private final RemoteObservationManager remote;
-    
+
     /**
      * The <code>Session</code> checked by the {@link #run} method whether it
      * is still alive or the thread should terminate.
      */
     private final Session session;
-    
+
     /** The map of locally registered listeners indexed by the unique identifier */
     private Map listenerMap = new HashMap();
 
@@ -98,13 +98,14 @@ public class ClientEventPoll extends Thread {
      *      events. This must not be <code>null</code>.
      * @param session The <code>Session</code> which is asked whether it is
      *      alive by the {@link #run()} method. This must not be <code>null</code>.
-     * 
+     *
      * @throws NullPointerException if <code>remote</code> or <code>session</code>
      *      is <code>null</code>.
      */
-    public ClientEventPoll(RemoteObservationManager remote, Session session) {
+    public ClientEventPoll(RemoteObservationManager remote, Session session)
+            throws NullPointerException {
         super(THREAD_NAME);
-        
+
         // check remote and session
         if (remote == null) {
             throw new NullPointerException("remote");
@@ -112,7 +113,7 @@ public class ClientEventPoll extends Thread {
         if (session == null) {
             throw new NullPointerException("session");
         }
-        
+
         this.remote = remote;
         this.session = session;
     }

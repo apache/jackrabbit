@@ -21,7 +21,6 @@ import java.rmi.RemoteException;
 import javax.jcr.Item;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -163,7 +162,7 @@ public class ClientItem extends ClientObject implements Item {
             return false;
         } else if (equals(item)) {
             return true;
-        } else if (isNode() == item.isNode()){
+        } else if (isNode() == item.isNode()) {
             return getPath().equals(item.getPath());
         } else {
             return false;

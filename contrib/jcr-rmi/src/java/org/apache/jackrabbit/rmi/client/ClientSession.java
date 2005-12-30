@@ -69,7 +69,7 @@ public class ClientSession extends ClientObject implements Session {
      * method first checks this flag before asking the remote session.
      */
     private boolean live = true;
-    
+
     /** The adapted remote session. */
     private RemoteSession remote;
 
@@ -308,12 +308,12 @@ public class ClientSession extends ClientObject implements Session {
 
     /** {@inheritDoc} */
     public void logout() {
-        
+
         // ignore if we are not alive any more.
         if (!isLive()) {
             return;
         }
-        
+
         try {
             remote.logout();
         } catch (RemoteException ex) {
