@@ -21,12 +21,15 @@ import java.rmi.RemoteException;
 import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
@@ -37,12 +40,15 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
 
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -294,4 +300,56 @@ public interface RemoteAdapterFactory {
      */
     RemoteEventCollection getRemoteEvent(long listenerId, EventIterator events)
         throws RemoteException;
+
+
+    /**
+     * Returns a remote adapter for the given local node iterator.
+     *
+     * @param iterator local node iterator
+     * @return remote iterator adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteIterator getRemoteNodeIterator(NodeIterator iterator)
+        throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local property iterator.
+     *
+     * @param iterator local property iterator
+     * @return remote iterator adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteIterator getRemotePropertyIterator(PropertyIterator iterator)
+        throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local version iterator.
+     *
+     * @param iterator local version iterator
+     * @return remote iterator adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteIterator getRemoteVersionIterator(VersionIterator iterator)
+        throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local node type iterator.
+     *
+     * @param iterator local node type iterator
+     * @return remote iterator adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteIterator getRemoteNodeTypeIterator(NodeTypeIterator iterator)
+        throws RemoteException;
+
+    /**
+     * Returns a remote adapter for the given local row iterator.
+     *
+     * @param iterator local row iterator
+     * @return remote iterator adapter
+     * @throws RemoteException on RMI errors
+     */
+    RemoteIterator getRemoteRowIterator(RowIterator iterator)
+        throws RemoteException;
+
 }

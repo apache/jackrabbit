@@ -66,7 +66,7 @@ public class ClientNodeTypeManager extends ClientObject
     /** {@inheritDoc} */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
         try {
-            return getNodeTypeIterator(remote.getAllNodeTypes());
+            return getFactory().getNodeTypeIterator(remote.getAllNodeTypes());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -75,7 +75,7 @@ public class ClientNodeTypeManager extends ClientObject
     /** {@inheritDoc} */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
         try {
-            return getNodeTypeIterator(remote.getPrimaryNodeTypes());
+            return getFactory().getNodeTypeIterator(remote.getPrimaryNodeTypes());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -84,7 +84,7 @@ public class ClientNodeTypeManager extends ClientObject
     /** {@inheritDoc} */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
         try {
-            return getNodeTypeIterator(remote.getMixinNodeTypes());
+            return getFactory().getNodeTypeIterator(remote.getMixinNodeTypes());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

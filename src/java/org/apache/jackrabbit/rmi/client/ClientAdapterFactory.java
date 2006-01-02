@@ -19,12 +19,15 @@ package org.apache.jackrabbit.rmi.client;
 import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
@@ -34,11 +37,19 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
 
+import org.apache.jackrabbit.rmi.client.iterator.ClientNodeIterator;
+import org.apache.jackrabbit.rmi.client.iterator.ClientNodeTypeIterator;
+import org.apache.jackrabbit.rmi.client.iterator.ClientPropertyIterator;
+import org.apache.jackrabbit.rmi.client.iterator.ClientRowIterator;
+import org.apache.jackrabbit.rmi.client.iterator.ClientVersionIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -260,4 +271,48 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
     public Row getRow(RemoteRow remote) {
         return new ClientRow(remote);
     }
+
+    /**
+     * Creates and returns a {@link ClientNodeIterator} instance.
+     * {@inheritDoc}
+     */
+    public NodeIterator getNodeIterator(
+            Session session, RemoteIterator remote) {
+        return new ClientNodeIterator(remote, session, this);
+    }
+
+    /**
+     * Creates and returns a {@link ClientPropertyIterator} instance.
+     * {@inheritDoc}
+     */
+    public PropertyIterator getPropertyIterator(
+            Session session, RemoteIterator remote) {
+        return new ClientPropertyIterator(remote, session, this);
+    }
+
+    /**
+     * Creates and returns a {@link ClientVersionIterator} instance.
+     * {@inheritDoc}
+     */
+    public VersionIterator getVersionIterator(
+            Session session, RemoteIterator remote) {
+        return new ClientVersionIterator(remote, session, this);
+    }
+
+    /**
+     * Creates and returns a {@link ClientNodeTypeIterator} instance.
+     * {@inheritDoc}
+     */
+    public NodeTypeIterator getNodeTypeIterator(RemoteIterator remote) {
+        return new ClientNodeTypeIterator(remote, this);
+    }
+
+    /**
+     * Creates and returns a {@link ClientRowIterator} instance.
+     * {@inheritDoc}
+     */
+    public RowIterator getRowIterator(RemoteIterator remote) {
+        return new ClientRowIterator(remote, this);
+    }
+
 }

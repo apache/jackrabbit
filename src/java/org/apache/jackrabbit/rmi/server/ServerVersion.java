@@ -53,6 +53,30 @@ public class ServerVersion extends ServerNode implements RemoteVersion {
         this.version = version;
     }
 
+    /**
+     * Utility method for creating an array of remote references for
+     * local versions. The remote references are created using the
+     * remote adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty array.
+     *
+     * @param versions local version array
+     * @return remote version array
+     * @throws RemoteException on RMI errors
+     */
+    private RemoteVersion[] getRemoteVersionArray(Version[] versions)
+            throws RemoteException {
+        if (versions != null) {
+            RemoteVersion[] remotes = new RemoteVersion[versions.length];
+            for (int i = 0; i < remotes.length; i++) {
+                remotes[i] = getFactory().getRemoteVersion(versions[i]);
+            }
+            return remotes;
+        } else {
+            return new RemoteVersion[0]; // for safety
+        }
+    }
+
 //  This is only available after 0.16.2
 //    /** {@inheritDoc} */
 //    public RemoteVersionHistory getContainingHistory() throws RepositoryException {

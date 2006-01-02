@@ -18,27 +18,13 @@ package org.apache.jackrabbit.rmi.client;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
 import javax.jcr.Session;
-import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionIterator;
 
-import org.apache.jackrabbit.rmi.iterator.ArrayNodeIterator;
-import org.apache.jackrabbit.rmi.iterator.ArrayNodeTypeIterator;
-import org.apache.jackrabbit.rmi.iterator.ArrayPropertyIterator;
-import org.apache.jackrabbit.rmi.iterator.ArrayVersionIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
@@ -77,7 +63,7 @@ public class ClientObject {
     /**
      * Utility method to create a local adapter for a remote item.
      * This method introspects the remote reference to determine
-     * whether to instantiate a {@link Property Property},
+     * whether to instantiate a {@link javax.jcr.Property},
      * a {@link Node Node}, or an {@link Item Item} adapter using
      * the local adapter factory.
      * <p>
@@ -121,94 +107,6 @@ public class ClientObject {
     }
 
     /**
-     * Utility method for creating a property iterator for an array
-     * of remote properties. The properties in the returned iterator
-     * are created using the local adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param session current session
-     * @param remotes remote properties
-     * @return local property iterator
-     */
-    protected PropertyIterator getPropertyIterator(
-            Session session, RemoteProperty[] remotes) {
-        if (remotes != null) {
-            Property[] properties = new Property[remotes.length];
-            for (int i = 0; i < remotes.length; i++) {
-                properties[i] = factory.getProperty(session, remotes[i]);
-            }
-            return new ArrayPropertyIterator(properties);
-        } else {
-            return new ArrayPropertyIterator(new Property[0]); // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating a node iterator for an array
-     * of remote nodes. The nodes in the returned iterator
-     * are created using the local adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param session current session
-     * @param remotes remote nodes
-     * @return local node iterator
-     */
-    protected NodeIterator getNodeIterator(
-            Session session, RemoteNode[] remotes) {
-        if (remotes != null) {
-            Node[] nodes = new Node[remotes.length];
-            for (int i = 0; i < remotes.length; i++) {
-                nodes[i] = getNode(session, remotes[i]);
-            }
-            return new ArrayNodeIterator(nodes);
-        } else {
-            return new ArrayNodeIterator(new Node[0]); // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating a version array for an array
-     * of remote versions. The versions in the returned array
-     * are created using the local adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param session current session
-     * @param remotes remote versions
-     * @return local version array
-     */
-    protected Version[] getVersionArray(
-            Session session, RemoteVersion[] remotes) {
-        if (remotes != null) {
-            Version[] versions = new Version[remotes.length];
-            for (int i = 0; i < remotes.length; i++) {
-                versions[i] = factory.getVersion(session, remotes[i]);
-            }
-            return versions;
-        } else {
-            return new Version[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating a version iterator for an array
-     * of remote versions. The versions in the returned iterator
-     * are created using the local adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param session current session
-     * @param remotes remote versions
-     * @return local version iterator
-     */
-    protected VersionIterator getVersionIterator(
-            Session session, RemoteVersion[] remotes) {
-        return new ArrayVersionIterator(getVersionArray(session, remotes));
-    }
-
-    /**
      * Utility method for creating an array of local node type adapters
      * for an array of remote node types. The node type adapters are created
      * using the local adapter factory.
@@ -227,64 +125,6 @@ public class ClientObject {
             return types;
         } else {
             return new NodeType[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an iterator of local node type adapters
-     * for an array of remote node types. The node type adapters are created
-     * using the local adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param remotes remote node types
-     * @return local node type iterator
-     */
-    protected NodeTypeIterator getNodeTypeIterator(RemoteNodeType[] remotes) {
-        return new ArrayNodeTypeIterator(getNodeTypeArray(remotes));
-    }
-
-    /**
-     * Utility method for creating an array of local node definition
-     * adapters for an array of remote node definitions. The node
-     * definition adapters are created using the local adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param remotes remote node definitions
-     * @return local node definition array
-     */
-    protected NodeDefinition[] getNodeDefArray(RemoteNodeDefinition[] remotes) {
-        if (remotes != null) {
-            NodeDefinition[] defs = new NodeDefinition[remotes.length];
-            for (int i = 0; i < remotes.length; i++) {
-                defs[i] = factory.getNodeDef(remotes[i]);
-            }
-            return defs;
-        } else {
-            return new NodeDefinition[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an array of local property definition
-     * adapters for an array of remote property definitions. The property
-     * definition adapters are created using the local adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param remotes remote property definitions
-     * @return local property definition array
-     */
-    protected PropertyDefinition[] getPropertyDefArray(RemotePropertyDefinition[] remotes) {
-        if (remotes != null) {
-            PropertyDefinition[] defs = new PropertyDefinition[remotes.length];
-            for (int i = 0; i < remotes.length; i++) {
-                defs[i] = factory.getPropertyDef(remotes[i]);
-            }
-            return defs;
-        } else {
-            return new PropertyDefinition[0]; // for safety
         }
     }
 

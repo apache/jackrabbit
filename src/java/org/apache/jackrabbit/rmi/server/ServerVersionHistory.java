@@ -22,6 +22,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
@@ -56,16 +57,6 @@ public class ServerVersionHistory extends ServerNode
     }
 
     /** {@inheritDoc} */
-//    public String getVersionableUUID()
-//            throws RepositoryException, RemoteException {
-//        try {
-//            return versionHistory.getVersionableUUID();
-//        } catch (RepositoryException ex) {
-//            throw getRepositoryException(ex);
-//        }
-//    }
-
-    /** {@inheritDoc} */
     public RemoteVersion getRootVersion()
             throws RepositoryException, RemoteException {
         try {
@@ -76,10 +67,11 @@ public class ServerVersionHistory extends ServerNode
     }
 
     /** {@inheritDoc} */
-    public RemoteVersion[] getAllVersions()
+    public RemoteIterator getAllVersions()
             throws RepositoryException, RemoteException {
         try {
-            return getRemoteVersionArray(versionHistory.getAllVersions());
+            return getFactory().getRemoteVersionIterator(
+                    versionHistory.getAllVersions());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

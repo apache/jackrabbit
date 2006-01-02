@@ -18,19 +18,13 @@ package org.apache.jackrabbit.rmi.client;
 
 import java.rmi.RemoteException;
 
-import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.QueryResult;
-import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
-import org.apache.jackrabbit.rmi.iterator.ArrayNodeIterator;
-import org.apache.jackrabbit.rmi.iterator.ArrayRowIterator;
-import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
-import org.apache.jackrabbit.rmi.remote.RemoteRow;
 
 /**
  * Local adapter for the JCR-RMI
@@ -77,16 +71,7 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
     /** {@inheritDoc} */
     public RowIterator getRows() throws RepositoryException {
         try {
-            RemoteRow[] remotes =  remote.getRows();
-            if (remotes != null) {
-                Row[] rows = new Row[remotes.length];
-                for (int i = 0; i < rows.length; i++) {
-                    rows[i] = getFactory().getRow(remotes[i]);
-                }
-                return new ArrayRowIterator(rows);
-            } else {
-                return new ArrayRowIterator(new Row[0]);
-            }
+            return getFactory().getRowIterator(remote.getRows());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -95,18 +80,9 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
     /** {@inheritDoc} */
     public NodeIterator getNodes() throws RepositoryException {
         try {
-            RemoteNode[] remotes = remote.getNodes();
-            if (remotes != null) {
-                Node[] nodes = new Node[remotes.length];
-                for (int i = 0; i < nodes.length; i++) {
-                    nodes[i] = getNode(session, remotes[i]);
-                }
-                return new ArrayNodeIterator(nodes);
-            } else {
-                return new ArrayNodeIterator(new Node[0]);
-            }
-        } catch (RemoteException ex) {
-            throw new RemoteRepositoryException(ex);
+            return getFactory().getNodeIterator(session, remote.getNodes());
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
         }
     }
 

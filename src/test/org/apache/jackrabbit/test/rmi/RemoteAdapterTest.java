@@ -261,6 +261,10 @@ public class RemoteAdapterTest extends TestCase {
         ignoreMethod("getVersionHistory");        // TODO
         ignoreMethod("getBaseVersion");           // TODO
         ignoreMethod("setProperty");              // multiple methods
+        ignoreMethod("getNodes");                 // null iterator
+        ignoreMethod("getProperties");            // null iterator
+        ignoreMethod("getReferences");            // null iterator
+        ignoreMethod("merge");                    // null iterator
 
         Node node = (Node) mock;
         RemoteNode remote = remoteFactory.getRemoteNode(node);
@@ -353,6 +357,9 @@ public class RemoteAdapterTest extends TestCase {
      */
     public void testNodeTypeManager() throws Exception {
         prepareTests(NodeTypeManager.class);
+        ignoreMethod("getAllNodeTypes");     // null iterator
+        ignoreMethod("getPrimaryNodeTypes"); // null iterator
+        ignoreMethod("getMixinNodeTypes");   // null iterator
 
         NodeTypeManager manager = (NodeTypeManager) mock;
         RemoteNodeTypeManager remote =
@@ -461,6 +468,8 @@ public class RemoteAdapterTest extends TestCase {
      */
     public void testQueryResult() throws Exception {
         prepareTests(QueryResult.class);
+        ignoreMethod("getNodes"); // null iterator
+        ignoreMethod("getRows");  // null iterator
 
         QueryResult result = (QueryResult) mock;
         RemoteQueryResult remote = remoteFactory.getRemoteQueryResult(result);
@@ -509,6 +518,7 @@ public class RemoteAdapterTest extends TestCase {
         prepareTests(VersionHistory.class);
         ignoreMethod("getVersionLabels"); // UUID call
         ignoreMethod("hasVersionLabel");  // UUID call
+        ignoreMethod("getAllVersions");   // null iterator
 
         VersionHistory history = (VersionHistory) mock;
         RemoteVersionHistory remote =

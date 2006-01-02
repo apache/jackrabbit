@@ -69,7 +69,7 @@ public interface RemoteNodeTypeManager extends Remote {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteNodeType[] getAllNodeTypes()
+    RemoteIterator getAllNodeTypes()
             throws RepositoryException, RemoteException;
 
     /**
@@ -81,7 +81,7 @@ public interface RemoteNodeTypeManager extends Remote {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteNodeType[] getPrimaryNodeTypes()
+    RemoteIterator getPrimaryNodeTypes()
             throws RepositoryException, RemoteException;
 
     /**
@@ -93,7 +93,7 @@ public interface RemoteNodeTypeManager extends Remote {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteNodeType[] getMixinNodeTypes()
+    RemoteIterator getMixinNodeTypes()
             throws RepositoryException, RemoteException;
 
 }

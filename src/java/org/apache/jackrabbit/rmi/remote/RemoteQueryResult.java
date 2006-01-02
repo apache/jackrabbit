@@ -51,15 +51,15 @@ public interface RemoteQueryResult extends Remote {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteRow[] getRows() throws RepositoryException, RemoteException;
+    RemoteIterator getRows() throws RepositoryException, RemoteException;
 
     /**
      * @see javax.jcr.query.QueryResult#getNodes()
      *
-     * @return a <code>NodeIterator</code>
+     * @return a remote node iterator
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteNode[] getNodes() throws RepositoryException, RemoteException;
+    RemoteIterator getNodes() throws RepositoryException, RemoteException;
 
 }
