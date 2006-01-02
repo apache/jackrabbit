@@ -19,6 +19,7 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 
 import javax.jcr.Value;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 
@@ -54,6 +55,57 @@ public class ServerNodeType extends ServerObject implements RemoteNodeType {
         super(factory);
         this.type = type;
     }
+
+    /**
+     * Utility method for creating an array of remote references for
+     * local node definitions. The remote references are created using the
+     * remote adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty array.
+     *
+     * @param defs local node definition array
+     * @return remote node definition array
+     * @throws RemoteException on RMI errors
+     */
+    private RemoteNodeDefinition[] getRemoteNodeDefArray(NodeDefinition[] defs)
+            throws RemoteException {
+        if (defs != null) {
+            RemoteNodeDefinition[] remotes =
+                new RemoteNodeDefinition[defs.length];
+            for (int i = 0; i < defs.length; i++) {
+                remotes[i] = getFactory().getRemoteNodeDefinition(defs[i]);
+            }
+            return remotes;
+        } else {
+            return new RemoteNodeDefinition[0]; // for safety
+        }
+    }
+
+    /**
+     * Utility method for creating an array of remote references for
+     * local property definitions. The remote references are created using the
+     * remote adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty array.
+     *
+     * @param defs local property definition array
+     * @return remote property definition array
+     * @throws RemoteException on RMI errors
+     */
+    private RemotePropertyDefinition[] getRemotePropertyDefArray(
+            PropertyDefinition[] defs) throws RemoteException {
+        if (defs != null) {
+            RemotePropertyDefinition[] remotes =
+                new RemotePropertyDefinition[defs.length];
+            for (int i = 0; i < defs.length; i++) {
+                remotes[i] = getFactory().getRemotePropertyDefinition(defs[i]);
+            }
+            return remotes;
+        } else {
+            return new RemotePropertyDefinition[0]; // for safety
+        }
+    }
+
 
     /** {@inheritDoc} */
     public String getName() throws RemoteException {

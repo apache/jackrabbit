@@ -204,7 +204,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public NodeIterator getNodes() throws RepositoryException {
         try {
-            return getNodeIterator(getSession(), remote.getNodes());
+            return getFactory().getNodeIterator(getSession(), remote.getNodes());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -213,7 +213,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public NodeIterator getNodes(String pattern) throws RepositoryException {
         try {
-            return getNodeIterator(getSession(), remote.getNodes(pattern));
+            return getFactory().getNodeIterator(getSession(), remote.getNodes(pattern));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -232,7 +232,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public PropertyIterator getProperties() throws RepositoryException {
         try {
-            return getPropertyIterator(getSession(), remote.getProperties());
+            return getFactory().getPropertyIterator(getSession(), remote.getProperties());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -242,8 +242,7 @@ public class ClientNode extends ClientItem implements Node {
     public PropertyIterator getProperties(String pattern)
             throws RepositoryException {
         try {
-            RemoteProperty[] properties = remote.getProperties(pattern);
-            return getPropertyIterator(getSession(), properties);
+            return getFactory().getPropertyIterator(getSession(), remote.getProperties(pattern));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -270,7 +269,7 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public PropertyIterator getReferences() throws RepositoryException {
         try {
-            return getPropertyIterator(getSession(), remote.getReferences());
+            return getFactory().getPropertyIterator(getSession(), remote.getReferences());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -406,7 +405,7 @@ public class ClientNode extends ClientItem implements Node {
     public NodeIterator merge(String workspace, boolean bestEffort)
             throws RepositoryException {
         try {
-            return getNodeIterator(getSession(), remote.merge(workspace, bestEffort));
+            return getFactory().getNodeIterator(getSession(), remote.merge(workspace, bestEffort));
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

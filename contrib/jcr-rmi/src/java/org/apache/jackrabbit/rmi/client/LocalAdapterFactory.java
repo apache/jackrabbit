@@ -19,7 +19,9 @@ package org.apache.jackrabbit.rmi.client;
 import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
@@ -27,6 +29,7 @@ import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.observation.ObservationManager;
@@ -34,11 +37,14 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -268,5 +274,49 @@ public interface LocalAdapterFactory {
      * @return local query row adapter
      */
     Row getRow(RemoteRow remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote node iterator.
+     *
+     * @param session current session
+     * @param remote remote node iterator
+     * @return local node iterator adapter
+     */
+    NodeIterator getNodeIterator(Session session, RemoteIterator remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote property iterator.
+     *
+     * @param session current session
+     * @param remote remote property iterator
+     * @return local property iterator adapter
+     */
+    PropertyIterator getPropertyIterator(Session session, RemoteIterator remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote version iterator.
+     *
+     * @param session current session
+     * @param remote remote version iterator
+     * @return local version iterator adapter
+     */
+    VersionIterator getVersionIterator(Session session, RemoteIterator remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote
+     * node type iterator.
+     *
+     * @param remote remote node type iterator
+     * @return local node type iterator adapter
+     */
+    NodeTypeIterator getNodeTypeIterator(RemoteIterator remote);
+
+    /**
+     * Factory method for creating a local adapter for a remote row iterator.
+     *
+     * @param remote remote row iterator
+     * @return local row iterator adapter
+     */
+    RowIterator getRowIterator(RemoteIterator remote);
 
 }

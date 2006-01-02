@@ -25,6 +25,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
+import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
@@ -51,6 +52,51 @@ public class ClientNodeType extends ClientObject implements NodeType {
     public ClientNodeType(RemoteNodeType remote, LocalAdapterFactory factory) {
         super(factory);
         this.remote = remote;
+    }
+
+    /**
+     * Utility method for creating an array of local node definition
+     * adapters for an array of remote node definitions. The node
+     * definition adapters are created using the local adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty array.
+     *
+     * @param remotes remote node definitions
+     * @return local node definition array
+     */
+    private NodeDefinition[] getNodeDefArray(RemoteNodeDefinition[] remotes) {
+        if (remotes != null) {
+            NodeDefinition[] defs = new NodeDefinition[remotes.length];
+            for (int i = 0; i < remotes.length; i++) {
+                defs[i] = getFactory().getNodeDef(remotes[i]);
+            }
+            return defs;
+        } else {
+            return new NodeDefinition[0]; // for safety
+        }
+    }
+
+    /**
+     * Utility method for creating an array of local property definition
+     * adapters for an array of remote property definitions. The property
+     * definition adapters are created using the local adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty array.
+     *
+     * @param remotes remote property definitions
+     * @return local property definition array
+     */
+    protected PropertyDefinition[] getPropertyDefArray(
+            RemotePropertyDefinition[] remotes) {
+        if (remotes != null) {
+            PropertyDefinition[] defs = new PropertyDefinition[remotes.length];
+            for (int i = 0; i < remotes.length; i++) {
+                defs[i] = getFactory().getPropertyDef(remotes[i]);
+            }
+            return defs;
+        } else {
+            return new PropertyDefinition[0]; // for safety
+        }
     }
 
     /** {@inheritDoc} */
@@ -128,8 +174,7 @@ public class ClientNodeType extends ClientObject implements NodeType {
     /** {@inheritDoc} */
     public NodeDefinition[] getChildNodeDefinitions() {
         try {
-            RemoteNodeDefinition[] defs = remote.getChildNodeDefs();
-            return getNodeDefArray(defs);
+            return getNodeDefArray(remote.getChildNodeDefs());
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }
@@ -138,8 +183,7 @@ public class ClientNodeType extends ClientObject implements NodeType {
     /** {@inheritDoc} */
     public NodeDefinition[] getDeclaredChildNodeDefinitions() {
         try {
-            RemoteNodeDefinition[] defs = remote.getDeclaredChildNodeDefs();
-            return getNodeDefArray(defs);
+            return getNodeDefArray(remote.getDeclaredChildNodeDefs());
         } catch (RemoteException ex) {
             throw new RemoteRuntimeException(ex);
         }

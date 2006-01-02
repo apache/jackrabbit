@@ -68,7 +68,8 @@ public class ClientVersionHistory extends ClientNode implements VersionHistory {
     /** {@inheritDoc} */
     public VersionIterator getAllVersions() throws RepositoryException {
         try {
-            return getVersionIterator(getSession(), remote.getAllVersions());
+            return getFactory().getVersionIterator(
+                    getSession(), remote.getAllVersions());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }

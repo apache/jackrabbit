@@ -54,6 +54,29 @@ public class ClientVersion extends ClientNode implements Version {
         this.remote = remote;
     }
 
+    /**
+     * Utility method for creating a version array for an array
+     * of remote versions. The versions in the returned array
+     * are created using the local adapter factory.
+     * <p>
+     * A <code>null</code> input is treated as an empty array.
+     *
+     * @param remotes remote versions
+     * @return local version array
+     */
+    private Version[] getVersionArray(RemoteVersion[] remotes) {
+        if (remotes != null) {
+            Version[] versions = new Version[remotes.length];
+            for (int i = 0; i < remotes.length; i++) {
+                versions[i] = getFactory().getVersion(getSession(), remotes[i]);
+            }
+            return versions;
+        } else {
+            return new Version[0]; // for safety
+        }
+    }
+
+
     /** {@inheritDoc} */
     public Calendar getCreated() throws RepositoryException {
         try {
@@ -66,7 +89,7 @@ public class ClientVersion extends ClientNode implements Version {
     /** {@inheritDoc} */
     public Version[] getSuccessors() throws RepositoryException {
         try {
-            return getVersionArray(getSession(), remote.getSuccessors());
+            return getVersionArray(remote.getSuccessors());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -75,7 +98,7 @@ public class ClientVersion extends ClientNode implements Version {
     /** {@inheritDoc} */
     public Version[] getPredecessors() throws RepositoryException {
         try {
-            return getVersionArray(getSession(), remote.getPredecessors());
+            return getVersionArray(remote.getPredecessors());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
