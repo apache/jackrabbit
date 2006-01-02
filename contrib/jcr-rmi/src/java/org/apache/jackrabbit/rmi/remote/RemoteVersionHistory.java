@@ -72,12 +72,11 @@ public interface RemoteVersionHistory extends RemoteNode {
      * {@link javax.jcr.version.VersionHistory#getAllVersions() VersionHistory.getAllVersions()}
      * method.
      *
-     * @return a <code>VersionIterator</code> object.
+     * @return remote versions
      * @throws RepositoryException if an error occurs.
      * @throws RemoteException on RMI errors
      */
-    RemoteVersion[] getAllVersions()
-            throws RepositoryException, RemoteException;
+    RemoteIterator getAllVersions() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the

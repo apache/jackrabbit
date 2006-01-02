@@ -23,7 +23,9 @@ import java.util.List;
 import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -32,6 +34,7 @@ import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.observation.Event;
@@ -41,12 +44,17 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
 
+import org.apache.jackrabbit.rmi.remote.ArrayIterator;
+import org.apache.jackrabbit.rmi.remote.BufferIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
@@ -65,6 +73,11 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.server.iterator.ServerNodeIterator;
+import org.apache.jackrabbit.rmi.server.iterator.ServerNodeTypeIterator;
+import org.apache.jackrabbit.rmi.server.iterator.ServerPropertyIterator;
+import org.apache.jackrabbit.rmi.server.iterator.ServerRowIterator;
+import org.apache.jackrabbit.rmi.server.iterator.ServerVersionIterator;
 
 /**
  * Default implementation of the
@@ -77,6 +90,11 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * @author Philipp Koch
  */
 public class ServerAdapterFactory implements RemoteAdapterFactory {
+
+    /**
+     * The default maximum buffer size used for local iterator buffers.
+     */
+    private static final int MAX_BUFFER_SIZE = 100;
 
     /**
      * Creates a {@link ServerRepository ServerRepository} instance.
@@ -282,4 +300,78 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
 
         return new ServerEventCollection(listenerId, remoteEvents);
     }
+
+    /**
+     * Optimizes the given remote iterator for transmission across the
+     * network. This method retrieves the first set of elements from
+     * the iterator by calling {@link RemoteIterator#nextObjects()} and
+     * then asks for the total size of the iterator. If the size is unkown
+     * or greater than the length of the retrieved array, then the elements,
+     * the size, and the remote iterator reference are wrapped into a
+     * {@link BufferIterator} instance that gets passed over the network.
+     * If the retrieved array of elements contains all the elements in the
+     * iterator, then the iterator instance is discarded and just the elements
+     * are wrapped into a {@link ArrayIterator} instance to be passed to the
+     * client.
+     *
+     * @param remote remote iterator
+     * @return optimized remote iterator
+     * @throws RemoteException on RMI errors
+     */
+    private RemoteIterator optimizeIterator(RemoteIterator remote)
+            throws RemoteException {
+        Object[] elements = remote.nextObjects();
+        long size = remote.getSize();
+        if (size == -1 || (elements != null && size > elements.length)) {
+            return new BufferIterator(elements, size, remote);
+        } else {
+            return new ArrayIterator(elements);
+        }
+    }
+
+    /**
+     * Creates a {@link ServerNodeIterator} instance. {@inheritDoc}
+     */
+    public RemoteIterator getRemoteNodeIterator(NodeIterator iterator)
+            throws RemoteException {
+        return optimizeIterator(
+                new ServerNodeIterator(iterator, this, MAX_BUFFER_SIZE));
+    }
+
+    /**
+     * Creates a {@link ServerPropertyIterator} instance. {@inheritDoc}
+     */
+    public RemoteIterator getRemotePropertyIterator(PropertyIterator iterator)
+            throws RemoteException {
+        return optimizeIterator(
+                new ServerPropertyIterator(iterator, this, MAX_BUFFER_SIZE));
+    }
+
+    /**
+     * Creates a {@link ServerVersionIterator} instance. {@inheritDoc}
+     */
+    public RemoteIterator getRemoteVersionIterator(VersionIterator iterator)
+            throws RemoteException {
+        return optimizeIterator(
+                new ServerVersionIterator(iterator, this, MAX_BUFFER_SIZE));
+    }
+
+    /**
+     * Creates a {@link ServerNodeTypeIterator} instance. {@inheritDoc}
+     */
+    public RemoteIterator getRemoteNodeTypeIterator(NodeTypeIterator iterator)
+            throws RemoteException {
+        return optimizeIterator(
+                new ServerNodeTypeIterator(iterator, this, MAX_BUFFER_SIZE));
+    }
+
+    /**
+     * Creates a {@link ServerRowIterator} instance. {@inheritDoc}
+     */
+    public RemoteIterator getRemoteRowIterator(RowIterator iterator)
+            throws RemoteException {
+        return optimizeIterator(
+                new ServerRowIterator(iterator, this, MAX_BUFFER_SIZE));
+    }
+
 }

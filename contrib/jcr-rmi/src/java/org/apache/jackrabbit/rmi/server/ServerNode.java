@@ -27,6 +27,7 @@ import javax.jcr.lock.Lock;
 import javax.jcr.version.Version;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
@@ -94,10 +95,10 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     /** {@inheritDoc} */
-    public RemoteProperty[] getProperties()
+    public RemoteIterator getProperties()
             throws RepositoryException, RemoteException {
         try {
-            return getRemotePropertyArray(node.getProperties());
+            return getFactory().getRemotePropertyIterator(node.getProperties());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -114,20 +115,20 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     /** {@inheritDoc} */
-    public RemoteProperty[] getProperties(String pattern)
+    public RemoteIterator getProperties(String pattern)
             throws RepositoryException, RemoteException {
         try {
-            return getRemotePropertyArray(node.getProperties(pattern));
+            return getFactory().getRemotePropertyIterator(node.getProperties(pattern));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
     }
 
     /** {@inheritDoc} */
-    public RemoteProperty[] getReferences()
+    public RemoteIterator getReferences()
             throws RepositoryException, RemoteException {
         try {
-            return getRemotePropertyArray(node.getReferences());
+            return getFactory().getRemotePropertyIterator(node.getReferences());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -201,19 +202,19 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     /** {@inheritDoc} */
-    public RemoteNode[] getNodes() throws RepositoryException, RemoteException {
+    public RemoteIterator getNodes() throws RepositoryException, RemoteException {
         try {
-            return getRemoteNodeArray(node.getNodes());
+            return getFactory().getRemoteNodeIterator(node.getNodes());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
     }
 
     /** {@inheritDoc} */
-    public RemoteNode[] getNodes(String pattern)
+    public RemoteIterator getNodes(String pattern)
             throws RepositoryException, RemoteException {
         try {
-            return getRemoteNodeArray(node.getNodes(pattern));
+            return getFactory().getRemoteNodeIterator(node.getNodes(pattern));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -358,10 +359,10 @@ public class ServerNode extends ServerItem implements RemoteNode {
     }
 
     /** {@inheritDoc} */
-    public RemoteNode[] merge(String workspace, boolean bestEffort)
+    public RemoteIterator merge(String workspace, boolean bestEffort)
             throws RepositoryException, RemoteException {
         try {
-            return getRemoteNodeArray(node.merge(workspace, bestEffort));
+            return getFactory().getRemoteNodeIterator(node.merge(workspace, bestEffort));
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

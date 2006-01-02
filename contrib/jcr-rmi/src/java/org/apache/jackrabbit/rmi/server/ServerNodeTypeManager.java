@@ -21,6 +21,7 @@ import java.rmi.RemoteException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeTypeManager;
 
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 
@@ -67,30 +68,33 @@ public class ServerNodeTypeManager extends ServerObject
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeType[] getAllNodeTypes()
+    public RemoteIterator getAllNodeTypes()
             throws RepositoryException, RemoteException {
         try {
-            return getRemoteNodeTypeArray(manager.getAllNodeTypes());
+            return getFactory().getRemoteNodeTypeIterator(
+                    manager.getAllNodeTypes());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeType[] getPrimaryNodeTypes()
+    public RemoteIterator getPrimaryNodeTypes()
             throws RepositoryException, RemoteException {
         try {
-            return getRemoteNodeTypeArray(manager.getPrimaryNodeTypes());
+            return getFactory().getRemoteNodeTypeIterator(
+                    manager.getPrimaryNodeTypes());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
     }
 
     /** {@inheritDoc} */
-    public RemoteNodeType[] getMixinNodeTypes()
+    public RemoteIterator getMixinNodeTypes()
             throws RepositoryException, RemoteException {
         try {
-            return getRemoteNodeTypeArray(manager.getMixinNodeTypes());
+            return getFactory().getRemoteNodeTypeIterator(
+                    manager.getMixinNodeTypes());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

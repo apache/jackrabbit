@@ -98,8 +98,7 @@ public interface RemoteNode extends RemoteItem {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteProperty[] getProperties()
-            throws RepositoryException, RemoteException;
+    RemoteIterator getProperties() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -111,7 +110,7 @@ public interface RemoteNode extends RemoteItem {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteProperty[] getProperties(String pattern)
+    RemoteIterator getProperties(String pattern)
             throws RepositoryException, RemoteException;
 
     /**
@@ -142,8 +141,7 @@ public interface RemoteNode extends RemoteItem {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteProperty[] getReferences()
-            throws RepositoryException, RemoteException;
+    RemoteIterator getReferences() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -153,7 +151,7 @@ public interface RemoteNode extends RemoteItem {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteNode[] getNodes() throws RepositoryException, RemoteException;
+    RemoteIterator getNodes() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -164,7 +162,7 @@ public interface RemoteNode extends RemoteItem {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteNode[] getNodes(String pattern)
+    RemoteIterator getNodes(String pattern)
             throws RepositoryException, RemoteException;
 
     /**
@@ -402,7 +400,7 @@ public interface RemoteNode extends RemoteItem {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteNode[] merge(String workspace, boolean bestEffort)
+    RemoteIterator merge(String workspace, boolean bestEffort)
             throws RepositoryException, RemoteException;
 
     /**

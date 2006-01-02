@@ -21,9 +21,8 @@ import java.rmi.RemoteException;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
 
-import org.apache.jackrabbit.rmi.remote.RemoteNode;
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
-import org.apache.jackrabbit.rmi.remote.RemoteRow;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.query.QueryResult QueryResult} interface.
@@ -61,13 +60,13 @@ public class ServerQueryResult extends ServerObject
     }
 
     /** {@inheritDoc} */
-    public RemoteRow[] getRows() throws RepositoryException, RemoteException {
-        return getRemoteRowArray(result.getRows());
+    public RemoteIterator getRows() throws RepositoryException, RemoteException {
+        return getFactory().getRemoteRowIterator(result.getRows());
     }
 
     /** {@inheritDoc} */
-    public RemoteNode[] getNodes() throws RepositoryException, RemoteException {
-        return getRemoteNodeArray(result.getNodes());
+    public RemoteIterator getNodes() throws RepositoryException, RemoteException {
+        return getFactory().getRemoteNodeIterator(result.getNodes());
     }
 
 }

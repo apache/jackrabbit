@@ -18,7 +18,6 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -31,10 +30,8 @@ import javax.jcr.MergeException;
 import javax.jcr.NamespaceException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -43,31 +40,19 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.RowIterator;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import javax.jcr.version.VersionIterator;
 
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
-import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
-import org.apache.jackrabbit.rmi.remote.RemoteProperty;
-import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
-import org.apache.jackrabbit.rmi.remote.RemoteRow;
-import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 
 /**
  * Base class for remote adapters. The purpose of this class is to
  * centralize the handling of the RemoteAdapterFactory instance used
  * to instantiate new server adapters.
- *
- * @author Jukka Zitting
  */
 public class ServerObject extends UnicastRemoteObject {
 
@@ -199,102 +184,6 @@ public class ServerObject extends UnicastRemoteObject {
 
     /**
      * Utility method for creating an array of remote references for
-     * local properties. The remote references are created using the
-     * remote adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty iterator.
-     *
-     * @param iterator local property iterator
-     * @return remote property array
-     * @throws RemoteException on RMI errors
-     */
-    protected RemoteProperty[] getRemotePropertyArray(PropertyIterator iterator)
-            throws RemoteException {
-        if (iterator != null) {
-            ArrayList remotes = new ArrayList();
-            while (iterator.hasNext()) {
-                remotes.add(factory.getRemoteProperty(iterator.nextProperty()));
-            }
-            return (RemoteProperty[]) remotes.toArray(new RemoteProperty[remotes.size()]);
-        } else {
-            return new RemoteProperty[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an array of remote references for
-     * local nodes. The remote references are created using the
-     * remote adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty iterator.
-     *
-     * @param iterator local node iterator
-     * @return remote node array
-     * @throws RemoteException on RMI errors
-     */
-    protected RemoteNode[] getRemoteNodeArray(NodeIterator iterator)
-            throws RemoteException {
-        if (iterator != null) {
-            ArrayList remotes = new ArrayList();
-            while (iterator.hasNext()) {
-                remotes.add(getRemoteNode(iterator.nextNode()));
-            }
-            return (RemoteNode[]) remotes.toArray(new RemoteNode[remotes.size()]);
-        } else {
-            return new RemoteNode[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an array of remote references for
-     * local versions. The remote references are created using the
-     * remote adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param versions local version array
-     * @return remote version array
-     * @throws RemoteException on RMI errors
-     */
-    protected RemoteVersion[] getRemoteVersionArray(Version[] versions)
-            throws RemoteException {
-        if (versions != null) {
-            RemoteVersion[] remotes = new RemoteVersion[versions.length];
-            for (int i = 0; i < remotes.length; i++) {
-                remotes[i] = factory.getRemoteVersion(versions[i]);
-            }
-            return remotes;
-        } else {
-            return new RemoteVersion[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an array of remote references for
-     * local versions. The remote references are created using the
-     * remote adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty iterator.
-     *
-     * @param iterator local version iterator
-     * @return remote version array
-     * @throws RemoteException on RMI errors
-     */
-    protected RemoteVersion[] getRemoteVersionArray(VersionIterator iterator)
-            throws RemoteException {
-        if (iterator != null) {
-            ArrayList remotes = new ArrayList();
-            while (iterator.hasNext()) {
-                remotes.add(factory.getRemoteVersion(iterator.nextVersion()));
-            }
-            return (RemoteVersion[]) remotes.toArray(new RemoteVersion[remotes.size()]);
-        } else {
-            return new RemoteVersion[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an array of remote references for
      * local node types. The remote references are created using the
      * remote adapter factory.
      * <p>
@@ -314,102 +203,6 @@ public class ServerObject extends UnicastRemoteObject {
             return remotes;
         } else {
             return new RemoteNodeType[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an array of remote references for
-     * local node types. The remote references are created using the
-     * remote adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty iterator.
-     *
-     * @param iterator local node type iterator
-     * @return remote node type array
-     * @throws RemoteException on RMI errors
-     */
-    protected RemoteNodeType[] getRemoteNodeTypeArray(NodeTypeIterator iterator)
-            throws RemoteException {
-        if (iterator != null) {
-            ArrayList remotes = new ArrayList();
-            while (iterator.hasNext()) {
-                remotes.add(factory.getRemoteNodeType(iterator.nextNodeType()));
-            }
-            return (RemoteNodeType[]) remotes.toArray(new RemoteNodeType[remotes.size()]);
-        } else {
-            return new RemoteNodeType[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an array of remote references for
-     * local node definitions. The remote references are created using the
-     * remote adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param defs local node definition array
-     * @return remote node definition array
-     * @throws RemoteException on RMI errors
-     */
-    protected RemoteNodeDefinition[] getRemoteNodeDefArray(NodeDefinition[] defs)
-            throws RemoteException {
-        if (defs != null) {
-            RemoteNodeDefinition[] remotes = new RemoteNodeDefinition[defs.length];
-            for (int i = 0; i < defs.length; i++) {
-                remotes[i] = factory.getRemoteNodeDefinition(defs[i]);
-            }
-            return remotes;
-        } else {
-            return new RemoteNodeDefinition[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an array of remote references for
-     * local property definitions. The remote references are created using the
-     * remote adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty array.
-     *
-     * @param defs local property definition array
-     * @return remote property definition array
-     * @throws RemoteException on RMI errors
-     */
-    protected RemotePropertyDefinition[] getRemotePropertyDefArray(PropertyDefinition[] defs)
-            throws RemoteException {
-        if (defs != null) {
-            RemotePropertyDefinition[] remotes = new RemotePropertyDefinition[defs.length];
-            for (int i = 0; i < defs.length; i++) {
-                remotes[i] = factory.getRemotePropertyDefinition(defs[i]);
-            }
-            return remotes;
-        } else {
-            return new RemotePropertyDefinition[0]; // for safety
-        }
-    }
-
-    /**
-     * Utility method for creating an array of remote references for
-     * local query result rows. The remote references are created using the
-     * remote adapter factory.
-     * <p>
-     * A <code>null</code> input is treated as an empty iterator.
-     *
-     * @param iterator local query result row iterator
-     * @return remote query result row array
-     * @throws RemoteException on RMI errors
-     */
-    protected RemoteRow[] getRemoteRowArray(RowIterator iterator)
-            throws RemoteException {
-        if (iterator != null) {
-            ArrayList remotes = new ArrayList();
-            while (iterator.hasNext()) {
-                remotes.add(getFactory().getRemoteRow(iterator.nextRow()));
-            }
-            return (RemoteRow[]) remotes.toArray(new RemoteRow[remotes.size()]);
-        } else {
-            return new RemoteRow[0]; // for safety
         }
     }
 
