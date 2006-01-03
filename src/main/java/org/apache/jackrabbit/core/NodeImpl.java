@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core
+package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.BaseException;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
