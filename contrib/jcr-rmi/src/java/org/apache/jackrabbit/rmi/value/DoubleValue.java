@@ -25,8 +25,8 @@ import javax.jcr.ValueFormatException;
 /**
  * The <code>DoubleValue</code> class implements the committed value state for
  * Double values as a part of the State design pattern (Gof) used by this
- * package. 
- * 
+ * package.
+ *
  * @since 0.16.4.1
  * @see org.apache.jackrabbit.rmi.value.SerialValue
  */
@@ -51,7 +51,7 @@ public class DoubleValue extends BaseNonStreamValue
      * <p>
      * This implementation uses the <code>Double.valueOf(String)</code> method
      * to convert the string to a double.
-     * 
+     *
      * @throws ValueFormatException if the string <code>value</code> cannot be
      *      parsed to double.
      */
@@ -61,7 +61,7 @@ public class DoubleValue extends BaseNonStreamValue
 
     /**
      * Returns the double value represented by the string <code>value</code>.
-     * 
+     *
      * @throws ValueFormatException if the string <code>value</code> cannot be
      *      parsed to double.
      */
@@ -82,14 +82,14 @@ public class DoubleValue extends BaseNonStreamValue
 
     /**
      * Returns a <code>Calendar</code> instance interpreting the double as the
-     * time in milliseconds since the epoch (1.1.1970, 0:00, UTC). 
+     * time in milliseconds since the epoch (1.1.1970, 0:00, UTC).
      */
     public Calendar getDate() throws ValueFormatException {
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis((long) value);
         return date;
     }
-    
+
     /**
      * Returns the double value.
      */

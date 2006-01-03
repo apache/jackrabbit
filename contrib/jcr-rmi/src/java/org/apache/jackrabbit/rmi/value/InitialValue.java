@@ -24,7 +24,6 @@ import java.util.Calendar;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 /**
@@ -109,7 +108,7 @@ final class InitialValue implements Serializable, StatefulValue {
         } else {
             realValue = value;
         }
-        
+
         general.setValue(realValue);
         return realValue.getStream();
     }
@@ -121,7 +120,7 @@ final class InitialValue implements Serializable, StatefulValue {
      * general value getter method.
      *
      * @return string value
-     * 
+     *
      * @throws ValueFormatException if conversion to string is not possible
      * @throws IllegalStateException not thrown by proper instances
      * @throws RepositoryException if another error occurs
@@ -134,7 +133,7 @@ final class InitialValue implements Serializable, StatefulValue {
         } else {
             realValue = value;
         }
-        
+
         general.setValue(realValue);
         return realValue.getString();
     }
@@ -158,7 +157,7 @@ final class InitialValue implements Serializable, StatefulValue {
         } else {
             realValue = value;
         }
-        
+
         general.setValue(realValue);
         return realValue.getLong();
     }
@@ -182,7 +181,7 @@ final class InitialValue implements Serializable, StatefulValue {
         } else {
             realValue = value;
         }
-        
+
         general.setValue(realValue);
         return realValue.getDouble();
     }
@@ -206,7 +205,7 @@ final class InitialValue implements Serializable, StatefulValue {
         } else {
             realValue = value;
         }
-        
+
         general.setValue(realValue);
         return realValue.getDate();
     }
@@ -230,7 +229,7 @@ final class InitialValue implements Serializable, StatefulValue {
         } else {
             realValue = value;
         }
-        
+
         general.setValue(realValue);
         return realValue.getBoolean();
     }
