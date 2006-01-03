@@ -217,6 +217,9 @@
             - idleTime: idle time in seconds after which an unused query handler is shut down.
               If the query handler is later used again it is automatically started.
               Default value -1 disables this feature.
+            - respectDocumentOrder: If true and the query does not contain an 'order by' clause,
+              result nodes will be in document order. For better performance when queries return
+              a lot of nodes set to 'false'.
 
             Note: all parameters (except path) in this SearchIndex config are default
             values and can be omitted.
@@ -235,6 +238,7 @@
             <param name="analyzer" value="org.apache.lucene.analysis.standard.StandardAnalyzer"/>
             <param name="queryClass" value="org.apache.jackrabbit.core.query.QueryImpl"/>
             <param name="idleTime" value="-1"/>
+            <param name="respectDocumentOrder" value="true"/>
         </SearchIndex>
     </Workspace>
 
