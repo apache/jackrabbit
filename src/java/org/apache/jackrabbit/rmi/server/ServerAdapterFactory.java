@@ -85,16 +85,46 @@ import org.apache.jackrabbit.rmi.server.iterator.ServerVersionIterator;
  * This factory uses the server adapters defined in this package as
  * the default adapter implementations. Subclasses can override or extend
  * the default adapters by implementing the corresponding factory methods.
+ * <p>
+ * The <code>bufferSize</code> property can be used to configure the
+ * size of the buffer used by iterators to speed up iterator traversal
+ * over the network. 
  *
  * @author Jukka Zitting
  * @author Philipp Koch
  */
 public class ServerAdapterFactory implements RemoteAdapterFactory {
 
+    /** The default iterator buffer size. */
+    private static final int DEFAULT_BUFFER_SIZE = 100;
+
+    /** The buffer size of iterators created by this factory. */
+    private int bufferSize;
+
     /**
-     * The default maximum buffer size used for local iterator buffers.
+     * Creates a server adapter factory with the default iterator buffer size.
      */
-    private static final int MAX_BUFFER_SIZE = 100;
+    public ServerAdapterFactory() {
+        bufferSize = DEFAULT_BUFFER_SIZE;
+    }
+
+    /**
+     * Returns the iterator buffer size.
+     *
+     * @return iterator buffer size
+     */
+    public int getBufferSize() {
+        return bufferSize;
+    }
+
+    /**
+     * Sets the iterator buffer size.
+     *
+     * @param bufferSize iterator buffer size
+     */
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
+    }
 
     /**
      * Creates a {@link ServerRepository ServerRepository} instance.
@@ -335,7 +365,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     public RemoteIterator getRemoteNodeIterator(NodeIterator iterator)
             throws RemoteException {
         return optimizeIterator(
-                new ServerNodeIterator(iterator, this, MAX_BUFFER_SIZE));
+                new ServerNodeIterator(iterator, this, bufferSize));
     }
 
     /**
@@ -344,7 +374,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     public RemoteIterator getRemotePropertyIterator(PropertyIterator iterator)
             throws RemoteException {
         return optimizeIterator(
-                new ServerPropertyIterator(iterator, this, MAX_BUFFER_SIZE));
+                new ServerPropertyIterator(iterator, this, bufferSize));
     }
 
     /**
@@ -353,7 +383,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     public RemoteIterator getRemoteVersionIterator(VersionIterator iterator)
             throws RemoteException {
         return optimizeIterator(
-                new ServerVersionIterator(iterator, this, MAX_BUFFER_SIZE));
+                new ServerVersionIterator(iterator, this, bufferSize));
     }
 
     /**
@@ -362,7 +392,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     public RemoteIterator getRemoteNodeTypeIterator(NodeTypeIterator iterator)
             throws RemoteException {
         return optimizeIterator(
-                new ServerNodeTypeIterator(iterator, this, MAX_BUFFER_SIZE));
+                new ServerNodeTypeIterator(iterator, this, bufferSize));
     }
 
     /**
@@ -371,7 +401,7 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     public RemoteIterator getRemoteRowIterator(RowIterator iterator)
             throws RemoteException {
         return optimizeIterator(
-                new ServerRowIterator(iterator, this, MAX_BUFFER_SIZE));
+                new ServerRowIterator(iterator, this, bufferSize));
     }
 
 }
