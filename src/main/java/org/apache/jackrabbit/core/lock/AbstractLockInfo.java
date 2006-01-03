@@ -127,6 +127,13 @@ abstract class AbstractLockInfo {
     }
 
     /**
+     * Return a flag indicating whether the lock information may still change.
+     */
+    public boolean mayChange() {
+        return live;
+    }
+
+    /**
      * Return a flag indicating whether the lock is session-scoped
      *
      * @return <code>true</code> if the lock is session-scoped;

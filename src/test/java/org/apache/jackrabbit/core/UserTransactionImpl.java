@@ -113,10 +113,11 @@ public class UserTransactionImpl implements UserTransaction {
 
             if (e.errorCode >= XAException.XA_RBBASE &&
                     e.errorCode <= XAException.XA_RBEND) {
-                throw new RollbackException();
+                throw new RollbackException("Transaction rolled back: " +
+                        "XA_ERR=" + e.errorCode);
             } else {
                 throw new SystemException("Unable to commit transaction: " +
-                    "XA_ERR=" + e.errorCode);
+                        "XA_ERR=" + e.errorCode);
             }
         }
     }
