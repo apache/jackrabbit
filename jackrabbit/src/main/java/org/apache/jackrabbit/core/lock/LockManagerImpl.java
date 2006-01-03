@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
@@ -53,12 +52,12 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 /**
  * Provides the functionality needed for locking and unlocking nodes.
  */
-public class SharedLockManager implements LockManager, SynchronousEventListener {
+public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
     /**
      * Logger
      */
-    private static final Logger log = Logger.getLogger(SharedLockManager.class);
+    private static final Logger log = Logger.getLogger(LockManagerImpl.class);
 
     /**
      * Name of the lock file
@@ -91,12 +90,6 @@ public class SharedLockManager implements LockManager, SynchronousEventListener 
     private boolean savingDisabled;
 
     /**
-     * Monitor used when modifying content, too, in order to make modifications
-     * in the lock map and modifications in the content atomic.
-     */
-    private final Object contentMonitor = new Object();
-
-    /**
      * Namespace resolver
      */
     private final NamespaceResolver nsResolver;
@@ -108,7 +101,7 @@ public class SharedLockManager implements LockManager, SynchronousEventListener 
      * @param fs      file system for persisting locks
      * @throws RepositoryException if an error occurs
      */
-    public SharedLockManager(SessionImpl session, FileSystem fs)
+    public LockManagerImpl(SessionImpl session, FileSystem fs)
             throws RepositoryException {
 
         this.session = session;
@@ -248,7 +241,7 @@ public class SharedLockManager implements LockManager, SynchronousEventListener 
      * @throws LockException       if the node is already locked
      * @throws RepositoryException if another error occurs
      */
-    Lock internalLock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
+    AbstractLockInfo internalLock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
 
         SessionImpl session = (SessionImpl) node.getSession();
@@ -285,7 +278,7 @@ public class SharedLockManager implements LockManager, SynchronousEventListener 
             if (!info.sessionScoped) {
                 save();
             }
-            return new LockImpl(info, node);
+            return info;
 
         } finally {
             release();
@@ -333,56 +326,6 @@ public class SharedLockManager implements LockManager, SynchronousEventListener 
     }
 
     /**
-     * Unlock a node given by its info. Invoked when a session logs out and
-     * all session scoped locks of that session must be unlocked.<p>
-     * In order to prevent deadlocks from within the synchronous dispatching of
-     * events, content modifications should not be made from within code
-     * sections that hold monitors. (see #JCR-194)
-     *
-     * @param info lock info
-     */
-    void unlock(LockInfo info) {
-        // if no session currently holds lock, take system session
-        SessionImpl session = info.getLockHolder();
-        if (session == null) {
-            session = this.session;
-        }
-        try {
-            synchronized (contentMonitor) {
-                // get node's path and remove child in path map
-                NodeImpl node = (NodeImpl) session.getItemManager().getItem(
-                        new NodeId(info.getUUID()));
-                Path path = getPath(node.getId());
-
-                acquire();
-
-                try {
-                    PathMap.Element element = lockMap.map(path, true);
-                    if (element != null) {
-                        element.set(null);
-                    }
-                    info.setLive(false);
-                    if (info.sessionScoped) {
-                        save();
-                    }
-
-                } finally {
-                    release();
-                }
-
-                // remove properties in content
-                node.internalSetProperty(QName.JCR_LOCKOWNER, (InternalValue) null);
-                node.internalSetProperty(QName.JCR_LOCKISDEEP, (InternalValue) null);
-                node.save();
-            }
-        } catch (RepositoryException e) {
-            log.warn("Unable to unlock session-scoped lock on node '"
-                    + info.lockToken + "': " + e.getMessage());
-            log.debug("Root cause: ", e);
-        }
-    }
-
-    /**
      * Return the most appropriate lock information for a node. This is either
      * the lock info for the node itself, if it is locked, or a lock info for one
      * of its parents, if that is deep locked.
@@ -418,18 +361,8 @@ public class SharedLockManager implements LockManager, SynchronousEventListener 
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
 
-        synchronized (contentMonitor) {
-            Lock lock = internalLock(node, isDeep, isSessionScoped);
-
-            // add properties to content
-            node.internalSetProperty(QName.JCR_LOCKOWNER,
-                    InternalValue.create(node.getSession().getUserID()));
-            node.internalSetProperty(QName.JCR_LOCKISDEEP,
-                    InternalValue.create(isDeep));
-            node.save();
-
-            return lock;
-        }
+        AbstractLockInfo info = internalLock(node, isDeep, isSessionScoped);
+        return new LockImpl(info, node);
     }
 
     /**
@@ -473,14 +406,7 @@ public class SharedLockManager implements LockManager, SynchronousEventListener 
     public void unlock(NodeImpl node)
             throws LockException, RepositoryException {
 
-        synchronized (contentMonitor) {
-            internalUnlock(node);
-
-            // remove properties in content
-            node.internalSetProperty(QName.JCR_LOCKOWNER, (InternalValue) null);
-            node.internalSetProperty(QName.JCR_LOCKISDEEP, (InternalValue) null);
-            node.save();
-        }
+        internalUnlock(node);
     }
 
     /**
@@ -954,7 +880,20 @@ public class SharedLockManager implements LockManager, SynchronousEventListener 
         public void loggingOut(SessionImpl session) {
             if (live) {
                 if (sessionScoped) {
-                    unlock(this);
+                    // if no session currently holds lock, reassign
+                    SessionImpl lockHolder = getLockHolder();
+                    if (lockHolder == null) {
+                        setLockHolder(session);
+                    }
+                    try {
+                        NodeImpl node = (NodeImpl) session.getItemManager().getItem(
+                                new NodeId(getUUID()));
+                        node.unlock();
+                    } catch (RepositoryException e) {
+                        log.warn("Unable to unlock session-scoped lock on node '"
+                                + lockToken + "': " + e.getMessage());
+                        log.debug("Root cause: ", e);
+                    }
                 } else {
                     if (session.equals(lockHolder)) {
                         session.removeLockToken(lockToken.toString());

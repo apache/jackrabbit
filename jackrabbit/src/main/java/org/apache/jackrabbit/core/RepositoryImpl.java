@@ -27,7 +27,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.lock.SharedLockManager;
+import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
@@ -1170,7 +1170,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         /**
          * Lock manager
          */
-        private SharedLockManager lockMgr;
+        private LockManagerImpl lockMgr;
 
         /**
          * Creates a new <code>WorkspaceInfo</code> based on the given
@@ -1315,7 +1315,7 @@ public class RepositoryImpl implements Repository, SessionListener,
          */
         synchronized LockManager getLockManager() throws RepositoryException {
             if (lockMgr == null) {
-                lockMgr = new SharedLockManager(getSystemSession(), config.getFileSystem());
+                lockMgr = new LockManagerImpl(getSystemSession(), config.getFileSystem());
             }
             return lockMgr;
         }

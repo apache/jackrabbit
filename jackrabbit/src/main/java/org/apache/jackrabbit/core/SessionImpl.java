@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.AuthContext;
@@ -244,7 +243,7 @@ public class SessionImpl implements Session, Dumpable {
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(subject, hierMgr);
-        versionMgr = rep.getVersionManager();
+        versionMgr = createVersionManager(rep);
     }
 
     /**
@@ -276,13 +275,23 @@ public class SessionImpl implements Session, Dumpable {
 
     /**
      * Create the item manager.
-     *
      * @return item manager
      */
     protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
                                             HierarchyManager hierMgr) {
         return new ItemManager(itemStateMgr, hierMgr, this,
                 ntMgr.getRootNodeDefinition(), rep.getRootNodeUUID());
+    }
+
+    /**
+     * Create the version manager. If we are not using XA, we may safely use
+     * the repository version manager.
+     * @return version manager
+     */
+    protected VersionManager createVersionManager(RepositoryImpl rep)
+            throws RepositoryException {
+        
+        return rep.getVersionManager();
     }
 
     /**
@@ -1275,11 +1284,8 @@ public class SessionImpl implements Session, Dumpable {
     }
 
     /**
-     * Return the lock manager for this session. In a non-transactional
-     * environment, this is simply the lock manager shared by all sessions
-     * on this workspace.
+     * Return the lock manager for this session.
      * @return lock manager for this session
-     * @throws RepositoryException if an error occurs
      */
     public LockManager getLockManager() throws RepositoryException {
         return wsp.getLockManager();

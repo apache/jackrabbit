@@ -22,6 +22,7 @@ import javax.jcr.Repository;
 import javax.jcr.Node;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Session;
+import javax.jcr.lock.Lock;
 import javax.transaction.UserTransaction;
 import javax.transaction.RollbackException;
 
@@ -742,4 +743,64 @@ public class XATest extends AbstractJCRTest {
         assertFalse("Node not locked", n.isLocked());
     }
 
+    /**
+     * Test correct behaviour of {@link javax.jcr.lock.Lock} inside a
+     * transaction.
+     * @throws Exception
+     */
+    public void testLockBehaviour() throws Exception {
+        // add node that is both lockable and referenceable, save
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        // get user transaction object, start and lock node
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+        Lock lock = n.lock(false, true);
+
+        // verify lock is live
+        assertTrue("Lock live", lock.isLive());
+
+        // rollback
+        utx.rollback();
+
+        // verify lock is not live anymore
+        assertFalse("Lock not live", lock.isLive());
+    }
+
+    /**
+     * Test correct behaviour of {@link javax.jcr.lock.Lock} inside a
+     * transaction.
+     * @throws Exception
+     */
+    public void testLockBehaviour2() throws Exception {
+        // add node that is both lockable and referenceable, save
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        Lock lock = n.lock(false, true);
+
+        // get user transaction object, start
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+
+        // verify lock is live
+        assertTrue("Lock live", lock.isLive());
+
+        // unlock
+        n.unlock();
+
+        // verify lock is no longer live
+        assertFalse("Lock not live", lock.isLive());
+
+        // rollback
+        utx.rollback();
+
+        // verify lock is live again
+        assertTrue("Lock live", lock.isLive());
+    }
 }

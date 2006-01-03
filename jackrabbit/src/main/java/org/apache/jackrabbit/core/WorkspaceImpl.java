@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.version.GenericVersionSelector;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.VersionImpl;
@@ -85,7 +85,7 @@ public class WorkspaceImpl implements Workspace {
      * The persistent state mgr associated with the workspace represented by <i>this</i>
      * <code>Workspace</code> instance.
      */
-    protected final TransactionalItemStateManager stateMgr;
+    protected final LocalItemStateManager stateMgr;
 
     /**
      * The hierarchy mgr that reflects persistent state only
@@ -128,7 +128,7 @@ public class WorkspaceImpl implements Workspace {
                   SessionImpl session) {
         this.wspConfig = wspConfig;
         this.rep = rep;
-        this.stateMgr = new TransactionalItemStateManager(stateMgr, this);
+        this.stateMgr = createItemStateManager(stateMgr);
         this.hierMgr = new CachingHierarchyManager(rep.getRootNodeUUID(),
                 this.stateMgr, session.getNamespaceResolver());
         this.session = session;
@@ -151,7 +151,7 @@ public class WorkspaceImpl implements Workspace {
      *
      * @return the item state manager of this workspace
      */
-    public TransactionalItemStateManager getItemStateManager() {
+    public LocalItemStateManager getItemStateManager() {
         return stateMgr;
     }
 
@@ -718,6 +718,16 @@ public class WorkspaceImpl implements Workspace {
                 throw new InvalidSerializedDataException(msg, se);
             }
         }
+    }
+
+    /**
+     * Create the persistent item state manager on top of the shared item
+     * state manager. May be overridden by subclasses.
+     * @param shared shared item state manager
+     * @return local item state manager
+     */
+    protected LocalItemStateManager createItemStateManager(SharedItemStateManager shared) {
+        return new LocalItemStateManager(shared, this);
     }
 }
 

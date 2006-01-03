@@ -19,10 +19,11 @@ package org.apache.jackrabbit.core;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.lock.TxLockManager;
-import org.apache.jackrabbit.core.lock.SharedLockManager;
-import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.TransactionalItemStateManager;
+import org.apache.jackrabbit.core.lock.XALockManager;
+import org.apache.jackrabbit.core.lock.LockManagerImpl;
+import org.apache.jackrabbit.core.state.XAItemStateManager;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
@@ -51,14 +52,9 @@ public class XASessionImpl extends SessionImpl
     private static final Map txGlobal = new HashMap();
 
     /**
-     * Known attribute name.
+     * Default transaction timeout, in seconds.
      */
-    private static final String ATTRIBUTE_CHANGE_LOG = "ChangeLog";
-
-    /**
-     * Known attribute name.
-     */
-    private static final String ATTRIBUTE_LOCK_MANAGER = "LockManager";
+    private static final int DEFAULT_TX_TIMEOUT = 5;
 
     /**
      * Currently associated transaction
@@ -69,6 +65,16 @@ public class XASessionImpl extends SessionImpl
      * Transaction timeout, in seconds
      */
     private int txTimeout;
+
+    /**
+     * List of transactional resources.
+     */
+    private InternalXAResource[] txResources;
+
+    /**
+     * Session-local lock manager.
+     */
+    private LockManager lockMgr;
 
     /**
      * Create a new instance of this class.
@@ -86,6 +92,11 @@ public class XASessionImpl extends SessionImpl
             throws AccessDeniedException, RepositoryException {
 
         super(rep, loginContext, wspConfig);
+
+        txResources = new InternalXAResource[] {
+            (XAItemStateManager) wsp.getItemStateManager(),
+            (XALockManager) getLockManager()
+        };
     }
 
     /**
@@ -103,8 +114,33 @@ public class XASessionImpl extends SessionImpl
             throws AccessDeniedException, RepositoryException {
 
         super(rep, subject, wspConfig);
+
+        txResources = new InternalXAResource[] {
+            (XAItemStateManager) wsp.getItemStateManager(),
+            (XALockManager) getLockManager()
+        };
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    protected WorkspaceImpl createWorkspaceInstance(WorkspaceConfig wspConfig,
+                                                    SharedItemStateManager stateMgr,
+                                                    RepositoryImpl rep,
+                                                    SessionImpl session) {
+        return new XAWorkspace(wspConfig, stateMgr, rep, session);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public LockManager getLockManager() throws RepositoryException {
+        if (lockMgr == null) {
+            LockManagerImpl lockMgr = (LockManagerImpl) wsp.getLockManager();
+            this.lockMgr = new XALockManager(this, lockMgr);
+        }
+        return lockMgr;
+    }
     //-------------------------------------------------------------< XASession >
     /**
      * {@inheritDoc}
@@ -117,14 +153,14 @@ public class XASessionImpl extends SessionImpl
     /**
      * {@inheritDoc}
      */
-    public int getTransactionTimeout() throws XAException {
-        return txTimeout;
+    public int getTransactionTimeout() {
+        return txTimeout == 0 ? DEFAULT_TX_TIMEOUT : txTimeout;
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean setTransactionTimeout(int seconds) throws XAException {
+    public boolean setTransactionTimeout(int seconds) {
         txTimeout = seconds;
         return true;
     }
@@ -160,7 +196,6 @@ public class XASessionImpl extends SessionImpl
             log.error("Resource already associated with a transaction.");
             throw new XAException(XAException.XAER_PROTO);
         }
-
         TransactionContext tx;
         if (flags == TMNOFLAGS) {
             tx = (TransactionContext) txGlobal.get(xid);
@@ -186,13 +221,12 @@ public class XASessionImpl extends SessionImpl
     }
 
     /**
-     * Create a global transaction.
-     *
+     * Create a new transaction context.
      * @param xid xid of global transaction.
-     * @return transaction
+     * @return transaction context
      */
     private TransactionContext createTransaction(Xid xid) {
-        TransactionContext tx = new TransactionContext();
+        TransactionContext tx = new TransactionContext(txResources, getTransactionTimeout());
         txGlobal.put(xid, tx);
         return tx;
     }
@@ -214,17 +248,12 @@ public class XASessionImpl extends SessionImpl
             log.error("Resource not associated with a transaction.");
             throw new XAException(XAException.XAER_PROTO);
         }
-
         TransactionContext tx = (TransactionContext) txGlobal.get(xid);
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        if (flags == TMSUCCESS) {
-            disassociate();
-        } else if (flags == TMFAIL) {
-            disassociate();
-        } else if (flags == TMSUSPEND) {
-            disassociate();
+        if (flags == TMSUCCESS || flags == TMFAIL || flags == TMSUSPEND) {
+            associate(null);
         } else {
             throw new XAException(XAException.XAER_INVAL);
         }
@@ -233,65 +262,13 @@ public class XASessionImpl extends SessionImpl
     /**
      * {@inheritDoc}
      */
-    public synchronized int prepare(Xid xid) throws XAException {
+    public int prepare(Xid xid) throws XAException {
         TransactionContext tx = (TransactionContext) txGlobal.get(xid);
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-
-        TransactionalItemStateManager stateMgr = wsp.getItemStateManager();
-        stateMgr.setChangeLog(getChangeLog(tx), true);
-
-        try {
-            // 1. Prepare state manager
-            try {
-                stateMgr.prepare();
-            } catch (TransactionException e) {
-                throw new ExtendedXAException(XAException.XA_RBOTHER, e);
-            }
-
-            // 2. Prepare lock manager
-            try {
-                TxLockManager lockMgr = getTxLockManager(tx);
-                if (lockMgr != null) {
-                    lockMgr.prepare();
-                }
-            } catch (TransactionException e) {
-                stateMgr.rollback();
-                throw new ExtendedXAException(XAException.XA_RBOTHER, e);
-            }
-            return XA_OK;
-
-        } finally {
-            stateMgr.setChangeLog(null, true);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void rollback(Xid xid) throws XAException {
-        TransactionContext tx = (TransactionContext) txGlobal.get(xid);
-        if (tx == null) {
-            throw new XAException(XAException.XAER_NOTA);
-        }
-
-        TransactionalItemStateManager stateMgr = wsp.getItemStateManager();
-        stateMgr.setChangeLog(getChangeLog(tx), true);
-
-        try {
-            // 1. Rollback changes on lock manager
-            TxLockManager lockMgr = getTxLockManager(tx);
-            if (lockMgr != null) {
-                lockMgr.rollback();
-            }
-
-            // 2. Rollback changes on state manager
-            stateMgr.rollback();
-
-        } finally {
-            stateMgr.setChangeLog(null, true);
-        }
+        tx.prepare();
+        return XA_OK;
     }
 
     /**
@@ -302,30 +279,21 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-
-        TransactionalItemStateManager stateMgr = wsp.getItemStateManager();
-        stateMgr.setChangeLog(getChangeLog(tx), true);
-
-        TxLockManager lockMgr = getTxLockManager(tx);
-
-        try {
-            // 1. Commit changes on state manager
-            try {
-                stateMgr.commit();
-            } catch (TransactionException e) {
-                if (lockMgr != null) {
-                    lockMgr.rollback();
-                }
-                throw new ExtendedXAException(XAException.XA_RBOTHER, e);
-            }
-
-            // 2. Commit changes on lock manager
-            if (lockMgr != null) {
-                lockMgr.commit();
-            }
-        } finally {
-            stateMgr.setChangeLog(null, true);
+        if (onePhase) {
+            tx.prepare();
         }
+        tx.commit();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void rollback(Xid xid) throws XAException {
+        TransactionContext tx = (TransactionContext) txGlobal.get(xid);
+        if (tx == null) {
+            throw new XAException(XAException.XAER_NOTA);
+        }
+        tx.rollback();
     }
 
     /**
@@ -350,15 +318,13 @@ public class XASessionImpl extends SessionImpl
      * the transaction containing all transaction-local objects to be
      * used when performing item retrieval and store.
      */
-    void associate(TransactionContext tx) {
+    public synchronized void associate(TransactionContext tx) {
         this.tx = tx;
 
-        ChangeLog txLog = getChangeLog(tx);
-        if (txLog == null) {
-            txLog = new ChangeLog();
-            tx.setAttribute(ATTRIBUTE_CHANGE_LOG, txLog);
+        for (int i = 0; i < txResources.length; i++) {
+            InternalXAResource txResource = txResources[i];
+            txResource.associate(tx);
         }
-        wsp.getItemStateManager().setChangeLog(txLog, false);
     }
 
     /**
@@ -368,18 +334,8 @@ public class XASessionImpl extends SessionImpl
      * @return <code>true</code> if this resource is associated
      *         with a transaction; otherwise <code>false</code>
      */
-    boolean isAssociated() {
+    private boolean isAssociated() {
         return tx != null;
-    }
-
-    /**
-     * Disassociate this session from a global transaction. Internally,
-     * clear the transaction object.
-     */
-    void disassociate() {
-        tx = null;
-
-        wsp.getItemStateManager().setChangeLog(null, false);
     }
 
     /**
@@ -392,71 +348,5 @@ public class XASessionImpl extends SessionImpl
         } else {
             return s1.equals(s2);
         }
-    }
-
-    /**
-     * Internal XAException derived class that allows passing a base exception
-     * in its constructor.
-     */
-    static class ExtendedXAException extends XAException {
-
-        /**
-         * Create an XAException with a given error code and a root cause.
-         * @param errcode The error code identifying the exception.
-         * @param cause The cause (which is saved for later retrieval by the
-         *              {@link #getCause()} method).  (A <tt>null</tt> value is
-         *              permitted, and indicates that the cause is nonexistent
-         *              or unknown.)
-         */
-        public ExtendedXAException(int errcode, Throwable cause) {
-            super(errcode);
-
-            if (cause != null) {
-                initCause(cause);
-            }
-        }
-    }
-
-    //-------------------------------------------------------< locking support >
-
-    /**
-     * Return the lock manager for this session. In a transactional environment,
-     * this is a session-local object that records locking/unlocking operations
-     * until final commit.
-     *
-     * @return lock manager for this session
-     * @throws javax.jcr.RepositoryException if an error occurs
-     */
-    public LockManager getLockManager() throws RepositoryException {
-        if (tx != null) {
-            TxLockManager lockMgr = (TxLockManager) tx.getAttribute(ATTRIBUTE_LOCK_MANAGER);
-            if (lockMgr == null) {
-                lockMgr = new TxLockManager(
-                        (SharedLockManager) super.getLockManager());
-                tx.setAttribute(ATTRIBUTE_LOCK_MANAGER, lockMgr);
-            }
-            return lockMgr;
-        }
-        return super.getLockManager();
-    }
-
-    /**
-     * Return the transactional change log for this session.
-     *
-     * @param tx transactional context
-     * @return change log for this session, may be <code>null</code>
-     */
-    private static ChangeLog getChangeLog(TransactionContext tx) {
-        return (ChangeLog) tx.getAttribute(ATTRIBUTE_CHANGE_LOG);
-    }
-
-    /**
-     * Return the transactional lock manager for this session. Returns
-     * <code>null</code> if no lock manager has been used yet.
-     *
-     * @return lock manager for this session
-     */
-    private static TxLockManager getTxLockManager(TransactionContext tx) {
-        return (TxLockManager) tx.getAttribute(ATTRIBUTE_LOCK_MANAGER);
     }
 }

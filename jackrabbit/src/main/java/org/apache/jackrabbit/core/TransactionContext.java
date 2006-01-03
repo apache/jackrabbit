@@ -16,21 +16,57 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.util.ArrayList;
+import org.apache.log4j.Logger;
+
+import javax.transaction.xa.XAException;
+import javax.transaction.Status;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Represents the transaction on behalf of the component that wants to
- * explictely demarcate transcation boundaries.
+ * explictely demarcate transcation boundaries. After having been prepared,
+ * starts a thread that rolls back the transaction if some time passes without
+ * any further action. This will guarantee that global objects locked by one
+ * of the resources' {@link InternalXAResource#prepare} method, are eventually
+ * unlocked.
  */
-public class TransactionContext {
+public class TransactionContext implements Runnable {
 
     /**
-     * Transaction attributes
+     * Logger instance.
+     */
+    private static final Logger log = Logger.getLogger(TransactionContext.class);
+
+    /**
+     * Transactional resources.
+     */
+    private final InternalXAResource[] resources;
+
+    /**
+     * Timeout, in seconds.
+     */
+    private final int timeout;
+
+    /**
+     * Transaction attributes.
      */
     private final Map attributes = new HashMap();
+
+    /**
+     * Status.
+     */
+    private int status;
+
+    /**
+     * Create a new instance of this class.
+     * @param resources transactional resources
+     * @param timeout timeout, in seconds
+     */
+    public TransactionContext(InternalXAResource[] resources, int timeout) {
+        this.resources = resources;
+        this.timeout = timeout;
+    }
 
     /**
      * Set an attribute on this transaction. If the value specified is
@@ -65,5 +101,136 @@ public class TransactionContext {
      */
     public void removeAttribute(String name) {
         attributes.remove(name);
+    }
+
+    /**
+     * Prepare the transaction identified by this context. Prepares changes on
+     * all resources. If some resource reports an error on prepare,
+     * automatically rollback changes on all other resources. Throw exception
+     * at the end if errors were found.
+     * @throws XAException if an error occurs
+     */
+    public synchronized void prepare() throws XAException {
+        status = Status.STATUS_PREPARING;
+
+        TransactionException txe = null;
+        for (int i = 0; i < resources.length; i++) {
+            InternalXAResource resource = resources[i];
+            if (txe != null) {
+                try {
+                    resource.rollback(this);
+                } catch (TransactionException e) {
+                    log.warn("Unable to rollback changes on " + resource, e);
+                }
+            } else {
+                try {
+                    resource.prepare(this);
+                } catch (TransactionException e) {
+                    txe = e;
+                }
+            }
+        }
+        status = Status.STATUS_PREPARED;
+
+        Thread rollbackThread = new Thread(this, "RollbackThread");
+        rollbackThread.start();
+
+        if (txe != null) {
+            XAException e = new XAException(XAException.XA_RBOTHER);
+            e.initCause(txe);
+            throw e;
+        }
+    }
+
+    /**
+     * Commit the transaction identified by this context. Commits changes on
+     * all resources. If some resource reports an error on commit,
+     * automatically rollback changes on all other resources. Throw
+     * exception at the end if some commit failed.
+     * @throws XAException if an error occurs
+     */
+    public synchronized void commit() throws XAException {
+        if (status == Status.STATUS_ROLLEDBACK) {
+            throw new XAException(XAException.XA_RBTIMEOUT);
+        }
+        status = Status.STATUS_COMMITTING;
+
+        TransactionException txe = null;
+        for (int i = 0; i < resources.length; i++) {
+            InternalXAResource resource = resources[i];
+            if (txe != null) {
+                try {
+                    resource.rollback(this);
+                } catch (TransactionException e) {
+                    log.warn("Unable to rollback changes on " + resource, e);
+                }
+            } else {
+                try {
+                    resource.commit(this);
+                } catch (TransactionException e) {
+                    txe = e;
+                }
+            }
+        }
+        status = Status.STATUS_COMMITTED;
+
+        if (txe != null) {
+            XAException e = new XAException(XAException.XA_RBOTHER);
+            e.initCause(txe);
+            throw e;
+        }
+    }
+
+    /**
+     * Rollback the transaction identified by this context. Rolls back changes
+     * on all resources. Throws exception at the end if errors were found.
+     * @throws XAException if an error occurs
+     */
+    public synchronized void rollback() throws XAException {
+        if (status == Status.STATUS_ROLLEDBACK) {
+            throw new XAException(XAException.XA_RBTIMEOUT);
+        }
+        status = Status.STATUS_ROLLING_BACK;
+
+        int errors = 0;
+        for (int i = 0; i < resources.length; i++) {
+            InternalXAResource resource = resources[i];
+            try {
+                resource.rollback(this);
+            } catch (TransactionException e) {
+                log.warn("Unable to rollback changes on " + resource, e);
+                errors++;
+            }
+        }
+        status = Status.STATUS_ROLLEDBACK;
+        if (errors != 0) {
+            throw new XAException(XAException.XA_RBOTHER);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Waits for the amount of time specified as transaction timeout. After
+     * this time has elapsed, rolls back the transaction if still prepared
+     * and marks the transaction rolled back.
+     */
+    public void run() {
+        try {
+            Thread.sleep(timeout * 1000);
+        } catch (InterruptedException e) {
+            /* ignore */
+        }
+
+        synchronized (this) {
+            if (status == Status.STATUS_PREPARED) {
+                try {
+                    rollback();
+                } catch (XAException e) {
+                    /* ignore */
+                }
+                log.warn("Transaction rolled back because timeout expired.");
+            }
+        }
     }
 }
