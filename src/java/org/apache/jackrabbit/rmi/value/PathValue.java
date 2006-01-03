@@ -24,8 +24,8 @@ import javax.jcr.ValueFormatException;
 
 /**
  * The <code>PathValue</code> class implements the committed value state for
- * Path values as a part of the State design pattern (Gof) used by this package. 
- * 
+ * Path values as a part of the State design pattern (Gof) used by this package.
+ *
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
@@ -37,22 +37,22 @@ public class PathValue extends BaseNonStreamValue
 
     /** The path value. */
     private final String value;
-    
+
     /**
      * Creates an instance for the given path <code>value</code>.
      */
     protected PathValue(String value) throws ValueFormatException {
         this.value = toPath(value);
     }
-    
+
     /**
      * Checks whether the string value adheres to the path syntax.
-     * 
+     *
      * @param value The string to check for synthactical compliance with a
      *      path value.
-     * 
+     *
      * @return The input value.
-     * 
+     *
      * @throws ValueFormatException if the string <code>value</code> is not a
      *      synthactically correct path.
      */

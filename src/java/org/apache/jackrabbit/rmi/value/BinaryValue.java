@@ -187,8 +187,7 @@ public class BinaryValue implements Serializable, StatefulValue {
      *      data is copied.
      * @throws IOException If an error occurrs writing the binary data.
      */
-    private void writeObject(ObjectOutputStream out)
-            throws IOException, OutOfMemoryError {
+    private void writeObject(ObjectOutputStream out) throws IOException {
         byte[] buffer = new byte[4096];
         int bytes = 0;
         while ((bytes = stream.read(buffer)) >= 0) {
@@ -210,8 +209,7 @@ public class BinaryValue implements Serializable, StatefulValue {
      *      binary data.
      * @throws IOException If an error occurrs reading the binary data.
      */
-    private void readObject(ObjectInputStream in)
-            throws IOException, OutOfMemoryError {
+    private void readObject(ObjectInputStream in) throws IOException {
         final File file = File.createTempFile("jcr-value", "bin");
 
         OutputStream out = new FileOutputStream(file);

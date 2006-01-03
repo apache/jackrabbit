@@ -35,7 +35,7 @@ import javax.jcr.ValueFormatException;
  * <code>yyyy-MM-dd'T'HH:mm:ss'Z'</code>. The issue with this pattern is that
  * the era specification as defined in the JCR specification (+/- prefix) as
  * well as full time zone naming are not supported.
- * 
+ *
  * @since 0.16.4.1
  * @see org.apache.jackrabbit.rmi.value.SerialValue
  */
@@ -52,9 +52,9 @@ public class DateValue extends BaseNonStreamValue
      * This should probably actually be a reference to the ISO8601 utility
      * class.
      */
-    private static final DateFormat DATE_FORMAT = 
+    private static final DateFormat DATE_FORMAT =
         new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    
+
     /**
      * Creates an instance for the given <code>Calendar</code> <code>value</code>.
      */
@@ -78,7 +78,7 @@ public class DateValue extends BaseNonStreamValue
     /**
      * Returns the string <code>value</code> parsed into a
      * <code>Calendar</code> instance.
-     * 
+     *
      * @param value The string value.
      * @return The <code>Calendar</code> instance parsed from the string
      *         value.

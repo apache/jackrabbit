@@ -38,7 +38,7 @@ import javax.jcr.ValueFormatException;
  * type of {@link org.apache.jackrabbit.rmi.value.StatefullValue}implementation. The
  * methods of the <code>ValueFactory</code> interface are declared final to
  * guard against breaking the rules.
- * 
+ *
  * @version $Revision$, $Date$
  * @author Jukka Zitting
  * @author Felix Meschberger
@@ -48,7 +48,7 @@ public class SerialValueFactory implements ValueFactory {
 
     /** The singleton value factory instance */
     private static final SerialValueFactory INSTANCE = new SerialValueFactory();
-    
+
     /**
      * Returns the <code>ValueFactory</code> instance, which currently is a
      * singleton instance of this class.
@@ -68,7 +68,7 @@ public class SerialValueFactory implements ValueFactory {
      * <p>
      * If the given array is <code>null</code>, then an empty array is
      * returned.
-     * 
+     *
      * @param values the values to be decorated
      * @return array of decorated values
      */
@@ -87,7 +87,7 @@ public class SerialValueFactory implements ValueFactory {
     /**
      * Utility method for decorating a value. Note that the contents of the
      * original values will only be copied when the decorators are serialized.
-     * 
+     *
      * @param value the value to be decorated
      * @return the decorated value
      */
@@ -106,8 +106,9 @@ public class SerialValueFactory implements ValueFactory {
      * Default constructor only visible to extensions of this class. See
      * class comments for details.
      */
-    protected SerialValueFactory() {}
-    
+    protected SerialValueFactory() {
+    }
+
     /** {@inheritDoc} */
     public final Value createValue(String value) {
         return new SerialValue(createStringValue(value));
@@ -147,7 +148,7 @@ public class SerialValueFactory implements ValueFactory {
             default:
                 throw new ValueFormatException("Unknown type " + type);
         }
-        
+
         return new SerialValue(intValue);
     }
 
@@ -180,31 +181,31 @@ public class SerialValueFactory implements ValueFactory {
     public final Value createValue(Node value) throws RepositoryException {
         return createValue(value.getUUID(), PropertyType.REFERENCE);
     }
-    
+
     //---------- API to overwrite to use extended classes ----------------------
-    
+
     /**
      * Creates an instance of the {@link StringValue} class or an extension
      * thereof.
      * <p>
      * This implementation just calls {@link StringValue#StringValue(String)}
      * with the string <code>value</code>.
-     * 
+     *
      * @param value The string making up the value itself.
      */
     protected StringValue createStringValue(String value) {
         return new StringValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link NameValue} class or an extension
      * thereof.
      * <p>
      * This implementation just calls {@link NameValue#NameValue(String)}
      * with the string <code>value</code>.
-     * 
+     *
      * @param value The string making up the value itself.
-     * 
+     *
      * @throws ValueFormatException if the string is not a synthactically
      *      correct JCR name.
      */
@@ -212,16 +213,16 @@ public class SerialValueFactory implements ValueFactory {
             throws ValueFormatException {
         return new NameValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link PathValue} class or an extension
      * thereof.
      * <p>
      * This implementation just calls {@link PathValue#PathValue(String)}
      * with the string <code>value</code>.
-     * 
+     *
      * @param value The string making up the value itself.
-     * 
+     *
      * @throws ValueFormatException if the string is not a synthactically
      *      correct JCR path.
      */
@@ -229,16 +230,16 @@ public class SerialValueFactory implements ValueFactory {
             throws ValueFormatException {
         return new PathValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link ReferenceValue} class or an extension
      * thereof.
      * <p>
      * This implementation just calls {@link ReferenceValue#ReferenceValue(String)}
      * with the string <code>value</code>.
-     * 
+     *
      * @param value The string making up the value itself.
-     * 
+     *
      * @throws ValueFormatException if the string is not a synthactically
      *      correct JCR reference.
      */
@@ -246,82 +247,80 @@ public class SerialValueFactory implements ValueFactory {
             throws ValueFormatException {
         return new ReferenceValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link LongValue} class or an extension
      * thereof.
      * <p>
      * This implementation just calls {@link LongValue#LongValue(long)}
      * with the long <code>value</code>.
-     * 
+     *
      * @param value The long making up the value itself.
      */
     protected LongValue createLongValue(long value) {
         return new LongValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link LongValue} class or an extension
      * thereof from the string representation of the <code>long</code> number.
      * <p>
      * This implementation just calls {@link LongValue#LongValue(String)} with
      * the string <code>value</code>.
-     * 
+     *
      * @param value The string representation of the <code>long</code> number
      *      making up the value itself.
-     * 
+     *
      * @throws ValueFormatException if the string cannot be converted to a
      *      long number.
      */
     protected LongValue createLongValue(String value) throws ValueFormatException {
         return new LongValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link DoubleValue} class or an extension
      * thereof.
      * <p>
      * This implementation just calls {@link DoubleValue#DoubleValue(double)}
      * with the double <code>value</code>.
-     * 
+     *
      * @param value The double making up the value itself.
      */
     protected DoubleValue createDoubleValue(double value) {
         return new DoubleValue(value);
     }
-    
-    
+
     /**
      * Creates an instance of the {@link DoubleValue} class or an extension
      * thereof from the string representation of the <code>double</code> number.
      * <p>
      * This implementation just calls {@link DoubleValue#DoubleValue(String)}
      * with the string <code>value</code>.
-     * 
+     *
      * @param value The string representation of the <code>long</code> number
      *      making up the value itself.
-     * 
+     *
      * @throws ValueFormatException if the string cannot be converted to a
      *      double number.
      */
     protected DoubleValue createDoubleValue(String value) throws ValueFormatException {
         return new DoubleValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link DateValue} class or an extension
      * thereof.
      * <p>
      * This implementation just calls {@link DateValue#DateValue(Calendar)}
      * with the <code>Calendar</code> <code>value</code>.
-     * 
+     *
      * @param value The <code>Calendar</code> making up the value itself.
      */
     protected DateValue createDateValue(Calendar value) {
         return new DateValue(value);
     }
-    
-    
+
     /**
      * Creates an instance of the {@link DateValue} class or an extension
      * thereof from the string representation of <code>Calendar</code>
@@ -329,61 +328,60 @@ public class SerialValueFactory implements ValueFactory {
      * <p>
      * This implementation just calls {@link DateValue#DateValue(String)} with
      * the string <code>value</code>.
-     * 
+     *
      * @param value The string representation of the <code>Calendar</code>
      *      instance making up the value itself.
-     * 
+     *
      * @throws ValueFormatException if the string cannot be converted to a
      *      <code>Calendar</code> instance.
      */
     protected DateValue createDateValue(String value) throws ValueFormatException {
         return new DateValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link BooleanValue} class or an extension
      * thereof.
      * <p>
      * This implementation just calls {@link BooleanValue#BooleanValue(boolean)}
      * with the boolean <code>value</code>.
-     * 
+     *
      * @param value The boolean making up the value itself.
      */
     protected BooleanValue createBooleanValue(boolean value) {
         return new BooleanValue(value);
     }
-    
-    
+
     /**
      * Creates an instance of the {@link BooleanValue} class or an extension
      * thereof from the string representation of the <code>boolean</code>.
      * <p>
      * This implementation just calls {@link BooleanValue#BooleanValue(String)}
      * with the string <code>value</code>.
-     * 
+     *
      * @param value The string representation of the <code>boolean</code>
      *      making up the value itself.
-     * 
+     *
      * @throws ValueFormatException if the string cannot be converted to a
      *      long number.
      */
     protected BooleanValue createBooleanValue(String value) {
         return new BooleanValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link BinaryValue} class or an extension
      * thereof.
      * <p>
      * This implementation just calls {@link BinaryValue#BinaryValue(InputStream)}
      * with the <code>InputStream</code> <code>value</code>.
-     * 
+     *
      * @param value The <code>InputStream</code> making up the value itself.
      */
     protected BinaryValue createBinaryValue(InputStream value) {
         return new BinaryValue(value);
     }
-    
+
     /**
      * Creates an instance of the {@link BinaryValue} class or an extension
      * thereof from the string whose UTF-8 representation is used as the
@@ -391,14 +389,15 @@ public class SerialValueFactory implements ValueFactory {
      * <p>
      * This implementation just calls {@link BinaryValue#BinaryValue(String)}
      * with the string <code>value</code>.
-     * 
+     *
      * @param value The string whose UTF-8 representation is making up the value
      *      itself.
-     * 
+     *
      * @throws ValueFormatException if the UTF-8 representation of the string
      *      cannot be created.
      */
     protected BinaryValue createBinaryValue(String value) throws ValueFormatException {
         return new BinaryValue(value);
     }
+
 }

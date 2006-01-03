@@ -25,8 +25,8 @@ import javax.jcr.ValueFormatException;
 /**
  * The <code>StringValue</code> class implements the committed value state for
  * String values as a part of the State design pattern (Gof) used by this
- * package. 
- * 
+ * package.
+ *
  * @since 0.16.4.1
  * @see org.apache.jackrabbit.rmi.value.SerialValue
  */
@@ -63,7 +63,7 @@ public class StringValue extends BaseNonStreamValue
     /**
      * Returns the string value parsed to a long calling the
      * <code>Long.valueOf(String)</code> method.
-     * 
+     *
      * @throws ValueFormatException if the string cannot be parsed to long.
      */
     public long getLong() throws ValueFormatException {
@@ -73,7 +73,7 @@ public class StringValue extends BaseNonStreamValue
     /**
      * Returns the string value parsed to a double calling the
      * <code>Double.valueOf(String)</code> method.
-     * 
+     *
      * @throws ValueFormatException if the string cannot be parsed to double.
      */
     public double getDouble() throws ValueFormatException {
@@ -84,7 +84,7 @@ public class StringValue extends BaseNonStreamValue
      * Returns the string value parsed to a <code>Calendar</code> using the
      * same formatter as the {@link DateValue} class. This formatting bears the
      * same issues as parsing and formatting that class.
-     * 
+     *
      * @throws ValueFormatException if the string cannot be parsed into a
      *      <code>Calendar</code> instance.
      */

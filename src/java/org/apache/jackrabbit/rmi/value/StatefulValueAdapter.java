@@ -52,11 +52,11 @@ final class StatefulValueAdapter implements Serializable, StatefulValue {
 
     /** The delegatee value. */
     private Value delegatee;
-    
+
     /**
      * Creates an instance adapting the given JCR <code>Value</code> to the
      * State design pattern.
-     * 
+     *
      * @param delegatee The JCR <code>Value</code> providing the value date.
      */
     StatefulValueAdapter(Value delegatee) {
@@ -105,21 +105,21 @@ final class StatefulValueAdapter implements Serializable, StatefulValue {
      * from the delegatee, which is then written. The newly created
      * {@link StatefullValue} value also replaces the original delegatee
      * internally.
-     * 
+     *
      * @param out The destination to write the delegatee to.
-     * 
+     *
      * @throws IOException If an error occurrs writing the value or if an
      *      error occurrs creating the {@link StatefullValue} from the
      *      delegatee.
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
         // if the delegatee value is a StatefullValue or SerialValue, serialize it
-        if (delegatee instanceof StatefulValue ||
-                delegatee instanceof SerialValue) {
+        if (delegatee instanceof StatefulValue
+                || delegatee instanceof SerialValue) {
             out.writeObject(delegatee);
             return;
         }
-        
+
         // otherwise create a SerialValue from the delegatee value to send
         try {
             SerialValueFactory factory = SerialValueFactory.getInstance();
@@ -158,33 +158,34 @@ final class StatefulValueAdapter implements Serializable, StatefulValue {
 
             // replace the delegatee with the new one
             delegatee = toSend;
-            
+
             // and finally send the serial value instance
             out.writeObject(toSend);
         } catch (RepositoryException ex) {
             throw new IOException(ex.getMessage());
         }
     }
-    
+
     /**
      * Reads an reconstructs the delegatee from the given
      * <code>ObjectInputStream</code>. The value read will either be an
      * instance of {@link SerialValue} or a {@link StatefullValue} depending
      * on the original delegatee written.
-     * 
+     *
      * @param in The <code>ObjectInputStream</code> from which to read the
      *      delegatee.
-     * 
+     *
      * @throws IOException If an error occurrs reading from the
      *      <code>ObjectInputStream</code> or if the runtime class of the
-     *      value to be read cannot be found. 
+     *      value to be read cannot be found.
      */
     private void readObject(ObjectInputStream in) throws IOException {
         try {
             delegatee = (Value) in.readObject();
         } catch (ClassNotFoundException cnfe) {
-            throw new IOException("Cannot load value object class: " + 
-                cnfe.getMessage());
+            throw new IOException(
+                    "Cannot load value object class: " + cnfe.getMessage());
         }
     }
+
 }
