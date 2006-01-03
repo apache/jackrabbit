@@ -23,8 +23,8 @@ import javax.jcr.PropertyType;
 /**
  * The <code>BooleanValue</code> class implements the committed value state for
  * Boolean values as a part of the State design pattern (Gof) used by this
- * package. 
- * 
+ * package.
+ *
  * @since 0.16.4.1
  * @see org.apache.jackrabbit.rmi.value.SerialValue
  */
@@ -52,7 +52,7 @@ public class BooleanValue extends BaseNonStreamValue
     protected BooleanValue(String value) {
         this(toBoolean(value));
     }
-    
+
     /**
      * Returns the boolean value represented by the string <code>value</code>.
      * <p>

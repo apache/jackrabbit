@@ -88,7 +88,7 @@ import org.apache.jackrabbit.rmi.server.iterator.ServerVersionIterator;
  * <p>
  * The <code>bufferSize</code> property can be used to configure the
  * size of the buffer used by iterators to speed up iterator traversal
- * over the network. 
+ * over the network.
  *
  * @author Jukka Zitting
  * @author Philipp Koch

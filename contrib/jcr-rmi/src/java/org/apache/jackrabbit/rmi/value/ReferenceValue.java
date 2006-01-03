@@ -25,8 +25,8 @@ import javax.jcr.ValueFormatException;
 /**
  * The <code>ReferenceValue</code> class implements the committed value state
  * for Reference values as a part of the State design pattern (Gof) used by
- * this package. 
- * 
+ * this package.
+ *
  * @author Felix Meschberger
  * @since 0.16.4.1
  */
@@ -38,22 +38,22 @@ public class ReferenceValue extends BaseNonStreamValue
 
     /** The reference value */
     private final String value;
-    
+
     /**
      * Creates an instance for the given reference <code>value</code>.
      */
     protected ReferenceValue(String value) throws ValueFormatException {
         this.value = toReference(value);
     }
-    
+
     /**
      * Checks whether the string value adheres to the reference syntax.
-     * 
+     *
      * @param value The string to check for synthactical compliance with a
      *      reference value.
-     * 
+     *
      * @return The input value.
-     * 
+     *
      * @throws ValueFormatException if the string <code>value</code> is not a
      *      synthactically correct reference.
      */

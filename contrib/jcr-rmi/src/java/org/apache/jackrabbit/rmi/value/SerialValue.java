@@ -39,7 +39,7 @@ final class SerialValue implements Value, Serializable {
 
     /** Static serial version UID. */
     static final long serialVersionUID = 6970955308427991717L;
-    
+
     /**
      * Type of the underlying value. Note that this type is never changed
      * even if the value state changes. Thus the type is memorized in this
