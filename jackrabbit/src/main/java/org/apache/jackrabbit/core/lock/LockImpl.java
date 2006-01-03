@@ -30,12 +30,12 @@ class LockImpl implements Lock {
     /**
      * Lock info containing latest information
      */
-    private final AbstractLockInfo info;
+    protected final AbstractLockInfo info;
 
     /**
      * Node holding lock
      */
-    private final Node node;
+    protected final Node node;
 
     /**
      * Create a new instance of this class.

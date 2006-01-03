@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core;
+package org.apache.jackrabbit.core
 
 import org.apache.jackrabbit.BaseException;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
@@ -42,6 +42,7 @@ import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
@@ -1248,37 +1249,14 @@ public class NodeImpl extends ItemImpl implements Node {
      * Note that no type conversion is being performed, i.e. it's the caller's
      * responsibility to make sure that the type of the given value is compatible
      * with the specified property's definition.
-     * <p/>
-     * <strong>Important:</strong> This method is public in order to make it
-     * accessible from internal code located in subpackages, i.e. it should
-     * never be called from an application directly!!!
-     *
      * @param name
      * @param value
      * @return
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    public Property internalSetProperty(QName name, InternalValue value)
+    protected Property internalSetProperty(QName name, InternalValue value)
             throws ValueFormatException, RepositoryException {
-        /**
-         * todo FIXME internalSetProperty being public is a potential security risk
-         * the following code snippet is a workaround that verifies that the
-         * caller is located in the same package (i.e. 'core') or a subpackage
-         * thereof; it is tested with jackrabbit being run standalone; however
-         * i commented it out as i am not sure whether there are potential
-         * problems/side effects with other setups/environments.
-         */
-/*
-        CallContext ctx = new CallContext();
-        String calledFromPackage = ctx.getCaller().getPackage().getName();
-        String thisPackage = NodeImpl.class.getPackage().getName();
-        // check if we're called from current package (i.e. 'core')
-        // or a subpackage thereof
-        if (!calledFromPackage.startsWith(thisPackage)) {
-            throw new SecurityException("illegal method invokation");
-        }
-*/
         int type;
         if (value == null) {
             type = PropertyType.UNDEFINED;
@@ -3745,7 +3723,18 @@ public class NodeImpl extends ItemImpl implements Node {
 
         checkLockable();
 
-        return session.getLockManager().lock(this, isDeep, isSessionScoped);
+        LockManager lockMgr = session.getLockManager();
+        synchronized (lockMgr) {
+            Lock lock = lockMgr.lock(this, isDeep, isSessionScoped);
+
+            // add properties to content
+            internalSetProperty(QName.JCR_LOCKOWNER,
+                    InternalValue.create(getSession().getUserID()));
+            internalSetProperty(QName.JCR_LOCKISDEEP,
+                    InternalValue.create(isDeep));
+            save();
+            return lock;
+        }
     }
 
     /**
@@ -3781,7 +3770,16 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         checkLockable();
-        session.getLockManager().unlock(this);
+
+        LockManager lockMgr = session.getLockManager();
+        synchronized (lockMgr) {
+            lockMgr.unlock(this);
+
+            // remove properties in content
+            internalSetProperty(QName.JCR_LOCKOWNER, (InternalValue) null);
+            internalSetProperty(QName.JCR_LOCKISDEEP, (InternalValue) null);
+            save();
+        }
     }
 
     /**
