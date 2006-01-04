@@ -343,12 +343,14 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
      * iterator, then the iterator instance is discarded and just the elements
      * are wrapped into a {@link ArrayIterator} instance to be passed to the
      * client.
+     * <p>
+     * Subclasses can override this method to provide alternative optimizations.
      *
      * @param remote remote iterator
      * @return optimized remote iterator
      * @throws RemoteException on RMI errors
      */
-    private RemoteIterator optimizeIterator(RemoteIterator remote)
+    protected RemoteIterator optimizeIterator(RemoteIterator remote)
             throws RemoteException {
         Object[] elements = remote.nextObjects();
         long size = remote.getSize();
