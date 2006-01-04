@@ -199,7 +199,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
                 }
                 int length = in.readInt();  // data length
                 byte[] data = new byte[length];
-                in.read(data);  // data
+                in.readFully(data);  // data
                 // store in map
                 stateStore.put(id, data);
             }
@@ -219,7 +219,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
                 NodeReferencesId id = (NodeReferencesId) NodeReferencesId.valueOf(s);
                 int length = in.readInt();  // data length
                 byte[] data = new byte[length];
-                in.read(data);  // data
+                in.readFully(data);  // data
                 // store in map
                 refsStore.put(id, data);
             }
