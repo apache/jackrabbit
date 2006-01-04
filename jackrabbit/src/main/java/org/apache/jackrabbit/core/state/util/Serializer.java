@@ -122,7 +122,7 @@ public final class Serializer {
         state.setNodeTypeName(QName.valueOf(s));
         // parentUUID (may be null)
         byte[] uuidBytes = new byte[UUID.UUID_BYTE_LENGTH];
-        in.read(uuidBytes);
+        in.readFully(uuidBytes);
         UUID uuid = new UUID(uuidBytes);
         if (!uuid.equals(NULL_UUID_PLACEHOLDER)) {
             state.setParentUUID(uuid.toString());
@@ -152,7 +152,7 @@ public final class Serializer {
         for (int i = 0; i < count; i++) {
             QName name = QName.valueOf(in.readUTF());    // name
             // uuid
-            in.read(uuidBytes);
+            in.readFully(uuidBytes);
             state.addChildNodeEntry(name, new UUID(uuidBytes).toString());
         }
     }
@@ -307,7 +307,7 @@ public final class Serializer {
                 //s = in.readUTF();   // value
                 int len = in.readInt(); // lenght of byte[]
                 byte[] bytes = new byte[len];
-                in.read(bytes); // byte[]
+                in.readFully(bytes); // byte[]
                 s = new String(bytes, ENCODING);
                 val = InternalValue.valueOf(s, type);
             }
