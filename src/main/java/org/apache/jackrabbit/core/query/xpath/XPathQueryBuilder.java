@@ -38,6 +38,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.commons.collections.map.ReferenceMap;
 
 import javax.jcr.query.InvalidQueryException;
 import java.io.StringReader;
@@ -45,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 /**
  * Query builder that translates a XPath statement into a query tree structure.
@@ -195,7 +195,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Map of reusable XPath parser instances indexed by NamespaceResolver.
      */
-    private static Map parsers = new WeakHashMap();
+    private static Map parsers = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     /**
      * The root <code>QueryNode</code>

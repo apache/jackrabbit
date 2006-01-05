@@ -35,6 +35,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.log4j.Logger;
+import org.apache.commons.collections.map.ReferenceMap;
 
 import javax.jcr.query.InvalidQueryException;
 import java.text.SimpleDateFormat;
@@ -46,7 +47,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.io.StringReader;
 
 /**
@@ -68,7 +68,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     /**
      * Map of reusable JCRSQL parser instances indexed by NamespaceResolver.
      */
-    private static Map parsers = new WeakHashMap();
+    private static Map parsers = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
 
     /**
