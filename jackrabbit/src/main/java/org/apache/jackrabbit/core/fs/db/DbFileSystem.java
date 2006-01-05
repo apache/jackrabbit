@@ -88,7 +88,29 @@ import java.util.ArrayList;
  *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
  *   &lt;/FileSystem&gt;
  * </pre>
- * See also {@link DerbyFileSystem}.
+ * The following is a fragment from a sample configuration using MSSQL:
+ * <pre>
+ *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;
+ *       &lt;param name="driver" value="com.microsoft.jdbc.sqlserver.SQLServerDriver"/&gt;
+ *       &lt;param name="url" value="jdbc:microsoft:sqlserver://localhost:1433;;DatabaseName=test;SelectMethod=Cursor;"/&gt;
+ *       &lt;param name="schema" value="mssql"/&gt;
+ *       &lt;param name="user" value="sa"/&gt;
+ *       &lt;param name="password" value=""/&gt;
+ *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
+ *   &lt;/FileSystem&gt;
+ * </pre>
+ * The following is a fragment from a sample configuration using PostgreSQL:
+ * <pre>
+ *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;
+ *       &lt;param name="driver" value="org.postgresql.Driver"/&gt;
+ *       &lt;param name="url" value="jdbc:postgresql://localhost/test"/&gt;
+ *       &lt;param name="schema" value="postgresql"/&gt;
+ *       &lt;param name="user" value="postgres"/&gt;
+ *       &lt;param name="password" value="postgres"/&gt;
+ *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
+ *   &lt;/FileSystem&gt;
+ * </pre>
+ * See also {@link DerbyFileSystem}, {@link DB2FileSystem}.
  */
 public class DbFileSystem implements FileSystem {
 
