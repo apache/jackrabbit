@@ -107,6 +107,40 @@ import java.sql.DatabaseMetaData;
  *       &lt;param name="externalBLOBs" value="false"/&gt;
  *   &lt;/PersistenceManager&gt;
  * </pre>
+ * The following is a fragment from a sample configuration using DB2:
+ * <pre>
+ *   &lt;PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager"&gt;
+ *       &lt;param name="driver" value="com.ibm.db2.jcc.DB2Driver"/&gt;
+ *       &lt;param name="url" value="jdbc:db2:test"/&gt;
+ *       &lt;param name="schema" value="db2"/&gt;
+ *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
+ *       &lt;param name="externalBLOBs" value="false"/&gt;
+ *   &lt;/PersistenceManager&gt;
+ * </pre>
+ * The following is a fragment from a sample configuration using MSSQL:
+ * <pre>
+ *   &lt;PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager"&gt;
+ *       &lt;param name="driver" value="com.microsoft.jdbc.sqlserver.SQLServerDriver"/&gt;
+ *       &lt;param name="url" value="jdbc:microsoft:sqlserver://localhost:1433;;DatabaseName=test;SelectMethod=Cursor;"/&gt;
+ *       &lt;param name="schema" value="mssql"/&gt;
+ *       &lt;param name="user" value="sa"/&gt;
+ *       &lt;param name="password" value=""/&gt;
+ *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
+ *       &lt;param name="externalBLOBs" value="false"/&gt;
+ *   &lt;/PersistenceManager&gt;
+ * </pre>
+ * The following is a fragment from a sample configuration using PostgreSQL:
+ * <pre>
+ *   &lt;PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager"&gt;
+ *       &lt;param name="driver" value="org.postgresql.Driver"/&gt;
+ *       &lt;param name="url" value="jdbc:postgresql://localhost/test"/&gt;
+ *       &lt;param name="schema" value="postgresql"/&gt;
+ *       &lt;param name="user" value="postgres"/&gt;
+ *       &lt;param name="password" value="postgres"/&gt;
+ *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
+ *       &lt;param name="externalBLOBs" value="false"/&gt;
+ *   &lt;/PersistenceManager&gt;
+ * </pre>
  * See also {@link DerbyPersistenceManager}.
  */
 public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
