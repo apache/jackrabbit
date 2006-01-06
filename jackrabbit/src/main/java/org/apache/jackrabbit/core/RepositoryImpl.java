@@ -222,26 +222,22 @@ public class RepositoryImpl implements Repository, SessionListener,
         virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
                 delegatingDispatcher, NODETYPES_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
 
-        // initialize workspaces
-        String wspName = "";
+        // initialize default workspace
+        String wspName = repConfig.getDefaultWorkspaceName();
         try {
-            iter = wspInfos.keySet().iterator();
-            while (iter.hasNext()) {
-                wspName = (String) iter.next();
-                initWorkspace(wspName);
-            }
+            initWorkspace((WorkspaceInfo) wspInfos.get(wspName));
         } catch (RepositoryException e) {
-            // if any workspace failed to initialize, shutdown again
+            // if default workspace failed to initialize, shutdown again
             log.fatal("Failed to initialize workspace '" + wspName + "'", e);
             log.fatal("Unable to start repository, forcing shutdown...");
             shutdown();
             throw e;
         }
 
-        // after the workspaces are initialized we pass a system session to
+        // after the workspace is initialized we pass a system session to
         // the virtual node type manager
 
-        // todo FIXME it seems odd that the *global* virtual node type manager 
+        // todo FIXME it seems odd that the *global* virtual node type manager
         // is using a session that is bound to a single specific workspace
         virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
     }
@@ -451,15 +447,17 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
     }
 
-    private void initWorkspace(String wspName) throws RepositoryException {
+    private void initWorkspace(WorkspaceInfo wspInfo) throws RepositoryException {
+        // first initialize workspace info
+        wspInfo.initialize();
         // get system session and Workspace instance
-        SessionImpl sysSession = getSystemSession(wspName);
+        SessionImpl sysSession = wspInfo.getSystemSession();
         WorkspaceImpl wsp = (WorkspaceImpl) sysSession.getWorkspace();
 
         /**
          * todo implement 'System' workspace
          * FIXME
-         * - the should be one 'System' workspace per repositoy
+         * - the should be one 'System' workspace per repository
          * - the 'System' workspace should have the /jcr:system node
          * - versions, version history and node types should be reflected in
          *   this system workspace as content under /jcr:system
@@ -488,7 +486,7 @@ public class RepositoryImpl implements Repository, SessionListener,
                 "/", true, null, null, false);
 
         // register SearchManager as event listener
-        SearchManager searchMgr = getSearchManager(wspName);
+        SearchManager searchMgr = wspInfo.getSearchManager();
         if (searchMgr != null) {
             wsp.getObservationManager().addEventListener(searchMgr,
                     Event.NODE_ADDED | Event.NODE_REMOVED
@@ -498,14 +496,15 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         // register the observation factory of that workspace
-        delegatingDispatcher.addDispatcher(getObservationManagerFactory(wspName));
+        delegatingDispatcher.addDispatcher(wspInfo.getObservationManagerFactory());
     }
 
     /**
      * Returns the system search manager or <code>null</code> if none is
      * configured.
      */
-    private SearchManager getSystemSearchManager(String wspName) throws RepositoryException {
+    private SearchManager getSystemSearchManager(String wspName)
+            throws RepositoryException {
         if (systemSearchMgr == null) {
             try {
                 if (repConfig.getSearchConfig() != null) {
@@ -587,6 +586,16 @@ public class RepositoryImpl implements Repository, SessionListener,
             throw new NoSuchWorkspaceException(workspaceName);
         }
 
+        synchronized (wspInfo) {
+            if (!wspInfo.isInitialized()) {
+                try {
+                    initWorkspace(wspInfo);
+                } catch (RepositoryException e) {
+                    log.error("Unable to initialize workspace '" + workspaceName + "'", e);
+                    throw new NoSuchWorkspaceException(workspaceName);
+                }
+            }
+        }
         return wspInfo;
     }
 
@@ -609,9 +618,6 @@ public class RepositoryImpl implements Repository, SessionListener,
         WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName);
         WorkspaceInfo info = createWorkspaceInfo(config);
         wspInfos.put(workspaceName, info);
-
-        // setup/initialize new workspace
-        initWorkspace(workspaceName);
     }
 
     SharedItemStateManager getWorkspaceStateManager(String workspaceName)
@@ -669,10 +675,13 @@ public class RepositoryImpl implements Repository, SessionListener,
     }
 
     /**
-     * @param workspaceName
-     * @return
-     * @throws NoSuchWorkspaceException
-     * @throws RepositoryException
+     * Returns the {@link SystemSession} for the workspace with name
+     * <code>workspaceName</code>
+     *
+     * @param workspaceName workspace name
+     * @return system session of the specified workspace
+     * @throws NoSuchWorkspaceException if such a workspace does not exist
+     * @throws RepositoryException      if some other error occurs
      */
     SystemSession getSystemSession(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
@@ -756,7 +765,11 @@ public class RepositoryImpl implements Repository, SessionListener,
         // shut down workspaces
         for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
             WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
-            wspInfo.dispose();
+            synchronized(wspInfo) {
+                if (wspInfo.isInitialized()) {
+                    wspInfo.dispose();
+                }
+            }
         }
 
         // shutdown system search manager if there is one
@@ -794,8 +807,8 @@ public class RepositoryImpl implements Repository, SessionListener,
         // make sure this instance is not used anymore
         disposed = true;
 
-        this.releaseRepositoryLock() ;
-        
+        // finally release repository lock
+        releaseRepositoryLock();
     }
 
     /**
@@ -1138,39 +1151,44 @@ public class RepositoryImpl implements Repository, SessionListener,
     protected class WorkspaceInfo {
 
         /**
-         * workspace configuration
+         * workspace configuration (passed in constructor)
          */
         private final WorkspaceConfig config;
 
         /**
-         * persistence manager
+         * persistence manager (instantiated on init)
          */
         private PersistenceManager persistMgr;
 
         /**
-         * item state provider
+         * item state provider (instantiated on init)
          */
         private SharedItemStateManager itemStateMgr;
 
         /**
-         * system session
-         */
-        private SystemSession systemSession;
-
-        /**
-         * observation manager factory
+         * observation manager factory (instantiated on init)
          */
         private ObservationManagerFactory obsMgrFactory;
 
         /**
-         * search manager
+         * system session (lazily instantiated)
+         */
+        private SystemSession systemSession;
+
+        /**
+         * search manager (lazily instantiated)
          */
         private SearchManager searchMgr;
 
         /**
-         * Lock manager
+         * lock manager (lazily instantiated)
          */
         private LockManagerImpl lockMgr;
+
+        /**
+         * flag indicating whether this instance has been initialized.
+         */
+        private boolean initialized;
 
         /**
          * Creates a new <code>WorkspaceInfo</code> based on the given
@@ -1180,10 +1198,11 @@ public class RepositoryImpl implements Repository, SessionListener,
          */
         protected WorkspaceInfo(WorkspaceConfig config) {
             this.config = config;
+            initialized = false;
         }
 
         /**
-         * Returns the workspace name
+         * Returns the workspace name.
          *
          * @return the workspace name
          */
@@ -1192,7 +1211,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         /**
-         * Returns the workspace file system
+         * Returns the workspace file system.
          *
          * @return the workspace file system
          */
@@ -1201,7 +1220,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         /**
-         * Returns the workspace configuration
+         * Returns the workspace configuration.
          *
          * @return the workspace configuration
          */
@@ -1210,35 +1229,28 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         /**
-         * Returns the workspace persistence manager
+         * Returns <code>true</code> if this workspace info is initialized,
+         * otherwise returns <code>false</code>.
+         *
+         * @return <code>true</code> if this workspace info is initialized.
+         */
+        synchronized boolean isInitialized() {
+            return initialized;
+        }
+
+        /**
+         * Returns the workspace persistence manager.
          *
          * @return the workspace persistence manager
          * @throws RepositoryException if the persistence manager could not be instantiated/initialized
          */
         synchronized PersistenceManager getPersistenceManager(PersistenceManagerConfig pmConfig)
                 throws RepositoryException {
-            if (persistMgr == null) {
-                persistMgr = createPersistenceManager(new File(config.getHomeDir()),
-                        config.getFileSystem(),
-                        pmConfig,
-                        rootNodeUUID,
-                        nsReg,
-                        ntReg);
+            if (!initialized) {
+                throw new IllegalStateException("not initialized");
             }
-            return persistMgr;
-        }
 
-        /**
-         * Returns the system session for this workspace
-         *
-         * @return the system session for this workspace
-         * @throws RepositoryException if the system session could not be created
-         */
-        synchronized SystemSession getSystemSession() throws RepositoryException {
-            if (systemSession == null) {
-                systemSession = SystemSession.create(RepositoryImpl.this, config);
-            }
-            return systemSession;
+            return persistMgr;
         }
 
         /**
@@ -1250,24 +1262,10 @@ public class RepositoryImpl implements Repository, SessionListener,
          */
         synchronized SharedItemStateManager getItemStateProvider()
                 throws RepositoryException {
-            if (itemStateMgr == null) {
-                // create item state manager
-                try {
-                    itemStateMgr = new SharedItemStateManager(
-                            getPersistenceManager(config.getPersistenceManagerConfig()),
-                            rootNodeUUID, ntReg);
-                    try {
-                        itemStateMgr.addVirtualItemStateProvider(vMgr.getVirtualItemStateProvider());
-                        itemStateMgr.addVirtualItemStateProvider(virtNTMgr.getVirtualItemStateProvider());
-                    } catch (Exception e) {
-                        log.error("Unable to add vmgr: " + e.toString(), e);
-                    }
-                } catch (ItemStateException ise) {
-                    String msg = "failed to instantiate persistent item state manager";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, ise);
-                }
+            if (!initialized) {
+                throw new IllegalStateException("not initialized");
             }
+
             return itemStateMgr;
         }
 
@@ -1277,29 +1275,36 @@ public class RepositoryImpl implements Repository, SessionListener,
          * @return the observation manager factory for this workspace
          */
         synchronized ObservationManagerFactory getObservationManagerFactory() {
-            if (obsMgrFactory == null) {
-                obsMgrFactory = new ObservationManagerFactory();
+            if (!initialized) {
+                throw new IllegalStateException("not initialized");
             }
+
             return obsMgrFactory;
         }
 
         /**
-         * Returns the search manager for this workspace
+         * Returns the search manager for this workspace.
          *
          * @return the search manager for this workspace, or <code>null</code>
          *         if no <code>SearchManager</code>
          * @throws RepositoryException if the search manager could not be created
          */
         synchronized SearchManager getSearchManager() throws RepositoryException {
+            if (!initialized) {
+                throw new IllegalStateException("not initialized");
+            }
+
             if (searchMgr == null) {
                 if (config.getSearchConfig() == null) {
                     // no search index configured
                     return null;
                 }
+                // search manager is lazily instantiated in order to avoid
+                // 'chicken & egg' bootstrap problems
                 searchMgr = new SearchManager(config.getSearchConfig(),
                         nsReg,
                         ntReg,
-                        getItemStateProvider(),
+                        itemStateMgr,
                         rootNodeUUID,
                         getSystemSearchManager(getName()),
                         SYSTEM_ROOT_NODE_UUID);
@@ -1308,12 +1313,18 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         /**
-         * Returns the lock manager for this workspace
+         * Returns the lock manager for this workspace.
          *
          * @return the lock manager for this workspace
          * @throws RepositoryException if the lock manager could not be created
          */
         synchronized LockManager getLockManager() throws RepositoryException {
+            if (!initialized) {
+                throw new IllegalStateException("not initialized");
+            }
+
+            // lock manager is lazily instantiated in order to avoid
+            // 'chicken & egg' bootstrap problems
             if (lockMgr == null) {
                 lockMgr = new LockManagerImpl(getSystemSession(), config.getFileSystem());
             }
@@ -1321,14 +1332,87 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         /**
+         * Returns the system session for this workspace.
+         *
+         * @return the system session for this workspace
+         * @throws RepositoryException if the system session could not be created
+         */
+        synchronized SystemSession getSystemSession() throws RepositoryException {
+            if (!initialized) {
+                throw new IllegalStateException("not initialized");
+            }
+
+            // system session is lazily instantiated in order to avoid
+            // 'chicken & egg' bootstrap problems
+            if (systemSession == null) {
+                systemSession = SystemSession.create(RepositoryImpl.this, config);
+            }
+            return systemSession;
+        }
+
+        /**
+         * Initializes this workspace info. The following components are
+         * initialized immediately:
+         * <ul>
+         * <li>persistence manager</li>
+         * <li>shared item state manager</li>
+         * <li>observation manager factory</li>
+         * </ul>
+         * The following components are initialized lazily (i.e. on demand)
+         * in order to save resources and to avoid 'chicken & egg' bootstrap
+         * problems:
+         * <ul>
+         * <li>system session</li>
+         * <li>lock manager</li>
+         * <li>search manager</li>
+         * </ul>
+         */
+        synchronized void initialize() throws RepositoryException {
+            if (initialized) {
+                throw new IllegalStateException("already initialized");
+            }
+
+            persistMgr = createPersistenceManager(new File(config.getHomeDir()),
+                    config.getFileSystem(),
+                    config.getPersistenceManagerConfig(),
+                    rootNodeUUID,
+                    nsReg,
+                    ntReg);
+
+            // create item state manager
+            try {
+                itemStateMgr =
+                        new SharedItemStateManager(persistMgr, rootNodeUUID, ntReg);
+                try {
+                    itemStateMgr.addVirtualItemStateProvider(
+                            vMgr.getVirtualItemStateProvider());
+                    itemStateMgr.addVirtualItemStateProvider(
+                            virtNTMgr.getVirtualItemStateProvider());
+                } catch (Exception e) {
+                    log.error("Unable to add vmgr: " + e.toString(), e);
+                }
+            } catch (ItemStateException ise) {
+                String msg = "failed to instantiate shared item state manager";
+                log.debug(msg);
+                throw new RepositoryException(msg, ise);
+            }
+
+            obsMgrFactory = new ObservationManagerFactory();
+
+            initialized = true;
+        }
+
+        /**
          * Disposes all objects this <code>WorkspaceInfo</code> is holding.
          */
-        void dispose() {
-            // dispose observation manager factory
-            if (obsMgrFactory != null) {
-                obsMgrFactory.dispose();
-                obsMgrFactory = null;
+        synchronized void dispose() {
+            if (!initialized) {
+                throw new IllegalStateException("not initialized");
             }
+
+            // dispose observation manager factory
+            obsMgrFactory.dispose();
+            obsMgrFactory = null;
 
             // shutdown search managers
             if (searchMgr != null) {
@@ -1343,25 +1427,23 @@ public class RepositoryImpl implements Repository, SessionListener,
                 systemSession = null;
             }
 
-            // dispose persistent item state mgr
-            if (itemStateMgr != null) {
-                itemStateMgr.dispose();
-                itemStateMgr = null;
-            }
+            // dispose shared item state manager
+            itemStateMgr.dispose();
+            itemStateMgr = null;
 
             // close persistence manager
-            if (persistMgr != null) {
-                try {
-                    persistMgr.close();
-                } catch (Exception e) {
-                    log.error("error while closing persistence manager of workspace "
-                            + config.getName(), e);
-                }
-                persistMgr = null;
+            try {
+                persistMgr.close();
+            } catch (Exception e) {
+                log.error("error while closing persistence manager of workspace "
+                        + config.getName(), e);
             }
+            persistMgr = null;
 
+            // close lock manager
             if (lockMgr != null) {
                 lockMgr.close();
+                lockMgr = null;
             }
 
             // close workspace file system
