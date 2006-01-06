@@ -24,103 +24,124 @@
   <section name="First Hops">
    <p>
      This is a short hands-on introduction to Jackrabbit and the features
-     of the JCR API. See the rest of the Jackrabbit web site and the JCR
-     API specification for more detailed information.
+     of the JCR API. See the rest of the Jackrabbit web site and the
+     <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html">JCR specification</a>
+     for more detailed information.
    </p>
    <p>
      You need to have Jackrabbit locally available to compile and run the
      examples on this page. See the <a href="building.html">Building Jackrabbit</a>
      section for instructions to download and build the Jackrabbit sources.
+     The examples on this page expect that your classpath contains the
+     <code>jackrabbit-1.0-SNAPSHOT.jar</code> generated into the
+     <code>target</code> directory by <code>maven jar</code> and all the
+     dependency jar files copied into the <code>target/lib</code> directory
+     by <code>maven copy-deps</code>. Please check your classpath settings
+     if you get a <code>ClassNotFoundException</code> when compiling the
+     example classes.
    </p>
+   <p>
+    Note that this introduction is meant to be as short and simple as
+    possible, rather than usable as a real application. Thus the example
+    classes should not be interpreted as the best practice.
+   </p>
+
   <subsection name="Run Jackrabbit">
    <p>
-    The following code provides a brief introduction to using Jackrabbit
-    in a simple application.  Please note that this example is meant to
-    be as short and simple as possible, rather than usable as a real
-    application, and should not be interpreted as best practice.
+    The first thing a JCR application needs to do is to get a
+    <code>Repository</code> instance and start a <code>Session</code>
+    for using the content repository. The first example application
+    show below does little more than this, it just prints out the node
+    type name of the root node to demonstrate that the session has indeed
+    been opened. After that the application closes the session and exits.
    </p>
-   <p>
-    JCRTest.java
-    <source>
-import java.util.Hashtable;
+   <p><strong>FirstHop.java</strong></p>
+<source>import javax.jcr.*;
+import org.apache.jackrabbit.core.TransientRepository;
 
-import javax.jcr.*;
+/**
+ * <i>First Jackrabbit example application. Opens a content repository as</i>
+ * <i>an anoymous user and prints the node type name of the root node of</i>
+ * <i>the default workspace.</i>
+ */
+public class FirstHop {
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
+    /** <i>The Jackrabbit configuration file</i> */
+    private static final String CONFIG_FILE = "<b>repository.xml</b>";
 
-import org.apache.jackrabbit.core.jndi.RegistryHelper;
+    /** <i>The Jackrabbit repository directory</i> */
+    private static final String DIRECTORY = "<b>repository</b>";
 
-public class JCRTest {
+    /** <i>Runs the FirstHop example.</i> */
+    public static void main(String[] args) {
+        try {
+            // <i>Set up a Jackrabbit repository with the specified</i>
+            // <i>configuration file and repository directory</i>
+            Repository repository =
+                new TransientRepository(CONFIG_FILE, DIRECTORY);
 
-  public static void main(String[] args) {
-    try {
-      String configFile = "<b>repotest/repository.xml</b>";
-      String repHomeDir = "<b>repotest</b>";
-      
-      Hashtable env = new Hashtable();
-      env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
-      env.put(Context.PROVIDER_URL, "localhost");
-      InitialContext ctx = new InitialContext(env);
-      
-      RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
-      Repository r = (Repository) ctx.lookup("repo");
-      Session session = r.login(new SimpleCredentials("userid", "".toCharArray()), null);
-      Node rn=session.getRootNode();
-      
-      System.out.println(rn.getPrimaryNodeType().getName());
-      
-      
-    } catch (Exception e){
-      System.err.println(e);
+            // <i>Login to the default workspace as a dummy user</i>
+            Session session = repository.login(
+                new SimpleCredentials("username", "password".toCharArray()));
+
+            // <i>Print the node type name of the root node</i>
+            Node root = session.getRootNode();
+            System.out.println(root.getPrimaryNodeType().getName());
+
+            // <i>Close the session</i>
+            session.logout();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-  }
-}
-    </source>
-   </p>
+
+}</source>
    <p>
-    The <code>configFile</code> variable points to a file, named
-    <code>repository.xml</code> by convention, that contains
-    the repository configuration.  
-    An example <code>repository.xml</code> might look like this:
-    <source>
-&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
-&lt;Repository&gt;
-    &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
-        &lt;param name="path" value="${rep.home}/repository"/&gt;
-    &lt;/FileSystem&gt;
-    &lt;Security appName="Jackrabbit"&gt;
-        &lt;AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager"/&gt;
-    &lt;/Security&gt;
-    &lt;Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default" /&gt;
-    &lt;Workspace name="${wsp.name}"&gt;
-        &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
-            &lt;param name="path" value="${wsp.home}"/&gt;
-        &lt;/FileSystem&gt;
-        &lt;PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" /&gt;
-        &lt;SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex"&gt;
-            &lt;param name="path" value="${wsp.home}/index"/&gt;
-        &lt;/SearchIndex&gt;
-    &lt;/Workspace&gt;
-    &lt;Versioning rootPath="${rep.home}/versions"&gt;
-        &lt;FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem"&gt;
-            &lt;param name="path" value="${rep.home}/versions"/&gt;
-        &lt;/FileSystem&gt;
-        &lt;PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" /&gt;
-    &lt;/Versioning&gt;
-&lt;/Repository&gt;   
-    </source>
+    The highlighted configuration parameters <code>CONFIG_FILE</code> and
+    <code>DIRECTORY</code> specify the names of the repository configuration
+    file and the repository directory. The repository configuration file
+    is an XML file that specifies the components and options used by the
+    Jackrabbit content repository. Below is an example configuration that
+    you can use as the <code>repository.xml</code> file in your working
+    directory.
    </p>
+   <p><strong>repository.xml</strong></p>
+<source><![CDATA[<?xml version="1.0"?>
+<Repository>
+    <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+        <param name="path" value="${rep.home}/repository"/>
+    </FileSystem>
+    <Security appName="Jackrabbit">
+        <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager"/>
+    </Security>
+    <Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default" />
+    <Workspace name="${wsp.name}">
+        <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+            <param name="path" value="${wsp.home}"/>
+        </FileSystem>
+        <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" />
+        <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
+            <param name="path" value="${wsp.home}/index"/>
+        </SearchIndex>
+    </Workspace>
+    <Versioning rootPath="${rep.home}/versions">
+        <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+            <param name="path" value="${rep.home}/versions"/>
+        </FileSystem>
+        <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" />
+    </Versioning>
+</Repository>]]></source>
    <p>
     The keyword <code>${rep.home}</code> refers to the repository home
     directory, which is used as the root directory for all of the
-    information that the repository persists. The directory can be
-    empty; after initial startup, the repository will be filled with
-    file structure similar to this:
-    <source>
-repository.xml
-
-repository/
+    information that the repository persists. At runtime the keyword is
+    replaced by the repository home directory path given to the Jackrabbit
+    instance (in this case using the <code>DIRECTORY</code> parameter).
+    The repository home directory needs to exists but it can be empty;
+    after the first repository startup, the repository will automatically
+    be filled with a file structure similar to this:
+   </p>
+<source>repository/
    meta/
    namespaces/
    nodetypes/
@@ -133,252 +154,278 @@ workspaces/
       workspace.xml
       blobs/
       data/
-      index/
-    </source>
-   </p>
+      index/</source>
    <p>
      In addition to the repository configuration file, you also need to
      create a
      <a href="http://java.sun.com/security/jaas/doc/api.html">JAAS configuration</a>
      file used for Jackrabbit login settings. The contents of a simple
-     configuration file named <code>jaas.config</code> is shown below. The
-     configuration for the SimpleLoginModule also contains an optional module
-     option to configure the user id of the anonymous user with read-only access
-     to the repository. If the option is omitted the anoymous user id default to
-     'anonymous'.
-     <source>
-Jackrabbit {
-org.apache.jackrabbit.core.security.SimpleLoginModule required anonymousId="anonymous";
-};
-     </source>
+     configuration file named <code>jaas.config</code> is shown below.
+   </p>
+   <p><strong>jaas.config</strong></p>
+<source>Jackrabbit {
+org.apache.jackrabbit.core.security.SimpleLoginModule required;
+};</source>
+   <p>
+    You need to include the JAAS configuration option
+    <code>-Djava.security.auth.login.config==jaas.config</code> to the
+    <code>java</code> command when running the example code to activate
+    the authentication settings. The SimpleLoginModule accepts any
+    username/password combination, so the hardcoded values will do just fine.
    </p>
    <p>
-    Make sure that all of the <a href="dependencies.html">dependencies</a> 
-    are added to your classpath, as well as the Jackrabbit
-    repository implementation (named something like 
-    <code>jackrabbit-x.xx-xxx-dev.jar</code>) that has been built by Maven
-    into the <code>target</code> directory of your checkout.
-    By executing <code>maven copy-deps</code> all dependencies are
-    being copied to the <code>target/lib</code> directory. In addition
-    to setting up the classpath, you need to include the JAAS configuration
-    option <code>-Djava.security.auth.login.config==jaas.config</code>
-    (note the double equal sign <code>==</code>) to the <code>java</code>
-    command when running the example code.
+     If you want, you can also add
+     <a href="http://logging.apache.org/log4j/">log4j</a> configuration
+     if you are interested in the internal log messages produced by Jackrabbit.
    </p>
    <p>
-    Now you should be ready to compile the above <code>JCRTest</code>
-    class and run it, which should produce the following output:
-    <source>
-rep:root
-    </source>
+    You should now have the files <code>FirstHop.java</code>,
+    <code>repository.xml</code>, <code>jaas.config</code>, and the subdirectory
+    <code>repository</code> available in your working directory. You should
+    also have the Java classpath configured according to the instructions
+    at the beginning of this page. Once all is ready, you can compile and
+    run the <code>FirstHop</code> application, which should produce the
+    following output (in addition to possible logging messages):
    </p>
+<source>rep:root</source>
   </subsection>
+
   <subsection name="Adding Content">
    <p>
-    Since an empty repository is not very useful, add the following
-    code to the above test class <code>JCRTest</code> to create 
-    content inside Jackrabbit.
+    Since an empty repository is not very useful, lets add some content to
+    it. The following example application uses the same setup code as the
+    already seen FirstHop class, but this one then goes to add a new
+    content node to the repository. The new code is hightlighted.
    </p>
-   <p>
-    JCRTest.java
-    <source>
-import java.util.Hashtable;
+   <p><strong>SecondHop.java</strong></p>
+<source>import javax.jcr.*;
+import org.apache.jackrabbit.core.TransientRepository;
 
-import javax.jcr.*;
+/**
+ * <i>Second Jackrabbit example application. Creates a test node with</i>
+ * <i>a greeting message as a property and prints the saved content.</i>
+ */
+public class SecondHop {
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
+    /** <i>The Jackrabbit configuration file</i> */
+    private static final String CONFIG_FILE = "repository.xml";
 
-import org.apache.jackrabbit.core.jndi.RegistryHelper;
+    /** <i>The Jackrabbit repository directory</i> */
+    private static final String DIRECTORY = "repository";
 
-public class JCRTest {
+    /** <i>Runs the SecondHop example.</i> */
+    public static void main(String[] args) {
+        try {
+            // <i>Set up a Jackrabbit repository with the specified</i>
+            // <i>configuration file and repository directory</i>
+            Repository repository =
+                new TransientRepository(CONFIG_FILE, DIRECTORY);
 
-  public static void main(String[] args) {
-    try {
-      String configFile = "repotest/repository.xml";
-      String repHomeDir = "repotest";
-      
-      Hashtable env = new Hashtable();
-      env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
-      env.put(Context.PROVIDER_URL, "localhost");
-      InitialContext ctx = new InitialContext(env);
-      
-      RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
-      Repository r = (Repository) ctx.lookup("repo");
-      Session session = r.login(new SimpleCredentials("userid", "".toCharArray()), null);
-      Node rn=session.getRootNode();
-      
-      System.out.println(rn.getPrimaryNodeType().getName());
-<b>        
-      if (!rn.hasNode("testnode")) {
-        System.out.println("creating testnode");
-        Node n=rn.addNode("testnode", "nt:unstructured");
-        n.setProperty("testprop", session.getValueFactory().createValue("Hello, World."));
-        session.save();
-      }
+            // <i>Login to the default workspace as a dummy user</i>
+            Session session = repository.login(
+                new SimpleCredentials("username", "password".toCharArray()));
+<b>
+            // <i>Use the root node as a starting point</i>
+            Node root = session.getRootNode();
 
-      System.out.println(rn.getProperty("testnode/testprop").getString());
-</b>      
-    } catch (Exception e){
-      System.err.println(e);
+            // <i>Create a test node unless it already exists</i>
+            if (!root.hasNode("testnode")) {
+                System.out.print("Creating testnode... ");
+                // <i>Create an unstructured node called "testnode"</i>
+                Node node = root.addNode("testnode", "nt:unstructured");
+                // <i>Add a string property called "testprop"</i>
+                node.setProperty("testprop", "Hello, World!");
+                // <i>Save the changes to the repository</i>
+                session.save();
+                System.out.println("done.");
+            }
+
+            // <i>Use the property path to get and print the added property</i>
+            Property property = root.getProperty("testnode/testprop");
+            System.out.println(property.getString());
+</b>
+            // <i>Close the session</i>
+            session.logout();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-  }
-}
-    </source>
-    which should produce the following output (possibly surrounded by log
-    messages, depending on settings) when started for the first time:
-    <source>
-rep:root
-creating testnode
-Hello, World.   
-    </source>
+
+}</source>
+   <p>
+    Compiling and running this class should produce the following output
+    when started for the first time. On subsequent runs the application
+    should only print "Hello, World!".
    </p>
+<source>Creating testnode... done.
+Hello, World!</source>
+  </subsection>
+
+  <subsection name="Importing content">
    <p>
     To add content a bit more efficiently, you may want to try
     JCR's import facilities, such as <code>Session.importXML</code>.
     The following <a href="http://www.cafeconleche.org/slides/xmlone/london2002/namespaces/10.html">XML document by Elliotte Rusty Harold</a>
     provides an interesting example that demonstrates a repository's
     namespace capabilities:
-    <source><!--  Copyright 2001, 2002 Elliotte Rusty Harold -->
-&lt;xhtml:html xmlns:xhtml="http://www.w3.org/1999/xhtml"
-            xmlns:mathml="http://www.w3.org/1998/Math/MathML"&gt;
-  &lt;xhtml:head&gt;&lt;xhtml:title&gt;Three Namespaces&lt;/xhtml:title&gt;&lt;/xhtml:head&gt;
-  &lt;xhtml:body&gt;
-    &lt;xhtml:h1 align="center"&gt;An Ellipse and a Rectangle&lt;/xhtml:h1&gt;
-    &lt;svg:svg xmlns:svg="http://www.w3.org/2000/svg" 
-             width="12cm" height="10cm"&gt;
-      &lt;svg:ellipse rx="110" ry="130" /&gt;
-      &lt;svg:rect x="4cm" y="1cm" width="3cm" height="6cm" /&gt;
-    &lt;/svg:svg&gt;
-    &lt;xhtml:p&gt;The equation for ellipses&lt;/xhtml:p&gt;
-&lt;mathml:math&gt;
-  &lt;mathml:apply&gt;
-    &lt;mathml:eq/&gt;
-    &lt;mathml:cn&gt; 1 &lt;/mathml:cn&gt;
-    &lt;mathml:apply&gt;
-      &lt;mathml:plus/&gt;
-      &lt;mathml:apply&gt;
-        &lt;mathml:divide/&gt;
-        &lt;mathml:apply&gt;
-          &lt;mathml:power/&gt;
-          &lt;mathml:ci&gt; x &lt;/mathml:ci&gt;
-          &lt;mathml:cn&gt; 2 &lt;/mathml:cn&gt;
-        &lt;/mathml:apply&gt;
-        &lt;mathml:apply&gt;
-          &lt;mathml:power/&gt;
-          &lt;mathml:ci&gt; a &lt;/mathml:ci&gt;
-          &lt;mathml:cn&gt; 2 &lt;/mathml:cn&gt;
-        &lt;/mathml:apply&gt;
-      &lt;/mathml:apply&gt;
-      &lt;mathml:apply&gt;
-        &lt;mathml:divide/&gt;
-        &lt;mathml:apply&gt;
-          &lt;mathml:power/&gt;
-          &lt;mathml:ci&gt; y &lt;/mathml:ci&gt;
-          &lt;mathml:cn&gt; 2 &lt;/mathml:cn&gt;
-        &lt;/mathml:apply&gt;
-        &lt;mathml:apply&gt;
-          &lt;mathml:power/&gt;
-          &lt;mathml:ci&gt; b &lt;/mathml:ci&gt;
-          &lt;mathml:cn&gt; 2 &lt;/mathml:cn&gt;
-        &lt;/mathml:apply&gt;        
-      &lt;/mathml:apply&gt;
-    &lt;/mathml:apply&gt;
- &lt;/mathml:apply&gt;
-&lt;/mathml:math&gt;
-    &lt;xhtml:hr/&gt;
-    &lt;xhtml:p&gt;Last Modified January 10, 2002&lt;/xhtml:p&gt;    
-  &lt;/xhtml:body&gt;
-&lt;/xhtml:html&gt;
-    </source>
    </p>
+   <p><strong>test.xml</strong></p>
+<!--  Copyright 2001, 2002 Elliotte Rusty Harold -->
+<source><![CDATA[<xhtml:html xmlns:xhtml="http://www.w3.org/1999/xhtml"
+            xmlns:mathml="http://www.w3.org/1998/Math/MathML">
+  <xhtml:head><xhtml:title>Three Namespaces</xhtml:title></xhtml:head>
+  <xhtml:body>
+    <xhtml:h1 align="center">An Ellipse and a Rectangle</xhtml:h1>
+    <svg:svg xmlns:svg="http://www.w3.org/2000/svg" 
+             width="12cm" height="10cm">
+      <svg:ellipse rx="110" ry="130" />
+      <svg:rect x="4cm" y="1cm" width="3cm" height="6cm" />
+    </svg:svg>
+    <xhtml:p>The equation for ellipses</xhtml:p>
+<mathml:math>
+  <mathml:apply>
+    <mathml:eq/>
+    <mathml:cn> 1 </mathml:cn>
+    <mathml:apply>
+      <mathml:plus/>
+      <mathml:apply>
+        <mathml:divide/>
+        <mathml:apply>
+          <mathml:power/>
+          <mathml:ci> x </mathml:ci>
+          <mathml:cn> 2 </mathml:cn>
+        </mathml:apply>
+        <mathml:apply>
+          <mathml:power/>
+          <mathml:ci> a </mathml:ci>
+          <mathml:cn> 2 </mathml:cn>
+        </mathml:apply>
+      </mathml:apply>
+      <mathml:apply>
+        <mathml:divide/>
+        <mathml:apply>
+          <mathml:power/>
+          <mathml:ci> y </mathml:ci>
+          <mathml:cn> 2 </mathml:cn>
+        </mathml:apply>
+        <mathml:apply>
+          <mathml:power/>
+          <mathml:ci> b </mathml:ci>
+          <mathml:cn> 2 </mathml:cn>
+        </mathml:apply>        
+      </mathml:apply>
+    </mathml:apply>
+ </mathml:apply>
+</mathml:math>
+    <xhtml:hr/>
+    <xhtml:p>Last Modified January 10, 2002</xhtml:p>    
+  </xhtml:body>
+</xhtml:html>]]></source>
    <p>
-    The <code>JCRTest</code> class is then extended with
-    <code>Session.importXml()</code> to import the XML file named
-    <code>repotest/test.xml</code>, and a simple <code>dump()</code>
-    method is added to display the content of the repository.
-    <source>
+    The third example application shown below will import the XML file called
+    <code>test.xml</code> from the current directory into a new content
+    repository node called <code>importxml</code>. Once the XML content is
+    imported, the application recursively dumps the contents of the entire
+    workspace using the simple <code>dump()</code> method.
+   </p>
+   <p><strong>ThirdHop.java</strong></p>
+<source>import javax.jcr.*;
+import org.apache.jackrabbit.core.TransientRepository;
 import java.io.FileInputStream;
-import java.util.Hashtable;
 
-import javax.jcr.*;
-import javax.naming.Context;
-import javax.naming.InitialContext;
+/**
+ * <i>Third Jackrabbit example application. Imports an example XML file</i>
+ * <i>and outputs the contents of the entire workspace.</i>
+ */
+public class ThirdHop {
 
-import org.apache.jackrabbit.core.jndi.RegistryHelper;
+    /** <i>The Jackrabbit configuration file</i> */
+    private static final String CONFIG_FILE = "repository.xml";
 
-public class JCRTest {
+    /** <i>The Jackrabbit repository directory</i> */
+    private static final String DIRECTORY = "repository";
 
-  public static void main(String[] args) {
-    try {
-      String configFile = "repotest/repository.xml";
-      String repHomeDir = "repotest";
+    /** <i>Runs the ThirdHop example.</i> */
+    public static void main(String[] args) {
+        try {
+            // <i>Set up a Jackrabbit repository with the specified</i>
+            // <i>configuration file and repository directory</i>
+            Repository repository =
+                new TransientRepository(CONFIG_FILE, DIRECTORY);
 
-      Hashtable env = new Hashtable();
-      env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
-      env.put(Context.PROVIDER_URL, "localhost");
-      InitialContext ctx = new InitialContext(env);
+            // <i>Login to the default workspace as a dummy user</i>
+            Session session = repository.login(
+                new SimpleCredentials("username", "password".toCharArray()));
 
-      RegistryHelper.registerRepository(ctx, "repo", configFile, repHomeDir, true);
-      Repository r = (Repository) ctx.lookup("repo");
-      Session session = r.login(new SimpleCredentials("userid", "".toCharArray()), null);
-      Node rn=session.getRootNode();
+            // <i>Use the root node as a starting point</i>
+            Node root = session.getRootNode();
+<b>
+            // <i>Import the XML file unless already imported</i>
+            if (!root.hasNode("importxml")) {
+                System.out.print("Importing xml... ");
+                // <i>Create an unstructured node under which to import the XML</i>
+                Node node = root.addNode("importxml", "nt:unstructured");
+                // <i>Import the file "test.xml" under the created node</i>
+                FileInputStream xml = new FileInputStream("<b>test.xml</b>");
+                session.importXML(
+                    "/importxml", xml, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+                xml.close();
+                // <i>Save the changes to the repository</i>
+                session.save();
+                System.out.println("done.");
+            }
 
-      System.out.println(rn.getPrimaryNodeType().getName());
-      
-      if (!rn.hasNode("testnode")) {
-        System.out.println("creating testnode");
-        Node n=rn.addNode("testnode", "nt:unstructured");
-        n.setProperty("testprop", session.getValueFactory().createValue("Hello, World."));
-        session.save();
-      }
-      
-      if (!rn.hasNode("importxml")) {
-        System.out.println("importing xml");
-        Node n=rn.addNode("importxml", "nt:unstructured");
-        session.importXML("/importxml", new FileInputStream("<b>repotest/test.xml</b>"), ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-        session.save();
-      }
-      dump(rn);
-    } catch (Exception e){
-      System.err.println(e);
-    }
-  }
-  public static void dump (Node n) throws RepositoryException {
-    System.out.println(n.getPath());
-    PropertyIterator pit=n.getProperties();
-    while (pit.hasNext()) {
-      Property p=pit.nextProperty();
-      System.out.print(p.getPath() + "=");
-      if (p.getDefinition().isMultiple()) {
-        Value[] values = p.getValues();
-        for (int i = 0; i &lt; values.length; i++) {
-          if (i &gt; 0) System.out.println(",");
-          System.out.println(values[i].getString());
+            dump(root);
+</b>
+            // <i>Close the session</i>
+            session.logout();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-      } else {
-        System.out.print(p.getString());
-      }
-      System.out.println();
     }
-    NodeIterator nit=n.getNodes();
-    while (nit.hasNext()) {
-      Node cn=nit.nextNode();
-      dump (cn);
+<b>
+    /** <i>Recursively outputs the contents of the given node.</i> */
+    private static void dump(Node node) throws RepositoryException {
+        // <i>First output the node path</i>
+        System.out.println(node.getPath());
+        // <i>Skip the virtual (and large!) jcr:system subtree</i>
+        if (node.getName().equals("jcr:system")) {
+            return;
+        }
+
+        // <i>Then output the properties</i>
+        PropertyIterator properties = node.getProperties();
+        while (properties.hasNext()) {
+            Property property = properties.nextProperty();
+            if (property.getDefinition().isMultiple()) {
+                // <i>A multi-valued property, print all values</i>
+                Value[] values = property.getValues();
+                for (int i = 0; i &lt; values.length; i++) {
+                    System.out.println(
+                        property.getPath() + " = " + values[i].getString());
+                }
+            } else {
+                // <i>A single-valued property</i>
+                System.out.println(
+                    property.getPath() + " = " + property.getString());
+            }
+        }
+
+        // <i>Finally output all the child nodes recursively</i>
+        NodeIterator nodes = node.getNodes();
+        while (nodes.hasNext()) {
+            dump(nodes.nextNode());
+        }
     }
-  }
-}
-    </source>
-    Which should output something along the lines of:
-    <source>
-rep:root
+</b>
+}</source>
+    <p>
+      Running the ThirdHop class should produce output like the following:
+    </p>
+<source>Importing XML... done.
 /
 /jcr:primaryType=rep:root
 /jcr:system
-/jcr:system/jcr:primaryType=rep:system
-/jcr:system/jcr:versionStorage
-/jcr:system/jcr:versionStorage/jcr:primaryType=rep:versionStorage
-/jcr:system/jcr:versionStorage/jcr:mixinTypes=
 /testnode
 /testnode/jcr:primaryType=nt:unstructured
 /testnode/testprop=Hello, World.
@@ -407,9 +454,7 @@ rep:root
 /importxml/xhtml:html/xhtml:body/svg:svg/height=10cm
 .
 .
-.   
-    </source>
-   </p>
+.</source>
   </subsection>
   </section>
  </body>
