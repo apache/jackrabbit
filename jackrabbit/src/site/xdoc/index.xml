@@ -36,7 +36,7 @@
                 There are no releases available yet, but development is progressing quickly.
                 To get Jackrabbit right now you can <a href="doc/building.html">checkout and build</a>
                 your own instance. To see what still needs to be done before the first release, take
-                a look at the  <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">Jira Road Map</a>.
+                a look at the <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">Jira Road Map</a>.
             </p>
             <!--
             <p>
@@ -70,27 +70,29 @@
             </p>
             <p>
                 Jackrabbit exposes most of its functionality to client applications thought that the JCR v1.0 API.
-                If you want more detail on the API you can browse the Javadoc at
-                <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0" class="externalLink" title="External Link">http://www.day.com/maven/jsr170/javadocs/jcr-1.0</a><br/>
-                or download it as a zipped package at <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0.javadoc" class="externalLink" title="External Link">http://www.day.com/maven/jsr170/javadocs/jcr-1.0.javadoc</a>
+                If you want more detail on the API you can browse the
+                <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0" class="externalLink" title="External Link">Javadoc</a>
+                or download it as a
+                <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0.javadoc" class="externalLink" title="External Link">zipped package</a>
+                (right click and select "Save as...").
             </p>
             <p>
                 If you really want to know all the details, the best current documentation available
-                is the JCR v1.0 specification itself, which you can get here:
-                <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html" class="externalLink" title="External Link">http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html</a>
+                is the <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html" class="externalLink" title="External Link">JCR v1.0 specification</a> itself.
             </p>
             <p>
                 In addition to implementing the JCR API, Jackrabbit has many extensions and
                 admistrational features that are not (yet) specified by JCR.
-                (see <a href="doc/arch/overview.html">Architecture Overview</a>). You can browse the
-                internal Jackrabbit API here: <a href="http://incubator.apache.org/jackrabbit/apidocs/index.html">http://incubator.apache.org/jackrabbit/apidocs/index.html</a>
+                (see <a href="doc/arch/overview.html">Architecture Overview</a>).
+                You can also browse the internal Jackrabbit API in the
+                <a href="http://incubator.apache.org/jackrabbit/apidocs/index.html">Jackrabbit Javadocs</a>.
             </p>
         </section>
         <section name="Downloads">
             <p>
                 For a quick guide to getting the source code, see the 
                 <a href="downloads.html">Downloads</a> page.
-            </p> 
+            </p>
         </section>
         <section name ="About">
             <p>
