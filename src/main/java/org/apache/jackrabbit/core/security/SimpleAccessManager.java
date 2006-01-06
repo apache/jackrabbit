@@ -101,7 +101,7 @@ public class SimpleAccessManager implements AccessManager {
             // system has always all permissions
             return;
         } else if (anonymous) {
-            // anonymous is always denied WRITE & REMOVE premissions
+            // anonymous is always denied WRITE & REMOVE permissions
             if ((permissions & WRITE) == WRITE
                     || (permissions & REMOVE) == REMOVE) {
                 throw new AccessDeniedException();
