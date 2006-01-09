@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.config.FileSystemConfig;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -1156,6 +1157,11 @@ public class RepositoryImpl implements Repository, SessionListener,
         private final WorkspaceConfig config;
 
         /**
+         * file system (instantiated on init)
+         */
+        private FileSystem fs;
+
+        /**
          * persistence manager (instantiated on init)
          */
         private PersistenceManager persistMgr;
@@ -1211,15 +1217,6 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         /**
-         * Returns the workspace file system.
-         *
-         * @return the workspace file system
-         */
-        FileSystem getFileSystem() {
-            return config.getFileSystem();
-        }
-
-        /**
          * Returns the workspace configuration.
          *
          * @return the workspace configuration
@@ -1239,12 +1236,25 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         /**
+         * Returns the workspace file system.
+         *
+         * @return the workspace file system
+         */
+        synchronized FileSystem getFileSystem() {
+            if (!initialized) {
+                throw new IllegalStateException("not initialized");
+            }
+
+            return fs;
+        }
+
+        /**
          * Returns the workspace persistence manager.
          *
          * @return the workspace persistence manager
          * @throws RepositoryException if the persistence manager could not be instantiated/initialized
          */
-        synchronized PersistenceManager getPersistenceManager(PersistenceManagerConfig pmConfig)
+        synchronized PersistenceManager getPersistenceManager()
                 throws RepositoryException {
             if (!initialized) {
                 throw new IllegalStateException("not initialized");
@@ -1326,7 +1336,7 @@ public class RepositoryImpl implements Repository, SessionListener,
             // lock manager is lazily instantiated in order to avoid
             // 'chicken & egg' bootstrap problems
             if (lockMgr == null) {
-                lockMgr = new LockManagerImpl(getSystemSession(), config.getFileSystem());
+                lockMgr = new LockManagerImpl(getSystemSession(), fs);
             }
             return lockMgr;
         }
@@ -1354,6 +1364,7 @@ public class RepositoryImpl implements Repository, SessionListener,
          * Initializes this workspace info. The following components are
          * initialized immediately:
          * <ul>
+         * <li>file system</li>
          * <li>persistence manager</li>
          * <li>shared item state manager</li>
          * <li>observation manager factory</li>
@@ -1372,8 +1383,12 @@ public class RepositoryImpl implements Repository, SessionListener,
                 throw new IllegalStateException("already initialized");
             }
 
+            FileSystemConfig fsConfig = config.getFileSystemConfig();
+            fsConfig.init();
+            fs = fsConfig.getFileSystem();
+
             persistMgr = createPersistenceManager(new File(config.getHomeDir()),
-                    config.getFileSystem(),
+                    fs,
                     config.getPersistenceManagerConfig(),
                     rootNodeUUID,
                     nsReg,
@@ -1447,13 +1462,9 @@ public class RepositoryImpl implements Repository, SessionListener,
             }
 
             // close workspace file system
-            try {
-                // close workspace file system
-                config.getFileSystem().close();
-            } catch (FileSystemException e) {
-                log.error("error while closing filesystem of workspace "
-                        + config.getName(), e);
-            }
+            FileSystemConfig fsConfig = config.getFileSystemConfig();
+            fsConfig.dispose();
+            fs = null;
         }
     }
 }
