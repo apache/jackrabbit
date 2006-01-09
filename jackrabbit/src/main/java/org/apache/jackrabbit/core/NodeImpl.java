@@ -3837,18 +3837,4 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         session.getLockManager().checkLock(this);
     }
-
-    //--------------------------------------------------------< inner classes >
-    private static class CallContext extends SecurityManager {
-        Class getCaller() {
-            // getClassContext()[0] is 'this' class
-            // getClassContext()[1] is the class that called getCaller() (i.e. 'this' method)
-            // getClassContext()[2] is the one we're looking for
-            return super.getClassContext()[2];
-        }
-
-        Class[] getCallerStack() {
-            return super.getClassContext();
-        }
-    }
 }
