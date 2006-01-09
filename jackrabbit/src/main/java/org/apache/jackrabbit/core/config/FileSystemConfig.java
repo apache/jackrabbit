@@ -21,9 +21,12 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 
 /**
  * File system configuration. This bean configuration class
- * is used to create a configured file system objects. The file system
+ * is used to create a configured file system object. The file system
  * is instantiated by the {@link #init() init()} method, and accessible
- * using the {@link #getFileSystem() getFileSystem()} method.
+ * using the {@link #getFileSystem() getFileSystem()} method. Calling
+ * {@link #dispose() dispose()} will close and dispose a file system instance
+ * previously created by the {@link #init() init()} method.
+ *
  */
 public class FileSystemConfig extends BeanConfig {
 
@@ -64,6 +67,24 @@ public class FileSystemConfig extends BeanConfig {
         } else {
             throw new IllegalStateException(
             "File system has already been initialized.");
+        }
+    }
+
+    /**
+     * Closes and disposes a file system instance previously created by the
+     * {@link #init() init()} method, i.e. resets this instance to the
+     * <i>uninitialized</i> state.
+     */
+    public void dispose() {
+        if (fs != null) {
+            try {
+                fs.close();
+            } catch (FileSystemException fse) {
+                // ignore...
+            }
+            fs = null;
+        } else {
+            throw new IllegalStateException("File system has not been initialized.");
         }
     }
 

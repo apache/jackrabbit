@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-
 /**
  * Workspace configuration. This configuration class is used to
  * create configured workspace objects.
@@ -73,12 +71,11 @@ public class WorkspaceConfig {
     }
 
     /**
-     * Initializes the workspace file system and search index implementations.
+     * Initializes the search index implementation.
      *
      * @throws ConfigurationException on initialization errors
      */
     public void init() throws ConfigurationException {
-        fsc.init();
         if (sc != null) {
             sc.init();
         }
@@ -100,15 +97,6 @@ public class WorkspaceConfig {
      */
     public String getName() {
         return name;
-    }
-
-    /**
-     * Returns the workspace file system implementation.
-     *
-     * @return file system implementation
-     */
-    public FileSystem getFileSystem() {
-        return fsc.getFileSystem();
     }
 
     /**
