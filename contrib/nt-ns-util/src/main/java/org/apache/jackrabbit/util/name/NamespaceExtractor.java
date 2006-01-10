@@ -1,5 +1,5 @@
 /*
- * $Id:$
+ * $Id$
  *
  * Copyright 2002-2004 Day Management AG, Switzerland.
  *
@@ -93,7 +93,7 @@ public class NamespaceExtractor {
 
             try{
                 // if prefix already used
-                if (mapping.getURI(prefix) != null){
+                if (mapping.hasPrefix(prefix)){
                     int c;
                     Integer co = (Integer) basePrefixes.get(prefix);
                     if (co == null) {
