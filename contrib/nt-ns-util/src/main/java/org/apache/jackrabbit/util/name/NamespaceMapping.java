@@ -53,6 +53,7 @@ public class NamespaceMapping extends AbstractNamespaceResolver {
         this.base = base;
     }
 
+
     /**
      * {@inheritDoc}
      */
@@ -77,6 +78,13 @@ public class NamespaceMapping extends AbstractNamespaceResolver {
         } else {
             return base.getURI(prefix);
         }
+    }
+
+    /**
+     * Returns true if prefix is already mapped to some URI. Returns false otherwise.
+     */
+    public boolean hasPrefix(String prefix) {
+        return prefixToURI.containsKey(prefix);
     }
 
     /**
