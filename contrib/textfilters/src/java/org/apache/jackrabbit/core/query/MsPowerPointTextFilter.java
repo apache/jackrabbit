@@ -26,8 +26,6 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.core.query.lucene.FieldNames;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
@@ -43,8 +41,6 @@ import org.apache.poi.util.LittleEndian;
  * class <code>org.apache.slide.extractor.MSPowerPointExtractor</code>
  */
 public class MsPowerPointTextFilter implements TextFilter {
-	/** logger */
-	private Log log = LogFactory.getLog(MsPowerPointTextFilter.class);
 
 	/**
 	 * Reader
@@ -72,7 +68,7 @@ public class MsPowerPointTextFilter implements TextFilter {
 					}
 				}
 			} catch (Exception e) {
-				log.error("Unable to load read file", e);
+				
 			}
 		}
 	}
