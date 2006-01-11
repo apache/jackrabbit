@@ -20,13 +20,14 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.version.GenericVersionSelector;
-import org.apache.jackrabbit.core.version.InternalVersion;
-import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.version.AbstractVersion;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
@@ -67,7 +68,7 @@ import java.util.Iterator;
 /**
  * A <code>WorkspaceImpl</code> ...
  */
-public class WorkspaceImpl implements Workspace {
+public class WorkspaceImpl implements Workspace, EventStateCollectionFactory {
 
     private static Logger log = Logger.getLogger(WorkspaceImpl.class);
 
@@ -123,9 +124,8 @@ public class WorkspaceImpl implements Workspace {
      * @param session   The session
      */
     protected WorkspaceImpl(WorkspaceConfig wspConfig,
-                  SharedItemStateManager stateMgr,
-                  RepositoryImpl rep,
-                  SessionImpl session) {
+                            SharedItemStateManager stateMgr, RepositoryImpl rep,
+                            SessionImpl session) {
         this.wspConfig = wspConfig;
         this.rep = rep;
         this.stateMgr = createItemStateManager(stateMgr);
@@ -573,7 +573,7 @@ public class WorkspaceImpl implements Workspace {
         // add all versions to map of versions to restore
         final HashMap toRestore = new HashMap();
         for (int i = 0; i < versions.length; i++) {
-            VersionImpl v = (VersionImpl) versions[i];
+            AbstractVersion v = (AbstractVersion) versions[i];
             VersionHistory vh = v.getContainingHistory();
             // check for collision
             if (toRestore.containsKey(vh.getUUID())) {
@@ -606,16 +606,16 @@ public class WorkspaceImpl implements Workspace {
             // now restore all versions that have a node in the ws
             int numRestored = 0;
             while (toRestore.size() > 0) {
-                InternalVersion[] restored = null;
+                Version[] restored = null;
                 Iterator iter = toRestore.values().iterator();
                 while (iter.hasNext()) {
-                    VersionImpl v = (VersionImpl) iter.next();
+                    AbstractVersion v = (AbstractVersion) iter.next();
                     try {
                         NodeImpl node = (NodeImpl) session.getNodeByUUID(v.getFrozenNode().getFrozenUUID());
-                        restored = node.internalRestore(v.getInternalVersion(), vsel, removeExisting);
+                        restored = node.internalRestore(v, vsel, removeExisting);
                         // remove restored versions from set
                         for (int i = 0; i < restored.length; i++) {
-                            toRestore.remove(restored[i].getVersionHistory().getId());
+                            toRestore.remove(restored[i].getContainingHistory().getUUID());
                         }
                         numRestored += restored.length;
                         break;
@@ -728,6 +728,20 @@ public class WorkspaceImpl implements Workspace {
      */
     protected LocalItemStateManager createItemStateManager(SharedItemStateManager shared) {
         return new LocalItemStateManager(shared, this);
+    }
+
+    //------------------------------------------< EventStateCollectionFactory >
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Implemented in this object and forwarded rather than {@link #obsMgr}
+     * since creation of the latter is lazy.
+     */
+    public EventStateCollection createEventStateCollection()
+            throws RepositoryException {
+
+        return ((ObservationManagerImpl) getObservationManager()).createEventStateCollection();
     }
 }
 

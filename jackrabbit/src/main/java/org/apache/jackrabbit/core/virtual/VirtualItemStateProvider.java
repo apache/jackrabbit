@@ -28,7 +28,7 @@ import javax.jcr.RepositoryException;
 /**
  * This Interface defines a virtual item state provider.
  */
-public interface VirtualItemStateProvider extends ItemStateManager, ItemStateListener {
+public interface VirtualItemStateProvider extends ItemStateManager {
 
     /**
      * Checks if the id refers to the root of a virtual tree.

@@ -22,8 +22,11 @@ import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.XALockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
-import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.VersionManagerImpl;
+import org.apache.jackrabbit.core.version.XAVersionManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
@@ -93,10 +96,7 @@ public class XASessionImpl extends SessionImpl
 
         super(rep, loginContext, wspConfig);
 
-        txResources = new InternalXAResource[] {
-            (XAItemStateManager) wsp.getItemStateManager(),
-            (XALockManager) getLockManager()
-        };
+        init();
     }
 
     /**
@@ -115,10 +115,21 @@ public class XASessionImpl extends SessionImpl
 
         super(rep, subject, wspConfig);
 
+        init();
+    }
+
+    /**
+     * Initialize this object.
+     */
+    private void init() throws RepositoryException {
+        XAItemStateManager stateMgr = (XAItemStateManager) wsp.getItemStateManager();
+        XALockManager lockMgr = (XALockManager) getLockManager();
+        XAVersionManager versionMgr = (XAVersionManager) getVersionManager();
+
         txResources = new InternalXAResource[] {
-            (XAItemStateManager) wsp.getItemStateManager(),
-            (XALockManager) getLockManager()
+            stateMgr, lockMgr, versionMgr
         };
+        stateMgr.setVirtualProvider(versionMgr);
     }
 
     /**
@@ -129,6 +140,25 @@ public class XASessionImpl extends SessionImpl
                                                     RepositoryImpl rep,
                                                     SessionImpl session) {
         return new XAWorkspace(wspConfig, stateMgr, rep, session);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected VersionManager createVersionManager(RepositoryImpl rep)
+            throws RepositoryException {
+
+        VersionManagerImpl vMgr = (VersionManagerImpl) rep.getVersionManager();
+        return new XAVersionManager(vMgr, rep.getNodeTypeRegistry(), wsp);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
+                                            HierarchyManager hierMgr) {
+        return new XAItemManager(itemStateMgr, hierMgr, this,
+                ntMgr.getRootNodeDefinition(), rep.getRootNodeUUID());
     }
 
     /**

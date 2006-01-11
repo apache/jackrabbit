@@ -24,7 +24,7 @@ import javax.jcr.version.VersionException;
 /**
  * Implements a <code>InternalFrozenVersionHistory</code>
  */
-public class InternalFrozenVHImpl extends InternalFreezeImpl
+class InternalFrozenVHImpl extends InternalFreezeImpl
         implements InternalFrozenVersionHistory {
 
     /**
@@ -37,7 +37,7 @@ public class InternalFrozenVHImpl extends InternalFreezeImpl
      *
      * @param node
      */
-    public InternalFrozenVHImpl(VersionManagerImpl vMgr, NodeStateEx node,
+    public InternalFrozenVHImpl(AbstractVersionManager vMgr, NodeStateEx node,
                                 InternalVersionItem parent) {
         super(vMgr, parent);
         this.node = node;
@@ -71,7 +71,7 @@ public class InternalFrozenVHImpl extends InternalFreezeImpl
     public InternalVersionHistory getVersionHistory()
             throws VersionException {
         try {
-            return getVersionManager().getVersionHistory(getVersionHistoryId());
+            return vMgr.getVersionHistory(getVersionHistoryId());
         } catch (RepositoryException e) {
             throw new VersionException(e);
         }
@@ -90,7 +90,7 @@ public class InternalFrozenVHImpl extends InternalFreezeImpl
     public InternalVersion getBaseVesion()
             throws VersionException {
         try {
-            InternalVersionHistory history = getVersionManager().getVersionHistory(getVersionHistoryId());
+            InternalVersionHistory history = vMgr.getVersionHistory(getVersionHistoryId());
             return history.getVersion(getBaseVersionId());
         } catch (RepositoryException e) {
             throw new VersionException(e);

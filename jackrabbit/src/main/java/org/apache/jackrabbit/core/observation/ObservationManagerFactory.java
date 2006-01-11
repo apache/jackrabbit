@@ -35,7 +35,8 @@ import java.util.Set;
  * creates new {@link EventStateCollection}s that can be dispatched
  * to registered {@link javax.jcr.observation.EventListener}s.
  */
-public final class ObservationManagerFactory implements Runnable {
+public final class ObservationManagerFactory extends EventDispatcher
+        implements Runnable {
 
     /**
      * Logger instance for this class
@@ -171,10 +172,10 @@ public final class ObservationManagerFactory implements Runnable {
     }
 
     /**
+     * {@inheritDoc}
+     * <p/>
      * Gives this observation manager the oportunity to
      * prepare the events for dispatching.
-     *
-     * @param events the {@link EventState}s to prepare.
      */
     void prepareEvents(EventStateCollection events) {
         Set consumers = new HashSet();
@@ -187,10 +188,7 @@ public final class ObservationManagerFactory implements Runnable {
     }
 
     /**
-     * Prepares changes that involve deleted item states.
-     *
-     * @param events the event state collection.
-     * @param changes the changes.
+     * {@inheritDoc}
      */
     void prepareDeleted(EventStateCollection events, ChangeLog changes) {
         Set consumers = new HashSet();
@@ -203,10 +201,10 @@ public final class ObservationManagerFactory implements Runnable {
     }
 
     /**
+     * {@inheritDoc}
+     * <p/>
      * Dispatches the {@link EventStateCollection events} to all
      * registered {@link javax.jcr.observation.EventListener}s.
-     *
-     * @param events the {@link EventState}s to dispatch.
      */
     void dispatchEvents(EventStateCollection events) {
         // notify synchronous listeners

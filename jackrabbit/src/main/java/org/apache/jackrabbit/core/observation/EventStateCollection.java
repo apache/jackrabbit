@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Collections;
 
 /**
  * The <code>EventStateCollection</code> class implements how {@link EventState}
@@ -70,9 +71,9 @@ public final class EventStateCollection {
     private final List events = new ArrayList();
 
     /**
-     * The <code>ObservationManagerFactory</code> that notifies the EventListeners.
+     * Event dispatcher.
      */
-    private final ObservationManagerFactory dispatcher;
+    private final EventDispatcher dispatcher;
 
     /**
      * The session that created these events
@@ -82,9 +83,10 @@ public final class EventStateCollection {
     /**
      * Creates a new empty <code>EventStateCollection</code>.
      *
+     * @param dispatcher event dispatcher
      * @param session the session that created these events.
      */
-    EventStateCollection(ObservationManagerFactory dispatcher,
+    EventStateCollection(EventDispatcher dispatcher,
                          SessionImpl session) {
         this.dispatcher = dispatcher;
         this.session = session;
@@ -420,6 +422,22 @@ public final class EventStateCollection {
      */
     Iterator iterator() {
         return events.iterator();
+    }
+
+    /**
+     * Return the list of events.
+     * @return list of events
+     */
+    List getEvents() {
+        return Collections.unmodifiableList(events);
+    }
+
+    /**
+     * Return the session who is the origin of this events.
+     * @return event source
+     */
+    SessionImpl getSession() {
+        return session;
     }
 
     /**

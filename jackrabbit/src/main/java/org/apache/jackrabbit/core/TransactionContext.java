@@ -112,6 +112,7 @@ public class TransactionContext implements Runnable {
      */
     public synchronized void prepare() throws XAException {
         status = Status.STATUS_PREPARING;
+        beforeOperation();
 
         TransactionException txe = null;
         for (int i = 0; i < resources.length; i++) {
@@ -130,6 +131,7 @@ public class TransactionContext implements Runnable {
                 }
             }
         }
+        afterOperation();
         status = Status.STATUS_PREPARED;
 
         Thread rollbackThread = new Thread(this, "RollbackThread");
@@ -154,6 +156,7 @@ public class TransactionContext implements Runnable {
             throw new XAException(XAException.XA_RBTIMEOUT);
         }
         status = Status.STATUS_COMMITTING;
+        beforeOperation();
 
         TransactionException txe = null;
         for (int i = 0; i < resources.length; i++) {
@@ -172,6 +175,7 @@ public class TransactionContext implements Runnable {
                 }
             }
         }
+        afterOperation();
         status = Status.STATUS_COMMITTED;
 
         if (txe != null) {
@@ -191,6 +195,7 @@ public class TransactionContext implements Runnable {
             throw new XAException(XAException.XA_RBTIMEOUT);
         }
         status = Status.STATUS_ROLLING_BACK;
+        beforeOperation();
 
         int errors = 0;
         for (int i = 0; i < resources.length; i++) {
@@ -202,7 +207,9 @@ public class TransactionContext implements Runnable {
                 errors++;
             }
         }
+        afterOperation();
         status = Status.STATUS_ROLLEDBACK;
+
         if (errors != 0) {
             throw new XAException(XAException.XA_RBOTHER);
         }
@@ -231,6 +238,26 @@ public class TransactionContext implements Runnable {
                 }
                 log.warn("Transaction rolled back because timeout expired.");
             }
+        }
+    }
+
+    /**
+     * Invoke all of the registered resources' {@link InternalXAResource#beforeOperation}
+     * methods.
+     */
+    private void beforeOperation() {
+        for (int i = 0; i < resources.length; i++) {
+            resources[i].beforeOperation(this);
+        }
+    }
+
+    /**
+     * Invoke all of the registered resources' {@link InternalXAResource#afterOperation}
+     * methods.
+     */
+    private void afterOperation() {
+        for (int i = 0; i < resources.length; i++) {
+            resources[i].afterOperation(this);
         }
     }
 }

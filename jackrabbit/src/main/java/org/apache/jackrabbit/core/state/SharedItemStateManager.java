@@ -27,7 +27,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
@@ -36,6 +36,7 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.io.PrintStream;
@@ -130,6 +131,12 @@ public class SharedItemStateManager
     private final NodeTypeRegistry ntReg;
 
     /**
+     * Flag indicating whether this item state manager uses node references to
+     * verify integrity of its reference properties.
+     */
+    private final boolean usesReferences;
+
+    /**
      * uuid of root node
      */
     private final String rootNodeUUID;
@@ -164,11 +171,13 @@ public class SharedItemStateManager
      */
     public SharedItemStateManager(PersistenceManager persistMgr,
                                   String rootNodeUUID,
-                                  NodeTypeRegistry ntReg)
+                                  NodeTypeRegistry ntReg,
+                                  boolean usesReferences)
             throws ItemStateException {
         cache = new ItemStateReferenceCache();
         this.persistMgr = persistMgr;
         this.ntReg = ntReg;
+        this.usesReferences = usesReferences;
         this.rootNodeUUID = rootNodeUUID;
         // create root node state if it doesn't yet exist
         if (!hasNonVirtualItemState(new NodeId(rootNodeUUID))) {
@@ -378,69 +387,89 @@ public class SharedItemStateManager
     }
 
     /**
-     * Store modifications registered in a <code>ChangeLog</code>. The items
-     * contained in the <tt>ChangeLog</tt> are not states returned by this
-     * item state manager but rather must be reconnected to items provided
-     * by this state manager.<p/>
-     * After successfully storing the states the observation manager is informed
-     * about the changes, if an observation manager is passed to this method.<p/>
-     * NOTE: This method is not synchronized, because all methods it invokes
-     * on instance members (such as {@link PersistenceManager#store} are
-     * considered to be thread-safe. Should this ever change, the
-     * synchronization status has to be re-examined.
-     *
-     * @param local  change log containing local items
-     * @param obsMgr the observation manager to inform, or <code>null</code> if
-     *               no observation manager should be informed.
-     * @throws ReferentialIntegrityException if a new or modified REFERENCE
-     *                                       property refers to a non-existent
-     *                                       target or if a removed node is still
-     *                                       being referenced
-     * @throws StaleItemStateException       if at least one of the affected item
-     *                                       states has become stale
-     * @throws ItemStateException            if another error occurs
+     * Object representing a single update operation.
      */
-    public void store(ChangeLog local, ObservationManagerImpl obsMgr)
-            throws ReferentialIntegrityException, StaleItemStateException,
-            ItemStateException {
-
-        ChangeLog shared = new ChangeLog();
+    class Update {
 
         /**
-         * array of lists of dirty virtual node references per virtual provider.
-         * since NV-type references must be persisted via the respective VISP
-         * and not by the SISM, they are filtered out below.
-         *
-         * todo: FIXME handling of virtual node references is erm...  messy
-         *       VISP are eventually replaced by a more general 'mounting'
-         *       mechanism, probably on the API level and not on the item state
-         *       layer.
+         * Local change log.
          */
-        List[] virtualNodeReferences = new List[virtualProviders.length];
+        private final ChangeLog local;
 
-        EventStateCollection events = null;
-        if (obsMgr != null) {
-            events = obsMgr.createEventStateCollection();
-            events.prepareDeleted(local);
+        /**
+         * Event state collection factory.
+         */
+        private final EventStateCollectionFactory factory;
+
+        /**
+         * Virtual provider containing references to be left out when updating
+         * references.
+         */
+        private final VirtualItemStateProvider virtualProvider;
+
+        /**
+         * Shared change log.
+         */
+        private ChangeLog shared;
+
+        /**
+         * Virtual node references.
+         */
+        private List[] virtualNodeReferences;
+
+        /**
+         * Events to dispatch.
+         */
+        private EventStateCollection events;
+
+        /**
+         * Create a new instance of this class.
+         */
+        public Update(ChangeLog local, EventStateCollectionFactory factory,
+                      VirtualItemStateProvider virtualProvider) {
+            this.local = local;
+            this.factory = factory;
+            this.virtualProvider = virtualProvider;
         }
 
-        acquireWriteLock();
-        boolean holdingWriteLock = true;
+        /**
+         * Begin update operation. Prepares everything upto the point where
+         * the persistence manager's <code>store</code> method may be invoked.
+         * If this method succeeds, a write lock will have been acquired on the
+         * item state manager and either {@link #end()} or {@link #cancel()} has
+         * to be called in order to release it.
+         */
+        public void begin() throws ItemStateException, ReferentialIntegrityException {
+            shared = new ChangeLog();
 
-        try {
-            /**
-             * Update node references based on modifications in change log
-             * (added/modified/removed REFERENCE properties)
-             */
-            updateReferences(local);
-            /**
-             * Check whether reference targets exist/were not removed
-             */
-            checkReferentialIntegrity(local);
+            virtualNodeReferences = new List[virtualProviders.length];
+
+            try {
+                events = factory.createEventStateCollection();
+            } catch (RepositoryException e) {
+                String msg = "Unable to create event state collection.";
+                log.error(msg);
+                throw new ItemStateException(msg, e);
+            }
+
+            acquireWriteLock();
 
             boolean succeeded = false;
 
             try {
+                if (usesReferences) {
+                    /**
+                     * Update node references based on modifications in change log
+                     * (added/modified/removed REFERENCE properties)
+                     */
+                    updateReferences(local, virtualProvider);
+                }
+
+                /**
+                 * Check whether reference targets exist/were not removed
+                 */
+                checkReferentialIntegrity(local);
+
                 /**
                  * Reconnect all items contained in the change log to their
                  * respective shared item and add the shared items to a
@@ -502,13 +531,32 @@ public class SharedItemStateManager
                 }
 
                 /* create event states */
-                if (events != null) {
-                    events.createEventStates(rootNodeUUID, local, this);
-                }
+                events.createEventStates(rootNodeUUID, local,
+                        SharedItemStateManager.this);
 
                 /* Push all changes from the local items to the shared items */
                 local.push();
 
+                succeeded = true;
+
+            } finally {
+                if (!succeeded) {
+                    cancel();
+                }
+            }
+        }
+
+        /**
+         * End update operation. This will store the changes to the associated
+         * <code>PersistenceManager</code>. At the end of this operation, an
+         * eventual read or write lock on the item state manager will have
+         * been released.
+         * @throws ItemStateException if some error occurs
+         */
+        public void end() throws ItemStateException {
+            boolean succeeded = false;
+
+            try {
                 /* Store items in the underlying persistence manager */
                 long t0 = System.currentTimeMillis();
                 persistMgr.store(shared);
@@ -517,71 +565,119 @@ public class SharedItemStateManager
                 if (log.isDebugEnabled()) {
                     log.debug("persisting change log " + shared + " took " + (t1 - t0) + "ms");
                 }
+            } finally {
+                if (!succeeded) {
+                    cancel();
+                }
+            }
+
+            boolean holdingWriteLock = true;
+
+            try {
+                /* Let the shared item listeners know about the change */
+                shared.persisted();
+
+                /* notify virtual providers about node references */
+                for (int i = 0; i < virtualNodeReferences.length; i++) {
+                    List virtualRefs = virtualNodeReferences[i];
+                    if (virtualRefs != null) {
+                        for (Iterator iter = virtualRefs.iterator(); iter.hasNext();) {
+                            NodeReferences refs = (NodeReferences) iter.next();
+                            virtualProviders[i].setNodeReferences(refs);
+                        }
+                    }
+                }
+
+                // downgrade to read lock
+                acquireReadLock();
+                rwLock.writeLock().release();
+                holdingWriteLock = false;
+
+                /* dispatch the events */
+                events.dispatch();
 
             } finally {
-
-                /**
-                 * If some store operation was unsuccessful, we have to reload
-                 * the state of modified and deleted items from persistent
-                 * storage.
-                 */
-                if (!succeeded) {
-                    local.disconnect();
-
-                    for (Iterator iter = shared.modifiedStates(); iter.hasNext();) {
-                        ItemState state = (ItemState) iter.next();
-                        try {
-                            state.copy(loadItemState(state.getId()));
-                        } catch (ItemStateException e) {
-                            state.discard();
-                        }
-                    }
-                    for (Iterator iter = shared.deletedStates(); iter.hasNext();) {
-                        ItemState state = (ItemState) iter.next();
-                        try {
-                            state.copy(loadItemState(state.getId()));
-                        } catch (ItemStateException e) {
-                            state.discard();
-                        }
-                    }
-                    for (Iterator iter = shared.addedStates(); iter.hasNext();) {
-                        ItemState state = (ItemState) iter.next();
-                        state.discard();
-                    }
+                if (holdingWriteLock) {
+                    // exception occured before downgrading lock
+                    rwLock.writeLock().release();
+                } else {
+                    rwLock.readLock().release();
                 }
-            }
-
-            /* Let the shared item listeners know about the change */
-            shared.persisted();
-
-            /* notify virtual providers about node references */
-            for (int i = 0; i < virtualNodeReferences.length; i++) {
-                List virtualRefs = virtualNodeReferences[i];
-                if (virtualRefs != null) {
-                    for (Iterator iter = virtualRefs.iterator(); iter.hasNext();) {
-                        NodeReferences refs = (NodeReferences) iter.next();
-                        virtualProviders[i].setNodeReferences(refs);
-                    }
-                }
-            }
-
-            // downgrade to read lock
-            acquireReadLock();
-            rwLock.writeLock().release();
-            holdingWriteLock = false;
-
-            /* dispatch the events */
-            if (events != null) {
-                events.dispatch();
-            }
-        } finally {
-            if (holdingWriteLock) {
-                // exception occured before downgrading lock
-                rwLock.writeLock().release();
-            } else {
-                rwLock.readLock().release();
             }
         }
+
+        /**
+         * Cancel update operation. At the end of this operation, the write lock
+         * on the item state manager will have been released.
+         */
+        public void cancel() {
+            local.disconnect();
+
+            for (Iterator iter = shared.modifiedStates(); iter.hasNext();) {
+                ItemState state = (ItemState) iter.next();
+                try {
+                    state.copy(loadItemState(state.getId()));
+                } catch (ItemStateException e) {
+                    state.discard();
+                }
+            }
+            for (Iterator iter = shared.deletedStates(); iter.hasNext();) {
+                ItemState state = (ItemState) iter.next();
+                try {
+                    state.copy(loadItemState(state.getId()));
+                } catch (ItemStateException e) {
+                    state.discard();
+                }
+            }
+            for (Iterator iter = shared.addedStates(); iter.hasNext();) {
+                ItemState state = (ItemState) iter.next();
+                state.discard();
+            }
+            rwLock.writeLock().release();
+        }
+    }
+
+    /**
+     * Begin update operation. This will return an object that can itself be
+     * ended/cancelled.
+     */
+    public Update beginUpdate(ChangeLog local, EventStateCollectionFactory factory,
+                              VirtualItemStateProvider virtualProvider)
+            throws ReferentialIntegrityException, StaleItemStateException,
+                   ItemStateException {
+
+        Update update = new Update(local, factory, virtualProvider);
+        update.begin();
+        return update;
+    }
+
+    /**
+     * Store modifications registered in a <code>ChangeLog</code>. The items
+     * contained in the <tt>ChangeLog</tt> are not states returned by this
+     * item state manager but rather must be reconnected to items provided
+     * by this state manager.<p/>
+     * After successfully storing the states the observation manager is informed
+     * about the changes, if an observation manager is passed to this method.<p/>
+     * NOTE: This method is not synchronized, because all methods it invokes
+     * on instance members (such as {@link PersistenceManager#store} are
+     * considered to be thread-safe. Should this ever change, the
+     * synchronization status has to be re-examined.
+     *
+     * @param local   change log containing local items
+     * @param factory event state collection factory
+     * @throws ReferentialIntegrityException if a new or modified REFERENCE
+     *                                       property refers to a non-existent
+     *                                       target or if a removed node is still
+     *                                       being referenced
+     * @throws StaleItemStateException       if at least one of the affected item
+     *                                       states has become stale
+     * @throws ItemStateException            if another error occurs
+     */
+    public void update(ChangeLog local, EventStateCollectionFactory factory)
+            throws ReferentialIntegrityException, StaleItemStateException,
+                   ItemStateException {
+
+        beginUpdate(local, factory, null).end();
     }
 
     //-------------------------------------------------------< implementation >
@@ -801,9 +897,13 @@ public class SharedItemStateManager
      * anymore afterwards.
      *
      * @param changes change log
+     * @param virtualProvider virtual provider that may already contain a
+     *                        node references object
      * @throws ItemStateException if an error occurs
      */
-    protected void updateReferences(ChangeLog changes) throws ItemStateException {
+    protected void updateReferences(ChangeLog changes, 
+                                    VirtualItemStateProvider virtualProvider) 
+            throws ItemStateException {
 
         // process added REFERENCE properties
         for (Iterator iter = changes.addedStates(); iter.hasNext();) {
@@ -817,6 +917,10 @@ public class SharedItemStateManager
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         String uuid = vals[i].toString();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        if (virtualProvider != null && 
+                                virtualProvider.hasNodeReferences(refsId)) {
+                            continue;
+                        }
                         NodeReferences refs =
                                 getOrCreateNodeReferences(refsId, changes);
                         // add reference
@@ -843,6 +947,10 @@ public class SharedItemStateManager
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         String uuid = vals[i].toString();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        if (virtualProvider != null && 
+                                virtualProvider.hasNodeReferences(refsId)) {
+                            continue;
+                        }
                         // either get node references from change log or load from
                         // persistence manager
                         NodeReferences refs = changes.get(refsId);
@@ -863,6 +971,10 @@ public class SharedItemStateManager
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         String uuid = vals[i].toString();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        if (virtualProvider != null && 
+                                virtualProvider.hasNodeReferences(refsId)) {
+                            continue;
+                        }
                         NodeReferences refs =
                                 getOrCreateNodeReferences(refsId, changes);
                         // add reference
@@ -886,6 +998,10 @@ public class SharedItemStateManager
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         String uuid = vals[i].toString();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        if (virtualProvider != null && 
+                                virtualProvider.hasNodeReferences(refsId)) {
+                            continue;
+                        }
                         // either get node references from change log or
                         // load from persistence manager
                         NodeReferences refs = changes.get(refsId);

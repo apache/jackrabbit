@@ -1397,7 +1397,7 @@ public class RepositoryImpl implements Repository, SessionListener,
             // create item state manager
             try {
                 itemStateMgr =
-                        new SharedItemStateManager(persistMgr, rootNodeUUID, ntReg);
+                        new SharedItemStateManager(persistMgr, rootNodeUUID, ntReg, true);
                 try {
                     itemStateMgr.addVirtualItemStateProvider(
                             vMgr.getVirtualItemStateProvider());

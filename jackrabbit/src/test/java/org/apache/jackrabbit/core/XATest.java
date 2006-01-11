@@ -22,6 +22,9 @@ import javax.jcr.Repository;
 import javax.jcr.Node;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Session;
+import javax.jcr.RepositoryException;
+import javax.jcr.version.VersionException;
+import javax.jcr.version.Version;
 import javax.jcr.lock.Lock;
 import javax.transaction.UserTransaction;
 import javax.transaction.RollbackException;
@@ -33,6 +36,30 @@ import javax.transaction.RollbackException;
 public class XATest extends AbstractJCRTest {
 
     /**
+     * Other superuser.
+     */
+    private Session otherSuperuser;
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        otherSuperuser = helper.getSuperuserSession();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void tearDown() throws Exception {
+        if (otherSuperuser != null) {
+            otherSuperuser.logout();
+        }
+        super.tearDown();
+    }
+
+    /**
      * @see junit.framework#runTest
      *
      * Make sure that tested repository supports transactions
@@ -42,28 +69,6 @@ public class XATest extends AbstractJCRTest {
         if (rep.getDescriptor(Repository.OPTION_TRANSACTIONS_SUPPORTED) != null) {
             super.runTest();
         }
-    }
-
-    public void testCheckin() throws Exception {
-        // get user transaction object
-        UserTransaction utx = new UserTransactionImpl(superuser);
-
-        // start transaction
-        utx.begin();
-
-        // add node and save
-        Node n = testRootNode.addNode(nodeName1, testNodeType);
-        n.addMixin(mixVersionable);
-        testRootNode.save();
-
-        n.checkin();
-
-        assertFalse("Node must be checked-in", n.isCheckedOut());
-
-        // commit
-        utx.commit();
-
-        assertFalse("Node must be checked-in", n.isCheckedOut());
     }
 
     /**
@@ -557,6 +562,8 @@ public class XATest extends AbstractJCRTest {
         otherSuperuser.logout();
     }
 
+    //--------------------------------------------------------------< locking >
+
     /**
      * Test locking a node in one session. Verify that node is not locked
      * in other session until commit.
@@ -692,7 +699,7 @@ public class XATest extends AbstractJCRTest {
      * Test locking a new node inside a transaction.
      * @throws Exception
      */
-    public void testLockNewNode() throws Exception {
+    public void xxxtestLockNewNode() throws Exception {
         // get user transaction object, start
         UserTransaction utx = new UserTransactionImpl(superuser);
         utx.begin();
@@ -802,5 +809,162 @@ public class XATest extends AbstractJCRTest {
 
         // verify lock is live again
         assertTrue("Lock live", lock.isLive());
+    }
+
+    //-----------------------------------------------------------< versioning >
+
+    /**
+     * Checkin inside tx should not be visible to other users.
+     */
+    public void testCheckin() throws Exception {
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // add node and save
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixVersionable);
+        testRootNode.save();
+
+        // reference node in other session
+        Node nOther = otherSuperuser.getNodeByUUID(n.getUUID());
+
+        // start transaction
+        utx.begin();
+
+        // checkin node
+        n.checkin();
+
+        // assert: base versions must differ
+        assertNotSame("Base versions must differ",
+                n.getBaseVersion().getName(), nOther.getBaseVersion().getName());
+
+        // assert: version must not be visible to other session
+        try {
+            nOther.getVersionHistory().getVersion(n.getBaseVersion().getName());
+            fail("Version must not be visible to other session.");
+        } catch (VersionException e) {
+            // expected.
+        }
+
+        // commit
+        utx.commit();
+
+        // assert: base versions must be equal
+        assertSame("Base versions must be equal",
+                n.getBaseVersion().getName(), nOther.getBaseVersion().getName());
+    }
+
+    /**
+     * Checkin from two sessions simultaneously should throw when committing.
+     * @throws Exception
+     */
+    public void testConflictingCheckin() throws Exception {
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // add node and save
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixVersionable);
+        testRootNode.save();
+
+        // reference node in other session
+        Node nOther = otherSuperuser.getNodeByUUID(n.getUUID());
+
+        // start transaction
+        utx.begin();
+
+        // checkin node inside tx
+        n.checkin();
+
+        // checkin node outside tx
+        nOther.checkin();
+
+        // commit
+        try {
+            utx.commit();
+            fail("Commit failing with modified version history.");
+        } catch (RollbackException e) {
+            // expected
+        }
+    }
+
+    /**
+     * Test removed version gets invalid for other users on commit.
+     */
+    public void testRemoveVersion() throws Exception {
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // add node and save
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixVersionable);
+        testRootNode.save();
+
+        // reference node in other session
+        Node nOther = otherSuperuser.getNodeByUUID(n.getUUID());
+
+        // create two versions, reference first version in other session
+        n.checkin();
+        Version vOther = nOther.getBaseVersion();
+        n.checkout();
+        n.checkin();
+
+        // start transaction
+        utx.begin();
+
+        // remove version and commit
+        n.getVersionHistory().removeVersion(vOther.getName());
+
+        // commit
+        utx.commit();
+
+        // assert: version has become invalid
+        try {
+            vOther.getPredecessors();
+            fail("Removed version still operational.");
+        } catch (RepositoryException e) {
+            // expected
+        }
+    }
+
+    /**
+     * Test new version label becomes available to other sessions on commit.
+     */
+    public void testSetVersionLabel() throws Exception {
+        final String versionLabel = "myVersion";
+
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser);
+
+        // add node and save
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixVersionable);
+        testRootNode.save();
+
+        // reference node in other session
+        Node nOther = otherSuperuser.getNodeByUUID(n.getUUID());
+
+        // create another version
+        Version v = n.checkin();
+
+        // start transaction
+        utx.begin();
+
+        // add new version label
+        n.getVersionHistory().addVersionLabel(v.getName(), versionLabel, false);
+
+        // assert: version label unknown in other session
+        try {
+            nOther.getVersionHistory().getVersionByLabel(versionLabel);
+            fail("Version label visible outside tx.");
+        } catch (VersionException e) {
+            // expected
+        }
+
+        // commit
+        utx.commit();
+
+        // assert: version label known in other session
+        nOther.getVersionHistory().getVersionByLabel(versionLabel);
     }
 }

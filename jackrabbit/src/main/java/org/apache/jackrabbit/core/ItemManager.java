@@ -32,6 +32,8 @@ import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.AbstractVersion;
+import org.apache.jackrabbit.core.version.AbstractVersionHistory;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
@@ -81,7 +83,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
     private final NodeDefinition rootNodeDef;
     private final NodeId rootNodeId;
 
-    private final SessionImpl session;
+    protected final SessionImpl session;
 
     private final ItemStateManager itemStateProvider;
     private final HierarchyManager hierMgr;
@@ -100,9 +102,9 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
      * @param rootNodeDef       the definition of the root node
      * @param rootNodeUUID      the UUID of the root node
      */
-    ItemManager(ItemStateManager itemStateProvider, HierarchyManager hierMgr,
-                SessionImpl session, NodeDefinition rootNodeDef,
-                String rootNodeUUID) {
+    protected ItemManager(ItemStateManager itemStateProvider, HierarchyManager hierMgr,
+                          SessionImpl session, NodeDefinition rootNodeDef,
+                          String rootNodeUUID) {
         this.itemStateProvider = itemStateProvider;
         this.hierMgr = hierMgr;
         this.session = session;
@@ -493,18 +495,17 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
         if (state.getNodeTypeName().equals(QName.NT_VERSION)) {
             InternalVersion version =
                     session.getVersionManager().getVersion(state.getUUID());
-            return new VersionImpl(this, session, id, state, def, listeners, version);
+            return createVersionInstance(id, state, def, listeners);
 
         } else if (state.getNodeTypeName().equals(QName.NT_VERSIONHISTORY)) {
             InternalVersionHistory history =
                     session.getVersionManager().getVersionHistory(state.getUUID());
-            return new VersionHistoryImpl(this, session, id, state, def, listeners, history);
+            return createVersionHistoryInstance(id, state, def, listeners);
 
         } else {
             // create node object
             return new NodeImpl(this, session, id, state, def, listeners);
         }
-
     }
 
     NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
@@ -531,6 +532,42 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
         PropertyDefinition def = getDefinition(state);
         // 2. create instance
         return createPropertyInstance(state, def);
+    }
+
+    /**
+     * Create a version instance.
+     * @param id node id
+     * @param state node state
+     * @param def node definition
+     * @param listeners listeners
+     * @return version instance
+     * @throws RepositoryException if an error occurs
+     */
+    protected AbstractVersion createVersionInstance(
+            NodeId id, NodeState state, NodeDefinition def,
+            ItemLifeCycleListener[] listeners) throws RepositoryException {
+
+        InternalVersion version =
+                session.getVersionManager().getVersion(id.getUUID());
+        return new VersionImpl(this, session, id, state, def, listeners, version);
+    }
+
+    /**
+     * Create a version history instance.
+     * @param id node id
+     * @param state node state
+     * @param def node definition
+     * @param listeners listeners
+     * @return version instance
+     * @throws RepositoryException if an error occurs
+     */
+    protected AbstractVersionHistory createVersionHistoryInstance(
+            NodeId id, NodeState state, NodeDefinition def,
+            ItemLifeCycleListener[] listeners) throws RepositoryException {
+
+        InternalVersionHistory history =
+                session.getVersionManager().getVersionHistory(id.getUUID());
+        return new VersionHistoryImpl(this, session, id, state, def, listeners, history);
     }
 
     //---------------------------------------------------< item cache methods >
