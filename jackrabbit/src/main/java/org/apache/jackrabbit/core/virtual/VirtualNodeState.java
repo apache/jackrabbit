@@ -56,7 +56,7 @@ public class VirtualNodeState extends NodeState {
      * @param mixins
      * @throws RepositoryException
      */
-    public VirtualNodeState(VirtualItemStateProvider stateMgr,
+    public VirtualNodeState(AbstractVISProvider stateMgr,
                             String parentUUID,
                             String uuid,
                             QName nodeTypeName,

@@ -17,13 +17,19 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.InternalXAResource;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.PropertyType;
+import java.util.Iterator;
 
 /**
  * Extension to <code>LocalItemStateManager</code> that remembers changes on
@@ -59,31 +65,51 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     private transient ChangeLog txLog;
 
     /**
+     * Current update operation.
+     */
+    private transient SharedItemStateManager.Update update;
+
+    /**
      * Change log attribute name.
      */
     private final String attributeName;
 
     /**
+     * Optional virtual item state provider.
+     */
+    private VirtualItemStateProvider virtualProvider;
+
+    /**
      * Creates a new instance of this class.
+     *
      * @param sharedStateMgr shared state manager
-     * @param wspImpl workspace
+     * @param factory        event state collection factory
      */
     public XAItemStateManager(SharedItemStateManager sharedStateMgr,
-                              WorkspaceImpl wspImpl) {
-        this(sharedStateMgr, wspImpl, DEFAULT_ATTRIBUTE_NAME);
+                              EventStateCollectionFactory factory) {
+        this(sharedStateMgr, factory, DEFAULT_ATTRIBUTE_NAME);
     }
 
     /**
      * Creates a new instance of this class with a custom attribute name.
+     *
      * @param sharedStateMgr shared state manager
-     * @param wspImpl workspace
-     * @param attributeName attribute name
+     * @param factory        event state collection factory
+     * @param attributeName  attribute name
      */
     public XAItemStateManager(SharedItemStateManager sharedStateMgr,
-                              WorkspaceImpl wspImpl, String attributeName) {
-        super(sharedStateMgr, wspImpl);
+                              EventStateCollectionFactory factory,
+                              String attributeName) {
+        super(sharedStateMgr, factory);
 
         this.attributeName = attributeName;
+    }
+
+    /**
+     * Set optional virtual item state provider.
+     */
+    public void setVirtualProvider(VirtualItemStateProvider virtualProvider) {
+        this.virtualProvider = virtualProvider;
     }
 
     /**
@@ -104,12 +130,24 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     /**
      * {@inheritDoc}
      */
+    public void beforeOperation(TransactionContext tx) {
+        ChangeLog txLog = (ChangeLog) tx.getAttribute(attributeName);
+        if (txLog != null) {
+            ((CommitLog) commitLog.get()).setChanges(txLog);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void prepare(TransactionContext tx) throws TransactionException {
         ChangeLog txLog = (ChangeLog) tx.getAttribute(attributeName);
         if (txLog != null) {
             try {
-                ((CommitLog) commitLog.get()).setChanges(txLog);
-                sharedStateMgr.checkReferentialIntegrity(txLog);
+                if (virtualProvider != null) {
+                    updateVirtualReferences(txLog);
+                }
+                update = sharedStateMgr.beginUpdate(txLog, factory, virtualProvider);
             } catch (ReferentialIntegrityException rie) {
                 log.error(rie);
                 txLog.undo(sharedStateMgr);
@@ -118,8 +156,6 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 log.error(ise);
                 txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to prepare transaction.", ise);
-            } finally {
-                ((CommitLog) commitLog.get()).setChanges(null);
             }
         }
     }
@@ -131,18 +167,11 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         ChangeLog txLog = (ChangeLog) tx.getAttribute(attributeName);
         if (txLog != null) {
             try {
-                ((CommitLog) commitLog.get()).setChanges(txLog);
-                super.update(txLog);
-            } catch (ReferentialIntegrityException rie) {
-                log.error(rie);
-                txLog.undo(sharedStateMgr);
-                throw new TransactionException("Unable to commit transaction.", rie);
+                update.end();
             } catch (ItemStateException ise) {
                 log.error(ise);
                 txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to commit transaction.", ise);
-            } finally {
-                ((CommitLog) commitLog.get()).setChanges(null);
             }
             txLog.reset();
         }
@@ -154,13 +183,18 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     public void rollback(TransactionContext tx) {
         ChangeLog txLog = (ChangeLog) tx.getAttribute(attributeName);
         if (txLog != null) {
-            try {
-                ((CommitLog) commitLog.get()).setChanges(txLog);
-                txLog.undo(sharedStateMgr);
-            } finally {
-                ((CommitLog) commitLog.get()).setChanges(null);
+            if (update != null) {
+                update.cancel();
             }
+            txLog.undo(sharedStateMgr);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void afterOperation(TransactionContext tx) {
+        ((CommitLog) commitLog.get()).setChanges(null);
     }
 
     /**
@@ -188,6 +222,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
+        if (virtualProvider != null && virtualProvider.hasItemState(id)) {
+            return virtualProvider.getItemState(id);
+        }
         ChangeLog changeLog = getChangeLog();
         if (changeLog != null) {
             ItemState state = changeLog.get(id);
@@ -207,6 +244,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * class.
      */
     public boolean hasItemState(ItemId id) {
+        if (virtualProvider != null && virtualProvider.hasItemState(id)) {
+            return true;
+        }
         ChangeLog changeLog = getChangeLog();
         if (changeLog != null) {
             try {
@@ -232,6 +272,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
+        if (virtualProvider != null && virtualProvider.hasNodeReferences(id)) {
+            return virtualProvider.getNodeReferences(id);
+        }
         ChangeLog changeLog = getChangeLog();
         if (changeLog != null) {
             NodeReferences refs = changeLog.get(id);
@@ -251,6 +294,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * the base class.
      */
     public boolean hasNodeReferences(NodeReferencesId id) {
+        if (virtualProvider != null && virtualProvider.hasNodeReferences(id)) {
+            return true;
+        }
         ChangeLog changeLog = getChangeLog();
         if (changeLog != null) {
             if (changeLog.get(id) != null) {
@@ -274,6 +320,111 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
             txLog.merge(changeLog);
         } else {
             super.update(changeLog);
+        }
+    }
+
+    //-------------------------------------------------------< implementation >
+
+    /**
+     * Determine all node references whose targets only exist in the view of
+     * this transaction and store the modified view back to the virtual provider.
+     * @param changes change log
+     * @throws ItemStateException if an error occurs
+     */
+    private void updateVirtualReferences(ChangeLog changes) throws ItemStateException {
+        for (Iterator iter = changes.addedStates(); iter.hasNext();) {
+            ItemState state = (ItemState) iter.next();
+            if (!state.isNode()) {
+                PropertyState prop = (PropertyState) state;
+                if (prop.getType() == PropertyType.REFERENCE) {
+                    InternalValue[] vals = prop.getValues();
+                    for (int i = 0; vals != null && i < vals.length; i++) {
+                        String uuid = vals[i].toString();
+                        NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        addVirtualReference((PropertyId) prop.getId(), refsId);
+                    }
+                }
+            }
+        }
+        for (Iterator iter = changes.modifiedStates(); iter.hasNext();) {
+            ItemState state = (ItemState) iter.next();
+            if (!state.isNode()) {
+                PropertyState newProp = (PropertyState) state;
+                PropertyState oldProp =
+                        (PropertyState) getItemState(state.getId());
+                if (oldProp.getType() == PropertyType.REFERENCE) {
+                    InternalValue[] vals = oldProp.getValues();
+                    for (int i = 0; vals != null && i < vals.length; i++) {
+                        String uuid = vals[i].toString();
+                        NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        removeVirtualReference((PropertyId) oldProp.getId(), refsId);
+                    }
+                }
+                if (newProp.getType() == PropertyType.REFERENCE) {
+                    InternalValue[] vals = newProp.getValues();
+                    for (int i = 0; vals != null && i < vals.length; i++) {
+                        String uuid = vals[i].toString();
+                        NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        addVirtualReference((PropertyId) newProp.getId(), refsId);
+                    }
+                }
+            }
+        }
+        for (Iterator iter = changes.deletedStates(); iter.hasNext();) {
+            ItemState state = (ItemState) iter.next();
+            if (!state.isNode()) {
+                PropertyState prop = (PropertyState) state;
+                if (prop.getType() == PropertyType.REFERENCE) {
+                    InternalValue[] vals = prop.getValues();
+                    for (int i = 0; vals != null && i < vals.length; i++) {
+                        String uuid = vals[i].toString();
+                        NodeReferencesId refsId = new NodeReferencesId(uuid);
+                        removeVirtualReference((PropertyId) prop.getId(), refsId);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Add a virtual reference from some reference property to a virtual node.
+     * Ignored if <code>targetId</code> does not actually point to a virtual
+     * node.
+     * @param sourceId property id
+     * @param targetId node references id
+     */
+    private void addVirtualReference(PropertyId sourceId,
+                                     NodeReferencesId targetId)
+            throws NoSuchItemStateException, ItemStateException {
+
+        NodeReferences refs = virtualProvider.getNodeReferences(targetId);
+        if (refs == null && virtualProvider.hasItemState(new NodeId(targetId.getUUID()))) {
+            refs = new NodeReferences(targetId);
+        }
+        if (refs != null) {
+            refs.addReference(sourceId);
+            virtualProvider.setNodeReferences(refs);
+        }
+    }
+
+    /**
+     * Remove a virtual reference from some reference property to a virtual node.
+     * Ignored if <code>targetId</code> does not actually point to a virtual
+     * node.
+     * @param sourceId property id
+     * @param targetId node references id
+     */
+    private void removeVirtualReference(PropertyId sourceId,
+                                        NodeReferencesId targetId)
+            throws NoSuchItemStateException, ItemStateException {
+
+        NodeReferences refs = virtualProvider.getNodeReferences(targetId);
+        if (refs == null && virtualProvider.hasItemState(new NodeId(targetId.getUUID()))) {
+            refs = new NodeReferences(targetId);
+        }
+        if (refs != null) {
+            refs.removeReference(sourceId);
+            virtualProvider.setNodeReferences(refs);
         }
     }
 

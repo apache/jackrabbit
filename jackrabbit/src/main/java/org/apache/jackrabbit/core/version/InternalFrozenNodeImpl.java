@@ -40,7 +40,7 @@ import java.util.List;
 /**
  * Implements a <code>InternalFrozenNode</code>
  */
-public class InternalFrozenNodeImpl extends InternalFreezeImpl
+class InternalFrozenNodeImpl extends InternalFreezeImpl
         implements InternalFrozenNode {
 
     /**
@@ -90,7 +90,7 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @param node
      * @throws javax.jcr.RepositoryException
      */
-    public InternalFrozenNodeImpl(VersionManagerImpl vMgr, NodeStateEx node,
+    public InternalFrozenNodeImpl(AbstractVersionManager vMgr, NodeStateEx node,
                                   InternalVersionItem parent)
             throws RepositoryException {
         super(vMgr, parent);
@@ -169,7 +169,7 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
             int i = 0;
             while (iter.hasNext()) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-                freezes[i++] = (InternalFreeze) getVersionManager().getItem(entry.getUUID());
+                freezes[i++] = (InternalFreeze) vMgr.getItem(entry.getUUID());
             }
             return freezes;
         } catch (RepositoryException e) {
@@ -184,7 +184,7 @@ public class InternalFrozenNodeImpl extends InternalFreezeImpl
         try {
             NodeState.ChildNodeEntry entry  = node.getState().getChildNodeEntry(uuid);
             if (entry != null) {
-                return getVersionManager().getItem(uuid) instanceof InternalFrozenVersionHistory;
+                return vMgr.getItem(uuid) instanceof InternalFrozenVersionHistory;
             }
         } catch (RepositoryException e) {
             // ignore

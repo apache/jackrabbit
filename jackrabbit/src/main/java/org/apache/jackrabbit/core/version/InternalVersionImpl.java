@@ -31,7 +31,7 @@ import java.util.HashSet;
 /**
  * Implements a <code>InternalVersion</code>
  */
-public class InternalVersionImpl extends InternalVersionItemImpl
+class InternalVersionImpl extends InternalVersionItemImpl
         implements InternalVersion {
 
     /**
@@ -126,7 +126,7 @@ public class InternalVersionImpl extends InternalVersionItemImpl
             if (entry == null) {
                 throw new InternalError("version has no frozen node: " + getId());
             }
-            return (InternalFrozenNode) getVersionManager().getItem(entry.getUUID());
+            return (InternalFrozenNode) vMgr.getItem(entry.getUUID());
         } catch (RepositoryException e) {
             throw new IllegalStateException("unable to retrieve frozen node: " + e);
         }
@@ -210,6 +210,15 @@ public class InternalVersionImpl extends InternalVersionItemImpl
     }
 
     /**
+     * Clear the list of predecessors/successors and the label cache.
+     */
+    void clear() {
+        successors.clear();
+        predecessors.clear();
+        labelCache = null;
+    }
+
+    /**
      * adds a successor version to the internal cache
      *
      * @param successor
@@ -250,9 +259,7 @@ public class InternalVersionImpl extends InternalVersionItemImpl
         }
 
         // clear properties
-        successors.clear();
-        predecessors.clear();
-        labelCache = null;
+        clear();
     }
 
     /**
@@ -349,5 +356,12 @@ public class InternalVersionImpl extends InternalVersionItemImpl
         } else {
             return (QName[]) labelCache.toArray(new QName[labelCache.size()]);
         }
+    }
+
+    /**
+     * Invalidate this item.
+     */
+    void invalidate() {
+        node.getState().discard();
     }
 }

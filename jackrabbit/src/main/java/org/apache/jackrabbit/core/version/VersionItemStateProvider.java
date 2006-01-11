@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
@@ -40,7 +41,7 @@ import javax.jcr.RepositoryException;
 /**
  * This Class implements a virtual item state provider.
  */
-public class VersionItemStateProvider implements VirtualItemStateProvider {
+class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateListener {
 
     /**
      * the default logger

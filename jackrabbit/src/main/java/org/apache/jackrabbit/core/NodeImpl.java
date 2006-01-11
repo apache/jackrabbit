@@ -38,10 +38,8 @@ import org.apache.jackrabbit.core.version.GenericVersionSelector;
 import org.apache.jackrabbit.core.version.InternalFreeze;
 import org.apache.jackrabbit.core.version.InternalFrozenNode;
 import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
-import org.apache.jackrabbit.core.version.InternalVersion;
-import org.apache.jackrabbit.core.version.VersionHistoryImpl;
-import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.version.AbstractVersion;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -2869,7 +2867,7 @@ public class NodeImpl extends ItemImpl implements Node {
             NodeImpl node;
             try {
                 // check if versionable node exists
-                InternalFrozenNode fn = ((VersionImpl) version).getFrozenNode();
+                InternalFrozenNode fn = ((AbstractVersion) version).getFrozenNode();
                 node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
                 if (removeExisting) {
                     try {
@@ -2888,7 +2886,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             } catch (ItemNotFoundException e) {
                 // not found, create new one
-                node = addNode(relPath, ((VersionImpl) version).getFrozenNode());
+                node = addNode(relPath, ((AbstractVersion) version).getFrozenNode());
             }
 
             // recreate node from frozen state
@@ -3075,14 +3073,14 @@ public class NodeImpl extends ItemImpl implements Node {
             return null;
         }
         // test versions
-        InternalVersion v = ((VersionImpl) getBaseVersion()).getInternalVersion();
-        InternalVersion vp = ((VersionImpl) srcNode.getBaseVersion()).getInternalVersion();
+        AbstractVersion v = (AbstractVersion) getBaseVersion();
+        AbstractVersion vp = (AbstractVersion) srcNode.getBaseVersion();
         if (vp.isMoreRecent(v) && !isCheckedOut()) {
             // I f V' is a successor (to any degree) of V, then the merge result for
             // N is update. This case can be thought of as the case where N' is
             // "newer" than N and therefore N should be updated to reflect N'.
             return srcNode;
-        } else if (v.equals(vp) || v.isMoreRecent(vp)) {
+        } else if (v.isSame(vp) || v.isMoreRecent(vp)) {
             // If V' is a predecessor (to any degree) of V or if V and V' are
             // identical (i.e., are actually the same version), then the merge
             // result for N is leave. This case can be thought of as the case where
@@ -3488,7 +3486,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws UnsupportedRepositoryOperationException, RepositoryException {
 
         try {
-            internalRestore(((VersionImpl) version).getInternalVersion(), vsel, removeExisting);
+            internalRestore((AbstractVersion) version, vsel, removeExisting);
         } catch (RepositoryException e) {
             // revert session
             try {
@@ -3511,8 +3509,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param removeExisting
      * @throws RepositoryException
      */
-    protected InternalVersion[] internalRestore(InternalVersion version, VersionSelector vsel,
-                                                boolean removeExisting)
+    protected Version[] internalRestore(AbstractVersion version, VersionSelector vsel,
+                                        boolean removeExisting)
             throws RepositoryException {
 
         // fail if root version
@@ -3531,7 +3529,8 @@ public class NodeImpl extends ItemImpl implements Node {
         restored.add(version);
 
         // 2. N's jcr:baseVersion property will be changed to point to V.
-        internalSetProperty(QName.JCR_BASEVERSION, InternalValue.create(new UUID(version.getId())));
+        UUID uuid = new UUID(((NodeId) version.getId()).getUUID());
+        internalSetProperty(QName.JCR_BASEVERSION, InternalValue.create(uuid));
 
         // 4. N's jcr:predecessor property is set to null
         internalSetProperty(QName.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
@@ -3542,7 +3541,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // 3. N's jcr:isCheckedOut property is set to false.
         internalSetProperty(QName.JCR_ISCHECKEDOUT, InternalValue.create(false));
 
-        return (InternalVersion[]) restored.toArray(new InternalVersion[restored.size()]);
+        return (Version[]) restored.toArray(new Version[restored.size()]);
     }
 
     /**
@@ -3654,7 +3653,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
             } else if (child instanceof InternalFrozenVersionHistory) {
                 InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;
-                VersionHistoryImpl history = (VersionHistoryImpl) session.getNodeByUUID(f.getVersionHistoryId());
+                VersionHistory history = (VersionHistory) session.getNodeByUUID(f.getVersionHistoryId());
                 String nodeId = history.getVersionableUUID();
 
                 // check if representing versionable already exists somewhere
@@ -3673,7 +3672,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     }
                 } else {
                     // get desired version from version selector
-                    InternalVersion v = ((VersionImpl) vsel.select(history)).getInternalVersion();
+                    AbstractVersion v = (AbstractVersion) vsel.select(history);
                     NodeImpl node = addNode(child.getName(), v.getFrozenNode());
                     node.internalRestore(v, vsel, removeExisting);
                     // add this version to set

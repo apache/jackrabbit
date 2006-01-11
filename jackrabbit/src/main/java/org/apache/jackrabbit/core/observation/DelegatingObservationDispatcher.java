@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.state.ChangeLog;
 
-import javax.jcr.RepositoryException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.List;
  * This Class implements an observation dispatcher, that delegates events to
  * a set of underlying dispatchers.
  */
-public class DelegatingObservationDispatcher {
+public class DelegatingObservationDispatcher extends EventDispatcher {
 
     /**
      * the set of dispatchers
@@ -53,15 +53,48 @@ public class DelegatingObservationDispatcher {
     }
 
     /**
+     * Creates an <code>EventStateCollection</code> tied to the session
+     * given as argument.
+     *
+     * @param session event source
+     * @return new <code>EventStateCollection</code> instance
+     */
+    public EventStateCollection createEventStateCollection(SessionImpl session) {
+        return new EventStateCollection(this, session);
+    }
+
+    //------------------------------------------------------< EventDispatcher >
+
+    /**
+     * {@inheritDoc}
+     */
+    void prepareEvents(EventStateCollection events) {
+        // events will get prepared on dispatch
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    void prepareDeleted(EventStateCollection events, ChangeLog changes) {
+        // events will get prepared on dispatch
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    void dispatchEvents(EventStateCollection events) {
+        dispatch(events.getEvents(), events.getSession());
+    }
+
+    /**
      * Dispatchers a list of events to all registered dispatchers. A new
      * {@link EventStateCollection} is created for every dispatcher, fille with
      * the given event list and then dispatched.
      *
      * @param eventList
      * @param session
-     * @throws RepositoryException
      */
-    public void dispatch(List eventList, SessionImpl session) throws RepositoryException {
+    public void dispatch(List eventList, SessionImpl session) {
         Iterator iter = dispatchers.iterator();
         while (iter.hasNext()) {
             ObservationManagerFactory fac = (ObservationManagerFactory) iter.next();

@@ -31,7 +31,7 @@ import javax.jcr.observation.ObservationManager;
  * instance. The class <code>SessionLocalObservationManager</code> implements
  * this behaviour.
  */
-public class ObservationManagerImpl implements ObservationManager {
+public class ObservationManagerImpl implements ObservationManager, EventStateCollectionFactory {
 
     /**
      * The logger instance of this class
@@ -153,16 +153,6 @@ public class ObservationManagerImpl implements ObservationManager {
     }
 
     /**
-     * Creates an <code>EventStateCollection</code> tied to the session
-     * which is attached this <code>ObservationManager</code> instance.
-     *
-     * @return a new <code>EventStateCollection</code>.
-     */
-    public EventStateCollection createEventStateCollection() {
-        return new EventStateCollection(obsMgrFactory, session);
-    }
-
-    /**
      * Unregisters all EventListeners.
      */
     public void dispose() {
@@ -179,4 +169,15 @@ public class ObservationManagerImpl implements ObservationManager {
 
     }
 
+    //------------------------------------------< EventStateCollectionFactory >
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Creates an <code>EventStateCollection</code> tied to the session
+     * which is attached to this <code>ObservationManager</code> instance.
+     */
+    public EventStateCollection createEventStateCollection() {
+        return new EventStateCollection(obsMgrFactory, session);
+    }
 }
