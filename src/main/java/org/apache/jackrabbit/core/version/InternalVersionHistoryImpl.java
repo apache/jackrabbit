@@ -39,7 +39,7 @@ import java.util.Set;
 /**
  * Implements a <code>InternalVersionHistory</code>
  */
-public class InternalVersionHistoryImpl extends InternalVersionItemImpl
+class InternalVersionHistoryImpl extends InternalVersionItemImpl
         implements InternalVersionHistory {
 
     /**
@@ -67,6 +67,11 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
     private HashMap versionCache = new HashMap();
 
     /**
+     * Temporary version cache, used on a refresh.
+     */
+    private HashMap tempVersionCache = new HashMap();
+
+    /**
      * The nodes state of this version history
      */
     private NodeStateEx node;
@@ -89,7 +94,7 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * Creates a new VersionHistory object for the given node state.
      */
-    public InternalVersionHistoryImpl(VersionManagerImpl vMgr, NodeStateEx node)
+    public InternalVersionHistoryImpl(AbstractVersionManager vMgr, NodeStateEx node)
             throws RepositoryException {
         super(vMgr);
         this.node = node;
@@ -119,11 +124,12 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 labelNode = child;
                 continue;
             }
-            InternalVersionImpl v = new InternalVersionImpl(this, child, child.getName());
+            InternalVersionImpl v = createVersionInstance(child);
             versionCache.put(v.getId(), v);
             if (v.isRootVersion()) {
                 rootVersion = v;
             }
+            vMgr.versionCreated(v);
         }
 
         // resolve successors and predecessors
@@ -149,6 +155,38 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
+    }
+
+    /**
+     * Reload this object and all its dependent version objects.
+     */
+    void reload() throws RepositoryException {
+        tempVersionCache.putAll(versionCache);
+
+        init();
+
+        // invalidate all versions that are not referenced any more
+        Iterator iter = tempVersionCache.values().iterator();
+        while (iter.hasNext()) {
+            InternalVersionImpl v = (InternalVersionImpl) iter.next();
+            v.invalidate();
+        }
+        tempVersionCache.clear();
+    }
+
+    /**
+     * Create a version instance. May resurrect versions temporarily swapped
+     * out when refreshing this history.
+     */
+    InternalVersionImpl createVersionInstance(NodeStateEx child) {
+        InternalVersionImpl v = (InternalVersionImpl) tempVersionCache.remove(child.getUUID());
+        if (v != null) {
+            v.clear();
+        }
+        if (v == null) {
+            v = new InternalVersionImpl(this, child, child.getName());
+        }
+        return v;
     }
 
     /**
@@ -279,7 +317,7 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throw new VersionException(msg);
         }
         // check if any references (from outside the version storage) exist on this version
-        List refs = getVersionManager().getItemReferences(v);
+        List refs = vMgr.getItemReferences(v);
         if (!refs.isEmpty()) {
             throw new ReferentialIntegrityException("Unable to remove version. At least once referenced.");
         }
@@ -298,6 +336,7 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // and remove from history
         versionCache.remove(v.getId());
+        vMgr.versionDestroyed(v);
 
         // store changes
         node.store();
@@ -403,6 +442,7 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
         // update version graph
         InternalVersionImpl version = new InternalVersionImpl(this, vNode, name);
         version.resolvePredecessors();
+        vMgr.versionCreated(version);
 
         // and store
         node.store();
@@ -422,29 +462,25 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @return
      * @throws RepositoryException
      */
-    static InternalVersionHistoryImpl create(VersionManagerImpl vMgr,
+    static InternalVersionHistoryImpl create(AbstractVersionManager vMgr,
                                              NodeStateEx parent,
                                              String historyId, QName name,
-                                             NodeState nodeState,
-                                             List created)
+                                             NodeState nodeState)
             throws RepositoryException {
 
         // create history node
         NodeStateEx pNode = parent.addNode(name, QName.NT_VERSIONHISTORY, historyId, true);
-        created.add(pNode.getUUID());
 
         // set the versionable uuid
         pNode.setPropertyValue(QName.JCR_VERSIONABLEUUID, InternalValue.create(nodeState.getUUID()));
 
         // create label node
-        NodeStateEx lNode = pNode.addNode(QName.JCR_VERSIONLABELS, QName.NT_VERSIONLABELS, null, false);
-        created.add(lNode.getUUID());
+        pNode.addNode(QName.JCR_VERSIONLABELS, QName.NT_VERSIONLABELS, null, false);
 
         // create root version
         String versionId = UUID.randomUUID().toString();
 
         NodeStateEx vNode = pNode.addNode(QName.JCR_ROOTVERSION, QName.NT_VERSION, versionId, true);
-        created.add(vNode.getUUID());
 
         // initialize 'created' and 'predecessors'
         vNode.setPropertyValue(QName.JCR_CREATED, InternalValue.create(Calendar.getInstance()));
@@ -453,8 +489,7 @@ public class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // add also an empty frozen node to the root version
         NodeStateEx node = vNode.addNode(QName.JCR_FROZENNODE, QName.NT_FROZENNODE, null, true);
-        created.add(node.getUUID());
-        
+
         // initialize the internal properties
         node.setPropertyValue(QName.JCR_FROZENUUID, InternalValue.create(nodeState.getUUID()));
         node.setPropertyValue(QName.JCR_FROZENPRIMARYTYPE,

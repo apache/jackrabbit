@@ -19,13 +19,11 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.WorkspaceImpl;
-import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.RepositoryException;
 import java.util.Iterator;
 
 /**
@@ -52,9 +50,9 @@ public class LocalItemStateManager
     protected final SharedItemStateManager sharedStateMgr;
 
     /**
-     * Local WorkspaceImpl instance.
+     * Event state collection factory.
      */
-    protected final WorkspaceImpl wspImpl;
+    protected final EventStateCollectionFactory factory;
 
     /**
      * Flag indicating whether this item state manager is in edit mode
@@ -68,20 +66,14 @@ public class LocalItemStateManager
 
     /**
      * Creates a new <code>LocalItemStateManager</code> instance.
-     * todo LocalItemStateManager without a wspImpl will not generate observation events!
-     *
      * @param sharedStateMgr shared state manager
-     * @param wspImpl        the workspace instance where this item state manager
-     *                       belongs to, or <code>null</code> if this item state manager is not
-     *                       associated with a workspace. This is the case for the version item state
-     *                       manager. Version item states are not associated with a specific workspace
-     *                       instance.
+     * @param factory event state collection factory
      */
     public LocalItemStateManager(SharedItemStateManager sharedStateMgr,
-                                 WorkspaceImpl wspImpl) {
+                                 EventStateCollectionFactory factory) {
         cache = new ItemStateReferenceCache();
         this.sharedStateMgr = sharedStateMgr;
-        this.wspImpl = wspImpl;
+        this.factory = factory;
     }
 
     /**
@@ -325,23 +317,9 @@ public class LocalItemStateManager
      * @throws ItemStateException            if an error occurs
      */
     protected void update(ChangeLog changeLog)
-            throws ReferentialIntegrityException, StaleItemStateException,
-            ItemStateException {
+            throws ReferentialIntegrityException, StaleItemStateException, ItemStateException {
 
-        ObservationManagerImpl obsMgr = null;
-
-        try {
-            if (wspImpl != null) {
-                obsMgr = (ObservationManagerImpl) wspImpl.getObservationManager();
-            }
-        } catch (RepositoryException e) {
-            // should never get here
-            String msg = "ObservationManager unavailable";
-            log.error(msg);
-            throw new ItemStateException(msg, e);
-        }
-
-        sharedStateMgr.store(changeLog, obsMgr);
+        sharedStateMgr.update(changeLog, factory);
         changeLog.persisted();
     }
 

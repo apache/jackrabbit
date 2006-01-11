@@ -14,35 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version;
+package org.apache.jackrabbit.core.observation;
+
+import javax.jcr.RepositoryException;
 
 /**
- * Implements a <code>InternalFreeze</code>
+ * Defines methods to create an {@link EventStateCollection}
  */
-abstract class InternalFreezeImpl extends InternalVersionItemImpl
-        implements InternalFreeze {
+public interface EventStateCollectionFactory {
 
     /**
-     * The parent item
-     */
-    private final InternalVersionItem parent;
-
-    /**
-     * Creates a new <code>InternalFreezeImpl</code>
+     * Creates an <code>EventStateCollection</code>.
      *
-     * @param vMgr
-     * @param parent
+     * @return a new <code>EventStateCollection</code>
+     * @throws RepositoryException if creation fails for some reason
      */
-    protected InternalFreezeImpl(AbstractVersionManager vMgr, InternalVersionItem parent) {
-        super(vMgr);
-        this.parent = parent;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public InternalVersionItem getParent() {
-        return parent;
-    }
-
+    public EventStateCollection createEventStateCollection() throws RepositoryException;
 }

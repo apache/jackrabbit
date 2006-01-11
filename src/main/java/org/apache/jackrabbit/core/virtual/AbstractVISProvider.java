@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateReferenceMap;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
@@ -44,7 +45,7 @@ import java.util.Iterator;
  * This Class implements a virtual item state provider, in order to expose the
  * versions to the version storage.
  */
-public abstract class AbstractVISProvider implements VirtualItemStateProvider {
+public abstract class AbstractVISProvider implements VirtualItemStateProvider, ItemStateListener {
     /**
      * the default logger
      */

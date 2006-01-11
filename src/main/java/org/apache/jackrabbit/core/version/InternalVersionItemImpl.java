@@ -24,14 +24,14 @@ abstract class InternalVersionItemImpl implements InternalVersionItem {
     /**
      * the version manager
      */
-    private final VersionManagerImpl vMgr;
+    protected final AbstractVersionManager vMgr;
 
     /**
      * Creates a new Internal version item impl
      *
      * @param vMgr
      */
-    protected InternalVersionItemImpl(VersionManagerImpl vMgr) {
+    protected InternalVersionItemImpl(AbstractVersionManager vMgr) {
         this.vMgr = vMgr;
     }
 
@@ -40,7 +40,7 @@ abstract class InternalVersionItemImpl implements InternalVersionItem {
      *
      * @return
      */
-    protected VersionManagerImpl getVersionManager() {
+    protected AbstractVersionManager getVersionManager() {
         return vMgr;
     }
 

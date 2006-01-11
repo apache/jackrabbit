@@ -30,6 +30,13 @@ public interface InternalXAResource {
     public void associate(TransactionContext tx);
 
     /**
+     * Invoked before one of the {@link #prepare}, {@link #commit} or
+     * {@link #rollback} method is called.
+     * @param tx transaction context
+     */
+    public void beforeOperation(TransactionContext tx);
+
+    /**
      * Prepare transaction. The transaction is identified by a transaction
      * context. 
      * @param tx transaction context
@@ -52,4 +59,11 @@ public interface InternalXAResource {
      * @param tx transaction context.
      */
     public void rollback(TransactionContext tx) throws TransactionException;
+
+    /**
+     * Invoked after one of the {@link #prepare}, {@link #commit} or
+     * {@link #rollback} method has been called.
+     * @param tx transaction context
+     */
+    public void afterOperation(TransactionContext tx);
 }

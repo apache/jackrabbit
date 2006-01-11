@@ -31,7 +31,7 @@ import java.util.NoSuchElementException;
  * a version can be deleted while traversing this iterator and the 'nextVesion'
  * would produce a  ConcurrentModificationException.
  */
-public class VersionIteratorImpl implements VersionIterator {
+class VersionIteratorImpl implements VersionIterator {
 
     /**
      * the id's of the versions to return

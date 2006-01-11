@@ -20,12 +20,11 @@ import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
-import org.apache.jackrabbit.core.observation.EventState;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -37,17 +36,12 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
-import javax.jcr.NodeIterator;
-import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -56,12 +50,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.LinkedList;
+import java.util.Collection;
 
 /**
  * This Class implements a VersionManager.
  */
-public class VersionManagerImpl implements VersionManager {
+public class VersionManagerImpl extends AbstractVersionManager
+        implements EventStateCollectionFactory {
 
     /**
      * the default logger
@@ -79,19 +74,14 @@ public class VersionManagerImpl implements VersionManager {
     private final PersistenceManager pMgr;
 
     /**
-     * the state manager for the version storage
+     * the shared state manager for the version storage
      */
-    private LocalItemStateManager stateMgr;
+    private SharedItemStateManager sharedStateMgr;
 
     /**
      * the virtual item state provider that exposes the version storage
      */
     private final VersionItemStateProvider versProvider;
-
-    /**
-     * the persistent root node of the version histories
-     */
-    private final NodeStateEx historyRoot;
 
     /**
      * the node type manager
@@ -106,12 +96,12 @@ public class VersionManagerImpl implements VersionManager {
     /**
      * Map of returned items. this is kept for invalidating
      */
-    //private ReferenceMap items = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+    private ReferenceMap versionItems = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
 
     /**
-     * Map of returned items. this is kept for invalidating
+     * Session to be used when creating observation events.
      */
-    private ReferenceMap versionItems = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+    private transient SessionImpl eventSource;
 
     /**
      * Creates a bew vesuion manager
@@ -145,9 +135,9 @@ public class VersionManagerImpl implements VersionManager {
                 cl.added(pt);
                 pMgr.store(cl);
             }
-            SharedItemStateManager sharedStateMgr =
+            sharedStateMgr =
                     new VersionItemStateManager(pMgr, VERSION_STORAGE_NODE_UUID, ntReg);
-            stateMgr = new LocalItemStateManager(sharedStateMgr, null);
+            stateMgr = new LocalItemStateManager(sharedStateMgr, this);
             NodeState nodeState = (NodeState) stateMgr.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID));
             historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, QName.JCR_VERSIONSTORAGE);
 
@@ -167,212 +157,47 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     /**
-     * Close this version manager. After having closed a persistence
-     * manager, further operations on this object are treated as illegal
-     * and throw
-     *
-     * @throws Exception if an error occurs
+     * {@inheritDoc}
      */
     public void close() throws Exception {
         pMgr.close();
     }
 
     /**
-     * Creates a new version history. This action is needed either when creating
-     * a new 'mix:versionable' node or when adding the 'mix:versionalbe' mixin
-     * to a node.
-     *
-     * @param node
-     * @return
-     * @throws javax.jcr.RepositoryException
+     * {@inheritDoc}
+     * <p/>
+     * This method needs to be synchronized since it sets the event source
+     * to be used when creating the events to be dispatched later on.
      */
-    public VersionHistory createVersionHistory(Session session, NodeState node)
+    public synchronized VersionHistory createVersionHistory(Session session,
+                                                            NodeState node)
             throws RepositoryException {
 
-        List created = new LinkedList();
-        InternalVersionHistory history = createVersionHistory(created, node);
+        eventSource = (SessionImpl) session;
+
+        InternalVersionHistory history = createVersionHistory(node);
         if (history == null) {
             throw new VersionException("History already exists for node " + node.getUUID());
         }
-        VersionHistoryImpl vh = (VersionHistoryImpl) session.getNodeByUUID(history.getId());
-
-        // generate observation events
-        List events = new ArrayList();
-        Iterator iter = created.iterator();
-        while (iter.hasNext()) {
-            String uuid = (String) iter.next();
-            NodeImpl child = (NodeImpl) ((SessionImpl) session).getItemManager().getItem(new NodeId(uuid));
-            generateAddedEvents(events, (NodeImpl) child.getParent(), child, false);
-        }
-        obsMgr.dispatch(events, (SessionImpl) session);
-        return vh;
+        return (VersionHistory) session.getNodeByUUID(history.getId());
     }
 
     /**
      * {@inheritDoc}
-     */
-    public VersionHistory getVersionHistory(Session session, NodeState node)
-            throws RepositoryException {
-
-        String vhId = getVersionHistoryId(node);
-        if (vhId == null) {
-            return null;
-        }
-        return (VersionHistoryImpl) session.getNodeByUUID(vhId);
-    }
-
-    /**
-     * Creates a new Version History.
-     *
-     * @param created a list for adding the uuids of the newly created nodes
-     * @param node the node for which the version history is to be initialized
-     * @return the newly created version history.
-     * @throws RepositoryException
-     */
-    private InternalVersionHistory createVersionHistory(List created, NodeState node)
-            throws RepositoryException {
-
-        try {
-            stateMgr.edit();
-        } catch (IllegalStateException e) {
-            throw new RepositoryException("Unable to start edit operation", e);
-        }
-
-        boolean succeeded = false;
-
-        try {
-            // create deep path
-            String uuid = node.getUUID();
-            NodeStateEx root = historyRoot;
-            for (int i = 0; i < 3; i++) {
-                QName name = new QName(QName.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
-                if (!root.hasNode(name)) {
-                    NodeStateEx n = root.addNode(name, QName.REP_VERSIONSTORAGE, null, false);
-                    created.add(n.getUUID());
-                    root.store();
-                }
-                root = root.getNode(name, 1);
-            }
-            QName historyNodeName = new QName(QName.NS_DEFAULT_URI, uuid);
-            if (root.hasNode(historyNodeName)) {
-                // already exists
-                return null;
-            }
-
-            // create new history node in the persistent state
-            InternalVersionHistoryImpl hist = InternalVersionHistoryImpl.create(this, root, UUID.randomUUID().toString(), historyNodeName, node, created);
-
-            // end update
-            stateMgr.update();
-            succeeded = true;
-
-            log.info("Created new version history " + hist.getId() + " for " + node + ".");
-            return hist;
-
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        } finally {
-            if (!succeeded) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
-            }
-        }
-    }
-
-    /**
-     * Returns the id of the version history associated with the given node
-     * or <code>null</code> if that node doesn't have a version history.
-     *
-     * @param node the node whose version history's id is to be returned.
-     * @return the the id of the version history associated with the given node
-     *         or <code>null</code> if that node doesn't have a version history.
-     * @throws RepositoryException if an error occurs
-     */
-    private String getVersionHistoryId(NodeState node)
-            throws RepositoryException {
-
-        // build and traverse path
-        String uuid = node.getUUID();
-        NodeStateEx n = historyRoot;
-        for (int i = 0; i < 3; i++) {
-            QName name = new QName(QName.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
-            if (!n.hasNode(name)) {
-                return null;
-            }
-            n = n.getNode(name, 1);
-        }
-        QName historyNodeName = new QName(QName.NS_DEFAULT_URI, uuid);
-        if (!n.hasNode(historyNodeName)) {
-            return null;
-        }
-        return n.getNode(historyNodeName, 1).getUUID();
-    }
-
-    /**
-     * Checks if the version history with the given id exists
-     *
-     * @param id
-     * @return
-     */
-    public boolean hasVersionHistory(String id) {
-        // todo: probably need to check if this item is really a history
-        return hasItem(id);
-    }
-
-    /**
-     * Returns the version history with the given id
-     *
-     * @param id
-     * @return
-     * @throws RepositoryException
-     */
-    public InternalVersionHistory getVersionHistory(String id) throws RepositoryException {
-        return (InternalVersionHistory) getItem(id);
-    }
-
-    /**
-     * Checks if the version with the given id exists
-     *
-     * @param id
-     * @return
-     */
-    public boolean hasVersion(String id) {
-        // todo: probably need to check if this item is really a version
-        return hasItem(id);
-    }
-
-    /**
-     * Returns the version with the given id
-     *
-     * @param id
-     * @return
-     * @throws RepositoryException
-     */
-    public InternalVersion getVersion(String id) throws RepositoryException {
-        return (InternalVersion) getItem(id);
-    }
-
-    /**
-     * checks, if the node with the given id exists
-     *
-     * @param id
-     * @return
      */
     public boolean hasItem(String id) {
         return versionItems.containsKey(id) || stateMgr.hasItemState(new NodeId(id));
     }
 
     /**
-     * Returns the item with the given persistent id
-     *
-     * @param uuid
-     * @return
-     * @throws RepositoryException
+     * {@inheritDoc}
      */
-    synchronized InternalVersionItem getItem(String uuid) throws RepositoryException {
+    protected synchronized InternalVersionItem getItem(String uuid)
+            throws RepositoryException {
+
         NodeId id = new NodeId(uuid);
         try {
-            InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
+            InternalVersionItem item = (InternalVersionItem) versionItems.get(uuid);
             if (item == null) {
                 if (stateMgr.hasItemState(id)) {
                     NodeState state = (NodeState) stateMgr.getItemState(id);
@@ -394,7 +219,7 @@ public class VersionManagerImpl implements VersionManager {
                     }
                 }
                 if (item != null) {
-                    versionItems.put(id, item);
+                    versionItems.put(uuid, item);
                 }
             }
             return item;
@@ -404,310 +229,113 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     /**
-     * invokes the checkin() on the persistent version manager and remaps the
-     * newly created version objects.
-     *
-     * @param node
-     * @return
-     * @throws RepositoryException
+     * {@inheritDoc}
+     * <p/>
+     * This method needs to be synchronized since it sets the event source
+     * to be used when creating the events to be dispatched later on.
      */
-    public Version checkin(NodeImpl node) throws RepositoryException {
-        SessionImpl session = (SessionImpl) node.getSession();
-        InternalVersion version = internalCheckin(node);
+    public synchronized Version checkin(NodeImpl node) throws RepositoryException {
+        eventSource = (SessionImpl) node.getSession();
 
-        VersionImpl v = (VersionImpl) session.getNodeByUUID(version.getId());
+        String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
+        InternalVersion version = checkin(
+                (InternalVersionHistoryImpl) getVersionHistory(histUUID), node);
 
-        // generate observation events
-        List events = new ArrayList();
+        AbstractVersion v = (AbstractVersion) eventSource.getNodeByUUID(version.getId());
 
-        generateAddedEvents(events, (NodeImpl) v.getParent(), v, true);
-
-        // invalidate predecessors successor property
+        // invalidate predecessors successor properties
         InternalVersion[] preds = version.getPredecessors();
-        for (int i=0; i<preds.length; i++) {
+        for (int i = 0; i < preds.length; i++) {
             PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
             versProvider.onPropertyChanged(propId);
         }
-        obsMgr.dispatch(events, session);
-
         return v;
     }
 
     /**
-     * Checks in a node
-     *
-     * @param node
-     * @return
-     * @throws RepositoryException
-     * @see javax.jcr.Node#checkin()
+     * {@inheritDoc}
+     * <p/>
+     * This method needs to be synchronized since it sets the event source
+     * to be used when creating the events to be dispatched later on.
      */
-    private synchronized InternalVersion internalCheckin(NodeImpl node) throws RepositoryException {
-        // assuming node is versionable and checkout (check in nodeimpl)
-        // To create a new version of a versionable node N, the client calls N.checkin.
-        // This causes the following series of events:
-        String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
-        InternalVersionHistoryImpl history = (InternalVersionHistoryImpl) getVersionHistory(histUUID);
-
-        // 0. resolve the predecessors
-        Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
-        InternalVersion[] preds = new InternalVersion[values.length];
-        for (int i = 0; i < values.length; i++) {
-            preds[i] = history.getVersion(values[i].getString());
-        }
-
-        // 0.1 search a predecessor, suitable for generating the new name
-        String versionName = null;
-        int maxDots = Integer.MAX_VALUE;
-        for (int i = 0; i < preds.length; i++) {
-            // take the first pred. without a successor
-            if (preds[i].getSuccessors().length == 0) {
-                versionName = preds[i].getName().getLocalName(); //assuming no namespaces in version names
-                // need to count the dots
-                int pos = -1;
-                int numDots = 0;
-                while (versionName.indexOf('.', pos + 1) >= 0) {
-                    pos = versionName.indexOf('.', pos + 1);
-                    numDots++;
-                }
-                if (numDots < maxDots) {
-                    maxDots = numDots;
-                    if (pos < 0) {
-                        versionName = "1.0";
-                    } else {
-                        versionName = versionName.substring(0, pos + 1)
-                                + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
-                    }
-                }
-                break;
-            }
-        }
-        // if no empty found, generate new name
-        if (versionName == null) {
-            versionName = preds[0].getName().getLocalName();
-            do {
-                versionName += ".1";
-            } while (history.hasVersion(new QName("", versionName)));
-        }
-
-        try {
-            stateMgr.edit();
-        } catch (IllegalStateException e) {
-            throw new RepositoryException("Unable to start edit operation.");
-        }
-
-        boolean succeeded = false;
-
-        try {
-            InternalVersionImpl v = history.checkin(new QName("", versionName), node);
-            stateMgr.update();
-            succeeded = true;
-
-            return v;
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        } finally {
-            if (!succeeded) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
-            }
-        }
-    }
-
-
-    /**
-     * Removes the specified version from the history
-     *
-     * @param history the version history from where to remove the version.
-     * @param name the name of the version to remove.
-     * @throws VersionException if the version <code>history</code> does
-     *  not have a version with <code>name</code>.
-     * @throws RepositoryException if any other error occurs.
-     */
-    public void removeVersion(VersionHistory history, QName name)
+    public synchronized void removeVersion(VersionHistory history, QName name)
             throws VersionException, RepositoryException {
-        if (!((VersionHistoryImpl) history).hasNode(name)) {
+
+        AbstractVersionHistory historyImpl = (AbstractVersionHistory) history;
+        if (!historyImpl.hasNode(name)) {
             throw new VersionException("Version with name " + name.toString()
                     + " does not exist in this VersionHistory");
         }
-        // generate observation events
-        SessionImpl session = (SessionImpl) history.getSession();
-        VersionImpl version = (VersionImpl) ((VersionHistoryImpl) history).getNode(name);
-        List events = new ArrayList();
-        generateRemovedEvents(events, (NodeImpl) history, version, true);
+        eventSource = (SessionImpl) history.getSession();
+
+        // save away predecessors before removing version
+        AbstractVersion version = (AbstractVersion) historyImpl.getNode(name);
+        InternalVersion preds[] = version.getInternalVersion().getPredecessors();
 
         InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                ((VersionHistoryImpl) history).getInternalVersionHistory();
-
-        try {
-            stateMgr.edit();
-        } catch (IllegalStateException e) {
-            throw new VersionException("Unable to start edit operation", e);
-        }
-        boolean succeeded = false;
-        try {
-            vh.removeVersion(name);
-            stateMgr.update();
-            succeeded = true;
-        } catch (ItemStateException e) {
-            log.error("Error while storing: " + e.toString());
-        } finally {
-            if (!succeeded) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
-            }
-        }
+                historyImpl.getInternalVersionHistory();
+        removeVersion(vh, name);
 
         // invalidate predecessors successor properties
-        InternalVersion preds[] = version.getInternalVersion().getPredecessors();
-        for (int i=0; i<preds.length; i++) {
+        for (int i = 0; i < preds.length; i++) {
             PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
             versProvider.onPropertyChanged(propId);
         }
-        obsMgr.dispatch(events, session);
     }
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * This method needs to be synchronized since it sets the event source
+     * to be used when creating the events to be dispatched later on.
      */
-    public Version setVersionLabel(VersionHistory history, QName version,
-                                   QName label, boolean move)
+    public synchronized Version setVersionLabel(VersionHistory history,
+                                                QName version, QName label,
+                                                boolean move)
             throws RepositoryException {
-        SessionImpl session = (SessionImpl) history.getSession();
+
+        AbstractVersionHistory historyImpl = (AbstractVersionHistory) history;
+        eventSource = (SessionImpl) history.getSession();
 
         InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                ((VersionHistoryImpl) history).getInternalVersionHistory();
-        NodeImpl labelNode = ((VersionHistoryImpl) history).getNode(QName.JCR_VERSIONLABELS);
-
-        try {
-            stateMgr.edit();
-        } catch (IllegalStateException e) {
-            throw new VersionException("Unable to start edit operation", e);
-        }
-        InternalVersion v = null;
-        boolean success = false;
-        try {
-            v = vh.setVersionLabel(version, label, move);
-            stateMgr.update();
-            success = true;
-        } catch(ItemStateException e) {
-            log.error("Error while storing: " + e.toString());
-        } finally {
-            if (!success) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
-            }
-        }
-
-        // collect observation events
-        List events = new ArrayList();
-        if (version == null && v != null) {
-            // label removed
-            events.add(EventState.propertyRemoved(
-                    labelNode.internalGetUUID(),
-                    labelNode.getPrimaryPath(),
-                    Path.PathElement.fromString(label.toString()),
-                    (NodeTypeImpl) labelNode.getPrimaryNodeType(),
-                    labelNode.getMixinTypeNames(),
-                    labelNode.getSession()
-            ));
-        } else if (v == null) {
-            // label added
-            events.add(EventState.propertyAdded(
-                    labelNode.internalGetUUID(),
-                    labelNode.getPrimaryPath(),
-                    Path.PathElement.fromString(label.toString()),
-                    (NodeTypeImpl) labelNode.getPrimaryNodeType(),
-                    labelNode.getMixinTypeNames(),
-                    labelNode.getSession()
-            ));
-        } else {
-            // label modified
-            events.add(EventState.propertyChanged(
-                    labelNode.internalGetUUID(),
-                    labelNode.getPrimaryPath(),
-                    Path.PathElement.fromString(label.toString()),
-                    (NodeTypeImpl) labelNode.getPrimaryNodeType(),
-                    labelNode.getMixinTypeNames(),
-                    labelNode.getSession()
-            ));
-        }
-        obsMgr.dispatch(events, session);
+                historyImpl.getInternalVersionHistory();
+        InternalVersion v = setVersionLabel(vh, version, label, move);
         if (v == null) {
             return null;
         } else {
-            return (VersionImpl) session.getNodeByUUID(v.getId());
+            return (Version) eventSource.getNodeByUUID(v.getId());
         }
     }
 
     /**
-     * Adds a subtree of itemstates as 'added' to a list of events
-     *
-     * @param events
-     * @param parent
-     * @param node
-     * @throws RepositoryException
+     * Invoked by some external source to indicate that some items in the
+     * versions tree were updated. Version manager should flush its own
+     * caches.
+     * @param items items updated
      */
-    private void generateAddedEvents(List events, NodeImpl parent, NodeImpl node,
-                                     boolean recursive)
-            throws RepositoryException {
-
-        events.add(EventState.childNodeAdded(
-                parent.internalGetUUID(),
-                parent.getPrimaryPath(),
-                node.internalGetUUID(),
-                node.getPrimaryPath().getNameElement(),
-                (NodeTypeImpl) parent.getPrimaryNodeType(),
-                parent.getMixinTypeNames(),
-                node.getSession()
-        ));
-
-        PropertyIterator iter = node.getProperties();
+    public void itemsUpdated(Collection items) {
+        Iterator iter = items.iterator();
         while (iter.hasNext()) {
-            PropertyImpl prop = (PropertyImpl) iter.nextProperty();
-            events.add(EventState.propertyAdded(
-                    node.internalGetUUID(),
-                    node.getPrimaryPath(),
-                    prop.getPrimaryPath().getNameElement(),
-                    (NodeTypeImpl) node.getPrimaryNodeType(),
-                    node.getMixinTypeNames(),
-                    node.getSession()
-            ));
-        }
-        if (recursive) {
-            NodeIterator niter = node.getNodes();
-            while (niter.hasNext()) {
-                NodeImpl n = (NodeImpl) niter.nextNode();
-                generateAddedEvents(events, node, n, true);
-            }
+            itemUpdated((InternalVersionItem) iter.next());
         }
     }
 
     /**
-     * Adds a subtree of itemstates as 'removed' to a list of events
-     *
-     * @param events
-     * @param parent
-     * @param node
-     * @throws RepositoryException
+     * Update internal version item. Version histories are reloaded if possible.
+     * Matching items are removed from the cache.
+     * @param item item updated
      */
-    private void generateRemovedEvents(List events, NodeImpl parent,
-                                       NodeImpl node, boolean recursive)
-            throws RepositoryException {
-
-        events.add(EventState.childNodeRemoved(
-                parent.internalGetUUID(),
-                parent.getPrimaryPath(),
-                node.internalGetUUID(),
-                node.getPrimaryPath().getNameElement(),
-                (NodeTypeImpl) parent.getPrimaryNodeType(),
-                parent.getMixinTypeNames(),
-                node.getSession()
-        ));
-        if (recursive) {
-            NodeIterator niter = node.getNodes();
-            while (niter.hasNext()) {
-                NodeImpl n = (NodeImpl) niter.nextNode();
-                generateRemovedEvents(events, node, n, true);
+    private void itemUpdated(InternalVersionItem item) {
+        InternalVersionItem cached = (InternalVersionItem) versionItems.remove(item.getId());
+        if (cached != null) {
+            if (cached instanceof InternalVersionHistoryImpl) {
+                InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl) cached;
+                try {
+                    vh.reload();
+                    versionItems.put(vh.getId(), vh);
+                } catch (RepositoryException e) {
+                    log.warn("Unable to update version history: " + e.toString());
+                }
             }
         }
     }
@@ -742,7 +370,7 @@ public class VersionManagerImpl implements VersionManager {
     /**
      * {@inheritDoc}
      */
-    public List getItemReferences(InternalVersionItem item) {
+    protected List getItemReferences(InternalVersionItem item) {
         try {
             NodeReferences refs = pMgr.load(new NodeReferencesId(item.getId()));
             return refs.getReferences();
@@ -776,6 +404,32 @@ public class VersionManagerImpl implements VersionManager {
         return (NodeId) historyRoot.getState().getId();
     }
 
+    /**
+     * Return the shared item state manager.
+     */
+    SharedItemStateManager getSharedStateMgr() {
+        return sharedStateMgr;
+    }
+
+    //------------------------------------------< EventStateCollectionFactory >
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This object uses one instance of a <code>LocalItemStateManager</code>
+     * to update data on behalf of many sessions. In order to maintain the
+     * association between update operation and session who actually invoked
+     * the update, an internal event source is used.
+     */
+    public synchronized EventStateCollection createEventStateCollection()
+            throws RepositoryException {
+
+        if (eventSource == null) {
+            throw new RepositoryException("Unknown event source.");
+        }
+        return obsMgr.createEventStateCollection(eventSource);
+    }
+
     //--------------------------------------------------------< inner classes >
     /**
      * Spezialized SharedItemStateManager that filters out NodeReferences to
@@ -787,7 +441,7 @@ public class VersionManagerImpl implements VersionManager {
                                        String rootNodeUUID,
                                        NodeTypeRegistry ntReg)
                 throws ItemStateException {
-            super(persistMgr, rootNodeUUID, ntReg);
+            super(persistMgr, rootNodeUUID, ntReg, false);
         }
 
         protected void checkReferentialIntegrity(ChangeLog changes)

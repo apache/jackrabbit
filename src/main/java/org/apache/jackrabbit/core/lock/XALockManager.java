@@ -215,6 +215,12 @@ public class XALockManager implements LockManager, InternalXAResource {
     /**
      * {@inheritDoc}
      */
+    public void beforeOperation(TransactionContext tx) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void prepare(TransactionContext tx) throws TransactionException {
         XAEnvironment xaEnv = (XAEnvironment) tx.getAttribute(XA_ENV_ATTRIBUTE_NAME);
         if (xaEnv != null) {
@@ -244,6 +250,12 @@ public class XALockManager implements LockManager, InternalXAResource {
         if (xaEnv != null) {
             xaEnv.rollback();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void afterOperation(TransactionContext tx) {
     }
 
     /**
