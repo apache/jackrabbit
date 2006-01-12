@@ -23,7 +23,8 @@ package org.apache.jackrabbit.uuid;
  * <p/>
  * todo remove and use official commons-id release as soon as it is available
  * <p/>
- * {@link http://jakarta.apache.org/turbine/turbine-2.3/}
+ * See <a href="http://jakarta.apache.org/turbine/turbine-2.3/">http://jakarta.apache.org/turbine/turbine-2.3/</a>
+ * for more details.
  */
 public final class Bytes {
 
