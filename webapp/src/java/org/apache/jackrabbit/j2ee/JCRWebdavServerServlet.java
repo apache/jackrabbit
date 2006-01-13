@@ -51,6 +51,17 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
      */
     public static final String INIT_PARAM_RESOURCE_PATH_PREFIX = "resource-path-prefix";
 
+    /**
+     * Name of the optional init parameter that defines the value of the
+     * 'WWW-Authenticate' header.<p/>
+     * If the parameter is omitted the default value
+     * {@link #DEFAULT_AUTHENTICATE_HEADER "Basic Realm=Jackrabbit Webdav Server"}
+     * is used.
+     *
+     * @see #getAuthenticateHeaderValue()
+     */
+    public static final String INIT_PARAM_AUTHENTICATE_HEADER = "authenticate-header";
+
     /** the 'missing-auth-mapping' init parameter */
     public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
 
@@ -62,6 +73,8 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
     public static final String CTX_ATTR_RESOURCE_PATH_PREFIX = "jackrabbit.webdav.jcr.resourcepath";
 
     private String pathPrefix;
+    private String authenticate_header;
+
     private JCRWebdavServer server;
     private DavResourceFactory resourceFactory;
     private DavLocatorFactory locatorFactory;
@@ -84,6 +97,12 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
         pathPrefix = getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX);
         getServletContext().setAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX, pathPrefix);
         log.debug(INIT_PARAM_RESOURCE_PATH_PREFIX + " = " + pathPrefix);
+
+        authenticate_header = getInitParameter(INIT_PARAM_AUTHENTICATE_HEADER);
+        if (authenticate_header == null) {
+            authenticate_header = DEFAULT_AUTHENTICATE_HEADER;
+        }
+        log.debug(INIT_PARAM_AUTHENTICATE_HEADER + " = " + authenticate_header);
 
         txMgr = new TxLockManagerImpl();
         subscriptionMgr = new SubscriptionManagerImpl();
@@ -190,12 +209,14 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
     }
 
     /**
-     * Returns {@link #DEFAULT_AUTHENTICATE_HEADER}.
+     * Returns the init param of the servlet configuration or
+     * {@link #DEFAULT_AUTHENTICATE_HEADER} as default value.
      *
-     * @return {@link #DEFAULT_AUTHENTICATE_HEADER}.
+     * @return corresponding init parameter or {@link #DEFAULT_AUTHENTICATE_HEADER}.
+     * @see #INIT_PARAM_AUTHENTICATE_HEADER
      */
     public String getAuthenticateHeaderValue() {
-        return DEFAULT_AUTHENTICATE_HEADER;
+        return authenticate_header;
     }
 
     /**
