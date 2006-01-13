@@ -688,7 +688,24 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // walk through list of transient states and reapply transient changes
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
-            ItemImpl item = itemMgr.getItem(itemState.getId());
+            ItemId id = itemState.getId();
+            ItemImpl item;
+
+            if (stateMgr.isItemStateInAttic(id)) {
+                // If an item has been removed and then again created, the
+                // item is lost after persistTransientItems() and the
+                // TransientItemStateManager will bark because of a deleted
+                // state in its attic. We therefore have to forge a new item
+                // instance ourself.
+                if (itemState.isNode()) {
+                    item = itemMgr.createNodeInstance((NodeState) itemState);
+                } else {
+                    item = itemMgr.createPropertyInstance((PropertyState) itemState);
+                }
+                itemState.setStatus(ItemState.STATUS_NEW);
+            } else {
+                item = itemMgr.getItem(id);
+            }
             if (!item.isTransient()) {
                 // reapply transient changes (i.e. undo effect of item.makePersistent())
                 if (item.isNode()) {

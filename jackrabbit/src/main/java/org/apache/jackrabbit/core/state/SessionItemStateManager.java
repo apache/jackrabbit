@@ -582,6 +582,18 @@ public class SessionItemStateManager
         return resultIter;
     }
 
+    /**
+     * Return a flag indicating whether the specified item is in the transient
+     * item state manager's attic space.
+     *
+     * @param id item id
+     * @return <code>true</code> if the item state is in the attic space;
+     *         <code>false</code> otherwise
+     */
+    public boolean isItemStateInAttic(ItemId id) {
+        return transientStateMgr.getAttic().hasItemState(id);
+    }
+
     //------< methods for creating & discarding transient ItemState instances >
     /**
      * @param uuid
