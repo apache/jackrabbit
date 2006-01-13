@@ -17,6 +17,7 @@ package org.apache.jackrabbit.webdav.ordering;
 
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * <code>OrderingConstants</code> provide constants for request and response
@@ -24,6 +25,11 @@ import org.apache.jackrabbit.webdav.DavConstants;
  * <a href="http://www.ietf.org/rfc/rfc3648.txt">RFC 3648</a>.
  */
 public interface OrderingConstants {
+
+    /**
+     * The namespace
+     */
+    public static final Namespace NAMESPACE = DavConstants.NAMESPACE;
 
     /**
      * The "Ordering-Type" request header.

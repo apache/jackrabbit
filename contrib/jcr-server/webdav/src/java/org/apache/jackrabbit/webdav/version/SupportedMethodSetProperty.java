@@ -16,15 +16,19 @@
 package org.apache.jackrabbit.webdav.version;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
  * The <code>SupportedMethodSetProperty</code>
  */
-public class SupportedMethodSetProperty extends DefaultDavProperty implements DeltaVConstants {
+public class SupportedMethodSetProperty extends AbstractDavProperty implements DeltaVConstants {
 
     private static Logger log = Logger.getLogger(SupportedMethodSetProperty.class);
+
+    private final String[] methods;
 
     /**
      * Create a new <code>SupportedMethodSetProperty</code> property.
@@ -32,14 +36,25 @@ public class SupportedMethodSetProperty extends DefaultDavProperty implements De
      * @param methods that are supported by the resource having this property.
      */
     public SupportedMethodSetProperty(String[] methods) {
-        super(DeltaVConstants.SUPPORTED_METHOD_SET, new Element[methods.length], true);
-
-        // fill the array with the proper elements
-        Element[] value = (Element[]) getValue();
-        for (int i = 0; i < methods.length; i++) {
-            Element methodElem = new Element(DeltaVConstants.XML_SUPPORTED_METHOD, DeltaVConstants.NAMESPACE);
-            methodElem.setAttribute("name",methods[i], DeltaVConstants.NAMESPACE);
-            value[i] = methodElem;
-        }
+        super(DeltaVConstants.SUPPORTED_METHOD_SET, true);
+        this.methods = methods;
     }
+
+    public Object getValue() {
+        return methods;
+    }
+
+    /**
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element elem = getName().toXml(document);
+        for (int i = 0; i < methods.length; i++) {
+            Element methodElem = DomUtil.addChildElement(elem, XML_SUPPORTED_METHOD, DeltaVConstants.NAMESPACE);
+            DomUtil.setAttribute(methodElem, "name", DeltaVConstants.NAMESPACE, methods[i]);
+        }
+        return elem;
+    }
+
 }

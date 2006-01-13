@@ -49,6 +49,7 @@ public class ExportContextImpl extends AbstractExportContext {
     private final OutputContext outputCtx;
 
     private File outFile;
+    private OutputStream outStream;
 
     public ExportContextImpl(Item exportRoot, OutputContext outputCtx) throws IOException {
         super(exportRoot, (outputCtx != null) ? outputCtx.hasStream() : false, null);
@@ -70,7 +71,14 @@ public class ExportContextImpl extends AbstractExportContext {
         checkCompleted();
         if (hasStream()) {
             try {
-                return new FileOutputStream(outFile);
+                // clean up the stream retrieved by the preceeding handler, that
+                // did not behave properly and failed to export although initially
+                // willing to handle the export.
+                if (outStream != null) {
+                    outStream.close();
+                }
+                outStream = new FileOutputStream(outFile);
+                return outStream;
             } catch (IOException e) {
                 // unexpected error... ignore and return null
             }
@@ -145,19 +153,35 @@ public class ExportContextImpl extends AbstractExportContext {
     public void informCompleted(boolean success) {
         checkCompleted();
         completed = true;
+        // make sure the outputStream gets closed (and don't assume the handlers
+        // took care of this.
+        if (outStream != null) {
+            try {
+                outStream.close();
+            } catch (IOException e) {
+                // ignore
+            }
+        }
         if (success) {
             // write properties and data to the output-context
             if (outputCtx != null) {
+                boolean hasContentLength = false;
                 Iterator it = properties.keySet().iterator();
                 while (it.hasNext()) {
                     String name = it.next().toString();
                     String value = properties.get(name).toString();
                     outputCtx.setProperty(name, value);
+                    // check for content-length
+                    hasContentLength = DavConstants.HEADER_CONTENT_LENGTH.equals(name);
                 }
 
                 if (outputCtx.hasStream() && outFile != null) {
                     OutputStream out = outputCtx.getOutputStream();
                     try {
+                        // make sure the content-length is set
+                        if (!hasContentLength) {
+                            outputCtx.setContentLength(outFile.length());
+                        }
                         FileInputStream in = new FileInputStream(outFile);
                         IOUtil.spool(in, out);
                     } catch (IOException e) {

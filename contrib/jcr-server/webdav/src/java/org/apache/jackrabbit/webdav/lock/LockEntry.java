@@ -15,12 +15,12 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 /**
  * <code>LockEntry</code>...
  */
-public interface LockEntry {
+public interface LockEntry extends XmlSerializable {
 
     /**
      * Returns the type of this lock entry
@@ -35,11 +35,4 @@ public interface LockEntry {
      * @return scope of this lock entry.
      */
     public Scope getScope();
-
-    /**
-     * Returns the Xml representation of this entry.
-     *
-     * @return Xml representation
-     */
-    public Element toXml();
 }

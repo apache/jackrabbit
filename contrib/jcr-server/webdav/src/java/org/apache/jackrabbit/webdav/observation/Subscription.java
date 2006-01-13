@@ -15,13 +15,18 @@
  */
 package org.apache.jackrabbit.webdav.observation;
 
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 /**
  * <code>Subscription</code> represents public representation of the event
- * listener created (or modified) by a successful SUBSCRIBE request.
+ * listener created (or modified) by a successful SUBSCRIBE request.<br>
+ * Please note that this interface extends the <code>XmlSerializable</code>
+ * interface. Tthe Xml representation of a <code>Subscription</code> is
+ * returned in the response to a successful SUBSCRIBE request as well
+ * as in a PROPFIND request. In both cases the subscription is packed into
+ * a {@link SubscriptionDiscovery} property object.
  */
-public interface Subscription {
+public interface Subscription extends XmlSerializable {
 
     /**
      * Returns the id of this subscription, that must be used for unsubscribing
@@ -30,15 +35,4 @@ public interface Subscription {
      * @return subscriptionId
      */
     public String getSubscriptionId();
-
-    /**
-     * Return the Xml representation of this <code>Subscription</code> that is
-     * returned in the response to a successful SUBSCRIBE request as well
-     * as in a PROPFIND request. In both cases the subscription is packed into
-     * a {@link SubscriptionDiscovery} property object.
-     *
-     * @return Xml representation
-     */
-    public Element toXml();
-
 }

@@ -15,22 +15,29 @@
  */
 package org.apache.jackrabbit.j2ee;
 
-import org.apache.jackrabbit.server.SessionProvider;
-import org.apache.jackrabbit.server.SessionProviderImpl;
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
+import org.apache.jackrabbit.server.SessionProvider;
+import org.apache.jackrabbit.server.SessionProviderImpl;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavLocatorFactory;
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavSessionProvider;
+import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.jcr.DavLocatorFactoryImpl;
 import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
 import org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl;
-import org.apache.jackrabbit.webdav.simple.ResourceFactoryImpl;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
-import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.simple.ResourceFactoryImpl;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Repository;
-import javax.servlet.ServletException;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 

@@ -16,37 +16,36 @@
 package org.apache.jackrabbit.webdav.property;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
 
 import java.util.HashSet;
 import java.util.Collection;
-import java.util.List;
 import java.util.Iterator;
 
 /**
  * <code>DavPropertyNameSet</code> represents a Set of {@link DavPropertyName}
  * objects.
  */
-public class DavPropertyNameSet extends HashSet {
+public class DavPropertyNameSet extends PropContainer {
 
     private static Logger log = Logger.getLogger(DavPropertyNameSet.class);
+    private final HashSet set = new HashSet();
 
     /**
      * Create a new empty set.
-     * @see HashSet()
      */
     public DavPropertyNameSet() {
-        super();
     }
 
     /**
-     * Create a new set from the given collection.
-     * @param c
-     * @see HashSet(Collection)
+     * Create a new <code>DavPropertyNameSet</code> with the given initial values.
+     *
+     * @param initialSet
      */
-    public DavPropertyNameSet(Collection c) {
-        super(c);
+    public DavPropertyNameSet(DavPropertyNameSet initialSet) {
+        addAll(initialSet);
     }
 
     /**
@@ -58,19 +57,14 @@ public class DavPropertyNameSet extends HashSet {
      * or is not a DAV:prop element.
      */
     public DavPropertyNameSet(Element propElement) {
-        super();
-        if (propElement == null || !propElement.getName().equals(DavConstants.XML_PROP)) {
+        if (!DomUtil.matches(propElement, XML_PROP, NAMESPACE)) {
             throw new IllegalArgumentException("'DAV:prop' element expected.");
         }
 
         // fill the set
-        List props = propElement.getChildren();
-        for (int j = 0; j < props.size(); j++) {
-            Element prop = (Element) props.get(j);
-            String propName = prop.getName();
-            if (propName != null && !"".equals(propName)) {
-                add(DavPropertyName.create(propName, prop.getNamespace()));
-            }
+        ElementIterator it = DomUtil.getChildren(propElement);
+        while (it.hasNext()) {
+            add(DavPropertyName.createFromXml(it.nextElement()));
         }
     }
 
@@ -83,42 +77,104 @@ public class DavPropertyNameSet extends HashSet {
      * element.
      */
     public boolean add(DavPropertyName propertyName) {
-        return super.add(propertyName);
+        return set.add(propertyName);
     }
 
     /**
-     * Add the given object to this set. In case the object is not a {@link DavPropertyName}
-     * this method returns false.
+     * Add the property names contained in the specified set to this set.
      *
-     * @param o
-     * @return true if adding the object was successful.
-     * @see #add(DavPropertyName)
+     * @param propertyNames
+     * @return true if the set has been modified by this call.
      */
-    public boolean add(Object o) {
-        if (o instanceof DavPropertyName) {
-            return add((DavPropertyName) o);
-        } else {
+    public boolean addAll(DavPropertyNameSet propertyNames) {
+        return set.addAll(propertyNames.getContent());
+    }
+
+    /**
+     * Removes the specified {@link DavPropertyName} object from this set.
+     *
+     * @param propertyName
+     * @return true if the given property name could be removed.
+     * @see HashSet#remove(Object)
+     */
+    public boolean remove(DavPropertyName propertyName) {
+        return set.remove(propertyName);
+    }
+
+    /**
+     * @return Iterator over all <code>DavPropertyName</code>s contained in this
+     * set.
+     */
+    public DavPropertyNameIterator iterator() {
+        return new PropertyNameIterator();
+    }
+
+    //------------------------------------------------------< PropContainer >---
+    /**
+     * @see PropContainer#contains(DavPropertyName)
+     */
+    public boolean contains(DavPropertyName name) {
+        return set.contains(name);
+    }
+
+    /**
+     * @param contentEntry NOTE that an instance of <code>DavPropertyName</code>
+     * in order to successfully add the given entry.
+     * @return true if contentEntry is an instance of <code>DavPropertyName</code>
+     * that could be added to this set. False otherwise.
+     * @see PropContainer#addContent(Object)
+     */
+    public boolean addContent(Object contentEntry) {
+        if (contentEntry instanceof DavPropertyName) {
+            return add((DavPropertyName)contentEntry);
+        }
             return false;
         }
+
+    /**
+     * @see PropContainer#isEmpty()
+     */
+    public boolean isEmpty() {
+        return set.isEmpty();
     }
 
     /**
-     * Returns the xml representation of this property name set with the
-     * following format:
-     * <pre>
-     * &lt;!ELEMENT prop (ANY) &gt;
-     * where ANY consists of a list of elements each reflecting the xml
-     * representation of an entry in this set.
-     * </pre>
-     *
-     * @return xml representation
+     * @see PropContainer#getContentSize()
      */
-    public Element toXml() {
-        Element prop = new Element(DavConstants.XML_PROP, DavConstants.NAMESPACE);
-        Iterator it = super.iterator();
-        while (it.hasNext()) {
-            prop.addContent(((DavPropertyName)it.next()).toXml());
+    public int getContentSize() {
+        return set.size();
+    }
+
+    /**
+     * @see PropContainer#getContent()
+     */
+    public Collection getContent() {
+        return set;
+    }
+
+    //--------------------------------------------------------< inner class >---
+    private class PropertyNameIterator implements DavPropertyNameIterator {
+
+        private Iterator iter;
+
+        private PropertyNameIterator() {
+            this.iter = set.iterator();
         }
-        return prop;
+
+        public DavPropertyName nextPropertyName() {
+            return (DavPropertyName)iter.next();
+        }
+
+        public void remove() {
+            iter.remove();
+        }
+
+        public boolean hasNext() {
+            return iter.hasNext();
+        }
+
+        public Object next() {
+            return iter.next();
+        }
     }
 }

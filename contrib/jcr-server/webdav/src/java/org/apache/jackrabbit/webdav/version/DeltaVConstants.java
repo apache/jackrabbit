@@ -17,7 +17,7 @@ package org.apache.jackrabbit.webdav.version;
 
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.jdom.Namespace;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * <code>DeltaVConstants</code> defines the following headers and properties

@@ -18,7 +18,9 @@ package org.apache.jackrabbit.webdav.version.report;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -87,23 +89,6 @@ public class SupportedReportSetProperty extends AbstractDavProperty {
     }
 
     /**
-     * Returns the Xml representation of this property.
-     *
-     * @return Xml representation listing all supported reports
-     * @see org.apache.jackrabbit.webdav.property.DavProperty#toXml()
-     */
-    public Element toXml() {
-        Element elem = getName().toXml();
-        Iterator it = reportTypes.iterator();
-        while (it.hasNext()) {
-	    Element sr = new Element(DeltaVConstants.XML_SUPPORTED_REPORT, DeltaVConstants.NAMESPACE);
-            Element r = new Element(DeltaVConstants.XML_REPORT, DeltaVConstants.NAMESPACE);
-	    elem.addContent(sr.addContent(r.addContent(((ReportType)it.next()).toXml())));
-        }
-        return elem;
-    }
-
-    /**
      * Returns a set of report types.
      *
      * @return set of {@link ReportType}.
@@ -112,4 +97,23 @@ public class SupportedReportSetProperty extends AbstractDavProperty {
     public Object getValue() {
         return reportTypes;
     }
+
+    /**
+     * Returns the Xml representation of this property.
+     *
+     * @return Xml representation listing all supported reports
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element elem = getName().toXml(document);
+        Iterator it = reportTypes.iterator();
+        while (it.hasNext()) {
+	    Element sr = DomUtil.addChildElement(elem, DeltaVConstants.XML_SUPPORTED_REPORT, DeltaVConstants.NAMESPACE);
+            Element r = DomUtil.addChildElement(sr, DeltaVConstants.XML_REPORT, DeltaVConstants.NAMESPACE);
+	    r.appendChild(((ReportType)it.next()).toXml(document));
+        }
+        return elem;
+    }
+
 }

@@ -17,10 +17,12 @@ package org.apache.jackrabbit.webdav.lock;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
- * <code>AbstractLockEntry</code> provides the generic {@link #toXml} method.
+ * <code>AbstractLockEntry</code> provides the generic {@link org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml} method.
  */
 public abstract class AbstractLockEntry implements LockEntry, DavConstants {
 
@@ -30,15 +32,14 @@ public abstract class AbstractLockEntry implements LockEntry, DavConstants {
      * Returns the Xml representation of this <code>LockEntry</code>.
      *
      * @return Xml representation
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Element toXml() {
-        Element entry = new Element(XML_LOCKENTRY, NAMESPACE);
-        Element prop = new Element(XML_LOCKSCOPE, NAMESPACE);
-        prop.addContent(getScope().toXml());
-        entry.addContent(prop);
-        prop = new Element(XML_LOCKTYPE, NAMESPACE);
-        prop.addContent(getType().toXml());
-        entry.addContent(prop);
+    public Element toXml(Document document) {
+        Element entry = DomUtil.createElement(document, XML_LOCKENTRY, NAMESPACE);
+        entry.appendChild(getScope().toXml(document));
+        entry.appendChild(getType().toXml(document));
         return entry;
     }
+
 }

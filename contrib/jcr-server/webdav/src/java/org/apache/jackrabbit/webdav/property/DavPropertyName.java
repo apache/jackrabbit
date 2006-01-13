@@ -15,9 +15,12 @@
  */
 package org.apache.jackrabbit.webdav.property;
 
-import org.jdom.Namespace;
-import org.jdom.Element;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.HashMap;
 
@@ -25,7 +28,7 @@ import java.util.HashMap;
  * The <code>DavPropertyName</code> class reflects a Webdav property name. It
  * holds together the actualy name of the property and its namespace.
  */
-public class DavPropertyName implements DavConstants {
+public class DavPropertyName implements DavConstants, XmlSerializable {
 
     /** internal 'cache' of created property names */
     private static final HashMap cache = new HashMap();
@@ -107,11 +110,11 @@ public class DavPropertyName implements DavConstants {
 	if (nameElement == null) {
 	    throw new IllegalArgumentException("Cannot build DavPropertyName from a 'null' element.");
 	}
-	Namespace ns = nameElement.getNamespace();
+	String ns = nameElement.getNamespaceURI();
 	if (ns == null) {
-	    return create(nameElement.getName());
+	    return create(nameElement.getLocalName(), Namespace.EMPTY_NAMESPACE);
 	} else {
-	    return create(nameElement.getName(), ns);
+	    return create(nameElement.getLocalName(), Namespace.getNamespace(nameElement.getPrefix(), ns));
 	}
     }
 
@@ -148,7 +151,6 @@ public class DavPropertyName implements DavConstants {
         return namespace;
     }
 
-
     /**
      * Computes the hash code using this propertys name and namespace.
      *
@@ -181,7 +183,7 @@ public class DavPropertyName implements DavConstants {
      * @return a human readable string representation
      */
     public String toString() {
-        return "{" + namespace.getURI() + "}" + name;
+        return DomUtil.getQualifiedName(name, namespace);
     }
 
     /**
@@ -189,9 +191,11 @@ public class DavPropertyName implements DavConstants {
      * DavPropertyName.
      *
      * @return A JDOM Element.
+     * @param document
      */
-    public Element toXml() {
-        return new Element(name, namespace);
+    public Element toXml(Document document) {
+        return DomUtil.createElement(document, name, namespace);
     }
+
 }
 

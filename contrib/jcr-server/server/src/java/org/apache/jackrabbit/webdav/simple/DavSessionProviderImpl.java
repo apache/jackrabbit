@@ -15,20 +15,27 @@
  */
 package org.apache.jackrabbit.webdav.simple;
 
-import javax.jcr.*;
-import javax.servlet.ServletException;
-
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.server.CredentialsProvider;
 import org.apache.jackrabbit.server.SessionProvider;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavSessionProvider;
+import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.log4j.Logger;
 
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.servlet.ServletException;
+
 /**
- * Simple implementation of the {@link DavSessionProvider}
+ * Simple implementation of the {@link org.apache.jackrabbit.webdav.DavSessionProvider}
  * interface that uses a {@link CredentialsProvider} to locate
  * credentials in the request, log into the respository, and provide
- * a {@link DavSession} to the request.
+ * a {@link org.apache.jackrabbit.webdav.DavSession} to the request.
  */
 public class DavSessionProviderImpl implements DavSessionProvider {
 
@@ -61,7 +68,7 @@ public class DavSessionProviderImpl implements DavSessionProvider {
      * A session will not be available if an exception is thrown.
      *
      * @param request
-     * @throws DavException if a problem occurred while obtaining the session
+     * @throws org.apache.jackrabbit.webdav.DavException if a problem occurred while obtaining the session
      * @see DavSessionProvider#attachSession(org.apache.jackrabbit.webdav.WebdavRequest)
      */
     public boolean attachSession(WebdavRequest request) throws DavException {

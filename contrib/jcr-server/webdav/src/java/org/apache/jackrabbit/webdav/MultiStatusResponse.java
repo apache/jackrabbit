@@ -15,22 +15,35 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.jdom.Element;
-import org.apache.jackrabbit.webdav.property.*;
-import org.apache.jackrabbit.webdav.util.XmlUtil;
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.PropContainer;
+import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.HashMap;
 import java.util.Iterator;
 
 /**
- * The <code>WebdavMultistatusResponse</code> class implements a structure that
- * hold a WebDAV multistatus response. Properties can be added to this response
- * with the respective error/status code.
+ * <code>Response</code>...
  */
-public class MultiStatusResponse implements DavConstants {
+public class MultiStatusResponse implements XmlSerializable, DavConstants {
 
-    private static Logger log = Logger.getLogger(MultiStatusResponse.class);
+    private static final int TYPE_PROPSTAT = 0;
+    private static final int TYPE_HREFSTATUS = 1;
+
+    /**
+     * The type of MultiStatusResponse
+     */
+    private final int type;
 
     /**
      * The content the 'href' element for this response
@@ -38,34 +51,78 @@ public class MultiStatusResponse implements DavConstants {
     private final String href;
 
     /**
-     * The '200' set (since this is used very often)
-     */
-    private final Element status200;
-
-    /**
-     * The '404' set (since this is used very often)
-     */
-    private final Element status404;
-
-    /**
-     * Hashmap containing all status
-     */
-    private final HashMap statusMap = new HashMap();
-
-    /**
      * An optional response description.
      */
-    private String responseDescription;
+    private final String responseDescription;
 
     /**
-     * Constructs an empty WebDAV multistatus response
+     * Type of MultiStatus response: Href + Status
      */
-    public MultiStatusResponse(String href) {
+    private Status status;
+
+    /**
+     * Type of MultiStatus response: PropStat
+     * Hashmap containing all status
+     */
+    private HashMap statusMap = new HashMap();
+
+    private MultiStatusResponse(String href, String responseDescription, int type) {
+        if (!isValidHref(href)) {
+            throw new IllegalArgumentException("Invalid href ('" + href + "')");
+        }
         this.href = href;
-        status200 = new Element(XML_PROP, NAMESPACE);
-        status404 = new Element(XML_PROP, NAMESPACE);
-        statusMap.put(new Integer(DavServletResponse.SC_OK), status200);
-        statusMap.put(new Integer(DavServletResponse.SC_NOT_FOUND), status404);
+        this.responseDescription = responseDescription;
+        this.type = type;
+    }
+
+    /**
+     * Constructs an WebDAV multistatus response
+     *
+     * @param href
+     * @param status
+     * @param responseDescription
+     */
+    public MultiStatusResponse(String href, Status status, String responseDescription) {
+        this(href, responseDescription, TYPE_HREFSTATUS);
+        if (status == null) {
+            throw new IllegalArgumentException("Status must not be null in case of a multistatus reponse that consists of href + status only.");
+        }
+        this.status = status;
+    }
+
+    /**
+     * Constructs an WebDAV multistatus response for a given resource. This
+     * would be used by COPY, MOVE, DELETE, LOCK that require a multistatus
+     * in case of error with a resource other than the resource identified in the
+     * Request-URI.<br>
+     * The response description is set to <code>null</code>.
+     *
+     * @param href
+     * @param statusCode
+     */
+    public MultiStatusResponse(String href, int statusCode) {
+        this(href, statusCode, null);
+    }
+
+    /**
+     * Constructs an WebDAV multistatus response for a given resource. This
+     * would be used by COPY, MOVE, DELETE, LOCK that require a multistatus
+     * in case of error with a resource other than the resource identified in the
+     * Request-URI.
+     *
+     * @param href
+     * @param statusCode
+     * @param responseDescription
+     */
+    public MultiStatusResponse(String href, int statusCode, String responseDescription) {
+        this(href, new Status(statusCode), responseDescription);
+    }
+
+    /**
+     * Constructs an empty WebDAV multistatus response of type 'PropStat'
+     */
+    public MultiStatusResponse(String href, String responseDescription) {
+        this(href, responseDescription, TYPE_PROPSTAT);
     }
 
     /**
@@ -94,80 +151,103 @@ public class MultiStatusResponse implements DavConstants {
      */
     public MultiStatusResponse(DavResource resource, DavPropertyNameSet propNameSet,
                                int propFindType) {
-        this(resource.getHref());
+        this(resource.getHref(), null, TYPE_PROPSTAT);
 
         // only property names requested
         if (propFindType == PROPFIND_PROPERTY_NAMES) {
+            PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, true);
             DavPropertyName[] propNames = resource.getPropertyNames();
             for (int i = 0; i < propNames.length; i++) {
-                status200.addContent(propNames[i].toXml());
+                status200.addContent(propNames[i]);
             }
             // all or a specified set of property and their values requested.
         } else {
+            PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, false);
             // clone set of property, since several resources could use this again
             propNameSet = new DavPropertyNameSet(propNameSet);
             // Add requested properties or all non-protected properties
             DavPropertyIterator iter = resource.getProperties().iterator();
             while (iter.hasNext()) {
-                DavProperty wdp = iter.nextProperty();
-                if ((propFindType == PROPFIND_ALL_PROP && !wdp.isProtected()) || propNameSet.remove(wdp.getName())) {
-                    status200.addContent(wdp.toXml());
+                DavProperty property = iter.nextProperty();
+                if ((propFindType == PROPFIND_ALL_PROP && !property.isProtected()) || propNameSet.remove(property.getName())) {
+                    status200.addContent(property);
                 }
             }
 
-            if (propFindType != PROPFIND_ALL_PROP) {
-                Iterator iter1 = propNameSet.iterator();
+            if (!propNameSet.isEmpty() && propFindType != PROPFIND_ALL_PROP) {
+                PropContainer status404 = getPropContainer(DavServletResponse.SC_NOT_FOUND, true);
+                DavPropertyNameIterator iter1 = propNameSet.iterator();
                 while (iter1.hasNext()) {
-                    DavPropertyName propName = (DavPropertyName) iter1.next();
-                    status404.addContent(propName.toXml());
+                    DavPropertyName propName = iter1.nextPropertyName();
+                    status404.addContent(propName);
                 }
             }
         }
-    }
-
-    /**
-     * Constructs an WebDAV multistatus response for a given resource. This
-     * would be used by COPY, MOVE, DELETE, LOCK that require a multistatus
-     * in case of error with a resource other than the resource identified in the
-     * Request-URI.
-     */
-    public MultiStatusResponse(String href, int status) {
-        this(href);
-        statusMap.put(new Integer(status), null);
     }
 
     /**
      * Returns the href
      *
      * @return href
+     * @see MultiStatusResponse#getHref()
      */
     public String getHref() {
         return href;
     }
 
     /**
-     * Adds a JDOM element to this response
-     *
-     * @param propElem the property to add
-     * @param status   the status of the response set to select
+     * @return responseDescription
+     * @see MultiStatusResponse#getResponseDescription()
      */
-    private void add(Element propElem, int status) {
-        Integer statusKey = new Integer(status);
-        Object propsContainer = statusMap.get(statusKey);
-        if (propsContainer == null) {
-            propsContainer = new Element(XML_PROP, NAMESPACE);
-            statusMap.put(statusKey, propsContainer);
-        }
-        ((Element) propsContainer).addContent(propElem.detach());
+    public String getResponseDescription() {
+        return responseDescription;
     }
 
+    /**
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(org.w3c.dom.Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element response = DomUtil.createElement(document, XML_RESPONSE, NAMESPACE);
+        // add '<href>'
+        response.appendChild(DomUtil.hrefToXml(getHref(), document));
+        if (type == TYPE_PROPSTAT) {
+            // add '<propstat>' elements
+            Iterator iter = statusMap.keySet().iterator();
+            while (iter.hasNext()) {
+                Integer statusKey = (Integer) iter.next();
+                Status status = new Status(statusKey.intValue());
+                PropContainer propCont = (PropContainer) statusMap.get(statusKey);
+
+                Element propstat = DomUtil.createElement(document, XML_PROPSTAT, NAMESPACE);
+                propstat.appendChild(propCont.toXml(document));
+                propstat.appendChild(status.toXml(document));
+                response.appendChild(propstat);
+            }
+        } else {
+            // add a single '<status>' element
+            // NOTE: a href+status response cannot be created with 'null' status
+            response.appendChild(status.toXml(document));
+        }
+        // add the optional '<responsedescription>' element
+        String description = getResponseDescription();
+        if (description != null) {
+            Element desc = DomUtil.createElement(document, XML_RESPONSEDESCRIPTION, NAMESPACE);
+            DomUtil.setText(desc, description);
+            response.appendChild(desc);
+        }
+        return response;
+    }
+    //----------------------------------------------< type specific methods >---
     /**
      * Adds a property to this response '200' propstat set.
      *
      * @param property the property to add
      */
     public void add(DavProperty property) {
-        status200.addContent(property.toXml());
+        checkType(TYPE_PROPSTAT);
+        PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, false);
+        status200.addContent(property);
     }
 
     /**
@@ -176,7 +256,9 @@ public class MultiStatusResponse implements DavConstants {
      * @param propertyName the property name to add
      */
     public void add(DavPropertyName propertyName) {
-        status200.addContent(propertyName.toXml());
+        checkType(TYPE_PROPSTAT);
+        PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, true);
+        status200.addContent(propertyName);
     }
 
     /**
@@ -186,7 +268,9 @@ public class MultiStatusResponse implements DavConstants {
      * @param status   the status of the response set to select
      */
     public void add(DavProperty property, int status) {
-        add(property.toXml(), status);
+        checkType(TYPE_PROPSTAT);
+        PropContainer propCont = getPropContainer(status, false);
+        propCont.addContent(property);
     }
 
     /**
@@ -196,117 +280,75 @@ public class MultiStatusResponse implements DavConstants {
      * @param status       the status of the response set to select
      */
     public void add(DavPropertyName propertyName, int status) {
-        add(propertyName.toXml(), status);
+        checkType(TYPE_PROPSTAT);
+        PropContainer propCont = getPropContainer(status, true);
+        propCont.addContent(propertyName);
     }
 
     /**
-     * Get properties present in this response for the given status code.
+     *
+     * @param status
+     * @return
+     */
+    private PropContainer getPropContainer(int status, boolean forNames) {
+        Integer statusKey = new Integer(status);
+        PropContainer propContainer;
+        Object entry = statusMap.get(statusKey);
+        if (entry == null) {
+            if (forNames) {
+                propContainer = new DavPropertyNameSet();
+            } else {
+                propContainer = new DavPropertySet();
+            }
+            statusMap.put(statusKey, propContainer);
+        } else {
+            propContainer = (PropContainer) entry;
+                }
+        return propContainer;
+            }
+
+    private void checkType(int type) {
+        if (this.type != type) {
+            throw new IllegalStateException("The given MultiStatusResponse is not of the required type.");
+        }
+    }
+
+    /**
+     * Get properties present in this response for the given status code. In case
+     * this MultiStatusResponse does not represent a 'propstat' response, always
+     * an empty {@link DavPropertySet} will be returned.
      *
      * @param status
      * @return property set
      */
     public DavPropertySet getProperties(int status) {
-        DavPropertySet set = new DavPropertySet();
         Integer key = new Integer(status);
         if (statusMap.containsKey(key)) {
             Object mapEntry = statusMap.get(key);
-            if (mapEntry != null) {
-                Element propElem = (Element) mapEntry;
-                Iterator it = propElem.getChildren().iterator();
-                while (it.hasNext()) {
-                    Element propEntry = (Element) it.next();
-                    DavProperty prop = DefaultDavProperty.createFromXml(propEntry);
-                    set.add(prop);
-                }
+            if (mapEntry != null && mapEntry instanceof DavPropertySet) {
+                return (DavPropertySet)mapEntry;
             }
         }
-        return set;
+        return new DavPropertySet();
     }
 
     /**
-     * Get property names present in this response for the given status code.
+     * Get property names present in this response for the given status code. In case
+     * this MultiStatusResponse does not represent a 'propstat' response, always
+     * an empty {@link DavPropertyNameSet} will be returned.
      *
      * @param status
      * @return property names
      */
     public DavPropertyNameSet getPropertyNames(int status) {
-        DavPropertyNameSet set = new DavPropertyNameSet();
         Integer key = new Integer(status);
         if (statusMap.containsKey(key)) {
             Object mapEntry = statusMap.get(key);
-            if (mapEntry != null) {
-                Element propElem = (Element) mapEntry;
-                Iterator it = propElem.getChildren().iterator();
-                while (it.hasNext()) {
-                    Element propEntry = (Element) it.next();
-                    set.add(DavPropertyName.createFromXml(propEntry));
-                }
-            }
+            if (mapEntry != null && mapEntry instanceof DavPropertyNameSet) {
+                return (DavPropertyNameSet)mapEntry;
         }
-        return set;
-    }
-
-    /**
-     * @return responseDescription
-     */
-    public String getResponseDescription() {
-        return responseDescription;
-    }
-
-    /**
-     * Set the content of the optional response description element, which is
-     * intended to contain a message that can be displayed to the user
-     * explaining the nature of this response.
-     *
-     * @param responseDescription
-     */
-    public void setResponseDescription(String responseDescription) {
-        this.responseDescription = responseDescription;
-    }
-
-    /**
-     * Creates the JDOM element for this reponse.
-     *
-     * @return A JDOM element of this response
-     */
-    public Element toXml() {
-        // don't create empty 'href' responses
-        if ("".equals(href)) {
-            return null;
-        }
-        Element response = new Element(XML_RESPONSE, NAMESPACE);
-        // add '<href>'
-        response.addContent(XmlUtil.hrefToXml(href));
-        // add '<propstat>' elements or a single '<status>' element
-        Iterator iter = statusMap.keySet().iterator();
-        while (iter.hasNext()) {
-            Integer statusKey = (Integer) iter.next();
-            Object mapEntry = statusMap.get(statusKey);
-            Status status = new Status(statusKey.intValue());
-            if (mapEntry != null) {
-                Element prop = (Element) mapEntry;
-                if (XML_PROP.equals(prop.getName())) {
-                    // do not add empty propstat elements
-                    if (prop.getContentSize() > 0) {
-                        Element propstat = new Element(XML_PROPSTAT, NAMESPACE);
-                        propstat.addContent(prop);
-                        propstat.addContent(status.toXml());
-                        response.addContent(propstat);
                     }
-                } else {
-                    response.addContent(status.toXml());
-                }
-            } else {
-                response.addContent(status.toXml());
-            }
-        }
-        // add the optional '<responsedescription>' element
-        if (responseDescription != null) {
-            Element desc = new Element(XML_RESPONSEDESCRIPTION, NAMESPACE);
-            desc.setText(responseDescription);
-            response.addContent(desc);
-        }
-        return response;
+        return new DavPropertyNameSet();
     }
 
     /**
@@ -315,117 +357,60 @@ public class MultiStatusResponse implements DavConstants {
      * @param responseElement
      * @return new <code>MultiStatusResponse</code> instance
      * @throws IllegalArgumentException if the specified element is <code>null</code>
+     * or not a DAV:response element or if the mandatory DAV:href child is
+     * missing.
      */
     public static MultiStatusResponse createFromXml(Element responseElement) {
-        if (responseElement == null) {
-            throw new IllegalArgumentException("The response element must not be null.");
+        if (!DomUtil.matches(responseElement, XML_RESPONSE, NAMESPACE)) {
+            throw new IllegalArgumentException("DAV:response element required.");
         }
-        String href = XmlUtil.hrefFromXml(responseElement.getChild(XML_HREF, NAMESPACE));
-        String statusLine = responseElement.getChildText(XML_STATUS, NAMESPACE);
-        MultiStatusResponse response = (statusLine != null) ? new MultiStatusResponse(href, Status.createFromStatusLine(statusLine).getStatusCode()) : new MultiStatusResponse(href);
+        String href = DomUtil.getChildTextTrim(responseElement, XML_HREF, NAMESPACE);
+        if (href == null) {
+            throw new IllegalArgumentException("DAV:response element must contain a DAV:href element expected.");
+        }
+        String statusLine = DomUtil.getChildText(responseElement, XML_STATUS, NAMESPACE);
+        String responseDescription = DomUtil.getChildText(responseElement, XML_RESPONSEDESCRIPTION, NAMESPACE);
 
+        MultiStatusResponse response;
+        if (statusLine != null) {
+            Status status = Status.parse(statusLine);
+            response = new MultiStatusResponse(href, status, responseDescription);
+        } else {
+            response = new MultiStatusResponse(href, responseDescription, TYPE_PROPSTAT);
         // read propstat elements
-        Iterator it = responseElement.getChildren(XML_PROPSTAT, NAMESPACE).iterator();
+            ElementIterator it = DomUtil.getChildren(responseElement, XML_PROPSTAT, NAMESPACE);
         while (it.hasNext()) {
-            Element propstat = (Element) it.next();
-            Element prop = propstat.getChild(XML_PROP, NAMESPACE);
-            String propstatus = propstat.getChildText(XML_STATUS, NAMESPACE);
-            if (propstatus != null) {
-                Status st = Status.createFromStatusLine(propstatus);
-                Element[] propertyElems = (Element[]) prop.getChildren().toArray(new Element[0]);
-                for (int i = 0; i < propertyElems.length; i++) {
-                    response.add(propertyElems[i], st.getStatusCode());
+                Element propstat = it.nextElement();
+                String propstatus = DomUtil.getChildText(propstat, XML_STATUS, NAMESPACE);
+                Element prop = DomUtil.getChildElement(propstat, XML_PROP, NAMESPACE);
+                if (propstatus != null && prop != null) {
+                    int statusCode = Status.parse(propstatus).getStatusCode();
+                    ElementIterator propIt = DomUtil.getChildren(prop);
+                    while (propIt.hasNext()) {
+                        Element el = propIt.nextElement();
+                        // current elem is now either a dav property xml representation
+                        // or the xml representation of a davpropertyname
+                        if (DomUtil.hasContent(el)) {
+                            // property
+                            DavProperty property = DefaultDavProperty.createFromXml(el);
+                            response.add(property, statusCode);
+                        } else {
+                            // property-name only
+                            DavPropertyName propName = DavPropertyName.createFromXml(el);
+                            response.add(propName, statusCode);
+                        }
+                    }
                 }
             }
-        // TODO: propstat may also contain a responsedescription
         }
-
-        response.setResponseDescription(responseElement.getChildText(XML_RESPONSEDESCRIPTION, NAMESPACE));
         return response;
     }
 
     /**
-     * Inner class encapsulating the 'status' present in the multistatus response.
+     * @param href
+     * @return false if the given href is <code>null</code> or empty string.
      */
-    private static class Status {
-
-        private String version = "HTTP/1.1";
-        private int code;
-        private String phrase = "";
-
-        private Status(int code) {
-            this.code = code;
-            phrase = DavException.getStatusPhrase(code);
-        }
-
-        private Status(String version, int code, String phrase) {
-            this.version = version;
-            this.code = code;
-            this.phrase = phrase;
-        }
-
-        private int getStatusCode() {
-            return code;
-        }
-
-        private Element toXml() {
-            String statusLine = version + " " + code + " " + phrase;
-            return new Element(XML_STATUS, NAMESPACE).setText(statusLine);
-        }
-
-        private static Status createFromStatusLine(String statusLine) {
-            if (statusLine == null) {
-                throw new IllegalArgumentException("Unable to parse status line from null xml element.");
-            }
-            Status status;
-
-            // code copied from org.apache.commons.httpclient.StatusLine
-            int length = statusLine.length();
-            int at = 0;
-            int start = 0;
-            try {
-                while (Character.isWhitespace(statusLine.charAt(at))) {
-                    ++at;
-                    ++start;
-                }
-                if (!"HTTP".equals(statusLine.substring(at, at += 4))) {
-                    log.warn("Status-Line '" + statusLine + "' does not start with HTTP");
-                }
-                //handle the HTTP-Version
-                at = statusLine.indexOf(" ", at);
-                if (at <= 0) {
-                    log.warn("Unable to parse HTTP-Version from the status line: '" + statusLine + "'");
-                }
-                String version = (statusLine.substring(start, at)).toUpperCase();
-                //advance through spaces
-                while (statusLine.charAt(at) == ' ') {
-                    at++;
-                }
-                //handle the Status-Code
-                int to = statusLine.indexOf(" ", at);
-                if (to < 0) {
-                    to = length;
-                }
-                try {
-                    int code = Integer.parseInt(statusLine.substring(at, to));
-                    status = new Status(code);
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Unable to parse status code from status line: '" + statusLine + "'");
-                }
-                //handle the Reason-Phrase
-                String phrase = "";
-                at = to + 1;
-                if (at < length) {
-                    phrase = statusLine.substring(at).trim();
-                }
-
-                status.version = version;
-                status.phrase = phrase;
-
-            } catch (StringIndexOutOfBoundsException e) {
-                throw new IllegalArgumentException("Status-Line '" + statusLine + "' is not valid");
-            }
-            return status;
-        }
+    private static boolean isValidHref(String href) {
+        return href != null && !"".equals(href);
     }
 }

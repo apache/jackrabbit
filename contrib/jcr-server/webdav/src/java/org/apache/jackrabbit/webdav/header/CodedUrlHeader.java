@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * <code>CodedUrlHeader</code>...
  */
-public class CodedUrlHeader {
+public class CodedUrlHeader implements Header {
 
     private static Logger log = Logger.getLogger(CodedUrlHeader.class);
 
@@ -42,6 +42,7 @@ public class CodedUrlHeader {
      * Return the name of the header
      *
      * @return header name
+     * @see Header#getHeaderName()
      */
     public String getHeaderName() {
 	return headerName;
@@ -51,6 +52,7 @@ public class CodedUrlHeader {
      * Return the value of the header
      *
      * @return value
+     * @see Header#getHeaderValue()
      */
     public String getHeaderValue() {
         return headerValue;

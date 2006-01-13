@@ -16,19 +16,20 @@
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.report.*;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
+import org.apache.jackrabbit.webdav.version.report.Report;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
-import org.apache.jackrabbit.webdav.jcr.JcrDavException;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.jdom.Document;
-import org.jdom.Element;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
-import javax.jcr.*;
-import java.util.ArrayList;
-import java.util.List;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
 
 /**
  * <code>RegisteredNamespacesReport</code> let the client retrieve the namespaces
@@ -59,7 +60,6 @@ public class RegisteredNamespacesReport implements Report, ItemResourceConstants
     public static final ReportType REGISTERED_NAMESPACES_REPORT = ReportType.register("registerednamespaces", ItemResourceConstants.NAMESPACE, RegisteredNamespacesReport.class);
 
     private NamespaceRegistry nsReg;
-    private ReportInfo info;
 
     /**
      * Returns {@link #REGISTERED_NAMESPACES_REPORT} type.
@@ -71,66 +71,61 @@ public class RegisteredNamespacesReport implements Report, ItemResourceConstants
     }
 
     /**
-     * @param resource
-     * @throws IllegalArgumentException if the resource or the session retrieved
-     * from the specified resource is <code>null</code>
-     * @see org.apache.jackrabbit.webdav.version.report.Report#setResource(org.apache.jackrabbit.webdav.version.DeltaVResource)
+     * Always returns <code>false</code>.
+     *
+     * @return false
+     * @see org.apache.jackrabbit.webdav.version.report.Report#isMultiStatusReport()
      */
-    public void setResource(DeltaVResource resource) {
+    public boolean isMultiStatusReport() {
+        return false;
+    }
+
+    /**
+     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, org.apache.jackrabbit.webdav.version.report.ReportInfo)
+     */
+    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
+        if (info == null) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "ReportInfo must not be null.");
+        }
         if (resource == null) {
-            throw new IllegalArgumentException("Resource must not be null.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Resource must not be null.");
+        }
+        if (!getType().isRequestedReportType(info)) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "registerednamespaces element expected.");
         }
         try {
             DavSession session = resource.getSession();
             if (session == null || session.getRepositorySession() == null) {
-                throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the registerednamespaces report.");
+                throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource must provide a non-null session object in order to create the registerednamespaces report.");
             }
             nsReg = session.getRepositorySession().getWorkspace().getNamespaceRegistry();
         } catch (RepositoryException e) {
-            log.error(e.getMessage());
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * @param info
-     * @throws IllegalArgumentException if the specified info does not contain
-     * a {@link ItemResourceConstants#NAMESPACE dcr}:registerednamespaces element.
-     * @see org.apache.jackrabbit.webdav.version.report.Report#setInfo(org.apache.jackrabbit.webdav.version.report.ReportInfo)
-     */
-    public void setInfo(ReportInfo info) {
-        if (info == null || !"registerednamespaces".equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("registerednamespaces element expected.");
-        }
-        this.info = info;
-    }
-
-    /**
-     * Returns a Xml representation of the node type definition(s) according
-     * to the info object.
+     * Returns a Xml representation of the registered namespace(s).
      *
-     * @return Xml representation of the node type definition(s)
-     * @throws org.apache.jackrabbit.webdav.DavException if the specified nodetypes are not known or if another
-     * error occurs while retrieving the nodetype definitions.
-     * @see org.apache.jackrabbit.webdav.version.report.Report#toXml()
+     * @return Xml representation of the registered namespace(s)
+     * error occurs while retrieving the namespaces.
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Document toXml() throws DavException {
-        if (info == null || nsReg == null) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running registerednamespaces report");
-        }
+    public Element toXml(Document document)  {
+        Element report = DomUtil.createElement(document, "registerednamespaces-report", NAMESPACE);
         try {
 	    String[] prefixes = nsReg.getPrefixes();
-	    List namespaceList = new ArrayList();
 	    for (int i = 0; i < prefixes.length; i++) {
-		Element elem = new Element(XML_NAMESPACE, NAMESPACE);
-		elem.addContent(new Element(XML_PREFIX, NAMESPACE).setText(prefixes[i]));
-		elem.addContent(new Element(XML_URI, NAMESPACE).setText(nsReg.getURI(prefixes[i])));
-		namespaceList.add(elem);
-	    }
-	    Element report = new Element("registerednamespaces-report", NAMESPACE).addContent(namespaceList);
-            Document reportDoc = new Document(report);
-            return reportDoc;
+                Element elem = DomUtil.addChildElement(report, XML_NAMESPACE, NAMESPACE);
+                DomUtil.addChildElement(elem, XML_PREFIX, NAMESPACE, prefixes[i]);
+                DomUtil.addChildElement(elem, XML_URI, NAMESPACE, nsReg.getURI(prefixes[i]));
+            }
         } catch (RepositoryException e) {
-            throw new JcrDavException(e);
+            // should not occur.
+            log.error(e.getMessage());
         }
+        return report;
     }
+
 }

@@ -16,14 +16,20 @@
 package org.apache.jackrabbit.webdav.jcr.version;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.*;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.DefaultItemCollection;
-import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
+import org.apache.jackrabbit.webdav.version.VersionResource;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Item;

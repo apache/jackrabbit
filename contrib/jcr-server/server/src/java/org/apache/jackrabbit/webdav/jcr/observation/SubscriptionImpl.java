@@ -15,18 +15,30 @@
  */
 package org.apache.jackrabbit.webdav.jcr.observation;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.DavResourceLocator;
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.observation.*;
-import org.apache.jackrabbit.webdav.util.XmlUtil;
 import org.apache.jackrabbit.uuid.UUID;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.observation.EventBundle;
+import org.apache.jackrabbit.webdav.observation.EventDiscovery;
+import org.apache.jackrabbit.webdav.observation.EventType;
+import org.apache.jackrabbit.webdav.observation.Filter;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
+import org.apache.jackrabbit.webdav.observation.ObservationResource;
+import org.apache.jackrabbit.webdav.observation.Subscription;
+import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import javax.jcr.observation.*;
-import javax.jcr.observation.EventListener;
 import javax.jcr.RepositoryException;
-import java.util.*;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * The <code>Subscription</code> class encapsulates a single subscription with
@@ -42,6 +54,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     private static final long DEFAULT_TIMEOUT = 300000; // 5 minutes
 
     private SubscriptionInfo info;
+    private long expirationTime;
 
     private final DavResourceLocator locator;
     private final String subscriptionId = UUID.randomUUID().toString();
@@ -70,25 +83,27 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
 
     /**
      * Return the Xml representation of this <code>Subscription</code> as required
-     * for the {@link org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery} webdav property that in included
-     * in the response body of a sucessful SUBSCRIBE request or as part of a
-     * PROPFIND response.
+     * for the {@link org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery}
+     * webdav property that in included in the response body of a sucessful SUBSCRIBE
+     * request or as part of a PROPFIND response.
      *
      * @return Xml representation
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Element toXml() {
-        Element subscr = new Element(XML_SUBSCRIPTION, NAMESPACE);
-        Element[] elems = info.toXml();
-        for (int i = 0; i < elems.length; i++) {
-            subscr.addContent(elems[i]);
-        }
+    public Element toXml(Document document) {
+        Element subscr = DomUtil.createElement(document, XML_SUBSCRIPTION, NAMESPACE);
 
-        Element id = new Element(XML_SUBSCRIPTIONID);
-        id.addContent(XmlUtil.hrefToXml(subscriptionId));
-        subscr.addContent(id);
+        subscr.appendChild(info.toXml(document));
+        subscr.appendChild(DomUtil.depthToXml(info.isDeep(), document));
+        subscr.appendChild(DomUtil.timeoutToXml(info.getTimeOut(), document));
+
+        Element id = DomUtil.addChildElement(subscr, XML_SUBSCRIPTIONID, NAMESPACE);
+        id.appendChild(DomUtil.hrefToXml(subscriptionId, document));
         return subscr;
     }
 
+    //--------------------------------------------< implementation specific >---
     /**
      * Modify the {@link SubscriptionInfo} for this subscription.
      *
@@ -98,36 +113,49 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
         this.info = info;
         // validate the timeout and adjust value, if it is invalid or missing
         long timeout = info.getTimeOut();
-        if (timeout == DavConstants.UNDEFINED_TIMEOUT) {
-            info.setTimeOut(DEFAULT_TIMEOUT);
+        if (timeout <= 0) {
+            timeout = DEFAULT_TIMEOUT;
         }
+        expirationTime = System.currentTimeMillis() + timeout;
     }
 
     /**
      * @return JCR compliant integer representation of the event types defined
      * for this {@link SubscriptionInfo}.
      */
-    int getEventTypes() {
-        Iterator xmlTypes = info.getEventTypes().iterator();
-        int eventTypes = 0;
-        while (xmlTypes.hasNext()) {
-            eventTypes |= nametoTypeConstant(((Element)xmlTypes.next()).getName());
+    int getEventTypes() throws DavException {
+        EventType[] eventTypes = info.getEventTypes();
+        int events = 0;
+        for (int i = 0; i < eventTypes.length; i++) {
+            events |= getEventType(eventTypes[i].getName());
         }
-        return eventTypes;
+        return events;
     }
 
     /**
      * @return a String array with size > 0 or <code>null</code>
      */
     String[] getUuidFilters() {
-        return info.getFilters(XML_UUID);
+        return getFilterValues(XML_UUID);
     }
 
     /**
      * @return a String array with size > 0 or <code>null</code>
      */
     String[] getNodetypeNameFilters() {
-        return info.getFilters(XML_NODETYPE_NAME);
+        return getFilterValues(XML_NODETYPE_NAME);
+    }
+
+    private String[] getFilterValues(String filterLocalName) {
+        Filter[] filters = info.getFilters(filterLocalName, NAMESPACE);
+        List values = new ArrayList();
+        for (int i = 0; i < filters.length; i++) {
+            String val = filters[i].getValue();
+            if (val != null) {
+                values.add(val);
+            }
+        }
+        return (values.size() > 0) ? (String[])values.toArray(new String[values.size()]) : null;
     }
 
     /**
@@ -173,7 +201,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * @return true if this <code>Subscription</code> is expired
      */
     boolean isExpired() {
-        return System.currentTimeMillis() > info.getTimeOut() + System.currentTimeMillis();
+        return System.currentTimeMillis() > expirationTime;
     }
 
     /**
@@ -189,7 +217,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
         Iterator it = eventBundles.iterator();
         while (it.hasNext()) {
             EventBundle eb = (EventBundle) it.next();
-            ed.addEventBundle(eb.toXml());
+            ed.addEventBundle(eb);
         }
         // clear list
         eventBundles.clear();
@@ -208,7 +236,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     public synchronized void onEvent(EventIterator events) {
         // TODO: correct not to accept events after expiration? without unsubscribing?
         if (!isExpired()) {
-            eventBundles.add(new EventBundle(events));
+            eventBundles.add(new EventBundleImpl(events));
         }
     }
 
@@ -217,12 +245,12 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * Static utility method in order to convert the types defined by
      * {@link javax.jcr.observation.Event} into their Xml representation.
      *
-     * @param jcrEventType
+     * @param eventType The jcr event type
      * @return Xml representation of the event type.
      */
-    static Element typeConstantToXml(int jcrEventType) {
+    private static String getEventName(int eventType) {
         String eventName;
-        switch (jcrEventType) {
+        switch (eventType) {
             case Event.NODE_ADDED:
                 eventName = EVENT_NODEADDED;
                 break;
@@ -240,7 +268,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 eventName = EVENT_PROPERTYREMOVED;
                 break;
         }
-        return new Element(eventName, NAMESPACE);
+        return eventName;
     }
 
     /**
@@ -248,25 +276,25 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * Xml request body into the corresponding constant defined by
      * {@link javax.jcr.observation.Event}.
      *
-     * @param eventTypeName
+     * @param eventName
      * @return event type as defined by {@link javax.jcr.observation.Event}.
-     * @throws IllegalArgumentException if the given element cannot be translated
+     * @throws DavException if the given element cannot be translated
      * to any of the events defined by {@link javax.jcr.observation.Event}.
      */
-    static int nametoTypeConstant(String eventTypeName) {
+    private static int getEventType(String eventName) throws DavException {
         int eType;
-        if (EVENT_NODEADDED.equals(eventTypeName)) {
+        if (EVENT_NODEADDED.equals(eventName)) {
             eType = Event.NODE_ADDED;
-        } else if (EVENT_NODEREMOVED.equals(eventTypeName)) {
+        } else if (EVENT_NODEREMOVED.equals(eventName)) {
             eType = Event.NODE_REMOVED;
-        } else if (EVENT_PROPERTYADDED.equals(eventTypeName)) {
+        } else if (EVENT_PROPERTYADDED.equals(eventName)) {
             eType = Event.PROPERTY_ADDED;
-        } else if (EVENT_PROPERTYCHANGED.equals(eventTypeName)) {
+        } else if (EVENT_PROPERTYCHANGED.equals(eventName)) {
             eType = Event.PROPERTY_CHANGED;
-        } else if (EVENT_PROPERTYREMOVED.equals(eventTypeName)) {
+        } else if (EVENT_PROPERTYREMOVED.equals(eventName)) {
             eType = Event.PROPERTY_REMOVED;
         } else {
-            throw new IllegalArgumentException("Invalid event type: "+eventTypeName);
+            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Invalid event type: "+eventName);
         }
         return eType;
     }
@@ -279,20 +307,19 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      *
      * @see SubscriptionImpl#discoverEvents()
      */
-    private class EventBundle {
+    private class EventBundleImpl implements EventBundle {
 
         private final EventIterator events;
 
-        private EventBundle(EventIterator events) {
+        private EventBundleImpl(EventIterator events) {
             this.events = events;
         }
 
-        private Element toXml() {
-            Element bundle = new Element(XML_EVENTBUNDLE, NAMESPACE);
+        public Element toXml(Document document) {
+            Element bundle = DomUtil.createElement(document, XML_EVENTBUNDLE, NAMESPACE);
             while (events.hasNext()) {
                 Event event = events.nextEvent();
-
-                Element eventElem = new Element(XML_EVENT, NAMESPACE);
+                Element eventElem = DomUtil.addChildElement(bundle, XML_EVENT, NAMESPACE);
                 // href
                 String eHref = "";
                 try {
@@ -302,15 +329,15 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                     // should not occur....
                     log.error(e.getMessage());
                 }
-                eventElem.addContent(XmlUtil.hrefToXml(eHref));
+                eventElem.appendChild(DomUtil.hrefToXml(eHref, document));
                 // eventtype
-                Element eType = new Element(XML_EVENTTYPE, NAMESPACE).addContent(typeConstantToXml(event.getType()));
-                eventElem.addContent(eType);
+                Element eType = DomUtil.addChildElement(eventElem, XML_EVENTTYPE, NAMESPACE);
+                DomUtil.addChildElement(eType, getEventName(event.getType()), NAMESPACE);
                 // user id
-                Element eUserId = new Element(XML_EVENTUSERID, NAMESPACE).setText(event.getUserID());
-                eventElem.addContent(eUserId);
+                DomUtil.addChildElement(eventElem, XML_EVENTUSERID, NAMESPACE, event.getUserID());
             }
             return bundle;
         }
+
     }
 }

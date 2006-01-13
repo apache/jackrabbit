@@ -15,36 +15,68 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.server.io.IOUtil;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavLocatorFactory;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.io.OutputContext;
-import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.jcr.search.SearchResourceImpl;
+import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
+import org.apache.jackrabbit.webdav.lock.LockDiscovery;
+import org.apache.jackrabbit.webdav.lock.LockInfo;
+import org.apache.jackrabbit.webdav.lock.LockManager;
+import org.apache.jackrabbit.webdav.lock.Scope;
+import org.apache.jackrabbit.webdav.lock.SupportedLock;
+import org.apache.jackrabbit.webdav.lock.Type;
+import org.apache.jackrabbit.webdav.observation.EventDiscovery;
+import org.apache.jackrabbit.webdav.observation.ObservationResource;
+import org.apache.jackrabbit.webdav.observation.Subscription;
+import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
+import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
+import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
-import org.apache.jackrabbit.webdav.transaction.TransactionResource;
-import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
+import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
+import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
+import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.transaction.TxLockManager;
-import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
-import org.apache.jackrabbit.webdav.jcr.search.SearchResourceImpl;
-import org.apache.jackrabbit.webdav.observation.*;
-import org.apache.jackrabbit.webdav.version.*;
+import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.version.DeltaVResource;
+import org.apache.jackrabbit.webdav.version.OptionsInfo;
+import org.apache.jackrabbit.webdav.version.OptionsResponse;
+import org.apache.jackrabbit.webdav.version.SupportedMethodSetProperty;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
-import org.apache.jackrabbit.webdav.lock.*;
-import org.apache.jackrabbit.webdav.property.*;
-import org.apache.jackrabbit.webdav.property.ResourceType;
+import org.apache.log4j.Logger;
 
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
 import javax.jcr.Item;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>AbstractResource</code> provides functionality common to all
@@ -467,14 +499,15 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         OptionsResponse oR = null;
         if (optionsInfo != null) {
             oR = new OptionsResponse();
-            // currently on DAV:version-history-collection-set and
+            // currently only DAV:version-history-collection-set and
             // DAV:workspace-collection-set is supported.
             if (optionsInfo.containsElement(DeltaVConstants.XML_VH_COLLECTION_SET, DeltaVConstants.NAMESPACE)) {
                 String[] hrefs = new String[] {
                     getLocatorFromItemPath(ItemResourceConstants.VERSIONSTORAGE_PATH).getHref(true)
                 };
                 oR.addEntry(DeltaVConstants.XML_VH_COLLECTION_SET, DeltaVConstants.NAMESPACE, hrefs);
-            } else if (optionsInfo.containsElement(DeltaVConstants.XML_WSP_COLLECTION_SET, DeltaVConstants.NAMESPACE)) {
+            }
+            if (optionsInfo.containsElement(DeltaVConstants.XML_WSP_COLLECTION_SET, DeltaVConstants.NAMESPACE)) {
                 // workspaces cannot be created anywhere.
                 oR.addEntry(DeltaVConstants.XML_WSP_COLLECTION_SET, DeltaVConstants.NAMESPACE, new String[0]);
             }
@@ -497,17 +530,10 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         }
 
         if (supportedReports.isSupportedReport(reportInfo)) {
-            try {
-                Report report = ReportType.getType(reportInfo).createReport();
-                report.setInfo(reportInfo);
-                report.setResource(this);
+            Report report = ReportType.getType(reportInfo).createReport(this, reportInfo);
                 return report;
-            } catch (IllegalArgumentException e) {
-                // should never occur.
-                throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-            }
         } else {
-            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Unkown report "+ reportInfo.getReportElement().getNamespacePrefix() + reportInfo.getReportElement().getName() +"requested.");
+            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Unkown report "+ reportInfo.getReportName() +"requested.");
         }
     }
 

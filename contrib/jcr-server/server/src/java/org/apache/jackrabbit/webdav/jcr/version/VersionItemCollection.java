@@ -19,16 +19,29 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.DefaultItemCollection;
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.property.*;
-import org.apache.jackrabbit.webdav.version.*;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.version.VersionResource;
+import org.apache.jackrabbit.webdav.version.LabelInfo;
+import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
+import org.apache.jackrabbit.webdav.version.LabelSetProperty;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.JcrConstants;
-import org.jdom.Element;
 
-import javax.jcr.*;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.Item;
+import javax.jcr.RepositoryException;
+import javax.jcr.PropertyIterator;
+import javax.jcr.Property;
+import javax.jcr.Node;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -71,7 +84,7 @@ public class VersionItemCollection extends DefaultItemCollection
      * Modify the labels defined for the underlying repository version.
      *
      * @param labelInfo
-     * @throws DavException
+     * @throws org.apache.jackrabbit.webdav.DavException
      * @see VersionResource#label(org.apache.jackrabbit.webdav.version.LabelInfo)
      * @see VersionHistory#addVersionLabel(String, String, boolean)
      * @see VersionHistory#removeVersionLabel(String)
@@ -166,11 +179,7 @@ public class VersionItemCollection extends DefaultItemCollection
 
                 // required, protected DAV:label-name-set property
                 String[] labels = getVersionHistoryItem().getVersionLabels(v);
-                Element[] labelElems = new Element[labels.length];
-                for (int i = 0; i < labels.length; i++) {
-                    labelElems[i] = new Element(DeltaVConstants.XML_LABEL_NAME, NAMESPACE).setText(labels[i]);
-                }
-                properties.add(new DefaultDavProperty(LABEL_NAME_SET, labelElems, true));
+                properties.add(new LabelSetProperty(labels));
 
                 // required DAV:predecessor-set (protected) and DAV:successor-set (computed) properties
                 addHrefProperty(VersionResource.PREDECESSOR_SET, v.getPredecessors(), true);

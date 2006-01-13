@@ -15,10 +15,9 @@
  */
 package org.apache.jackrabbit.webdav.simple;
 
-import javax.jcr.Session;
-
 import org.apache.jackrabbit.webdav.DavSession;
 
+import javax.jcr.Session;
 import java.util.HashSet;
 
 /**

@@ -15,12 +15,20 @@
 */
 package org.apache.jackrabbit.server.jcr;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.server.SessionProvider;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavSessionProvider;
+import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.jcr.JcrDavException;
+import org.apache.log4j.Logger;
 
-import javax.jcr.*;
+import javax.jcr.LoginException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;

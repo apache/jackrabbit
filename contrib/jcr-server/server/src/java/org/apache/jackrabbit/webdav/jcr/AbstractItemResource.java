@@ -16,15 +16,27 @@
 package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.property.*;
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.jcr.version.report.*;
 import org.apache.jackrabbit.webdav.transaction.TxLockEntry;
 import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.LocateByUuidReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
 import org.apache.jackrabbit.util.Text;
 
-import javax.jcr.*;
+import javax.jcr.Item;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Workspace;
 
 /**
  * <code>AbstractItemResource</code> covers common functionality for the various
@@ -71,7 +83,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * Returns true if there exists a {@link Item repository item} with the given
      * resource path, false otherwise.
      *
-     * @see DavResource#exists()
+     * @see org.apache.jackrabbit.webdav.DavResource#exists()
      */
     public boolean exists() {
         return item != null;
@@ -85,7 +97,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * which is exposed with the {@link #JCR_NAME &#123;http://www.day.com/jcr/webdav/1.0&#125;name}
      * property.
      *
-     * @see DavResource#getDisplayName() )
+     * @see org.apache.jackrabbit.webdav.DavResource#getDisplayName() )
      */
     public String getDisplayName() {
         String resPath = getResourcePath();
@@ -100,7 +112,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @return the collection this resource is internal member of. Except for the
      * repository root, the returned collection always represent the parent
      * repository node.
-     * @see DavResource#getCollection()
+     * @see org.apache.jackrabbit.webdav.DavResource#getCollection()
      */
     public DavResource getCollection() {
         DavResource collection = null;
@@ -127,7 +139,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @param destination
      * @throws DavException
      * @see DavResource#move(DavResource)
-     * @see Session#move(String, String)
+     * @see javax.jcr.Session#move(String, String)
      */
     public void move(DavResource destination) throws DavException {
         if (!exists()) {

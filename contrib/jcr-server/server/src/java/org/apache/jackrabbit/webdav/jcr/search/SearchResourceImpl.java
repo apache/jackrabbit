@@ -16,16 +16,28 @@
 package org.apache.jackrabbit.webdav.jcr.search;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.JcrConstants;
-import org.jdom.Namespace;
 
-import javax.jcr.*;
-import javax.jcr.query.*;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.RowIterator;
+import javax.jcr.query.Row;
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.Value;
 
 /**
  * <code>SearchResourceImpl</code>...
@@ -47,17 +59,16 @@ public class SearchResourceImpl implements SearchResource {
      * @see SearchResource#getQueryGrammerSet()
      */
     public QueryGrammerSet getQueryGrammerSet()  {
-        QueryGrammerSet qgs;
+        QueryGrammerSet qgs = new QueryGrammerSet();
         try {
             QueryManager qMgr = session.getRepositorySession().getWorkspace().getQueryManager();
             String[] langs = qMgr.getSupportedQueryLanguages();
-            qgs = new QueryGrammerSet();
             for (int i = 0; i < langs.length; i++) {
                 // todo: define proper namespace
-                qgs.addQueryLanguage(langs[i], Namespace.NO_NAMESPACE);
+                qgs.addQueryLanguage(langs[i], Namespace.EMPTY_NAMESPACE);
             }
         } catch (RepositoryException e) {
-            qgs = new QueryGrammerSet(new String[0]);
+            log.debug(e.getMessage());
         }
         return qgs;
     }
@@ -90,7 +101,7 @@ public class SearchResourceImpl implements SearchResource {
      * </ul>
      * @param sInfo defining the query to be executed
      * @return <code>Query</code> object.
-     * @throws InvalidQueryException if the query defined by <code>sInfo</code> is invalid
+     * @throws javax.jcr.query.InvalidQueryException if the query defined by <code>sInfo</code> is invalid
      * @throws RepositoryException the query manager cannot be accessed or if
      * another error occurs.
      * @throws DavException if <code>sInfo</code> is <code>null</code> and
@@ -159,7 +170,7 @@ public class SearchResourceImpl implements SearchResource {
             // create a new ms-response for this row of the result set
             DavResourceLocator loc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), itemPath, false);
             String href = loc.getHref(true);
-            MultiStatusResponse resp = new MultiStatusResponse(href);
+            MultiStatusResponse resp = new MultiStatusResponse(href, null);
             // build the s-r-property
             SearchResultProperty srp = new SearchResultProperty(columnNames, values);
             resp.add(srp);
