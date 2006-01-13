@@ -15,33 +15,37 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.jdom.Element;
-import org.jdom.Namespace;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
-import java.util.*;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * The <code>Scope</code> class abstracts the lock scope as defined by RFC 2518.
  */
-public class Scope {
+public class Scope implements XmlSerializable {
 
     private static final Map scopes = new HashMap();
 
     public static final Scope EXCLUSIVE = Scope.create(DavConstants.XML_EXCLUSIVE, DavConstants.NAMESPACE);
     public static final Scope SHARED = Scope.create(DavConstants.XML_SHARED, DavConstants.NAMESPACE);
 
-    private final String name;
+    private final String localName;
     private final Namespace namespace;
 
     /**
      * Private constructor
      *
-     * @param name
+     * @param localName
      * @param namespace
      */
-    private Scope(String name, Namespace namespace) {
-        this.name = name;
+    private Scope(String localName, Namespace namespace) {
+        this.localName = localName;
         this.namespace = namespace;
     }
 
@@ -50,40 +54,12 @@ public class Scope {
      * the LOCK request and response body and in the {@link LockDiscovery}.
      *
      * @return Xml representation
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      */
-    public Element toXml() {
-        return new Element(name, namespace);
-    }
-
-    /**
-     * Create a <code>Scope</code> object from the given Xml element.
-     *
-     * @param lockScope
-     * @return Scope object.
-     */
-    public static Scope create(Element lockScope) {
-        if (lockScope == null) {
-            throw new IllegalArgumentException("'null' is not valid lock scope entry.");
-        }
-        return create(lockScope.getName(), lockScope.getNamespace());
-    }
-
-    /**
-     * Create a <code>Scope</code> object from the given name and namespace.
-     *
-     * @param name
-     * @param namespace
-     * @return Scope object.
-     */
-    public static Scope create(String name, Namespace namespace) {
-	String key = "{" + namespace.getURI() + "}" + name;
-        if (scopes.containsKey(key)) {
-            return (Scope) scopes.get(key);
-        } else {
-            Scope scope = new Scope(name, namespace);
-            scopes.put(key, scope);
-            return scope;
-        }
+    public Element toXml(Document document) {
+        Element lockScope = DomUtil.createElement(document, DavConstants.XML_LOCKSCOPE, DavConstants.NAMESPACE);
+        DomUtil.addChildElement(lockScope, localName, namespace);
+        return lockScope;
     }
 
     /**
@@ -93,14 +69,49 @@ public class Scope {
      * @return
      */
     public boolean equals(Object obj) {
-	if (this == obj) {
-	    return true;
-	}
-	if (obj instanceof Scope) {
-	    Scope other = (Scope) obj;
-	    return name.equals(other.name) && namespace.equals(other.namespace);
-	}
-	return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof Scope) {
+            Scope other = (Scope) obj;
+            return localName.equals(other.localName) && namespace.equals(other.namespace);
+        }
+        return false;
     }
 
+    /**
+     * Create a <code>Scope</code> object from the given Xml element.
+     *
+     * @param lockScope
+     * @return Scope object.
+     */
+    public static Scope createFromXml(Element lockScope) {
+        if (lockScope != null && DavConstants.XML_LOCKSCOPE.equals(lockScope.getLocalName())) {
+            // we have the parent element and must retrieve the scope first
+            lockScope = DomUtil.getFirstChildElement(lockScope);
+        }
+        if (lockScope == null) {
+            throw new IllegalArgumentException("'null' is not a valid lock scope entry.");
+        }
+        Namespace namespace = Namespace.getNamespace(lockScope.getPrefix(), lockScope.getNamespaceURI());
+        return create(lockScope.getLocalName(), namespace);
+    }
+
+    /**
+     * Create a <code>Scope</code> object from the given name and namespace.
+     *
+     * @param localName
+     * @param namespace
+     * @return Scope object.
+     */
+    public static Scope create(String localName, Namespace namespace) {
+        String key = DomUtil.getQualifiedName(localName, namespace);
+        if (scopes.containsKey(key)) {
+            return (Scope) scopes.get(key);
+        } else {
+            Scope scope = new Scope(localName, namespace);
+            scopes.put(key, scope);
+            return scope;
+        }
+    }
 }

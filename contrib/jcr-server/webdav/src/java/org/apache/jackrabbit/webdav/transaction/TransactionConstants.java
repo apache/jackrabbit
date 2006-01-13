@@ -16,10 +16,10 @@
 package org.apache.jackrabbit.webdav.transaction;
 
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.jdom.Namespace;
 
 /**
  * <code>TransactionConstants</code> interface provide constants for request
@@ -119,7 +119,7 @@ public interface TransactionConstants {
     /**
      * "transaction" lock type constant.
      * @see #XML_TRANSACTION
-     * @see Type#create(String, org.jdom.Namespace)
+     * @see Type#create(String, Namespace)
      */
     public static final Type TRANSACTION = Type.create(XML_TRANSACTION, TransactionConstants.NAMESPACE);
 
@@ -127,7 +127,7 @@ public interface TransactionConstants {
      * "local" lock scope constant.
      *
      * @see #XML_LOCAL
-     * @see Scope#create(String, org.jdom.Namespace)
+     * @see Scope#create(String, Namespace)
      */
     public static final Scope LOCAL = Scope.create(XML_LOCAL, TransactionConstants.NAMESPACE);
 
@@ -135,7 +135,7 @@ public interface TransactionConstants {
      * "global" lock scope constant.
      * 
      * @see #XML_GLOBAL
-     * @see Scope#create(String, org.jdom.Namespace)
+     * @see Scope#create(String, Namespace)
      */
     public static final Scope GLOBAL = Scope.create(XML_GLOBAL, TransactionConstants.NAMESPACE);
 }

@@ -16,8 +16,9 @@
 package org.apache.jackrabbit.webdav.lock;
 
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.util.XmlUtil;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
  * <code>AbstractActiveLock</code>...
@@ -29,43 +30,34 @@ public abstract class AbstractActiveLock implements ActiveLock, DavConstants {
      * as defined by RFC 2518.
      *
      * @return Xml representation
+     * @param document
      */
-    public Element toXml() {
-        Element activeLock = new Element(XML_ACTIVELOCK, NAMESPACE);
-
-        // locktype property
-        Element property = new Element(XML_LOCKTYPE, NAMESPACE);
-        property.addContent(getType().toXml());
-        activeLock.addContent(property);
+    public Element toXml(Document document) {
+        Element activeLock = DomUtil.createElement(document, XML_ACTIVELOCK, NAMESPACE);
 
         // lockscope property
-        property = new Element(XML_LOCKSCOPE, NAMESPACE);
-        property.addContent(getScope().toXml());
-        activeLock.addContent(property);
-
+        activeLock.appendChild(getScope().toXml(document));
+        // locktype property
+        activeLock.appendChild(getType().toXml(document));
         // depth
-        activeLock.addContent(XmlUtil.depthToXml(isDeep()));
+        activeLock.appendChild(DomUtil.depthToXml(isDeep(), document));
         // timeout
         long timeout = getTimeout();
         if (!isExpired() && timeout != UNDEFINED_TIMEOUT) {
-            activeLock.addContent(XmlUtil.timeoutToXml(timeout));
+            activeLock.appendChild(DomUtil.timeoutToXml(timeout, document));
         }
 
         // owner
         if (getOwner() != null) {
-            property = new Element(XML_OWNER, NAMESPACE);
-            property.setText(getOwner());
-            activeLock.addContent(property);
+            DomUtil.addChildElement(activeLock, XML_OWNER, NAMESPACE, getOwner());
         }
 
         // locktoken
         if (getToken() != null) {
-            property = new Element(XML_LOCKTOKEN, NAMESPACE);
-            Element href = new Element(XML_HREF, NAMESPACE);
-            href.setText(getToken());
-            property.addContent(href);
-            activeLock.addContent(property);
+            Element lToken = DomUtil.addChildElement(activeLock, XML_LOCKTOKEN, NAMESPACE);
+            lToken.appendChild(DomUtil.hrefToXml(getToken(), document));
         }
         return activeLock;
     }
+
 }

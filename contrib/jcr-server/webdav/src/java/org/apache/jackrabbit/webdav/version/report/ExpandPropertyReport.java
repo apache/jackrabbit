@@ -15,20 +15,28 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
-import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
-import org.jdom.Element;
-import org.jdom.Attribute;
-import org.jdom.Namespace;
-import org.jdom.Document;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Iterator;
 
 /**
  * <code>ExpandPropertyReport</code> encapsulates the DAV:expand-property report,
@@ -57,7 +65,7 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
 
     private DeltaVResource resource;
     private ReportInfo info;
-    private List properties;
+    private Iterator propertyElements;
 
     /**
      * Returns {@link ReportType#EXPAND_PROPERTY}.
@@ -70,15 +78,32 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
     }
 
     /**
+     * Always returns <code>true</code>.
+     *
+     * @return true
+     * @see org.apache.jackrabbit.webdav.version.report.Report#isMultiStatusReport()
+     */
+    public boolean isMultiStatusReport() {
+        return true;
+    }
+
+    /**
+     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, ReportInfo)
+     */
+    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
+        setResource(resource);
+        setInfo(info);
+    }
+
+    /**
      * Set the target resource.
      *
      * @param resource
-     * @throws IllegalArgumentException if the specified resource is <code>null</code>
-     * @see Report#setResource(org.apache.jackrabbit.webdav.version.DeltaVResource)
+     * @throws DavException if the specified resource is <code>null</code>
      */
-    public void setResource(DeltaVResource resource) throws IllegalArgumentException {
+    private void setResource(DeltaVResource resource) throws DavException {
         if (resource == null) {
-            throw new IllegalArgumentException("The resource specified must not be null.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource specified must not be null.");
         }
         this.resource = resource;
     }
@@ -87,16 +112,15 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      * Set the <code>ReportInfo</code>.
      *
      * @param info
-     * @throws IllegalArgumentException if the given <code>ReportInfo</code>
+     * @throws DavException if the given <code>ReportInfo</code>
      * does not contain a DAV:expand-property element.
-     * @see Report#setInfo(ReportInfo)
      */
-    public void setInfo(ReportInfo info) throws IllegalArgumentException {
-        if (info == null || !XML_EXPAND_PROPERTY.equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("DAV:expand-property element expected.");
+    private void setInfo(ReportInfo info) throws DavException {
+        if (!getType().isRequestedReportType(info)) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:expand-property element expected.");
         }
         this.info = info;
-        properties = info.getReportElement().getChildren(XML_PROPERTY, NAMESPACE);
+        propertyElements = info.getContentElements(XML_PROPERTY, NAMESPACE).iterator();
     }
 
     /**
@@ -104,17 +128,28 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      *
      * @return Xml <code>Document</code> as defined by
      * <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a>
-     * @throws DavException
-     * @see Report#toXml()
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Document toXml() throws DavException {
+    public Element toXml(Document document) {
+        return getMultiStatus().toXml(document);
+    }
+
+    /**
+     * Retrieve the multistatus object that is returned in response to the
+     * expand-property report request.
+     *
+     * @return
+     * @throws NullPointerException if info and resource have not been set.
+     */
+    private MultiStatus getMultiStatus() {
         if (info == null || resource == null) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running DAV:version-tree report");
+            throw new NullPointerException("Error while running DAV:version-tree report");
         }
 
         MultiStatus ms = new MultiStatus();
-        buildMultiStatus(resource, info.getDepth(), ms);
-        return ms.toXml();
+        addResponses(resource, info.getDepth(), ms);
+        return ms;
     }
 
     /**
@@ -125,17 +160,15 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      * @param res
      * @param depth
      * @param ms
-     * @throws DavException
-     * @see #getResponse(DavResource, List)
+     * @see #getResponse(DavResource, Iterator)
      */
-    private void buildMultiStatus(DavResource res, int depth, MultiStatus ms)
-            throws DavException {
-        MultiStatusResponse response = getResponse(res, properties);
+    private void addResponses(DavResource res, int depth, MultiStatus ms) {
+        MultiStatusResponse response = getResponse(res, propertyElements);
         ms.addResponse(response);
         if (depth > 0) {
             DavResourceIterator it = res.getMembers();
             while (it.hasNext()) {
-                buildMultiStatus(it.nextResource(), depth-1, ms);
+                addResponses(it.nextResource(), depth-1, ms);
             }
         }
     }
@@ -151,30 +184,31 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      * themselves have properties, which are defined by the separate list.
      *
      * @param res
-     * @param propertyList
+     * @param propertyElements
      * @return <code>MultiStatusResponse</code> for the given resource.
      * @see ExpandProperty
      */
-    private MultiStatusResponse getResponse(DavResource res, List propertyList) {
-        MultiStatusResponse resp = new MultiStatusResponse(res.getHref());
-        Iterator propIter = propertyList.iterator();
-        while (propIter.hasNext()) {
-            Element propertyElem = (Element) propIter.next();
-            Attribute nameAttr = propertyElem.getAttribute(ATTR_NAME);
-            if (nameAttr == null) {
+    private MultiStatusResponse getResponse(DavResource res, Iterator propertyElements) {
+        MultiStatusResponse resp = new MultiStatusResponse(res.getHref(), null);
+        while (propertyElements.hasNext()) {
+            Element propertyElem = (Element)propertyElements.next();
+            // retrieve the localName present in the "name" attribute
+            String nameAttr = propertyElem.getAttribute(ATTR_NAME);
+            if (nameAttr == null || "".equals(nameAttr)) {
                 // NOTE: this is not valid according to the DTD
                 continue;
             }
-            Attribute namespaceAttr = propertyElem.getAttribute(ATTR_NAMESPACE);
+            // retrieve the namespace present in the "namespace" attribute
+            // NOTE: if this attribute is missing the DAV: namespace represents the default.
+            String namespaceAttr = propertyElem.getAttribute(ATTR_NAMESPACE);
+            Namespace namespace = (namespaceAttr != null) ? Namespace.getNamespace(namespaceAttr) : NAMESPACE;
 
-            String name = nameAttr.getValue();
-            Namespace namespace = (namespaceAttr != null) ? Namespace.getNamespace(namespaceAttr.getValue()) : NAMESPACE;
-
-            DavPropertyName propName = DavPropertyName.create(name, namespace);
+            DavPropertyName propName = DavPropertyName.create(nameAttr, namespace);
             DavProperty p = res.getProperty(propName);
             if (p != null) {
                 if (p instanceof HrefProperty && res instanceof DeltaVResource) {
-                    resp.add(new ExpandProperty((DeltaVResource)res, (HrefProperty)p, propertyElem.getChildren(XML_PROPERTY, NAMESPACE)));
+                    ElementIterator it = DomUtil.getChildren(propertyElem, XML_PROPERTY, NAMESPACE);
+                    resp.add(new ExpandProperty((DeltaVResource)res, (HrefProperty)p, it));
                 } else {
                     resp.add(p);
                 }
@@ -203,15 +237,15 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
          * Create a new <code>ExpandProperty</code>.
          *
          * @param hrefProperty
-         * @param propertyList
+         * @param elementIter
          */
-        private ExpandProperty(DeltaVResource deltaVResource, HrefProperty hrefProperty, List propertyList) {
+        private ExpandProperty(DeltaVResource deltaVResource, HrefProperty hrefProperty, ElementIterator elementIter) {
             super(hrefProperty.getName(), hrefProperty.isProtected());
             try {
                 DavResource[] refResource = deltaVResource.getReferenceResources(hrefProperty.getName());
                 for (int i = 0; i < refResource.length; i++) {
-                    MultiStatusResponse resp = getResponse(refResource[i], propertyList);
-                    valueList.add(resp.toXml());
+                    MultiStatusResponse resp = getResponse(refResource[i], elementIter);
+                    valueList.add(resp);
                 }
             } catch (DavException e) {
                 // invalid references or unknown property
@@ -220,7 +254,8 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
         }
 
         /**
-         * Returns
+         * Returns a List of {@link MultiStatusResponse} objects.
+         *
          * @return
          */
         public Object getValue() {

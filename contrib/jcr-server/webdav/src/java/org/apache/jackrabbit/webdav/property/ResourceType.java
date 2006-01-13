@@ -20,9 +20,12 @@ import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jdom.Element;
-import org.jdom.Namespace;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
  * The <code>ResourceType</code> class represents the webdav resource
@@ -98,33 +101,21 @@ public class ResourceType extends AbstractDavProperty {
     }
 
     /**
-     * Return the JDOM element representation of this property
+     * Returns a Set of resource types each implementing the XmlSerializable
+     * interface.
      *
-     * @return a JDOM element
-     */
-    public Element toXml() {
-        Element elem = getName().toXml();
-        elem.addContent((Set)getValue());
-        return elem;
-    }
-
-    /**
-     * Returns the Xml representation of this property as a
-     * <code>Set</code> of <code>Element</code>s.
-     *
-     * @return a <code>Set</code> of <code>Element</code>s
-     * representing this property.
+     * @return a <code>Set</code> of resource types representing this property.
      * @see DavProperty#getValue()
      */
     public Object getValue() {
-        Set elements = new HashSet();
+        Set rTypes = new HashSet();
         for (int i=0; i<resourceTypes.length; i++) {
-            Element elem = resourceTypeToXml(resourceTypes[i]);
-            if (elem != null) {
-                elements.add(elem);
+            Object n = NAMES.get(resourceTypes[i]);
+            if (n != null) {
+               rTypes.add(n);
             }
         }
-        return elements;
+        return rTypes;
     }
 
     /**
@@ -134,22 +125,6 @@ public class ResourceType extends AbstractDavProperty {
      */
     public int[] getResourceTypes() {
         return resourceTypes;
-    }
-
-    /**
-     * Returns the Xml representation of an individual resource type,
-     * or <code>null</code> if the resource type has no Xml
-     * representation (e.g. {@link #DEFAULT_RESOURCE}).<p/>{@link #getValue()} uses
-     * this method to build the full set of Xml elements for the property's resource
-     * types. Subclasses should override this method to add support for resource
-     * types they define.
-     *
-     * @return Xml element representing the internal type or <code>null</code>
-     * if the resource has no element name assigned (default resource type).
-     */
-    private static Element resourceTypeToXml(int resourceType) {
-        TypeName name = (TypeName) NAMES.get(resourceType);
-        return (name != null) ? new Element(name.localName, name.namespace) : null;
     }
 
     /**
@@ -197,7 +172,7 @@ public class ResourceType extends AbstractDavProperty {
      * Private inner class used to register predefined and user defined resource
      * types.
      */
-    private static class TypeName {
+    private static class TypeName implements XmlSerializable {
 
         private final String localName;
         private final Namespace namespace;
@@ -206,7 +181,7 @@ public class ResourceType extends AbstractDavProperty {
         private TypeName(String localName, Namespace namespace) {
             this.localName = localName;
             this.namespace = namespace;
-            hashCode = ("{" + namespace.getURI() + "}" + localName).hashCode();
+            hashCode = DomUtil.getQualifiedName(localName, namespace).hashCode();
         }
 
         public int hashCode() {
@@ -219,5 +194,10 @@ public class ResourceType extends AbstractDavProperty {
             }
             return false;
         }
+
+        public Element toXml(Document document) {
+            return DomUtil.createElement(document, localName, namespace);
+        }
+
     }
 }

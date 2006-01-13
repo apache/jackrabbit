@@ -15,19 +15,24 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
-import org.jdom.Element;
-import org.jdom.Document;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.List;
 import java.util.HashSet;
-import java.util.Iterator;
 
 /**
  * <code>LocateByHistoryReport</code> encapsulates the DAV:locate-by-hisotry
@@ -59,48 +64,49 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
     }
 
     /**
-     * Set the DeltaVResource.
-     *
-     * @param resource
-     * @throws IllegalArgumentException if the specified resource is not a {@link VersionControlledResource}.
-     * @see Report#setResource(org.apache.jackrabbit.webdav.version.DeltaVResource)
+     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, ReportInfo) 
      */
-    public void setResource(DeltaVResource resource) throws IllegalArgumentException {
-        if (resource instanceof VersionControlledResource) {
-            this.resource = resource;
-        } else {
-            throw new IllegalArgumentException("DAV:version-tree report can only be created for version-controlled resources and version resources.");
+    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
+        if (resource == null || !(resource instanceof VersionControlledResource)) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:version-tree report can only be created for version-controlled resources and version resources.");
         }
+            this.resource = resource;
+        setInfo(info);
     }
 
     /**
      * Set the <code>ReportInfo</code>
      *
      * @param info
-     * @throws IllegalArgumentException if the given <code>ReportInfo</code>
+     * @throws DavException if the given <code>ReportInfo</code>
      * does not contain a DAV:version-tree element.
-     * @see Report#setInfo(ReportInfo)
      */
-    public void setInfo(ReportInfo info) throws IllegalArgumentException {
-        if (info == null || !XML_LOCATE_BY_HISTORY.equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("DAV:locate-by-history element expected.");
+    private void setInfo(ReportInfo info) throws DavException {
+        if (info == null || !getType().isRequestedReportType(info)) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:locate-by-history element expected.");
         }
-        Element versionHistorySet = info.getReportElement().getChild(XML_VERSION_HISTORY_SET, NAMESPACE);
+        Element versionHistorySet = info.getContentElement(XML_VERSION_HISTORY_SET, NAMESPACE);
         if (versionHistorySet == null) {
-            throw new IllegalArgumentException("The DAV:locate-by-history element must contain a DAV:version-history-set child.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The DAV:locate-by-history element must contain a DAV:version-history-set child.");
         }
-
-        List l = versionHistorySet.getChildren(DavConstants.XML_HREF, DavConstants.NAMESPACE);
-        if (l != null && !l.isEmpty()) {
-            Iterator it = l.iterator();
+        ElementIterator it = DomUtil.getChildren(versionHistorySet, DavConstants.XML_HREF, DavConstants.NAMESPACE);
             while (it.hasNext()) {
-                String href = ((Element)it.next()).getText();
-                if (href != null) {
+            String href = DomUtil.getText(it.nextElement());
+            if (href != null && !"".equals(href)) {
                     vhHrefSet.add(href);
                 }
             }
-        }
         this.info = info;
+        }
+
+    /**
+     * Always returns <code>true</code>.
+     *
+     * @return true
+     * @see org.apache.jackrabbit.webdav.version.report.Report#isMultiStatusReport()
+     */
+    public boolean isMultiStatusReport() {
+        return true;
     }
 
     /**
@@ -108,17 +114,24 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
      *
      * @return Xml <code>Document</code> representing the report in the required
      * format.
-     * @throws DavException
-     * @see Report#toXml()
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Document toXml() throws DavException {
-        if (info == null || resource == null) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running DAV:locate-by-history report");
+    public Element toXml(Document document) {
+        return getMultiStatus().toXml(document);
         }
 
+    /**
+     * Retrieve the <code>MultiStatus</code> that is returned in response to a locate-by-history
+     * report request.
+     *
+     * @return
+     * @throws NullPointerException if info or resource is <code>null</code>.
+     */
+    private MultiStatus getMultiStatus() {
         MultiStatus ms = new MultiStatus();
         buildResponse(resource, info.getPropertyNameSet(), info.getDepth(), ms);
-        return ms.toXml();
+        return ms;
     }
 
     /**
@@ -130,10 +143,9 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
      * @param propNameSet
      * @param depth
      * @param ms
-     * @throws DavException
      */
     private void buildResponse(DavResource res, DavPropertyNameSet propNameSet,
-                               int depth, MultiStatus ms) throws DavException {
+                               int depth, MultiStatus ms) {
         // loop over members first, since this report only list members
         DavResourceIterator it = res.getMembers();
         while (!vhHrefSet.isEmpty() && it.hasNext()) {

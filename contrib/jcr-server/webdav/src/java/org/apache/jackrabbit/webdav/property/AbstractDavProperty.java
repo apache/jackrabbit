@@ -16,10 +16,14 @@
 package org.apache.jackrabbit.webdav.property;
 
 import org.apache.log4j.Logger;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.Document;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Iterator;
+import java.util.Collection;
 
 /**
  * <code>AbstractDavProperty</code> provides generic METHODS used by various
@@ -80,16 +84,16 @@ public abstract class AbstractDavProperty implements DavProperty {
      * Return a JDOM element representation of this property. The value of the
      * property will be added as text or as child element.
      * <pre>
-     * new DavProperty("displayname", "WebDAV Directory").toXml()
+     * new DavProperty("displayname", "WebDAV Directory").toXml
      * gives a element like:
      * &lt;D:displayname&gt;WebDAV Directory&lt;/D:displayname&gt;
      *
-     * new DavProperty("resourcetype", new Element("collection")).toXml()
+     * new DavProperty("resourcetype", new Element("collection")).toXml
      * gives a element like:
      * &lt;D:resourcetype&gt;&lt;D:collection/&gt;&lt;/D:resourcetype&gt;
      *
      * Element[] customVals = { new Element("bla", customNamespace), new Element("bli", customNamespace) };
-     * new DavProperty("custom-property", customVals, customNamespace).toXml()
+     * new DavProperty("custom-property", customVals, customNamespace).toXml
      * gives an element like
      * &lt;Z:custom-property&gt;
      *    &lt;Z:bla/&gt;
@@ -98,20 +102,39 @@ public abstract class AbstractDavProperty implements DavProperty {
      * </pre>
      *
      * @return a JDOM element of this property
-     * @see DavProperty#toXml()
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Element toXml() {
-	Element elem = getName().toXml();
+    public Element toXml(Document document) {
+	Element elem = getName().toXml(document);
         Object value = getValue();
+        // todo: improve....
 	if (value != null) {
-	    if (value instanceof Element) {
-		elem.addContent((Element) value);
-	    } else if (value instanceof Element[]) {
-                elem.addContent(Arrays.asList((Element[])value));
-            } else if (value instanceof List) {
-                elem.addContent((List)value);
+	    if (value instanceof XmlSerializable) {
+                elem.appendChild(((XmlSerializable)value).toXml(document));
+            } else if (value instanceof Node) {
+                Node n = document.importNode((Node)value, true);
+		elem.appendChild(n);
+	    } else if (value instanceof Node[]) {
+                for (int i = 0; i < ((Node[])value).length; i++) {
+                    Node n = document.importNode(((Node[])value)[i], true);
+                    elem.appendChild(n);
+                }
+            } else if (value instanceof Collection) {
+                Iterator it = ((Collection)value).iterator();
+                while (it.hasNext()) {
+                    Object entry = it.next();
+                    if (entry instanceof XmlSerializable) {
+                        elem.appendChild(((XmlSerializable)entry).toXml(document));
+                    } else if (entry instanceof Node) {
+                        Node n = document.importNode((Node)entry, true);
+                        elem.appendChild(n);
+                    } else {
+                        DomUtil.setText(elem, entry.toString());
+                    }
+                }
             } else {
-                elem.setText(value.toString());
+                DomUtil.setText(elem, value.toString());
 	    }
 	}
 	return elem;

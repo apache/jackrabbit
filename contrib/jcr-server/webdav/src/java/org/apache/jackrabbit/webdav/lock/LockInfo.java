@@ -16,10 +16,11 @@
 package org.apache.jackrabbit.webdav.lock;
 
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.jdom.Element;
-
-import java.util.List;
-import java.util.Iterator;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
  * <code>LockInfo</code> is a simple utility class encapsulating the information
@@ -31,7 +32,7 @@ import java.util.Iterator;
  * given, since this left to those objects responsible for the lock creation
  * on the requested resource.
  */
-public class LockInfo {
+public class LockInfo implements DavConstants, XmlSerializable {
 
     private Type type;
     private Scope scope;
@@ -40,6 +41,38 @@ public class LockInfo {
     private long timeout;
 
     private boolean isRefreshLock;
+
+    /**
+     * Create a new <code>LockInfo</code> used for refreshing an existing lock.
+     * 
+     * @param timeout
+     */
+    public LockInfo(long timeout) {
+        this.timeout = (timeout > 0) ? timeout : INFINITE_TIMEOUT;
+        this.isRefreshLock = true;
+    }
+
+    /**
+     * Create a new <code>LockInfo</code>
+     *
+     * @param scope
+     * @param type
+     * @param owner
+     * @param timeout
+     * @param isDeep
+     */
+    public LockInfo(Scope scope, Type type, String owner, long timeout, boolean isDeep) {
+        this.timeout = (timeout > 0) ? timeout : INFINITE_TIMEOUT;
+        this.isDeep = isDeep;
+
+        if (scope == null || type == null) {
+            this.isRefreshLock = true;
+        } else {
+            this.scope = scope;
+            this.type = type;
+            this.owner = owner;
+        }
+    }
 
     /**
      * Create a new <code>LockInfo</code> object from the given information. If
@@ -57,29 +90,28 @@ public class LockInfo {
      * <code>null</null> but does not start with an 'lockinfo' element.
      */
     public LockInfo(Element liElement, long timeout, boolean isDeep) {
-        this.timeout = timeout;
+        this.timeout = (timeout > 0) ? timeout : INFINITE_TIMEOUT;
         this.isDeep = isDeep;
 
         if (liElement != null) {
-            if (!DavConstants.XML_LOCKINFO.equals(liElement.getName())) {
-                throw new IllegalArgumentException("Element must have name 'lockinfo'.");
+            if (!DomUtil.matches(liElement, XML_LOCKINFO, NAMESPACE)) {
+                throw new IllegalArgumentException("'DAV:lockinfo' element expected.");
             }
 
-            List childList = liElement.getChildren();
-            for (int i = 0; i < childList.size(); i++) {
-                Element child = (Element) childList.get(i);
-                String nodeName = child.getName();
-                if (DavConstants.XML_LOCKTYPE.equals(nodeName)) {
-                    Element typeElement = getFirstChildElement(child);
-                    type = Type.create(typeElement);
-                } else if (DavConstants.XML_LOCKSCOPE.equals(nodeName)) {
-                    Element scopeElement = getFirstChildElement(child);
-                    scope = Scope.create(scopeElement);
-                } else if (DavConstants.XML_OWNER.equals(nodeName)) {
-                    owner = child.getChildTextTrim(DavConstants.XML_HREF);
+            ElementIterator it = DomUtil.getChildren(liElement);
+            while (it.hasNext()) {
+                Element child = it.nextElement();
+                String childName = child.getLocalName();
+                if (XML_LOCKTYPE.equals(childName)) {
+                    type = Type.createFromXml(child);
+                } else if (XML_LOCKSCOPE.equals(childName)) {
+                    scope = Scope.createFromXml(child);
+                } else if (XML_OWNER.equals(childName)) {
+                    // first try if 'owner' is inside a href element
+                    owner = DomUtil.getChildTextTrim(child, XML_HREF, NAMESPACE);
                     if (owner==null) {
-                        // check if child is a text element
-                        owner = child.getTextTrim();
+                        // otherwise: assume owner is a simple text element
+                        owner = DomUtil.getTextTrim(child);
                     }
                 }
             }
@@ -87,25 +119,6 @@ public class LockInfo {
         } else {
             isRefreshLock = true;
         }
-    }
-
-    /**
-     * Retrieve the first element from the content list of the specified Xml element.
-     *
-     * @param elem
-     * @return
-     */
-    private static Element getFirstChildElement(Element elem) {
-        if (elem.getContentSize() > 0) {
-            Iterator it = elem.getContent().iterator();
-            while (it.hasNext()) {
-                Object content = it.next();
-                if (content instanceof Element) {
-                    return (Element) content;
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -188,4 +201,29 @@ public class LockInfo {
     public boolean isRefreshLock() {
         return isRefreshLock;
     }
+
+    /**
+     * Returns the xml representation of this lock info.<br>
+     * NOTE however, that the depth and the timeout are not included
+     * in the xml. They will be passed to the server using the corresponding
+     * request headers.
+     *
+     * @param document
+     * @return xml representation of this lock info.
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     */
+    public Element toXml(Document document) {
+        if (isRefreshLock) {
+            return null;
+        } else {
+            Element lockInfo = DomUtil.createElement(document, XML_LOCKINFO, NAMESPACE);
+            lockInfo.appendChild(scope.toXml(document));
+            lockInfo.appendChild(type.toXml(document));
+            if (owner != null) {
+                DomUtil.addChildElement(lockInfo, XML_OWNER, NAMESPACE, owner);
+            }
+            return lockInfo;
+        }
+    }
+
 }

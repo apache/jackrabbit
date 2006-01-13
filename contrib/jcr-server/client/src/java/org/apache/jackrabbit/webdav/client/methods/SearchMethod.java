@@ -19,7 +19,10 @@ package org.apache.jackrabbit.webdav.client.methods;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.DavMethods;
-import org.jdom.Namespace;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+
+import java.io.IOException;
 
 /**
  * <code>SearchMethod</code>...
@@ -28,19 +31,29 @@ public class SearchMethod extends DavMethodBase {
 
     private static Logger log = Logger.getLogger(SearchMethod.class);
 
-    public SearchMethod(String uri, String statement, String language) {
-        this(uri, statement, language, Namespace.NO_NAMESPACE);
+    public SearchMethod(String uri, String statement, String language) throws IOException {
+        this(uri, statement, language, Namespace.EMPTY_NAMESPACE);
     }
 
-    public SearchMethod(String uri, String statement, String language, Namespace languageNamespace) {
+    public SearchMethod(String uri, String statement, String language, Namespace languageNamespace) throws IOException {
         super(uri);
         if (language != null && statement != null) {
+            setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");            
             // build the request body
-            SearchInfo sInfo = new SearchInfo(language, languageNamespace, statement);
-            setRequestBody(sInfo.toXml());
+            SearchInfo searchInfo = new SearchInfo(language, languageNamespace, statement);
+            setRequestBody(searchInfo);
         }
     }
     
+    public SearchMethod(String uri, SearchInfo searchInfo) throws IOException {
+        super(uri);
+        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
+        setRequestBody(searchInfo);
+    }
+
+    /**
+     * @see org.apache.commons.httpclient.HttpMethod#getName()
+     */
     public String getName() {
         return DavMethods.METHOD_SEARCH;
     }

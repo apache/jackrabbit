@@ -17,8 +17,15 @@ package org.apache.jackrabbit.webdav.version;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.jdom.Element;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>MergeInfo</code> encapsulates the information present in the DAV:merge
@@ -36,11 +43,12 @@ import org.jdom.Element;
  * prop: see <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518, Section 12.11</a>
  * </pre>
  */
-public class MergeInfo implements DeltaVConstants {
+public class MergeInfo implements DeltaVConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(MergeInfo.class);
 
-    private Element mergeElement;
+    private final Element mergeElement;
+    private final DavPropertyNameSet propertyNameSet;
 
     /**
      * Create a new <code>MergeInfo</code>
@@ -50,10 +58,19 @@ public class MergeInfo implements DeltaVConstants {
      * or not a DAV:merge element.
      */
     public MergeInfo(Element mergeElement) {
-        if (mergeElement == null || !mergeElement.getName().equals(XML_MERGE)) {
+        if (!DomUtil.matches(mergeElement, XML_MERGE, NAMESPACE)) {
             throw new IllegalArgumentException("'DAV:merge' element expected");
         }
-        this.mergeElement = (Element) mergeElement.detach();
+
+        // if property name set if present
+        Element propElem = DomUtil.getChildElement(mergeElement, DavConstants.XML_PROP, DavConstants.NAMESPACE);
+        if (propElem != null) {
+            propertyNameSet = new DavPropertyNameSet(propElem);
+            mergeElement.removeChild(propElem);
+        } else {
+            propertyNameSet = new DavPropertyNameSet();
+        }
+        this.mergeElement = mergeElement;
     }
 
     /**
@@ -62,12 +79,19 @@ public class MergeInfo implements DeltaVConstants {
      *
      * @return href present in the DAV:source child element or <code>null</code>.
      */
-    public String getSourceHref() {
-        Element source = mergeElement.getChild(DavConstants.XML_SOURCE, DavConstants.NAMESPACE);
-        if (source != null) {
-            return source.getChildText(DavConstants.XML_HREF, DavConstants.NAMESPACE);
+    public String[] getSourceHrefs() {
+        List sourceHrefs = new ArrayList();
+        Element srcElem = DomUtil.getChildElement(mergeElement, DavConstants.XML_SOURCE, DavConstants.NAMESPACE);
+        if (srcElem != null) {
+            ElementIterator it = DomUtil.getChildren(srcElem, DavConstants.XML_HREF, DavConstants.NAMESPACE);
+            while (it.hasNext()) {
+                String href = DomUtil.getTextTrim(it.nextElement());
+                if (href != null) {
+                    sourceHrefs.add(href);
         }
-        return null;
+            }
+        }
+        return (String[])sourceHrefs.toArray(new String[sourceHrefs.size()]);
     }
 
     /**
@@ -76,7 +100,7 @@ public class MergeInfo implements DeltaVConstants {
      * @return true if the DAV:merge element contains a DAV:no-auto-merge child.
      */
     public boolean isNoAutoMerge() {
-        return mergeElement.getChild(XML_N0_AUTO_MERGE, NAMESPACE) != null;
+        return DomUtil.hasChildElement(mergeElement, XML_N0_AUTO_MERGE, NAMESPACE);
     }
 
     /**
@@ -85,24 +109,22 @@ public class MergeInfo implements DeltaVConstants {
      * @return true if the DAV:merge element contains a DAV:no-checkout child
      */
     public boolean isNoCheckout() {
-        return mergeElement.getChild(XML_N0_CHECKOUT, NAMESPACE) != null;
+        return DomUtil.hasChildElement(mergeElement, XML_N0_CHECKOUT, NAMESPACE);
     }
 
     /**
      * Returns a {@link DavPropertyNameSet}. If the DAV:merge element contains
      * a DAV:prop child element the properties specified therein are included
-     * in the set. Otherwise an empty set is returned.
+     * in the set. Otherwise an empty set is returned.<br>
+     *
+     * <b>WARNING:</b> modifying the DavPropertyNameSet returned by this method does
+     * not modify this <code>UpdateInfo</code>.
      *
      * @return set listing the properties specified in the DAV:prop element indicating
      * those properties that must be reported in the response body.
      */
     public DavPropertyNameSet getPropertyNameSet() {
-        Element propElement = mergeElement.getChild(DavConstants.XML_PROP, DavConstants.NAMESPACE);
-        if (propElement != null) {
-            return new DavPropertyNameSet(propElement);
-        } else {
-            return new DavPropertyNameSet();
-        }
+        return propertyNameSet;
     }
 
     /**
@@ -114,4 +136,17 @@ public class MergeInfo implements DeltaVConstants {
     public Element getMergeElement() {
         return mergeElement;
     }
+
+    /**
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element elem = (Element)document.importNode(mergeElement, true);
+        if (!propertyNameSet.isEmpty()) {
+            elem.appendChild(propertyNameSet.toXml(document));
+        }
+        return elem;
+    }
+
 }

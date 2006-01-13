@@ -18,13 +18,30 @@ package org.apache.jackrabbit.webdav.jcr;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
-import javax.jcr.*;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.*;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.InvalidSerializedDataException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.MergeException;
+import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.LoginException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFormatException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.HashMap;
 
 /**
@@ -74,17 +91,27 @@ public class JcrDavException extends DavException {
     }
 
     /**
+     * @return true
+     */
+    public boolean hasErrorCondition() {
+        return true;
+    }
+
+    /**
      * Returns a DAV:error Xml element containing the exceptions class and the
      * message as child elements.
      *
      * @return Xml representation of this exception.
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Element getError() {
-        Element error = super.getError();
-        Element excep = new Element("exception", ItemResourceConstants.NAMESPACE);
-        excep.addContent(new Element("class", ItemResourceConstants.NAMESPACE).setText(exceptionClass.getName()));
-        excep.addContent(new Element("message", ItemResourceConstants.NAMESPACE).setText(getMessage()));
-        error.addContent(excep);
+    public Element toXml(Document document) {
+        Element error = DomUtil.createElement(document, XML_ERROR, DavConstants.NAMESPACE);
+        Element excep = DomUtil.createElement(document, "exception", ItemResourceConstants.NAMESPACE);
+        DomUtil.addChildElement(excep, "class", ItemResourceConstants.NAMESPACE, exceptionClass.getName());
+        DomUtil.addChildElement(excep, "message", ItemResourceConstants.NAMESPACE, getMessage());
+        error.appendChild(excep);
         return error;
     }
+
 }

@@ -16,9 +16,14 @@
 package org.apache.jackrabbit.webdav.ordering;
 
 import org.apache.log4j.Logger;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
-import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * <code>Position</code> encapsulates the position in ordering information
@@ -30,25 +35,20 @@ import java.util.HashMap;
  * @see OrderingConstants#XML_POSITION
  * @see OrderPatch
  */
-public class Position implements OrderingConstants {
+public class Position implements OrderingConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(Position.class);
 
-    public static final int TYPE_FIRST = 1;
-    public static final int TYPE_LAST = 2;
-    public static final int TYPE_BEFORE = 4;
-    public static final int TYPE_AFTER = 8;
-
-    private static final HashMap xmlTypeMap = new HashMap(4);
+    private static final Set VALID_TYPES = new HashSet();
     static {
-        xmlTypeMap.put(XML_FIRST, new Integer(TYPE_FIRST));
-        xmlTypeMap.put(XML_LAST, new Integer(TYPE_LAST));
-        xmlTypeMap.put(XML_BEFORE, new Integer(TYPE_BEFORE));
-        xmlTypeMap.put(XML_AFTER, new Integer(TYPE_AFTER));
+        VALID_TYPES.add(XML_FIRST);
+        VALID_TYPES.add(XML_LAST);
+        VALID_TYPES.add(XML_AFTER);
+        VALID_TYPES.add(XML_BEFORE);
     }
 
-    private int type;
-    private String segment;
+    private final String type;
+    private final String segment;
 
     /**
      * Create a new <code>Position</code> object with the specified type.
@@ -61,38 +61,14 @@ public class Position implements OrderingConstants {
      * or {@link #XML_LAST}.
      */
     public Position(String type) {
+        if (!VALID_TYPES.contains(type)) {
+            throw new IllegalArgumentException("Invalid type: " + type);
+        }
         if (!(XML_FIRST.equals(type) || XML_LAST.equals(type))) {
             throw new IllegalArgumentException("If type is other than 'first' or 'last' a segment must be specified");
         }
-        setType(type);
-    }
-
-    /**
-     * Create a new <code>Position</code> object from the specified position
-     * element. The element must fulfill the following structure:<br>
-     * <pre>
-     * &lt;!ELEMENT position (first | last | before | after) &gt;
-     * &lt;!ELEMENT segment (#PCDATA) &gt;
-     * &lt;!ELEMENT first EMPTY &gt;
-     * &lt;!ELEMENT last EMPTY &gt;
-     * &lt;!ELEMENT before segment &gt;
-     * &lt;!ELEMENT after segment &gt;
-     * </pre>
-     *
-     * @param position Xml element defining the position.
-     * @throws IllegalArgumentException if the given Xml element is not valid.
-     */
-    public Position(Element position) {
-        if (position.getChildren().size() != 1) {
-            throw new IllegalArgumentException("The 'position' element must contain exactly a single child indicating the type.");
-        }
-        Element typeElem = (Element)position.getChildren().get(0);
-        String type = typeElem.getName();
-        String segmentText = null;
-        if (typeElem.getChildren().size() > 0) {
-            segmentText = typeElem.getChildText(XML_SEGMENT);
-        }
-        init(type, segmentText);
+        this.type = type;
+        this.segment = null;
     }
 
     /**
@@ -105,20 +81,13 @@ public class Position implements OrderingConstants {
      * form a valid pair.
      */
     public Position(String type, String segment) {
-        init(type, segment);
+        if (!VALID_TYPES.contains(type)) {
+            throw new IllegalArgumentException("Invalid type: " + type);
     }
-
-    /**
-     * Initialize the internal fields.
-     *
-     * @param type
-     * @param segment
-     */
-    private void init(String type, String segment) {
         if ((XML_AFTER.equals(type) || XML_BEFORE.equals(type)) && (segment == null || "".equals(segment))) {
             throw new IllegalArgumentException("If type is other than 'first' or 'last' a segment must be specified");
         }
-        setType(type);
+        this.type = type;
         this.segment = segment;
     }
 
@@ -129,17 +98,8 @@ public class Position implements OrderingConstants {
      *
      * @return type
      */
-    public int getType() {
+    public String getType() {
         return type;
-    }
-
-    /**
-     * Set the type.
-     *
-     * @param xmlType
-     */
-    private void setType(String xmlType) {
-        type = ((Integer)xmlTypeMap.get(xmlType)).intValue();
     }
 
     /**
@@ -151,5 +111,48 @@ public class Position implements OrderingConstants {
      */
     public String getSegment() {
         return segment;
+    }
+
+    //------------------------------------------< XmlSerializable interface >---
+    /**
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element pos = DomUtil.createElement(document, XML_POSITION, NAMESPACE);
+        DomUtil.addChildElement(pos, type, NAMESPACE, segment);
+        return pos;
+    }
+
+    //-----------------------------------------------------< static methods >---
+    /**
+     * Create a new <code>Position</code> object from the specified position
+     * element. The element must fulfill the following structure:<br>
+     * <pre>
+     * &lt;!ELEMENT position (first | last | before | after) &gt;
+     * &lt;!ELEMENT segment (#PCDATA) &gt;
+     * &lt;!ELEMENT first EMPTY &gt;
+     * &lt;!ELEMENT last EMPTY &gt;
+     * &lt;!ELEMENT before segment &gt;
+     * &lt;!ELEMENT after segment &gt;
+     * </pre>
+     *
+     * @param positionElement Xml element defining the position.
+     * @throws IllegalArgumentException if the given Xml element is not valid.
+     */
+    public static Position createFromXml(Element positionElement) {
+        if (!DomUtil.matches(positionElement, XML_POSITION, NAMESPACE)) {
+            throw new IllegalArgumentException("The 'DAV:position' element required.");
+        }
+        ElementIterator it = DomUtil.getChildren(positionElement);
+        while (it.hasNext()) {
+            Element el = it.nextElement();
+            String type = el.getLocalName();
+            // read the text of DAV:segment child element inside the type
+            String segmentText = DomUtil.getChildText(el, XML_SEGMENT, NAMESPACE);
+            // stop after the first iteration
+            new Position(type, segmentText);
+        }
+        throw new IllegalArgumentException("The 'DAV:position' element required with exact one child indicating the type.");
     }
 }

@@ -16,17 +16,19 @@
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.report.*;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
+import org.apache.jackrabbit.webdav.version.report.Report;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.jdom.Document;
-import org.jdom.Element;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
-import javax.jcr.*;
-import java.util.ArrayList;
-import java.util.List;
+import javax.jcr.Repository;
 
 /**
  * <code>RepositoryDescriptorsReport</code> allows to retrieve the repository
@@ -45,7 +47,7 @@ import java.util.List;
  * </pre>
  *
  * @see javax.jcr.Repository#getDescriptorKeys()
- * @see Repository#getDescriptor(String)
+ * @see javax.jcr.Repository#getDescriptor(String)
  */
 public class RepositoryDescriptorsReport implements Report, ItemResourceConstants {
 
@@ -68,54 +70,49 @@ public class RepositoryDescriptorsReport implements Report, ItemResourceConstant
     }
 
     /**
-     * @param resource
-     * @throws IllegalArgumentException if the resource or the session retrieved
-     * from the specified resource is <code>null</code>
-     * @see org.apache.jackrabbit.webdav.version.report.Report#setResource(org.apache.jackrabbit.webdav.version.DeltaVResource)
+     * Always returns <code>false</code>.
+     *
+     * @return false
+     * @see org.apache.jackrabbit.webdav.version.report.Report#isMultiStatusReport()
      */
-    public void setResource(DeltaVResource resource) {
+    public boolean isMultiStatusReport() {
+        return false;
+    }
+
+    /**
+     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, org.apache.jackrabbit.webdav.version.report.ReportInfo) 
+     */
+    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
         if (resource == null) {
-            throw new IllegalArgumentException("Resource must not be null.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Resource must not be null.");
+        }
+        if (!getType().isRequestedReportType(info)) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "repositorydescriptors element expected.");
         }
         DavSession session = resource.getSession();
         if (session == null || session.getRepositorySession() == null) {
-            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the repositorydescriptors report.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource must provide a non-null session object in order to create the repositorydescriptors report.");
         }
         repository = session.getRepositorySession().getRepository();
     }
 
     /**
-     * @param info
-     * @throws IllegalArgumentException if the specified info does not contain
-     * a {@link ItemResourceConstants#NAMESPACE dcr}:repositorydescriptors element.
-     * @see org.apache.jackrabbit.webdav.version.report.Report#setInfo(org.apache.jackrabbit.webdav.version.report.ReportInfo)
-     */
-    public void setInfo(ReportInfo info) {
-        if (info == null || !"repositorydescriptors".equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("repositorydescriptors element expected.");
-        }
-    }
-
-    /**
-     * Returns a Xml representation of the node type definition(s) according
+     * Returns a Xml representation of the repository descriptors according
      * to the info object.
      *
-     * @return Xml representation of the node type definition(s)
-     * @throws org.apache.jackrabbit.webdav.DavException if the specified nodetypes are not known or if another
-     * error occurs while retrieving the nodetype definitions.
-     * @see org.apache.jackrabbit.webdav.version.report.Report#toXml()
+     * @return Xml representation of the repository descriptors
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Document toXml() throws DavException {
+    public Element toXml(Document document) {
+        Element report = DomUtil.createElement(document, "repositorydescriptors-report", NAMESPACE);
         String[] keys = repository.getDescriptorKeys();
-        List descList = new ArrayList();
         for (int i = 0; i < keys.length; i++) {
-            Element elem = new Element(XML_DESCRIPTOR, NAMESPACE);
-            elem.addContent(new Element(XML_DESCRIPTORKEY, NAMESPACE).setText(keys[i]));
-            elem.addContent(new Element(XML_DESCRIPTORVALUE, NAMESPACE).setText(repository.getDescriptor(keys[i])));
-            descList.add(elem);
+            Element elem = DomUtil.addChildElement(report, XML_DESCRIPTOR, NAMESPACE);
+            DomUtil.addChildElement(elem, XML_DESCRIPTORKEY, NAMESPACE, keys[i]);
+            DomUtil.addChildElement(elem, XML_DESCRIPTORVALUE, NAMESPACE, repository.getDescriptor(keys[i]));
         }
-        Element report = new Element("repositorydescriptors-report", NAMESPACE).addContent(descList);
-        Document reportDoc = new Document(report);
-        return reportDoc;
+        return report;
     }
+
 }

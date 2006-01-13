@@ -17,7 +17,9 @@
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
 import org.apache.log4j.Logger;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.Value;
@@ -87,9 +89,10 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
      * Return xml representation
      *
      * @return xml representation
+     * @param document
      */
-    public Element toXml() {
-	Element elem = super.toXml();
+    public Element toXml(Document document) {
+	Element elem = super.toXml(document);
 
         elem.setAttribute(MULTIPLE_ATTRIBUTE, Boolean.toString(isMultiple()));
         elem.setAttribute(REQUIREDTYPE_ATTRIBUTE, PropertyType.nameFromValue(getRequiredType()));
@@ -97,25 +100,28 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
         // default values may be 'null'
         Value[] values = getDefaultValues();
         if (values != null) {
-            Element dvElement = new Element(DEFAULTVALUES_ELEMENT);
+            Element dvElement = document.createElement(DEFAULTVALUES_ELEMENT);
             for (int i = 0; i < values.length; i++) {
                 try {
-                    Element valElem = new Element(DEFAULTVALUE_ELEMENT).setText(values[i].getString());
-                    dvElement.addContent(valElem);
+                    Element valElem = document.createElement(DEFAULTVALUE_ELEMENT);
+                    DomUtil.setText(valElem, values[i].getString());
+                    dvElement.appendChild(valElem);
                 } catch (RepositoryException e) {
                     // should not occur
                     log.error(e.getMessage());
                 }
             }
-            elem.addContent(dvElement);
+            elem.appendChild(dvElement);
         }
         // value constraints array is never null.
-        Element constrElem = new Element(VALUECONSTRAINTS_ELEMENT);
+        Element constrElem = document.createElement(VALUECONSTRAINTS_ELEMENT);
         String[] constraints = getValueConstraints();
         for (int i = 0; i < constraints.length; i++) {
-            constrElem.addContent(new Element(VALUECONSTRAINT_ELEMENT).setText(constraints[i]));
+            Element vcElem = document.createElement(VALUECONSTRAINT_ELEMENT);
+            DomUtil.setText(vcElem, constraints[i]);
+            constrElem.appendChild(vcElem);
         }
-        elem.addContent(constrElem);
+        elem.appendChild(constrElem);
 
         return elem;
     }
@@ -125,7 +131,7 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
      * 
      * @return always returns {@link #PROPERTYDEFINITION_ELEMENT}
      */
-    public String getElementName() {
+    String getElementName() {
 	return PROPERTYDEFINITION_ELEMENT;
     }
 }

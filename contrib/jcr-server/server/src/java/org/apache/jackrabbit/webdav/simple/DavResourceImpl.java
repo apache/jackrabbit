@@ -15,33 +15,67 @@
  */
 package org.apache.jackrabbit.webdav.simple;
 
-import javax.jcr.*;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.lock.Lock;
-import java.util.*;
-import java.io.*;
-
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.server.io.IOUtil;
-import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
-import org.apache.jackrabbit.webdav.observation.ObservationConstants;
-import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
-import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.jackrabbit.webdav.lock.*;
-import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.server.io.IOManager;
+import org.apache.jackrabbit.server.io.AbstractExportContext;
 import org.apache.jackrabbit.server.io.ExportContext;
+import org.apache.jackrabbit.server.io.ExportContextImpl;
+import org.apache.jackrabbit.server.io.IOManager;
+import org.apache.jackrabbit.server.io.IOUtil;
+import org.apache.jackrabbit.server.io.ImportContext;
+import org.apache.jackrabbit.server.io.ImportContextImpl;
+import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
-import org.apache.jackrabbit.server.io.ImportContext;
-import org.apache.jackrabbit.server.io.ExportContextImpl;
-import org.apache.jackrabbit.server.io.ImportContextImpl;
-import org.apache.jackrabbit.server.io.AbstractExportContext;
-import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.webdav.jcr.JcrDavException;
+import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
+import org.apache.jackrabbit.webdav.lock.LockDiscovery;
+import org.apache.jackrabbit.webdav.lock.LockInfo;
+import org.apache.jackrabbit.webdav.lock.LockManager;
+import org.apache.jackrabbit.webdav.lock.Scope;
+import org.apache.jackrabbit.webdav.lock.SupportedLock;
+import org.apache.jackrabbit.webdav.lock.Type;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.ResourceType;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.log4j.Logger;
-import org.jdom.Namespace;
+
+import javax.jcr.Item;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.lock.Lock;
+import javax.jcr.nodetype.PropertyDefinition;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * DavResourceImpl implements a DavResource.
@@ -58,7 +92,6 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     static {
         reservedNamespaces.put(DavConstants.NAMESPACE.getPrefix(), DavConstants.NAMESPACE.getURI());
         reservedNamespaces.put(ObservationConstants.NAMESPACE.getPrefix(), ObservationConstants.NAMESPACE.getURI());
-        reservedNamespaces.put(TransactionConstants.NAMESPACE.getPrefix(), TransactionConstants.NAMESPACE.getURI());
     }
 
     private DavResourceFactory factory;
@@ -359,7 +392,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
 
-        MultiStatusResponse msr = new MultiStatusResponse(getHref());
+        MultiStatusResponse msr = new MultiStatusResponse(getHref(), null);
         boolean success = true;
 
         // loop over set and remove Sets and remember all properties and propertyNames
@@ -489,7 +522,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
         try {
-            ImportContext ctx = getImportContext(inputContext, Text.getName(member.getLocator().getJcrPath()));
+            String memberName = Text.getName(member.getLocator().getJcrPath());
+            ImportContext ctx = getImportContext(inputContext, memberName);
             if (!ioManager.importContent(ctx, member)) {
                 // any changes should have been reverted in the importer
                 throw new DavException(DavServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);

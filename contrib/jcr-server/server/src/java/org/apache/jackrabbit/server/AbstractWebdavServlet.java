@@ -15,12 +15,26 @@
  */
 package org.apache.jackrabbit.server;
 
-import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.server.io.IOUtil;
-import org.apache.jackrabbit.webdav.io.InputContextImpl;
-import org.apache.jackrabbit.webdav.io.OutputContextImpl;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavLocatorFactory;
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavSessionProvider;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.WebdavRequestImpl;
+import org.apache.jackrabbit.webdav.WebdavResponse;
+import org.apache.jackrabbit.webdav.WebdavResponseImpl;
 import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.jackrabbit.webdav.io.InputContextImpl;
 import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.jackrabbit.webdav.io.OutputContextImpl;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
@@ -29,7 +43,10 @@ import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.ordering.OrderPatch;
 import org.apache.jackrabbit.webdav.ordering.OrderingResource;
-import org.apache.jackrabbit.webdav.property.*;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
@@ -48,15 +65,15 @@ import org.apache.jackrabbit.webdav.version.VersionableResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.log4j.Logger;
-import org.jdom.Document;
+import org.w3c.dom.Document;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -152,7 +169,10 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             throws ServletException, IOException {
 
         WebdavRequest webdavRequest = new WebdavRequestImpl(request, getLocatorFactory());
-        WebdavResponse webdavResponse = new WebdavResponseImpl(response);
+        // DeltaV requires 'Cache-Control' header for all methods except 'VERSION-CONTROL' and 'REPORT'.
+        int methodCode = DavMethods.getMethodCode(request.getMethod());
+        boolean noCache = DavMethods.isDeltaVMethod(webdavRequest) && !(DavMethods.DAV_VERSION_CONTROL == methodCode || DavMethods.DAV_REPORT == methodCode);
+        WebdavResponse webdavResponse = new WebdavResponseImpl(response, noCache);
         try {
             // make sure there is a authenticated user
             if (!getDavSessionProvider().attachSession(webdavRequest)) {
@@ -165,8 +185,6 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 webdavResponse.sendError(DavServletResponse.SC_PRECONDITION_FAILED);
                 return;
             }
-
-            int methodCode = DavMethods.getMethodCode(webdavRequest.getMethod());
             if (!execute(webdavRequest, webdavResponse, methodCode, resource)) {
                 super.service(request, response);
             }
@@ -314,7 +332,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         if (oR == null) {
             response.setStatus(DavServletResponse.SC_OK);
         } else {
-            response.sendXmlResponse(oR.toXml(), DavServletResponse.SC_OK);
+            response.sendXmlResponse(oR, DavServletResponse.SC_OK);
         }
     }
 
@@ -388,7 +406,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @throws IOException
      */
     protected void doPropFind(WebdavRequest request, WebdavResponse response,
-                              DavResource resource) throws IOException {
+                              DavResource resource) throws IOException, DavException {
 
         if (!resource.exists()) {
             response.sendError(DavServletResponse.SC_NOT_FOUND);
@@ -852,7 +870,8 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
         ReportInfo info = request.getReportInfo();
         Report report = ((DeltaVResource) resource).getReport(info);
-        response.sendXmlResponse(report.toXml(), DavServletResponse.SC_OK);
+        int statusCode = (report.isMultiStatusReport()) ? DavServletResponse.SC_MULTI_STATUS : DavServletResponse.SC_OK;
+        response.sendXmlResponse(report, statusCode);
     }
 
     /**
@@ -1006,7 +1025,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         try {
             Document doc = request.getRequestDocument();
             if (doc != null) {
-                SearchInfo sR = new SearchInfo(doc);
+                SearchInfo sR = SearchInfo.createFromXml(doc.getDocumentElement());
                 response.sendMultiStatus(((SearchResource) resource).search(sR));
             } else {
                 // request without request body is valid if requested resource

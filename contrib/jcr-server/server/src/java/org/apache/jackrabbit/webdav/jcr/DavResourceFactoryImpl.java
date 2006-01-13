@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest;
 import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
@@ -26,10 +25,22 @@ import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.jcr.version.VersionItemCollection;
 import org.apache.jackrabbit.webdav.jcr.version.VersionHistoryItemCollection;
 import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavMethods;
 
-import javax.jcr.*;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 /**
  * <code>DavResourceFactoryImpl</code>...
@@ -152,7 +163,7 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
      * @param locator
      * @param session
      * @return DavResource representing a repository item.
-     * @throws RepositoryException if {@link Session#getItem(String)} fails.
+     * @throws RepositoryException if {@link javax.jcr.Session#getItem(String)} fails.
      */
     private DavResource createResourceForItem(DavResourceLocator locator, DavSession session) throws RepositoryException {
         DavResource resource;

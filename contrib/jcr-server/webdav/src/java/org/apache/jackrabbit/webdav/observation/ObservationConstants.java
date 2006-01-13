@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.observation;
 
-import org.jdom.Namespace;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * <code>ObservationConstants</code> interface provide constants for request

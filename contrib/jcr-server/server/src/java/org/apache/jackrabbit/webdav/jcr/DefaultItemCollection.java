@@ -15,24 +15,66 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.property.*;
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.io.InputContext;
-import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
-import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
-import org.apache.jackrabbit.webdav.jcr.version.report.ExportViewReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.LocateCorrespondingNodeReport;
-import org.apache.jackrabbit.webdav.ordering.*;
-import org.apache.jackrabbit.webdav.lock.*;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
+import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
+import org.apache.jackrabbit.webdav.jcr.version.report.ExportViewReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.LocateCorrespondingNodeReport;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
+import org.apache.jackrabbit.webdav.lock.LockInfo;
+import org.apache.jackrabbit.webdav.lock.Scope;
+import org.apache.jackrabbit.webdav.lock.Type;
+import org.apache.jackrabbit.webdav.ordering.OrderPatch;
+import org.apache.jackrabbit.webdav.ordering.OrderingConstants;
+import org.apache.jackrabbit.webdav.ordering.OrderingResource;
+import org.apache.jackrabbit.webdav.ordering.OrderingType;
+import org.apache.jackrabbit.webdav.ordering.Position;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.log4j.Logger;
 
-import javax.jcr.*;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Item;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.NodeType;
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <code>DefaultItemCollection</code> represents a JCR node item.
@@ -640,7 +682,7 @@ public class DefaultItemCollection extends AbstractItemResource
             throws RepositoryException {
 
         String destPath = null;
-        if (position.getType() == Position.TYPE_FIRST) {
+        if (OrderingConstants.XML_FIRST.equals(position.getType())) {
             if (childNodes.hasNext()) {
                 Node firstChild = childNodes.nextNode();
                 destPath = firstChild.getPath();
@@ -649,7 +691,7 @@ public class DefaultItemCollection extends AbstractItemResource
             if (destPath == null) {
                 throw new ItemNotFoundException("No 'first' item found for reordering.");
             }
-        } else if (position.getType() == Position.TYPE_AFTER) {
+        } else if (OrderingConstants.XML_AFTER.equals(position.getType())) {
             String afterRelPath = Text.getName(position.getSegment());
             boolean found = false;
             // jcr only knows order-before > retrieve the node that follows the

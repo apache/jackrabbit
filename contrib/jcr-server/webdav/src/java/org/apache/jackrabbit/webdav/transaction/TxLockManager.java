@@ -3,8 +3,11 @@
  */
 package org.apache.jackrabbit.webdav.transaction;
 
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.lock.*;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
+import org.apache.jackrabbit.webdav.lock.LockManager;
+import org.apache.jackrabbit.webdav.lock.Scope;
+import org.apache.jackrabbit.webdav.lock.Type;
 
 /**
  * <code>TxLockManager</code> manages locks with locktype

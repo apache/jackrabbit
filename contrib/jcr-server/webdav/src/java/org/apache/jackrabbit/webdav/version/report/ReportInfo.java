@@ -18,7 +18,17 @@ package org.apache.jackrabbit.webdav.version.report;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The <code>ReportInfo</code> class encapsulates the body of a REPORT request.
@@ -26,31 +36,82 @@ import org.jdom.Element;
  * being the name of the requested report. In addition a Depth header may
  * be present (default value: {@link DavConstants#DEPTH_0}).
  */
-public class ReportInfo {
+public class ReportInfo implements XmlSerializable {
 
     private static Logger log = Logger.getLogger(ReportInfo.class);
 
-    private final Element reportElement;
+    private final String typeLocalName;
+    private final Namespace typeNamespace;
     private final int depth;
+    private final DavPropertyNameSet propertyNames;
+    private final List content = new ArrayList();
 
     /**
-     * Create a new <code>ReportInfo</code> object.
+     * Create a new <code>ReportInfo</code>
+     *
+     * @param type
+     */
+    public ReportInfo(ReportType type) {
+        this(type, DavConstants.DEPTH_0, null);
+    }
+
+    /**
+     * Create a new <code>ReportInfo</code>
+     *
+     * @param type
+     * @param depth
+     */
+    public ReportInfo(ReportType type, int depth) {
+        this(type, depth, null);
+    }
+
+    /**
+     * Create a new <code>ReportInfo</code>
+     *
+     * @param type
+     * @param depth
+     * @param propertyNames
+     */
+    public ReportInfo(ReportType type, int depth, DavPropertyNameSet propertyNames) {
+        this.typeLocalName = type.getLocalName();
+        this.typeNamespace = type.getNamespace();
+        this.depth = depth;
+        if (propertyNames != null) {
+            this.propertyNames = new DavPropertyNameSet(propertyNames);
+        } else {
+            this.propertyNames = new DavPropertyNameSet();
+        }
+    }
+
+    /**
+     * Create a new <code>ReportInfo</code> object from the given Xml element.
      *
      * @param reportElement
      * @param depth Depth value as retrieved from the {@link DavConstants#HEADER_DEPTH}.
      */
     public ReportInfo(Element reportElement, int depth) {
-        this.reportElement = reportElement;
+        if (reportElement == null) {
+            throw new IllegalArgumentException("Report request body must not be null.");
+        }
+
+        this.typeLocalName = reportElement.getLocalName();
+        this.typeNamespace = DomUtil.getNamespace(reportElement);
         this.depth = depth;
+        Element propElement = DomUtil.getChildElement(reportElement, DavConstants.XML_PROP, DavConstants.NAMESPACE);
+        if (propElement != null) {
+            propertyNames = new DavPropertyNameSet(propElement);
+            reportElement.removeChild(propElement);
+        } else {
+            propertyNames = new DavPropertyNameSet();
     }
 
-    /**
-     * Returns the Xml element specifying the requested report.
-     *
-     * @return reportElement
-     */
-    public Element getReportElement() {
-        return reportElement;
+        ElementIterator it = DomUtil.getChildren(reportElement);
+        while (it.hasNext()) {
+            Element el = it.nextElement();
+            if (!DavConstants.XML_PROP.equals(el.getLocalName())) {
+                content.add(el);
+            }
+        }
     }
 
     /**
@@ -65,6 +126,87 @@ public class ReportInfo {
     }
 
     /**
+     * Name of the report type that will be / has been requested.
+     *
+     * @return Name of the report type
+     */
+    public String getReportName() {
+        return DomUtil.getQualifiedName(typeLocalName, typeNamespace);
+    }
+
+    /**
+     * Indicates whether this info contains an element with the given name/namespace.
+     *
+     * @param localName
+     * @param namespace
+     * @return true if an element with the given name/namespace is present in the
+     * body of the request info.
+     */
+    public boolean containsContentElement(String localName, Namespace namespace) {
+        if (content.isEmpty()) {
+            return false;
+        }
+        Iterator it = content.iterator();
+        while (it.hasNext()) {
+            Element elem = (Element)it.next();
+            boolean sameNamespace = (namespace == null) ? elem.getNamespaceURI() == null : namespace.isSame(elem.getNamespaceURI());
+            if (sameNamespace && elem.getLocalName().equals(localName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Retrieves the Xml element with the given name/namespace that is a child
+     * of this info. If no such child exists <code>null</code> is returned. If
+     * multiple elements with the same name exist, the first one is returned.
+     *
+     * @param localName
+     * @param namespace
+     * @return Xml element with the given name/namespace or <code>null</code>
+     */
+    public Element getContentElement(String localName, Namespace namespace) {
+        List values = getContentElements(localName, namespace);
+        if (values.isEmpty()) {
+            return null;
+        } else {
+            return (Element)values.get(0);
+        }
+    }
+
+    /**
+     * Returns a list containing all child Xml elements of this info that have
+     * the specified name/namespace. If this info contains no such element,
+     * an empty list is returned.
+     *
+     * @param localName
+     * @param namespace
+     * @return List contain all child elements with the given name/namespace
+     * or an empty list.
+     */
+    public List getContentElements(String localName, Namespace namespace) {
+        List l = new ArrayList();
+        Iterator it = content.iterator();
+        while (it.hasNext()) {
+            Element elem = (Element)it.next();
+            if (DomUtil.matches(elem, localName, namespace)) {
+                l.add(elem);
+            }
+        }
+        return l;
+    }
+
+    /**
+     * Add the specified Xml element as child of this info.
+     *
+     * @param contentElement
+     */
+    public void setContentElement(Element contentElement) {
+        content.add(contentElement);
+    }
+
+    /**
      * Returns a <code>DavPropertyNameSet</code> providing the property names present
      * in an eventual {@link DavConstants#XML_PROP} child element. If no such
      * child element is present an empty set is returned.
@@ -73,11 +215,31 @@ public class ReportInfo {
      * in an eventual {@link DavConstants#XML_PROP DAV:prop} child element or an empty set.
      */
     public DavPropertyNameSet getPropertyNameSet() {
-        Element propElement = reportElement.getChild(DavConstants.XML_PROP, DavConstants.NAMESPACE);
-        if (propElement != null) {
-            return new DavPropertyNameSet(propElement);
-        } else {
-            return new DavPropertyNameSet();
-        }
+        return propertyNames;
     }
+
+
+    /**
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element reportElement = DomUtil.createElement(document, typeLocalName, typeNamespace);
+        if (!content.isEmpty()) {
+            Iterator it = content.iterator();
+            while (it.hasNext()) {
+                Object contentEntry = it.next();
+                if (contentEntry instanceof Node) {
+                    Node n = document.importNode((Node)contentEntry, true);
+                    reportElement.appendChild(n);
+                }
+                // else: another object. this should never occure and is therefore ignored.
+            }
+        }
+        if (!propertyNames.isEmpty()) {
+            reportElement.appendChild(propertyNames.toXml(document));
+        }
+        return reportElement;
+    }
+
 }

@@ -16,7 +16,11 @@
 package org.apache.jackrabbit.webdav.search;
 
 import org.apache.log4j.Logger;
-import org.jdom.*;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
  * <code>SearchInfo</code> parses the 'searchrequest' element of a SEARCH
@@ -41,11 +45,13 @@ import org.jdom.*;
  * </pre>
  *
  */
-public class SearchInfo implements SearchConstants {
+public class SearchInfo implements SearchConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(SearchInfo.class);
 
-    private final Element languageElem;
+    private final String language;
+    private final Namespace languageNamespace;
+    private final String query;
 
     /**
      * Create a new <code>SearchInfo</code> instance.
@@ -55,27 +61,9 @@ public class SearchInfo implements SearchConstants {
      * @param query
      */
     public SearchInfo(String language, Namespace languageNamespace, String query) {
-        languageElem = new Element(language, languageNamespace).setText(query);
-    }
-
-    /**
-     * Create a new <code>SearchInfo</code> from the specifying document
-     * retrieved from the request body.
-     *
-     * @param searchDocument
-     * @throws IllegalArgumentException if the root element's name is other than
-     * 'searchrequest' or if it does not contain a single child element specifying
-     * the query language to be used.
-     */
-    public SearchInfo(Document searchDocument) {
-        Element searchRequest = searchDocument.getRootElement();
-        if (searchRequest == null || !XML_SEARCHREQUEST.equals(searchRequest.getName()))  {
-            throw new IllegalArgumentException("The root element must be 'searchrequest'.");
-        } else if (searchRequest.getChildren().size() != 1) {
-            throw new IllegalArgumentException("A single child element is expected with the 'searchrequest'.");
-        }
-        Element child = (Element)searchRequest.getChildren().get(0);
-        languageElem = (Element) child.detach();
+        this.language = language;
+        this.languageNamespace = languageNamespace;
+        this.query = query;
     }
 
     /**
@@ -84,7 +72,7 @@ public class SearchInfo implements SearchConstants {
      * @return name of the query language
      */
     public String getLanguageName() {
-        return languageElem.getName();
+        return language;
     }
 
     /**
@@ -93,7 +81,7 @@ public class SearchInfo implements SearchConstants {
      * @return namespace of the requestes language.
      */
     public Namespace getLanguageNameSpace() {
-        return languageElem.getNamespace();
+        return languageNamespace;
     }
 
     /**
@@ -102,17 +90,39 @@ public class SearchInfo implements SearchConstants {
      * @return query string
      */
     public String getQuery() {
-        return languageElem.getText();
+        return query;
     }
 
     /**
      * Return the xml representation of this <code>SearchInfo</code> instance.
      *
      * @return xml representation
+     * @param document
      */
-    public Document toXml() {
-        Element sRequestElem = new Element(XML_SEARCHREQUEST, NAMESPACE);
-        sRequestElem.addContent(languageElem);
-        return new Document(sRequestElem);
+    public Element toXml(Document document) {
+        Element sRequestElem = DomUtil.createElement(document, XML_SEARCHREQUEST, NAMESPACE);
+        DomUtil.addChildElement(sRequestElem, language, languageNamespace, query);
+        return sRequestElem;
+    }
+
+    /**
+     * Create a new <code>SearchInfo</code> from the specifying document
+     * retrieved from the request body.
+     *
+     * @param searchRequest
+     * @throws IllegalArgumentException if the root element's name is other than
+     * 'searchrequest' or if it does not contain a single child element specifying
+     * the query language to be used.
+     */
+    public static SearchInfo createFromXml(Element searchRequest) {
+        if (searchRequest == null || !XML_SEARCHREQUEST.equals(searchRequest.getLocalName()))  {
+            throw new IllegalArgumentException("The root element must be 'searchrequest'.");
+        }
+        Element first = DomUtil.getFirstChildElement(searchRequest);
+        if (first != null) {
+            return new SearchInfo(first.getLocalName(), DomUtil.getNamespace(first), DomUtil.getText(first));
+        } else {
+            throw new IllegalArgumentException("A single child element is expected with the 'DAV:searchrequest'.");
+        }
     }
 }

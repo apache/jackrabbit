@@ -15,7 +15,7 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.jdom.Namespace;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 
 import java.text.DateFormat;
@@ -55,7 +55,6 @@ public interface DavConstants {
     
     //----------------------------------------------------- Overwrite header ---
     public static final String HEADER_OVERWRITE = "Overwrite";
-    public static final String NO_OVERWRITE = "T";
 
     //--------------------------------------------------------- Depth header ---
     public static final String HEADER_DEPTH = "Depth";

@@ -15,9 +15,10 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.jdom.Element;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -75,23 +76,6 @@ public class LockDiscovery extends AbstractDavProperty {
     }
 
     /**
-     * Creates a JDOM  <code>&lt;lockdiscovery&gt;</code> element in order to respond to a LOCK
-     * request or to the lockdiscovery property of a PROPFIND request.<br>
-     * NOTE: if the {@link #activeLocks} list is empty an empty lockdiscovery
-     * property is created ( <code>&lt;lockdiscovery/&gt;</code>)
-     * @return A JDOM element of the &lt;active> lock tag.
-     */
-    public Element toXml() {
-        Element lockdiscovery = getName().toXml();
-        Iterator it = activeLocks.iterator();
-        while (it.hasNext()) {
-            ActiveLock lock = (ActiveLock) it.next();
-            lockdiscovery.addContent(lock.toXml());
-	}
-	return lockdiscovery;
-    }
-
-    /**
      * Returns the list of active locks.
      *
      * @return list of active locks
@@ -100,4 +84,23 @@ public class LockDiscovery extends AbstractDavProperty {
     public Object getValue() {
         return activeLocks;
     }
+
+    /**
+     * Creates a JDOM  <code>&lt;lockdiscovery&gt;</code> element in order to respond to a LOCK
+     * request or to the lockdiscovery property of a PROPFIND request.<br>
+     * NOTE: if the {@link #activeLocks} list is empty an empty lockdiscovery
+     * property is created ( <code>&lt;lockdiscovery/&gt;</code>)
+     * @return A JDOM element of the &lt;active> lock tag.
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element lockdiscovery = getName().toXml(document);
+        Iterator it = activeLocks.iterator();
+        while (it.hasNext()) {
+            ActiveLock lock = (ActiveLock) it.next();
+            lockdiscovery.appendChild(lock.toXml(document));
+	}
+	return lockdiscovery;
+    }
+
 }

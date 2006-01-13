@@ -38,6 +38,11 @@ public class DavMethods {
     private static int[] labelMethods;
 
     /**
+     * An array of method codes defined by RFC 3253 (deltaV)
+     */
+    private static int[] deltaVMethods;
+
+    /**
      * The webdav OPTIONS method and public constant
      */
     public static final int DAV_OPTIONS = 1;
@@ -234,6 +239,20 @@ public class DavMethods {
     public static final String METHOD_MKWORKSPACE = "MKWORKSPACE";
 
     /**
+     * The webdav BASELINE-CONTROL method and public constant defined by
+     * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
+     */
+    public static final int DAV_BASELINE_CONTROL = DAV_MKWORKSPACE + 1;
+    public static final String METHOD_BASELINE_CONTROL = "BASELINE-CONTROL";
+
+    /**
+     * The webdav MKACTIVITY method and public constant defined by
+     * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
+     */
+    public static final int DAV_MKACTIVITY = DAV_BASELINE_CONTROL + 1;
+    public static final String METHOD_MKACTIVITY = "MKACTIVITY";
+
+    /**
      * Returns webdav method type code, error result <= 0
      * Valid type codes > 0
      */
@@ -283,9 +302,16 @@ public class DavMethods {
         addMethodCode(METHOD_MERGE, DAV_MERGE);
         addMethodCode(METHOD_UPDATE, DAV_UPDATE);
         addMethodCode(METHOD_MKWORKSPACE, DAV_MKWORKSPACE);
+        addMethodCode(METHOD_BASELINE_CONTROL, DAV_BASELINE_CONTROL);
+        addMethodCode(METHOD_MKACTIVITY, DAV_MKACTIVITY);
 
         labelMethods = new int[] { DAV_GET, DAV_HEAD, DAV_OPTIONS, DAV_PROPFIND,
                                    DAV_LABEL, DAV_COPY };
+
+        deltaVMethods = new int[] { DAV_REPORT, DAV_VERSION_CONTROL, DAV_CHECKIN,
+                                    DAV_CHECKOUT, DAV_UNCHECKOUT, DAV_LABEL,
+                                    DAV_MERGE, DAV_UPDATE, DAV_MKWORKSPACE,
+                                    DAV_BASELINE_CONTROL, DAV_MKACTIVITY };
     }
 
    /**
@@ -324,6 +350,22 @@ public class DavMethods {
         int code = getMethodCode(request.getMethod());
         for (int i = 0; i < labelMethods.length; i++) {
             if (code == labelMethods[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true, if the specified method is defined by RFC 3253
+     *
+     * @param request
+     * @return true, if the specified method is defined by RFC 3253
+     */
+    public static boolean isDeltaVMethod(DavServletRequest request) {
+        int code = getMethodCode(request.getMethod());
+        for (int i = 0; i < deltaVMethods.length; i++) {
+            if (code == deltaVMethods[i]) {
                 return true;
             }
         }

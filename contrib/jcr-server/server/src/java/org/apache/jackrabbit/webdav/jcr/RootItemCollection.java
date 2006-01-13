@@ -15,15 +15,23 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.property.*;
-import org.jdom.Element;
 
+import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
-import javax.jcr.Item;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Properties;
 
 /**
  * <code>RootItemCollection</code> represents the root node of the underlying
@@ -89,53 +97,34 @@ public class RootItemCollection extends VersionControlledItemCollection {
      */
     public void setProperty(DavProperty property) throws DavException {
         if (JCR_NAMESPACES.equals(property.getName())) {
-            Object v = property.getValue();
-            if (v instanceof List) {
-                Map changeMap = new HashMap();
-                // retrieve list of prefix/uri pairs that build the new values of
-                // the ns-registry
-                Iterator it = ((List)v).iterator();
-                while (it.hasNext()) {
-                    Object listEntry = it.next();
-                    if (listEntry instanceof Element) {
-                        Element e = (Element)listEntry;
-                        if (XML_NAMESPACE.equals(e.getName())) {
-                            String prefix = e.getChildText(XML_PREFIX, NAMESPACE);
-                            String uri = e.getChildText(XML_URI, NAMESPACE);
-                            changeMap.put(prefix, uri);
-                        }
-                    }
-                }
+            NamespacesProperty nsp = new NamespacesProperty(property);
                 try {
+                Properties changes = nsp.getNamespaces();
                     NamespaceRegistry nsReg = getRepositorySession().getWorkspace().getNamespaceRegistry();
                     String[] registeredPrefixes = nsReg.getPrefixes();
                     for (int i = 0; i < registeredPrefixes.length; i++) {
                         String prfx = registeredPrefixes[i];
-                        if (!changeMap.containsKey(prfx)) {
+                    if (!changes.containsKey(prfx)) {
                             // prefix not present amongst the new values any more > unregister
                             nsReg.unregisterNamespace(prfx);
-                        } else if (changeMap.get(prfx).equals(nsReg.getURI(prfx))) {
+                    } else if (changes.get(prfx).equals(nsReg.getURI(prfx))) {
                             // present with same uri-value >> no action required
-                            changeMap.remove(prfx);
+                        changes.remove(prfx);
                         }
                     }
 
                     // try to register any prefix/uri pair that has a changed uri or
                     // it has not been present before.
-                    Iterator prefixIt = changeMap.keySet().iterator();
+                Iterator prefixIt = changes.keySet().iterator();
                     while (prefixIt.hasNext()) {
                         String prefix = (String)prefixIt.next();
-                        String uri = (String)changeMap.get(prefix);
+                    String uri = (String)changes.get(prefix);
                         nsReg.registerNamespace(prefix, uri);
                     }
                 } catch (RepositoryException e) {
                     throw new JcrDavException(e);
                 }
             } else {
-                log.warn("Unexpected structure of dcr:namespace property.");
-                throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
-        } else {
             super.setProperty(property);
         }
     }
@@ -165,15 +154,8 @@ public class RootItemCollection extends VersionControlledItemCollection {
         try {
             // init workspace specific properties
             NamespaceRegistry nsReg = getRepositorySession().getWorkspace().getNamespaceRegistry();
-            String[] prefixes = nsReg.getPrefixes();
-            Element[] nsElems = new Element[prefixes.length];
-            for (int i = 0; i < prefixes.length; i++) {
-                Element elem = new Element(XML_NAMESPACE, NAMESPACE);
-                elem.addContent(new Element(XML_PREFIX, NAMESPACE).setText(prefixes[i]));
-                elem.addContent(new Element(XML_URI, NAMESPACE)).setText(nsReg.getURI(prefixes[i]));
-                nsElems[i] = elem;
-            }
-            properties.add(new DefaultDavProperty(JCR_NAMESPACES, nsElems, false));
+            DavProperty namespacesProp = new NamespacesProperty(nsReg);
+            properties.add(namespacesProp);
         } catch (RepositoryException e) {
             log.error("Failed to access NamespaceRegistry: " + e.getMessage());
         }

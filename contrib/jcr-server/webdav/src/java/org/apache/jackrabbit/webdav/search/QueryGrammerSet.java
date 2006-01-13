@@ -17,12 +17,14 @@ package org.apache.jackrabbit.webdav.search;
 
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.jdom.Element;
-import org.jdom.Namespace;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * <code>QueryGrammerSet</code> is a {@link DavProperty} that
@@ -31,41 +33,24 @@ import java.util.Iterator;
  */
 public class QueryGrammerSet extends AbstractDavProperty implements SearchConstants {
 
-    private List queryLanguages = new ArrayList();
+    private final Set queryGrammers = new HashSet();
 
     /**
      * Create a new empty <code>QueryGrammerSet</code>. Supported query grammers
      * may be added by calling {@link #addQueryLanguage(String, Namespace).
      */
     public QueryGrammerSet() {
-       this(null);
-    }
-
-    /**
-     * Create a new <code>QueryGrammerSet</code> from the given query languages
-     * string array. The default {@link SearchConstants#NAMESPACE} is assumed.
-     * @param qLanguages
-     */
-    public QueryGrammerSet(String[] qLanguages) {
         super(QUERY_GRAMMER_SET, true);
-        if (qLanguages != null) {
-            for (int i = 0; i < qLanguages.length; i++) {
-                queryLanguages.add(new Element(qLanguages[i], SearchConstants.NAMESPACE));
-            }
-        }
     }
 
     /**
-     * Add another query language to this set.
+     * Add another query queryGrammer to this set.
      *
-     * @param qLanguage
+     * @param grammerName
      * @param namespace
      */
-    public void addQueryLanguage(String qLanguage, Namespace namespace) {
-        if (namespace == null) {
-            namespace = SearchConstants.NAMESPACE;
-        }
-        queryLanguages.add(new Element(qLanguage, namespace));
+    public void addQueryLanguage(String grammerName, Namespace namespace) {
+        queryGrammers.add(new Grammer(grammerName, namespace));
     }
 
     /**
@@ -75,12 +60,12 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
      * @return names of the supported query languages
      */
     public String[] getQueryLanguages() {
-        int size = queryLanguages.size();
+        int size = queryGrammers.size();
         if (size > 0) {
             String[] qLangStr = new String[size];
-            Element[] elements = (Element[]) queryLanguages.toArray(new Element[size]);
-            for (int i = 0; i < elements.length; i++) {
-                qLangStr[i] = elements[i].getNamespaceURI() + elements[i].getName();
+            Grammer[] grammers = (Grammer[]) queryGrammers.toArray(new Grammer[size]);
+            for (int i = 0; i < grammers.length; i++) {
+                qLangStr[i] = grammers[i].namespace.getURI() + grammers[i].localName;
             }
             return qLangStr;
         } else {
@@ -94,26 +79,56 @@ public class QueryGrammerSet extends AbstractDavProperty implements SearchConsta
      *
      * @return Xml representation
      * @see SearchConstants#QUERY_GRAMMER_SET
-     * @see org.apache.jackrabbit.webdav.property.DavProperty#toXml()
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Element toXml() {
-        Element elem = getName().toXml();
-        Iterator qlIter = queryLanguages.iterator();
+    public Element toXml(Document document) {
+        Element elem = getName().toXml(document);
+        Iterator qlIter = queryGrammers.iterator();
         while (qlIter.hasNext()) {
-            Element grammer = new Element(XML_GRAMMER, SearchConstants.NAMESPACE).addContent((Element)qlIter.next());
-            Element sqg = new Element(XML_QUERY_GRAMMAR, SearchConstants.NAMESPACE).addContent(grammer);
-            elem.addContent(sqg);
+            Element sqg = DomUtil.addChildElement(elem, XML_QUERY_GRAMMAR, SearchConstants.NAMESPACE);
+            Element grammer = DomUtil.addChildElement(sqg, XML_GRAMMER, SearchConstants.NAMESPACE);
+            Grammer qGrammer = (Grammer)qlIter.next();
+            DomUtil.addChildElement(grammer, qGrammer.localName, qGrammer.namespace);
         }
         return elem;
     }
 
     /**
-     * Returns the list of supported query languages.
+     * Returns the set of supported query grammers.
      *
      * @return list of supported query languages.
      * @see org.apache.jackrabbit.webdav.property.DavProperty#getValue()
      */
     public Object getValue() {
-        return queryLanguages;
+        return queryGrammers;
+    }
+
+
+    private class Grammer {
+
+        private final String localName;
+        private final Namespace namespace;
+        private final int hashCode;
+
+        Grammer(String localName, Namespace namespace) {
+            this.localName = localName;
+            this.namespace = namespace;
+            hashCode = DomUtil.getQualifiedName(localName, namespace).hashCode();
+        }
+
+        public int hashCode() {
+            return hashCode;
+        }
+
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj instanceof Grammer) {
+                return obj.hashCode() == hashCode();
+            }
+            return false;
+        }
     }
 }

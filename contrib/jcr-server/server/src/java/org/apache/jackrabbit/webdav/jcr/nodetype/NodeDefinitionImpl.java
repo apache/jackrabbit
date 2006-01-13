@@ -17,7 +17,9 @@
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
 import org.apache.log4j.Logger;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeDefinition;
@@ -76,12 +78,11 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
      * Returns xml representation
      *
      * @return xml representation
+     * @param document
      */
-    public Element toXml() {
-        Element elem = super.toXml();
-
+    public Element toXml(Document document) {
+        Element elem = super.toXml(document);
         elem.setAttribute(SAMENAMESIBLINGS_ATTRIBUTE, Boolean.toString(allowsSameNameSiblings()));
-
         // defaultPrimaryType can be 'null'
         NodeType defaultPrimaryType = getDefaultPrimaryType();
         if (defaultPrimaryType != null) {
@@ -89,12 +90,14 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
         }
         // reqPrimaryTypes: minimal set is nt:base.
         NodeType[] nts = getRequiredPrimaryTypes();
-        Element reqPrimaryTypes = new Element(REQUIREDPRIMARYTYPES_ELEMENT);
+        Element reqPrimaryTypes = document.createElement(REQUIREDPRIMARYTYPES_ELEMENT);
 	for (int i = 0; i < nts.length; i++) {
-	    reqPrimaryTypes.addContent(new Element(REQUIREDPRIMARYTYPE_ELEMENT).setText(nts[i].getName()));
-	}
-        elem.addContent(reqPrimaryTypes);
+            Element rptElem = document.createElement(REQUIREDPRIMARYTYPE_ELEMENT);
+            DomUtil.setText(rptElem, nts[i].getName());
+	    reqPrimaryTypes.appendChild(rptElem);
 
+	}
+        elem.appendChild(reqPrimaryTypes);
         return elem;
     }
 
@@ -103,7 +106,7 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
      *
      * @return always returns {@link #CHILDNODEDEFINITION_ELEMENT}.
      */
-    public String getElementName() {
+    String getElementName() {
 	return CHILDNODEDEFINITION_ELEMENT;
     }
 }

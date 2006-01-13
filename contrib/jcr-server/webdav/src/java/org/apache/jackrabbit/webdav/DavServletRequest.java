@@ -18,7 +18,7 @@ package org.apache.jackrabbit.webdav;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
-import org.jdom.Document;
+import org.w3c.dom.Document;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -115,7 +115,7 @@ public interface DavServletRequest extends HttpServletRequest {
     public long getTimeout();
 
     /**
-     * Parse the Xml request body and return a {@link org.jdom.Document}.
+     * Parse the Xml request body and return a {@link org.w3c.dom.Document}.
      * If the request body can not be parsed <code>null</code> is returned.
      *
      * @return Document representing the Xml request body or <code>null</code>.
@@ -131,7 +131,7 @@ public interface DavServletRequest extends HttpServletRequest {
      * @see DavConstants#PROPFIND_BY_PROPERTY
      * @see DavConstants#PROPFIND_PROPERTY_NAMES
      */
-    public int getPropFindType();
+    public int getPropFindType() throws DavException;
 
     /**
      * Return the set of properties the client requested with a PROPFIND request
@@ -140,7 +140,7 @@ public interface DavServletRequest extends HttpServletRequest {
      *
      * @return set of properties the client requested with a PROPFIND request
      */
-    public DavPropertyNameSet getPropFindProperties();
+    public DavPropertyNameSet getPropFindProperties() throws DavException;
 
     /**
      * Return the set of properties the client wanted to modify / create with a
@@ -150,7 +150,7 @@ public interface DavServletRequest extends HttpServletRequest {
      * @return set of properties the client wanted to modify / create with a
      * PROPPATCH request.
      */
-    public DavPropertySet getPropPatchSetProperties();
+    public DavPropertySet getPropPatchSetProperties() throws DavException;
 
     /**
      * Return the set of property names the client wanted to remove with a
@@ -164,7 +164,7 @@ public interface DavServletRequest extends HttpServletRequest {
      * @return set of property names the client wanted to remove with a
      * PROPPATCH request.
      */
-    public DavPropertyNameSet getPropPatchRemoveProperties();
+    public DavPropertyNameSet getPropPatchRemoveProperties() throws DavException;
 
     /**
      * Return the parsed 'lockinfo' request body, the {@link DavConstants#HEADER_TIMEOUT

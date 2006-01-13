@@ -15,22 +15,26 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.jdom.Element;
-import org.jdom.Namespace;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The <code>Type</code> class encapsulates the lock type as defined by RFC 2518.
  */
-public class Type {
+public class Type implements XmlSerializable {
 
     private static Map types = new HashMap();
 
     public static final Type WRITE = Type.create(DavConstants.XML_WRITE, DavConstants.NAMESPACE);
 
-    private final String name;
+    private final String localName;
     private final Namespace namespace;
 
     /**
@@ -40,7 +44,7 @@ public class Type {
      * @param namespace
      */
     private Type(String name, Namespace namespace) {
-        this.name = name;
+        this.localName = name;
         this.namespace = namespace;
     }
 
@@ -48,40 +52,12 @@ public class Type {
      * Returns the Xml representation of this lock <code>Type</code>.
      *
      * @return Xml representation
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      */
-    public Element toXml() {
-        return new Element(name, namespace);
-    }
-
-    /**
-     * Create a <code>Type</code> object from the given Xml element.
-     *
-     * @param lockType
-     * @return <code>Type</code> object.
-     */
-    public static Type create(Element lockType) {
-        if (lockType == null) {
-            throw new IllegalArgumentException("'null' is not valid lock type entry.");
-        }
-        return create(lockType.getName(), lockType.getNamespace());
-    }
-
-    /**
-     * Create a <code>Type</code> object from the given name and namespace.
-     *
-     * @param name
-     * @param namespace
-     * @return <code>Type</code> object.
-     */
-    public static Type create(String name, Namespace namespace) {
-	String key = "{" + namespace.getURI() + "}" + name;
-        if (types.containsKey(key)) {
-            return (Type) types.get(key);
-        } else {
-            Type type = new Type(name, namespace);
-            types.put(key, type);
-            return type;
-        }
+    public Element toXml(Document document) {
+        Element lockType = DomUtil.createElement(document, DavConstants.XML_LOCKTYPE, DavConstants.NAMESPACE);
+        DomUtil.addChildElement(lockType, localName, namespace);
+        return lockType;
     }
 
     /**
@@ -96,8 +72,44 @@ public class Type {
 	}
 	if (obj instanceof Type) {
 	    Type other = (Type) obj;
-	    return name.equals(other.name) && namespace.equals(other.namespace);
+	    return localName.equals(other.localName) && namespace.equals(other.namespace);
 	}
 	return false;
+    }
+
+    /**
+     * Create a <code>Type</code> object from the given Xml element.
+     *
+     * @param lockType
+     * @return <code>Type</code> object.
+     */
+    public static Type createFromXml(Element lockType) {
+        if (lockType != null && DavConstants.XML_LOCKTYPE.equals(lockType.getLocalName())) {
+            // we have the parent element and must retrieve the type first
+            lockType = DomUtil.getFirstChildElement(lockType);
+        }
+        if (lockType == null) {
+            throw new IllegalArgumentException("'null' is not valid lock type entry.");
+        }
+        Namespace namespace = Namespace.getNamespace(lockType.getPrefix(), lockType.getNamespaceURI());
+        return create(lockType.getLocalName(), namespace);
+    }
+
+    /**
+     * Create a <code>Type</code> object from the given localName and namespace.
+     *
+     * @param localName
+     * @param namespace
+     * @return <code>Type</code> object.
+     */
+    public static Type create(String localName, Namespace namespace) {
+        String key = DomUtil.getQualifiedName(localName, namespace);
+        if (types.containsKey(key)) {
+            return (Type) types.get(key);
+        } else {
+            Type type = new Type(localName, namespace);
+            types.put(key, type);
+            return type;
+        }
     }
 }

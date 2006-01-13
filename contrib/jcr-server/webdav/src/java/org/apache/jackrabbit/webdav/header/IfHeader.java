@@ -15,17 +15,18 @@
  */
 package org.apache.jackrabbit.webdav.header;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Iterator;
-import java.io.StringReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * The <code>IfHeader</code> class represents the state lists defined
@@ -38,7 +39,7 @@ import java.io.Reader;
      Resource = Coded-URL
      List = "(" 1*(["Not"](State-etag | "[" entity-tag "]")) ")"
      State-etag = Coded-URL
-     Coded-URL = "<" absoluteURI ">"
+     Coded-URL = "&lt;" absoluteURI "&gt;"
  * </pre>
  * <p>
  * Reformulating this specification into proper EBNF as specified by N. Wirth
@@ -47,9 +48,9 @@ import java.io.Reader;
  * within words which is considered significant.
  * <pre>
      If = "If:" ( Tagged | Untagged ).
-     Tagged = { "<" Word ">" Untagged } .
+     Tagged = { "&lt;" Word "&gt;" Untagged } .
      Untagged = { "(" IfList ")" } .
-     IfList = { [ "Not" ] ( ("<" Word ">" ) | ( "[" Word "]" ) ) } .
+     IfList = { [ "Not" ] ( ("&lt;" Word "&gt;" ) | ( "[" Word "]" ) ) } .
      Word = characters .
  * </pre>
  * <p>
@@ -74,7 +75,7 @@ import java.io.Reader;
  *
  * @author Felix Meschberger
  */
-public class IfHeader {
+public class IfHeader implements Header {
 
     /**
      * default logger
@@ -82,14 +83,40 @@ public class IfHeader {
     private static final Logger log = Logger.getLogger(IfHeader.class);
 
     /**
+     * The string representation of the header value
+     */
+    private final String headerValue;
+
+    /**
      * The list of untagged state entries
      */
     private final IfHeaderInterface ifHeader;
 
     /**
-     * The list of all tokens present in the If header.
+     * The list of all positive tokens present in the If header.
      */
     private List allTokens = new ArrayList();
+    /**
+     * The list of all NOT tokens present in the If header.
+     */
+    private List allNotTokens = new ArrayList();
+
+    /**
+     * Create a Untagged <code>IfHeader</code> if the given lock tokens.
+     *
+     * @param tokens
+     */
+    public IfHeader(String[] tokens) {
+        allTokens.addAll(Arrays.asList(tokens));
+        StringBuffer b = new StringBuffer();
+        for (int i = 0; i < tokens.length; i++) {
+            b.append("(").append("<");
+            b.append(tokens[i]);
+            b.append(">").append(")");
+        }
+        headerValue = b.toString();
+        ifHeader = parse();
+    }
 
     /**
      * Parses the <em>If</em> header and creates and internal representation
@@ -98,45 +125,8 @@ public class IfHeader {
      * @param req The request object
      */
     public IfHeader(HttpServletRequest req) {
-
-	String ifHeaderValue = req.getHeader(DavConstants.HEADER_IF);
-        if (ifHeaderValue != null && ifHeaderValue.length() > 0) {
-
-            StringReader reader = null;
-            int firstChar = 0;
-
-            try {
-                reader = new StringReader(ifHeaderValue);
-
-                // get the first character to decide - expect '(' or '<'
-                try {
-                    reader.mark(1);
-                    firstChar = readWhiteSpace(reader);
-                    reader.reset();
-                } catch (IOException ignore) {
-                    // may be thrown according to API but is only thrown by the
-                    // StringReader class if the reader is already closed.
-                }
-
-                if (firstChar == '(') {
-                    ifHeader = parseUntagged(reader);
-                } else if (firstChar == '<') {
-                    ifHeader = parseTagged(reader);
-                } else {
-                    logIllegalState("If", firstChar, "(<", null);
-                    ifHeader = null;
-                }
-
-            } finally  {
-                if (reader != null) {
-                    reader.close();
-                }
-            }
-
-        } else {
-            log.debug("IfHeader: No If header in request");
-            ifHeader = null;
-        }
+	headerValue = req.getHeader(DavConstants.HEADER_IF);
+        ifHeader = parse();
     }
 
     /**
@@ -147,6 +137,16 @@ public class IfHeader {
      */
     public String getHeaderName() {
 	return DavConstants.HEADER_IF;
+    }
+
+    /**
+     * Return the String representation of the If header present on
+     * the given request or <code>null</code>.
+     *
+     * @return If header value as String or <code>null</code>.
+     */
+    public String getHeaderValue() {
+        return headerValue;
     }
 
     /**
@@ -189,11 +189,63 @@ public class IfHeader {
     }
 
     /**
-     * 
-     * @return
+     * @return an interator over all tokens present in the if header, that were
+     * not denied by a leading NOT statement.
      */
     public Iterator getAllTokens() {
         return allTokens.iterator();
+    }
+
+    /**
+     * @return an interator over all NOT tokens present in the if header, that
+     * were explicitely denied.
+     */
+    public Iterator getAllNotTokens() {
+        return allNotTokens.iterator();
+    }
+
+    /**
+     * Parse the original header value and build th internal IfHeaderInterface
+     * object that is easy to query.
+     */
+    private IfHeaderInterface parse() {
+        IfHeaderInterface ifHeader;
+        if (headerValue != null && headerValue.length() > 0) {
+            StringReader reader = null;
+            int firstChar = 0;
+
+            try {
+                reader = new StringReader(headerValue);
+                // get the first character to decide - expect '(' or '<'
+                try {
+                    reader.mark(1);
+                    firstChar = readWhiteSpace(reader);
+                    reader.reset();
+                } catch (IOException ignore) {
+                    // may be thrown according to API but is only thrown by the
+                    // StringReader class if the reader is already closed.
+                }
+
+                if (firstChar == '(') {
+                    ifHeader = parseUntagged(reader);
+                } else if (firstChar == '<') {
+                    ifHeader = parseTagged(reader);
+                } else {
+                    logIllegalState("If", firstChar, "(<", null);
+                    ifHeader = null;
+                }
+
+            } finally  {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
+
+        } else {
+            log.debug("IfHeader: No If header in request");
+            ifHeader = null;
+        }
+        return ifHeader;
     }
 
     //---------- internal IF header parser -------------------------------------
@@ -331,7 +383,11 @@ public class IfHeader {
                     if (word != null) {
                         res.add(new IfListEntryToken(word, positive));
                         // also add the token to the list of all tokens
+                        if (positive) {
                         allTokens.add(word);
+                        } else {
+                            allNotTokens.add(word);
+                        }
                         positive = true;
                     }
                     break;

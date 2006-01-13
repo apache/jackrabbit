@@ -17,7 +17,9 @@
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
 import org.apache.log4j.Logger;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.ItemDefinition;
@@ -26,7 +28,7 @@ import javax.jcr.version.OnParentVersionAction;
 /**
  * <code>ItemDefinitionImpl</code>...
  */
-abstract public class ItemDefinitionImpl implements ItemDefinition, NodeTypeConstants {
+abstract public class ItemDefinitionImpl implements ItemDefinition, NodeTypeConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(ItemDefinitionImpl.class);
 
@@ -41,7 +43,6 @@ abstract public class ItemDefinitionImpl implements ItemDefinition, NodeTypeCons
 	if (definition == null) {
             throw new IllegalArgumentException("PropDef argument can not be null");
         }
-
         name = definition.getName();
 	declaringNodeType = definition.getDeclaringNodeType();
 	isAutoCreated = definition.isAutoCreated();
@@ -92,14 +93,15 @@ abstract public class ItemDefinitionImpl implements ItemDefinition, NodeTypeCons
 	return isProtected;
     }
 
-    //-------------------------------------< implementation specific method >---
+    //------------------------------------------< XmlSerializable interface >---
     /**
      * Returns the Xml representation of a {@link ItemDefinition} object.
      *
      * @return Xml representation of the specified {@link ItemDefinition def}.
+     * @param document
      */
-    public Element toXml() {
-	Element elem = new Element(getElementName());
+    public Element toXml(Document document) {
+	Element elem = document.createElement(getElementName());
         elem.setAttribute(NAME_ATTRIBUTE, getName());
         elem.setAttribute(AUTOCREATED_ATTRIBUTE, Boolean.toString(isAutoCreated()));
         elem.setAttribute(MANDATORY_ATTRIBUTE, Boolean.toString(isMandatory()));
@@ -108,10 +110,11 @@ abstract public class ItemDefinitionImpl implements ItemDefinition, NodeTypeCons
         return elem;
     }
 
+    //-------------------------------------< implementation specific method >---
     /**
      * Returns the name of the root element
      *
      * @return the name of the root element
      */
-    public abstract String getElementName();
+    abstract String getElementName();
 }

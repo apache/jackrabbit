@@ -16,7 +16,7 @@
 package org.apache.jackrabbit.webdav;
 
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
-import org.jdom.Document;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -41,8 +41,13 @@ public interface DavServletResponse extends HttpServletResponse {
     int SC_MULTI_STATUS = 207;
 
     /**
-     * Status code (422) indicating the entity body submitted with
-     * the PATCH method was not understood by the resource.
+     * The 422 (Unprocessable Entity) status code means the server understands
+     * the content type of the request entity (hence a 415(Unsupported Media Type)
+     * status code is inappropriate), and the syntax of the request entity is
+     * correct (thus a 400 (Bad Request) status code is inappropriate) but was
+     * unable to process the contained instructions. For example, this error
+     * condition may occur if an XML request body contains well-formed (i.e.,
+     * syntactically correct), but semantically erroneous XML instructions.
      */
     int SC_UNPROCESSABLE_ENTITY = 422;
 
@@ -116,9 +121,10 @@ public interface DavServletResponse extends HttpServletResponse {
     /**
      * Generic method to return an Xml response body.
      *
-     * @param xmlDoc Xml document representing the response body.
+     * @param serializable object that can be converted to the root Xml element
+     * of the document to be sent as response body.
      * @param status Status code to be used with {@link #setStatus(int)}.
      * @throws IOException
      */
-    public void sendXmlResponse(Document xmlDoc, int status) throws IOException;
+    public void sendXmlResponse(XmlSerializable serializable, int status) throws IOException;
 }

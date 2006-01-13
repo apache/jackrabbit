@@ -15,15 +15,45 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.property.*;
-import org.apache.jackrabbit.webdav.*;
-import org.apache.jackrabbit.webdav.version.*;
-import org.apache.jackrabbit.webdav.version.report.*;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavLocatorFactory;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.version.LabelInfo;
+import org.apache.jackrabbit.webdav.version.MergeInfo;
+import org.apache.jackrabbit.webdav.version.UpdateInfo;
+import org.apache.jackrabbit.webdav.version.VersionControlledResource;
+import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
+import org.apache.jackrabbit.webdav.version.VersionResource;
+import org.apache.jackrabbit.webdav.version.VersionableResource;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.log4j.Logger;
+import org.w3c.dom.Element;
 
-import javax.jcr.*;
-import javax.jcr.observation.*;
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+import javax.jcr.Workspace;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.List;
@@ -295,7 +325,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         MultiStatus ms = new MultiStatus();
         try {
             Node node = (Node)item;
-            boolean removeExisting = updateInfo.getUpdateElement().getChild(XML_REMOVEEXISTING, NAMESPACE) != null;
+            Element udElem = updateInfo.getUpdateElement();
+            boolean removeExisting = DomUtil.hasChildElement(udElem, XML_REMOVEEXISTING, NAMESPACE);
 
             // register eventListener in order to be able to report the modified resources.
             EventListener el = new EListener(updateInfo.getPropertyNameSet(), ms);
@@ -311,7 +342,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                     versions[i] = vh.getVersion(getItemName(itemPath));
                 }
                 if (versions.length == 1) {
-                    String relPath = updateInfo.getUpdateElement().getChildText(XML_RELPATH, NAMESPACE);
+                    String relPath = DomUtil.getChildText(udElem, XML_RELPATH, NAMESPACE);
                     if (relPath == null) {
                         node.restore(versions[0], removeExisting);
                     } else {
@@ -378,7 +409,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
             EventListener el = new EListener(mergeInfo.getPropertyNameSet(), ms);
             registerEventListener(el, node.getPath());
 
-            String workspaceName = getLocatorFromHref(mergeInfo.getSourceHref()).getWorkspaceName();
+            // todo: RFC allows multiple href elements inside the DAV:source element
+            String workspaceName = getLocatorFromHref(mergeInfo.getSourceHrefs()[0]).getWorkspaceName();
             NodeIterator failed = node.merge(workspaceName, !mergeInfo.isNoAutoMerge());
 
             // unregister the event listener again

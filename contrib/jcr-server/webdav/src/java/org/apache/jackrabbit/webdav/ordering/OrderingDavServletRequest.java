@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.webdav.ordering;
 
 import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavException;
 
 /**
  * <code>OrderingDavServletRequest</code> provides extensions to the
@@ -48,6 +49,6 @@ public interface OrderingDavServletRequest extends DavServletRequest {
      *
      * @return <code>OrderPatch</code> object encapsulating the request body.
      */
-    public OrderPatch getOrderPatch();
+    public OrderPatch getOrderPatch() throws DavException;
 
 }

@@ -16,9 +16,11 @@
 package org.apache.jackrabbit.webdav.version;
 
 import org.apache.log4j.Logger;
-import org.jdom.Element;
-
-import java.util.Iterator;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
  * <code>LabelInfo</code> encapsulates the request body of a LABEL request
@@ -37,8 +39,10 @@ import java.util.Iterator;
  * &lt;!ELEMENT label-name (#PCDATA)&gt;
  * PCDATA value: string
  * </pre>
+ * Please note, that the given implementation only recognizes the predefined elements 'add',
+ * 'set' and 'remove'.
  */
-public class LabelInfo implements DeltaVConstants {
+public class LabelInfo implements DeltaVConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(LabelInfo.class);
 
@@ -46,11 +50,48 @@ public class LabelInfo implements DeltaVConstants {
     public static final int TYPE_REMOVE = 1;
     public static final int TYPE_ADD = 2;
 
-    private final Element labelElement;
-    private final int depth;
+    public static String[] typeNames = new String[] { XML_LABEL_SET , XML_LABEL_REMOVE, XML_LABEL_ADD};
 
-    private int type;
-    private String labelName;
+    private final int depth;
+    private final int type;
+    private final String labelName;
+
+    public LabelInfo(String labelName, String type) {
+        if (labelName == null) {
+            throw new IllegalArgumentException("Label name must not be null.");
+        }
+        boolean validType = false;
+        int i = 0;
+        while (i < typeNames.length) {
+            if (typeNames[i].equals(type)) {
+                validType = true;
+                break;
+            }
+            i++;
+        }
+        if (!validType) {
+            throw new IllegalArgumentException("Invalid type: " + type);
+        }
+        this.type = i;
+        this.labelName = labelName;
+        this.depth = DavConstants.DEPTH_0;
+    }
+
+    public LabelInfo(String labelName, int type) {
+        this(labelName, type, DavConstants.DEPTH_0);
+    }
+
+    public LabelInfo(String labelName, int type, int depth) {
+        if (labelName == null) {
+            throw new IllegalArgumentException("Label name must not be null.");
+        }
+        if (type < TYPE_SET || type > TYPE_ADD) {
+            throw new IllegalArgumentException("Invalid type: " + type);
+        }
+        this.labelName = labelName;
+        this.type = type;
+        this.depth = depth;
+    }
 
     /**
      * Create a new <code>LabelInfo</code> from the given element and depth
@@ -66,30 +107,24 @@ public class LabelInfo implements DeltaVConstants {
      * or DAV:remove elements.
      */
     public LabelInfo(Element labelElement, int depth) {
-        if (labelElement == null || !labelElement.getName().equals(DeltaVConstants.XML_LABEL)) {
-            throw new IllegalArgumentException("label element expected");
+        if (!DomUtil.matches(labelElement, DeltaVConstants.XML_LABEL, DeltaVConstants.NAMESPACE)) {
+            throw new IllegalArgumentException("DAV:label element expected");
         }
 
-        this.labelElement = (Element) labelElement.detach();
-
-        Iterator childrenIter = labelElement.getChildren().iterator();
-        while (childrenIter.hasNext()) {
-            Element child = (Element) childrenIter.next();
-            if (!NAMESPACE.equals(child.getNamespace())) {
-                continue;
+        String label = null;
+        int type = -1;
+        for (int i = 0; i < typeNames.length && type == -1; i++) {
+            if (DomUtil.hasChildElement(labelElement, typeNames[i], NAMESPACE)) {
+                type = i;
+                Element el = DomUtil.getChildElement(labelElement, typeNames[i], NAMESPACE);
+                label = DomUtil.getChildText(el, XML_LABEL_NAME, NAMESPACE);
             }
-            String name = child.getName();
-            if (XML_LABEL_ADD.equals(name)) {
-                type = TYPE_ADD;
-                setLabelName(child);
-            } else if (XML_LABEL_REMOVE.equals(name)) {
-                type = TYPE_REMOVE;
-                setLabelName(child);
-            } else if (XML_LABEL_SET.equals(name)) {
-                type = TYPE_SET;
-                setLabelName(child);
             }
+        if (label == null) {
+            throw new IllegalArgumentException("DAV:label element must contain at least one set, add or remove element defining a label-name.");
         }
+        this.labelName = label;
+        this.type = type;
         this.depth = depth;
     }
 
@@ -99,34 +134,19 @@ public class LabelInfo implements DeltaVConstants {
      *
      * @param labelElement
      * @throws IllegalArgumentException
-     * @see #LabelInfo(org.jdom.Element, int)
+     * @see #LabelInfo(org.w3c.dom.Element;, int)
      */
     public LabelInfo(Element labelElement) {
         this(labelElement, 0);
     }
 
     /**
-     * Return the 'label-name' or <code>null</code>
+     * Return the text present inside the 'DAV:label-name' element or <code>null</code>
      *
      * @return 'label-name' or <code>null</code>
      */
     public String getLabelName() {
         return labelName;
-    }
-
-    /**
-     * Retrieve the text of the 'label-name' child element of the specified
-     * parent element.
-     *
-     * @param parent the is intended to contain a valid 'label-name' child.
-     * @throws IllegalArgumentException if the labelName has been set before.
-     */
-    private void setLabelName(Element parent) {
-        // test if any label name is present
-        if (labelName != null) {
-            throw new IllegalArgumentException("The DAV:label element may contain at most one DAV:add, DAV:set, or DAV:remove element");
-        }
-        labelName = parent.getChildText(XML_LABEL_NAME, NAMESPACE);
     }
 
     /**
@@ -149,11 +169,14 @@ public class LabelInfo implements DeltaVConstants {
     }
 
     /**
-     * Return the DAV:label element
-     *
-     * @return the DAV:label element
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Element getLabelElement() {
-        return labelElement;
+    public Element toXml(Document document) {
+        Element label = DomUtil.createElement(document, XML_LABEL, NAMESPACE);
+        Element typeElem = DomUtil.addChildElement(label, typeNames[type], NAMESPACE);
+        DomUtil.addChildElement(typeElem, XML_LABEL_NAME, NAMESPACE, labelName);
+        return label;
     }
+
 }

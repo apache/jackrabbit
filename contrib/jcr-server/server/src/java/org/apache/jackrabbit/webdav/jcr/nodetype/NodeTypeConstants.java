@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
-import org.jdom.Namespace;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * <code>NodeTypeConstants</code> used to represent nodetype definitions in
@@ -31,16 +31,11 @@ public interface NodeTypeConstants {
 
     public static final String XML_NODETYPENAME = "nodetypename";
 
-    public static final String XML_REPORT_ALLNODETYPES = "allnodetypes";
-    public static final String XML_REPORT_MIXINNODETYPES = "mixinnodetypes";
-    public static final String XML_REPORT_PRIMARYNODETYPES = "primarynodetypes";
-
-    // report response
-    /** Name of the node type definition root element. */
-    public static final String XML_NODETYPES = "nodeTypes";
-
-    /** Name of the node type definition element. */
-    public static final String XML_NODETYPE = "nodeType";
+    public static final String XML_REPORT_ALLNODETYPES = "all-nodetypes";
+    public static final String XML_REPORT_MIXINNODETYPES = "mixin-nodetypes";
+    public static final String XML_REPORT_PRIMARYNODETYPES = "primary-nodetypes";
+    public static final String XML_NODETYPES = "nodetypes";
+    public static final String XML_NODETYPE = "nodetype";
 
     //------< copied from org.apache.jackrabbit.core.nodetype.xml.Constants >---
 
