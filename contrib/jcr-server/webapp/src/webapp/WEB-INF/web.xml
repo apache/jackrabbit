@@ -216,7 +216,18 @@
             The webdav servlet that connects HTTP request to the repository.
         </description>
         <servlet-class>org.apache.jackrabbit.j2ee.JCRWebdavServerServlet</servlet-class>
-
+        <!--
+            Optional parameter to define the value of the 'WWW-Authenticate' header
+        -->
+        <!--
+        <init-param>
+            <param-name>authenticate-header</param-name>
+            <param-value>Basic realm="Jackrabbit Webdav Server"</param-value>
+            <description>
+                Defines the value of the 'WWW-Authenticate' header.
+            </description>
+        </init-param>
+        -->
         <init-param>
             <param-name>resource-path-prefix</param-name>
             <param-value>/server</param-value>
