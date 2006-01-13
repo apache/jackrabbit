@@ -18,21 +18,29 @@ package org.apache.jackrabbit.webdav.jcr.version.report;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.jackrabbit.webdav.version.report.*;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
+import org.apache.jackrabbit.webdav.version.report.Report;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.util.Text;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
+import org.xml.sax.SAXException;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
-import java.io.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * <code>ExportViewReport</code> handles REPORT requests for the 'exportview'
@@ -78,59 +86,62 @@ public class ExportViewReport implements Report {
     }
 
     /**
-     * @param resource The resource this report is generated from. NOTE: the
-     * {@link org.apache.jackrabbit.webdav.DavResource#getResourcePath() resource path}
-     * of the resource is used as 'absPath' argument for exporting the specified
-     * view.
-     * @throws IllegalArgumentException if the resource is <code>null</code> or
-     * if the session object provided with the resource is <code>null</code>.
-     * @see Report#setResource(org.apache.jackrabbit.webdav.version.DeltaVResource)
+     * Always returns <code>false</code>.
+     *
+     * @return false
      */
-    public void setResource(DeltaVResource resource) {
-        if (resource == null) {
-            throw new IllegalArgumentException("Resource must not be null.");
-        }
-        DavSession davSession = resource.getSession();
-        if (davSession == null || davSession.getRepositorySession() == null) {
-            throw new IllegalArgumentException("The resource must provide a non-null session object in order to create the exportview report.");
-        }
-        session = davSession.getRepositorySession();
-        absItemPath = resource.getLocator().getJcrPath();
+    public boolean isMultiStatusReport() {
+        return false;
     }
 
     /**
-     * @param info
-     * @throws IllegalArgumentException if the specified {@link ReportInfo info}
-     * object does not contain a {@link ItemResourceConstants#NAMESPACE dcr}:exportview element.
-     * @see Report#setInfo(org.apache.jackrabbit.webdav.version.report.ReportInfo)
+     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, org.apache.jackrabbit.webdav.version.report.ReportInfo)
      */
-    public void setInfo(ReportInfo info) {
-        if (info == null || !REPORT_NAME.equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("dcr:exportview element expected.");
+    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
+        if (!getType().isRequestedReportType(info)) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "dcr:exportview element expected.");
         }
+        if (resource == null) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Resource must not be null.");
+        }
+
         this.info = info;
+
+        DavSession davSession = resource.getSession();
+        if (davSession == null || davSession.getRepositorySession() == null) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource must provide a non-null session object in order to create the exportview report.");
+        }
+        session = davSession.getRepositorySession();
+        absItemPath = resource.getLocator().getJcrPath();
+        try {
+            if (!session.itemExists(absItemPath)) {
+                throw new JcrDavException(new PathNotFoundException(absItemPath + " does not exist."));
+    }
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
     }
 
     /**
      * Creates a Xml document from the generated view.
      *
-     * @return Xml document representing the output of the specified view.
-     * @throws DavException if the report document could not be created.
-     * @see org.apache.jackrabbit.webdav.version.report.Report#toXml()
+     * @param document
+     * @return Xml element representing the output of the specified view.
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      */
-    public Document toXml() throws DavException {
-        Element reportElem = info.getReportElement();
-        boolean skipBinary = reportElem.getChild("skipbinary", ItemResourceConstants.NAMESPACE) != null;
-        boolean noRecurse = reportElem.getChild("norecurse", ItemResourceConstants.NAMESPACE) != null;
+    public Element toXml(Document document) {
+        boolean skipBinary = info.containsContentElement("skipbinary", ItemResourceConstants.NAMESPACE);
+        boolean noRecurse = info.containsContentElement("norecurse", ItemResourceConstants.NAMESPACE);
 
+        // todo improve...
         try {
             // create tmpFile in default system-tmp directory
             String prefix = "_tmp_" + Text.getName(absItemPath);
             File tmpfile = File.createTempFile(prefix, null, null);
             tmpfile.deleteOnExit();
-            FileOutputStream out = new FileOutputStream(tmpfile);
 
-            if (reportElem.getChild("sysview", ItemResourceConstants.NAMESPACE) != null) {
+            FileOutputStream out = new FileOutputStream(tmpfile);
+            if (info.containsContentElement("sysview", ItemResourceConstants.NAMESPACE)) {
                 session.exportSystemView(absItemPath, out, skipBinary, noRecurse);
             } else {
                 // default is docview
@@ -138,20 +149,24 @@ public class ExportViewReport implements Report {
             }
             out.close();
 
-            SAXBuilder builder = new SAXBuilder(false);
             InputStream in = new FileInputStream(tmpfile);
-            return builder.build(in);
+            Document tmpDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
 
-        } catch (FileNotFoundException e) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
-        } catch (IOException e) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
-        } catch (PathNotFoundException e) {
-            throw new DavException(DavServletResponse.SC_NOT_FOUND);
+            // import the root node of the generated xml to the given document.
+            Element rootElem = (Element)document.importNode(tmpDoc.getDocumentElement(), true);
+            return rootElem;
+
         } catch (RepositoryException e) {
-            throw new JcrDavException(e);
-        } catch (JDOMException e) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
+            log.error(e.getMessage());
+        } catch (FileNotFoundException e) {
+            log.error(e.getMessage());
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        } catch (ParserConfigurationException e) {
+            log.error(e.getMessage());
+        } catch (SAXException e) {
+            log.error(e.getMessage());
         }
+        return null;
     }
 }

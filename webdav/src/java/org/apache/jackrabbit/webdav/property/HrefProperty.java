@@ -16,8 +16,9 @@
 package org.apache.jackrabbit.webdav.property;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.util.XmlUtil;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.List;
 import java.util.Iterator;
@@ -84,8 +85,8 @@ public class HrefProperty extends AbstractDavProperty {
             Iterator it = ((List)val).iterator();
             while (it.hasNext()) {
                 Object o = it.next();
-                if (o instanceof Element && XML_HREF.equals(((Element)o).getName())) {
-                    String href = ((Element)o).getText();
+                if (o instanceof Element && XML_HREF.equals(((Element)o).getLocalName())) {
+                    String href = DomUtil.getText((Element)o);
                     if (href != null) {
                         hrefList.add(href);
                     } else {
@@ -95,8 +96,8 @@ public class HrefProperty extends AbstractDavProperty {
                     log.warn("DAV: href element expected in the content of " + getName().toString());
                 }
             }
-        } else if (val instanceof Element && XML_HREF.equals(((Element)val).getName())) {
-            String href = ((Element)val).getText();
+        } else if (val instanceof Element && XML_HREF.equals(((Element)val).getLocalName())) {
+            String href = DomUtil.getTextTrim((Element)val);
             if (href != null) {
                 hrefList.add(href);
             } else {
@@ -117,19 +118,20 @@ public class HrefProperty extends AbstractDavProperty {
      * webdav property name.
      *
      * @return Xml representation
-     * @see XmlUtil#hrefToXml(String)
+     * @see org.apache.jackrabbit.webdav.xml.DomUtil#hrefToXml(String,org.w3c.dom.Document)
+     * @param document
      */
-    public Element toXml() {
-        Element elem = getName().toXml();
+    public Element toXml(Document document) {
+        Element elem = getName().toXml(document);
         Object value = getValue();
         if (value != null) {
             if (value instanceof String[]) {
                 String[] hrefs = (String[]) value;
                 for (int i = 0; i < hrefs.length; i++) {
-                    elem.addContent(XmlUtil.hrefToXml(hrefs[i]));
+                    elem.appendChild(DomUtil.hrefToXml(hrefs[i], document));
                 }
             } else {
-                elem.addContent(XmlUtil.hrefToXml(value.toString()));
+                elem.appendChild(DomUtil.hrefToXml(value.toString(), document));
             }
         }
         return elem;
@@ -147,9 +149,10 @@ public class HrefProperty extends AbstractDavProperty {
 
     /**
      * Return an array of String containg the text of those DAV:href elements
-     * that would be returned as child elements of this property on {@link #toXml()}
+     * that would be returned as child elements of this property on
+     * {@link org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)}
      *
-     * @return
+     * @return array of href String
      */
     public List getHrefs() {
         return (value != null) ? Arrays.asList(value) : new ArrayList();

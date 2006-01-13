@@ -16,7 +16,10 @@
 package org.apache.jackrabbit.webdav.transaction;
 
 import org.apache.log4j.Logger;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
  * <code>TransactionInfo</code> class encapsultes the information present
@@ -26,11 +29,20 @@ import org.jdom.Element;
  * @see TransactionConstants#XML_TRANSACTIONINFO
  * @see TransactionConstants#XML_TRANSACTION
  */
-public class TransactionInfo implements TransactionConstants {
+public class TransactionInfo implements TransactionConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(TransactionInfo.class);
 
-    private Element status;
+    private final boolean isCommit;
+
+    /**
+     * Creates a <code>TransactionInfo</code> object
+     *
+     * @param isCommit
+     */
+    public TransactionInfo(boolean isCommit) {
+        this.isCommit = isCommit;
+    }
 
     /**
      * Creates a <code>TransactionInfo</code> object from the given 'transactionInfo'
@@ -47,34 +59,41 @@ public class TransactionInfo implements TransactionConstants {
      * is not valid.
      */
     public TransactionInfo(Element transactionInfo) {
-        if (transactionInfo == null || !XML_TRANSACTIONINFO.equals(transactionInfo.getName())) {
+        if (transactionInfo == null || !XML_TRANSACTIONINFO.equals(transactionInfo.getLocalName())) {
             throw new IllegalArgumentException("transactionInfo element expected.");
         }
-        Element tStatus = transactionInfo.getChild(XML_TRANSACTIONSTATUS, NAMESPACE);
-        if (tStatus == null) {
+        Element txStatus = DomUtil.getChildElement(transactionInfo, XML_TRANSACTIONSTATUS, NAMESPACE);
+        if (txStatus != null) {
+            // retrieve status: commit or rollback
+            isCommit = DomUtil.hasChildElement(txStatus, XML_COMMIT, NAMESPACE);
+        } else {
             throw new IllegalArgumentException("transactionInfo must contain a single 'transactionstatus' element.");
-        }
-
-        // retrieve status: commit or rollback
-        status = tStatus.getChild(XML_COMMIT, NAMESPACE);
-        if (status == null) {
-            status = tStatus.getChild(XML_ROLLBACK, NAMESPACE);
-        }
-
-        if (status == null) {
-            throw new IllegalArgumentException("'jcr:transactionstatus' element must contain either a '" + XML_COMMIT + "' or a '" + XML_ROLLBACK + "' elements.");
         }
     }
 
     /**
-     * Returns either 'commit' or 'rollback' with are the only allowed status
-     * types.
+     * Returns true, if this info requires a 'commit' action, false otherwise
+     * (i.e. 'rollback' is requested).
      *
-     * @return 'commit' or 'rollback'
+     * @return true if a 'commit' element was present. false otherwise.
      * @see #XML_COMMIT
      * @see #XML_ROLLBACK
      */
-    public String getStatus() {
-        return status.getName();
+    public boolean isCommit() {
+        return isCommit;
     }
+
+    //------------------------------------------< XmlSerializable interface >---
+    /**
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element elem = DomUtil.createElement(document, XML_TRANSACTIONINFO, NAMESPACE);
+        Element st = DomUtil.addChildElement(elem, XML_TRANSACTIONSTATUS, NAMESPACE);
+        String lName = (isCommit) ? XML_COMMIT : XML_ROLLBACK;
+        DomUtil.addChildElement(st, lName, NAMESPACE);
+        return elem;
+    }
+
 }

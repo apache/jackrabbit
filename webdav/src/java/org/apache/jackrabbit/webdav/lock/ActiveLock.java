@@ -15,13 +15,13 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 /**
  * <code>ActiveLock</code> encapsulates the lock information for a
  * {@link org.apache.jackrabbit.webdav.DavResource}.
  */
-public interface ActiveLock {
+public interface ActiveLock extends XmlSerializable {
 
     /**
      * Return true, if the given token matches the lock token present in this
@@ -104,11 +104,4 @@ public interface ActiveLock {
      * @return scope
      */
     public Scope getScope();
-
-    /**
-     * Return the Xml representation of this lock.
-     *
-     * @return Xml representation of this lock
-     */
-    public Element toXml();
 }

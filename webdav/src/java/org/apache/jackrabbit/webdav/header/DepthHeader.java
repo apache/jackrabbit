@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * <code>DepthHeader</code>...
  */
-public class DepthHeader implements DavConstants {
+public class DepthHeader implements Header, DavConstants {
 
     private static Logger log = Logger.getLogger(DepthHeader.class);
 
@@ -36,11 +36,21 @@ public class DepthHeader implements DavConstants {
      * @param depth
      */
     public DepthHeader(int depth) {
-	if (depth == DavConstants.DEPTH_0 || depth == DavConstants.DEPTH_1 || depth == DavConstants.DEPTH_INFINITY) {
+	if (depth == DEPTH_0 || depth == DEPTH_1 || depth == DEPTH_INFINITY) {
 	    this.depth = depth;
 	} else {
 	    throw new IllegalArgumentException("Invalid depth: " + depth);
 	}
+    }
+
+    /**
+     * Create a new <code>DepthHeader</code> with either value {@link #DEPTH_0 0}
+     * or {@link #DEPTH_INFINITY infinity}.
+     * 
+     * @param isDeep
+     */
+    public DepthHeader(boolean isDeep) {
+        this.depth = (isDeep) ? DEPTH_INFINITY : DEPTH_0;
     }
 
     /**
@@ -55,6 +65,7 @@ public class DepthHeader implements DavConstants {
      *
      * @return {@link DavConstants#HEADER_DEPTH Depth}
      * @see DavConstants#HEADER_DEPTH
+     * @see Header#getHeaderName()
      */
     public String getHeaderName() {
 	return DavConstants.HEADER_DEPTH;
@@ -64,6 +75,7 @@ public class DepthHeader implements DavConstants {
      * Returns the header value.
      *
      * @return header value
+     * @see Header#getHeaderValue()
      */
     public String getHeaderValue() {
         if (depth == DavConstants.DEPTH_0 || depth == DavConstants.DEPTH_1) {

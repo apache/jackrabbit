@@ -209,7 +209,7 @@ public class TxLockManagerImpl implements TxLockManager {
             removeExpired(tx, responsibleMap, resource);
             throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Transaction lock for resource '" + resource.getResourcePath() + "' was already expired.");
         } else {
-            if (TransactionConstants.XML_COMMIT.equals(lockInfo.getStatus())) {
+            if (lockInfo.isCommit()) {
                 tx.commit(resource);
             } else {
                 tx.rollback(resource);

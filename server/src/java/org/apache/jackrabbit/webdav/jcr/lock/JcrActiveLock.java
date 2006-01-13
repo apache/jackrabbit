@@ -17,8 +17,11 @@ package org.apache.jackrabbit.webdav.jcr.lock;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.lock.AbstractActiveLock;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
+import org.apache.jackrabbit.webdav.lock.Type;
+import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.webdav.lock.*;
 import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.lock.Lock;

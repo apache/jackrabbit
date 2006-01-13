@@ -15,9 +15,7 @@
  */
 package org.apache.jackrabbit.webdav.ordering;
 
-import org.jdom.Element;
-import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
-import org.apache.jackrabbit.webdav.util.XmlUtil;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
 
 /**
  * <code>OrderingType</code> represents the {@link #ORDERING_TYPE
@@ -29,31 +27,25 @@ import org.apache.jackrabbit.webdav.util.XmlUtil;
  *
  * @see org.apache.jackrabbit.webdav.property.DavProperty#isProtected()
  */
-public class OrderingType extends DefaultDavProperty implements OrderingConstants {
+public class OrderingType extends HrefProperty implements OrderingConstants {
 
     /**
-     * Create an OrderingType with the given ordering.<br>
+     * Creates a <code>OrderingType</code> with the default type (e.g. default
+     * value). The default value is specified to be {@link #ORDERING_TYPE_UNORDERED}.
+     */
+    public OrderingType() {
+        this(null);
+    }
+
+    /**
+     * Create an <code>OrderingType</code> with the given ordering.<br>
      * NOTE: the ordering-type property is defined to be protected.
      *
      * @param href
      * @see org.apache.jackrabbit.webdav.property.DavProperty#isProtected()
      */
     public OrderingType(String href) {
-        super(ORDERING_TYPE, href, true);
-    }
-
-    /**
-     * Returns the Xml representation of this property. If the property has
-     * a <code>null</code> value, the default ({@link #ORDERING_TYPE_UNORDERED
-     * DAV:unordered}) is assumed.
-     *
-     * @return Xml representation
-     */
-    public Element toXml() {
-        Element elem = getName().toXml();
-        // spec requires that the default is 'DAV:unordered'
-        String href = (getValue() != null) ? getValue().toString() : ORDERING_TYPE_UNORDERED;
-        XmlUtil.hrefToXml(href);
-        return elem;
+        // spec requires that the default value is 'DAV:unordered'
+        super(ORDERING_TYPE, (href != null) ? href : ORDERING_TYPE_UNORDERED, true);
     }
 }

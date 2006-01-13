@@ -15,11 +15,17 @@
  */
 package org.apache.jackrabbit.webdav.version;
 
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.log4j.Logger;
-import org.jdom.Element;
-import org.jdom.Namespace;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <code>OptionsInfo</code> represents the Xml request body, that may be present
@@ -32,50 +38,88 @@ import java.util.List;
  * ANY value: A sequence of elements each at most onces.
  * </pre>
  *
+ * Note, that this is a simplified implementation of the very generic
+ * definition: We assume that the DAV:options element only contains empty child
+ * elements, such as e.g. {@link DeltaVConstants#XML_VH_COLLECTION_SET DAV:version-history-collection-set}
+ * or {@link DeltaVConstants#XML_WSP_COLLECTION_SET DAV:workspace-collection-set}.
+ *
  * @see DeltaVConstants#XML_VH_COLLECTION_SET
  * @see DeltaVConstants#XML_WSP_COLLECTION_SET
  * @see DeltaVConstants#XML_ACTIVITY_COLLECTION_SET
  */
-public class OptionsInfo {
+public class OptionsInfo implements XmlSerializable {
 
     private static Logger log = Logger.getLogger(OptionsInfo.class);
 
-    private final Element optionsElement;
+    private final Set entriesLocalNames = new HashSet();
 
     /**
-     * Create a new <code>UpdateInfo</code> object.
+     * Create a new OptionsInfo with the specified entries. Each entry will
+     * be converted to an empty Xml element when calling <code>toXml</code>.
+     * As namespace {@link DeltaVConstants#NAMESPACE} is used.
      *
-     * @param optionsElement
-     * @throws IllegalArgumentException if the updateElement is <code>null</code>
-     * or not a DAV:update element or if the element does not match the required
-     * structure.
+     * @param entriesLocalNames
      */
-    public OptionsInfo(Element optionsElement) {
-         if (optionsElement == null || !optionsElement.getName().equals(DeltaVConstants.XML_OPTIONS)) {
-            throw new IllegalArgumentException("DAV:options element expected");
+    public OptionsInfo(String[] entriesLocalNames) {
+       if (entriesLocalNames != null) {
+           for (int i = 0; i < entriesLocalNames.length; i++) {
+               this.entriesLocalNames.add(entriesLocalNames[i]);
+           }
         }
-        this.optionsElement = (Element) optionsElement.detach();
     }
 
     /**
-     * Returns the set of elements present in the {@link DeltaVConstants#XML_OPTIONS DAV:options}
-     * element. These elements define the information the client wishes to retrieve
-     * the OPTIONS request.
-     *
-     * @return set of child elements
+     * Private constructor used to create an OptionsInfo from Xml.
      */
-    public List getElements() {
-        return optionsElement.getChildren();
-    }
+    private OptionsInfo() {}
 
     /**
      * Returns true if a child element with the given name and namespace is present.
      *
-     * @param name
+     * @param localName
      * @param namespace
      * @return true if such a child element exists in the options element.
      */
-    public boolean containsElement(String name, Namespace namespace) {
-        return optionsElement.getChild(name, namespace) != null;
+    public boolean containsElement(String localName, Namespace namespace) {
+        if (DeltaVConstants.NAMESPACE.equals(namespace)) {
+            return entriesLocalNames.contains(localName);
+        }
+        return false;
+    }
+
+    /**
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element optionsElem = DomUtil.createElement(document, DeltaVConstants.XML_OPTIONS, DeltaVConstants.NAMESPACE);
+        Iterator it = entriesLocalNames.iterator();
+        while (it.hasNext()) {
+            String localName = (String)it.next();
+            DomUtil.addChildElement(optionsElem, localName, DeltaVConstants.NAMESPACE);
+        }
+        return optionsElem;
+    }
+
+    /**
+     * Build an <code>OptionsInfo</code> object from the root element present
+     * in the request body.
+     *
+     * @param optionsElement
+     * @return
+     * @throws IllegalArgumentException if the optionsElement is <code>null</code>
+     * or not a DAV:options element.
+     */
+    public static OptionsInfo createFromXml(Element optionsElement) {
+        if (!DomUtil.matches(optionsElement, DeltaVConstants.XML_OPTIONS, DeltaVConstants.NAMESPACE)) {
+            throw new IllegalArgumentException("DAV:options element expected");
+        }
+        OptionsInfo oInfo = new OptionsInfo();
+        ElementIterator it = DomUtil.getChildren(optionsElement);
+        while (it.hasNext()) {
+            // todo: not correct since assuming its the deltaV-namespace
+            oInfo.entriesLocalNames.add(it.nextElement().getLocalName());
+        }
+        return oInfo;
     }
 }

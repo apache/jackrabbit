@@ -16,10 +16,14 @@
 package org.apache.jackrabbit.webdav.observation;
 
 import org.apache.log4j.Logger;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * <code>EventDiscovery</code> represents the request body of a successfull
@@ -27,7 +31,7 @@ import java.util.ArrayList;
  * definition what events that particular subscription is interested in was
  * specified with the initial SUBSCRIPTION that started the event listening.
  */
-public class EventDiscovery implements ObservationConstants {
+public class EventDiscovery implements ObservationConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(EventDiscovery.class);
 
@@ -41,7 +45,7 @@ public class EventDiscovery implements ObservationConstants {
      * @param eventBundle
      * @see Subscription
      */
-    public void addEventBundle(Element eventBundle) {
+    public void addEventBundle(EventBundle eventBundle) {
         if (eventBundle != null) {
             bundles.add(eventBundle);
         }
@@ -52,10 +56,17 @@ public class EventDiscovery implements ObservationConstants {
      * being present in the POLL response body.
      *
      * @return Xml representation
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Element toXml() {
-        Element ed = new Element(XML_EVENTDISCOVERY, NAMESPACE);
-        ed.addContent(bundles);
+    public Element toXml(Document document) {
+        Element ed = DomUtil.createElement(document, XML_EVENTDISCOVERY, NAMESPACE);
+        Iterator it = bundles.iterator();
+        while (it.hasNext()) {
+            EventBundle bundle = (EventBundle)it.next();
+            ed.appendChild(bundle.toXml(document));
+        }
         return ed;
     }
+
 }

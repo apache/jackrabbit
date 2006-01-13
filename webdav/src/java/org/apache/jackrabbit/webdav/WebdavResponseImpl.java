@@ -15,20 +15,26 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.jdom.Element;
-import org.jdom.Document;
-import org.jdom.output.XMLOutputter;
-import org.jdom.output.Format;
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.lock.*;
-import org.apache.jackrabbit.webdav.observation.*;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
+import org.apache.jackrabbit.webdav.lock.LockDiscovery;
+import org.apache.jackrabbit.webdav.observation.Subscription;
+import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
+import org.apache.jackrabbit.webdav.observation.EventDiscovery;
+import org.apache.xml.serialize.OutputFormat;
+import org.apache.xml.serialize.XMLSerializer;
+import org.w3c.dom.Document;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.ServletOutputStream;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.io.ByteArrayOutputStream;
 import java.util.Locale;
 
 /**
@@ -38,6 +44,8 @@ public class WebdavResponseImpl implements WebdavResponse {
 
     private static Logger log = Logger.getLogger(WebdavResponseImpl.class);
 
+    private static final DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
+
     private HttpServletResponse httpResponse;
 
     /**
@@ -46,26 +54,40 @@ public class WebdavResponseImpl implements WebdavResponse {
      * @param httpResponse
      */
     public WebdavResponseImpl(HttpServletResponse httpResponse) {
-        this.httpResponse = httpResponse;
-
-        /* set cache control headers in order to deal with non-webdav complient
-        * http1.1 or http1.0 proxies. >> see RFC2518 9.4.5 */
-        addHeader("Pragma", "No-cache");  // http1.0
-        addHeader("Cache-Control", "no-cache"); // http1.1
+        this(httpResponse, false);
     }
 
     /**
+     * Create a new <code>WebdavResponse</code>
+     *
+     * @param httpResponse
+     * @param noCache
+     */
+    public WebdavResponseImpl(HttpServletResponse httpResponse, boolean noCache) {
+        this.httpResponse = httpResponse;
+        if (noCache) {
+            /* set cache control headers */
+        addHeader("Pragma", "No-cache");  // http1.0
+        addHeader("Cache-Control", "no-cache"); // http1.1
+    }
+    }
+
+    /**
+     * If the specifid exception provides an error condition an Xml response body
+     * is sent providing more detailed information about the error. Otherwise only
+     * the error code and status phrase is sent back.
      *
      * @param exception
      * @throws IOException
      * @see DavServletResponse#sendError(org.apache.jackrabbit.webdav.DavException)
+     * @see #sendError(int, String)
+     * @see #sendXmlResponse(XmlSerializable, int)
      */
     public void sendError(DavException exception) throws IOException {
-        Element errorElem = exception.getError();
-        if (errorElem == null || errorElem.getChildren().size() == 0) {
+        if (!exception.hasErrorCondition()) {
             httpResponse.sendError(exception.getErrorCode(), exception.getStatusPhrase());
         } else {
-            sendXmlResponse(new Document(exception.getError()), exception.getErrorCode());
+            sendXmlResponse(exception, exception.getErrorCode());
         }
     }
 
@@ -77,7 +99,7 @@ public class WebdavResponseImpl implements WebdavResponse {
      * @see DavServletResponse#sendMultiStatus(org.apache.jackrabbit.webdav.MultiStatus)
      */
     public void sendMultiStatus(MultiStatus multistatus) throws IOException {
-        sendXmlResponse(multistatus.toXml(), SC_MULTI_STATUS);
+        sendXmlResponse(multistatus, SC_MULTI_STATUS);
     }
 
     /**
@@ -89,10 +111,9 @@ public class WebdavResponseImpl implements WebdavResponse {
      */
     public void sendLockResponse(ActiveLock lock) throws IOException {
         httpResponse.setHeader(DavConstants.HEADER_LOCK_TOKEN, "<" + lock.getToken() + ">");
-
-        Element propElem = new Element(DavConstants.XML_PROP, DavConstants.NAMESPACE);
-	propElem.addContent(new LockDiscovery(lock).toXml());
-	sendXmlResponse(new Document(propElem), SC_OK);
+	DavPropertySet propSet = new DavPropertySet();
+        propSet.add(new LockDiscovery(lock));
+        sendXmlResponse(propSet, SC_OK);
     }
 
     /**
@@ -104,32 +125,41 @@ public class WebdavResponseImpl implements WebdavResponse {
      * @see DavServletResponse#sendRefreshLockResponse(org.apache.jackrabbit.webdav.lock.ActiveLock[])
      */
     public void sendRefreshLockResponse(ActiveLock[] locks) throws IOException {
-        Element propElem = new Element(DavConstants.XML_PROP, DavConstants.NAMESPACE);
-        propElem.addContent(new LockDiscovery(locks).toXml());
-        sendXmlResponse(new Document(propElem), SC_OK);
+        DavPropertySet propSet = new DavPropertySet();
+        propSet.add(new LockDiscovery(locks));
+        sendXmlResponse(propSet, SC_OK);
     }
 
     /**
      * Send Xml response body.
      *
-     * @param xmlDoc
+     * @param serializable
      * @param status
      * @throws IOException
-     * @see DavServletResponse#sendXmlResponse(Document, int);
+     * @see DavServletResponse#sendXmlResponse(XmlSerializable, int);
      */
-    public void sendXmlResponse(Document xmlDoc, int status) throws IOException {
+    public void sendXmlResponse(XmlSerializable serializable, int status) throws IOException {
         httpResponse.setStatus(status);
-        if (xmlDoc != null) {
+        if (serializable != null) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            // Write dom tree into byte array output stream
-            XMLOutputter xmli = new XMLOutputter(Format.getRawFormat());
-            xmli.output(xmlDoc, out);
+            try {
+                Document doc = BUILDER_FACTORY.newDocumentBuilder().newDocument();
+                doc.appendChild(serializable.toXml(doc));
+                
+                OutputFormat format = new OutputFormat("xml", "UTF-8", true);
+                XMLSerializer serializer = new XMLSerializer(out, format);
+                serializer.setNamespaces(true);
+                serializer.asDOMSerializer().serialize(doc);
+
             byte[] bytes = out.toByteArray();
             httpResponse.setContentType("text/xml; charset=UTF-8");
             httpResponse.setContentLength(bytes.length);
             httpResponse.getOutputStream().write(bytes);
-            out.close();
-            out.flush();
+
+            } catch (ParserConfigurationException e) {
+                log.error(e.getMessage());
+                throw new IOException(e.getMessage());
+            }
         }
     }
 
@@ -141,10 +171,9 @@ public class WebdavResponseImpl implements WebdavResponse {
      * @see org.apache.jackrabbit.webdav.observation.ObservationDavServletResponse#sendSubscriptionResponse(org.apache.jackrabbit.webdav.observation.Subscription)
      */
     public void sendSubscriptionResponse(Subscription subscription) throws IOException {
-        Element propElem = new Element(DavConstants.XML_PROP, DavConstants.NAMESPACE);
-	propElem.addContent(new SubscriptionDiscovery(subscription).toXml());
-	Document doc = new Document(propElem);
-	sendXmlResponse(doc, SC_OK);
+	DavPropertySet propSet = new DavPropertySet();
+        propSet.add(new SubscriptionDiscovery(subscription));
+        sendXmlResponse(propSet, SC_OK);
     }
 
     /**
@@ -154,8 +183,7 @@ public class WebdavResponseImpl implements WebdavResponse {
      * @see org.apache.jackrabbit.webdav.observation.ObservationDavServletResponse#sendPollResponse(org.apache.jackrabbit.webdav.observation.EventDiscovery)
      */
     public void sendPollResponse(EventDiscovery eventDiscovery) throws IOException {
-        Document pollDoc = new Document(eventDiscovery.toXml());
-        sendXmlResponse(pollDoc, SC_OK);
+        sendXmlResponse(eventDiscovery, SC_OK);
     }
 
     //--------------------------------------< HttpServletResponse interface >---

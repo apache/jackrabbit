@@ -16,7 +16,8 @@
 package org.apache.jackrabbit.webdav.observation;
 
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.jdom.Element;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
  * <code>SubscriptionDiscovery</code> encapsulates the 'subscriptiondiscovery'
@@ -53,20 +54,6 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
     }
 
     /**
-     * Returns the Xml representation of the subscription discovery.
-     *
-     * @return Xml representation
-     * @see org.apache.jackrabbit.webdav.property.DavProperty#toXml()
-     */
-    public Element toXml() {
-        Element elem = getName().toXml();
-        for (int i = 0; i < subscriptions.length; i++) {
-            elem.addContent(subscriptions[i].toXml());
-        }
-        return elem;
-    }
-
-    /**
      * Returns an array of {@link Subscription}s.
      *
      * @return an array of {@link Subscription}s
@@ -75,4 +62,20 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
     public Object getValue() {
         return subscriptions;
     }
+
+    /**
+     * Returns the Xml representation of the subscription discovery.
+     *
+     * @return Xml representation
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element elem = getName().toXml(document);
+        for (int i = 0; i < subscriptions.length; i++) {
+            elem.appendChild(subscriptions[i].toXml(document));
+        }
+        return elem;
+    }
+
 }

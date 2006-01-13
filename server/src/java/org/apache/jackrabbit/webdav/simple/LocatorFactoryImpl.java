@@ -16,8 +16,9 @@
 
 package org.apache.jackrabbit.webdav.simple;
 
-import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.DavLocatorFactory;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.log4j.Logger;
 
 /**

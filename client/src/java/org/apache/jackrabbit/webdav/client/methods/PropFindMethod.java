@@ -19,9 +19,17 @@ package org.apache.jackrabbit.webdav.client.methods;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
-import org.jdom.Element;
-import org.jdom.Document;
+import org.apache.xml.serialize.XMLSerializer;
+import org.apache.xml.serialize.OutputFormat;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 
 /**
  * <code>PropFindMethod</code>...
@@ -30,46 +38,68 @@ public class PropFindMethod extends DavMethodBase {
 
     private static Logger log = Logger.getLogger(PropFindMethod.class);
 
-    public PropFindMethod(String uri) {
+    public PropFindMethod(String uri) throws IOException {
         this(uri, PROPFIND_ALL_PROP, new DavPropertyNameSet(), DEPTH_INFINITY);
     }
 
-    public PropFindMethod(String uri, DavPropertyNameSet propNameSet, int depth) {
+    public PropFindMethod(String uri, DavPropertyNameSet propNameSet, int depth)
+        throws IOException {
         this(uri, PROPFIND_BY_PROPERTY, propNameSet, depth);
     }
 
-    public PropFindMethod(String uri, int propfindType, int depth) {
+    public PropFindMethod(String uri, int propfindType, int depth)
+        throws IOException {
         this(uri, propfindType, new DavPropertyNameSet(), depth);
     }
 
-    private PropFindMethod(String uri, int propfindType, DavPropertyNameSet propNameSet, int depth) {
+    private PropFindMethod(String uri, int propfindType, DavPropertyNameSet propNameSet,
+                           int depth) throws IOException {
         super(uri);
 
         DepthHeader dh = new DepthHeader(depth);
         setRequestHeader(dh.getHeaderName(), dh.getHeaderValue());
-        setRequestHeader("Content-Type","text/xml; charset=UTF-8");
+
+        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
 
         // build the request body
-        Element propfind = new Element(XML_PROPFIND, NAMESPACE);
+        try {
+            // create the document and attach the root element
+            Document document = BUILDER_FACTORY.newDocumentBuilder().newDocument();
+            Element propfind = DomUtil.createElement(document, XML_PROPFIND, NAMESPACE);
+            document.appendChild(propfind);
+
+            // fill the propfind element
         switch (propfindType) {
             case PROPFIND_ALL_PROP:
-                propfind.addContent(new Element(XML_ALLPROP, NAMESPACE));
+                    propfind.appendChild(DomUtil.createElement(document, XML_ALLPROP, NAMESPACE));
                 break;
             case PROPFIND_PROPERTY_NAMES:
-                propfind.addContent(new Element(XML_PROPNAME, NAMESPACE));
+                    propfind.appendChild(DomUtil.createElement(document, XML_PROPNAME, NAMESPACE));
                 break;
             default:
                 if (propNameSet == null) {
-                    propfind.addContent(new Element(XML_PROP, NAMESPACE));
+                        propfind.appendChild(DomUtil.createElement(document, XML_PROP, NAMESPACE));
                 } else {
-                    propfind.addContent(propNameSet.toXml());
+                        propfind.appendChild(propNameSet.toXml(document));
                 }
                 break;
         }
-        Document propfindBody = new Document(propfind);
-        setRequestBody(propfindBody);
+
+            // set the request body
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            OutputFormat format = new OutputFormat("xml", "UTF-8", true);
+            XMLSerializer serializer = new XMLSerializer(out, format);
+            serializer.asDOMSerializer().serialize(document);
+            setRequestBody(out.toString());
+
+        } catch (ParserConfigurationException e) {
+            throw new IOException(e.getMessage());
+        }
     }
 
+    /**
+     * @see org.apache.commons.httpclient.HttpMethod#getName()
+     */
     public String getName() {
         return DavMethods.METHOD_PROPFIND;
     }

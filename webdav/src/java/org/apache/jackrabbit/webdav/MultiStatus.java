@@ -15,21 +15,35 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.jdom.Document;
-import org.jdom.Element;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * MultiStatus representing the content of a multistatus response body and
  * allows to retrieve the Xml representation.
  */
-public class MultiStatus implements DavConstants {
+public class MultiStatus implements DavConstants, XmlSerializable {
 
-    private ArrayList responses = new ArrayList();
+    /**
+     * Map collecting the responses for this multistatus, where every href must
+     * only occure one single time.
+     */
+    private HashMap responses = new HashMap();
+
+    /**
+     * A general response description at the multistatus top level is used to
+     * provide a general message describing the overarching nature of the response.
+     * If this value is available an application may use it instead of
+     * presenting the individual response descriptions contained within the
+     * responses.
+     */
     private String responseDescription;
 
     /**
@@ -94,7 +108,7 @@ public class MultiStatus implements DavConstants {
      * @param response
      */
     public void addResponse(MultiStatusResponse response) {
-	responses.add(response);
+	responses.put(response.getHref(), response);
     }
 
     /**
@@ -104,7 +118,7 @@ public class MultiStatus implements DavConstants {
      * multistatus.
      */
     public MultiStatusResponse[] getResponses() {
-	return (MultiStatusResponse[]) responses.toArray(new MultiStatusResponse[responses.size()]);
+	return (MultiStatusResponse[]) responses.values().toArray(new MultiStatusResponse[responses.size()]);
     }
 
     /**
@@ -129,48 +143,45 @@ public class MultiStatus implements DavConstants {
      * Return the Xml representation of this <code>MultiStatus</code>.
      *
      * @return Xml document
+     * @param document
      */
-    public Document toXml() {
-	Element multistatus = new Element(XML_MULTISTATUS, NAMESPACE);
-        Iterator it = responses.iterator();
+    public Element toXml(Document document) {
+	Element multistatus = DomUtil.createElement(document, XML_MULTISTATUS, NAMESPACE);
+        Iterator it = responses.values().iterator();
 	while(it.hasNext()) {
-	    multistatus.addContent(((MultiStatusResponse)it.next()).toXml());
+	    multistatus.appendChild(((MultiStatusResponse)it.next()).toXml(document));
 	}
         if (responseDescription != null) {
-            multistatus.addContent(new Element(XML_RESPONSEDESCRIPTION, NAMESPACE).setText(responseDescription));
+            Element respDesc = DomUtil.createElement(document, XML_RESPONSEDESCRIPTION, NAMESPACE, responseDescription);
+            multistatus.appendChild(respDesc);
         }
-	return new Document(multistatus);
+	return multistatus;
     }
 
     /**
-     * Build a <code>MultiStatus</code> from the specified xml document.
+     * Build a <code>MultiStatus</code> from the specified xml element.
      *
-     * @param multistatusDocument
+     * @param multistatusElement
      * @return new <code>MultiStatus</code> instance.
      * @throws IllegalArgumentException if the given document is <code>null</code>
      * or does not provide the required element.
      */
-    public static MultiStatus createFromXml(Document multistatusDocument) {
-        if (multistatusDocument == null) {
-	    throw new IllegalArgumentException("Cannot create a MultiStatus object from a null xml document.");
-	}
-
-	Element msElem = multistatusDocument.getRootElement();
-	if (!(XML_MULTISTATUS.equals(msElem.getName()) && NAMESPACE.equals(msElem.getNamespace()))) {
+    public static MultiStatus createFromXml(Element multistatusElement) {
+	if (!DomUtil.matches(multistatusElement, XML_MULTISTATUS, NAMESPACE)) {
 	    throw new IllegalArgumentException("DAV:multistatus element expected.");
 	}
 
         MultiStatus multistatus = new MultiStatus();
 
-	List respList = msElem.getChildren(XML_RESPONSE, NAMESPACE);
-	Iterator it = respList.iterator();
+        ElementIterator it = DomUtil.getChildren(multistatusElement, XML_RESPONSE, NAMESPACE);
 	while (it.hasNext()) {
-            MultiStatusResponse response = MultiStatusResponse.createFromXml((Element)it.next());
+            Element respElem = it.nextElement();
+            MultiStatusResponse response = MultiStatusResponse.createFromXml(respElem);
             multistatus.addResponse(response);
 	}
 
 	// optional response description on the multistatus element
-	multistatus.setResponseDescription(msElem.getChildText(XML_RESPONSEDESCRIPTION, NAMESPACE));
+	multistatus.setResponseDescription(DomUtil.getChildText(multistatusElement, XML_RESPONSEDESCRIPTION, NAMESPACE));
         return multistatus;
     }
 }

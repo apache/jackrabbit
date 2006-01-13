@@ -17,10 +17,13 @@ package org.apache.jackrabbit.webdav.ordering;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.List;
-import java.util.Iterator;
 import java.util.ArrayList;
 
 /**
@@ -37,7 +40,7 @@ import java.util.ArrayList;
  * &lt;!ELEMENT after segment &gt;
  * </pre>
  */
-public class OrderPatch implements OrderingConstants{
+public class OrderPatch implements OrderingConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(OrderPatch.class);
 
@@ -47,35 +50,11 @@ public class OrderPatch implements OrderingConstants{
     /**
      * Create a new <code>OrderPath</code> object.
      *
-     * @param orderPatchElement
-     * @throws IllegalArgumentException if the specified Xml element was not valid.
+     * @param orderingType
+     * @param instruction
      */
-    public OrderPatch(Element orderPatchElement) {
-        if (!OrderingConstants.XML_ORDERPATCH.equals(orderPatchElement.getName()) ||
-                orderPatchElement.getChild(OrderingConstants.XML_ORDERING_TYPE) == null) {
-            throw new IllegalArgumentException("ORDERPATH request body must start with an 'orderpatch' element, which must contain an 'ordering-type' child element.");
-        }
-        // retrieve the orderingtype element
-        orderingType = orderPatchElement.getChild(OrderingConstants.XML_ORDERING_TYPE).getChildText(DavConstants.XML_HREF);
-
-        // set build the list of ordering instructions
-        List oMembers = orderPatchElement.getChildren(OrderingConstants.XML_ORDER_MEMBER, DavConstants.NAMESPACE);
-        Iterator it = oMembers.iterator();
-        int cnt = 0;
-        List tmpInst = new ArrayList();
-        while (it.hasNext()) {
-            Element member = (Element) it.next();
-            try {
-                String segment = member.getChildText(OrderingConstants.XML_SEGMENT);
-                Position pos = new Position(member.getChild(OrderingConstants.XML_POSITION));
-                Member om = new Member(segment, pos);
-                tmpInst.add(om);
-                cnt++;
-            } catch (IllegalArgumentException e) {
-                log.error("Invalid element in 'orderpatch' request body: " + e.getMessage());
-            }
-        }
-        instructions = (Member[]) tmpInst.toArray(new Member[cnt]);
+    public OrderPatch(String orderingType, Member instruction) {
+        this(orderingType, new Member[] {instruction});
     }
 
     /**
@@ -85,6 +64,9 @@ public class OrderPatch implements OrderingConstants{
      * @param instructions
      */
     public OrderPatch(String orderingType, Member[] instructions) {
+        if (orderingType == null || instructions == null) {
+            throw new IllegalArgumentException("ordering type and instructions cannot be null.");
+        }
         this.orderingType = orderingType;
         this.instructions = instructions;
     }
@@ -108,12 +90,71 @@ public class OrderPatch implements OrderingConstants{
         return instructions;
     }
 
+    //------------------------------------------< XmlSerializable interface >---
+    /**
+     *
+     * @return
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element orderPatch = DomUtil.createElement(document, XML_ORDERPATCH, NAMESPACE);
+        // add DAV:ordering-type below DAV:orderpatch
+        Element otype = DomUtil.addChildElement(orderPatch, XML_ORDERING_TYPE, NAMESPACE);
+        otype.appendChild(DomUtil.hrefToXml(orderingType, document));
+        // add DAV:member elements below DAV:orderpatch
+        for (int i = 0; i < instructions.length; i++) {
+            orderPatch.appendChild(instructions[i].toXml(document));
+        }
+        return null;
+    }
+
+    //------------------------------------------------------< static method >---
+    /**
+     * Create a new <code>OrderPath</code> object.
+     *
+     * @param orderPatchElement
+     * @throws IllegalArgumentException if the specified Xml element was not valid.
+     */
+    public static OrderPatch createFromXml(Element orderPatchElement) {
+        if (!DomUtil.matches(orderPatchElement, XML_ORDERPATCH, NAMESPACE)) {
+            throw new IllegalArgumentException("ORDERPATH request body must start with an 'orderpatch' element.");
+        }
+
+        // retrieve the href of the orderingtype element
+        String orderingType;
+        Element otype = DomUtil.getChildElement(orderPatchElement, XML_ORDERING_TYPE, NAMESPACE);
+        if (otype != null) {
+            orderingType = DomUtil.getChildText(otype, DavConstants.XML_HREF, DavConstants.NAMESPACE);
+        } else {
+            throw new IllegalArgumentException("ORDERPATH request body must contain an 'ordering-type' child element.");
+        }
+
+        // set build the list of ordering instructions
+        List tmpList = new ArrayList();
+        ElementIterator it = DomUtil.getChildren(orderPatchElement, XML_ORDER_MEMBER, NAMESPACE);
+        while (it.hasNext()) {
+            Element el = it.nextElement();
+            try {
+                // retrieve text 'DAV:segment' child of this DAV:order-member element
+                String segment = DomUtil.getChildText(el, XML_SEGMENT, NAMESPACE);
+                // retrieve the 'DAV:position' child element
+                Position pos = Position.createFromXml(DomUtil.getChildElement(el, XML_POSITION, NAMESPACE));
+                Member om = new Member(segment, pos);
+                tmpList.add(om);
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid element in 'orderpatch' request body: " + e.getMessage());
+            }
+        }
+        Member[] instructions = (Member[]) tmpList.toArray(new Member[tmpList.size()]);
+        return new OrderPatch(orderingType, instructions);
+    }
+
     //--------------------------------------------------------------------------
     /**
      * Internal class <code>Member</code> represents the 'Order-Member' children
      * elements of an 'OrderPatch' request body present in the ORDERPATCH request.
      */
-    public class Member {
+    public static class Member implements XmlSerializable {
 
         private String memberHandle;
         private Position position;
@@ -148,5 +189,17 @@ public class OrderPatch implements OrderingConstants{
         public Position getPosition() {
             return position;
         }
+
+        //--------------------------------------< XmlSerializable interface >---
+        /**
+         * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+         */
+        public Element toXml(Document document) {
+            Element memberElem = DomUtil.createElement(document, XML_ORDER_MEMBER, NAMESPACE);
+            DomUtil.addChildElement(memberElem, XML_SEGMENT, NAMESPACE, memberHandle);
+            memberElem.appendChild(position.toXml(document));
+            return memberElem;
+        }
+
     }
 }

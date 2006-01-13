@@ -16,19 +16,23 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.jdom.Element;
-import org.jdom.Namespace;
+import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.version.DeltaVResource;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import java.util.HashMap;
 
 /**
  * <code>ReportType</code>...
  */
-public class ReportType implements DeltaVConstants {
+public class ReportType implements DeltaVConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(ReportType.class);
 
@@ -38,18 +42,20 @@ public class ReportType implements DeltaVConstants {
     public static final ReportType EXPAND_PROPERTY = register(XML_EXPAND_PROPERTY, NAMESPACE, ExpandPropertyReport.class);
     public static final ReportType LOCATE_BY_HISTORY = register(XML_LOCATE_BY_HISTORY, NAMESPACE, LocateByHistoryReport.class);
 
-    private final String name;
+    private final String key;
+    private final String localName;
     private final Namespace namespace;
     private final Class reportClass;
 
     /**
      * Private constructor
      *
-     * @see #register(String, Namespace, Class)
+     * @see ReportType#register(String, org.apache.jackrabbit.webdav.xml.Namespace, Class)
      */
-    private ReportType(String name, Namespace namespace, Class reportClass) {
-        this.name = name;
+    private ReportType(String localName, Namespace namespace, String key, Class reportClass) {
+        this.localName = localName;
         this.namespace = namespace;
+        this.key = key;
         this.reportClass = reportClass;
     }
 
@@ -59,9 +65,11 @@ public class ReportType implements DeltaVConstants {
      * @return
      * @throws DavException
      */
-    public Report createReport() throws DavException {
+    public Report createReport(DeltaVResource resource, ReportInfo info) throws DavException {
         try {
-            return (Report) reportClass.getConstructor(new Class[0]).newInstance(new Object[0]);
+            Report report = (Report) reportClass.getConstructor(new Class[0]).newInstance(new Object[0]);
+            report.init(resource, info);
+            return report;
         } catch (Exception e) {
             // should never occur
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register Report.");
@@ -72,10 +80,12 @@ public class ReportType implements DeltaVConstants {
      * Returns an Xml element representing this report type. It may be used to
      * build the body for a REPORT request.
      *
+     * @param document
      * @return Xml representation
+     * @see XmlSerializable#toXml(org.w3c.dom.Document)
      */
-    public Element toXml() {
-        return new Element(name, namespace);
+    public Element toXml(Document document) {
+        return DomUtil.createElement(document, localName, namespace);
     }
 
     /**
@@ -87,19 +97,41 @@ public class ReportType implements DeltaVConstants {
      */
     public boolean isRequestedReportType(ReportInfo reqInfo) {
         if (reqInfo != null) {
-            Element elem = reqInfo.getReportElement();
-            if (elem != null) {
-                return name.equals(elem.getName()) && namespace.equals(elem.getNamespace());
-            }
+            return getReportName().equals(reqInfo.getReportName());
         }
         return false;
+    }
+
+    /**
+     * Return the qualified name of this <code>ReportType</code>.
+     *
+     * @return qualified name
+     */
+    public String getReportName() {
+        return key;
+            }
+
+    /**
+     *
+     * @return
+     */
+    public String getLocalName() {
+        return localName;
+        }
+
+    /**
+     *
+     * @return
+     */
+    public Namespace getNamespace() {
+        return namespace;
     }
 
     /**
      * Register the report type with the given name, namespace and class, that can
      * run that report.
      *
-     * @param name
+     * @param localName
      * @param namespace
      * @param reportClass
      * @return
@@ -107,12 +139,12 @@ public class ReportType implements DeltaVConstants {
      * if the given class does not implement the {@link Report} interface or if
      * it does not provide an empty constructor.
      */
-    public static ReportType register(String name, Namespace namespace, Class reportClass) {
-        if (name == null || namespace == null || reportClass == null) {
+    public static ReportType register(String localName, Namespace namespace, Class reportClass) {
+        if (localName == null || namespace == null || reportClass == null) {
             throw new IllegalArgumentException("A ReportType cannot be registered with a null name, namespace or report class");
         }
 
-        String key = buildKey(namespace, name);
+        String key = DomUtil.getQualifiedName(localName, namespace);
         if (types.containsKey(key)) {
             return (ReportType) types.get(key);
         } else {
@@ -132,7 +164,7 @@ public class ReportType implements DeltaVConstants {
                 throw new IllegalArgumentException("The specified report class must provide a default constructor.");
             }
 
-            ReportType type = new ReportType(name, namespace, reportClass);
+            ReportType type = new ReportType(localName, namespace, key, reportClass);
             types.put(key, type);
             return type;
         }
@@ -150,22 +182,11 @@ public class ReportType implements DeltaVConstants {
         if (reportInfo == null) {
             throw new IllegalArgumentException("ReportInfo must not be null.");
         }
-        String key = buildKey(reportInfo.getReportElement().getNamespace(), reportInfo.getReportElement().getName());
+        String key = reportInfo.getReportName();
         if (types.containsKey(key)) {
             return (ReportType) types.get(key);
         } else {
             throw new IllegalArgumentException("The request report '"+key+"' has not been registered yet.");
         }
-    }
-
-    /**
-     * Build the key from the given namespace and name.
-     *
-     * @param namespace
-     * @param name
-     * @return key identifying the report with the given namespace and name
-     */
-    private static String buildKey(Namespace namespace, String name) {
-        return "{" + namespace.getURI() + "}" + name;
     }
 }

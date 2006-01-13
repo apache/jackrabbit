@@ -15,9 +15,10 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.jdom.Element;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -96,13 +97,14 @@ public class SupportedLock extends AbstractDavProperty {
      * Creates a JDOM element that represents the &lt;supportedlock> tag.
      * 
      * @return A JDOM element of this lock support.
+     * @param document
      */
-    public Element toXml() {
-        Element support = getName().toXml();
+    public Element toXml(Document document) {
+        Element support = getName().toXml(document);
         Iterator iter = entries.iterator();
         while (iter.hasNext()) {
             LockEntry le = (LockEntry) iter.next();
-            support.addContent(le.toXml());
+            support.appendChild(le.toXml(document));
         }
 	return support;
     }

@@ -16,7 +16,9 @@
 package org.apache.jackrabbit.webdav;
 
 import org.apache.log4j.Logger;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.Properties;
 import java.io.IOException;
@@ -27,7 +29,7 @@ import java.io.IOException;
  * of WebDAV requests and provides possibility to retrieve an Xml representation
  * of the error.
  */
-public class DavException extends Exception {
+public class DavException extends Exception implements XmlSerializable {
 
     private static Logger log = Logger.getLogger(DavException.class);
     private static Properties statusPhrases = new Properties();
@@ -39,10 +41,9 @@ public class DavException extends Exception {
         }
     }
 
-    private static final String XML_ERROR = "error";
+    public static final String XML_ERROR = "error";
 
     private int errorCode = DavServletResponse.SC_INTERNAL_SERVER_ERROR;
-    private Element conditionElement;
 
     /**
      * Create a new <code>DavException</code>.
@@ -68,41 +69,12 @@ public class DavException extends Exception {
     }
 
     /**
-     * Create a new <code>DavException</code>.
-     *
-     * @param errorCode integer specifying any of the status codes defined by
-     * {@link DavServletResponse}.
-     * @param message
-     * @param conditionElement
-     */
-    public DavException(int errorCode, String message, Element conditionElement) {
-        this(errorCode, message);
-        this.conditionElement = conditionElement;
-        log.debug("DavException: (" + errorCode + ") " + conditionElement.toString());
-    }
-
-    /**
      * Return the error code attached to this <code>DavException</code>.
      *
      * @return errorCode
      */
     public int getErrorCode() {
         return errorCode;
-    }
-
-    /**
-     * Returns the Xml representation of this <code>DavException</code>. In case
-     * no {@link Element} has been passed to the constructor, an empty DAV:error
-     * element is returned.
-     *
-     * @return Xml representation of this exception.
-     */
-    public Element getError() {
-        Element error = new Element(XML_ERROR, DavConstants.NAMESPACE);
-        if (conditionElement != null) {
-            error.addContent(conditionElement);
-        }
-        return error;
     }
 
     /**
@@ -125,4 +97,23 @@ public class DavException extends Exception {
     public static String getStatusPhrase(int errorCode) {
         return statusPhrases.getProperty(errorCode+"");
     }
+
+    /**
+     * @return Always false
+     */
+    public boolean hasErrorCondition() {
+        return false;
+    }
+
+    /**
+     * Returns <code>null</code>
+     *
+     * @param document
+     * @return <code>null</code>
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     */
+    public Element toXml(Document document) {
+        return null;
+    }
+
 }

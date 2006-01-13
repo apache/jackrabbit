@@ -20,7 +20,9 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.DavMethods;
-import org.jdom.Document;
+import org.apache.jackrabbit.webdav.DavConstants;
+
+import java.io.IOException;
 
 /**
  * <code>ReportMethod</code>...
@@ -29,16 +31,18 @@ public class ReportMethod extends DavMethodBase {
 
     private static Logger log = Logger.getLogger(ReportMethod.class);
 
-    public ReportMethod(String uri, ReportInfo reportInfo) {
+    public ReportMethod(String uri, ReportInfo reportInfo) throws IOException {
 	super(uri);
 	DepthHeader dh = new DepthHeader(reportInfo.getDepth());
-	setRequestHeader(dh.getHeaderName(), dh.getHeaderValue());
-	setRequestHeader("Content-Type","text/xml; charset=UTF-8");
+	setRequestHeader(dh);
 
-	Document reportBody = new Document(reportInfo.getReportElement());
-	setRequestBody(reportBody);
+        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
+       	setRequestBody(reportInfo);
     }
 
+    /**
+     * @see org.apache.commons.httpclient.HttpMethod#getName()
+     */
     public String getName() {
 	return DavMethods.METHOD_REPORT;
     }

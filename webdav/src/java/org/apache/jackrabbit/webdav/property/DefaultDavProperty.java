@@ -16,10 +16,12 @@
 package org.apache.jackrabbit.webdav.property;
 
 import org.apache.log4j.Logger;
-import org.jdom.Namespace;
-import org.jdom.Element;
-import org.jdom.Content;
-import org.jdom.Text;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import java.util.List;
 
 /**
  * <code>DefaultDavProperty</code>...
@@ -119,21 +121,21 @@ public class DefaultDavProperty extends AbstractDavProperty {
 	}
 	DavPropertyName name = DavPropertyName.createFromXml(propertyElement);
 	Object value;
-	int size = propertyElement.getContentSize();
-	switch (size) {
-	    case 0:
+
+        if (!DomUtil.hasContent(propertyElement)) {
 		value = null;
-		break;
-	    case 1:
-		Content c = propertyElement.getContent(0);
-		if (c instanceof Text) {
-		    value = ((Text)c).getText();
 		} else {
+            List c = DomUtil.getContent(propertyElement);
+            if (c.size() == 1) {
+                Node n = (Node)c.get(0);
+                if (n instanceof Element) {
+                    value = n;
+                } else {
+                    value = n.getNodeValue();
+                }
+            } else /* size > 1 */ {
 		    value = c;
 		}
-		break;
-	    default:
-		value = propertyElement.getContent();
 	}
 	return new DefaultDavProperty(name, value, false);
     }

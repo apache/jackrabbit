@@ -18,10 +18,14 @@ package org.apache.jackrabbit.webdav.version;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.jdom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import java.util.List;
-import java.util.Iterator;
+import java.util.ArrayList;
 
 /**
  * <code>UpdateInfo</code> encapsulates the request body of an UPDATE request.
@@ -45,11 +49,12 @@ import java.util.Iterator;
  * &lt;!ELEMENT removeExisting EMPTY &gt;
  * </pre>
  */
-public class UpdateInfo implements DeltaVConstants {
+public class UpdateInfo implements DeltaVConstants, XmlSerializable {
 
     private static Logger log = Logger.getLogger(UpdateInfo.class);
 
     private final Element updateElement;
+    private final DavPropertyNameSet propertyNameSet;
     private String[] versionHref;
     private String[] labelName;
     private String workspaceHref;
@@ -63,36 +68,51 @@ public class UpdateInfo implements DeltaVConstants {
      * structure.
      */
     public UpdateInfo(Element updateElement) {
-         if (updateElement == null || !updateElement.getName().equals(DeltaVConstants.XML_UPDATE)) {
+        if (!DomUtil.matches(updateElement, XML_UPDATE, NAMESPACE)) {
             throw new IllegalArgumentException("DAV:update element expected");
         }
 
-        List targetList;
-        if (!(targetList = updateElement.getChildren(XML_VERSION, NAMESPACE)).isEmpty()) {
-            Iterator it = targetList.iterator();
-            versionHref = new String[targetList.size()];
-            int i = 0;
+        boolean done = false;
+        ElementIterator it = DomUtil.getChildren(updateElement, XML_VERSION, NAMESPACE);
             while (it.hasNext()) {
-                Element versionElem = (Element) it.next();
-                versionHref[i] = versionElem.getChildText(DavConstants.XML_HREF, NAMESPACE);
-                i++;
-            }
-        } else if (!(targetList = updateElement.getChildren(XML_LABEL_NAME, NAMESPACE)).isEmpty()) {
-            Iterator it = targetList.iterator();
-            labelName = new String[targetList.size()];
-            int i = 0;
+            List hrefList = new ArrayList();
+            Element el = it.nextElement();
+            hrefList.add(DomUtil.getChildText(el, DavConstants.XML_HREF, DavConstants.NAMESPACE));
+            versionHref = (String[])hrefList.toArray(new String[hrefList.size()]);
+            done = true;
+        }
+
+        // alternatively 'DAV:label-name' elements may be present.
+        if (!done) {
+            it = DomUtil.getChildren(updateElement, XML_LABEL_NAME, NAMESPACE);
             while (it.hasNext()) {
-                Element labelNameElem = (Element) it.next();
-                labelName[i] = labelNameElem.getText();
-                i++;
+                List labelList = new ArrayList();
+                Element el = it.nextElement();
+                labelList.add(DomUtil.getText(el));
+                labelName = (String[])labelList.toArray(new String[labelList.size()]);
+                done = true;
             }
-        } else if (updateElement.getChild(XML_WORKSPACE, NAMESPACE) != null) {
-            workspaceHref = updateElement.getChild(XML_WORKSPACE, NAMESPACE).getChildText(DavConstants.XML_HREF, NAMESPACE);
+        }
+
+        // last possibility: a DAV:workspace element
+        if (!done) {
+            Element wspElem = DomUtil.getChildElement(updateElement, XML_WORKSPACE, NAMESPACE);
+            if (wspElem != null) {
+                workspaceHref = DomUtil.getChildTextTrim(wspElem, DavConstants.XML_HREF, DavConstants.NAMESPACE);
         } else {
             throw new IllegalArgumentException("DAV:update element must contain either DAV:version, DAV:label-name or DAV:workspace child element.");
         }
+        }
 
-        this.updateElement = (Element) updateElement.detach();
+        // if property name set if present
+        if (DomUtil.hasChildElement(updateElement, DavConstants.XML_PROP, DavConstants.NAMESPACE)) {
+            Element propEl = DomUtil.getChildElement(updateElement, DavConstants.XML_PROP, DavConstants.NAMESPACE);
+            propertyNameSet = new DavPropertyNameSet(propEl);
+            updateElement.removeChild(propEl);
+        } else {
+            propertyNameSet = new DavPropertyNameSet();
+        }
+        this.updateElement = updateElement;
     }
 
     /**
@@ -122,18 +142,16 @@ public class UpdateInfo implements DeltaVConstants {
     /**
      * Returns a {@link DavPropertyNameSet}. If the DAV:update element contains
      * a DAV:prop child element the properties specified therein are included
-     * in the set. Otherwise an empty set is returned.
+     * in the set. Otherwise an empty set is returned.<p/>
+     *
+     * <b>WARNING:</b> modifying the DavPropertyNameSet returned by this method does
+     * not modify this <code>UpdateInfo</code>.
      *
      * @return set listing the properties specified in the DAV:prop element indicating
      * those properties that must be reported in the response body.
      */
     public DavPropertyNameSet getPropertyNameSet() {
-        Element propElement = updateElement.getChild(DavConstants.XML_PROP, DavConstants.NAMESPACE);
-        if (propElement != null) {
-            return new DavPropertyNameSet(propElement);
-        } else {
-            return new DavPropertyNameSet();
-        }
+        return propertyNameSet;
     }
 
     /**
@@ -143,4 +161,17 @@ public class UpdateInfo implements DeltaVConstants {
     public Element getUpdateElement() {
         return updateElement;
     }
+
+    /**
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
+     */
+    public Element toXml(Document document) {
+        Element elem = (Element)document.importNode(updateElement, true);
+        if (!propertyNameSet.isEmpty()) {
+            elem.appendChild(propertyNameSet.toXml(document));
+        }
+        return elem;
+    }
+
 }

@@ -16,10 +16,18 @@
 package org.apache.jackrabbit.webdav.version.report;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.version.*;
-import org.jdom.Document;
+import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.version.DeltaVResource;
+import org.apache.jackrabbit.webdav.version.VersionControlledResource;
+import org.apache.jackrabbit.webdav.version.VersionResource;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 /**
  * <code>VersionTreeReport</code> encapsulates the DAV:version-tree report.
@@ -34,23 +42,51 @@ public class VersionTreeReport implements Report, DeltaVConstants {
     private ReportInfo info;
     private DeltaVResource resource;
 
+    /**
+     * Returns {@link ReportType#VERSION_TREE}
+     *
+     * @return {@link ReportType#VERSION_TREE}
+     * @see Report#getType()
+     */
     public ReportType getType() {
         return ReportType.VERSION_TREE;
+    }
+
+    /**
+     * Always returns <code>true</code>.
+     *
+     * @return true
+     * @see org.apache.jackrabbit.webdav.version.report.Report#isMultiStatusReport()
+     */
+    public boolean isMultiStatusReport() {
+        return true;
+    }
+
+    /**
+     * Validates the specified resource and info objects.
+     *
+     * @param resource
+     * @param info
+     * @throws org.apache.jackrabbit.webdav.DavException
+     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, ReportInfo)
+     */
+    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
+        setResource(resource);
+        setInfo(info);
     }
 
     /**
      * Set the <code>DeltaVResource</code> used to register this report.
      *
      * @param resource
-     * @throws IllegalArgumentException if the given resource is neither
-     * {@link VersionControlledResource} nor {@link VersionResource}.
-     * @see Report#setResource(org.apache.jackrabbit.webdav.version.DeltaVResource)
+     * @throws DavException if the given resource is neither
+     * {@link org.apache.jackrabbit.webdav.version.VersionControlledResource} nor {@link org.apache.jackrabbit.webdav.version.VersionResource}.
      */
-    public void setResource(DeltaVResource resource) throws IllegalArgumentException {
-        if (resource instanceof VersionControlledResource || resource instanceof VersionResource) {
+    private void setResource(DeltaVResource resource) throws DavException {
+        if (resource != null && (resource instanceof VersionControlledResource || resource instanceof VersionResource)) {
             this.resource = resource;
         } else {
-            throw new IllegalArgumentException("DAV:version-tree report can only be created for version-controlled resources and version resources.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:version-tree report can only be created for version-controlled resources and version resources.");
         }
     }
 
@@ -59,13 +95,12 @@ public class VersionTreeReport implements Report, DeltaVConstants {
      * that defines the details for this report.
      *
      * @param info
-     * @throws IllegalArgumentException if the given <code>ReportInfo</code>
+     * @throws DavException if the given <code>ReportInfo</code>
      * does not contain a DAV:version-tree element.
-     * @see Report#setInfo(ReportInfo)
      */
-    public void setInfo(ReportInfo info) throws IllegalArgumentException {
-        if (info == null || !XML_VERSION_TREE.equals(info.getReportElement().getName())) {
-            throw new IllegalArgumentException("DAV:version-tree element expected.");
+    private void setInfo(ReportInfo info) throws DavException {
+        if (!getType().isRequestedReportType(info)) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:version-tree element expected.");
         }
         this.info = info;
     }
@@ -75,18 +110,28 @@ public class VersionTreeReport implements Report, DeltaVConstants {
      *
      * @return Xml <code>Document</code> representing the report in the required
      * format.
-     * @throws DavException if the resource or the info field are <code>null</code>
-     * or if any other error occurs.
-     * @see Report#toXml()
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
+     * @param document
      */
-    public Document toXml() throws DavException {
+    public Element toXml(Document document) {
+        return getMultiStatus().toXml(document);
+    }
+
+    /**
+     * Retrieve the <code>MultiStatus</code> that is returned in response to a locate-by-history
+     * report request.
+     *
+     * @return
+     * @throws NullPointerException if info or resource is <code>null</code>.
+     */
+    private MultiStatus getMultiStatus() {
         if (info == null || resource == null) {
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while running DAV:version-tree report");
+            throw new NullPointerException("Error while running DAV:version-tree report");
         }
 
         MultiStatus ms = new MultiStatus();
         buildResponse(resource, info.getPropertyNameSet(), info.getDepth(), ms);
-        return ms.toXml();
+        return ms;
     }
 
     /**
@@ -95,10 +140,10 @@ public class VersionTreeReport implements Report, DeltaVConstants {
      * @param propNameSet
      * @param depth
      * @param ms
-     * @throws DavException
      */
     private void buildResponse(DavResource res, DavPropertyNameSet propNameSet,
-                               int depth, MultiStatus ms) throws DavException {
+                               int depth, MultiStatus ms) {
+        try {
         VersionResource[] versions = getVersions(res);
         for (int i = 0; i < versions.length; i++) {
             if (propNameSet.isEmpty()) {
@@ -106,6 +151,9 @@ public class VersionTreeReport implements Report, DeltaVConstants {
             } else {
                 ms.addResourceProperties(versions[i], propNameSet, 0);
             }
+            }
+        } catch (DavException e) {
+            log.error(e);
         }
         if (depth > 0) {
             DavResourceIterator it = res.getMembers();

@@ -15,9 +15,9 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
-import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
-import org.jdom.Document;
+import org.apache.jackrabbit.webdav.DavException;
 
 /**
  * The <code>Report</code> interface defines METHODS needed in order to respond
@@ -26,7 +26,7 @@ import org.jdom.Document;
  *
  * @see DeltaVResource#getReport(ReportInfo)
  */
-public interface Report {
+public interface Report extends XmlSerializable {
 
     /**
      * Returns the registered type of this report.
@@ -36,29 +36,25 @@ public interface Report {
     public ReportType getType();
 
     /**
-     * Set the <code>DeltaVResource</code> for which this report was requested.
+     * Returns true if this <code>Report</code> will send a <code>MultiStatus</code>
+     * response.<br>
+     * Please note that RFC 3253 that the the response must be a 207 Multi-Status,
+     * if a Depth request header is present.
+     *
+     * @return
+     */
+    public boolean isMultiStatusReport();
+
+    /**
+     * Set the <code>DeltaVResource</code> for which this report was requested
+     * and the <code>ReportInfo</code> as specified by the REPORT request body,
+     * that defines the details for this report.<br>
+     * Please note that this methods should perform basic validation checks
+     * in order to prevent execeptional situations during the xml serialization.
      *
      * @param resource
+     * @param info
+     * @throws DavException
      */
-    public void setResource(DeltaVResource resource);
-
-    /**
-     * Set the <code>ReportInfo</code> as specified by the REPORT request body,
-     * that defines the details for this report.
-     *
-     * @param info providing in detail requirements for this report.
-     */
-    public void setInfo(ReportInfo info);
-
-    /**
-     * Returns the report {@link Document Xml document} defined by the this
-     * <code>ReportType</code>. The document will be returned in the response
-     * body.
-     *
-     * @return Xml <code>Document</code> object representing the generated report
-     * in the proper format.
-     * @throws DavException if an error occurs while running the report or
-     * creating the <code>Document</code>.
-     */
-    public Document toXml() throws DavException;
+    public void init(DeltaVResource resource, ReportInfo info) throws DavException;
 }

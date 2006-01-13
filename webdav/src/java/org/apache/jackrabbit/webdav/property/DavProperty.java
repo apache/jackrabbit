@@ -15,42 +15,35 @@
  */
 package org.apache.jackrabbit.webdav.property;
 
-import org.jdom.Element;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 /**
  * The <code>Property</code> class represents a Property of a WebDAV
  * resource. The {@link #hashCode()} and {@link #equals(Object)} METHODS are
  * overridden in a way, that the name and value of the property are
  * respected. this means, an property is equal to another, if the names
- * and values are equal.
- */
-public interface DavProperty extends DavConstants {
-
-    /**
-     * Return a JDOM element representation of this property. The value of the
-     * property will be added as text or as child element.
+ * and values are equal.<br>
+ * The XML representation of a <code>DavProperty</code>:
      * <pre>
-     * new DavProperty("displayname", "WebDAV Directory").toXml()
+     * new DavProperty("displayname", "WebDAV Directory").toXml
      * gives a element like:
      * &lt;D:displayname&gt;WebDAV Directory&lt;/D:displayname&gt;
      *
-     * new DavProperty("resourcetype", new Element("collection")).toXml()
+     * new DavProperty("resourcetype", new Element("collection")).toXml
      * gives a element like:
      * &lt;D:resourcetype&gt;&lt;D:collection/&gt;&lt;/D:resourcetype&gt;
      *
      * Element[] customVals = { new Element("bla", customNamespace), new Element("bli", customNamespace) };
-     * new DavProperty("custom-property", customVals, customNamespace).toXml()
+     * new DavProperty("custom-property", customVals, customNamespace).toXml
      * gives an element like
      * &lt;Z:custom-property&gt;
      *    &lt;Z:bla/&gt;
      *    &lt;Z:bli/&gt;
      * &lt;/Z:custom-property&gt;
      * </pre>
-     *
-     * @return a JDOM element of this property
      */
-    public Element toXml();
+public interface DavProperty extends XmlSerializable, DavConstants {
 
     /**
      * Returns the name of this property

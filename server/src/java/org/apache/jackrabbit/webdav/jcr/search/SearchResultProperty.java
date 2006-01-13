@@ -20,17 +20,22 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.jdom.Element;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * <code>SearchResultProperty</code>...
  */
+// todo: find proper solution for transporting search results...
 public class SearchResultProperty extends AbstractDavProperty implements ItemResourceConstants {
 
     private static Logger log = Logger.getLogger(SearchResultProperty.class);
@@ -80,12 +85,12 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
             while (elemIt.hasNext()) {
                 Object el = elemIt.next();
                 if (el instanceof Element) {
-                    String txt = ((Element)el).getText();
-                    if (JCR_NAME.getName().equals(((Element)el).getName())) {
+                    String txt = DomUtil.getText((Element)el);
+                    if (JCR_NAME.getName().equals(((Element)el).getLocalName())) {
                         name = txt;
-                    } else if (JCR_VALUE.getName().equals(((Element)el).getName())) {
+                    } else if (JCR_VALUE.getName().equals(((Element)el).getLocalName())) {
                         value = txt;
-                    } else if (JCR_TYPE.getName().equals(((Element)el).getName())) {
+                    } else if (JCR_TYPE.getName().equals(((Element)el).getLocalName())) {
                         int type = PropertyType.valueFromName(txt);
                         if (name == null) {
                             throw new IllegalArgumentException("SearchResultProperty requires a set of 'dcr:name','dcr:value' and 'dcr:type' xml elements.");
@@ -100,7 +105,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
                 }
             }
         } else {
-            new IllegalArgumentException("SearchResultProperty requires a set of 'dcr:name','dcr:value' and 'dcr:type' xml elements.");
+            new IllegalArgumentException("SearchResultProperty requires a list of 'dcr:name','dcr:value' and 'dcr:type' xml elements.");
         }
 
         columnNames = (String[]) colList.toArray(new String[colList.size()]);
@@ -128,10 +133,19 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
         return values;
     }
 
+
     /**
-     * Return the value of this webdav property i.e. an list of xml
-     * {@link Element}s. For every value in the query result row represented by
-     * this webdav property a dcr:name, dcr:value and dcr:type element is created.
+     * Same as {@link #getValues()}
+     *
+     * @return Array of JCR Value object
+     */
+    public Object getValue() {
+        return values;
+    }
+
+    /**
+     * Return the xml representation of this webdav property. For every value in
+     * the query result row a dcr:name, dcr:value and dcr:type element is created.
      * Example:
      * <pre>
      * -----------------------------------------------------------
@@ -157,11 +171,10 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      * &lt;dcr:type&gt;Long&lt;dcr:value/&gt;
      * </pre>
      *
-     * @return value of this webdav property consisting of an list of xml elements.
-     * @see org.apache.jackrabbit.webdav.property.DavProperty#getValue()
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(org.w3c.dom.Document)
      */
-    public Object getValue() {
-        List value = new ArrayList();
+    public Element toXml(Document document) {
+        Element elem = getName().toXml(document);
         for (int i = 0; i < columnNames.length; i++) {
             String propertyName = columnNames[i];
             Value propertyValue = values[i];
@@ -175,10 +188,18 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
             }
             String type = (propertyValue == null) ? PropertyType.TYPENAME_STRING : PropertyType.nameFromValue(propertyValue.getType());
 
-            value.add(JCR_NAME.toXml().setText(propertyName));
-            value.add(JCR_VALUE.toXml().setText(valueStr));
-            value.add(JCR_TYPE.toXml().setText(type));
+            Element child = JCR_NAME.toXml(document);
+            DomUtil.setText(child, propertyName);
+            elem.appendChild(child);
+
+            child = JCR_VALUE.toXml(document);
+            DomUtil.setText(child, valueStr);
+            elem.appendChild(child);
+
+            child = JCR_TYPE.toXml(document);
+            DomUtil.setText(child, type);
+            elem.appendChild(child);
         }
-        return value;
+        return elem;
     }
 }
