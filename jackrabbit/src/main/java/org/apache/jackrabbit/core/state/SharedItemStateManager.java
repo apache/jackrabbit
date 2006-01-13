@@ -1082,7 +1082,10 @@ public class SharedItemStateManager
                         }
                         refs = getNodeReferences(refsId);
                     }
-                    if (refs.hasReferences()) {
+                    // in some versioning operations (such as restore) a node
+                    // may actually be deleted and then again added with the
+                    // same UUID, i.e. the node is still referenceable.  
+                    if (refs.hasReferences() && !changes.has(node.getId())) {
                         String msg = node.getId()
                                 + ": the node cannot be removed because it is still being referenced.";
                         log.debug(msg);
