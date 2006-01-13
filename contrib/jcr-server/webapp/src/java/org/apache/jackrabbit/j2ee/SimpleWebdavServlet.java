@@ -58,11 +58,6 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     public static final String INIT_PARAM_RESOURCE_PATH_PREFIX = "resource-path-prefix";
 
     /**
-     * init param file of the commons chain catalog
-     */
-    public static final String INIT_PARAM_CHAIN_CATALOG = "chain-catalog";
-
-    /**
      * Name of the optional init parameter that defines the value of the
      * 'WWW-Authenticate' header.<p/>
      * If the parameter is omitted the default value
