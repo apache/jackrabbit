@@ -209,15 +209,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         // init version manager
-        VersioningConfig vConfig = repConfig.getVersioningConfig();
-        PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
-                vConfig.getFileSystem(),
-                vConfig.getPersistenceManagerConfig(),
-                rootNodeUUID,
-                nsReg,
-                ntReg);
-        vMgr = new VersionManagerImpl(pm, ntReg, delegatingDispatcher,
-                VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
+        vMgr = createVersionManager(repConfig.getVersioningConfig());
 
         // init virtual nodetype manager
         virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
@@ -241,6 +233,24 @@ public class RepositoryImpl implements Repository, SessionListener,
         // todo FIXME it seems odd that the *global* virtual node type manager
         // is using a session that is bound to a single specific workspace
         virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
+    }
+
+    /**
+     * Creates the version manager.
+     *
+     * @param vConfig the versioning config
+     * @return the newly created version manager
+     * @throws RepositoryException if an error occurrs
+     */
+    protected VersionManager createVersionManager(VersioningConfig vConfig)
+            throws RepositoryException {
+        PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
+                vConfig.getFileSystem(),
+                vConfig.getPersistenceManagerConfig(),
+                rootNodeUUID,
+                nsReg,
+                ntReg);
+        return new VersionManagerImpl(pm, ntReg, delegatingDispatcher, VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
     }
 
     /**
