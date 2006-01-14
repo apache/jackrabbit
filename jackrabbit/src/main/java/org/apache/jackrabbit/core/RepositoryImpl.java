@@ -209,7 +209,8 @@ public class RepositoryImpl implements Repository, SessionListener,
         }
 
         // init version manager
-        vMgr = createVersionManager(repConfig.getVersioningConfig());
+        vMgr = createVersionManager(repConfig.getVersioningConfig(),
+                delegatingDispatcher);
 
         // init virtual nodetype manager
         virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
@@ -242,7 +243,8 @@ public class RepositoryImpl implements Repository, SessionListener,
      * @return the newly created version manager
      * @throws RepositoryException if an error occurrs
      */
-    protected VersionManager createVersionManager(VersioningConfig vConfig)
+    protected VersionManager createVersionManager(VersioningConfig vConfig,
+                                                  DelegatingObservationDispatcher delegatingDispatcher)
             throws RepositoryException {
         PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
                 vConfig.getFileSystem(),

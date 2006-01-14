@@ -104,6 +104,11 @@ public class VersionManagerImpl extends AbstractVersionManager
     private transient SessionImpl eventSource;
 
     /**
+     * workaround for potential deadlock
+     */
+    private final Object eventSourceLock = new Object();
+
+    /**
      * Creates a bew vesuion manager
      *
      */
@@ -166,16 +171,21 @@ public class VersionManagerImpl extends AbstractVersionManager
     /**
      * {@inheritDoc}
      * <p/>
-     * This method needs to be synchronized since it sets the event source
-     * to be used when creating the events to be dispatched later on.
+     * This method must not be synchronized since it could cause deadlocks with
+     * item-reading listeners in the observation thread.
      */
-    public synchronized VersionHistory createVersionHistory(Session session,
-                                                            NodeState node)
+    public VersionHistory createVersionHistory(Session session, NodeState node)
             throws RepositoryException {
 
-        eventSource = (SessionImpl) session;
+        InternalVersionHistory history;
+        synchronized (eventSourceLock) {
+            // This needs to be synchronized since it sets the event source
+            // to be used when creating the events to be dispatched later on.
+            eventSource = (SessionImpl) session;
 
-        InternalVersionHistory history = createVersionHistory(node);
+            history = createVersionHistory(node);
+        }
+
         if (history == null) {
             throw new VersionException("History already exists for node " + node.getUUID());
         }
@@ -231,34 +241,38 @@ public class VersionManagerImpl extends AbstractVersionManager
     /**
      * {@inheritDoc}
      * <p/>
-     * This method needs to be synchronized since it sets the event source
-     * to be used when creating the events to be dispatched later on.
+     * This method must not be synchronized since it could cause deadlocks with
+     * item-reading listeners in the observation thread.
      */
-    public synchronized Version checkin(NodeImpl node) throws RepositoryException {
-        eventSource = (SessionImpl) node.getSession();
+    public Version checkin(NodeImpl node) throws RepositoryException {
+        InternalVersion version;
 
-        String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
-        InternalVersion version = checkin(
-                (InternalVersionHistoryImpl) getVersionHistory(histUUID), node);
+        synchronized (eventSourceLock) {
+            // This  needs to be synchronized since it sets the event source
+            // to be used when creating the events to be dispatched later on.
+            eventSource = (SessionImpl) node.getSession();
 
-        AbstractVersion v = (AbstractVersion) eventSource.getNodeByUUID(version.getId());
+            String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
+            version = checkin(
+                    (InternalVersionHistoryImpl) getVersionHistory(histUUID), node);
 
-        // invalidate predecessors successor properties
-        InternalVersion[] preds = version.getPredecessors();
-        for (int i = 0; i < preds.length; i++) {
-            PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
-            versProvider.onPropertyChanged(propId);
+            // invalidate predecessors successor properties
+            InternalVersion[] preds = version.getPredecessors();
+            for (int i = 0; i < preds.length; i++) {
+                PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
+                versProvider.onPropertyChanged(propId);
+            }
         }
-        return v;
+        return (AbstractVersion) eventSource.getNodeByUUID(version.getId());
     }
 
     /**
      * {@inheritDoc}
      * <p/>
-     * This method needs to be synchronized since it sets the event source
-     * to be used when creating the events to be dispatched later on.
+     * This method must not be synchronized since it could cause deadlocks with
+     * item-reading listeners in the observation thread.
      */
-    public synchronized void removeVersion(VersionHistory history, QName name)
+    public void removeVersion(VersionHistory history, QName name)
             throws VersionException, RepositoryException {
 
         AbstractVersionHistory historyImpl = (AbstractVersionHistory) history;
@@ -266,40 +280,50 @@ public class VersionManagerImpl extends AbstractVersionManager
             throw new VersionException("Version with name " + name.toString()
                     + " does not exist in this VersionHistory");
         }
-        eventSource = (SessionImpl) history.getSession();
 
-        // save away predecessors before removing version
-        AbstractVersion version = (AbstractVersion) historyImpl.getNode(name);
-        InternalVersion preds[] = version.getInternalVersion().getPredecessors();
+        synchronized (eventSourceLock) {
+            // This needs to be synchronized since it sets the event source
+            // to be used when creating the events to be dispatched later on.
+            eventSource = (SessionImpl) history.getSession();
 
-        InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                historyImpl.getInternalVersionHistory();
-        removeVersion(vh, name);
+            // save away predecessors before removing version
+            AbstractVersion version = (AbstractVersion) historyImpl.getNode(name);
+            InternalVersion preds[] = version.getInternalVersion().getPredecessors();
 
-        // invalidate predecessors successor properties
-        for (int i = 0; i < preds.length; i++) {
-            PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
-            versProvider.onPropertyChanged(propId);
+            InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
+                    historyImpl.getInternalVersionHistory();
+            removeVersion(vh, name);
+
+            // invalidate predecessors successor properties
+            for (int i = 0; i < preds.length; i++) {
+                PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
+                versProvider.onPropertyChanged(propId);
+            }
         }
     }
 
     /**
      * {@inheritDoc}
      * <p/>
-     * This method needs to be synchronized since it sets the event source
-     * to be used when creating the events to be dispatched later on.
+     * This method must not be synchronized since it could cause deadlocks with
+     * item-reading listeners in the observation thread.
      */
-    public synchronized Version setVersionLabel(VersionHistory history,
+    public Version setVersionLabel(VersionHistory history,
                                                 QName version, QName label,
                                                 boolean move)
             throws RepositoryException {
 
         AbstractVersionHistory historyImpl = (AbstractVersionHistory) history;
-        eventSource = (SessionImpl) history.getSession();
+        InternalVersion v;
+        synchronized (eventSourceLock) {
+            // This  needs to be synchronized since it sets the event source
+            // to be used when creating the events to be dispatched later on.
+            eventSource = (SessionImpl) history.getSession();
 
-        InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                historyImpl.getInternalVersionHistory();
-        InternalVersion v = setVersionLabel(vh, version, label, move);
+            InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
+                    historyImpl.getInternalVersionHistory();
+            v = setVersionLabel(vh, version, label, move);
+        }
         if (v == null) {
             return null;
         } else {
