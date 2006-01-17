@@ -53,13 +53,6 @@ public class NodeTypeRegistry implements Dumpable {
 
     private static Logger log = Logger.getLogger(NodeTypeRegistry.class);
 
-    /**
-     * The empty name used as the name of the declaring node type of the
-     * root node definion.
-     * TODO: Is it proper to use an invalid QName for this.
-     */
-    private static final QName EMPTY_NAME = new QName("", "");
-
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
             "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";
     private static final String CUSTOM_NODETYPES_RESOURCE_NAME =
@@ -210,8 +203,9 @@ public class NodeTypeRegistry implements Dumpable {
     private static NodeDef createRootNodeDef() {
         NodeDefImpl def = new NodeDefImpl();
 
-        // FIXME need a fake declaring node type
-        def.setDeclaringNodeType(EMPTY_NAME);
+        // FIXME need a fake declaring node type:
+        // rep:root is not quite correct but better than a non-existing node type 
+        def.setDeclaringNodeType(QName.REP_ROOT);
         def.setRequiredPrimaryTypes(new QName[] { QName.REP_ROOT });
         def.setDefaultPrimaryType(QName.REP_ROOT);
         def.setMandatory(true);
@@ -428,6 +422,20 @@ public class NodeTypeRegistry implements Dumpable {
         }
     }
 
+    /**
+     * Utility method for verifying that the namespace of a <code>QName</code>
+     * is registered; a <code>null</code> argument is silently ignored.
+     * @param name name whose namespace is to be checked
+     * @throws RepositoryException if the namespace of the given name is not
+     *                             registered or if an unspecified error occured
+     */
+    private void checkNamespace(QName name) throws RepositoryException {
+        if (name != null) {
+            // make sure namespace uri denotes a registered namespace
+            nsReg.getPrefix(name.getNamespaceURI());
+        }
+    }
+
     private EffectiveNodeType validateNodeTypeDef(NodeTypeDef ntd)
             throws InvalidNodeTypeDefException, RepositoryException {
 
@@ -447,11 +455,13 @@ public class NodeTypeRegistry implements Dumpable {
             log.debug(msg);
             throw new InvalidNodeTypeDefException(msg);
         }
+        checkNamespace(name);
 
         // validate supertypes
         QName[] supertypes = ntd.getSupertypes();
         if (supertypes != null && supertypes.length > 0) {
             for (int i = 0; i < supertypes.length; i++) {
+                checkNamespace(supertypes[i]);
                 /**
                  * simple check for infinite recursion
                  * (won't trap recursion on a deeper inheritance level)
@@ -482,7 +492,7 @@ public class NodeTypeRegistry implements Dumpable {
         /**
          * note that infinite recursion through inheritance is automatically
          * being checked by the following call to getEffectiveNodeType()
-         * as it's impossible to register an node type definition which
+         * as it's impossible to register a node type definition which
          * references a supertype that isn't registered yet...
          */
 
@@ -520,6 +530,8 @@ public class NodeTypeRegistry implements Dumpable {
             }
         }
 
+        checkNamespace(ntd.getPrimaryItemName());
+
         // validate property definitions
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
@@ -534,6 +546,7 @@ public class NodeTypeRegistry implements Dumpable {
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
+            checkNamespace(pd.getName());
             // check that auto-created properties specify a name
             if (pd.definesResidual() && pd.isAutoCreated()) {
                 String msg = "[" + name + "#" + pd.getName()
@@ -646,6 +659,7 @@ public class NodeTypeRegistry implements Dumpable {
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
+            checkNamespace(cnd.getName());
             // check that auto-created child-nodes specify a name
             if (cnd.definesResidual() && cnd.isAutoCreated()) {
                 String msg = "[" + name + "#" + cnd.getName()
@@ -663,6 +677,7 @@ public class NodeTypeRegistry implements Dumpable {
             }
             // check default primary type
             QName dpt = cnd.getDefaultPrimaryType();
+            checkNamespace(dpt);
             boolean referenceToSelf = false;
             EffectiveNodeType defaultENT = null;
             if (dpt != null) {
@@ -724,6 +739,7 @@ public class NodeTypeRegistry implements Dumpable {
             if (reqTypes != null && reqTypes.length > 0) {
                 for (int n = 0; n < reqTypes.length; n++) {
                     QName rpt = reqTypes[n];
+                    checkNamespace(rpt);
                     referenceToSelf = false;
                     /**
                      * check if this node type specifies itself as required
@@ -1650,7 +1666,7 @@ public class NodeTypeRegistry implements Dumpable {
      * A <code>WeightedKey</code> uniquely identifies
      * a combination (i.e. an aggregation) of one or more node types.
      * The weight is an indicator for the cost involved in building such an
-     * aggregate (an aggregation multiple complex node types with deep
+     * aggregate (e.g. an aggregation of multiple complex node types with deep
      * inheritance trees is more costly to build/validate than an agreggation
      * of two very simple node types with just one property definition each).
      * <p/>
