@@ -47,7 +47,7 @@ public class PropertyState extends ItemState {
     protected PropDefId defId;
 
     /**
-     * Package private constructor
+     * Create a new <code>PropertyState</code>
      *
      * @param overlayedState the backing property state being overlayed
      * @param initialStatus  the initial status of the property state object
@@ -62,7 +62,7 @@ public class PropertyState extends ItemState {
     }
 
     /**
-     * Package private constructor
+     * Create a new <code>PropertyState</code>
      *
      * @param name          name of the property
      * @param parentUUID    the uuid of the parent node
