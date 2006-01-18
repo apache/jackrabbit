@@ -735,7 +735,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
                 if (e instanceof NoSuchItemStateException) {
                     throw (NoSuchItemStateException) e;
                 }
-                String msg = "failed to read references: " + targetId;
+                String msg = "failed to read node references: " + targetId;
                 log.error(msg, e);
                 throw new ItemStateException(msg, e);
             } finally {
@@ -781,7 +781,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write property state: " + refs.getTargetId();
+            String msg = "failed to write node references: " + refs.getTargetId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
@@ -803,7 +803,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
             stmt.setString(1, refs.getTargetId().toString());
             stmt.executeUpdate();
         } catch (Exception e) {
-            String msg = "failed to delete references: " + refs.getTargetId();
+            String msg = "failed to delete node references: " + refs.getTargetId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
