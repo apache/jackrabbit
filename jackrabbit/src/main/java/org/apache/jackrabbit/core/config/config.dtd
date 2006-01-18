@@ -32,10 +32,11 @@
         a Security element that specifies the name of the app-entry
         in the JAAS config and the access manager
 
-        a Workspaces element that specifies to the location of
-        workspaces root directory, the name of default workspace
-        and optionally the workspace configuration root directory
-        within the virtual repository file system
+        a Workspaces element that specifies the location of the 
+        workspaces root directory, the name of the default workspace,
+        the maximum idle time before a workspace is automatically
+        shutdown (optional) and the workspace configuration root directory
+        within the virtual repository file system (optional)
 
         a Workspace element that is used as a workspace configuration
         template; it is used to create the initial workspace if there's
