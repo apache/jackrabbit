@@ -96,7 +96,9 @@
 <!--
     the Workspaces element specifies the physical workspaces root directory
     (rootPath attribute), the name of the default workspace
-    (defaultWorkspace attribute) and optionally the workspace configuration
+    (defaultWorkspace attribute), the (optional) maximum amount of time in
+    seconds before an idle workspace is automatically shutdown
+    (maxIdleTime attribute) and the (optional) workspace configuration
     root directory within the virtual repository file system (configRootPath
     attribute).
 
@@ -113,7 +115,8 @@
 <!ATTLIST Workspaces
     rootPath CDATA #REQUIRED
     defaultWorkspace CDATA #REQUIRED
-    configRootPath CDATA #IMPLIED>
+    configRootPath CDATA #IMPLIED
+    maxIdleTime CDATA #IMPLIED>
 
 <!--
     the Workspace element serves as a workspace configuration template;

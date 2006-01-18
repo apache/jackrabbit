@@ -196,6 +196,12 @@ public class RepositoryConfig {
     private final String workspaceConfigDirectory;
 
     /**
+     * Amount of time in seconds after which an idle workspace is automatically
+     * shutdown.
+     */
+    private final int workspaceMaxIdleTime;
+
+    /**
      * The workspace configuration template. Used in creating new workspace
      * configuration files.
      */
@@ -222,6 +228,7 @@ public class RepositoryConfig {
      * @param fsc file system configuration
      * @param workspaceDirectory workspace root directory
      * @param workspaceConfigDirectory optional workspace configuration directory
+     * @param workspaceMaxIdleTime maximum workspace idle time in seconds
      * @param defaultWorkspace name of the default workspace
      * @param vc versioning configuration
      * @param sc search configuration for system search manager.
@@ -230,8 +237,9 @@ public class RepositoryConfig {
     RepositoryConfig(String home, String name,
             AccessManagerConfig amc, LoginModuleConfig lmc, FileSystemConfig fsc,
             String workspaceDirectory, String workspaceConfigDirectory,
-            String defaultWorkspace, Element template, VersioningConfig vc,
-            SearchConfig sc, ConfigurationParser parser) {
+            String defaultWorkspace, int workspaceMaxIdleTime,
+            Element template, VersioningConfig vc, SearchConfig sc,
+            ConfigurationParser parser) {
         this.workspaces = new HashMap();
         this.home = home;
         this.name = name;
@@ -240,6 +248,7 @@ public class RepositoryConfig {
         this.fsc = fsc;
         this.workspaceDirectory = workspaceDirectory;
         this.workspaceConfigDirectory = workspaceConfigDirectory;
+        this.workspaceMaxIdleTime = workspaceMaxIdleTime;
         this.defaultWorkspace = defaultWorkspace;
         this.template = template;
         this.vc = vc;
@@ -597,6 +606,17 @@ public class RepositoryConfig {
      */
     public String getDefaultWorkspaceName() {
         return defaultWorkspace;
+    }
+
+    /**
+     * Returns the amount of time in seconds after which an idle workspace is
+     * automatically shutdown. If zero then idle workspaces will never be
+     * automatically shutdown.
+     *
+     * @return maximum workspace idle time in seconds
+     */
+    public int getWorkspaceMaxIdleTime() {
+        return workspaceMaxIdleTime;
     }
 
     /**
