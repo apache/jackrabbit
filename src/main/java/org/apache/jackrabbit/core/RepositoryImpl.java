@@ -72,6 +72,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
+import java.util.HashSet;
 import java.nio.channels.FileLock;
 import java.nio.channels.FileChannel;
 
@@ -151,6 +153,13 @@ public class RepositoryImpl implements Repository, SessionListener,
     private final ReferenceMap activeSessions =
             new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
+    /**
+     * workspace janitor thread that is responsible for temporarily
+     * shutting down workspaces that have been idle for a specific
+     * amount of time
+     */
+    private Thread wspJanitor;
+
     // misc. statistics
     private long nodesCount = 0;
     private long propsCount = 0;
@@ -170,9 +179,11 @@ public class RepositoryImpl implements Repository, SessionListener,
      */
     protected RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
 
+        log.info("Starting repository...");
+
         this.repConfig = repConfig;
 
-        this.acquireRepositoryLock() ;
+        acquireRepositoryLock() ;
 
         // setup file systems
         repStore = repConfig.getFileSystem();
@@ -212,7 +223,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         vMgr = createVersionManager(repConfig.getVersioningConfig(),
                 delegatingDispatcher);
 
-        // init virtual nodetype manager
+        // init virtual node type manager
         virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
                 delegatingDispatcher, NODETYPES_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
 
@@ -228,12 +239,23 @@ public class RepositoryImpl implements Repository, SessionListener,
             throw e;
         }
 
+        // amount of time in seconds before an idle workspace is automatically
+        // shut down
+        int maxIdleTime = repConfig.getWorkspaceMaxIdleTime();
+        if (maxIdleTime != 0) {
+            // start workspace janitor thread
+            wspJanitor = new WorkspaceJanitor(maxIdleTime * 1000);
+            wspJanitor.start();
+        }
+
         // after the workspace is initialized we pass a system session to
         // the virtual node type manager
 
         // todo FIXME it seems odd that the *global* virtual node type manager
         // is using a session that is bound to a single specific workspace
         virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
+
+        log.info("Repository started");
     }
 
     /**
@@ -266,7 +288,7 @@ public class RepositoryImpl implements Repository, SessionListener,
 
         if (lock.exists()) {
             log.warn("Existing lock file at " + lock.getAbsolutePath() +
-                    " deteteced. Repository was not shutdown properly.");
+                    " deteteced. Repository was not shut down properly.");
         } else {
             try {
                 lock.createNewFile();
@@ -486,7 +508,7 @@ public class RepositoryImpl implements Repository, SessionListener,
             // add version storage
             nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_VERSIONSTORAGE);
             sysRoot.internalAddChildNode(QName.JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_UUID);
-            // add nodetypes
+            // add node types
             nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_NODETYPES);
             sysRoot.internalAddChildNode(QName.JCR_NODETYPES, nt, NODETYPES_NODE_UUID);
             rootNode.save();
@@ -721,7 +743,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    protected final SessionImpl createSession(AuthContext loginContext,
+    protected synchronized final SessionImpl createSession(AuthContext loginContext,
                               String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
@@ -729,6 +751,8 @@ public class RepositoryImpl implements Repository, SessionListener,
         SessionImpl ses = createSessionInstance(loginContext, wspInfo.getConfig());
         ses.addListener(this);
         activeSessions.put(ses, ses);
+        // reset idle timestamp
+        wspInfo.setIdleTimestamp(0);
         return ses;
     }
 
@@ -749,7 +773,7 @@ public class RepositoryImpl implements Repository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    protected final SessionImpl createSession(Subject subject,
+    protected synchronized final SessionImpl createSession(Subject subject,
                                               String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
@@ -757,6 +781,8 @@ public class RepositoryImpl implements Repository, SessionListener,
         SessionImpl ses = createSessionInstance(subject, wspInfo.getConfig());
         ses.addListener(this);
         activeSessions.put(ses, ses);
+        // reset idle timestamp
+        wspInfo.setIdleTimestamp(0);
         return ses;
     }
 
@@ -769,6 +795,8 @@ public class RepositoryImpl implements Repository, SessionListener,
             // there's nothing to do here because the repository has already been shut down
             return;
         }
+
+        log.info("Shutting down repository...");
 
         // close active user sessions
         while (!activeSessions.isEmpty()) {
@@ -820,8 +848,15 @@ public class RepositoryImpl implements Repository, SessionListener,
         // make sure this instance is not used anymore
         disposed = true;
 
+        if (wspJanitor != null) {
+            wspJanitor.interrupt();
+            wspJanitor = null;
+        }
+
         // finally release repository lock
         releaseRepositoryLock();
+
+        log.info("Repository has been shutdown");
     }
 
     /**
@@ -942,8 +977,12 @@ public class RepositoryImpl implements Repository, SessionListener,
      * @throws RepositoryException if the persistence manager could
      *                             not be instantiated/initialized
      */
-    private static PersistenceManager createPersistenceManager(File homeDir, FileSystem fs, PersistenceManagerConfig pmConfig,
-                                                               String rootNodeUUID, NamespaceRegistry nsReg, NodeTypeRegistry ntReg)
+    private static PersistenceManager createPersistenceManager(File homeDir,
+                                                               FileSystem fs,
+                                                               PersistenceManagerConfig pmConfig,
+                                                               String rootNodeUUID,
+                                                               NamespaceRegistry nsReg,
+                                                               NodeTypeRegistry ntReg)
             throws RepositoryException {
         try {
             PersistenceManager pm = (PersistenceManager) pmConfig.newInstance();
@@ -1066,7 +1105,7 @@ public class RepositoryImpl implements Repository, SessionListener,
     /**
      * {@inheritDoc}
      */
-    public void loggedOut(SessionImpl session) {
+    public synchronized void loggedOut(SessionImpl session) {
         // remove session from active sessions
         activeSessions.remove(session);
     }
@@ -1209,6 +1248,11 @@ public class RepositoryImpl implements Repository, SessionListener,
         private boolean initialized;
 
         /**
+         * timestamp when the workspace has been determined being idle
+         */
+        private long idleTimestamp;
+
+        /**
          * Creates a new <code>WorkspaceInfo</code> based on the given
          * <code>config</code>.
          *
@@ -1216,6 +1260,7 @@ public class RepositoryImpl implements Repository, SessionListener,
          */
         protected WorkspaceInfo(WorkspaceConfig config) {
             this.config = config;
+            idleTimestamp = 0;
             initialized = false;
         }
 
@@ -1235,6 +1280,28 @@ public class RepositoryImpl implements Repository, SessionListener,
          */
         public WorkspaceConfig getConfig() {
             return config;
+        }
+
+        /**
+         * Returns the timestamp when the workspace has become idle or zero
+         * if the workspace is currently not idle.
+         *
+         * @return the timestamp when the workspace has become idle or zero if
+         *         the workspace is not idle.
+         */
+        long getIdleTimestamp() {
+            return idleTimestamp;
+        }
+
+        /**
+         * Sets the timestamp when the workspace has become idle. if
+         * <code>ts == 0</code> the workspace is marked as being currently
+         * active.
+         *
+         * @param ts timestamp when workspace has become idle.
+         */
+        void setIdleTimestamp(long ts) {
+            idleTimestamp = ts;
         }
 
         /**
@@ -1395,6 +1462,8 @@ public class RepositoryImpl implements Repository, SessionListener,
                 throw new IllegalStateException("already initialized");
             }
 
+            log.info("initializing workspace '" + getName() + "'...");
+
             FileSystemConfig fsConfig = config.getFileSystemConfig();
             fsConfig.init();
             fs = fsConfig.getFileSystem();
@@ -1427,6 +1496,8 @@ public class RepositoryImpl implements Repository, SessionListener,
             obsMgrFactory = new ObservationManagerFactory();
 
             initialized = true;
+
+            log.info("workspace '" + getName() + "' initialized");
         }
 
         /**
@@ -1436,6 +1507,8 @@ public class RepositoryImpl implements Repository, SessionListener,
             if (!initialized) {
                 throw new IllegalStateException("not initialized");
             }
+
+            log.info("shutting down workspace '" + getName() + "'...");
 
             // dispose observation manager factory
             obsMgrFactory.dispose();
@@ -1477,6 +1550,106 @@ public class RepositoryImpl implements Repository, SessionListener,
             FileSystemConfig fsConfig = config.getFileSystemConfig();
             fsConfig.dispose();
             fs = null;
+
+            // reset idle timestamp
+            idleTimestamp = 0;
+
+            initialized = false;
+
+            log.info("workspace '" + getName() + "' has been shutdown");
+        }
+    }
+
+    /**
+     * The workspace janitor thread that will shutdown workspaces that have
+     * been idle for a certain amount of time.
+     */
+    private class WorkspaceJanitor extends Thread {
+
+        /**
+         * amount of time in mmilliseconds before an idle workspace is
+         * automatically shutdown.
+         */
+        private long maxIdleTime;
+        /**
+         * interval in mmilliseconds between checks for idle workspaces.
+         */
+        private long checkInterval;
+
+        /**
+         * Creates a new <code>WorkspaceJanitor</code> instance responsible for
+         * shutting down idle workspaces.
+         *
+         * @param maxIdleTime amount of time in mmilliseconds before an idle
+         *                    workspace is automatically shutdown.
+         */
+        WorkspaceJanitor(long maxIdleTime) {
+            super("WorkspaceJanitor");
+            setPriority(Thread.MIN_PRIORITY);
+            setDaemon(true);
+            this.maxIdleTime = maxIdleTime;
+            // compute check interval as 10% of maxIdleTime
+            checkInterval = (long) (0.1 * maxIdleTime);
+        }
+
+        /**
+         * {@inheritDoc}
+         * <p/>
+         * Performs the following tasks in a <code>while (true)</code> loop:
+         * <ol>
+         * <li>wait for <code>checkInterval</code> milliseconds</li>
+         * <li>build list of initialized but currently inactive workspaces
+         *     (excluding the default workspace)</li>
+         * <li>shutdown those workspaces that have been idle for at least
+         *     <code>maxIdleTime</code> milliseconds</li>
+         * </ol>
+         */
+        public void run() {
+            while (!disposed) {
+                try {
+                    Thread.sleep(checkInterval);
+                } catch (InterruptedException e) {
+                    /* ignore */
+                }
+
+                synchronized (RepositoryImpl.this) {
+                    if (disposed) {
+                        return;
+                    }
+                    // get names of workspaces
+                    Set wspNames = new HashSet(wspInfos.keySet());
+                    // remove default workspace (will never be shutdown when idle)
+                    wspNames.remove(repConfig.getDefaultWorkspaceName());
+                    // remove workspaces with active sessions
+                    for (Iterator it = activeSessions.values().iterator(); it.hasNext();) {
+                        SessionImpl ses = (SessionImpl) it.next();
+                        wspNames.remove(ses.getWorkspace().getName());
+                    }
+                    // remove uninitialized workspaces
+                    for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
+                        WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
+                        if (!wspInfo.isInitialized()) {
+                            wspNames.remove(wspInfo.getName());
+                        }
+                    }
+
+                    // remaining names denote workspaces which are currently idle
+                    for (Iterator it = wspNames.iterator(); it.hasNext();) {
+                        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(it.next());
+                        long currentTS = System.currentTimeMillis();
+                        long idleTS = wspInfo.getIdleTimestamp();
+                        if (idleTS == 0) {
+                            // set idle timestamp
+                            wspInfo.setIdleTimestamp(currentTS);
+                        } else {
+                            if ((currentTS - idleTS) > maxIdleTime) {
+                                // temporarily shutdown workspace
+                                wspInfo.dispose();
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

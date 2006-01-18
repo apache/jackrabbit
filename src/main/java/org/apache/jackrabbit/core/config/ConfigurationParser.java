@@ -100,6 +100,9 @@ public class ConfigurationParser {
     /** Name of the config root path configuration attribute. */
     public static final String CONFIG_ROOT_PATH_ATTRIBUTE = "configRootPath";
 
+    /** Name of the maximum idle time configuration attribute. */
+    public static final String MAX_IDLE_TIME_ATTRIBUTE = "maxIdleTime";
+
     /** Name of the default workspace configuration attribute. */
     public static final String DEFAULT_WORKSPACE_ATTRIBUTE =
         "defaultWorkspace";
@@ -228,6 +231,9 @@ public class ConfigurationParser {
         String defaultWorkspace = replaceVariables(
                 getAttribute(workspaces, DEFAULT_WORKSPACE_ATTRIBUTE));
 
+        int maxIdleTime = Integer.parseInt(
+                getAttribute(workspaces, MAX_IDLE_TIME_ATTRIBUTE, "0"));
+
         // Workspace configuration template
         Element template = getElement(root, WORKSPACE_ELEMENT);
 
@@ -239,7 +245,7 @@ public class ConfigurationParser {
 
         return new RepositoryConfig(home, appName, amc, lmc, fsc,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
-                template, vc, sc, this);
+                maxIdleTime, template, vc, sc, this);
     }
 
     /**
