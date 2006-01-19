@@ -1,0 +1,11 @@
+#Tue Jan 17 18:27:06 CET 2006
+xs=http\://www.w3.org/2001/XMLSchema
+xml=http\://www.w3.org/XML/1998/namespace
+fn=http\://www.w3.org/2004/10/xpath-functions
+jcr=http\://www.jcp.org/jcr/1.0
+nt=http\://www.jcp.org/jcr/nt/1.0
+sv=http\://www.jcp.org/jcr/sv/1.0
+mix=http\://www.jcp.org/jcr/mix/1.0
+rep=internal
+test=http\://www.apache.org/jackrabbit/test
+=
