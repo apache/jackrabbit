@@ -49,6 +49,7 @@
             <ant:fileset dir="applications/test/repository">
                 <ant:include name="**/*"/>
                 <ant:exclude name="**/custom_nodetypes.xml"/>
+                <ant:exclude name="**/ns_reg.properties.install"/>
             </ant:fileset>
         </ant:delete>
         <ant:delete includeEmptyDirs="true">
@@ -205,6 +206,8 @@
         read-only tests.
     -->
     <goal name="jackrabbit:test-init">
+        <ant:copy file="applications/test/repository/namespaces/ns_reg.properties.install" 
+            tofile="applications/test/repository/namespaces/ns_reg.properties"/>
         <j:set var="testcase" value="org.apache.jackrabbit.init.TestAll"/>
         <attainGoal name="test:single"/>
     </goal>
