@@ -30,7 +30,7 @@ import java.util.Properties;
  *
  * @see WorkspaceConfig#getSearchConfig()
  */
-public final class SearchConfig extends BeanConfig {
+public class SearchConfig extends BeanConfig {
 
     /**
      * The search index file system configuration, or <code>null</code> if

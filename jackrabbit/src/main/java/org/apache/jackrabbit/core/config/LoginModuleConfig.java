@@ -28,7 +28,7 @@ import javax.security.auth.spi.LoginModule;
  * @see RepositoryConfig#getLoginModuleConfig()
  * @version $Id$
  */
-public final class LoginModuleConfig extends BeanConfig {
+public class LoginModuleConfig extends BeanConfig {
 
     /**
      * Creates an access manager configuration object from the
