@@ -36,7 +36,7 @@ public class LoginModuleConfig extends BeanConfig {
      *
      * @param config bean configuration
      */
-    LoginModuleConfig(BeanConfig config) {
+    public LoginModuleConfig(BeanConfig config) {
         super(config);
     }
 
