@@ -25,7 +25,7 @@ package org.apache.jackrabbit.core.config;
  *
  * @see WorkspaceConfig#getPersistenceManagerConfig()
  */
-public class PersistenceManagerConfig extends BeanConfig {
+public final class PersistenceManagerConfig extends BeanConfig {
 
     /**
      * Creates a persistence manager configuration object from the
