@@ -99,7 +99,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, Dumpable,
         pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
-        rootNodeDef = new RootNodeDefinition(ntReg.getRootNodeDef(), this,
+        rootNodeDef = new NodeDefinitionImpl(ntReg.getRootNodeDef(), this,
                 nsResolver);
         ndCache.put(rootNodeDef.unwrap().getId(), rootNodeDef);
     }
@@ -297,37 +297,5 @@ public class NodeTypeManagerImpl implements NodeTypeManager, Dumpable,
         ps.println("NodeTypeManager (" + this + ")");
         ps.println();
         ntReg.dump(ps);
-    }
-
-    //--------------------------------------------------------< inner classes >
-    /**
-     * The <code>RootNodeDefinition</code> defines the characteristics of
-     * the root node.
-     */
-    private static class RootNodeDefinition extends NodeDefinitionImpl {
-
-        /**
-         * Creates a new <code>RootNodeDefinition</code>.
-         */
-        RootNodeDefinition(NodeDef def, NodeTypeManagerImpl ntMgr,
-                           NamespaceResolver nsResolver) {
-            super(def, ntMgr, nsResolver);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public String getName() {
-            // not applicable
-            return "";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public NodeType getDeclaringNodeType() {
-            // not applicable
-            return null;
-        }
     }
 }
