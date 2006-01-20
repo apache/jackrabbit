@@ -38,7 +38,7 @@ public class FileSystemConfig extends BeanConfig {
      *
      * @param config file system implementation class configuration
      */
-    FileSystemConfig(BeanConfig config) {
+    public FileSystemConfig(BeanConfig config) {
         super(config);
         fs = null;
     }

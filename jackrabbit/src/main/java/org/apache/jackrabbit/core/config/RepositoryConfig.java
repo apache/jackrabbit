@@ -234,7 +234,7 @@ public class RepositoryConfig {
      * @param sc search configuration for system search manager.
      * @param parser the ConfigurationParser that servers as config factory
      */
-    RepositoryConfig(String home, String name,
+    public RepositoryConfig(String home, String name,
             AccessManagerConfig amc, LoginModuleConfig lmc, FileSystemConfig fsc,
             String workspaceDirectory, String workspaceConfigDirectory,
             String defaultWorkspace, int workspaceMaxIdleTime,

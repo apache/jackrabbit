@@ -54,7 +54,7 @@ public class VersioningConfig {
      * @param fsc file system configuration
      * @param pmc persistence manager configuration
      */
-    VersioningConfig(
+    public VersioningConfig(
             String home, FileSystemConfig fsc, PersistenceManagerConfig pmc) {
         this.home = home;
         this.fsc = fsc;
