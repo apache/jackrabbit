@@ -4,11 +4,21 @@ Jackrabbit configuration handling.
 This package contains functionality for reading and manipulating the
 Jackrabbit configuration. The configuration functionality can be
 divided in two parts: parsing and representing configuration.
+
+<h2>Parsing configuration</h2>
 <p>
 The configuration parsing functionality is located in the
 {@link org.apache.jackrabbit.core.config.ConfigurationParser ConfigurationParser}
 class. The parser class reads repository and workspace configuration
 files and builds corresponding configuration object structures.
+<p>
+<p>
+The static <code>create()</code> factory methods of the
+{@link org.apache.jackrabbit.core.config.RepositoryConfig RepositoryConfig}
+class are the standard ways of invoking the configuration parser.
+</p>
+
+<h2>Representating configuration</h2>
 <p>
 The parsed configuration information is represented using Config object
 structures. The
@@ -32,4 +42,14 @@ The
 class contains also a set of static and instance methods for manipulating
 the repository configuration, especially creating and loading workspace
 configurations.
+
+<h2>Modifying configuration</h2>
+<p>
+The configuration classes in this package are immutable and <code>final</code>
+to enforce the contract that the configuration should not be modified once
+it has been intstantiated. The public constructors allow a limited form of
+dynamic configurability for Jackrabbit, but note that the only officially
+supported Jackrabbit configuration interface are the XML configuration files.
+</p>
+
 </body>
