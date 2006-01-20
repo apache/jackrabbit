@@ -30,7 +30,7 @@ import java.io.File;
  *
  * @see RepositoryConfig#getVersioningConfig()
  */
-public final class VersioningConfig {
+public class VersioningConfig {
 
     /**
      * Versioning home directory.
