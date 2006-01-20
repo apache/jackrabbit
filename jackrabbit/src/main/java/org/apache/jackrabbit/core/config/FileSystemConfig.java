@@ -28,7 +28,7 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
  * previously created by the {@link #init() init()} method.
  *
  */
-public class FileSystemConfig extends BeanConfig {
+public final class FileSystemConfig extends BeanConfig {
 
     /** The initialized file system implementation. */
     private FileSystem fs;

@@ -57,7 +57,7 @@ import org.xml.sax.InputSource;
  * addition the workspace configuration object keeps track of all configured
  * workspaces.
  */
-public class RepositoryConfig {
+public final class RepositoryConfig {
 
     /** Name of the workspace configuration file. */
     private static final String WORKSPACE_XML = "workspace.xml";

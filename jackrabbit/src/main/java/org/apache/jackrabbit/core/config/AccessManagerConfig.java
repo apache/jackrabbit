@@ -25,7 +25,7 @@ package org.apache.jackrabbit.core.config;
  *
  * @see RepositoryConfig#getAccessManagerConfig()
  */
-public class AccessManagerConfig extends BeanConfig {
+public final class AccessManagerConfig extends BeanConfig {
 
     /**
      * Creates an access manager configuration object from the
