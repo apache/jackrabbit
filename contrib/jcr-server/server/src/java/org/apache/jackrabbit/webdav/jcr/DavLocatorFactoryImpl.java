@@ -168,7 +168,8 @@ public class DavLocatorFactoryImpl implements DavLocatorFactory {
             if (resourcePath != null) {
                 buf.append(Text.escapePath(resourcePath));
             }
-            if (buf.charAt(buf.length() - 1) != '/') {
+            int length = buf.length();
+            if (length > 0 && buf.charAt(length - 1) != '/') {
                 buf.append("/");
             }
             href = buf.toString();
