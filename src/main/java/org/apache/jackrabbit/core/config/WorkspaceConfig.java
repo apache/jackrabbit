@@ -25,7 +25,7 @@ package org.apache.jackrabbit.core.config;
  * search index configuration. The search index is an optional part of the
  * configuration.
  */
-public final class WorkspaceConfig {
+public class WorkspaceConfig {
 
     /**
      * Workspace home directory.

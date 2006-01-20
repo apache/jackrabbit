@@ -45,11 +45,13 @@ configurations.
 
 <h2>Modifying configuration</h2>
 <p>
-The configuration classes in this package are immutable and <code>final</code>
-to enforce the contract that the configuration should not be modified once
-it has been intstantiated. The public constructors allow a limited form of
-dynamic configurability for Jackrabbit, but note that the only officially
-supported Jackrabbit configuration interface are the XML configuration files.
+The configuration classes in this package are immutable to enforce the
+contract that the configuration should not be modified once it has been
+intstantiated. It is possible to subclass the configuration classes as long
+as the immutability contract is not broken. The public constructors allow
+a limited form of dynamic configurability for Jackrabbit, but note that the
+only officially supported Jackrabbit configuration interface are the XML
+configuration files.
 </p>
 
 </body>
