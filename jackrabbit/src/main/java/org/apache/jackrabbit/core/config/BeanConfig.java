@@ -47,7 +47,7 @@ public class BeanConfig {
      * @param className class name of the bean
      * @param properties initial properties of the bean
      */
-    protected BeanConfig(String className, Properties properties) {
+    public BeanConfig(String className, Properties properties) {
         this.className = className;
         this.properties = (Properties) properties.clone();
     }
@@ -57,7 +57,7 @@ public class BeanConfig {
      *
      * @param config the configuration to be copied
      */
-    protected BeanConfig(BeanConfig config) {
+    public BeanConfig(BeanConfig config) {
         this(config.getClassName(), config.getParameters());
     }
 
