@@ -27,6 +27,8 @@ import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Implements a lucene <code>Query</code> which filters a sub query by checking
@@ -34,6 +36,11 @@ import java.util.BitSet;
  * nodes selected by a context query.
  */
 class DescendantSelfAxisQuery extends Query {
+
+    /**
+     * Default score is 1.0f.
+     */
+    private static final Float DEFAULT_SCORE = new Float(1.0f);
 
     /**
      * The context query
@@ -205,6 +212,15 @@ class DescendantSelfAxisQuery extends Query {
         private final BitSet subHits;
 
         /**
+         * Map that contains the scores for the sub hits. To save memory
+         * only scores that are not equal to 1.0f are put to this map.
+         * <p/>
+         * key=[Integer] id of selected document from sub query<br>
+         * value=[Float] score for that document
+         */
+        private final Map scores = new HashMap();
+
+        /**
          * The next document id to return
          */
         private int nextDoc = -1;
@@ -278,7 +294,11 @@ class DescendantSelfAxisQuery extends Query {
          * {@inheritDoc}
          */
         public float score() throws IOException {
-            return 1.0f;
+            Float score = (Float) scores.get(new Integer(nextDoc));
+            if (score == null) {
+                score = DEFAULT_SCORE;
+            }
+            return score.floatValue();
         }
 
         /**
@@ -304,6 +324,9 @@ class DescendantSelfAxisQuery extends Query {
                     subScorer.score(new HitCollector() {
                         public void collect(int doc, float score) {
                             subHits.set(doc);
+                            if (score != DEFAULT_SCORE.floatValue()) {
+                                scores.put(new Integer(doc), new Float(score));
+                            }
                         }
                     });
                 }
