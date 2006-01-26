@@ -725,7 +725,7 @@ class ReferenceConstraint extends ValueConstraint {
                             + targetUUID + " does not satisfy the constraint '" + definition + "'");
                 }
 */
-                log.warn("validation of REFERENCE constraint is not yet implemented");
+                log.info("validation of REFERENCE constraint is not yet implemented");
                 return;
 
             default:
