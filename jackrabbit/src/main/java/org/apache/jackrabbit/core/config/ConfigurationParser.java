@@ -23,6 +23,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.apache.jackrabbit.util.Text;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -515,32 +516,11 @@ public class ConfigurationParser {
      */
     protected String replaceVariables(String value)
             throws ConfigurationException {
-        StringBuffer result = new StringBuffer();
-
-        // Value:
-        // +--+-+--------+-+-----------------+
-        // |  |p|-->     |q|-->              |
-        // +--+-+--------+-+-----------------+
-        int p = 0, q = value.indexOf("${");                // Find first ${
-        while (q != -1) {
-            result.append(value.substring(p, q));          // Text before ${
-            p = q;
-            q = value.indexOf("}", q + 2);                 // Find }
-            if (q != -1) {
-                String variable = value.substring(p + 2, q);
-                String replacement = variables.getProperty(variable);
-                if (replacement == null) {
-                    throw new ConfigurationException(
-                            "Replacement not found for ${" + variable + "}.");
-                }
-                result.append(replacement);
-                p = q + 1;
-                q = value.indexOf("${", p);                // Find next ${
-            }
+        try {
+            return Text.replaceVariables(variables, value, false);
+        } catch (IllegalArgumentException e) {
+            throw new ConfigurationException(e.getMessage());
         }
-        result.append(value.substring(p, value.length())); // Trailing text
-
-        return result.toString();
     }
 
     /**
