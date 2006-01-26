@@ -22,6 +22,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Properties;
 
 /**
  * This Class provides some text related utilities
@@ -164,7 +165,7 @@ public class Text {
      * Concatenates all strings in the string array using the specified delimiter.
      * @param arr
      * @param delim
-     * @return
+     * @return the concatenated string
      */
     public static String implode(String[] arr, String delim) {
         StringBuffer buf = new StringBuffer();
@@ -586,6 +587,56 @@ public class Text {
             level--;
         }
         return level >= 0 ? "" : path.substring(0, idx);
+    }
+
+    /**
+     * Performs variable replacement on the given string value.
+     * Each <code>${...}</code> sequence within the given value is replaced
+     * with the value of the named parser variable. If a variable is not found
+     * in the properties an IllegalArgumentException is thrown unless
+     * <code>ignoreMissing</code> is <code>true</code>. In the later case, the
+     * missing variable is replaced by the empty string.
+     *
+     * @param value         the original value
+     * @param ignoreMissing if <code>true</code>, missing variables are replaced
+     *                      by the empty string.
+     * @return value after variable replacements
+     * @throws IllegalArgumentException if the replacement of a referenced
+     *                                  variable is not found
+     */
+    public static String replaceVariables(Properties variables, String value,
+                                   boolean ignoreMissing)
+            throws IllegalArgumentException {
+        StringBuffer result = new StringBuffer();
+
+        // Value:
+        // +--+-+--------+-+-----------------+
+        // |  |p|-->     |q|-->              |
+        // +--+-+--------+-+-----------------+
+        int p = 0, q = value.indexOf("${");                // Find first ${
+        while (q != -1) {
+            result.append(value.substring(p, q));          // Text before ${
+            p = q;
+            q = value.indexOf("}", q + 2);                 // Find }
+            if (q != -1) {
+                String variable = value.substring(p + 2, q);
+                String replacement = variables.getProperty(variable);
+                if (replacement == null) {
+                    if (ignoreMissing) {
+                        replacement = "";
+                    } else {
+                        throw new IllegalArgumentException(
+                                "Replacement not found for ${" + variable + "}.");
+                    }
+                }
+                result.append(replacement);
+                p = q + 1;
+                q = value.indexOf("${", p);                // Find next ${
+            }
+        }
+        result.append(value.substring(p, value.length())); // Trailing text
+
+        return result.toString();
     }
 
 }
