@@ -580,9 +580,12 @@ public class EffectiveNodeType implements Cloneable {
      * type conversions are attempted if the type of the given values does not
      * match the required type as specified in the given definition.
      *
-     * @param pd
-     * @param values
-     * @throws ConstraintViolationException
+     * @param pd     The definiton of the property
+     * @param values An array of <code>InternalValue</code> objects.
+     * @throws ConstraintViolationException if the value constraints defined in
+     *                                      the property definition are satisfied
+     *                                      by the the specified values
+     * @throws RepositoryException          if another error occurs
      */
     public static void checkSetPropertyValueConstraints(PropDef pd,
                                                         InternalValue[] values)
@@ -655,7 +658,8 @@ public class EffectiveNodeType implements Cloneable {
 
     /**
      * Returns the applicable child node definition for a child node with the
-     * specified name and node type.
+     * specified name and node type. If there are multiple applicable definitions
+     * named definitions will take precedence over residual definitions.
      *
      * @param name
      * @param nodeTypeName
@@ -728,8 +732,8 @@ public class EffectiveNodeType implements Cloneable {
 
     /**
      * Returns the applicable property definition for a property with the
-     * specified name, type and multiValued characteristic. If there more than
-     * one applicable definitions then the following rules are applied:
+     * specified name, type and multiValued characteristic. If there are
+     * multiple applicable definitions the following rules will be applied:
      * <ul>
      * <li>named definitions are preferred to residual definitions</li>
      * <li>definitions with specific required type are preferred to definitions
