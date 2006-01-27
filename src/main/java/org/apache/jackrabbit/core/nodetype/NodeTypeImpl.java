@@ -77,56 +77,6 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * Returns the applicable child node definition for a child node with the
-     * specified name.
-     *
-     * @param nodeName
-     * @return
-     * @throws RepositoryException if no applicable child node definition
-     *                             could be found
-     */
-    public NodeDefinitionImpl getApplicableChildNodeDefinition(QName nodeName)
-            throws RepositoryException {
-        return getApplicableChildNodeDefinition(nodeName, null);
-    }
-
-    /**
-     * Returns the applicable child node definition for a child node with the
-     * specified name and node type.
-     *
-     * @param nodeName
-     * @param nodeTypeName
-     * @return
-     * @throws RepositoryException if no applicable child node definition
-     *                             could be found
-     */
-    public NodeDefinitionImpl getApplicableChildNodeDefinition(QName nodeName,
-                                                               QName nodeTypeName)
-            throws RepositoryException {
-        return ntMgr.getNodeDefinition(
-                ent.getApplicableChildNodeDef(nodeName, nodeTypeName).getId());
-    }
-
-    /**
-     * Returns the applicable property definition for a property with the
-     * specified name and type.
-     *
-     * @param propertyName
-     * @param type
-     * @param multiValued
-     * @return
-     * @throws RepositoryException if no applicable property definition
-     *                             could be found
-     */
-    public PropertyDefinitionImpl getApplicablePropertyDefinition(QName propertyName,
-                                                                  int type,
-                                                                  boolean multiValued)
-            throws RepositoryException {
-        return ntMgr.getPropertyDefinition(
-                ent.getApplicablePropertyDef(propertyName, type, multiValued).getId());
-    }
-
-    /**
      * Checks if this node type is directly or indirectly derived from the
      * specified node type.
      *
@@ -224,25 +174,6 @@ public class NodeTypeImpl implements NodeType {
             nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i].getId());
         }
         return nodeDefs;
-    }
-
-    /**
-     * Tests if the value constraints defined in the property definition
-     * <code>def</code> are satisfied by the the specified <code>values</code>.
-     * <p/>
-     * Note that the <i>protected</i> flag is not checked. Also note that no
-     * type conversions are attempted if the type of the given values does not
-     * match the required type as specified in the given definition.
-     *
-     * @param def    The definiton of the property
-     * @param values An array of <code>InternalValue</code> objects.
-     * @throws ConstraintViolationException
-     * @throws RepositoryException
-     */
-    public static void checkSetPropertyValueConstraints(PropertyDefinitionImpl def,
-                                                        InternalValue[] values)
-            throws ConstraintViolationException, RepositoryException {
-        EffectiveNodeType.checkSetPropertyValueConstraints(def.unwrap(), values);
     }
 
     /**
@@ -433,13 +364,13 @@ public class NodeTypeImpl implements NodeType {
         }
         try {
             QName name = QName.fromJCRName(propertyName, nsResolver);
-            PropertyDefinitionImpl def;
+            PropDef def;
             try {
                 // try to get definition that matches the given value type
-                def = getApplicablePropertyDefinition(name, value.getType(), false);
+                def = ent.getApplicablePropertyDef(name, value.getType(), false);
             } catch (ConstraintViolationException cve) {
                 // fallback: ignore type
-                def = getApplicablePropertyDefinition(name, PropertyType.UNDEFINED, false);
+                def = ent.getApplicablePropertyDef(name, PropertyType.UNDEFINED, false);
             }
             if (def.isProtected()) {
                 return false;
@@ -460,7 +391,8 @@ public class NodeTypeImpl implements NodeType {
             // type conversion as necessary
             InternalValue internalValue = InternalValue.create(value, targetType,
                     nsResolver);
-            checkSetPropertyValueConstraints(def, new InternalValue[]{internalValue});
+            EffectiveNodeType.checkSetPropertyValueConstraints(
+                    def, new InternalValue[]{internalValue});
             return true;
         } catch (BaseException be) {
             // implementation specific exception, fall through
@@ -494,13 +426,13 @@ public class NodeTypeImpl implements NodeType {
                     return false;
                 }
             }
-            PropertyDefinitionImpl def;
+            PropDef def;
             try {
                 // try to get definition that matches the given value type
-                def = getApplicablePropertyDefinition(name, type, true);
+                def = ent.getApplicablePropertyDef(name, type, true);
             } catch (ConstraintViolationException cve) {
                 // fallback: ignore type
-                def = getApplicablePropertyDefinition(name, PropertyType.UNDEFINED, true);
+                def = ent.getApplicablePropertyDef(name, PropertyType.UNDEFINED, true);
             }
 
             if (def.isProtected()) {
@@ -534,7 +466,7 @@ public class NodeTypeImpl implements NodeType {
             }
             InternalValue[] internalValues =
                     (InternalValue[]) list.toArray(new InternalValue[list.size()]);
-            checkSetPropertyValueConstraints(def, internalValues);
+            EffectiveNodeType.checkSetPropertyValueConstraints(def, internalValues);
             return true;
         } catch (BaseException be) {
             // implementation specific exception, fall through

@@ -576,7 +576,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                     if (constraints != null) {
                         InternalValue[] values = propState.getValues();
                         try {
-                            NodeTypeImpl.checkSetPropertyValueConstraints(def, values);
+                            EffectiveNodeType.checkSetPropertyValueConstraints(
+                                    def.unwrap(), values);
                         } catch (RepositoryException e) {
                             // repack exception for providing verboser error message
                             String msg = prop.safeGetJCRPath() + ": " + e.getMessage();
