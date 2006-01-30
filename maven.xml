@@ -17,14 +17,24 @@
    limitations under the License.
 -->
 
-<project
-    default="jar:install">
+<project default="jar:install" xmlns:ant="jelly:ant">
 
    <!-- Compile the RMI stubs for the JCR-RMI server classes. -->
    <postGoal name="java:compile">
       <rmic base="${maven.build.dest}" verify="true"
             includes="org/apache/jackrabbit/rmi/server/**/Server*.class"
             classpathref="maven.dependency.classpath"/>
+   </postGoal>
+
+   <!-- Add extra files to the source distribution. The Maven dist      -->
+   <!-- plugin supports this natively since version 1.7, see MPDIST-15. -->
+   <postGoal name="dist:prepare-src-filesystem">
+      <ant:copy todir="${maven.dist.src.assembly.dir}">
+        <ant:fileset dir=".">
+          <ant:include name="HEADER.txt"/>
+          <ant:include name="checkstyle.xml"/>
+        </ant:fileset>
+      </ant:copy>
    </postGoal>
 
 </project>
