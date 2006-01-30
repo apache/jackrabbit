@@ -26,40 +26,13 @@
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.rmi.*</package>
   <description>
-    JCR-RMI is an independent subproject of the Jackrabbit project. It
-    provides a transparent Remote Method Invocation (RMI) layer for the
-    Content Repository for Java Technology API (JCR). The JCR-RMI layer
-    makes it possible to access JCR content repositories across virtual
-    machine boundaries. Although implemented as a contribution to the
-    Jackrabbit project, the JCR-RMI layer is independent of the underlying
-    JCR repository implementation.
+    JCR-RMI is a transparent Remote Method Invocation (RMI) layer for
+    the Content Repository for Java Technology API (JCR). The layer makes
+    it possible to remotely access JCR content repositories. JCR-RMI is
+    developed as a part of the incubating Apache Jackrabbit project, but
+    the implementation is compatible with all JCR content repositories.
   </description>
   <shortDescription>Transparent RMI layer for the JCR API</shortDescription>
-
-  <developers>
-    <developer>
-      <name>Jukka Zitting</name>
-      <id>jukkaz</id>
-      <email>jz@yukatan.fi</email>
-      <organization>Yukatan</organization>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-      <timezone>+2</timezone>
-    </developer>
-  </developers>
-
-  <contributors>
-    <contributor>
-      <name>Felix Meschberger</name>
-      <email/>
-      <organization>Day Software</organization>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </contributor>
-  </contributors>
 
   <licenses>
     <license>
