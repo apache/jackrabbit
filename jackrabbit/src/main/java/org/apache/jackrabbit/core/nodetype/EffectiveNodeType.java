@@ -25,11 +25,12 @@ import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
-import java.util.Arrays;
 
 /**
  * An <code>EffectiveNodeType</code> represents one or more
@@ -69,8 +70,8 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     /**
-     * Factory method: creates an effective node type
-     * representation of an existing (i.e. registered) node type.
+     * Factory method: creates an effective node type representation of an
+     * existing (i.e. registered) node type.
      *
      * @param ntReg
      * @param nodeTypeName
@@ -84,10 +85,10 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     /**
-     * Factory method: creates an effective node type
-     * representation of a node type definition. Whereas all referenced
-     * node types must exist (i.e. must be registered), the definition itself
-     * is not required to be registered.
+     * Factory method: creates an effective node type representation of a
+     * node type definition. Whereas all referenced node types must exist
+     * (i.e. must be registered), the definition itself is not required to be
+     * registered.
      *
      * @param ntReg
      * @param ntd
@@ -96,6 +97,29 @@ public class EffectiveNodeType implements Cloneable {
      * @throws NoSuchNodeTypeException
      */
     public static EffectiveNodeType create(NodeTypeRegistry ntReg, NodeTypeDef ntd)
+            throws NodeTypeConflictException, NoSuchNodeTypeException {
+        return create(ntReg, ntd, null, null);
+    }
+
+    /**
+     * Package private factory method.
+     * <p/>
+     * Creates an effective node type representation of a node type definition.
+     * Whereas all referenced node types must exist (i.e. must be registered),
+     * the definition itself is not required to be registered.
+     * todo check javadoc/param names
+     * @param ntReg
+     * @param ntd
+     * @param anEntCache
+     * @param aRegisteredNTDefCache
+     * @return
+     * @throws NodeTypeConflictException
+     * @throws NoSuchNodeTypeException
+     */
+    static EffectiveNodeType create(NodeTypeRegistry ntReg,
+                                    NodeTypeDef ntd,
+                                    EffectiveNodeTypeCache anEntCache,
+                                    Map aRegisteredNTDefCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // create empty effective node type instance
         EffectiveNodeType ent = new EffectiveNodeType(ntReg);
@@ -210,7 +234,11 @@ public class EffectiveNodeType implements Cloneable {
         // resolve supertypes recursively
         QName[] supertypes = ntd.getSupertypes();
         if (supertypes != null && supertypes.length > 0) {
-            ent.internalMerge(ntReg.getEffectiveNodeType(supertypes), true);
+            if (anEntCache == null || aRegisteredNTDefCache == null) {
+                ent.internalMerge(ntReg.getEffectiveNodeType(supertypes), true);
+            } else {
+                ent.internalMerge(ntReg.getEffectiveNodeType(supertypes, anEntCache, aRegisteredNTDefCache), true);
+            }
         }
 
         // we're done
@@ -218,9 +246,10 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     /**
-     * Factory method: creates a new 'empty' effective node type instance
+     * Package private factory method for creating a new 'empty' effective
+     * node type instance.
      *
-     * @return
+     * @return an 'empty' effective node type instance.
      */
     static EffectiveNodeType create(NodeTypeRegistry ntReg) {
         return new EffectiveNodeType(ntReg);
@@ -905,7 +934,8 @@ public class EffectiveNodeType implements Cloneable {
      * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    public void checkRequiredPrimaryType(QName nodeTypeName, QName[] requiredPrimaryTypes)
+    public void checkRequiredPrimaryType(QName nodeTypeName,
+                                         QName[] requiredPrimaryTypes)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         if (requiredPrimaryTypes == null) {
             // no constraint
