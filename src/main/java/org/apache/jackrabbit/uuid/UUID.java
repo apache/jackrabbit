@@ -257,15 +257,7 @@ public class UUID implements Constants, Serializable, Comparable {
             buf.insert(FORMAT_POSITION4, '-');
             stringValue = buf.toString();
 */
-            char[] chars = new char[UUID_FORMATTED_LENGTH];
-            for (int i = 0, j = 0; i < 16; i++) {
-                chars[j++] = hexDigits[(rawBytes[i] >> 4) & 0x0f];
-                chars[j++] = hexDigits[rawBytes[i] & 0x0f];
-                if (i == 3 || i == 5 || i == 7 || i == 9) {
-                    chars[j++] = '-';
-                }
-            }
-            stringValue = new String(chars);
+            stringValue = bytesToString(rawBytes);
             /** XXX end modification by stefan@apache.org */
         }
         return stringValue;
@@ -507,5 +499,38 @@ public class UUID implements Constants, Serializable, Comparable {
 
         return new UUID(raw);
     }*/
+    /** XXX end modification by stefan@apache.org */
+
+    /** XXX begin modification by stefan@apache.org */
+    public static String bytesToString(byte[] bytes) {
+        if (bytes.length != UUID_BYTE_LENGTH) {
+            throw new IllegalArgumentException();
+        }
+        char[] chars = new char[UUID_FORMATTED_LENGTH];
+        for (int i = 0, j = 0; i < UUID_BYTE_LENGTH; i++) {
+            chars[j++] = hexDigits[(bytes[i] >> 4) & 0x0f];
+            chars[j++] = hexDigits[bytes[i] & 0x0f];
+            if (i == 3 || i == 5 || i == 7 || i == 9) {
+                chars[j++] = '-';
+            }
+        }
+        return new String(chars);
+    }
+
+    public static byte[] stringToBytes(String uuid) {
+        if (uuid.length() != UUID_FORMATTED_LENGTH) {
+            throw new IllegalArgumentException();
+        }
+        byte[] ba = new byte[UUID_BYTE_LENGTH];
+        for (int i = 0, j = 0; i < UUID_FORMATTED_LENGTH; i += 2) {
+            if (i == FORMAT_POSITION1 || i == FORMAT_POSITION2
+                    || i == FORMAT_POSITION3 || i == FORMAT_POSITION4) {
+                // skip '-'
+                i++;
+            }
+            ba[j++] = (byte) Integer.parseInt(uuid.substring(i, i + 2), 16);
+        }
+        return ba;
+    }
     /** XXX end modification by stefan@apache.org */
 }
