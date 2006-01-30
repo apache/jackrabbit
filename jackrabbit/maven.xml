@@ -22,30 +22,39 @@
     xmlns:ant="jelly:ant"
     xmlns:maven="jelly:maven">
 
-   <!-- Add extra files to the source distribution. The Maven dist      -->
-   <!-- plugin supports this natively since version 1.7, see MPDIST-15. -->
-   <postGoal name="dist:prepare-src-filesystem">
-      <ant:copy todir="${maven.dist.src.assembly.dir}">
-        <ant:fileset dir=".">
-          <ant:include name="NOTICE.txt"/>
-          <ant:include name="HEADER.txt"/>
-          <ant:include name="checkstyle.xml"/>
-          <ant:include name="checkstyle-suppressions.xml"/>
-          <ant:include name="derby.properties"/>
-          <ant:include name="modules/commons/project.xml"/>
-          <ant:include name="modules/commons/project.properties"/>
-          <ant:include name="modules/commons/maven.xml"/>
-          <ant:include name="applications/test/jaas.config"/>
-          <ant:include name="applications/test/log4j.properties"/>
-          <ant:include name="applications/test/repositoryStubImpl.properties"/>
-          <ant:include name="applications/test/repository.xml"/>
-          <ant:include name="applications/test/repository/namespaces/ns_reg.properties.install"/>
-          <ant:include name="applications/test/repository/nodetypes/custom_nodetypes.xml"/>
-          <ant:include name="applications/test/workspaces/test/workspace.xml"/>
-          <ant:include name="applications/test/workspaces/default/workspace.xml"/>
-        </ant:fileset>
-      </ant:copy>
-   </postGoal>
+    <!-- Add extra files to the source distribution. The Maven dist      -->
+    <!-- plugin supports this natively since version 1.7, see MPDIST-15. -->
+    <postGoal name="dist:prepare-src-filesystem">
+        <ant:copy todir="${maven.dist.src.assembly.dir}">
+            <ant:fileset dir="${basedir}">
+                <ant:include name="NOTICE.txt"/>
+                <ant:include name="HEADER.txt"/>
+                <ant:include name="checkstyle.xml"/>
+                <ant:include name="checkstyle-suppressions.xml"/>
+                <ant:include name="derby.properties"/>
+                <ant:include name="modules/commons/project.xml"/>
+                <ant:include name="modules/commons/project.properties"/>
+                <ant:include name="modules/commons/maven.xml"/>
+                <ant:include name="applications/test/jaas.config"/>
+                <ant:include name="applications/test/log4j.properties"/>
+                <ant:include name="applications/test/repositoryStubImpl.properties"/>
+                <ant:include name="applications/test/repository.xml"/>
+                <ant:include name="applications/test/repository/namespaces/ns_reg.properties.install"/>
+                <ant:include name="applications/test/repository/nodetypes/custom_nodetypes.xml"/>
+                <ant:include name="applications/test/workspaces/test/workspace.xml"/>
+                <ant:include name="applications/test/workspaces/default/workspace.xml"/>
+            </ant:fileset>
+        </ant:copy>
+    </postGoal>
+
+    <!-- Copy the jackrabbit-commons jar to the binary release. -->
+    <postGoal name="dist:prepare-bin-filesystem">
+        <ant:copy todir="${maven.dist.bin.assembly.dir}">
+            <ant:fileset dir="${basedir}/modules/commons/target">
+                <ant:include name="*.jar"/>
+            </ant:fileset>
+        </ant:copy>
+    </postGoal>
 
     <postGoal name="maven-javadoc-plugin:report">
         <attainGoal name="jackrabbit:post-javadoc"/>
@@ -273,6 +282,5 @@
             ignoreFailures="false"  
         /> 
     </goal>
-    
-    
+
 </project>
