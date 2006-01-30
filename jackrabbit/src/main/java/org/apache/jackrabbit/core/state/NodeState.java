@@ -53,7 +53,7 @@ public class NodeState extends ItemState {
     protected QName nodeTypeName;
 
     /** the names of this node's mixin types */
-    protected Set mixinTypeNames = new HashSet();
+    protected HashSet mixinTypeNames = new HashSet();
 
     /** id of this node's definition */
     protected NodeDefId defId;
@@ -62,7 +62,7 @@ public class NodeState extends ItemState {
     protected ChildNodeEntries childNodeEntries = new ChildNodeEntries();
 
     /** set of property names (QName objects) */
-    protected Set propertyNames = new HashSet();
+    protected HashSet propertyNames = new HashSet();
 
     /**
      * Listeners (weak references)
@@ -111,12 +111,11 @@ public class NodeState extends ItemState {
 
             NodeState nodeState = (NodeState) state;
             nodeTypeName = nodeState.getNodeTypeName();
-            mixinTypeNames = new HashSet(nodeState.getMixinTypeNames());
+            mixinTypeNames = (HashSet) nodeState.mixinTypeNames.clone();
             defId = nodeState.getDefinitionId();
             uuid = nodeState.getUUID();
-            propertyNames = new HashSet(nodeState.getPropertyNames());
-            childNodeEntries = new ChildNodeEntries();
-            childNodeEntries.addAll(nodeState.getChildNodeEntries());
+            propertyNames = (HashSet) nodeState.propertyNames.clone();
+            childNodeEntries = (ChildNodeEntries) nodeState.childNodeEntries.clone();
         }
     }
 
@@ -711,31 +710,86 @@ public class NodeState extends ItemState {
      * <code>ChildNodeEntries</code> also provides an unmodifiable
      * <code>List</code> view.
      */
-    private static class ChildNodeEntries implements List, Serializable {
+    private static class ChildNodeEntries implements List, Cloneable, Serializable {
 
         // insertion-ordered map of entries (key=uuid, value=entry)
         LinkedMap entries;
-        // map used for lookup by name (key=name, value=1st same-name sibling entry)
-        Map nameMap;
+        // map used for lookup by name
+        // (key=name, value=either a single entry or a list of sns entries)
+        HashMap nameMap;
 
         ChildNodeEntries() {
             entries = new LinkedMap();
             nameMap = new HashMap();
         }
 
-        ChildNodeEntry add(QName nodeName, String uuid) {
-            ChildNodeEntry sibling = (ChildNodeEntry) nameMap.get(nodeName);
-            while (sibling != null && sibling.getNextSibling() != null) {
-                sibling = sibling.getNextSibling();
+        ChildNodeEntry get(String uuid) {
+            return (ChildNodeEntry) entries.get(uuid);
+        }
+
+        List get(QName nodeName) {
+            Object obj = nameMap.get(nodeName);
+            if (obj == null) {
+                return Collections.EMPTY_LIST;
+            }
+            if (obj instanceof ArrayList) {
+                // map entry is a list of siblings
+                return Collections.unmodifiableList((ArrayList) obj);
+            } else {
+                // map entry is a single child node entry
+                return Collections.singletonList(obj);
+            }
+        }
+
+        ChildNodeEntry get(QName nodeName, int index) {
+            if (index < 1) {
+                throw new IllegalArgumentException("index is 1-based");
             }
 
-            int index = (sibling == null) ? 1 : sibling.getIndex() + 1;
+            Object obj = nameMap.get(nodeName);
+            if (obj == null) {
+                return null;
+            }
+            if (obj instanceof ArrayList) {
+                // map entry is a list of siblings
+                ArrayList siblings = (ArrayList) obj;
+                if (index <= siblings.size()) {
+                    return (ChildNodeEntry) siblings.get(index - 1);
+                }
+            } else {
+                // map entry is a single child node entry
+                if (index == 1) {
+                    return (ChildNodeEntry) obj;
+                }
+            }
+            return null;
+        }
+
+        ChildNodeEntry add(QName nodeName, String uuid) {
+            List siblings = null;
+            int index = 0;
+            Object obj = nameMap.get(nodeName);
+            if (obj != null) {
+                if (obj instanceof ArrayList) {
+                    // map entry is a list of siblings
+                    siblings = (ArrayList) obj;
+                } else {
+                    // map entry is a single child node entry,
+                    // convert to siblings list
+                    siblings = new ArrayList();
+                    siblings.add(obj);
+                    nameMap.put(nodeName, siblings);
+                }
+                index = siblings.size();
+            }
+
+            index++;
 
             ChildNodeEntry entry = new ChildNodeEntry(nodeName, uuid, index);
-            if (sibling == null) {
-                nameMap.put(nodeName, entry);
+            if (siblings != null) {
+                siblings.add(entry);
             } else {
-                sibling.setNextSibling(entry);
+                nameMap.put(nodeName, entry);
             }
             entries.put(uuid, entry);
 
@@ -751,9 +805,61 @@ public class NodeState extends ItemState {
             }
         }
 
-        public void removeAll() {
-            entries.clear();
-            nameMap.clear();
+        public ChildNodeEntry remove(QName nodeName, int index) {
+            if (index < 1) {
+                throw new IllegalArgumentException("index is 1-based");
+            }
+
+            Object obj = nameMap.get(nodeName);
+            if (obj == null) {
+                return null;
+            }
+
+            if (obj instanceof ChildNodeEntry) {
+                // map entry is a single child node entry
+                if (index != 1) {
+                    return null;
+                }
+                ChildNodeEntry removedEntry = (ChildNodeEntry) obj;
+                nameMap.remove(nodeName);
+                entries.remove(removedEntry.getUUID());
+                return removedEntry;
+            }
+
+            // map entry is a list of siblings
+            List siblings = (ArrayList) obj;
+            if (index > siblings.size()) {
+                return null;
+            }
+
+            // remove from siblings list
+            ChildNodeEntry removedEntry = (ChildNodeEntry) siblings.remove(index - 1);
+            // remove from ordered entries map
+            entries.remove(removedEntry.getUUID());
+
+            // update indices of subsequent same-name siblings
+            for (int i = index - 1; i < siblings.size(); i++) {
+                ChildNodeEntry oldEntry = (ChildNodeEntry) siblings.get(i);
+                ChildNodeEntry newEntry = new ChildNodeEntry(nodeName, oldEntry.getUUID(), oldEntry.getIndex() - 1);
+                // overwrite old entry with updated entry in siblings list
+                siblings.set(i, newEntry);
+                // overwrite old entry with updated entry in ordered entries map
+                entries.put(newEntry.getUUID(), newEntry);
+            }
+
+            // clean up name lookup map if necessary
+            if (siblings.size() == 0) {
+                // no more entries with that name left:
+                // remove from name lookup map as well
+                nameMap.remove(nodeName);
+            } else if (siblings.size() == 1) {
+                // just one entry with that name left:
+                // discard siblings list and update name lookup map accordingly
+                nameMap.put(nodeName, siblings.get(0));
+            }
+
+            // we're done
+            return removedEntry;
         }
 
         ChildNodeEntry remove(String uuid) {
@@ -761,86 +867,16 @@ public class NodeState extends ItemState {
             if (entry != null) {
                 return remove(entry.getName(), entry.getIndex());
            }
-            return entry;
+           return entry;
         }
 
         public ChildNodeEntry remove(ChildNodeEntry entry) {
             return remove(entry.getName(), entry.getIndex());
         }
 
-        public ChildNodeEntry remove(QName nodeName, int index) {
-            if (index < 1) {
-                throw new IllegalArgumentException("index is 1-based");
-            }
-
-            ChildNodeEntry sibling = (ChildNodeEntry) nameMap.get(nodeName);
-            ChildNodeEntry prevSibling = null;
-            while (sibling != null) {
-                if (sibling.getIndex() == index) {
-                    break;
-                }
-                prevSibling = sibling;
-                sibling = sibling.getNextSibling();
-            }
-            if (sibling == null) {
-                return null;
-            }
-
-            // remove from entries list
-            entries.remove(sibling.getUUID());
-
-            // update linked list of siblings & name map entry
-            if (prevSibling != null) {
-                prevSibling.setNextSibling(sibling.getNextSibling());
-            } else {
-                // the head is removed from the linked siblings list,
-                // update name map
-                if (sibling.getNextSibling() == null) {
-                    nameMap.remove(nodeName);
-                } else {
-                    nameMap.put(nodeName, sibling.getNextSibling());
-                }
-            }
-            // update indices of subsequent same-name siblings
-            ChildNodeEntry nextSibling = sibling.getNextSibling();
-            while (nextSibling != null) {
-                nextSibling.decIndex();
-                nextSibling = nextSibling.getNextSibling();
-            }
-
-            return sibling;
-        }
-
-        List get(QName nodeName) {
-            ChildNodeEntry sibling = (ChildNodeEntry) nameMap.get(nodeName);
-            if (sibling == null) {
-                return Collections.EMPTY_LIST;
-            }
-            List siblings = new ArrayList();
-            while (sibling != null) {
-                siblings.add(sibling);
-                sibling = sibling.getNextSibling();
-            }
-            return siblings;
-        }
-
-        ChildNodeEntry get(String uuid) {
-            return (ChildNodeEntry) entries.get(uuid);
-        }
-
-        ChildNodeEntry get(QName nodeName, int index) {
-            if (index < 1) {
-                throw new IllegalArgumentException("index is 1-based");
-            }
-
-            ChildNodeEntry sibling = (ChildNodeEntry) nameMap.get(nodeName);
-            while (sibling != null) {
-                if (sibling.getIndex() == index) {
-                    return sibling;
-                }
-                sibling = sibling.getNextSibling();
-            }
-            return null;
+        public void removeAll() {
+            nameMap.clear();
+            entries.clear();
         }
 
         /**
@@ -1030,6 +1066,28 @@ public class NodeState extends ItemState {
             }
         }
 
+        //------------------------------------------------< Cloneable support >
+        /**
+         * Returns a shallow copy of this <code>ChildNodeEntries</code> instance;
+         * the entries themselves are not cloned.
+         * @return a shallow copy of this instance.
+         */
+        protected Object clone() {
+            ChildNodeEntries clone = new ChildNodeEntries();
+            clone.entries = (LinkedMap) entries.clone();
+            clone.nameMap = new HashMap(nameMap.size());
+            for (Iterator it = nameMap.keySet().iterator(); it.hasNext(); ) {
+                Object key = it.next();
+                Object obj = nameMap.get(key);
+                if (obj instanceof ArrayList) {
+                    // clone List
+                    obj = ((ArrayList) obj).clone();
+                }
+                clone.nameMap.put(key, obj);
+            }
+            return clone;
+        }
+
         //----------------------------------------------------< inner classes >
         class OrderedMapIterator implements ListIterator {
 
@@ -1082,13 +1140,16 @@ public class NodeState extends ItemState {
     /**
      * <code>ChildNodeEntry</code> specifies the name, index (in the case of
      * same-name siblings) and the UUID of a child node entry.
+     * <p/>
+     * <code>ChildNodeEntry</code> instances are immutable.
      */
     public static class ChildNodeEntry {
 
-        private QName name;
-        private int index; // 1-based index for same-name siblings
-        private String uuid;
-        private ChildNodeEntry nextSibling;
+        private int hash = 0;
+
+        private final QName name;
+        private final int index; // 1-based index for same-name siblings
+        private final String uuid;
 
         private ChildNodeEntry(QName name, String uuid, int index) {
             if (name == null) {
@@ -1105,8 +1166,6 @@ public class NodeState extends ItemState {
                 throw new IllegalArgumentException("index is 1-based");
             }
             this.index = index;
-
-            nextSibling = null;
         }
 
         public String getUUID() {
@@ -1119,29 +1178,6 @@ public class NodeState extends ItemState {
 
         public int getIndex() {
             return index;
-        }
-
-        public ChildNodeEntry getNextSibling() {
-            return nextSibling;
-        }
-
-        void setNextSibling(ChildNodeEntry nextSibling) {
-            if (nextSibling != null && !nextSibling.getName().equals(name)) {
-                throw new IllegalArgumentException("not a same-name sibling entry");
-            }
-
-            this.nextSibling = nextSibling;
-        }
-
-        int incIndex() {
-            return ++index;
-        }
-
-        int decIndex() {
-            if (index == 1) {
-                throw new IndexOutOfBoundsException();
-            }
-            return --index;
         }
 
         //---------------------------------------< java.lang.Object overrides >
@@ -1161,15 +1197,17 @@ public class NodeState extends ItemState {
             return name.toString() + "[" + index + "] -> " + uuid;
         }
 
-        /**
-         * Returns zero to satisfy the Object equals/hashCode contract.
-         * This class is mutable and not meant to be used as a hash key.
-         *
-         * @return always zero
-         * @see Object#hashCode()
-         */
         public int hashCode() {
-            return 0;
+            // ChildNodeEntry is immutable, we can store the computed hash code value
+            int h = hash;
+            if (h == 0) {
+                h = 17;
+                h = 37 * h + name.hashCode();
+                h = 37 * h + uuid.hashCode();
+                h = 37 * h + index;
+                hash = h;
+            }
+            return h;
         }
     }
 }

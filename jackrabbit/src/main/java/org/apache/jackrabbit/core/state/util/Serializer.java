@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * <code>Serializer</code> is a utility class that provides static methods
@@ -47,8 +48,9 @@ import java.util.Set;
  */
 public final class Serializer {
 
-    private static final UUID NULL_UUID_PLACEHOLDER =
-            UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private static final byte[] NULL_UUID_PLACEHOLDER_BYTES = new byte[] {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
 
     /**
      * encoding used for serializing String values
@@ -73,9 +75,9 @@ public final class Serializer {
         out.writeUTF(state.getNodeTypeName().toString());
         // parentUUID
         if (state.getParentUUID() == null) {
-            out.write(NULL_UUID_PLACEHOLDER.getRawBytes());
+            out.write(NULL_UUID_PLACEHOLDER_BYTES);
         } else {
-            out.write(UUID.fromString(state.getParentUUID()).getRawBytes());
+            out.write(UUID.stringToBytes(state.getParentUUID()));
         }
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
@@ -100,7 +102,7 @@ public final class Serializer {
         for (Iterator iter = c.iterator(); iter.hasNext();) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
             out.writeUTF(entry.getName().toString());   // name
-            out.write(UUID.fromString(entry.getUUID()).getRawBytes());  // uuid
+            out.write(UUID.stringToBytes(entry.getUUID()));    // uuid
         }
     }
 
@@ -123,9 +125,8 @@ public final class Serializer {
         // parentUUID (may be null)
         byte[] uuidBytes = new byte[UUID.UUID_BYTE_LENGTH];
         in.readFully(uuidBytes);
-        UUID uuid = new UUID(uuidBytes);
-        if (!uuid.equals(NULL_UUID_PLACEHOLDER)) {
-            state.setParentUUID(uuid.toString());
+        if (!Arrays.equals(uuidBytes, NULL_UUID_PLACEHOLDER_BYTES)) {
+            state.setParentUUID(UUID.bytesToString(uuidBytes));
         }
         // definitionId
         s = in.readUTF();
@@ -153,7 +154,7 @@ public final class Serializer {
             QName name = QName.valueOf(in.readUTF());    // name
             // uuid
             in.readFully(uuidBytes);
-            state.addChildNodeEntry(name, new UUID(uuidBytes).toString());
+            state.addChildNodeEntry(name, UUID.bytesToString(uuidBytes));
         }
     }
 
