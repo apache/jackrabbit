@@ -63,7 +63,7 @@ public class ZipHandler extends DefaultHandler {
      * is <code>null</code>
      */
     public ZipHandler(IOManager ioManager) {
-        this(ioManager, JcrConstants.NT_UNSTRUCTURED, JcrConstants.NT_FILE, JcrConstants.NT_UNSTRUCTURED);
+        this(ioManager, JcrConstants.NT_FOLDER, JcrConstants.NT_FILE, JcrConstants.NT_UNSTRUCTURED);
     }
 
     /**
