@@ -54,27 +54,6 @@ public abstract class ValueConstraint {
         this.definition = definition;
     }
 
-    public boolean equals(Object other) {
-        if (other == this) {
-            return true;
-        } else if (other instanceof ValueConstraint) {
-            return definition.equals(((ValueConstraint) other).definition);
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Returns zero to satisfy the Object equals/hashCode contract.
-     * This class is mutable and not meant to be used as a hash key.
-     *
-     * @return always zero
-     * @see Object#hashCode()
-     */
-    public int hashCode() {
-        return 0;
-    }
-
     /**
      * Returns the original (raw) definition of this constraint.
      *
@@ -736,5 +715,3 @@ class ReferenceConstraint extends ValueConstraint {
         }
     }
 }
-
-
