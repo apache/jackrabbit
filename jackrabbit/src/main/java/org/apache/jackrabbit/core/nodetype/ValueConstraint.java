@@ -117,6 +117,21 @@ public abstract class ValueConstraint {
     }
 
     abstract void check(InternalValue value) throws ConstraintViolationException, RepositoryException;
+
+    //-------------------------------------------< java.lang.Object overrides >
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        } else if (other instanceof ValueConstraint) {
+            return definition.equals(((ValueConstraint) other).definition);
+        } else {
+            return false;
+        }
+    }
+
+    public int hashCode() {
+        return definition.hashCode();
+    }
 }
 
 /**
@@ -715,3 +730,5 @@ class ReferenceConstraint extends ValueConstraint {
         }
     }
 }
+
+
