@@ -20,7 +20,7 @@
   <title>Project Layout</title>
  </properties>
  <body>
-  <section name="Directory Layout">
+  <section name="Project Layout">
    <p>This contains the JCR Reference Implementation subproject.</p>
 
    <p>The directories contained:
@@ -31,15 +31,26 @@
      <td>The destination for the compiled Java classes</td>   
     </tr>
     <tr>
-     <td>src/java</td>
+     <td>src/main/java</td>
      <td>The directory containing Java source files</td>
     </tr>
     <tr>
-     <td>src/conf</td>
+     <td>target/generated-src/main/java</td>
+     <td>The directory containing generated Java source files</td>
+    </tr>
+    <tr>
+     <td>src/test/java</td>
+     <td>
+       The directory containing
+       <a href="http://www.junit.org/">JUnit</a> test cases.
+     </td>
+    </tr>
+    <tr>
+     <td>src/main/config</td>
      <td>The directory with sample configuration files etc.</td>
     </tr>
     <tr>
-     <td>src/grammar</td>
+     <td>src/main/javacc</td>
      <td>
        The directory with
        <a href="https://javacc.dev.java.net/">JavaCC</a> grammar files
@@ -47,11 +58,8 @@
      </td>
     </tr>
     <tr>
-     <td>src/test</td>
-     <td>
-       The directory containing
-       <a href="http://www.junit.org/">JUnit</a> test cases.
-     </td>
+     <td>target/generated-src/main/javacc</td>
+     <td>The directory containing generated JavaCC grammar files</td>
     </tr>
     <tr>
      <td>applications/test</td>
@@ -60,17 +68,10 @@
      </td>
     </tr>
     <tr>
-     <td>xdocs</td>
+     <td>src/site</td>
      <td>
        The directory containing documentation files shown on
        the Maven-generated Jackrabbit web site.
-     </td>
-    </tr>
-    <tr>
-     <td>contrib</td>
-     <td>
-       The directory containing contributed JCR and Jackrabbit
-       components and subprojects organized in subdirectories.
      </td>
     </tr>
    </table>
