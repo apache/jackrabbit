@@ -352,6 +352,14 @@
             </roles>
             <timezone>+1</timezone>
         </contributor>
+        <contributor>
+            <name>Sandro Boehme</name>
+            <email>sandro.boehme@gmx.de</email>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
     </contributors>
 
     <!-- ====================================================================== -->
