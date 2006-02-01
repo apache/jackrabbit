@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.core.nodetype.compact;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.nodetype.PropDefImpl;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
+import org.apache.jackrabbit.core.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
-import org.apache.jackrabbit.core.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
 
@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.HashSet;
-import java.util.Arrays;
 
 /**
  * CompactNodeTypeDefReader. Parses node type definitions written in the compact
@@ -201,15 +200,12 @@ public class CompactNodeTypeDefReader {
             ntd.setMixin(false);
             ntd.setPrimaryItemName(null);
             doNodeTypeName(ntd);
-            doSuperClasses(ntd);
+            doSuperTypes(ntd);
             doOptions(ntd);
-            // add nt:base to superclasses if not mixin
-            if (!ntd.isMixin()) {
-                HashSet superTypes = new HashSet(Arrays.asList(ntd.getSupertypes()));
-                if (!superTypes.contains(QName.NT_BASE)) {
-                    superTypes.add(QName.NT_BASE);
-                    ntd.setSupertypes((QName[]) superTypes.toArray(new QName[superTypes.size()]));
-                }
+            // add nt:base to supertypes if not mixin and does not define
+            // any supertype yet.
+            if (!ntd.isMixin() && ntd.getSupertypes().length == 0) {
+                ntd.setSupertypes(new QName[]{QName.NT_BASE});
             }
             doItemDefs(ntd);
             nodeTypeDefs.add(ntd);
@@ -273,8 +269,8 @@ public class CompactNodeTypeDefReader {
      * @param ntd
      * @throws ParseException
      */
-    private void doSuperClasses(NodeTypeDef ntd) throws ParseException {
-        List supertypes = new ArrayList();
+    private void doSuperTypes(NodeTypeDef ntd) throws ParseException {
+        HashSet supertypes = new HashSet();
         if (!currentTokenEquals(Lexer.EXTENDS)) {
             return;
         }
