@@ -1648,7 +1648,7 @@ public class NodeTypeRegistry implements Dumpable {
         OutputStream out = null;
         try {
             out = customNodeTypesResource.getOutputStream();
-            customNTDefs.store(out, nsReg);
+            store.store(out, nsReg);
         } catch (IOException ioe) {
             String error =
                     "internal error: failed to persist custom node type definitions to "
