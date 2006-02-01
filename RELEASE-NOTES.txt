@@ -1,0 +1,79 @@
+Release Notes -- Apache Jackrabit -- Version 0.9
+
+Introduction
+------------
+
+The Apache Jackrabbit project is an effort to build and maintain
+an open source implemention of the Content Repository for Java
+Technology API (JCR) specified in the Java Specification Request 170
+(JSR-170).
+
+The version 0.9 release is the first official release of the
+Jackrabbit project. The goal of this release is to provide a tested
+and packaged version of Jackrabbit for users who have so far been
+using custom snapshots. This release also provides a well defined
+baseline for the upcoming Jackrabbit version 1.0.
+
+Users of this release should note that the JCR extensions and internal
+component interfaces in this release may not be upwards compatible 
+with the upcoming 1.0 release.
+
+Incubation
+----------
+
+Apache Jackrabbit is an effort undergoing incubation at the
+Apache Software Foundation. Incubation is required of all newly
+accepted projects until a further review indicates that the
+infrastructure, communications, and decision making process
+have stabilized in a manner consistent with other successful
+ASF projects. While incubation status is not necessarily a
+reflection of the completeness or stability of the code, it
+does indicate that the project has yet to be fully endorsed
+by the ASF.  The incubation status is recorded at
+
+   http://incubator.apache.org/projects/jackrabbit.html
+
+Release Contents
+----------------
+
+This release contains the main Jackrabbit implementation and the
+JCR-RMI network layer for the JCR API. The JCR utility library
+jackrabbit-commons is also included in this release.
+
+The release files are organized in three directories: src, bin, 
+and jar. The src directory contains the full source code packages
+of Jackrabbit and JCR-RMI. The related packages in the bin
+directory contain the compiled binaries and documentation. The jar
+directory contains just the compiled jar files found in the binary 
+packages. 
+
+The runtime dependency libraries are not included in the release,
+you need to download the dependencies separately.
+
+Each release file is accompanied by an MD5 checksum and a PGP
+signature. The public key used for the signatures is located
+in the KEYS file.
+
+Known Issues
+------------
+
+The main known issues in this release are listed below:
+
+  [JCR-140] Versioning might not be thread-safe
+
+See the Jackrabbit issue tracker for other outstanding issues:
+
+  http://issues.apache.org/jira/browse/JCR
+
+Change History
+--------------
+
+Changes since 0.9-rc1:
+
+  [JCR-109] Contrib RMI: NotSerializableException
+
+Changes since the beginning:
+
+This release is the result of more than two years of development and
+contains the resolutions of more than 270 tracked issues. See the
+Jackrabbit issue tracker for a more detailed change history.
