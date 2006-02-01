@@ -61,6 +61,7 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             OutputFormat format = new OutputFormat("xml", "UTF-8", true);
             XMLSerializer serializer = new XMLSerializer(out, format);
+            serializer.setNamespaces(true);
             serializer.asDOMSerializer().serialize(document);
             setRequestBody(out.toString());
         } catch (ParserConfigurationException e) {
