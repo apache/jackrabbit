@@ -57,10 +57,27 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
         InputStream in2 = val.getStream();
         Value otherVal = PropertyUtil.getValue(prop);
         InputStream in3 = otherVal.getStream();
-        assertSame("Same InputStream object expected when " +
-                "Value.getStream is called twice.", in, in2);
-        assertNotSame("Value.getStream() called on a new value " +
-                "object should return a different Stream object.", in, in3);
+        try {
+            assertSame("Same InputStream object expected when " +
+                    "Value.getStream is called twice.", in, in2);
+            assertNotSame("Value.getStream() called on a new value " +
+                    "object should return a different Stream object.", in, in3);
+        } finally {
+            // cleaning up
+            try {
+                in.close();
+            } catch (IOException ignore) {}
+            if (in2 != in) {
+                try {
+                    in2.close();
+                } catch (IOException ignore) {}
+            }
+            if (in3 != in) {
+                try {
+                    in3.close();
+                } catch (IOException ignore) {}
+            }
+        }
     }
 
     /**
@@ -99,15 +116,24 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
         } else {
             in2 = prop.getStream();
         }
-        int b = in.read();
-        while (b != -1) {
-            int b2 = in2.read();
+        try {
+            int b = in.read();
+            while (b != -1) {
+                int b2 = in2.read();
+                assertEquals("Value.getStream() and Property.getStream() " +
+                        "return different values.", b, b2);
+                b = in.read();
+            }
             assertEquals("Value.getStream() and Property.getStream() " +
-                    "return different values.", b, b2);
-            b = in.read();
+                    "return different values.", -1, in2.read());
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ignore) {}
+            try {
+                in2.close();
+            } catch (IOException ignore) {}
         }
-        assertEquals("Value.getStream() and Property.getStream() " +
-                "return different values.", -1, in2.read());
     }
 
     /**

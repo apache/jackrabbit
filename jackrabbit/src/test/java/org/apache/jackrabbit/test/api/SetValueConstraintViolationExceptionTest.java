@@ -30,6 +30,8 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
+import java.io.InputStream;
+import java.io.IOException;
 
 /**
  * <code>SetValueConstraintViolationExceptionTest</code> tests if setValue()
@@ -89,14 +91,19 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         }
 
         // test of signature setValue(InputStream value)
+        InputStream in = valueNotSatisfied1.getStream();
         try {
-            prop.setValue(valueNotSatisfied1.getStream());
+            prop.setValue(in);
             node.save();
             fail("setValue(InputStream value) must throw a ConstraintViolationException " +
                     "if the change would violate a node type constraint " +
                     "either immediately or on save");
         } catch (ConstraintViolationException e) {
             // success
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ignore) {}
         }
 
         // test of signature setValue(Value value)

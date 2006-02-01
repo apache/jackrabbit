@@ -83,7 +83,12 @@ public class SetValueBinaryTest extends AbstractJCRTest {
     public void testBinarySession() throws RepositoryException, IOException {
         property1.setValue(value);
         superuser.save();
-        compareStream(data, property1.getValue().getStream());
+        InputStream in = property1.getValue().getStream();
+        try {
+            compareStream(data, in);
+        } finally {
+            in.close();
+        }
     }
 
     /**
@@ -91,9 +96,19 @@ public class SetValueBinaryTest extends AbstractJCRTest {
      * parameter and saved from the parent Node
      */
     public void testBooleanParent() throws RepositoryException, IOException {
-        property1.setValue(value.getStream());
-        node.save();
-        compareStream(data, property1.getValue().getStream());
+        InputStream in = value.getStream();
+        try {
+            property1.setValue(in);
+            node.save();
+        } finally {
+            in.close();
+        }
+        in = property1.getValue().getStream();
+        try {
+            compareStream(data, in);
+        } finally {
+            in.close();
+        }
     }
 
     /**
