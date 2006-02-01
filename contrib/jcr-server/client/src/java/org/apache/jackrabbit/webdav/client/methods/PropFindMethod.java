@@ -89,6 +89,7 @@ public class PropFindMethod extends DavMethodBase {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             OutputFormat format = new OutputFormat("xml", "UTF-8", true);
             XMLSerializer serializer = new XMLSerializer(out, format);
+            serializer.setNamespaces(true);
             serializer.asDOMSerializer().serialize(document);
             setRequestBody(out.toString());
 
