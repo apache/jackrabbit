@@ -25,7 +25,7 @@
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-commons</artifactId>
     <name>Jackrabbit</name>
-    <currentVersion>0.9-rc1-incubating</currentVersion>
+    <currentVersion>0.9-incubating</currentVersion>
     <name>Jackrabbit Commons</name>
 
     <!-- ====================================================================== -->
