@@ -30,6 +30,8 @@ import javax.jcr.NamespaceRegistry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.io.IOException;
 
 /**
  * This class provides various utility methods that are used by the property
@@ -281,14 +283,22 @@ public class PropertyUtil {
      */
     public static long countBytes(Value val) {
         int length = 0;
+        InputStream in = null;
         try {
-            BufferedInputStream bin = new BufferedInputStream(val.getStream());
+            in = val.getStream();
+            BufferedInputStream bin = new BufferedInputStream(in);
             while (bin.read() != -1) {
                 length++;
             }
             bin.close();
         } catch (Exception e) {
             length = -1;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ignore) {}
+            }
         }
         return length;
     }

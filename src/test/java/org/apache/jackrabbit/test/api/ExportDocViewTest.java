@@ -963,7 +963,12 @@ public class ExportDocViewTest extends AbstractJCRTest {
 
         if (isBinary) {
             for (int i = 0; i < vals.length; i++) {
-                exportedVal += encodeBase64(vals[i].getStream());
+                InputStream in = vals[i].getStream();
+                try {
+                    exportedVal += encodeBase64(in);
+                } finally {
+                    in.close();
+                }
                 exportedVal += " ";
             }
         } else {

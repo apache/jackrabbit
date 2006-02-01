@@ -29,6 +29,8 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
+import java.io.InputStream;
+import java.io.IOException;
 
 /**
  * <code>SetPropertyConstraintViolationExceptionTest</code> tests if
@@ -257,14 +259,19 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         }
 
         // test of signature setProperty(String name, InputStream value)
+        InputStream in = valueNotSatisfied1.getStream();
         try {
-            node.setProperty(propDef.getName(), valueNotSatisfied1.getStream());
+            node.setProperty(propDef.getName(), in);
             node.save();
             fail("setProperty(String name, InputStream value) must throw a " +
                     "ConstraintViolationException if the change would violate a " +
                     "node type constraint either immediately or on save");
         } catch (ConstraintViolationException e) {
             // success
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ignore) {}
         }
 
         // test of signature setProperty(String name, Value value)
