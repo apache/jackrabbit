@@ -55,7 +55,7 @@ public class ServerRow extends ServerObject implements RemoteRow {
 
     /** {@inheritDoc} */
     public Value[] getValues() throws RepositoryException, RemoteException {
-        return row.getValues();
+        return SerialValueFactory.makeSerialValueArray(row.getValues());
     }
 
     /** {@inheritDoc} */
