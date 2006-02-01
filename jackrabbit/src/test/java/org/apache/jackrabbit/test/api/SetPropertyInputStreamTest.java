@@ -54,8 +54,13 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
         testNode.setProperty(propertyName1, is1);
         superuser.save();
         is1 = new ByteArrayInputStream(bytes1);
-        assertTrue("Setting property with Node.setProperty(String, InputStream) and Session.save() not working",
-                compareInputStreams(is1, testNode.getProperty(propertyName1).getStream()));
+        InputStream in = testNode.getProperty(propertyName1).getStream();
+        try {
+            assertTrue("Setting property with Node.setProperty(String, InputStream) and Session.save() not working",
+                    compareInputStreams(is1, in));
+        } finally {
+            in.close();
+        }
     }
 
     /**
@@ -68,8 +73,13 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
         testNode.setProperty(propertyName1, is2);
         superuser.save();
         is2 = new ByteArrayInputStream(bytes2);
-        assertTrue("Modifying property with Node.setProperty(String, InputStream) and Session.save() not working",
-                compareInputStreams(is2, testNode.getProperty(propertyName1).getStream()));
+        InputStream in = testNode.getProperty(propertyName1).getStream();
+        try {
+            assertTrue("Modifying property with Node.setProperty(String, InputStream) and Session.save() not working",
+                    compareInputStreams(is2, in));
+        } finally {
+            in.close();
+        }
     }
 
     /**
@@ -80,8 +90,13 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
         testNode.setProperty(propertyName1, is1);
         testRootNode.save();
         is1 = new ByteArrayInputStream(bytes1);
-        assertTrue("Setting property with Node.setProperty(String, InputStream) and parentNode.save() not working",
-                compareInputStreams(is1, testNode.getProperty(propertyName1).getStream()));
+        InputStream in = testNode.getProperty(propertyName1).getStream();
+        try {
+            assertTrue("Setting property with Node.setProperty(String, InputStream) and parentNode.save() not working",
+                    compareInputStreams(is1, in));
+        } finally {
+            in.close();
+        }
     }
 
     /**
@@ -94,8 +109,13 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
         testNode.setProperty(propertyName1, is2);
         testRootNode.save();
         is2 = new ByteArrayInputStream(bytes2);
-        assertTrue("Modifying property with Node.setProperty(String, InputStream) and parentNode.save() not working",
-                compareInputStreams(is2, testNode.getProperty(propertyName1).getStream()));
+        InputStream in = testNode.getProperty(propertyName1).getStream();
+        try {
+            assertTrue("Modifying property with Node.setProperty(String, InputStream) and parentNode.save() not working",
+                    compareInputStreams(is2, in));
+        } finally {
+            in.close();
+        }
     }
 
     /**
