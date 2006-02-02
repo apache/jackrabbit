@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.BaseException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.ISO9075;
@@ -202,7 +202,7 @@ class DocViewImportHandler extends TargetImportHandler {
                     if (attrValue.length() > 0) {
                         try {
                             nodeTypeName = QName.fromJCRName(attrValue, nsContext);
-                        } catch (BaseException be) {
+                        } catch (NameException be) {
                             throw new SAXException("illegal jcr:primaryType value: "
                                     + attrValue, be);
                         }
@@ -213,7 +213,7 @@ class DocViewImportHandler extends TargetImportHandler {
                         try {
                             mixinTypes =
                                     new QName[]{QName.fromJCRName(attrValue, nsContext)};
-                        } catch (BaseException be) {
+                        } catch (NameException be) {
                             throw new SAXException("illegal jcr:mixinTypes value: "
                                     + attrValue, be);
                         }

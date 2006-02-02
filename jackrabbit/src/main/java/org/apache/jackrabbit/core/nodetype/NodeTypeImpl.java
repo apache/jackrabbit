@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.BaseException;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
@@ -394,7 +394,7 @@ public class NodeTypeImpl implements NodeType {
             EffectiveNodeType.checkSetPropertyValueConstraints(
                     def, new InternalValue[]{internalValue});
             return true;
-        } catch (BaseException be) {
+        } catch (NameException be) {
             // implementation specific exception, fall through
         } catch (RepositoryException re) {
             // fall through
@@ -468,7 +468,7 @@ public class NodeTypeImpl implements NodeType {
                     (InternalValue[]) list.toArray(new InternalValue[list.size()]);
             EffectiveNodeType.checkSetPropertyValueConstraints(def, internalValues);
             return true;
-        } catch (BaseException be) {
+        } catch (NameException be) {
             // implementation specific exception, fall through
         } catch (RepositoryException re) {
             // fall through
@@ -483,7 +483,7 @@ public class NodeTypeImpl implements NodeType {
         try {
             ent.checkAddNodeConstraints(QName.fromJCRName(childNodeName, nsResolver));
             return true;
-        } catch (BaseException be) {
+        } catch (NameException be) {
             // implementation specific exception, fall through
         } catch (RepositoryException re) {
             // fall through
@@ -498,7 +498,7 @@ public class NodeTypeImpl implements NodeType {
         try {
             ent.checkAddNodeConstraints(QName.fromJCRName(childNodeName, nsResolver), QName.fromJCRName(nodeTypeName, nsResolver));
             return true;
-        } catch (BaseException be) {
+        } catch (NameException be) {
             // implementation specific exception, fall through
         } catch (RepositoryException re) {
             // fall through
@@ -513,7 +513,7 @@ public class NodeTypeImpl implements NodeType {
         try {
             ent.checkRemoveItemConstraints(QName.fromJCRName(itemName, nsResolver));
             return true;
-        } catch (BaseException be) {
+        } catch (NameException be) {
             // implementation specific exception, fall through
         } catch (RepositoryException re) {
             // fall through
