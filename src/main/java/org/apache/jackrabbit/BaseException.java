@@ -24,14 +24,6 @@ package org.apache.jackrabbit;
 public abstract class BaseException extends Exception {
 
     /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public BaseException() {
-        super();
-    }
-
-    /**
      * Constructs a new instance of this class with the specified detail
      * message.
      *
@@ -52,15 +44,6 @@ public abstract class BaseException extends Exception {
      */
     public BaseException(String message, Throwable rootCause) {
         super(message, rootCause);
-    }
-
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public BaseException(Throwable rootCause) {
-        super(rootCause);
     }
 
 }

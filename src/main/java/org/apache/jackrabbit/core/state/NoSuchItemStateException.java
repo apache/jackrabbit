@@ -20,13 +20,6 @@ package org.apache.jackrabbit.core.state;
  * The <code>NoSuchItemStateException</code> ...
  */
 public class NoSuchItemStateException extends ItemStateException {
-    /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public NoSuchItemStateException() {
-        super();
-    }
 
     /**
      * Constructs a new instance of this class with the specified detail
@@ -51,12 +44,4 @@ public class NoSuchItemStateException extends ItemStateException {
         super(message, rootCause);
     }
 
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public NoSuchItemStateException(Throwable rootCause) {
-        super(rootCause);
-    }
 }
