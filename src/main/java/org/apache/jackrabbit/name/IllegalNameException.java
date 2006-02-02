@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * Thrown when an illegal JCR name string is encountered. This exception is
  * thrown when attempting to parse a JCR name string that does not match the
@@ -28,7 +26,7 @@ import org.apache.jackrabbit.BaseException;
  * See the section 4.6 of the JCR 1.0 specification for details of the
  * JCR name syntax.
  */
-public class IllegalNameException extends BaseException {
+public class IllegalNameException extends NameException {
 
     /**
      * Creates an IllegalNameException with the given error message.

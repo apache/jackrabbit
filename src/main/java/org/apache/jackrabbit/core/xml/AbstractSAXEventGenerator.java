@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.BaseException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.SessionNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -126,7 +126,7 @@ abstract class AbstractSAXEventGenerator {
             jcrRoot = QName.JCR_ROOT.toJCRName(nsResolver);
             jcrXMLText = QName.JCR_XMLTEXT.toJCRName(nsResolver);
             jcrXMLCharacters = QName.JCR_XMLCHARACTERS.toJCRName(nsResolver);
-        } catch (BaseException e) {
+        } catch (NameException e) {
             // should never get here...
             String msg = "internal error: failed to resolve namespace mappings";
             log.error(msg, e);

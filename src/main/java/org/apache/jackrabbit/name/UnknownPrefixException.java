@@ -16,14 +16,12 @@
  */
 package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * Thrown when a JCR name string with an unknown prefix is encountered.
  * This exception is thrown when attempting to parse a JCR name string
  * whose prefix is not bound to any namespace.
  */
-public class UnknownPrefixException extends BaseException {
+public class UnknownPrefixException extends NameException {
 
     /**
      * Creates an UnknownPrefixException with the given error message.
