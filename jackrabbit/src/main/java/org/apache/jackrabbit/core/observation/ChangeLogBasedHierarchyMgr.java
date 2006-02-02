@@ -208,7 +208,7 @@ class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
             if (state != null) {
                 return state;
             } else {
-                throw new NoSuchItemStateException();
+                throw new NoSuchItemStateException("Item not in the attic: " + id);
             }
         }
 

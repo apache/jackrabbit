@@ -24,14 +24,6 @@ import org.apache.jackrabbit.BaseException;
 public class ItemStateException extends BaseException {
 
     /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public ItemStateException() {
-        super();
-    }
-
-    /**
      * Constructs a new instance of this class with the specified detail
      * message.
      *
@@ -54,12 +46,4 @@ public class ItemStateException extends BaseException {
         super(message, rootCause);
     }
 
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public ItemStateException(Throwable rootCause) {
-        super(rootCause);
-    }
 }

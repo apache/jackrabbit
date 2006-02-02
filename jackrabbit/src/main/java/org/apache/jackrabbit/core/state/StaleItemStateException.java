@@ -23,14 +23,6 @@ package org.apache.jackrabbit.core.state;
 public class StaleItemStateException extends ItemStateException {
 
     /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public StaleItemStateException() {
-        super();
-    }
-
-    /**
      * Constructs a new instance of this class with the specified detail
      * message.
      *
@@ -53,12 +45,4 @@ public class StaleItemStateException extends ItemStateException {
         super(message, rootCause);
     }
 
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public StaleItemStateException(Throwable rootCause) {
-        super(rootCause);
-    }
 }

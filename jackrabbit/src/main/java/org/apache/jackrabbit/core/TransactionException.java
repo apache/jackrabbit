@@ -34,15 +34,6 @@ public class TransactionException extends BaseException {
     }
 
     /**
-     * Creates an instance of this class. Takes a root throwable as parameter.
-     *
-     * @param rootCause root throwable
-     */
-    public TransactionException(Throwable rootCause) {
-        super(rootCause);
-    }
-
-    /**
      * Creates an instance of this class. Takes a message and a root throwable
      * as parameter.
      *

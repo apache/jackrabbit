@@ -173,7 +173,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
             }
             return root;
         } catch (RepositoryException e) {
-            throw new ItemStateException(e);
+            throw new ItemStateException("Error creating root node state", e);
         }
     }
 
