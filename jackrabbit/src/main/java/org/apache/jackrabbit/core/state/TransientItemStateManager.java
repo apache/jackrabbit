@@ -81,7 +81,7 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
         }
     }
 
-    //----------------------------------------------------< ItemStateProvider >
+    //-----------------------------------------------------< ItemStateManager >
     /**
      * {@inheritDoc}
      */
