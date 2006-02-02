@@ -23,20 +23,17 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -310,93 +307,7 @@ public class SessionItemStateManager
         if (!transientStateMgr.hasAnyItemStates()) {
             return Collections.EMPTY_LIST.iterator();
         }
-/*
-        // build ordered collection of descendant transient states:
-        // the path serves as key and sort criteria
-        TreeMap descendants = new TreeMap(new PathComparator());
 
-        // use shortcut if root was specified as parent
-        // (in which case all non-root states are descendents)
-        if (parentId.equals(rootNodeId)) {
-            Iterator iter = transientStateMgr.getEntries();
-            while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
-                ItemId id = state.getId();
-                if (id.equals(rootNodeId)) {
-                    // skip root
-                    continue;
-                }
-                try {
-                    Path p = hierMgr.getPath(id);
-                    descendants.put(p, state);
-                } catch (ItemNotFoundException infe) {
-                    String msg = id + ": the item has been removed externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
-                } catch (RepositoryException re) {
-                    // unable to build path, assume that it (or any of
-                    // its ancestors) has been removed externally
-                    String msg = id
-                            + ": the item seems to have been removed externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
-                }
-            }
-            return descendants.values().iterator();
-        }
-
-        Path parentPath;
-        try {
-            parentPath = hierMgr.getPath(parentId);
-        } catch (ItemNotFoundException infe) {
-            String msg = parentId + ": the item has been removed externally.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        /**
-         * walk through list of transient states and check if
-         * they are descendants of the specified parent
-         * /
-        try {
-            Iterator iter = transientStateMgr.getEntries();
-            while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
-                ItemId id = state.getId();
-                Path path;
-                try {
-                    path = hierMgr.getPath(id);
-                } catch (ItemNotFoundException infe) {
-                    /**
-                     * one of the parents of the specified item has been
-                     * removed externally; as we don't know its path,
-                     * we can't determine if it is a descendant;
-                     * InvalidItemStateException should only be thrown if
-                     * a descendant is affected;
-                     * => throw InvalidItemStateException for now
-                     * todo FIXME
-                     * /
-                    // unable to build path, assume that it (or any of
-                    // its ancestors) has been removed externally
-                    String msg = id
-                            + ": the item seems to have been removed externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
-                }
-
-                if (path.isDescendantOf(parentPath)) {
-                    // this is a descendant, add it to the list
-                    descendants.put(path, state);
-                }
-            }
-        } catch (MalformedPathException mpe) {
-            String msg = "inconsistent hierarchy state";
-            log.warn(msg, mpe);
-            throw new RepositoryException(msg, mpe);
-        }
-
-        return descendants.values().iterator();
-*/
         // build ordered collection of descendant transient states
         // sorted by decreasing relative depth
 
@@ -485,40 +396,7 @@ public class SessionItemStateManager
         if (!transientStateMgr.hasAnyItemStatesInAttic()) {
             return Collections.EMPTY_LIST.iterator();
         }
-/*
-        // build ordered collection of descendant transient states in attic:
-        // the path serves as key and sort criteria
 
-        // use a special attic-aware hierarchy manager
-        ZombieHierarchyManager zombieHierMgr =
-                new ZombieHierarchyManager(hierMgr.getRootNodeId().getUUID(),
-                        this,
-                        transientStateMgr.getAttic(),
-                        hierMgr.getNamespaceResolver());
-
-        TreeMap descendants = new TreeMap(new PathComparator());
-        try {
-            Path parentPath = zombieHierMgr.getPath(parentId);
-             // walk through list of transient states in attic and check if
-             // they are descendants of the specified parent
-            Iterator iter = transientStateMgr.getEntriesInAttic();
-            while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
-                ItemId id = state.getId();
-                Path path = zombieHierMgr.getPath(id);
-                if (path.isDescendantOf(parentPath)) {
-                    // this is a descendant, add it to the list
-                    descendants.put(path, state);
-                }
-                // continue with next transient state
-            }
-        } catch (MalformedPathException mpe) {
-            log.warn("inconsistent hierarchy state", mpe);
-        } catch (RepositoryException re) {
-            log.warn("inconsistent hierarchy state", re);
-        }
-        return descendants.values().iterator();
-*/
         // build ordered collection of descendant transient states in attic
         // sorted by decreasing relative depth
 
@@ -699,50 +577,5 @@ public class SessionItemStateManager
      */
     public void disposeAllTransientItemStates() {
         transientStateMgr.disposeAllItemStates();
-    }
-
-    //--------------------------------------------------------< inner classes >
-    /**
-     * Comparator used to sort canonical <code>Path</code> objects
-     * hierarchically (in depth-first tree traversal order).
-     */
-    static class PathComparator implements Comparator {
-        /**
-         * @param o1
-         * @param o2
-         * @return
-         */
-        public int compare(Object o1, Object o2) {
-            Path p1 = (Path) o1;
-            Path p2 = (Path) o2;
-            if (p1.equals(p2)) {
-                return 0;
-            }
-            try {
-                if (p1.isAncestorOf(p2)) {
-                    return -1;
-                } else if (p1.isDescendantOf(p2)) {
-                    return 1;
-                }
-            } catch (MalformedPathException mpe) {
-                log.warn("unable to compare non-canonical (i.e. relative) paths", mpe);
-            }
-            // the 2 paths are not on the same graph;
-            // do string comparison of individual path elements
-            Path.PathElement[] pea1 = p1.getElements();
-            Path.PathElement[] pea2 = p2.getElements();
-            for (int i = 0; i < pea1.length; i++) {
-                if (i >= pea2.length) {
-                    return 1;
-                }
-                String s1 = pea1[i].toString();
-                String s2 = pea2[i].toString();
-                int result = s1.compareTo(s2);
-                if (result != 0) {
-                    return result;
-                }
-            }
-            return 0;
-        }
     }
 }
