@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * Thrown when a malformed JCR path string is encountered. This exception is
  * thrown when attempting to parse a JCR path string that does not match the
@@ -27,7 +25,7 @@ import org.apache.jackrabbit.BaseException;
  * See the section 4.6 of the JCR 1.0 specification for details of the
  * JCR path syntax.
  */
-public class MalformedPathException extends BaseException {
+public class MalformedPathException extends NameException {
 
     /**
      * Creates a MalformedPathException with the given error message.

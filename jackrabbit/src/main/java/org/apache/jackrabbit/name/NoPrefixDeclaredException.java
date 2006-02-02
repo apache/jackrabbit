@@ -16,15 +16,13 @@
  */
 package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * Thrown when the namespace prefix of a qualified name is not found. This
  * exception is thrown when trying to convert a qualified name whose namespace
  * prefix is not found into a JCR name string. The JCR name string can not be
  * created without the namespace prefix.
  */
-public class NoPrefixDeclaredException extends BaseException {
+public class NoPrefixDeclaredException extends NameException {
 
     /**
      * Creates a NoPrefixDeclaredException with the given error message.

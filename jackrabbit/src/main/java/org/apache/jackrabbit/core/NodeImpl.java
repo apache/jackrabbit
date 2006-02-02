@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.BaseException;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -43,6 +42,7 @@ import org.apache.jackrabbit.core.version.AbstractVersion;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -183,7 +183,7 @@ public class NodeImpl extends ItemImpl implements Node {
             } catch (PathNotFoundException pnfe) {
                 return null;
             }
-        } catch (BaseException e) {
+        } catch (NameException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg, e);
@@ -2639,7 +2639,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
                 // use prefix mappings of srcSession
                 relPath = p.toJCRPath(srcSession.getNamespaceResolver());
-            } catch (BaseException be) {
+            } catch (NameException be) {
                 // should never get here...
                 String msg = "internal error: failed to determine relative path";
                 log.error(msg, be);
@@ -3026,7 +3026,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
                 // use prefix mappings of srcSession
                 relPath = p.toJCRPath(srcSession.getNamespaceResolver());
-            } catch (BaseException be) {
+            } catch (NameException be) {
                 // should never get here...
                 String msg = "internal error: failed to determine relative path";
                 log.error(msg, be);
