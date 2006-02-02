@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
@@ -51,7 +52,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -68,7 +68,7 @@ import java.util.Iterator;
 /**
  * A <code>WorkspaceImpl</code> ...
  */
-public class WorkspaceImpl implements Workspace, EventStateCollectionFactory {
+public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionFactory {
 
     private static Logger log = Logger.getLogger(WorkspaceImpl.class);
 
@@ -176,6 +176,7 @@ public class WorkspaceImpl implements Workspace, EventStateCollectionFactory {
         session.sanityCheck();
     }
 
+    //--------------------------------------------------< JackrabbitWorkspace >
     /**
      * Creates a workspace with the given name.
      *
