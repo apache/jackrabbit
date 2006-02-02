@@ -57,8 +57,8 @@ public interface ItemStateManager {
      * Return a flag indicating whether a node references object
      * for a given target id exists.
      * @param id target id
-     * @return <code>true</code> if an item state exists,
-     *         otherwise <code>false</code>
+     * @return <code>true</code> if a node reference object exists for the given
+     *         id, otherwise <code>false</code>.
      */
     boolean hasNodeReferences(NodeReferencesId id);
 }
