@@ -257,7 +257,8 @@ public class NodeTypeReader {
                 try {
                     values.add(InternalValue.create(value, type, resolver));
                 } catch (RepositoryException e) {
-                    throw new InvalidNodeTypeDefException(e);
+                    throw new InvalidNodeTypeDefException(
+                            "Unable to create default value: " + value, e);
                 }
             }
             def.setDefaultValues((InternalValue[])

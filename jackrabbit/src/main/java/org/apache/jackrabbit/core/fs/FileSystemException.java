@@ -24,13 +24,6 @@ import org.apache.jackrabbit.BaseException;
  * implementations.
  */
 public class FileSystemException extends BaseException {
-    /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public FileSystemException() {
-        super();
-    }
 
     /**
      * Constructs a new instance of this class with the specified detail
@@ -55,12 +48,4 @@ public class FileSystemException extends BaseException {
         super(message, rootCause);
     }
 
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public FileSystemException(Throwable rootCause) {
-        super(rootCause);
-    }
 }

@@ -22,13 +22,6 @@ import org.apache.jackrabbit.BaseException;
  * The <code>InvalidConstraintException</code> ...
  */
 public class InvalidConstraintException extends BaseException {
-    /**
-     * Constructs a new instance of this class with <code>null</code> as its
-     * detail message.
-     */
-    public InvalidConstraintException() {
-        super();
-    }
 
     /**
      * Constructs a new instance of this class with the specified detail
@@ -53,12 +46,4 @@ public class InvalidConstraintException extends BaseException {
         super(message, rootCause);
     }
 
-    /**
-     * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
-     */
-    public InvalidConstraintException(Throwable rootCause) {
-        super(rootCause);
-    }
 }
