@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
@@ -51,7 +52,6 @@ import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
@@ -80,7 +80,7 @@ import java.nio.channels.FileChannel;
 /**
  * A <code>RepositoryImpl</code> ...
  */
-public class RepositoryImpl implements Repository, SessionListener,
+public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         EventListener {
 
     private static Logger log = Logger.getLogger(RepositoryImpl.class);
@@ -786,6 +786,7 @@ public class RepositoryImpl implements Repository, SessionListener,
         return ses;
     }
 
+    //-------------------------------------------------< JackrabbitRepository >
     /**
      * Shuts down this repository.
      */
