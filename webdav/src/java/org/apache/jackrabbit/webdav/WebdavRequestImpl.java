@@ -420,10 +420,14 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      *
      * @return lock info object or <code>null</code> if an error occured while
      *         parsing the request body.
+     * @throws DavException throws a 400 (Bad Request) DavException if a request
+     * body is present but does not start with a DAV:lockinfo element. Note however,
+     * that a non-existing request body is a valid request used to refresh
+     * an existing lock.
      * @see DavServletRequest#getLockInfo()
      */
-    public LockInfo getLockInfo() {
-        LockInfo lockInfo = null;
+    public LockInfo getLockInfo() throws DavException {
+        LockInfo lockInfo;
         boolean isDeep = (getDepth(DEPTH_INFINITY) == DEPTH_INFINITY);
         Document requestDocument = getRequestDocument();
         // check if XML request body is present. It SHOULD have one for
@@ -433,7 +437,8 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             if (root.getLocalName().equals(XML_LOCKINFO)) {
                 lockInfo = new LockInfo(root, getTimeout(), isDeep);
             } else {
-                log.debug("Lock-Request has no <lockinfo> tag.");
+                log.debug("Lock request body must start with a DAV:lockinfo element.");
+                throw new DavException(DavServletResponse.SC_BAD_REQUEST);
             }
         } else {
             lockInfo = new LockInfo(null, getTimeout(), isDeep);
@@ -524,14 +529,10 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     /**
      * @see org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest#getTransactionInfo()
      */
-    public TransactionInfo getTransactionInfo() {
+    public TransactionInfo getTransactionInfo() throws DavException {
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
-            try {
                 return new TransactionInfo(requestDocument.getDocumentElement());
-            } catch (IllegalArgumentException e) {
-                log.error(e.getMessage());
-            }
         }
         return null;
     }
@@ -547,7 +548,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     /**
      * @see org.apache.jackrabbit.webdav.observation.ObservationDavServletRequest#getSubscriptionInfo()
      */
-    public SubscriptionInfo getSubscriptionInfo() {
+    public SubscriptionInfo getSubscriptionInfo() throws DavException {
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
             Element root = requestDocument.getDocumentElement();
@@ -596,12 +597,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
             Element root = requestDocument.getDocumentElement();
-            try {
                 op = OrderPatch.createFromXml(root);
-            } catch (IllegalArgumentException e) {
-                log.error(e.getMessage());
-                throw new DavException(DavServletResponse.SC_BAD_REQUEST);
-            }
         } else {
             log.error("Error while building xml document from ORDERPATH request body.");
         }
@@ -623,17 +619,13 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     /**
      * @see org.apache.jackrabbit.webdav.version.DeltaVServletRequest#getLabelInfo()
      */
-    public LabelInfo getLabelInfo() {
+    public LabelInfo getLabelInfo() throws DavException {
         LabelInfo lInfo = null;
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
             Element root = requestDocument.getDocumentElement();
             int depth = getDepth(DEPTH_0);
-            try {
                 lInfo = new LabelInfo(root, depth);
-            } catch (IllegalArgumentException e) {
-                log.error(e.getMessage());
-            }
         }
         return lInfo;
     }
@@ -641,15 +633,11 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     /**
      * @see org.apache.jackrabbit.webdav.version.DeltaVServletRequest#getMergeInfo()
      */
-    public MergeInfo getMergeInfo() {
+    public MergeInfo getMergeInfo()  throws DavException {
         MergeInfo mInfo = null;
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
-            try {
                 mInfo = new MergeInfo(requestDocument.getDocumentElement());
-            } catch (IllegalArgumentException e) {
-                log.error(e.getMessage());
-            }
         }
         return mInfo;
     }
@@ -657,15 +645,11 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     /**
      * @see org.apache.jackrabbit.webdav.version.DeltaVServletRequest#getUpdateInfo()
      */
-    public UpdateInfo getUpdateInfo() {
+    public UpdateInfo getUpdateInfo() throws DavException  {
         UpdateInfo uInfo = null;
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
-            try {
                 uInfo = new UpdateInfo(requestDocument.getDocumentElement());
-            } catch (IllegalArgumentException e) {
-                log.error(e.getMessage());
-            }
         }
         return uInfo;
     }
@@ -673,7 +657,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     /**
      * @see org.apache.jackrabbit.webdav.version.DeltaVServletRequest#getReportInfo()
      */
-    public ReportInfo getReportInfo() {
+    public ReportInfo getReportInfo() throws DavException  {
         ReportInfo rInfo = null;
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
@@ -685,7 +669,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     /**
      * @see org.apache.jackrabbit.webdav.version.DeltaVServletRequest#getOptionsInfo()
      */
-    public OptionsInfo getOptionsInfo() {
+    public OptionsInfo getOptionsInfo() throws DavException {
         OptionsInfo info = null;
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {

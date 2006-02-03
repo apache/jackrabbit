@@ -20,6 +20,8 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
@@ -101,9 +103,10 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
      * @param isDeep as defined by the {@link org.apache.jackrabbit.webdav.DavConstants#HEADER_DEPTH depth header}.
      * @throws IllegalArgumentException if the reqInfo element does not contain the mandatory elements.
      */
-    public SubscriptionInfo(Element reqInfo, long timeout, boolean isDeep) {
+    public SubscriptionInfo(Element reqInfo, long timeout, boolean isDeep) throws DavException {
         if (!DomUtil.matches(reqInfo, XML_SUBSCRIPTIONINFO, NAMESPACE)) {
-            throw new IllegalArgumentException("Element with name 'subscriptioninfo' expected");
+            log.warn("Element with name 'subscriptioninfo' expected");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
         List typeList = new ArrayList();
         Element el = DomUtil.getChildElement(reqInfo, XML_EVENTTYPE, NAMESPACE);
@@ -115,11 +118,13 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
                 typeList.add(et);
             }
         } else {
-            throw new IllegalArgumentException("'subscriptioninfo' must contain an 'eventtype' child element.");
+            log.warn("'subscriptioninfo' must contain an 'eventtype' child element.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
 
         if (typeList.isEmpty()) {
-            throw new IllegalArgumentException("'subscriptioninfo' must at least indicate a single event type.");
+            log.warn("'subscriptioninfo' must at least indicate a single event type.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
         eventTypes = (EventType[]) typeList.toArray(new EventType[typeList.size()]);
 

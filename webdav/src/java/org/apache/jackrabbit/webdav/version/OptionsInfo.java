@@ -19,6 +19,8 @@ import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -107,12 +109,13 @@ public class OptionsInfo implements XmlSerializable {
      *
      * @param optionsElement
      * @return
-     * @throws IllegalArgumentException if the optionsElement is <code>null</code>
+     * @throws DavException if the optionsElement is <code>null</code>
      * or not a DAV:options element.
      */
-    public static OptionsInfo createFromXml(Element optionsElement) {
+    public static OptionsInfo createFromXml(Element optionsElement) throws DavException {
         if (!DomUtil.matches(optionsElement, DeltaVConstants.XML_OPTIONS, DeltaVConstants.NAMESPACE)) {
-            throw new IllegalArgumentException("DAV:options element expected");
+            log.warn("DAV:options element expected");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
         OptionsInfo oInfo = new OptionsInfo();
         ElementIterator it = DomUtil.getChildren(optionsElement);

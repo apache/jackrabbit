@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.webdav.observation;
 
 import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavException;
 
 /**
  * <code>ObservationDavServletRequest</code> provides extensions to the
@@ -38,6 +39,7 @@ public interface ObservationDavServletRequest extends DavServletRequest {
      *
      * @return subscription info object encapsulating the SUBSCRIBE request body
      * or <code>null</code> if the subscription info cannot be built.
+     * @throws DavException if an invalid request body was encountered.
      */
-    public SubscriptionInfo getSubscriptionInfo();
+    public SubscriptionInfo getSubscriptionInfo() throws DavException;
 }
