@@ -18,6 +18,8 @@ package org.apache.jackrabbit.webdav.transaction;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
@@ -58,16 +60,18 @@ public class TransactionInfo implements TransactionConstants, XmlSerializable {
      * @throws IllegalArgumentException if the given transactionInfo element
      * is not valid.
      */
-    public TransactionInfo(Element transactionInfo) {
+    public TransactionInfo(Element transactionInfo) throws DavException {
         if (transactionInfo == null || !XML_TRANSACTIONINFO.equals(transactionInfo.getLocalName())) {
-            throw new IllegalArgumentException("transactionInfo element expected.");
+            log.warn("'transactionInfo' element expected.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
         Element txStatus = DomUtil.getChildElement(transactionInfo, XML_TRANSACTIONSTATUS, NAMESPACE);
         if (txStatus != null) {
             // retrieve status: commit or rollback
             isCommit = DomUtil.hasChildElement(txStatus, XML_COMMIT, NAMESPACE);
         } else {
-            throw new IllegalArgumentException("transactionInfo must contain a single 'transactionstatus' element.");
+            log.warn("transactionInfo must contain a single 'transactionstatus' element.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
     }
 

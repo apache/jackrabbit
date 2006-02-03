@@ -18,6 +18,8 @@ package org.apache.jackrabbit.webdav.version;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
@@ -63,13 +65,14 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
      * Create a new <code>UpdateInfo</code> object.
      *
      * @param updateElement
-     * @throws IllegalArgumentException if the updateElement is <code>null</code>
+     * @throws DavException if the updateElement is <code>null</code>
      * or not a DAV:update element or if the element does not match the required
      * structure.
      */
-    public UpdateInfo(Element updateElement) {
+    public UpdateInfo(Element updateElement) throws DavException {
         if (!DomUtil.matches(updateElement, XML_UPDATE, NAMESPACE)) {
-            throw new IllegalArgumentException("DAV:update element expected");
+            log.warn("DAV:update element expected");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
 
         boolean done = false;
@@ -100,7 +103,8 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
             if (wspElem != null) {
                 workspaceHref = DomUtil.getChildTextTrim(wspElem, DavConstants.XML_HREF, DavConstants.NAMESPACE);
         } else {
-            throw new IllegalArgumentException("DAV:update element must contain either DAV:version, DAV:label-name or DAV:workspace child element.");
+                log.warn("DAV:update element must contain either DAV:version, DAV:label-name or DAV:workspace child element.");
+                throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
         }
 

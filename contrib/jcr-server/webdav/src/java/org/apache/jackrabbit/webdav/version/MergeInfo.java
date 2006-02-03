@@ -17,6 +17,8 @@ package org.apache.jackrabbit.webdav.version;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
@@ -54,12 +56,13 @@ public class MergeInfo implements DeltaVConstants, XmlSerializable {
      * Create a new <code>MergeInfo</code>
      *
      * @param mergeElement
-     * @throws IllegalArgumentException if the mergeElement is <code>null</code>
+     * @throws DavException if the mergeElement is <code>null</code>
      * or not a DAV:merge element.
      */
-    public MergeInfo(Element mergeElement) {
+    public MergeInfo(Element mergeElement) throws DavException {
         if (!DomUtil.matches(mergeElement, XML_MERGE, NAMESPACE)) {
-            throw new IllegalArgumentException("'DAV:merge' element expected");
+            log.warn("'DAV:merge' element expected");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
 
         // if property name set if present

@@ -313,7 +313,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @param resource
      */
     protected void doOptions(WebdavRequest request, WebdavResponse response,
-                             DavResource resource) throws IOException {
+                             DavResource resource) throws IOException, DavException {
         response.addHeader(DavConstants.HEADER_DAV, resource.getComplianceClass());
         response.addHeader("Allow", resource.getSupportedMethods());
         response.addHeader("MS-Author-Via", DavConstants.HEADER_DAV);
@@ -1022,7 +1022,6 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
             return;
         }
-        try {
             Document doc = request.getRequestDocument();
             if (doc != null) {
                 SearchInfo sR = SearchInfo.createFromXml(doc.getDocumentElement());
@@ -1031,10 +1030,6 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 // request without request body is valid if requested resource
                 // is a 'query' resource.
                 response.sendMultiStatus(((SearchResource) resource).search(null));
-            }
-        } catch (IllegalArgumentException e) {
-            response.sendError(DavServletResponse.SC_BAD_REQUEST);
-            return;
         }
     }
 
