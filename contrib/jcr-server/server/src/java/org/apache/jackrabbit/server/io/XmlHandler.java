@@ -138,7 +138,7 @@ public class XmlHandler extends DefaultHandler {
     }
 
     /**
-     * @see DefaultHandler#exportProperties(ExportContext, boolean, Node)
+     * @see DefaultHandler#exportData(ExportContext, boolean, Node)
      */
     protected void exportData(ExportContext context, boolean isCollection, Node contentNode) throws IOException, RepositoryException {
         // first child of content is XML document root
@@ -147,5 +147,22 @@ public class XmlHandler extends DefaultHandler {
         }
         OutputStream out = context.getOutputStream();
         contentNode.getSession().exportDocumentView(contentNode.getPath(), out, true, false);
+    }
+
+    /**
+     * @see DefaultHandler#exportProperties(ExportContext, boolean, Node)
+     */
+    protected void exportProperties(ExportContext context, boolean isCollection, Node contentNode) throws IOException {
+        super.exportProperties(context, isCollection, contentNode);
+        // set mimetype if the content node did not provide the
+        // jcr property (thus not handled by super class)
+        try {
+            if (!contentNode.hasProperty(JcrConstants.JCR_MIMETYPE)) {
+                context.setContentType("text/xml", "UTF-8");
+            }
+        } catch (RepositoryException e) {
+            // should never occur
+            throw new IOException(e.getMessage());
+        }
     }
 }

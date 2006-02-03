@@ -168,11 +168,13 @@ public class ExportContextImpl extends AbstractExportContext {
                 boolean hasContentLength = false;
                 Iterator it = properties.keySet().iterator();
                 while (it.hasNext()) {
-                    String name = it.next().toString();
-                    String value = properties.get(name).toString();
-                    outputCtx.setProperty(name, value);
+                    Object name = it.next();
+                    Object value = properties.get(name);
+                    if (name != null && value != null) {
+                        outputCtx.setProperty(name.toString(), value.toString());
                     // check for content-length
-                    hasContentLength = DavConstants.HEADER_CONTENT_LENGTH.equals(name);
+                        hasContentLength = DavConstants.HEADER_CONTENT_LENGTH.equals(name.toString());
+                    }
                 }
 
                 if (outputCtx.hasStream() && outFile != null) {
