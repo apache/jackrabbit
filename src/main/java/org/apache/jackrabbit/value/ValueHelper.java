@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.value;
 
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.TransientFileFactory;
@@ -231,13 +227,6 @@ public class ValueHelper {
                             throw new ValueFormatException("failed to convert source value to PATH value",
                                     re);
                         }
-                        try {
-                            // check path format
-                            Path.checkFormat(path);
-                        } catch (MalformedPathException mpe) {
-                            throw new ValueFormatException("source value " + path
-                                    + " does not represent a valid path", mpe);
-                        }
                         val = PathValue.valueOf(path);
                         break;
 
@@ -275,14 +264,6 @@ public class ValueHelper {
                             // should never happen
                             throw new ValueFormatException("failed to convert source value to NAME value",
                                     re);
-                        }
-                        try {
-                            // check name format
-                            QName.checkFormat(name);
-                        } catch (IllegalNameException ine) {
-                            throw new ValueFormatException("source value "
-                                    + name
-                                    + " does not represent a valid name", ine);
                         }
                         val = NameValue.valueOf(name);
                         break;
