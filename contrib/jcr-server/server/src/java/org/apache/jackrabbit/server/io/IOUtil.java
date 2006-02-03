@@ -110,7 +110,7 @@ public class IOUtil {
      */
     public static String buildContentType(String mimeType, String encoding) {
         String contentType = mimeType;
-        if (encoding != null) {
+        if (contentType != null && encoding != null) {
             contentType += "; charset=\"" + encoding + "\"";
         }
         return contentType;
