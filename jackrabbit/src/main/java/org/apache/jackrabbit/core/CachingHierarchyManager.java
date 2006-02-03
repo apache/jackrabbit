@@ -398,7 +398,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry now = (NodeState.ChildNodeEntry) iter.next();
             NodeState.ChildNodeEntry old =
-                    ((NodeState) state.getOverlayedState()).getChildNodeEntry(now.getUUID());;
+                    ((NodeState) state.getOverlayedState()).getChildNodeEntry(now.getUUID());
 
             if (old == null) {
                 log.warn("Reordered child node not found in old list.");
