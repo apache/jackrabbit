@@ -111,4 +111,12 @@ public interface NodeTypeConstants {
     /** Name of the <code>sameNameSiblings</code> attribute. */
     String SAMENAMESIBLINGS_ATTRIBUTE = "sameNameSiblings";
 
+    //----------< attr. not defined by copied from o.a.j.core.n.x.Constants >---
+    /**
+     * Name of the declaring nodetype. This value is not needed during
+     * discovery of nodetype definitions. However if the definition of an item is
+     * retrieved (instead of being calculated on the client), this information is
+     * needed
+     */
+    String DECLARINGNODETYPE_ATTRIBUTE = "declaringNodeType";
 }

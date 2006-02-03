@@ -102,6 +102,7 @@ abstract public class ItemDefinitionImpl implements ItemDefinition, NodeTypeCons
      */
     public Element toXml(Document document) {
 	Element elem = document.createElement(getElementName());
+        elem.setAttribute(DECLARINGNODETYPE_ATTRIBUTE, getDeclaringNodeType().getName());
         elem.setAttribute(NAME_ATTRIBUTE, getName());
         elem.setAttribute(AUTOCREATED_ATTRIBUTE, Boolean.toString(isAutoCreated()));
         elem.setAttribute(MANDATORY_ATTRIBUTE, Boolean.toString(isMandatory()));
