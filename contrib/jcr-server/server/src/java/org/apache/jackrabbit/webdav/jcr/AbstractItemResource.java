@@ -31,12 +31,17 @@ import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.LocateByUuidReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
+import org.apache.jackrabbit.webdav.jcr.nodetype.ItemDefinitionImpl;
+import org.apache.jackrabbit.webdav.jcr.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.webdav.jcr.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.Item;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
+import javax.jcr.Node;
+import javax.jcr.Property;
 
 /**
  * <code>AbstractItemResource</code> covers common functionality for the various
@@ -261,6 +266,14 @@ abstract class AbstractItemResource extends AbstractResource implements
                     String parentHref = getLocatorFromItem(item.getParent()).getHref(true);
                     properties.add(new HrefProperty(JCR_PARENT, parentHref, false));
                 }
+                // protected 'definition' property revealing the item definition
+                ItemDefinitionImpl val;
+                if (item.isNode()) {
+                    val = NodeDefinitionImpl.create(((Node)item).getDefinition());
+                } else {
+                    val = PropertyDefinitionImpl.create(((Property)item).getDefinition());
+                }
+                properties.add(new DefaultDavProperty(JCR_DEFINITION, val, true));
             } catch (RepositoryException e) {
                 // should not get here
                 log.error("Error while accessing jcr properties: " + e.getMessage());
