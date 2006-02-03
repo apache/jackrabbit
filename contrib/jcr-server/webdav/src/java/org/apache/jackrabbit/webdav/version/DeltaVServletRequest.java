@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.webdav.version;
 
 import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 
 /**
@@ -37,16 +38,18 @@ public interface DeltaVServletRequest extends DavServletRequest {
      * if parsing the request body or the creation of the label info failed.
      *
      * @return <code>LabelInfo</code> object or <code>null</code>
+     * @throws DavException in case of an invalid request body
      */
-    public LabelInfo getLabelInfo();
+    public LabelInfo getLabelInfo() throws DavException;
 
     /**
      * Return the request body as <code>MergeInfo</code> object or <code>null</code>
      * if the creation failed due to invalid format.
      *
      * @return <code>MergeInfo</code> object or <code>null</code>
+     * @throws DavException in case of an invalid request body
      */
-    public MergeInfo getMergeInfo();
+    public MergeInfo getMergeInfo() throws DavException;
 
     /**
      * Parses the UPDATE request body a build the corresponding <code>UpdateInfo</code>
@@ -54,8 +57,9 @@ public interface DeltaVServletRequest extends DavServletRequest {
      * <code>null</code> is returned.
      *
      * @return the parsed update request body or <code>null</code>
+     * @throws DavException in case of an invalid request body
      */
-    public UpdateInfo getUpdateInfo();
+    public UpdateInfo getUpdateInfo() throws DavException;
 
     /**
      * Returns the request body and the Depth header as <code>ReportInfo</code>
@@ -65,13 +69,15 @@ public interface DeltaVServletRequest extends DavServletRequest {
      * <code>null</code> is returned.
      *
      * @return <code>ReportInfo</code> or <code>null</code>
+     * @throws DavException in case of an invalid request body
      */
-    public ReportInfo getReportInfo();
+    public ReportInfo getReportInfo() throws DavException;
 
     /**
      * Returns the {@link OptionsInfo} present with the request or <code>null</code>.
      *
      * @return {@link OptionsInfo} or <code>null</code>
+     * @throws DavException in case of an invalid request body
      */
-    public OptionsInfo getOptionsInfo();
+    public OptionsInfo getOptionsInfo() throws DavException;
 }

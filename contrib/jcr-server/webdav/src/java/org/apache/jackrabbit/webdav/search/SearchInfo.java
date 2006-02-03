@@ -19,6 +19,8 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
@@ -110,19 +112,21 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
      * retrieved from the request body.
      *
      * @param searchRequest
-     * @throws IllegalArgumentException if the root element's name is other than
+     * @throws DavException if the root element's name is other than
      * 'searchrequest' or if it does not contain a single child element specifying
      * the query language to be used.
      */
-    public static SearchInfo createFromXml(Element searchRequest) {
+    public static SearchInfo createFromXml(Element searchRequest) throws DavException {
         if (searchRequest == null || !XML_SEARCHREQUEST.equals(searchRequest.getLocalName()))  {
-            throw new IllegalArgumentException("The root element must be 'searchrequest'.");
+            log.warn("The root element must be 'searchrequest'.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
         Element first = DomUtil.getFirstChildElement(searchRequest);
         if (first != null) {
             return new SearchInfo(first.getLocalName(), DomUtil.getNamespace(first), DomUtil.getText(first));
         } else {
-            throw new IllegalArgumentException("A single child element is expected with the 'DAV:searchrequest'.");
+            log.warn("A single child element is expected with the 'DAV:searchrequest'.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
     }
 }

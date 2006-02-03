@@ -16,9 +16,12 @@
 package org.apache.jackrabbit.webdav.lock;
 
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
@@ -33,6 +36,8 @@ import org.w3c.dom.Document;
  * on the requested resource.
  */
 public class LockInfo implements DavConstants, XmlSerializable {
+
+    private static Logger log = Logger.getLogger(LockInfo.class);
 
     private Type type;
     private Scope scope;
@@ -86,16 +91,17 @@ public class LockInfo implements DavConstants, XmlSerializable {
      * according to RFC 2518.
      * @param isDeep boolean value indicating whether the lock should be applied
      * with depth infinity or only to the requested resource.
-     * @throws IllegalArgumentException if the <code>liElement</code> is not
+     * @throws DavException if the <code>liElement</code> is not
      * <code>null</null> but does not start with an 'lockinfo' element.
      */
-    public LockInfo(Element liElement, long timeout, boolean isDeep) {
+    public LockInfo(Element liElement, long timeout, boolean isDeep) throws DavException {
         this.timeout = (timeout > 0) ? timeout : INFINITE_TIMEOUT;
         this.isDeep = isDeep;
 
         if (liElement != null) {
             if (!DomUtil.matches(liElement, XML_LOCKINFO, NAMESPACE)) {
-                throw new IllegalArgumentException("'DAV:lockinfo' element expected.");
+                log.warn("'DAV:lockinfo' element expected.");
+                throw new DavException(DavServletResponse.SC_BAD_REQUEST);
             }
 
             ElementIterator it = DomUtil.getChildren(liElement);

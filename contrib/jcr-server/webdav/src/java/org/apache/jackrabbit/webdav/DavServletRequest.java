@@ -130,6 +130,8 @@ public interface DavServletRequest extends HttpServletRequest {
      * @see DavConstants#PROPFIND_ALL_PROP
      * @see DavConstants#PROPFIND_BY_PROPERTY
      * @see DavConstants#PROPFIND_PROPERTY_NAMES
+     * @throws DavException If the propfind type could not be determined due to
+     * an invalid request body.
      */
     public int getPropFindType() throws DavException;
 
@@ -139,6 +141,7 @@ public interface DavServletRequest extends HttpServletRequest {
      * or {@link DavConstants#PROPFIND_PROPERTY_NAMES}.
      *
      * @return set of properties the client requested with a PROPFIND request
+     * @throws DavException In case of invalid request body
      */
     public DavPropertyNameSet getPropFindProperties() throws DavException;
 
@@ -149,6 +152,7 @@ public interface DavServletRequest extends HttpServletRequest {
      *
      * @return set of properties the client wanted to modify / create with a
      * PROPPATCH request.
+     * @throws DavException In case of invalid request body
      */
     public DavPropertySet getPropPatchSetProperties() throws DavException;
 
@@ -163,6 +167,7 @@ public interface DavServletRequest extends HttpServletRequest {
      *
      * @return set of property names the client wanted to remove with a
      * PROPPATCH request.
+     * @throws DavException In case of invalid request body
      */
     public DavPropertyNameSet getPropPatchRemoveProperties() throws DavException;
 
@@ -176,8 +181,9 @@ public interface DavServletRequest extends HttpServletRequest {
      * @see DavConstants#HEADER_TIMEOUT
      * @see DavConstants#HEADER_DEPTH
      * @see DavConstants#XML_LOCKINFO
+     * @throws DavException
      */
-    public LockInfo getLockInfo();
+    public LockInfo getLockInfo() throws DavException;
 
     /**
      * Returns true, if the {@link DavConstants#HEADER_IF If header} present

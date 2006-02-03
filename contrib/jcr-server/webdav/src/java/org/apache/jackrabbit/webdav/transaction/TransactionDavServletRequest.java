@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.webdav.transaction;
 
 import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavException;
 
 /**
  * <code>TransactionDavServletRequest</code> provides extensions to the
@@ -33,8 +34,9 @@ public interface TransactionDavServletRequest extends DavServletRequest {
      * @return <code>TransactionInfo</code> object encapsulating the 'transactioninfo'
      * Xml element present in the request body or <code>null</null> if no
      * body is present or if it could not be parsed.
+     * @throws DavException if an invalid request body is present.
      */
-    public TransactionInfo getTransactionInfo();
+    public TransactionInfo getTransactionInfo() throws DavException;
 
 
     /**

@@ -18,6 +18,8 @@ package org.apache.jackrabbit.webdav.version.report;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
@@ -88,10 +90,12 @@ public class ReportInfo implements XmlSerializable {
      *
      * @param reportElement
      * @param depth Depth value as retrieved from the {@link DavConstants#HEADER_DEPTH}.
+     * @throws DavException if the report element is <code>null</code>.
      */
-    public ReportInfo(Element reportElement, int depth) {
+    public ReportInfo(Element reportElement, int depth) throws DavException {
         if (reportElement == null) {
-            throw new IllegalArgumentException("Report request body must not be null.");
+            log.warn("Report request body must not be null.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
 
         this.typeLocalName = reportElement.getLocalName();

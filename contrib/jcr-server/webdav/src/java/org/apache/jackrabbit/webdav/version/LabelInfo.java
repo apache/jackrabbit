@@ -19,6 +19,8 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
@@ -101,14 +103,15 @@ public class LabelInfo implements DeltaVConstants, XmlSerializable {
      *
      * @param labelElement
      * @param depth
-     * @throws IllegalArgumentException if the specified element does not
+     * @throws DavException if the specified element does not
      * start with a {@link DeltaVConstants#XML_LABEL} element or if the DAV:label
      * element contains illegal instructions e.g. contains multiple DAV:add, DAV:set
      * or DAV:remove elements.
      */
-    public LabelInfo(Element labelElement, int depth) {
+    public LabelInfo(Element labelElement, int depth) throws DavException {
         if (!DomUtil.matches(labelElement, DeltaVConstants.XML_LABEL, DeltaVConstants.NAMESPACE)) {
-            throw new IllegalArgumentException("DAV:label element expected");
+            log.warn("DAV:label element expected");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
 
         String label = null;
@@ -121,7 +124,8 @@ public class LabelInfo implements DeltaVConstants, XmlSerializable {
             }
             }
         if (label == null) {
-            throw new IllegalArgumentException("DAV:label element must contain at least one set, add or remove element defining a label-name.");
+            log.warn("DAV:label element must contain at least one set, add or remove element defining a label-name.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
         this.labelName = label;
         this.type = type;
@@ -133,10 +137,10 @@ public class LabelInfo implements DeltaVConstants, XmlSerializable {
      * the default value 0 is assumed.
      *
      * @param labelElement
-     * @throws IllegalArgumentException
+     * @throws DavException
      * @see #LabelInfo(org.w3c.dom.Element;, int)
      */
-    public LabelInfo(Element labelElement) {
+    public LabelInfo(Element labelElement) throws DavException {
         this(labelElement, 0);
     }
 

@@ -17,6 +17,8 @@ package org.apache.jackrabbit.webdav.ordering;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
@@ -115,9 +117,10 @@ public class OrderPatch implements OrderingConstants, XmlSerializable {
      * @param orderPatchElement
      * @throws IllegalArgumentException if the specified Xml element was not valid.
      */
-    public static OrderPatch createFromXml(Element orderPatchElement) {
+    public static OrderPatch createFromXml(Element orderPatchElement) throws DavException {
         if (!DomUtil.matches(orderPatchElement, XML_ORDERPATCH, NAMESPACE)) {
-            throw new IllegalArgumentException("ORDERPATH request body must start with an 'orderpatch' element.");
+            log.warn("ORDERPATH request body must start with an 'orderpatch' element.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
 
         // retrieve the href of the orderingtype element
@@ -126,7 +129,8 @@ public class OrderPatch implements OrderingConstants, XmlSerializable {
         if (otype != null) {
             orderingType = DomUtil.getChildText(otype, DavConstants.XML_HREF, DavConstants.NAMESPACE);
         } else {
-            throw new IllegalArgumentException("ORDERPATH request body must contain an 'ordering-type' child element.");
+            log.warn("ORDERPATH request body must contain an 'ordering-type' child element.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
 
         // set build the list of ordering instructions
@@ -142,7 +146,8 @@ public class OrderPatch implements OrderingConstants, XmlSerializable {
                 Member om = new Member(segment, pos);
                 tmpList.add(om);
             } catch (IllegalArgumentException e) {
-                log.error("Invalid element in 'orderpatch' request body: " + e.getMessage());
+                log.warn("Invalid element in 'orderpatch' request body: " + e.getMessage());
+                throw new DavException(DavServletResponse.SC_BAD_REQUEST);
             }
         }
         Member[] instructions = (Member[]) tmpList.toArray(new Member[tmpList.size()]);
