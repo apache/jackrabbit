@@ -56,4 +56,27 @@ public class OnParentVersionIgnoreTest extends AbstractOnParentVersionTest {
 
         assertEquals("On restore of a OnParentVersion-IGNORE property P, the current value of P must be left unchanged.", p.getString(), newPropValue);
     }
+
+    /**
+     * Test the restore of a OnParentVersion-Ignore node
+     *
+     * @throws javax.jcr.RepositoryException
+     */
+    public void testRestoreNode() throws RepositoryException {
+
+        versionableNode.checkout();
+        Version v = versionableNode.checkin();
+        versionableNode.checkout();
+
+        // add 'ignore' child
+        String childName = addChildNode(OPVAction).getName();
+        versionableNode.save();
+        
+        versionableNode.restore(v, false);
+
+        if (!versionableNode.hasNode(childName)) {
+            fail("On restore of a OnParentVersion-Ignore child node, the node needs to be untouched.");
+        }
+    }
+
 }
