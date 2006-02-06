@@ -3616,12 +3616,16 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
 
-        // first delete all non frozen version histories
+        // first delete all non frozen version histories (i.e. all OPV=Copy)
         NodeIterator iter = getNodes();
         while (iter.hasNext()) {
             NodeImpl n = (NodeImpl) iter.nextNode();
             if (!freeze.hasFrozenHistory(n.internalGetUUID())) {
-                n.internalRemove(true);
+                if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY
+                        || n.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
+                    // only remove OPV=Copy or OPV=Version nodes
+                    n.internalRemove(true);
+                }
             }
         }
 
