@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.commons.collections.MapIterator;
+import org.apache.commons.collections.OrderedMapIterator;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.NodeId;
@@ -35,7 +36,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -43,25 +43,39 @@ import java.util.Set;
  */
 public class NodeState extends ItemState {
 
-    /** Serialization UID of this class. */
+    /**
+     * Serialization UID of this class.
+     */
     static final long serialVersionUID = -4116945555530446652L;
 
-    /** the uuid of this node */
+    /**
+     * the uuid of this node
+     */
     protected String uuid;
 
-    /** the name of this node's primary type */
+    /**
+     * the name of this node's primary type
+     */
     protected QName nodeTypeName;
 
-    /** the names of this node's mixin types */
+    /**
+     * the names of this node's mixin types
+     */
     protected HashSet mixinTypeNames = new HashSet();
 
-    /** id of this node's definition */
+    /**
+     * id of this node's definition
+     */
     protected NodeDefId defId;
 
-    /** insertion-ordered collection of ChildNodeEntry objects */
+    /**
+     * insertion-ordered collection of ChildNodeEntry objects
+     */
     protected ChildNodeEntries childNodeEntries = new ChildNodeEntries();
 
-    /** set of property names (QName objects) */
+    /**
+     * set of property names (QName objects)
+     */
     protected HashSet propertyNames = new HashSet();
 
     /**
@@ -313,7 +327,7 @@ public class NodeState extends ItemState {
      * Renames a new <code>ChildNodeEntry</code>.
      *
      * @param oldName <code>QName</code> object specifying the entry's old name
-     * @param index 1-based index if there are same-name child node entries
+     * @param index   1-based index if there are same-name child node entries
      * @param newName <code>QName</code> object specifying the entry's new name
      * @return <code>true</code> if the entry was sucessfully renamed;
      *         otherwise <code>false</code>
@@ -374,8 +388,14 @@ public class NodeState extends ItemState {
      * child nodes of this node.
      */
     public synchronized void setChildNodeEntries(List nodeEntries) {
-        childNodeEntries.removeAll();
-        childNodeEntries.addAll(nodeEntries);
+        if (nodeEntries instanceof ChildNodeEntries) {
+            // optimization
+            ChildNodeEntries entries = (ChildNodeEntries) nodeEntries;
+            childNodeEntries = (ChildNodeEntries) entries.clone();
+        } else {
+            childNodeEntries.removeAll();
+            childNodeEntries.addAll(nodeEntries);
+        }
         notifyNodesReplaced();
     }
 
@@ -423,6 +443,10 @@ public class NodeState extends ItemState {
      * properties of this node.
      */
     public synchronized void setPropertyNames(Set propNames) {
+        if (propNames instanceof HashSet) {
+            HashSet names = (HashSet) propNames;
+            propNames = (HashSet) names.clone();
+        }
         propertyNames.clear();
         propertyNames.addAll(propNames);
     }
@@ -539,24 +563,31 @@ public class NodeState extends ItemState {
             return Collections.EMPTY_LIST;
         }
 
-        List others = new ArrayList();
-        others.addAll(((NodeState) getOverlayedState()).getChildNodeEntries());
+        ChildNodeEntries otherChildNodeEntries =
+                ((NodeState) overlayedState).childNodeEntries;
 
-        List ours = new ArrayList();
-        ours.addAll(childNodeEntries);
+        if (childNodeEntries.isEmpty()
+                || otherChildNodeEntries.isEmpty()) {
+            return Collections.EMPTY_LIST;
+        }
+
+        // build intersections of both collections,
+        // each preserving their relative order
+        List ours = childNodeEntries.retainAll(otherChildNodeEntries);
+        List others = otherChildNodeEntries.retainAll(childNodeEntries);
 
         // do a lazy init
         List reordered = null;
-        // remove added nodes from 'our' entries
-        ours.removeAll(getAddedChildNodeEntries());
-        // remove all removed nodes from 'other' entries
-        others.removeAll(getRemovedChildNodeEntries());
         // both entry lists now contain the set of nodes that have not
         // been removed or added, but they may have changed their position.
         for (int i = 0; i < ours.size();) {
             ChildNodeEntry entry = (ChildNodeEntry) ours.get(i);
             ChildNodeEntry other = (ChildNodeEntry) others.get(i);
-            if (!entry.getUUID().equals(other.getUUID())) {
+            if (entry == other || entry.getUUID().equals(other.getUUID())) {
+                // no reorder, move to next child entry
+                i++;
+            } else {
+                // reordered entry detected
                 if (reordered == null) {
                     reordered = new ArrayList();
                 }
@@ -596,9 +627,6 @@ public class NodeState extends ItemState {
                 // if a reorder has been detected index <code>i</code> is not
                 // incremented because entries will be shifted when the
                 // reordered entry is removed.
-            } else {
-                // no reorder, move to next child entry
-                i++;
             }
         }
         if (reordered == null) {
@@ -611,7 +639,7 @@ public class NodeState extends ItemState {
     //--------------------------------------------------< ItemState overrides >
     /**
      * {@inheritDoc}
-     *
+     * <p/>
      * If the listener passed is at the same time a <code>NodeStateListener</code>
      * we add it to our list of specialized listeners.
      */
@@ -628,7 +656,7 @@ public class NodeState extends ItemState {
 
     /**
      * {@inheritDoc}
-     *
+     * <p/>
      * If the listener passed is at the same time a <code>NodeStateListener</code>
      * we remove it from our list of specialized listeners.
      */
@@ -866,8 +894,8 @@ public class NodeState extends ItemState {
             ChildNodeEntry entry = (ChildNodeEntry) entries.get(uuid);
             if (entry != null) {
                 return remove(entry.getName(), entry.getIndex());
-           }
-           return entry;
+            }
+            return entry;
         }
 
         public ChildNodeEntry remove(ChildNodeEntry entry) {
@@ -881,7 +909,7 @@ public class NodeState extends ItemState {
 
         /**
          * Returns a list of <code>ChildNodeEntry</code>s who do only exist in
-         * <code>this</code> but not in <code>other</code>
+         * <code>this</code> but not in <code>other</code>.
          * <p/>
          * Note that two entries are considered identical in this context if
          * they have the same name and uuid, i.e. the index is disregarded
@@ -905,8 +933,46 @@ public class NodeState extends ItemState {
             while (iter.hasNext()) {
                 ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                 ChildNodeEntry otherEntry = (ChildNodeEntry) other.get(entry.uuid);
+                if (entry == otherEntry) {
+                    continue;
+                }
                 if (otherEntry == null
                         || !entry.getName().equals(otherEntry.getName())) {
+                    result.add(entry);
+                }
+            }
+
+            return result;
+        }
+
+        /**
+         * Returns a list of <code>ChildNodeEntry</code>s who do exist in
+         * <code>this</code> <i>and</i> in <code>other</code>.
+         * <p/>
+         * Note that two entries are considered identical in this context if
+         * they have the same name and uuid, i.e. the index is disregarded
+         * whereas <code>ChildNodeEntry.equals(Object)</code> also compares
+         * the index.
+         *
+         * @param other entries to be retained
+         * @return a new list of those entries that do exist in
+         *         <code>this</code> <i>and</i> in <code>other</code>
+         */
+        List retainAll(ChildNodeEntries other) {
+            if (entries.isEmpty()
+                    || other.isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
+
+            List result = new ArrayList();
+            Iterator iter = iterator();
+            while (iter.hasNext()) {
+                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+                ChildNodeEntry otherEntry = (ChildNodeEntry) other.get(entry.uuid);
+                if (entry == otherEntry) {
+                    result.add(entry);
+                } else if (otherEntry != null
+                        && entry.getName().equals(otherEntry.getName())) {
                     result.add(entry);
                 }
             }
@@ -955,15 +1021,22 @@ public class NodeState extends ItemState {
         }
 
         public Iterator iterator() {
-            return new OrderedMapIterator(entries.asList().listIterator(), entries);
+            return new EntriesIterator();
         }
 
         public ListIterator listIterator() {
-            return new OrderedMapIterator(entries.asList().listIterator(), entries);
+            return new EntriesIterator();
         }
 
         public ListIterator listIterator(int index) {
-            return new OrderedMapIterator(entries.asList().listIterator(index), entries);
+            if (index < 0 || index >= entries.size()) {
+                throw new IndexOutOfBoundsException();
+            }
+            ListIterator iter = new EntriesIterator();
+            while (index-- > 0) {
+                iter.next();
+            }
+            return iter;
         }
 
         public int size() {
@@ -1070,13 +1143,14 @@ public class NodeState extends ItemState {
         /**
          * Returns a shallow copy of this <code>ChildNodeEntries</code> instance;
          * the entries themselves are not cloned.
+         *
          * @return a shallow copy of this instance.
          */
         protected Object clone() {
             ChildNodeEntries clone = new ChildNodeEntries();
             clone.entries = (LinkedMap) entries.clone();
             clone.nameMap = new HashMap(nameMap.size());
-            for (Iterator it = nameMap.keySet().iterator(); it.hasNext(); ) {
+            for (Iterator it = nameMap.keySet().iterator(); it.hasNext();) {
                 Object key = it.next();
                 Object obj = nameMap.get(key);
                 if (obj instanceof ArrayList) {
@@ -1089,38 +1163,38 @@ public class NodeState extends ItemState {
         }
 
         //----------------------------------------------------< inner classes >
-        class OrderedMapIterator implements ListIterator {
+        class EntriesIterator implements ListIterator {
 
-            final ListIterator keyIter;
-            final Map entries;
+            OrderedMapIterator mapIter;
 
-            OrderedMapIterator(ListIterator keyIter, Map entries) {
-                this.keyIter = keyIter;
-                this.entries = entries;
+            EntriesIterator() {
+                mapIter = entries.orderedMapIterator();
             }
 
             public boolean hasNext() {
-                return keyIter.hasNext();
+                return mapIter.hasNext();
             }
 
             public Object next() {
-                return entries.get(keyIter.next());
+                mapIter.next();
+                return mapIter.getValue();
             }
 
             public boolean hasPrevious() {
-                return keyIter.hasPrevious();
+                return mapIter.hasPrevious();
             }
 
             public int nextIndex() {
-                return keyIter.nextIndex();
+                return entries.indexOf(mapIter.getKey()) + 1;
             }
 
             public Object previous() {
-                return entries.get(keyIter.previous());
+                mapIter.previous();
+                return mapIter.getValue();
             }
 
             public int previousIndex() {
-                return keyIter.previousIndex();
+                return entries.indexOf(mapIter.getKey()) - 1;
             }
 
             public void add(Object o) {
