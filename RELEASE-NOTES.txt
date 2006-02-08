@@ -40,19 +40,17 @@ This release contains the main Jackrabbit implementation and the
 JCR-RMI network layer for the JCR API. The JCR utility library
 jackrabbit-commons is also included in this release.
 
-The release files are organized in three directories: src, bin, 
-and jar. The src directory contains the full source code packages
-of Jackrabbit and JCR-RMI. The related packages in the bin
-directory contain the compiled binaries and documentation. The jar
-directory contains just the compiled jar files found in the binary 
-packages. 
+The release contains both binary and source jar files. The binary
+jackrabbit and jackrabbit-commons jar files are built from the
+jackrabbit-0.9-incubating-src.jar file, and the binary jcr-rmi jar
+file from the jcr-rmi-0.9-incubating-src.jar file.
 
 The runtime dependency libraries are not included in the release,
 you need to download the dependencies separately.
 
 Each release file is accompanied by an MD5 checksum and a PGP
 signature. The public key used for the signatures is located
-in the KEYS file.
+in the KEYS file located in the parent directory.
 
 Known Issues
 ------------
