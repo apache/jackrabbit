@@ -66,14 +66,7 @@ public class NodeTypeImpl implements NodeType {
         this.ent = ent;
         this.ntMgr = ntMgr;
         this.nsResolver = nsResolver;
-        try {
-            // store a clone of the definition
-            this.ntd = (NodeTypeDef) ntd.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
+        this.ntd = ntd;
     }
 
     /**
@@ -94,14 +87,8 @@ public class NodeTypeImpl implements NodeType {
      * @return the definition of this node type
      */
     public NodeTypeDef getDefinition() {
-        try {
-            // return a clone of the definition
-            return (NodeTypeDef) ntd.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
+        // return clone to make sure nobody messes around with the 'live' definition
+        return (NodeTypeDef) ntd.clone();
     }
 
     /**

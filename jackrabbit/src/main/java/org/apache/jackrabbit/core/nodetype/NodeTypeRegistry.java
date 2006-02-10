@@ -230,13 +230,7 @@ public class NodeTypeRegistry implements Dumpable {
         entCache.put(ent);
 
         // register clone of node type definition
-        try {
-            ntd = (NodeTypeDef) ntd.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
+        ntd = (NodeTypeDef) ntd.clone();
         registeredNTDefs.put(name, ntd);
 
         // store property & child node definitions of new node type by id
@@ -252,31 +246,86 @@ public class NodeTypeRegistry implements Dumpable {
         return ent;
     }
 
-    private void internalUnregister(QName name)
-            throws NoSuchNodeTypeException, RepositoryException {
-        if (!registeredNTDefs.containsKey(name)) {
-            throw new NoSuchNodeTypeException(name.toString());
-        }
-        if (builtInNTDefs.contains(name)) {
-            throw new RepositoryException(name.toString()
-                    + ": can't unregister built-in node type.");
+    /**
+     * Validates and registers the specified collection of <code>NodeTypeDef</code>
+     * objects. An <code>InvalidNodeTypeDefException</code> is thrown if the
+     * validation of any of the contained <code>NodeTypeDef</code> objects fails.
+     * <p/>
+     * Note that in the case an exception is thrown no node type will be
+     * eventually registered.
+     *
+     * @param ntDefs collection of <code>NodeTypeDef</code> objects
+     * @throws InvalidNodeTypeDefException
+     * @throws RepositoryException
+     * @see #registerNodeType
+     */
+    private synchronized void internalRegister(Collection ntDefs)
+            throws InvalidNodeTypeDefException, RepositoryException {
+
+        // @todo review
+
+        // cache of pre-built aggregations of node types
+        EffectiveNodeTypeCache anEntCache = new EffectiveNodeTypeCache(entCache);
+
+        // map of node type names and node type definitions
+        Map aRegisteredNTDefCache = new HashMap(registeredNTDefs);
+
+        // temporarily register the node type definition
+        // and do some preliminary checks
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntd = (NodeTypeDef) iter.next();
+            QName name = ntd.getName();
+            if (name != null && registeredNTDefs.containsKey(name)) {
+                String msg = name + " already exists";
+                log.debug(msg);
+                throw new InvalidNodeTypeDefException(msg);
+            }
+            // add definition to temporary cache
+            aRegisteredNTDefCache.put(ntd.getName(), ntd);
         }
 
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntd = (NodeTypeDef) iter.next();
+
+            EffectiveNodeType ent = validateNodeTypeDef(ntd, anEntCache, aRegisteredNTDefCache);
+
+            // store new effective node type instance
+            anEntCache.put(ent);
+        }
+
+        // since no exception was thrown so far the definitions are assumed to be valid
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntd = (NodeTypeDef) iter.next();
+
+            // register clone of node type definition
+            ntd = (NodeTypeDef) ntd.clone();
+            registeredNTDefs.put(ntd.getName(), ntd);
+            // store property & child node definitions of new node type by id
+            PropDef[] pda = ntd.getPropertyDefs();
+            for (int i = 0; i < pda.length; i++) {
+                propDefs.put(pda[i].getId(), pda[i]);
+            }
+            NodeDef[] nda = ntd.getChildNodeDefs();
+            for (int i = 0; i < nda.length; i++) {
+                nodeDefs.put(nda[i].getId(), nda[i]);
+            }
+        }
+    }
+
+    private void internalUnregister(QName name) throws NoSuchNodeTypeException {
         NodeTypeDef ntd = (NodeTypeDef) registeredNTDefs.get(name);
+        if (ntd == null) {
+            throw new NoSuchNodeTypeException(name.toString());
+        }
         registeredNTDefs.remove(name);
         /**
          * remove all affected effective node types from aggregates cache
-         * (collect keys first to prevent ConcurrentModificationException)
+         * (copy keys first to prevent ConcurrentModificationException)
          */
-        Iterator iter = entCache.keys();
-        ArrayList keys = new ArrayList();
-        while (iter.hasNext()) {
-            keys.add(iter.next());
-        }
-        iter = keys.iterator();
-        while (iter.hasNext()) {
+        ArrayList keys = new ArrayList(entCache.keySet());
+        for (Iterator keysIter = keys.iterator(); keysIter.hasNext();) {
             EffectiveNodeTypeCache.WeightedKey k =
-                    (EffectiveNodeTypeCache.WeightedKey) iter.next();
+                    (EffectiveNodeTypeCache.WeightedKey) keysIter.next();
             EffectiveNodeType ent = entCache.get(k);
             if (ent.includesNodeType(name)) {
                 entCache.remove(k);
@@ -291,6 +340,14 @@ public class NodeTypeRegistry implements Dumpable {
         NodeDef[] nda = ntd.getChildNodeDefs();
         for (int i = 0; i < nda.length; i++) {
             nodeDefs.remove(nda[i].getId());
+        }
+    }
+
+    private void internalUnregister(Collection ntNames)
+            throws NoSuchNodeTypeException {
+        for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
+            QName name = (QName) iter.next();
+            internalUnregister(name);
         }
     }
 
@@ -398,7 +455,9 @@ public class NodeTypeRegistry implements Dumpable {
      * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
-    private EffectiveNodeType validateNodeTypeDef(NodeTypeDef ntd, EffectiveNodeTypeCache anEntCache, Map aRegisteredNTDefCache)
+    private EffectiveNodeType validateNodeTypeDef(NodeTypeDef ntd,
+                                                  EffectiveNodeTypeCache anEntCache,
+                                                  Map aRegisteredNTDefCache)
             throws InvalidNodeTypeDefException, RepositoryException {
 
         /**
@@ -791,7 +850,9 @@ public class NodeTypeRegistry implements Dumpable {
      * @return
      * @throws NoSuchNodeTypeException
      */
-    public synchronized EffectiveNodeType getEffectiveNodeType(QName ntName, EffectiveNodeTypeCache anEntCache, Map aRegisteredNTDefCache)
+    public synchronized EffectiveNodeType getEffectiveNodeType(QName ntName,
+                                                               EffectiveNodeTypeCache anEntCache,
+                                                               Map aRegisteredNTDefCache)
             throws NoSuchNodeTypeException {
         // 1. make sure that the specified node type exists
         if (!aRegisteredNTDefCache.containsKey(ntName)) {
@@ -806,17 +867,8 @@ public class NodeTypeRegistry implements Dumpable {
 
         // 3. build effective node type
         try {
-            NodeTypeDef def = (NodeTypeDef) aRegisteredNTDefCache.get(ntName);
-            NodeTypeDef ntDef4ENT;
-            // return clone to make sure nobody messes around with the 'live' definition
-            try {
-                ntDef4ENT = (NodeTypeDef) def.clone();
-            } catch (CloneNotSupportedException e) {
-                // should never get here
-                log.fatal("internal error", e);
-                throw new InternalError(e.getMessage());
-            }
-            ent = EffectiveNodeType.create(this, ntDef4ENT, anEntCache, aRegisteredNTDefCache);
+            NodeTypeDef ntd = (NodeTypeDef) aRegisteredNTDefCache.get(ntName);
+            ent = EffectiveNodeType.create(this, ntd, anEntCache, aRegisteredNTDefCache);
             // store new effective node type
             anEntCache.put(ent);
             return ent;
@@ -836,7 +888,9 @@ public class NodeTypeRegistry implements Dumpable {
      * @throws NodeTypeConflictException
      * @throws NoSuchNodeTypeException
      */
-    public synchronized EffectiveNodeType getEffectiveNodeType(QName[] ntNames, EffectiveNodeTypeCache anEntCache, Map aRegisteredNTDefCache)
+    public synchronized EffectiveNodeType getEffectiveNodeType(QName[] ntNames,
+                                                               EffectiveNodeTypeCache anEntCache,
+                                                               Map aRegisteredNTDefCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // 1. make sure every single node type exists
         for (int i = 0; i < ntNames.length; i++) {
@@ -872,7 +926,7 @@ public class NodeTypeRegistry implements Dumpable {
              * aggregate (i.e. the cost of building it)
              */
             boolean foundSubResult = false;
-            Iterator iter = anEntCache.keys();
+            Iterator iter = anEntCache.keyIterator();
             while (iter.hasNext()) {
                 EffectiveNodeTypeCache.WeightedKey k =
                         (EffectiveNodeTypeCache.WeightedKey) iter.next();
@@ -895,19 +949,9 @@ public class NodeTypeRegistry implements Dumpable {
                  */
                 QName[] remainder = key.toArray();
                 for (int i = 0; i < remainder.length; i++) {
-                    NodeTypeDef def = (NodeTypeDef) aRegisteredNTDefCache.get(remainder[i]);
-                    NodeTypeDef clonedDef;
-                    // return clone to make sure nobody messes around with the 'live' definition
-                    try {
-                        clonedDef = (NodeTypeDef) def.clone();
-                    } catch (CloneNotSupportedException e) {
-                        // should never get here
-                        log.fatal("internal error", e);
-                        throw new InternalError(e.getMessage());
-                    }
-
+                    NodeTypeDef ntd = (NodeTypeDef) aRegisteredNTDefCache.get(remainder[i]);
                     EffectiveNodeType ent =
-                            EffectiveNodeType.create(this, clonedDef, anEntCache, aRegisteredNTDefCache);
+                            EffectiveNodeType.create(this, ntd, anEntCache, aRegisteredNTDefCache);
                     // store new effective node type
                     anEntCache.put(ent);
                     if (result == null) {
@@ -975,7 +1019,9 @@ public class NodeTypeRegistry implements Dumpable {
         return getEffectiveNodeType(ntNames, entCache, registeredNTDefs);
     }
 
-    void checkForCircularInheritance(QName[] supertypes, Stack inheritanceChain, Map aRegisteredNTDefCache)
+    void checkForCircularInheritance(QName[] supertypes,
+                                     Stack inheritanceChain,
+                                     Map aRegisteredNTDefCache)
             throws InvalidNodeTypeDefException, RepositoryException {
         for (int i = 0; i < supertypes.length; i++) {
             QName nt = supertypes[i];
@@ -1062,7 +1108,8 @@ public class NodeTypeRegistry implements Dumpable {
 
     /**
      * Validates the <code>NodeTypeDef</code> and returns
-     * a registered <code>EffectiveNodeType</code> instance.
+     * an  <code>EffectiveNodeType</code> object representing the newly
+     * registered node type.
      * <p/>
      * The validation includes the following checks:
      * <ul>
@@ -1118,176 +1165,110 @@ public class NodeTypeRegistry implements Dumpable {
      * <p/>
      * This method can be used to register a set of node types that have
      * dependencies on each other.
-     * <p/>
-     * Note that in the case an exception is thrown, some node types might have
-     * been nevertheless successfully registered.
      *
-     * @param newNTDefs a collection of <code>NodeTypeDef<code>s
+     * @param ntDefs a collection of <code>NodeTypeDef<code> objects
      * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
-    public synchronized void registerNodeTypes(Collection newNTDefs)
+    public synchronized void registerNodeTypes(Collection ntDefs)
             throws InvalidNodeTypeDefException, RepositoryException {
-        // exceptions that might be thrown by internalRegister(Collection)
-        RepositoryException re = null;
-        InvalidNodeTypeDefException intde = null;
-
-        try {
-            internalRegister(newNTDefs);
-        } catch (RepositoryException e) {
-            // store exception so it can be re-thrown later on
-            re = e;
-        } catch (InvalidNodeTypeDefException e) {
-            // store exception so it can be re-thrown later on
-            intde = e;
+        // validate and register new node type definitions
+        internalRegister(ntDefs);
+        // persist new node type definitions
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntDef = (NodeTypeDef) iter.next();
+            customNTDefs.add(ntDef);
         }
-        boolean allNodeTypeDefsAreValid = re == null && intde == null;
-        if (allNodeTypeDefsAreValid) {
-            Iterator validNTDsIterator = newNTDefs.iterator();
-            while (validNTDsIterator.hasNext()) {
-                NodeTypeDef ntd = (NodeTypeDef) validNTDsIterator.next();
-                // store property & child node definitions of new node type by id
-                customNTDefs.add(ntd);
-            }
-            persistCustomNodeTypeDefs(customNTDefs);
-            // notify listeners
-            for (Iterator iter = newNTDefs.iterator(); iter.hasNext();) {
-                NodeTypeDef ntDef = (NodeTypeDef) iter.next();
-                notifyRegistered(ntDef.getName());
-            }
-        } else {
-            // re-throw the exception
-            if (re != null) {
-                throw re;
-            } else if (intde != null) {
-                throw intde;
-            }
-        }
-    }
-
-    /**
-     * Validates and registers the specified collection of <code>NodeTypeDef</code>
-     * objects. An <code>InvalidNodeTypeDefException</code> is thrown if the
-     * validation of any of the contained <code>NodeTypeDef</code> objects fails.
-     * <p/>
-     * Note that in the case an exception is thrown no node type will be
-     * registered.
-     *
-     * @param newNTDefs collection of <code>NodeTypeDef</code> objects
-     * @throws InvalidNodeTypeDefException
-     * @throws RepositoryException
-     * @see #registerNodeType
-     */
-    private synchronized void internalRegister(Collection newNTDefs)
-            throws InvalidNodeTypeDefException, RepositoryException {
-
-        // cache of pre-built aggregations of node types
-        EffectiveNodeTypeCache anEntCache = new EffectiveNodeTypeCache(entCache);
-        
-        // map of node type names and node type definitions
-        Map aRegisteredNTDefCache = new HashMap(registeredNTDefs);
-        
-        // temporarily register a clone of the node type definition
-        // and do some checks by the way
-        Iterator ntdNameIterator = newNTDefs.iterator();
-        while (ntdNameIterator.hasNext()) {
-            Object ntdObject = ntdNameIterator.next();
-            // check if the right type is used
-            if (!(ntdObject instanceof NodeTypeDef)) {
-                String msg = "The specified object is not of type "
-                        + NodeTypeDef.class.getName();
-                log.debug(msg);
-                throw new InvalidNodeTypeDefException(msg);
-            } else {
-                // check if the ntd is new
-                NodeTypeDef ntd = (NodeTypeDef) ntdObject;
-                QName name = ntd.getName();
-                if (name != null && registeredNTDefs.containsKey(name)) {
-                    String msg = name + " already exists";
-                    log.debug(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
-                // clone the ntd and add it to the cache
-                NodeTypeDef clonedNTD;
-                try {
-                    clonedNTD = (NodeTypeDef) ntd.clone();
-                } catch (CloneNotSupportedException e) {
-                    // should never get here
-                    log.fatal("internal error", e);
-                    throw new InternalError(e.getMessage());
-                }
-                aRegisteredNTDefCache.put(clonedNTD.getName(), clonedNTD);
-            }
-        }
-        Iterator ntdIterator = newNTDefs.iterator();
-        while (ntdIterator.hasNext()) {
-            NodeTypeDef ntd = (NodeTypeDef) ntdIterator.next();
-
-            EffectiveNodeType ent = validateNodeTypeDef(ntd, anEntCache, aRegisteredNTDefCache);
-
-            // store new effective node type instance
-            anEntCache.put(ent);
-        }
-        // as no exception occured at this point, the ntds are valid
-        Iterator validNTDsIterator = newNTDefs.iterator();
-        while (validNTDsIterator.hasNext()) {
-            NodeTypeDef ntd = (NodeTypeDef) validNTDsIterator.next();
-            registeredNTDefs.put(ntd.getName(), ntd);
-            // store property & child node definitions of new node type by id
-            PropDef[] pda = ntd.getPropertyDefs();
-            for (int i = 0; i < pda.length; i++) {
-                propDefs.put(pda[i].getId(), pda[i]);
-            }
-            NodeDef[] nda = ntd.getChildNodeDefs();
-            for (int i = 0; i < nda.length; i++) {
-                nodeDefs.put(nda[i].getId(), nda[i]);
-            }
-        }
-    }
-
-    /**
-     * @param nodeTypeName
-     * @throws NoSuchNodeTypeException
-     * @throws RepositoryException
-     */
-    public synchronized void unregisterNodeType(QName nodeTypeName)
-            throws NoSuchNodeTypeException, RepositoryException {
-        if (!registeredNTDefs.containsKey(nodeTypeName)) {
-            throw new NoSuchNodeTypeException(nodeTypeName.toString());
-        }
-        if (builtInNTDefs.contains(nodeTypeName)) {
-            throw new RepositoryException(nodeTypeName.toString()
-                    + ": can't unregister built-in node type.");
-        }
-
-        /**
-         * check if there are node types that have dependencies on the given
-         * node type
-         */
-        Set dependentNTs = getDependentNodeTypes(nodeTypeName);
-        if (dependentNTs.size() > 0) {
-            StringBuffer msg = new StringBuffer();
-            msg.append(nodeTypeName
-                    + " could not be removed because the following node types are referencing it: ");
-            Iterator iterator = dependentNTs.iterator();
-            while (iterator.hasNext()) {
-                msg.append(iterator.next());
-                msg.append(" ");
-            }
-            throw new RepositoryException(msg.toString());
-        }
-
-        // make sure node type is not currently in use
-        checkForReferencesInContent(nodeTypeName);
-
-        internalUnregister(nodeTypeName);
-
-        // persist removal of node type definition
-        customNTDefs.remove(nodeTypeName);
         persistCustomNodeTypeDefs(customNTDefs);
-
         // notify listeners
-        notifyUnregistered(nodeTypeName);
+        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
+            NodeTypeDef ntDef = (NodeTypeDef) iter.next();
+            notifyRegistered(ntDef.getName());
+        }
+    }
+
+    /**
+     * Same as <code>{@link #unregisterNodeType(QName)}</code> except
+     * that a set of node types is unregistered instead of just one.
+     * <p/>
+     * This method can be used to unregister a set of node types that depend on
+     * each other.
+     *
+     * @param ntNames a collection of <code>QName</code> objects denoting the
+     *                node types to be unregistered
+     * @throws NoSuchNodeTypeException if any of the specified names does not
+     *                                 denote a registered node type.
+     * @throws RepositoryException if another error occurs
+     * @see #unregisterNodeType(QName)
+     */
+    public synchronized void unregisterNodeTypes(Collection ntNames)
+            throws NoSuchNodeTypeException, RepositoryException {
+        // do some preliminary checks
+        for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
+            QName ntName = (QName) iter.next();
+            if (!registeredNTDefs.containsKey(ntName)) {
+                throw new NoSuchNodeTypeException(ntName.toString());
+            }
+            if (builtInNTDefs.contains(ntName)) {
+                throw new RepositoryException(ntName.toString()
+                        + ": can't unregister built-in node type.");
+            }
+            // check for node types other than those to be unregistered
+            // that depend on the given node types
+            Set dependents = getDependentNodeTypes(ntName);
+            dependents.removeAll(ntNames);
+            if (dependents.size() > 0) {
+                StringBuffer msg = new StringBuffer();
+                msg.append(ntName
+                        + " can not be removed because the following node types depend on it: ");
+                for (Iterator depIter = dependents.iterator(); depIter.hasNext();) {
+                    msg.append(depIter.next());
+                    msg.append(" ");
+                }
+                throw new RepositoryException(msg.toString());
+            }
+        }
+
+        // make sure node types are not currently in use
+        for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
+            QName ntName = (QName) iter.next();
+            checkForReferencesInContent(ntName);
+        }
+
+        // all preconditions are met, node types can now safely be unregistered
+        internalUnregister(ntNames);
+
+        // persist removal of node type definitions & notify listeners
+        for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
+            QName ntName = (QName) iter.next();
+            customNTDefs.remove(ntName);
+            notifyUnregistered(ntName);
+        }
+        persistCustomNodeTypeDefs(customNTDefs);
+    }
+
+    /**
+     * Unregisters the specified node type. In order for a node type to be
+     * successfully unregistered it must meet the following conditions:
+     * <ol>
+     * <li>the node type must obviously be registered.</li>
+     * <li>a built-in node type can not be unregistered.</li>
+     * <li>the node type must not have dependents, i.e. other node types that
+     * are referencing it.</li>
+     * <li>the node type must not be currently used by any workspace.</li>
+     * </ol>
+     *
+     * @param ntName name of the node type to be unregistered
+     * @throws NoSuchNodeTypeException if <code>ntName</code> does not
+     *                                 denote a registered node type.
+     * @throws RepositoryException if another error occurs.
+     * @see #unregisterNodeTypes(Collection)
+     */
+    public synchronized void unregisterNodeType(QName ntName)
+            throws NoSuchNodeTypeException, RepositoryException {
+        HashSet ntNames = new HashSet();
+        ntNames.add(ntName);
+        unregisterNodeTypes(ntNames);
     }
 
     /**
@@ -1370,7 +1351,7 @@ public class NodeTypeRegistry implements Dumpable {
      * Returns the names of those registered node types that have
      * dependencies on the given node type.
      *
-     * @param nodeTypeName
+     * @param nodeTypeName node type name
      * @return a set of node type <code>QName</code>s
      * @throws NoSuchNodeTypeException
      */
@@ -1410,13 +1391,7 @@ public class NodeTypeRegistry implements Dumpable {
         }
         NodeTypeDef def = (NodeTypeDef) registeredNTDefs.get(nodeTypeName);
         // return clone to make sure nobody messes around with the 'live' definition
-        try {
-            return (NodeTypeDef) def.clone();
-        } catch (CloneNotSupportedException e) {
-            // should never get here
-            log.fatal("internal error", e);
-            throw new InternalError(e.getMessage());
-        }
+        return (NodeTypeDef) def.clone();
     }
 
     /**
