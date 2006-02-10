@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * <code>EffectiveNodeTypeCache</code> ...
  */
-class EffectiveNodeTypeCache implements Dumpable {
+class EffectiveNodeTypeCache implements Cloneable, Dumpable {
     /** ordered set of keys */
     final TreeSet sortedKeys;
     /** cache of pre-built aggregations of node types */
@@ -39,11 +39,6 @@ class EffectiveNodeTypeCache implements Dumpable {
     EffectiveNodeTypeCache() {
         sortedKeys = new TreeSet();
         aggregates = new HashMap();
-    }
-
-    EffectiveNodeTypeCache(EffectiveNodeTypeCache entCache) {
-        sortedKeys = new TreeSet(entCache.sortedKeys);
-        aggregates = new HashMap(entCache.aggregates);
     }
 
     void put(EffectiveNodeType ent) {
@@ -118,6 +113,14 @@ class EffectiveNodeTypeCache implements Dumpable {
      */
     Set keySet() {
         return Collections.unmodifiableSet(sortedKeys);
+    }
+
+    //-------------------------------------------< java.lang.Object overrides >
+    public Object clone() {
+        EffectiveNodeTypeCache clone = new EffectiveNodeTypeCache();
+        clone.sortedKeys.addAll(sortedKeys);
+        clone.aggregates.putAll(aggregates);
+        return clone;
     }
 
     //-------------------------------------------------------------< Dumpable >

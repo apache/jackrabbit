@@ -265,7 +265,7 @@ public class NodeTypeRegistry implements Dumpable {
         // @todo review
 
         // cache of pre-built aggregations of node types
-        EffectiveNodeTypeCache anEntCache = new EffectiveNodeTypeCache(entCache);
+        EffectiveNodeTypeCache anEntCache = (EffectiveNodeTypeCache) entCache.clone();
 
         // map of node type names and node type definitions
         Map aRegisteredNTDefCache = new HashMap(registeredNTDefs);
@@ -292,6 +292,8 @@ public class NodeTypeRegistry implements Dumpable {
             // store new effective node type instance
             anEntCache.put(ent);
         }
+
+        // todo add newly created ENTs to entCache
 
         // since no exception was thrown so far the definitions are assumed to be valid
         for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
