@@ -44,47 +44,12 @@ public class NodeTypeDef implements Cloneable {
     public NodeTypeDef() {
         dependencies = null;
         name = null;
+        primaryItemName = null;
         nodeDefs = NodeDef.EMPTY_ARRAY;
         propDefs = PropDef.EMPTY_ARRAY;
         supertypes = QName.EMPTY_ARRAY;
         mixin = false;
         orderableChildNodes = false;
-    }
-
-    public Object clone() throws CloneNotSupportedException {
-        // create a shallow copy
-        NodeTypeDef clone = (NodeTypeDef) super.clone();
-        // clear dependencies (will be lazily built)
-        clone.resetDependencies();
-        return clone;
-    }
-
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof NodeTypeDef) {
-            NodeTypeDef other = (NodeTypeDef) obj;
-            return (name == null ? other.name == null : name.equals(other.name))
-                    && (primaryItemName == null ? other.primaryItemName == null : primaryItemName.equals(other.primaryItemName))
-                    && Arrays.equals(supertypes, other.supertypes)
-                    && mixin == other.mixin
-                    && orderableChildNodes == other.orderableChildNodes
-                    && Arrays.equals(propDefs, other.propDefs)
-                    && Arrays.equals(nodeDefs, other.nodeDefs);
-        }
-        return false;
-    }
-
-    /**
-     * Returns zero to satisfy the Object equals/hashCode contract.
-     * This class is mutable and not meant to be used as a hash key.
-     *
-     * @return always zero
-     * @see Object#hashCode()
-     */
-    public int hashCode() {
-        return 0;
     }
 
     /**
@@ -144,6 +109,7 @@ public class NodeTypeDef implements Cloneable {
         dependencies = null;
     }
 
+    //----------------------------------------------------< setters & getters >
     /**
      * Sets the name of the node type being defined.
      *
@@ -197,6 +163,7 @@ public class NodeTypeDef implements Cloneable {
      * @param defs An array of <code>PropertyDef</code> objects.
      */
     public void setPropertyDefs(PropDef[] defs) {
+        resetDependencies();
         propDefs = defs;
     }
 
@@ -279,5 +246,46 @@ public class NodeTypeDef implements Cloneable {
      */
     public NodeDef[] getChildNodeDefs() {
         return nodeDefs;
+    }
+
+    //-------------------------------------------< java.lang.Object overrides >
+    public Object clone() {
+        NodeTypeDef clone = new NodeTypeDef();
+        clone.name = name;
+        clone.primaryItemName = primaryItemName;
+        clone.supertypes = (QName[]) supertypes.clone();
+        clone.mixin = mixin;
+        clone.orderableChildNodes = orderableChildNodes;
+        clone.nodeDefs = (NodeDef[]) nodeDefs.clone();
+        clone.propDefs = (PropDef[]) propDefs.clone();
+        return clone;
+    }
+
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof NodeTypeDef) {
+            NodeTypeDef other = (NodeTypeDef) obj;
+            return (name == null ? other.name == null : name.equals(other.name))
+                    && (primaryItemName == null ? other.primaryItemName == null : primaryItemName.equals(other.primaryItemName))
+                    && Arrays.equals(supertypes, other.supertypes)
+                    && mixin == other.mixin
+                    && orderableChildNodes == other.orderableChildNodes
+                    && Arrays.equals(propDefs, other.propDefs)
+                    && Arrays.equals(nodeDefs, other.nodeDefs);
+        }
+        return false;
+    }
+
+    /**
+     * Returns zero to satisfy the Object equals/hashCode contract.
+     * This class is mutable and not meant to be used as a hash key.
+     *
+     * @return always zero
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return 0;
     }
 }

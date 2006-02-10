@@ -107,8 +107,17 @@ class EffectiveNodeTypeCache implements Dumpable {
      *
      * @see WeightedKey#compareTo
      */
-    Iterator keys() {
+    Iterator keyIterator() {
         return sortedKeys.iterator();
+    }
+
+    /**
+     * Returns the set of keys.
+     *
+     * @return the set of keys.
+     */
+    Set keySet() {
+        return Collections.unmodifiableSet(sortedKeys);
     }
 
     //-------------------------------------------------------------< Dumpable >
