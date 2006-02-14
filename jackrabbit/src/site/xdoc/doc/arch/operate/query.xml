@@ -48,10 +48,10 @@ The XPath query parser is based on the W3C XQuery grammar definition which
 is not yet final but can be downloaded as draft
 <a href="http://www.w3.org/2005/02/applets/xgrammar.zip">here</a>.
 The reason why Jackrabbit uses the XQuery grammar, rather than the XPath
-grammer, is, that JSR-170 specifies an 'order by' clause for the XPath
+grammar, is, that JSR-170 specifies an 'order by' clause for the XPath
 query syntax. This 'order by' clause is borrowed from the
 <a href="http://www.w3.org/TR/xquery/#id-flwor-expressions">XQuery FLWOR</a>
-expression syntax. Befor parsing the XPath query in Jackrabbit, the statement
+expression syntax. Before parsing the XPath query in Jackrabbit, the statement
 is surrounded with dummy code, to form a valid XQuery FLWOR expression and
 is then passed to the XQuery parser.
 </p>

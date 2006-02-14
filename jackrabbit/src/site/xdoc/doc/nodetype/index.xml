@@ -43,10 +43,10 @@
                 </p>
                 <p>
                     Mixin node types usually specify additional properties or child nodes related to
-                    a capability being added to the node. These capabilites may include
+                    a capability being added to the node. These capabilities may include
                     generic repository-level functions as in the case of the built-in mixins
                     <code>mix:versionable</code> and <code>mix:lockable</code>, for example,
-                    or domain-level capabilites such as a (hypothetical) <code>myapp:Emailable</code>
+                    or domain-level capabilities such as a (hypothetical) <code>myapp:Emailable</code>
                     mixin type that adds the property <code>myapp:emailAddress</code> to a node.
                 </p>
             </subsection>

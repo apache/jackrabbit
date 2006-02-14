@@ -77,7 +77,7 @@
 ]]></source>
         <p>
           Note that the <code>java:comp/env/jcr</code> subcontext
-          is the preferred naming contxt for JCR content repository
+          is the preferred naming context for JCR content repository
           resources.
         </p>
       </subsection>
