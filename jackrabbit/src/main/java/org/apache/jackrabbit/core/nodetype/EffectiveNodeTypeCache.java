@@ -26,6 +26,8 @@ import java.util.TreeSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * <code>EffectiveNodeTypeCache</code> ...
@@ -169,10 +171,15 @@ class EffectiveNodeTypeCache implements Cloneable, Dumpable {
      * approximation).
      */
     static class WeightedKey implements Comparable {
+
         /**
          * set of node type names, sorted in ascending order
          */
-        private final TreeSet set;
+        private final QName[] names;
+
+        /**
+         * the weight of this key
+         */
         private final int weight;
 
         /**
@@ -188,12 +195,9 @@ class EffectiveNodeTypeCache implements Cloneable, Dumpable {
          */
         WeightedKey(QName[] ntNames, int weight) {
             this.weight = weight;
-
-            set = new TreeSet();
-            for (int i = 0; i < ntNames.length; i++) {
-                // add name to this sorted set
-                set.add(ntNames[i]);
-            }
+            names = new QName[ntNames.length];
+            System.arraycopy(ntNames, 0, names, 0, names.length);
+            Arrays.sort(names);
         }
 
         /**
@@ -208,8 +212,7 @@ class EffectiveNodeTypeCache implements Cloneable, Dumpable {
          * @param weight
          */
         WeightedKey(Collection ntNames, int weight) {
-            this.weight = weight;
-            set = new TreeSet(ntNames);
+            this((QName[]) ntNames.toArray(new QName[ntNames.size()]), weight);
         }
 
         /**
@@ -220,40 +223,38 @@ class EffectiveNodeTypeCache implements Cloneable, Dumpable {
          * @return string representation of this sorted set
          * @see java.util.AbstractCollection#toString
          */
-        String getKey() {
-            return set.toString();
+        Object getKey() {
+            return names;
         }
 
         /**
-         * @return
+         * @return the weight of this key
          */
         int getWeight() {
             return weight;
         }
 
         int size() {
-            return set.size();
-        }
-
-        Iterator iterator() {
-            return Collections.unmodifiableSortedSet(set).iterator();
-        }
-
-        Set getSet() {
-            return Collections.unmodifiableSortedSet(set);
+            return names.length;
         }
 
         QName[] toArray() {
-            return (QName[]) set.toArray(new QName[set.size()]);
+            return names;
         }
 
         boolean contains(WeightedKey otherKey) {
-            return set.containsAll(otherKey.getSet());
+            Set tmp = new HashSet(Arrays.asList(names));
+            for (int i=0; i<otherKey.names.length; i++) {
+                if (!tmp.contains(otherKey.names[i])) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         WeightedKey subtract(WeightedKey otherKey) {
-            Set tmp = (Set) set.clone();
-            tmp.removeAll(otherKey.getSet());
+            Set tmp = new HashSet(Arrays.asList(names));
+            tmp.removeAll(Arrays.asList(otherKey.names));
             return new WeightedKey(tmp);
 
         }
@@ -263,28 +264,28 @@ class EffectiveNodeTypeCache implements Cloneable, Dumpable {
          * (i.e. string representation of this sorted set).
          *
          * @param o
-         * @return
+         * @return the result of the comparison
          */
         public int compareTo(Object o) {
             WeightedKey other = (WeightedKey) o;
-            if (getWeight() > other.getWeight()) {
+            if (weight > other.weight) {
                 return -1;
-            } else if (getWeight() < other.getWeight()) {
+            } else if (weight < other.weight) {
                 return 1;
             }
-            return getKey().compareTo(other.getKey());
+            if (Arrays.equals(names, other.names)) {
+                return 0;
+            } else {
+                return -1;
+            }
         }
 
         public int hashCode() {
             int h = 17;
             // ignore weight
-            Iterator i = set.iterator();
-            while (i.hasNext()) {
+            for (int i=0; i<names.length; i++) {
                 h *= 37;
-                Object obj = i.next();
-                if (obj != null) {
-                    h += obj.hashCode();
-                }
+                h += names[i].hashCode();
             }
             return h;
         }
@@ -296,13 +297,13 @@ class EffectiveNodeTypeCache implements Cloneable, Dumpable {
             if (obj instanceof WeightedKey) {
                 WeightedKey other = (WeightedKey) obj;
                 // ignore weight
-                return set.equals(other.set);
+                return Arrays.equals(names, other.names);
             }
             return false;
         }
 
         public String toString() {
-            return set.toString() + " (" + weight + ")";
+            return names.toString() + " (" + weight + ")";
         }
     }
 }
