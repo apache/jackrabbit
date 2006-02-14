@@ -23,10 +23,10 @@
         <section name="The Open Source Content Repository for Java">
             <p>
                 The Apache Jackrabbit project is an effort to build and maintain an open source
-                implemention of the Content Repository for Java Technology API (JCR).
+                implementation of the Content Repository for Java Technology API (JCR).
             </p>
             <p>
-                JCR 1.0 is specifed in
+                JCR 1.0 is specified in
                 <a href="http://jcp.org/en/jsr/detail?id=170" class="externalLink" title="External Link">Java Specification Request 170 (JSR-170)</a>.
                 Work on JCR v2.0 has begun in <a href="http://jcp.org/en/jsr/detail?id=283" class="externalLink" title="External Link">JSR 283</a>.
             </p>
@@ -59,7 +59,7 @@
         <section name="Documentation">
             <p>
                 For a basic overview and details on getting started, have a look at
-                the <a href="doc/index.html">Jackrabbit documention</a> on this site.
+                the <a href="doc/index.html">Jackrabbit documentation</a> on this site.
             </p>
             <p>
                 Jackrabbit exposes most of its functionality to client applications thought that the JCR v1.0 API.
@@ -75,7 +75,7 @@
             </p>
             <p>
                 In addition to implementing the JCR API, Jackrabbit has many extensions and
-                admistrational features that are not (yet) specified by JCR.
+                administrational features that are not (yet) specified by JCR.
                 (see <a href="doc/arch/overview.html">Architecture Overview</a>).
                 You can also browse the internal Jackrabbit API in the
                 <a href="http://incubator.apache.org/jackrabbit/apidocs/index.html">Jackrabbit Javadocs</a>.

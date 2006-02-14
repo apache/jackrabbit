@@ -23,7 +23,7 @@
     <section name="Model 1: The (Web-) Application Bundle HOWTO">
       <p>
         This document describes how to setup a Jackrabbit content repository
-        in the deployment model 1; The (Web-) Application Bunde. In this
+        in the deployment model 1; The (Web-) Application Bundle. In this
         deployment model, each application bundle uses its own local content
         repository that is not visible to other applications. See the
         <a href="howto-client.html">JCR client application HOWTO</a> for

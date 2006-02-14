@@ -80,7 +80,7 @@ with the web application's class loader which makes it invisible to other
 applications.
 </p>
 <p>
-This deplyoment model of course also works for any stand-alone application 
+This deployment model of course also works for any stand-alone application 
 and not just for web applications.
 </p>
 </section>
