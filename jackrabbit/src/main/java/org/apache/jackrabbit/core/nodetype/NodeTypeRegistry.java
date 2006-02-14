@@ -203,7 +203,7 @@ public class NodeTypeRegistry implements Dumpable {
         NodeDefImpl def = new NodeDefImpl();
 
         // FIXME need a fake declaring node type:
-        // rep:root is not quite correct but better than a non-existing node type 
+        // rep:root is not quite correct but better than a non-existing node type
         def.setDeclaringNodeType(QName.REP_ROOT);
         def.setRequiredPrimaryTypes(new QName[]{QName.REP_ROOT});
         def.setDefaultPrimaryType(QName.REP_ROOT);
@@ -856,15 +856,15 @@ public class NodeTypeRegistry implements Dumpable {
                                                                EffectiveNodeTypeCache anEntCache,
                                                                Map aRegisteredNTDefCache)
             throws NoSuchNodeTypeException {
-        // 1. make sure that the specified node type exists
-        if (!aRegisteredNTDefCache.containsKey(ntName)) {
-            throw new NoSuchNodeTypeException(ntName.toString());
-        }
-
-        // 2. check if effective node type has already been built
+        // 1. check if effective node type has already been built
         EffectiveNodeType ent = anEntCache.get(new QName[]{ntName});
         if (ent != null) {
             return ent;
+        }
+
+        // 2. make sure that the specified node type exists
+        if (!aRegisteredNTDefCache.containsKey(ntName)) {
+            throw new NoSuchNodeTypeException(ntName.toString());
         }
 
         // 3. build effective node type
@@ -894,21 +894,21 @@ public class NodeTypeRegistry implements Dumpable {
                                                                EffectiveNodeTypeCache anEntCache,
                                                                Map aRegisteredNTDefCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
-        // 1. make sure every single node type exists
+
+        EffectiveNodeTypeCache.WeightedKey key =
+                new EffectiveNodeTypeCache.WeightedKey(ntNames);
+
+        // 1. check if aggregate has already been built
+        if (anEntCache.contains(key)) {
+            return anEntCache.get(key);
+        }
+
+        // 2. make sure every single node type exists
         for (int i = 0; i < ntNames.length; i++) {
             if (!aRegisteredNTDefCache.containsKey(ntNames[i])) {
                 throw new NoSuchNodeTypeException(ntNames[i].toString());
             }
         }
-
-        EffectiveNodeTypeCache.WeightedKey key =
-                new EffectiveNodeTypeCache.WeightedKey(ntNames);
-
-        // 2. check if aggregate has already been built
-        if (anEntCache.contains(key)) {
-            return anEntCache.get(key);
-        }
-
         // 3. build aggregate
         EffectiveNodeType result = null;
 
@@ -994,7 +994,7 @@ public class NodeTypeRegistry implements Dumpable {
     }
 
     /**
-     * @return
+     * @return the definition of the root node
      */
     public NodeDef getRootNodeDef() {
         return rootNodeDef;
@@ -1398,7 +1398,8 @@ public class NodeTypeRegistry implements Dumpable {
 
     /**
      * @param nodeTypeName
-     * @return
+     * @return <code>true</code> if the specified nodetype is registered;
+     *         <code>false</code> otherwise.
      */
     public synchronized boolean isRegistered(QName nodeTypeName) {
         return registeredNTDefs.containsKey(nodeTypeName);
@@ -1407,7 +1408,8 @@ public class NodeTypeRegistry implements Dumpable {
 
     /**
      * @param nodeTypeName
-     * @return
+     * @return <code>true</code> if the specified nodetype is built-in;
+     *         <code>false</code> otherwise.
      */
     public synchronized boolean isBuiltIn(QName nodeTypeName) {
         return builtInNTDefs.contains(nodeTypeName);
@@ -1415,7 +1417,7 @@ public class NodeTypeRegistry implements Dumpable {
 
     /**
      * @param id
-     * @return
+     * @return the node definition for the given id.
      */
     public NodeDef getNodeDef(NodeDefId id) {
         return (NodeDef) nodeDefs.get(id);
@@ -1423,7 +1425,7 @@ public class NodeTypeRegistry implements Dumpable {
 
     /**
      * @param id
-     * @return
+     * @return the property definition for the given id.
      */
     public PropDef getPropDef(PropDefId id) {
         return (PropDef) propDefs.get(id);
