@@ -264,7 +264,7 @@
           class implements a simple persistence manager that keeps all content
           in memory. A custom binary serializer is optionally used to load
           and store the persistent state during initialization and shutdown
-          of the persistence maanger.
+          of the persistence manager.
         </p>
         <p>
           This persistence manager is best suited for testing and for small
@@ -288,7 +288,7 @@
           <dt><code>loadFactory</code></dt>
           <dd>
             The load factor of the hash maps. The default value should be
-            fine for almost all uses fo this persistence manager.
+            fine for almost all uses of this persistence manager.
           </dd>
         </dl>
         <p>

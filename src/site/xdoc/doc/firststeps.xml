@@ -61,7 +61,7 @@ import org.apache.jackrabbit.core.TransientRepository;
 
 /**
  * <i>First Jackrabbit example application. Opens a content repository as</i>
- * <i>an anoymous user and prints the node type name of the root node of</i>
+ * <i>an anonymous user and prints the node type name of the root node of</i>
  * <i>the default workspace.</i>
  */
 public class FirstHop {
@@ -195,7 +195,7 @@ org.apache.jackrabbit.core.security.SimpleLoginModule required;
     Since an empty repository is not very useful, lets add some content to
     it. The following example application uses the same setup code as the
     already seen FirstHop class, but this one then goes to add a new
-    content node to the repository. The new code is hightlighted.
+    content node to the repository. The new code is highlighted.
    </p>
    <p><strong>SecondHop.java</strong></p>
 <source>import javax.jcr.*;

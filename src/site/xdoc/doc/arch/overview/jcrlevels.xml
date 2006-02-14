@@ -34,7 +34,7 @@ Download zipped JCR v1.0 Javadoc:<a href="http://www.day.com/maven/jsr170/javado
 </p>
 <p>
 Beyond the JCR API Jackrabbit features numerous extensions and
-admistrational features that are needed to run a repository 
+administrational features that are needed to run a repository 
 but are not (yet) specified by JCR. (see <a href="arch/overview.html">Architecture Overview</a>)
 </p>
 <p>
@@ -87,7 +87,7 @@ fashion.
 Applications written against Level 2 of JSR-170 include
 management applications or generally speaking any 
 application that generates data, information or content
-for both structured and unstrcutured information.
+for both structured and unstructured information.
 </p>
 </section>
 

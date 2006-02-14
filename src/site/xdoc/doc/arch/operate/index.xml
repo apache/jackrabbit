@@ -42,13 +42,13 @@ the modification is only visible to that same session, in the
 so-called "transient" space.</li>
 
 <li><b>Transactional Item State Manager</b>
-When the Application perists the modified items using the 
+When the Application persists the modified items using the 
 JCR <code>Item.save()</code> or <code>Session.save()</code> the
 transient Items are promoted into the Transactional ISM.
 The modifications are still only visible within the scope
 of this transaction, meaning that other sessions will not
 see the modification until they are committed. The commit
-may haven implicitely in case the Content Repository is not 
+may haven implicitly in case the Content Repository is not 
 running in an XA environment.
 </li>
 
@@ -72,7 +72,7 @@ able persist and retrieve a given item based on its item id.
 </li>
 
 <li><b>Observation</b>
-When a transcation is committed the Shared Item State Manager
+When a transaction is committed the Shared Item State Manager
 triggers the Observation mechanism. This allows applications
 to asynchronously subscribe changes in the workspace. 
 Jackrabbit also non-standard offers a synchronous observation.

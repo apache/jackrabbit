@@ -238,7 +238,7 @@ uri ::= string]]></source>
                 of <code>nt:base</code> is assumed. If present, the element consists of a 
                 greater-than sign followed by a comma delimited list of node type names, each of which 
                 may optionally be single-quoted (see Quoting below). In Jackrabbit,
-                multile inheritance of node typoes is supported, sot his listy can be greater than
+                multiple inheritance of node types is supported, so this list can be greater than
                 one item in length.
             </p>
         </subsection>
