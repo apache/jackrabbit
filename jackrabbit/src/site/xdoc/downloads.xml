@@ -22,19 +22,16 @@
 
    <body>
       <section name="Releases">
+         <p>The following releases are available:</p>
+         <ul>
+           <li><a href="http://cvs.apache.org/dist/incubator/jackrabbit/0.9-incubating/">Apache Jackrabbit 0.9</a> - 14 February 2006</li>
+         </ul>
          <p>
-           There are no releases available yet. See the
-           <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">Jira Road Map</a>
-           for the issues remaining before the first release is made.
+           See the <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">Jira Road Map</a>
+           for the open issues and work in progress towards future releases.
          </p>
 
 <!--
-         <p>The following releases are available:</p>
-         <ul>
-           <li>Version 1.1 - 20 October 2003</li>
-           <li>Version 1.0 - 12 August 2002</li>
-         </ul>
-         <br/>
          <p>
             The latest binary release is always available on the 
             <a href="http://jakarta.apache.org/site/binindex.cgi#commons-uid">
@@ -55,14 +52,14 @@
          </p>
 -->
       </section>
-      
+
       <section name="Source code">
          <p>
             Access to the source tree to see the latest and greatest code is possible
             through anonymous SVN access at
             <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>.
-            The source tree can also be browsed using ViewCVS at
-            <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/">http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/</a>.
+            The source tree can also be browsed using
+            <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/">the ViewCVS interface</a>.
          </p>
          <p>
             See the <a href="doc/building.html">Building Jackrabbit</a> page
