@@ -1,10 +1,10 @@
-Release Notes -- Apache Jackrabit -- Version 0.9
+Release Notes -- Apache Jackrabbit -- Version 0.9
 
 Introduction
 ------------
 
 The Apache Jackrabbit project is an effort to build and maintain
-an open source implemention of the Content Repository for Java
+an open source implementation of the Content Repository for Java
 Technology API (JCR) specified in the Java Specification Request 170
 (JSR-170).
 
