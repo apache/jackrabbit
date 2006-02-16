@@ -303,7 +303,6 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     protected NodeState cache(NodeState state) {
         if (state != null) {
             nodes.put(state);
-            state.addListener(this);
             log.debug("item added to cache. size=" + nodes.size());
         }
         return state;
