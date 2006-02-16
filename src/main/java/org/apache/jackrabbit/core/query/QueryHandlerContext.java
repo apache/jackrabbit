@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.NodeId;
 
 /**
  * Acts as an argument for the {@link QueryHandler} to keep the interface
@@ -43,9 +44,9 @@ public class QueryHandlerContext {
     private final NodeTypeRegistry ntRegistry;
 
     /**
-     * The UUID of the root node.
+     * The id of the root node.
      */
-    private String rootUUID;
+    private NodeId rootId;
 
     /**
      * PropertyType registry to look up the type of a property with a given name.
@@ -58,9 +59,9 @@ public class QueryHandlerContext {
     private final QueryHandler parentHandler;
 
     /**
-     * UUID of the node that should be excluded from indexing.
+     * id of the node that should be excluded from indexing.
      */
-    private final String excludedNodeUUID;
+    private final NodeId excludedNodeId;
 
     /**
      * Creates a new context instance.
@@ -70,27 +71,27 @@ public class QueryHandlerContext {
      *                         <code>FileSystem</code> has been configured
      *                         <code>fs</code> is <code>null</code>.
      * @param stateMgr         provides persistent item states.
-     * @param rootUUID         the uuid of the root node.
+     * @param rootId           the id of the root node.
      * @param ntRegistry       the node type registry.
      * @param parentHandler    the parent query handler or <code>null</code> it
      *                         there is no parent handler.
-     * @param excludedNodeUUID uuid of the node that should be excluded from
+     * @param excludedNodeId   id of the node that should be excluded from
      *                         indexing. Any descendant of that node is also
      *                         excluded from indexing.
      */
     public QueryHandlerContext(FileSystem fs,
                                ItemStateManager stateMgr,
-                               String rootUUID,
+                               NodeId rootId,
                                NodeTypeRegistry ntRegistry,
                                QueryHandler parentHandler,
-                               String excludedNodeUUID) {
+                               NodeId excludedNodeId) {
         this.fs = fs;
         this.stateMgr = stateMgr;
-        this.rootUUID = rootUUID;
+        this.rootId = rootId;
         this.ntRegistry = ntRegistry;
         propRegistry = new PropertyTypeRegistry(ntRegistry);
         this.parentHandler = parentHandler;
-        this.excludedNodeUUID = excludedNodeUUID;
+        this.excludedNodeId = excludedNodeId;
         ntRegistry.addListener(propRegistry);
     }
 
@@ -118,11 +119,11 @@ public class QueryHandlerContext {
     }
 
     /**
-     * Returns the UUID of the root node.
-     * @return the UUID of the root node.
+     * Returns the id of the root node.
+     * @return the idof the root node.
      */
-    public String getRootUUID() {
-        return rootUUID;
+    public NodeId getRootId() {
+        return rootId;
     }
 
     /**
@@ -150,13 +151,13 @@ public class QueryHandlerContext {
     }
 
     /**
-     * Returns the uuid of the node that should be excluded from indexing. Any
+     * Returns the id of the node that should be excluded from indexing. Any
      * descendant of this node is also excluded from indexing.
      *
      * @return the uuid of the exluded node.
      */
-    public String getExcludedNodeUUID() {
-        return excludedNodeUUID;
+    public NodeId getExcludedNodeId() {
+        return excludedNodeId;
     }
 
     /**

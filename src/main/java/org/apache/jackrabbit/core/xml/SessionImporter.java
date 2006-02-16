@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
@@ -26,6 +27,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.value.ReferenceValue;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ImportUUIDBehavior;
@@ -88,7 +90,7 @@ public class SessionImporter implements Importer {
                                   QName nodeName,
                                   QName nodeTypeName,
                                   QName[] mixinNames,
-                                  String uuid)
+                                  NodeId id)
             throws RepositoryException {
         NodeImpl node;
 
@@ -121,6 +123,7 @@ public class SessionImporter implements Importer {
         }
 
         // add node
+        UUID uuid = id == null ? UUID.randomUUID() : id.getUUID();
         node = parent.addNode(nodeName, nodeTypeName, uuid);
         // add mixins
         if (mixinNames != null) {
@@ -142,10 +145,10 @@ public class SessionImporter implements Importer {
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
             // remember uuid mapping
             if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
-                refTracker.mappedUUID(nodeInfo.getUUID(), node.getUUID());
+                refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
-            String msg = "a node with uuid " + nodeInfo.getUUID() + " already exists!";
+            String msg = "a node with uuid " + nodeInfo.getId() + " already exists!";
             log.debug(msg);
             throw new ItemExistsException(msg);
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING) {
@@ -160,7 +163,7 @@ public class SessionImporter implements Importer {
             // create new with given uuid
             node = createNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
-                    nodeInfo.getUUID());
+                    nodeInfo.getId());
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
             if (conflicting.getDepth() == 0) {
                 String msg = "root node cannot be replaced";
@@ -174,7 +177,7 @@ public class SessionImporter implements Importer {
             // create new with given uuid at same location as conflicting
             node = createNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
-                    nodeInfo.getUUID());
+                    nodeInfo.getId());
         } else {
             String msg = "unknown uuidBehavior: " + uuidBehavior;
             log.debug(msg);
@@ -202,7 +205,7 @@ public class SessionImporter implements Importer {
         // process node
 
         NodeImpl node = null;
-        String uuid = nodeInfo.getUUID();
+        NodeId id = nodeInfo.getId();
         QName nodeName = nodeInfo.getName();
         QName ntName = nodeInfo.getNodeTypeName();
         QName[] mixins = nodeInfo.getMixinNames();
@@ -237,14 +240,14 @@ public class SessionImporter implements Importer {
 
         if (node == null) {
             // create node
-            if (uuid == null) {
+            if (id == null) {
                 // no potential uuid conflict, always add new node
                 node = createNode(parent, nodeName, ntName, mixins, null);
             } else {
                 // potential uuid conflict
                 NodeImpl conflicting;
                 try {
-                    conflicting = (NodeImpl) session.getNodeByUUID(uuid);
+                    conflicting = session.getNodeById(id);
                 } catch (ItemNotFoundException infe) {
                     conflicting = null;
                 }
@@ -253,7 +256,7 @@ public class SessionImporter implements Importer {
                     node = resolveUUIDConflict(parent, conflicting, nodeInfo);
                 } else {
                     // create new with given uuid
-                    node = createNode(parent, nodeName, ntName, mixins, uuid);
+                    node = createNode(parent, nodeName, ntName, mixins, id);
                 }
             }
         }
@@ -410,8 +413,8 @@ public class SessionImporter implements Importer {
                 Value[] newVals = new Value[values.length];
                 for (int i = 0; i < values.length; i++) {
                     Value val = values[i];
-                    String original = val.getString();
-                    String adjusted = refTracker.getMappedUUID(original);
+                    UUID original = UUID.fromString(val.getString());
+                    UUID adjusted = refTracker.getMappedUUID(original);
                     if (adjusted != null) {
                         newVals[i] = new ReferenceValue(session.getNodeByUUID(adjusted));
                     } else {
@@ -422,8 +425,8 @@ public class SessionImporter implements Importer {
                 prop.setValue(newVals);
             } else {
                 Value val = prop.getValue();
-                String original = val.getString();
-                String adjusted = refTracker.getMappedUUID(original);
+                UUID original = UUID.fromString(val.getString());
+                UUID adjusted = refTracker.getMappedUUID(original);
                 if (adjusted != null) {
                     prop.setValue(session.getNodeByUUID(adjusted));
                 }

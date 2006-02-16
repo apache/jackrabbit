@@ -18,12 +18,15 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
@@ -189,13 +192,13 @@ public class SearchIndex extends AbstractQueryHandler {
             throw new IOException("SearchIndex requires 'path' parameter in configuration!");
         }
 
-        Set excludedUUIDs = new HashSet();
-        if (context.getExcludedNodeUUID() != null) {
-            excludedUUIDs.add(context.getExcludedNodeUUID());
+        Set excludedIDs= new HashSet();
+        if (context.getExcludedNodeId() != null) {
+            excludedIDs.add(context.getExcludedNodeId());
         }
 
         index = new MultiIndex(new File(path), this,
-                context.getItemStateManager(), context.getRootUUID(), excludedUUIDs);
+                context.getItemStateManager(), context.getRootId(), excludedIDs);
         if (index.getRedoLogApplied() || forceConsistencyCheck) {
             log.info("Running consistency check...");
             try {
@@ -232,11 +235,11 @@ public class SearchIndex extends AbstractQueryHandler {
 
     /**
      * Removes the node with <code>uuid</code> from the search index.
-     * @param uuid the UUID of the node to remove from the index.
+     * @param id the id of the node to remove from the index.
      * @throws IOException if an error occurs while removing the node from
      * the index.
      */
-    public void deleteNode(String uuid) throws IOException {
+    public void deleteNode(NodeId id) throws IOException {
         throw new UnsupportedOperationException("deleteNode");
     }
 
@@ -252,13 +255,13 @@ public class SearchIndex extends AbstractQueryHandler {
      * @throws RepositoryException if an error occurs while indexing a node.
      * @throws IOException         if an error occurs while updating the index.
      */
-    public void updateNodes(Iterator remove, Iterator add)
+    public void updateNodes(NodeIdIterator remove, NodeStateIterator add)
             throws RepositoryException, IOException {
         checkOpen();
         index.update(new AbstractIteratorDecorator(remove) {
             public Object next() {
-                String uuid = (String) super.next();
-                return new Term(FieldNames.UUID, uuid);
+                NodeId id = (NodeId) super.next();
+                return new Term(FieldNames.UUID, id.getUUID().toString());
             }
         }, new AbstractIteratorDecorator(add) {
             public Object next() {
@@ -271,7 +274,7 @@ public class SearchIndex extends AbstractQueryHandler {
                     doc = createDocument(state, getNamespaceMappings());
                 } catch (RepositoryException e) {
                     log.error("Exception while creating document for node: " +
-                            state.getUUID() + ": " + e.toString());
+                            state.getNodeId() + ": " + e.toString());
                 }
                 return doc;
             }
@@ -486,7 +489,7 @@ public class SearchIndex extends AbstractQueryHandler {
          * @param n document number.
          * @return the reader index.
          */
-        final private int readerIndex(int n) {
+        private int readerIndex(int n) {
             int lo = 0;                                      // search starts array
             int hi = subReaders.length - 1;                  // for first element less
 

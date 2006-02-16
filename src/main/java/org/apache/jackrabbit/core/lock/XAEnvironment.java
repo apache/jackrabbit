@@ -3,6 +3,7 @@ package org.apache.jackrabbit.core.lock;
 import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -90,17 +91,16 @@ class XAEnvironment {
     public AbstractLockInfo lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
 
-        String uuid = node.internalGetUUID();
+        NodeId id = node.getNodeId();
 
         // check negative set first
-        LockInfo info = (LockInfo) unlockedNodesMap.get(uuid);
+        LockInfo info = (LockInfo) unlockedNodesMap.get(id);
         if (info != null) {
-
             // if settings are compatible, this is effectively a no-op
             if (info.deep == isDeep && info.sessionScoped == isSessionScoped) {
-                unlockedNodesMap.remove(uuid);
+                unlockedNodesMap.remove(id);
                 operations.remove(info);
-                return lockMgr.getLockInfo(uuid);
+                return lockMgr.getLockInfo(id);
             }
         }
 
@@ -110,13 +110,13 @@ class XAEnvironment {
         }
 
         // create a new lock info for this node
-        info = new LockInfo(node, new LockToken(node.internalGetUUID()),
+        info = new LockInfo(node, new LockToken(id),
                 isSessionScoped, isDeep, node.getSession().getUserID());
         SessionImpl session = (SessionImpl) node.getSession();
         info.setLockHolder(session);
         info.setLive(true);
         session.addLockToken(info.lockToken.toString(), false);
-        lockedNodesMap.put(uuid, info);
+        lockedNodesMap.put(id, info);
         operations.add(info);
 
         return info;
@@ -129,23 +129,23 @@ class XAEnvironment {
      * @throws RepositoryException if an error occurs
      */
     public void unlock(NodeImpl node) throws LockException, RepositoryException {
-        String uuid = node.internalGetUUID();
+        NodeId id = node.getNodeId();
 
         // check positive set first
-        AbstractLockInfo info = (LockInfo) lockedNodesMap.get(uuid);
+        AbstractLockInfo info = (LockInfo) lockedNodesMap.get(id);
         if (info != null) {
-            lockedNodesMap.remove(uuid);
+            lockedNodesMap.remove(id);
             operations.remove(info);
             info.setLive(false);
         } else {
             info = getLockInfo(node);
-            if (info == null || info.getUUID() != uuid) {
+            if (info == null || !info.getId().equals(id)) {
                 throw new LockException("Node not locked.");
             } else if (info.getLockHolder() != node.getSession()) {
                 throw new LockException("Node not locked by this session.");
             }
             info = new LockInfo(node, info);
-            unlockedNodesMap.put(uuid, info);
+            unlockedNodesMap.put(id, info);
             operations.add(info);
         }
 
@@ -171,10 +171,10 @@ class XAEnvironment {
      * @throws RepositoryException if an error occurs
      */
     public AbstractLockInfo getLockInfo(NodeImpl node) throws RepositoryException {
-        String uuid = node.internalGetUUID();
+        NodeId id = node.getNodeId();
 
         // check negative set
-        if (unlockedNodesMap.containsKey(uuid)) {
+        if (unlockedNodesMap.containsKey(id)) {
             return null;
         }
 
@@ -182,9 +182,9 @@ class XAEnvironment {
         if (!lockedNodesMap.isEmpty()) {
             NodeImpl current = node;
             for (;;) {
-                LockInfo info = (LockInfo) lockedNodesMap.get(current.internalGetUUID());
+                LockInfo info = (LockInfo) lockedNodesMap.get(current.getId());
                 if (info != null) {
-                    if (info.getUUID() == uuid || info.deep) {
+                    if (info.getId().equals(id) || info.deep) {
                         return info;
                     }
                     break;
@@ -196,7 +196,7 @@ class XAEnvironment {
             }
         }
         // ask parent
-        return lockMgr.getLockInfo(uuid);
+        return lockMgr.getLockInfo(id);
     }
 
     /**

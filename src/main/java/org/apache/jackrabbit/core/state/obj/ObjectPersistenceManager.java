@@ -36,7 +36,6 @@ import org.apache.jackrabbit.core.state.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.state.util.Serializer;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
@@ -82,9 +81,9 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
         initialized = false;
     }
 
-    private static String buildNodeFolderPath(String uuid) {
+    private static String buildNodeFolderPath(NodeId id) {
         StringBuffer sb = new StringBuffer();
-        char[] chars = uuid.toCharArray();
+        char[] chars = id.getUUID().toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < chars.length; i++) {
             if (chars[i] == '-') {
@@ -100,12 +99,12 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
         return sb.toString();
     }
 
-    private static String buildPropFilePath(String parentUUID, QName propName) {
+    private static String buildPropFilePath(PropertyId id) {
         String fileName;
         try {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
-            md5.update(propName.getNamespaceURI().getBytes());
-            md5.update(propName.getLocalName().getBytes());
+            md5.update(id.getName().getNamespaceURI().getBytes());
+            md5.update(id.getName().getLocalName().getBytes());
             byte[] bytes = md5.digest();
             char[] chars = new char[32];
             for (int i = 0, j = 0; i < 16; i++) {
@@ -119,15 +118,15 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             log.fatal(msg, nsae);
             throw new InternalError(msg + nsae);
         }
-        return buildNodeFolderPath(parentUUID) + FileSystem.SEPARATOR + fileName;
+        return buildNodeFolderPath(id.getParentId()) + FileSystem.SEPARATOR + fileName;
     }
 
-    private static String buildNodeFilePath(String uuid) {
-        return buildNodeFolderPath(uuid) + FileSystem.SEPARATOR + NODEFILENAME;
+    private static String buildNodeFilePath(NodeId id) {
+        return buildNodeFolderPath(id) + FileSystem.SEPARATOR + NODEFILENAME;
     }
 
-    private static String buildNodeReferencesFilePath(String uuid) {
-        return buildNodeFolderPath(uuid) + FileSystem.SEPARATOR + NODEREFSFILENAME;
+    private static String buildNodeReferencesFilePath(NodeReferencesId id) {
+        return buildNodeFolderPath(id) + FileSystem.SEPARATOR + NODEREFSFILENAME;
     }
 
     //---------------------------------------------------< PersistenceManager >
@@ -187,7 +186,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String nodeFilePath = buildNodeFilePath(id.getUUID());
+        String nodeFilePath = buildNodeFilePath(id);
 
         try {
             if (!itemStateFS.isFile(nodeFilePath)) {
@@ -229,7 +228,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String propFilePath = buildPropFilePath(id.getParentUUID(), id.getName());
+        String propFilePath = buildPropFilePath(id);
 
         try {
             if (!itemStateFS.isFile(propFilePath)) {
@@ -268,7 +267,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(id.getUUID());
+        String refsFilePath = buildNodeReferencesFilePath(id);
 
         try {
             if (!itemStateFS.isFile(refsFilePath)) {
@@ -305,8 +304,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String uuid = state.getUUID();
-        String nodeFilePath = buildNodeFilePath(uuid);
+        String nodeFilePath = buildNodeFilePath(state.getNodeId());
         FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
         try {
             nodeFile.makeParentDirs();
@@ -314,12 +312,11 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             try {
                 // serialize node state
                 Serializer.serialize(state, out);
-                return;
             } finally {
                 out.close();
             }
         } catch (Exception e) {
-            String msg = "failed to write node state: " + uuid;
+            String msg = "failed to write node state: " + state.getNodeId();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -333,7 +330,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
+        String propFilePath = buildPropFilePath(state.getPropertyId());
         FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
         try {
             propFile.makeParentDirs();
@@ -341,12 +338,11 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             try {
                 // serialize property state
                 Serializer.serialize(state, out, blobStore);
-                return;
             } finally {
                 out.close();
             }
         } catch (Exception e) {
-            String msg = "failed to store property state: " + state.getParentUUID() + "/" + state.getName();
+            String msg = "failed to store property state: " + state.getParentId() + "/" + state.getName();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -360,8 +356,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String uuid = refs.getTargetId().getUUID();
-        String refsFilePath = buildNodeReferencesFilePath(uuid);
+        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             refsFile.makeParentDirs();
@@ -372,7 +367,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 out.close();
             }
         } catch (Exception e) {
-            String msg = "failed to store references: " + uuid;
+            String msg = "failed to store references: " + refs.getTargetId();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -386,8 +381,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String uuid = state.getUUID();
-        String nodeFilePath = buildNodeFilePath(uuid);
+        String nodeFilePath = buildNodeFilePath(state.getNodeId());
         FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
         try {
             if (nodeFile.exists()) {
@@ -395,7 +389,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 nodeFile.delete(true);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to delete node state: " + uuid;
+            String msg = "failed to delete node state: " + state.getNodeId();
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
@@ -424,7 +418,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             }
         }
         // delete property file
-        String propFilePath = buildPropFilePath(state.getParentUUID(), state.getName());
+        String propFilePath = buildPropFilePath(state.getPropertyId());
         FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
         try {
             if (propFile.exists()) {
@@ -432,7 +426,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 propFile.delete(true);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to delete property state: " + state.getParentUUID() + "/" + state.getName();
+            String msg = "failed to delete property state: " + state.getParentId() + "/" + state.getName();
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
@@ -446,8 +440,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String uuid = refs.getTargetId().getUUID();
-        String refsFilePath = buildNodeReferencesFilePath(uuid);
+        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             if (refsFile.exists()) {
@@ -455,7 +448,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 refsFile.delete(true);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to delete references: " + uuid;
+            String msg = "failed to delete references: " + refs.getTargetId();
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
@@ -470,7 +463,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
         }
 
         try {
-            String propFilePath = buildPropFilePath(id.getParentUUID(), id.getName());
+            String propFilePath = buildPropFilePath(id);
             FileSystemResource propFile = new FileSystemResource(itemStateFS, propFilePath);
             return propFile.exists();
         } catch (FileSystemException fse) {
@@ -489,7 +482,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
         }
 
         try {
-            String nodeFilePath = buildNodeFilePath(id.getUUID());
+            String nodeFilePath = buildNodeFilePath(id);
             FileSystemResource nodeFile = new FileSystemResource(itemStateFS, nodeFilePath);
             return nodeFile.exists();
         } catch (FileSystemException fse) {
@@ -510,8 +503,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
         }
 
         try {
-            String uuid = id.getUUID();
-            String refsFilePath = buildNodeReferencesFilePath(uuid);
+            String refsFilePath = buildNodeReferencesFilePath(id);
             FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
             return refsFile.exists();
         } catch (FileSystemException fse) {

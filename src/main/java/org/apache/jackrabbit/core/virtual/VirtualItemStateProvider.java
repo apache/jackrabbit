@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.virtual;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.name.QName;
@@ -34,14 +33,14 @@ public interface VirtualItemStateProvider extends ItemStateManager {
      * Checks if the id refers to the root of a virtual tree.
      *
      * @param id
-     * @return
+     * @return <code>true</code> if it is the root
      */
     boolean isVirtualRoot(ItemId id);
 
     /**
      * Returns the id of the root node of the virtual tree.
      *
-     * @return
+     * @return the id of the root node of the virtual tree.
      */
     NodeId getVirtualRootId();
 
@@ -56,8 +55,8 @@ public interface VirtualItemStateProvider extends ItemStateManager {
      * @throws RepositoryException
      */
     VirtualPropertyState createPropertyState(VirtualNodeState parent,
-                                                    QName name, int type,
-                                                    boolean multiValued)
+                                             QName name, int type,
+                                             boolean multiValued)
             throws RepositoryException;
 
     /**
@@ -65,14 +64,14 @@ public interface VirtualItemStateProvider extends ItemStateManager {
      *
      * @param parent
      * @param name
-     * @param uuid
+     * @param id
      * @param nodeTypeName
      * @return
      * @throws RepositoryException
      */
     VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
-                                            String uuid, QName nodeTypeName)
-            throws RepositoryException;
+                                     NodeId id, QName nodeTypeName)
+        throws RepositoryException;
 
     /**
      * Informs this provider that the node references to one of its states has

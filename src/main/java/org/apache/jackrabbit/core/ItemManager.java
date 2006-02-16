@@ -100,16 +100,17 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
      *                          the new instance
      * @param session           the session associated with the new instance
      * @param rootNodeDef       the definition of the root node
-     * @param rootNodeUUID      the UUID of the root node
+     * @param rootNodeId        the id of the root node
      */
     protected ItemManager(ItemStateManager itemStateProvider, HierarchyManager hierMgr,
                           SessionImpl session, NodeDefinition rootNodeDef,
-                          String rootNodeUUID) {
+                          NodeId rootNodeId) {
         this.itemStateProvider = itemStateProvider;
         this.hierMgr = hierMgr;
         this.session = session;
         this.rootNodeDef = rootNodeDef;
-        rootNodeId = new NodeId(rootNodeUUID);
+        this.rootNodeId = rootNodeId;
+
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
     }
@@ -130,15 +131,13 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
              * todo need proper way of handling inconsistent/corrupt definition
              * e.g. 'flag' items that refer to non-existent definitions
              */
-            log.warn("node at " + safeGetJCRPath(state.getId())
+            log.warn("node at " + safeGetJCRPath(state.getNodeId())
                     + " has invalid definitionId (" + defId + ")");
 
             // fallback: try finding applicable definition
-            NodeId parentId = new NodeId(state.getParentUUID());
-            NodeImpl parent = (NodeImpl) getItem(parentId);
+            NodeImpl parent = (NodeImpl) getItem(state.getParentId());
             NodeState parentState = (NodeState) parent.getItemState();
-            NodeState.ChildNodeEntry cne =
-                    (NodeState.ChildNodeEntry) parentState.getChildNodeEntry(state.getUUID());
+            NodeState.ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
             def = parent.getApplicableChildNodeDefinition(cne.getName(), state.getNodeTypeName());
             state.setDefinitionId(def.unwrap().getId());
         }
@@ -154,12 +153,11 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
              * todo need proper way of handling inconsistent/corrupt definition
              * e.g. 'flag' items that refer to non-existent definitions
              */
-            log.warn("property at " + safeGetJCRPath(state.getId())
+            log.warn("property at " + safeGetJCRPath(state.getPropertyId())
                     + " has invalid definitionId (" + defId + ")");
 
             // fallback: try finding applicable definition
-            NodeId parentId = new NodeId(state.getParentUUID());
-            NodeImpl parent = (NodeImpl) getItem(parentId);
+            NodeImpl parent = (NodeImpl) getItem(state.getParentId());
             def = parent.getApplicablePropertyDefinition(state.getName(), state.getType(), state.isMultiValued());
             state.setDefinitionId(def.unwrap().getId());
         }
@@ -346,9 +344,8 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-            NodeId id = new NodeId(entry.getUUID());
             // check read access
-            if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
+            if (session.getAccessManager().isGranted(entry.getId(), AccessManager.READ)) {
                 return true;
             }
         }
@@ -379,10 +376,9 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-            NodeId id = new NodeId(entry.getUUID());
             // check read access
-            if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
-                childIds.add(id);
+            if (session.getAccessManager().isGranted(entry.getId(), AccessManager.READ)) {
+                childIds.add(entry.getId());
             }
         }
 
@@ -412,10 +408,8 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
         while (iter.hasNext()) {
             QName propName = (QName) iter.next();
-
-            PropertyId id = new PropertyId(parentId.getUUID(), propName);
             // check read access
-            if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
+            if (session.getAccessManager().isGranted(new PropertyId(parentId, propName), AccessManager.READ)) {
                 return true;
             }
         }
@@ -447,7 +441,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
         while (iter.hasNext()) {
             QName propName = (QName) iter.next();
-            PropertyId id = new PropertyId(parentId.getUUID(), propName);
+            PropertyId id = new PropertyId(parentId, propName);
             // check read access
             if (session.getAccessManager().isGranted(id, AccessManager.READ)) {
                 childIds.add(id);
@@ -486,20 +480,16 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
     NodeImpl createNodeInstance(NodeState state, NodeDefinition def)
             throws RepositoryException {
-        NodeId id = new NodeId(state.getUUID());
+        NodeId id = state.getNodeId();
         // we want to be informed on life cycle changes of the new node object
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
         // check special nodes
         if (state.getNodeTypeName().equals(QName.NT_VERSION)) {
-            InternalVersion version =
-                    session.getVersionManager().getVersion(state.getUUID());
             return createVersionInstance(id, state, def, listeners);
 
         } else if (state.getNodeTypeName().equals(QName.NT_VERSIONHISTORY)) {
-            InternalVersionHistory history =
-                    session.getVersionManager().getVersionHistory(state.getUUID());
             return createVersionHistoryInstance(id, state, def, listeners);
 
         } else {
@@ -517,13 +507,12 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
     PropertyImpl createPropertyInstance(PropertyState state,
                                         PropertyDefinition def) {
-        PropertyId id = new PropertyId(state.getParentUUID(), state.getName());
         // we want to be informed on life cycle changes of the new property object
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
         // create property object
-        PropertyImpl prop = new PropertyImpl(this, session, id, state, def, listeners);
-        return prop;
+        return new PropertyImpl(
+                this, session, state.getPropertyId(), state, def, listeners);
     }
 
     PropertyImpl createPropertyInstance(PropertyState state)
@@ -547,8 +536,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
             NodeId id, NodeState state, NodeDefinition def,
             ItemLifeCycleListener[] listeners) throws RepositoryException {
 
-        InternalVersion version =
-                session.getVersionManager().getVersion(id.getUUID());
+        InternalVersion version = session.getVersionManager().getVersion(id);
         return new VersionImpl(this, session, id, state, def, listeners, version);
     }
 
@@ -566,7 +554,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
             ItemLifeCycleListener[] listeners) throws RepositoryException {
 
         InternalVersionHistory history =
-                session.getVersionManager().getVersionHistory(id.getUUID());
+                session.getVersionManager().getVersionHistory(id);
         return new VersionHistoryImpl(this, session, id, state, def, listeners, history);
     }
 

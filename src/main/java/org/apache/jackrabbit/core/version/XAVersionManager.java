@@ -16,35 +16,36 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import org.apache.jackrabbit.core.InternalXAResource;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.TransactionException;
-import org.apache.jackrabbit.core.InternalXAResource;
-import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
+import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
 import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionException;
-import java.util.Map;
+import javax.jcr.version.VersionHistory;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of a {@link VersionManager} that works in an XA environment.
@@ -118,7 +119,7 @@ public class XAVersionManager extends AbstractVersionManager
         if (isInXA()) {
             InternalVersionHistory history = createVersionHistory(node);
             xaItems.put(history.getId(), history);
-            return (VersionHistory) session.getNodeByUUID(history.getId());
+            return (VersionHistory) ((SessionImpl) session).getNodeById(history.getId());
         }
         return vMgr.createVersionHistory(session, node);
     }
@@ -129,9 +130,9 @@ public class XAVersionManager extends AbstractVersionManager
     public Version checkin(NodeImpl node) throws RepositoryException {
         if (isInXA()) {
             String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
-            InternalVersion version = checkin(
-                    (InternalVersionHistoryImpl) getVersionHistory(histUUID), node);
-            return (Version) node.getSession().getNodeByUUID(version.getId());
+            InternalVersion version = checkin((InternalVersionHistoryImpl)
+                    getVersionHistory(NodeId.valueOf(histUUID)), node);
+            return (Version) ((SessionImpl) node.getSession()).getNodeById(version.getId());
         }
         return vMgr.checkin(node);
     }
@@ -165,7 +166,7 @@ public class XAVersionManager extends AbstractVersionManager
             if (v == null) {
                 return null;
             } else {
-                return (Version) history.getSession().getNodeByUUID(v.getId());
+                return (Version) ((SessionImpl) history.getSession()).getNodeById(v.getId());
             }
         }
         return vMgr.setVersionLabel(history, version, label, move);
@@ -208,7 +209,7 @@ public class XAVersionManager extends AbstractVersionManager
      * {@inheritDoc}
      */
     public VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
-                                            String uuid, QName nodeTypeName)
+                                            NodeId id, QName nodeTypeName)
             throws RepositoryException {
 
         throw new IllegalStateException("Read-only");
@@ -282,13 +283,13 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-     protected InternalVersionItem getItem(String uuid) throws RepositoryException {
+     protected InternalVersionItem getItem(NodeId id) throws RepositoryException {
         InternalVersionItem item = null;
         if (xaItems != null) {
-            item = (InternalVersionItem) xaItems.get(uuid);
+            item = (InternalVersionItem) xaItems.get(id);
         }
         if (item == null) {
-            item = vMgr.getItem(uuid);
+            item = vMgr.getItem(id);
         }
         return item;
     }
@@ -296,11 +297,11 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    protected boolean hasItem(String uuid) {
-        if (xaItems != null && xaItems.containsKey(uuid)) {
+    protected boolean hasItem(NodeId id) {
+        if (xaItems != null && xaItems.containsKey(id)) {
             return true;
         }
-        return vMgr.hasItem(uuid);
+        return vMgr.hasItem(id);
     }
 
     /**
@@ -464,7 +465,7 @@ public class XAVersionManager extends AbstractVersionManager
 
         NodeState state;
         try {
-            state = (NodeState) stateMgr.getItemState(new NodeId(history.getId()));
+            state = (NodeState) stateMgr.getItemState(history.getId());
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to make local copy", e);
         }

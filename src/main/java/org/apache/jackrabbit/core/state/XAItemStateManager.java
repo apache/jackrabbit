@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.ReferentialIntegrityException;
@@ -339,9 +340,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (prop.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        String uuid = vals[i].toString();
+                        UUID uuid = (UUID) vals[i].internalValue();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        addVirtualReference((PropertyId) prop.getId(), refsId);
+                        addVirtualReference(prop.getPropertyId(), refsId);
                     }
                 }
             }
@@ -355,17 +356,17 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (oldProp.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = oldProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        String uuid = vals[i].toString();
+                        UUID uuid = (UUID) vals[i].internalValue();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        removeVirtualReference((PropertyId) oldProp.getId(), refsId);
+                        removeVirtualReference(oldProp.getPropertyId(), refsId);
                     }
                 }
                 if (newProp.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = newProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        String uuid = vals[i].toString();
+                        UUID uuid = (UUID) vals[i].internalValue();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        addVirtualReference((PropertyId) newProp.getId(), refsId);
+                        addVirtualReference(newProp.getPropertyId(), refsId);
                     }
                 }
             }
@@ -377,9 +378,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (prop.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        String uuid = vals[i].toString();
+                        UUID uuid = (UUID) vals[i].internalValue();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        removeVirtualReference((PropertyId) prop.getId(), refsId);
+                        removeVirtualReference(prop.getPropertyId(), refsId);
                     }
                 }
             }

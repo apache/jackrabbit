@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.util;
 
+import org.apache.jackrabbit.uuid.UUID;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -52,12 +54,12 @@ public class ReferenceChangeTracker {
 
     /**
      * Store the given uuid mapping for later lookup using
-     * <code>{@link #getMappedUUID(String)}</code>.
+     * <code>{@link #getMappedUUID(UUID)}</code>.
      *
      * @param oldUUID old uuid
      * @param newUUID new uuid
      */
-    public void mappedUUID(String oldUUID, String newUUID) {
+    public void mappedUUID(UUID oldUUID, UUID newUUID) {
         uuidMap.put(oldUUID, newUUID);
     }
 
@@ -77,10 +79,10 @@ public class ReferenceChangeTracker {
      *
      * @param oldUUID old uuid
      * @return mapped new uuid or <code>null</code> if no such mapping exists
-     * @see #mappedUUID(String, String)
+     * @see #mappedUUID(UUID, UUID)
      */
-    public String getMappedUUID(String oldUUID) {
-        return (String) uuidMap.get(oldUUID);
+    public UUID getMappedUUID(UUID oldUUID) {
+        return (UUID) uuidMap.get(oldUUID);
     }
 
     /**

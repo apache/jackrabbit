@@ -161,7 +161,7 @@ class ConsistencyCheck {
                 }
                 Document d = reader.document(i);
                 String uuid = d.get(FieldNames.UUID);
-                if (stateMgr.hasItemState(new NodeId(uuid))) {
+                if (stateMgr.hasItemState(NodeId.valueOf(uuid))) {
                     Document old = (Document) documents.put(uuid, d);
                     if (old != null) {
                         multipleEntries.add(uuid);
@@ -188,7 +188,7 @@ class ConsistencyCheck {
                 continue;
             }
             // parent is missing
-            NodeId parentId = new NodeId(parentUUID);
+            NodeId parentId = NodeId.valueOf(parentUUID);
             if (stateMgr.hasItemState(parentId)) {
                 errors.add(new MissingAncestor(uuid, parentUUID));
             } else {
@@ -206,14 +206,14 @@ class ConsistencyCheck {
      */
     private String getPath(NodeState node) {
         // remember as fallback
-        String uuid = node.getUUID();
+        String uuid = node.getNodeId().toString();
         StringBuffer path = new StringBuffer();
         List elements = new ArrayList();
         try {
-            while (node.getParentUUID() != null) {
-                NodeId parentId = new NodeId(node.getParentUUID());
+            while (node.getParentId() != null) {
+                NodeId parentId = node.getParentId();
                 NodeState parent = (NodeState) stateMgr.getItemState(parentId);
-                NodeState.ChildNodeEntry entry = parent.getChildNodeEntry(node.getUUID());
+                NodeState.ChildNodeEntry entry = parent.getChildNodeEntry(node.getNodeId());
                 elements.add(entry);
                 node = parent;
             }
@@ -263,12 +263,12 @@ class ConsistencyCheck {
             String pUUID = parentUUID;
             while (pUUID != null && !documents.containsKey(pUUID)) {
                 try {
-                    NodeState n = (NodeState) stateMgr.getItemState(new NodeId(pUUID));
+                    NodeState n = (NodeState) stateMgr.getItemState(NodeId.valueOf(pUUID));
                     log.info("Reparing missing node " + getPath(n));
                     Document d = index.createDocument(n);
                     index.addDocument(d);
-                    documents.put(n.getUUID(), d);
-                    pUUID = n.getParentUUID();
+                    documents.put(n.getNodeId().toString(), d);
+                    pUUID = n.getParentId().toString();
                 } catch (ItemStateException e) {
                     throw new IOException(e.toString());
                 } catch (RepositoryException e) {
@@ -331,11 +331,11 @@ class ConsistencyCheck {
             index.removeAllDocuments(id);
             // then re-index the node
             try {
-                NodeState node = (NodeState) stateMgr.getItemState(new NodeId(uuid));
+                NodeState node = (NodeState) stateMgr.getItemState(NodeId.valueOf(uuid));
                 log.info("Re-indexing duplicate node occurrences in index: " + getPath(node));
                 Document d = index.createDocument(node);
                 index.addDocument(d);
-                documents.put(node.getUUID(), d);
+                documents.put(node.getNodeId().toString(), d);
             } catch (ItemStateException e) {
                 throw new IOException(e.toString());
             } catch (RepositoryException e) {

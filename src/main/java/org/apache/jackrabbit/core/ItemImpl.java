@@ -495,7 +495,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             if (itemState.isNode()) {
                 // the transient item is a node
                 NodeState nodeState = (NodeState) itemState;
-                ItemId id = nodeState.getId();
+                ItemId id = nodeState.getNodeId();
                 NodeImpl node = (NodeImpl) itemMgr.getItem(id);
                 NodeDefinition def = node.getDefinition();
                 // primary type
@@ -560,7 +560,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             } else {
                 // the transient item is a property
                 PropertyState propState = (PropertyState) itemState;
-                ItemId propId = propState.getId();
+                ItemId propId = propState.getPropertyId();
                 PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propId);
                 PropertyDefinitionImpl def =
                         (PropertyDefinitionImpl) prop.getDefinition();
@@ -1088,23 +1088,23 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 ItemState transientState = (ItemState) it.next();
                 if (transientState.isNode()) {
                     NodeState nodeState = (NodeState) transientState;
-                    Set dependentUUIDs = new HashSet();
+                    Set dependentIDs = new HashSet();
                     if (nodeState.hasOverlayedState()) {
-                        String oldParentUUID =
-                                nodeState.getOverlayedState().getParentUUID();
-                        String newParentUUID = nodeState.getParentUUID();
-                        if (oldParentUUID != null) {
-                            if (newParentUUID == null) {
+                        NodeId oldParentId =
+                                nodeState.getOverlayedState().getParentId();
+                        NodeId newParentId = nodeState.getParentId();
+                        if (oldParentId != null) {
+                            if (newParentId == null) {
                                 // node has been removed, add old parent
                                 // to dependencies
-                                dependentUUIDs.add(oldParentUUID);
+                                dependentIDs.add(oldParentId);
                             } else {
-                                if (oldParentUUID != null &&
-                                        !oldParentUUID.equals(newParentUUID)) {
+                                if (oldParentId!= null &&
+                                        !oldParentId.equals(newParentId)) {
                                     // node has been moved, add old and new parent
                                     // to dependencies
-                                    dependentUUIDs.add(oldParentUUID);
-                                    dependentUUIDs.add(newParentUUID);
+                                    dependentIDs.add(oldParentId);
+                                    dependentIDs.add(newParentId);
                                 }
                             }
                         }
@@ -1115,7 +1115,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                          cneIt.hasNext();) {
                         NodeState.ChildNodeEntry cne =
                                 (NodeState.ChildNodeEntry) cneIt.next();
-                        dependentUUIDs.add(cne.getUUID());
+                        dependentIDs.add(cne.getId());
                     }
                     // added child node entries
                     for (Iterator cneIt =
@@ -1123,14 +1123,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                          cneIt.hasNext();) {
                         NodeState.ChildNodeEntry cne =
                                 (NodeState.ChildNodeEntry) cneIt.next();
-                        dependentUUIDs.add(cne.getUUID());
+                        dependentIDs.add(cne.getId());
                     }
 
                     // now walk through dependencies and check whether they
                     // are within the scope of this save operation
-                    Iterator depIt = dependentUUIDs.iterator();
+                    Iterator depIt = dependentIDs.iterator();
                     while (depIt.hasNext()) {
-                        NodeId id = new NodeId((String) depIt.next());
+                        NodeId id = (NodeId) depIt.next();
                         if (!affectedIds.contains(id)) {
                             // need to save the parent as well
                             String msg = itemMgr.safeGetJCRPath(id)
@@ -1373,7 +1373,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // check state of this instance
         sanityCheck();
 
-        if (state.getParentUUID() == null) {
+        if (state.getParentId() == null) {
             // shortcut
             return 0;
         }

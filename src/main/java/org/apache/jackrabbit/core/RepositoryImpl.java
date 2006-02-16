@@ -44,7 +44,6 @@ import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.AccessDeniedException;
@@ -91,13 +90,24 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     private static final String REPOSITORY_LOCK = ".lock";
 
     /**
-     * hardcoded uuid of the repository root node
+     * hardcoded id of the repository root node
      */
-    private static final String ROOT_NODE_UUID = "cafebabe-cafe-babe-cafe-babecafebabe";
+    public static final NodeId ROOT_NODE_ID = NodeId.valueOf("cafebabe-cafe-babe-cafe-babecafebabe");
 
-    private static final String SYSTEM_ROOT_NODE_UUID = "deadbeef-cafe-babe-cafe-babecafebabe";
-    private static final String VERSION_STORAGE_NODE_UUID = "deadbeef-face-babe-cafe-babecafebabe";
-    private static final String NODETYPES_NODE_UUID = "deadbeef-cafe-cafe-cafe-babecafebabe";
+    /**
+     * hardcoded id of the "/jcr:system" node
+     */
+    public static final NodeId SYSTEM_ROOT_NODE_ID = NodeId.valueOf("deadbeef-cafe-babe-cafe-babecafebabe");
+
+    /**
+     * hardcoded id of the "/jcr:system/jcr:versionStorage" node
+     */
+    public static final NodeId VERSION_STORAGE_NODE_ID = NodeId.valueOf("deadbeef-face-babe-cafe-babecafebabe");
+
+    /**
+     * hardcoded id of the "/jcr:system/jcr:nodeTypes" node
+     */
+    public static final NodeId NODETYPES_NODE_ID = NodeId.valueOf("deadbeef-cafe-cafe-cafe-babecafebabe");
 
     /**
      * the name of the filesystem resource containing the properties of the
@@ -114,7 +124,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     public static final String STATS_NODE_COUNT_PROPERTY = "jcr.repository.stats.nodes.count";
     public static final String STATS_PROP_COUNT_PROPERTY = "jcr.repository.stats.properties.count";
 
-    private String rootNodeUUID;
+    private NodeId rootNodeId;
 
     private final NamespaceRegistryImpl nsReg;
     private final NodeTypeRegistry ntReg;
@@ -200,7 +210,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         metaDataStore = new BasedFileSystem(repStore, fsRootPath);
 
         // init root node uuid
-        rootNodeUUID = loadRootNodeUUID(metaDataStore);
+        rootNodeId = loadRootNodeId(metaDataStore);
 
         // load repository properties
         repProps = loadRepProps();
@@ -225,7 +235,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
         // init virtual node type manager
         virtNTMgr = new VirtualNodeTypeStateManager(getNodeTypeRegistry(),
-                delegatingDispatcher, NODETYPES_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
+                delegatingDispatcher, NODETYPES_NODE_ID, SYSTEM_ROOT_NODE_ID);
 
         // initialize default workspace
         String wspName = repConfig.getDefaultWorkspaceName();
@@ -271,10 +281,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
                 vConfig.getFileSystem(),
                 vConfig.getPersistenceManagerConfig(),
-                rootNodeUUID,
+                rootNodeId,
                 nsReg,
                 ntReg);
-        return new VersionManagerImpl(pm, ntReg, delegatingDispatcher, VERSION_STORAGE_NODE_UUID, SYSTEM_ROOT_NODE_UUID);
+        return new VersionManagerImpl(pm, ntReg, delegatingDispatcher,
+                VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID);
     }
 
     /**
@@ -339,7 +350,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @return
      * @throws RepositoryException
      */
-    protected String loadRootNodeUUID(FileSystem fs) throws RepositoryException {
+    protected NodeId loadRootNodeId(FileSystem fs) throws RepositoryException {
         FileSystemResource uuidFile = new FileSystemResource(fs, "rootUUID");
         try {
             if (uuidFile.exists()) {
@@ -372,7 +383,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                             // ignore
                         }
                     }
-                    return new UUID(new String(chars)).toString();
+                    return NodeId.valueOf(new String(chars));
                 } catch (Exception e) {
                     String msg = "failed to load persisted repository state";
                     log.debug(msg);
@@ -408,7 +419,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     // store uuid in text format for better readability
                     OutputStreamWriter writer = new OutputStreamWriter(out);
                     try {
-                        writer.write(ROOT_NODE_UUID);
+                        writer.write(ROOT_NODE_ID.toString());
                     } finally {
                         try {
                             writer.close();
@@ -416,7 +427,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                             // ignore
                         }
                     }
-                    return ROOT_NODE_UUID;
+                    return ROOT_NODE_ID;
                 } catch (Exception e) {
                     String msg = "failed to persist repository state";
                     log.debug(msg);
@@ -504,13 +515,13 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         NodeImpl rootNode = (NodeImpl) sysSession.getRootNode();
         if (!rootNode.hasNode(QName.JCR_SYSTEM)) {
             NodeTypeImpl nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_SYSTEM);
-            NodeImpl sysRoot = rootNode.internalAddChildNode(QName.JCR_SYSTEM, nt, SYSTEM_ROOT_NODE_UUID);
+            NodeImpl sysRoot = rootNode.internalAddChildNode(QName.JCR_SYSTEM, nt, SYSTEM_ROOT_NODE_ID);
             // add version storage
             nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_VERSIONSTORAGE);
-            sysRoot.internalAddChildNode(QName.JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_UUID);
+            sysRoot.internalAddChildNode(QName.JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_ID);
             // add node types
             nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_NODETYPES);
-            sysRoot.internalAddChildNode(QName.JCR_NODETYPES, nt, NODETYPES_NODE_UUID);
+            sysRoot.internalAddChildNode(QName.JCR_NODETYPES, nt, NODETYPES_NODE_ID);
             rootNode.save();
         }
 
@@ -545,7 +556,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 if (repConfig.getSearchConfig() != null) {
                     SystemSession defSysSession = getSystemSession(wspName);
                     systemSearchMgr = new SystemSearchManager(repConfig.getSearchConfig(),
-                            nsReg, ntReg, defSysSession.getItemStateManager(), SYSTEM_ROOT_NODE_UUID);
+                            nsReg, ntReg, defSysSession.getItemStateManager(), SYSTEM_ROOT_NODE_ID);
                     ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
                     obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED |
                             Event.NODE_REMOVED | Event.PROPERTY_ADDED |
@@ -583,11 +594,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         return vMgr;
     }
 
-    String getRootNodeUUID() {
+    NodeId getRootNodeId() {
         // check sanity of this instance
         sanityCheck();
 
-        return rootNodeUUID;
+        return rootNodeId;
     }
 
     /**
@@ -981,13 +992,13 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     private static PersistenceManager createPersistenceManager(File homeDir,
                                                                FileSystem fs,
                                                                PersistenceManagerConfig pmConfig,
-                                                               String rootNodeUUID,
+                                                               NodeId rootNodeId,
                                                                NamespaceRegistry nsReg,
                                                                NodeTypeRegistry ntReg)
             throws RepositoryException {
         try {
             PersistenceManager pm = (PersistenceManager) pmConfig.newInstance();
-            pm.init(new PMContext(homeDir, fs, rootNodeUUID, nsReg, ntReg));
+            pm.init(new PMContext(homeDir, fs, rootNodeId, nsReg, ntReg));
             return pm;
         } catch (Exception e) {
             String msg = "Cannot instantiate persistence manager " + pmConfig.getClassName();
@@ -1395,9 +1406,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                         nsReg,
                         ntReg,
                         itemStateMgr,
-                        rootNodeUUID,
+                        rootNodeId,
                         getSystemSearchManager(getName()),
-                        SYSTEM_ROOT_NODE_UUID);
+                        SYSTEM_ROOT_NODE_ID);
             }
             return searchMgr;
         }
@@ -1472,14 +1483,14 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             persistMgr = createPersistenceManager(new File(config.getHomeDir()),
                     fs,
                     config.getPersistenceManagerConfig(),
-                    rootNodeUUID,
+                    rootNodeId,
                     nsReg,
                     ntReg);
 
             // create item state manager
             try {
                 itemStateMgr =
-                        new SharedItemStateManager(persistMgr, rootNodeUUID, ntReg, true);
+                        new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true);
                 try {
                     itemStateMgr.addVirtualItemStateProvider(
                             vMgr.getVirtualItemStateProvider());

@@ -16,19 +16,17 @@
  */
 package org.apache.jackrabbit.core.lock;
 
+import org.apache.jackrabbit.core.InternalXAResource;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.TransactionContext;
-import org.apache.jackrabbit.core.InternalXAResource;
+import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.log4j.Logger;
 
-import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
 
 /**
  * Session-local lock manager that implements the semantical changes inside
@@ -36,11 +34,6 @@ import javax.jcr.Session;
  * view of the locking space.
  */
 public class XALockManager implements LockManager, InternalXAResource {
-
-    /**
-     * Logger instance for this class
-     */
-    private static final Logger log = Logger.getLogger(XALockManager.class);
 
     /**
      * Attribute name for XA Environment.
@@ -80,7 +73,7 @@ public class XALockManager implements LockManager, InternalXAResource {
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
 
-        AbstractLockInfo info = null;
+        AbstractLockInfo info;
         if (isInXA()) {
             info = xaEnv.lock(node, isDeep, isSessionScoped);
         } else {
@@ -93,18 +86,17 @@ public class XALockManager implements LockManager, InternalXAResource {
      * {@inheritDoc}
      */
     public Lock getLock(NodeImpl node) throws LockException, RepositoryException {
-        AbstractLockInfo info = null;
+        AbstractLockInfo info;
         if (isInXA()) {
             info = xaEnv.getLockInfo(node);
         } else {
-            info = lockMgr.getLockInfo(node.internalGetUUID());
+            info = lockMgr.getLockInfo(node.getNodeId());
         }
         if (info == null) {
             throw new LockException("Node not locked: " + node.safeGetJCRPath());
         }
         SessionImpl session = (SessionImpl) node.getSession();
-        NodeImpl holder = (NodeImpl) session.getItemManager().getItem(
-                new NodeId(info.getUUID()));
+        NodeImpl holder = (NodeImpl) session.getItemManager().getItem(info.getId());
         return new XALock(this, info, holder);
     }
 
@@ -123,27 +115,24 @@ public class XALockManager implements LockManager, InternalXAResource {
      * {@inheritDoc}
      */
     public boolean holdsLock(NodeImpl node) throws RepositoryException {
-        AbstractLockInfo info = null;
+        AbstractLockInfo info;
         if (isInXA()) {
             info = xaEnv.getLockInfo(node);
         } else {
-            info = lockMgr.getLockInfo(node.internalGetUUID());
+            info = lockMgr.getLockInfo(node.getNodeId());
         }
-        if (info != null && info.getUUID().equals(node.internalGetUUID())) {
-            return true;
-        }
-        return false;
+        return info != null && info.getId().equals(node.getId());
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean isLocked(NodeImpl node) throws RepositoryException {
-        AbstractLockInfo info = null;
+        AbstractLockInfo info;
         if (isInXA()) {
             info = xaEnv.getLockInfo(node);
         } else {
-            info = lockMgr.getLockInfo(node.internalGetUUID());
+            info = lockMgr.getLockInfo(node.getNodeId());
         }
         return info != null;
     }
@@ -152,11 +141,11 @@ public class XALockManager implements LockManager, InternalXAResource {
      * {@inheritDoc}
      */
     public void checkLock(NodeImpl node) throws LockException, RepositoryException {
-        AbstractLockInfo info = null;
+        AbstractLockInfo info;
         if (isInXA()) {
             info = xaEnv.getLockInfo(node);
         } else {
-            info = lockMgr.getLockInfo(node.internalGetUUID());
+            info = lockMgr.getLockInfo(node.getNodeId());
         }
         if (info != null && info.getLockHolder() != node.getSession()) {
             throw new LockException("Node locked.");

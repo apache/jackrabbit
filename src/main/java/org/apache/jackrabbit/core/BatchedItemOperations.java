@@ -292,7 +292,7 @@ public class BatchedItemOperations extends ItemValidator {
                 | CHECK_VERSIONING | CHECK_CONSTRAINTS);
         // check read access right on source node using source access manager
         try {
-            if (!srcAccessMgr.isGranted(srcState.getId(), AccessManager.READ)) {
+            if (!srcAccessMgr.isGranted(srcState.getNodeId(), AccessManager.READ)) {
                 throw new PathNotFoundException(safeGetJCRPath(srcPath));
             }
         } catch (ItemNotFoundException infe) {
@@ -308,10 +308,10 @@ public class BatchedItemOperations extends ItemValidator {
 
         // create deep copy of source node state
         NodeState newState = copyNodeState(srcState, srcStateMgr, srcAccessMgr,
-                destParentState.getUUID(), flag, refTracker);
+                destParentState.getNodeId(), flag, refTracker);
 
         // add to new parent
-        destParentState.addChildNodeEntry(destName.getName(), newState.getUUID());
+        destParentState.addChildNodeEntry(destName.getName(), newState.getNodeId());
 
         // change definition (id) of new node
         NodeDef newNodeDef =
@@ -333,10 +333,10 @@ public class BatchedItemOperations extends ItemValidator {
             InternalValue[] newVals = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {
                 InternalValue val = values[i];
-                String original = ((UUID) val.internalValue()).toString();
-                String adjusted = refTracker.getMappedUUID(original);
+                UUID original = (UUID) val.internalValue();
+                UUID adjusted = refTracker.getMappedUUID(original);
                 if (adjusted != null) {
-                    newVals[i] = InternalValue.create(UUID.fromString(adjusted));
+                    newVals[i] = InternalValue.create(adjusted);
                     modified = true;
                 } else {
                     // reference doesn't need adjusting, just copy old value
@@ -417,15 +417,14 @@ public class BatchedItemOperations extends ItemValidator {
 
         // 2. check if target state can be removed from old/added to new parent
 
-        checkRemoveNode(target, (NodeId) srcParent.getId(),
+        checkRemoveNode(target, srcParent.getNodeId(),
                 CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS);
         checkAddNode(destParent, destName.getName(),
                 target.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
                 | CHECK_VERSIONING | CHECK_CONSTRAINTS);
 
         // 3. do move operation (modify and store affected states)
-
-        boolean renameOnly = srcParent.getUUID().equals(destParent.getUUID());
+        boolean renameOnly = srcParent.getNodeId().equals(destParent.getNodeId());
 
         int srcNameIndex = srcName.getIndex();
         if (srcNameIndex == 0) {
@@ -440,9 +439,9 @@ public class BatchedItemOperations extends ItemValidator {
             // remove child node entry from old parent
             srcParent.removeChildNodeEntry(srcName.getName(), srcNameIndex);
             // re-parent target node
-            target.setParentUUID(destParent.getUUID());
+            target.setParentId(destParent.getNodeId());
             // add child node entry to new parent
-            destParent.addChildNodeEntry(destName.getName(), target.getUUID());
+            destParent.addChildNodeEntry(destName.getName(), target.getNodeId());
         }
 
         // change definition (id) of target node
@@ -489,18 +488,15 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         // 1. retrieve affected state
-
         NodeState target = getNodeState(nodePath);
-        NodeId parentId = new NodeId(target.getParentUUID());
+        NodeId parentId = target.getParentId();
 
         // 2. check if target state can be removed from parent
-
         checkRemoveNode(target, parentId,
                 CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING
                 | CHECK_CONSTRAINTS | CHECK_REFERENCES);
 
         // 3. do remove operation
-
         removeNodeState(target);
     }
 
@@ -541,7 +537,7 @@ public class BatchedItemOperations extends ItemValidator {
             VersionException, LockException, ItemNotFoundException,
             ItemExistsException, RepositoryException {
 
-        Path parentPath = hierMgr.getPath(parentState.getId());
+        Path parentPath = hierMgr.getPath(parentState.getNodeId());
 
         // 1. locking status
 
@@ -562,12 +558,12 @@ public class BatchedItemOperations extends ItemValidator {
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             AccessManager accessMgr = session.getAccessManager();
             // make sure current session is granted read access on parent node
-            if (!accessMgr.isGranted(parentState.getId(), AccessManager.READ)) {
-                throw new ItemNotFoundException(safeGetJCRPath(parentState.getId()));
+            if (!accessMgr.isGranted(parentState.getNodeId(), AccessManager.READ)) {
+                throw new ItemNotFoundException(safeGetJCRPath(parentState.getNodeId()));
             }
             // make sure current session is granted write access on parent node
-            if (!accessMgr.isGranted(parentState.getId(), AccessManager.WRITE)) {
-                throw new AccessDeniedException(safeGetJCRPath(parentState.getId())
+            if (!accessMgr.isGranted(parentState.getNodeId(), AccessManager.WRITE)) {
+                throw new AccessDeniedException(safeGetJCRPath(parentState.getNodeId())
                         + ": not allowed to add child node");
             }
         }
@@ -578,7 +574,7 @@ public class BatchedItemOperations extends ItemValidator {
             NodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
             // make sure parent node is not protected
             if (parentDef.isProtected()) {
-                throw new ConstraintViolationException(safeGetJCRPath(parentState.getId())
+                throw new ConstraintViolationException(safeGetJCRPath(parentState.getNodeId())
                         + ": cannot add child node to protected parent node");
             }
             // make sure there's an applicable definition for new child node
@@ -593,7 +589,7 @@ public class BatchedItemOperations extends ItemValidator {
                 // there's already a property with that name
                 throw new ItemExistsException("cannot add child node '"
                         + nodeName.getLocalName() + "' to "
-                        + safeGetJCRPath(parentState.getId())
+                        + safeGetJCRPath(parentState.getNodeId())
                         + ": colliding with same-named existing property");
             }
             if (parentState.hasChildNodeEntry(nodeName)) {
@@ -602,7 +598,7 @@ public class BatchedItemOperations extends ItemValidator {
                 // get definition of existing conflicting node
                 NodeState.ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName, 1);
                 NodeState conflictingState;
-                NodeId conflictingId = new NodeId(entry.getUUID());
+                NodeId conflictingId = entry.getId();
                 try {
                     conflictingState = (NodeState) stateMgr.getItemState(conflictingId);
                 } catch (ItemStateException ise) {
@@ -618,7 +614,7 @@ public class BatchedItemOperations extends ItemValidator {
                         || !newNodeDef.allowsSameNameSiblings()) {
                     throw new ItemExistsException("cannot add child node '"
                             + nodeName.getLocalName() + "' to "
-                            + safeGetJCRPath(parentState.getId())
+                            + safeGetJCRPath(parentState.getNodeId())
                             + ": colliding with same-named existing node");
                 }
             }
@@ -656,8 +652,7 @@ public class BatchedItemOperations extends ItemValidator {
             throws ConstraintViolationException, AccessDeniedException,
             VersionException, LockException, ItemNotFoundException,
             ReferentialIntegrityException, RepositoryException {
-        NodeId parentId = new NodeId(targetState.getParentUUID());
-        checkRemoveNode(targetState, parentId, options);
+        checkRemoveNode(targetState, targetState.getParentId(), options);
     }
 
     /**
@@ -695,11 +690,11 @@ public class BatchedItemOperations extends ItemValidator {
             VersionException, LockException, ItemNotFoundException,
             ReferentialIntegrityException, RepositoryException {
 
-        if (targetState.getParentUUID() == null) {
+        if (targetState.getParentId() == null) {
             // root or orphaned node
             throw new ConstraintViolationException("cannot remove root node");
         }
-        NodeId targetId = (NodeId) targetState.getId();
+        NodeId targetId = targetState.getNodeId();
         NodeState parentState = getNodeState(parentId);
         Path parentPath = hierMgr.getPath(parentId);
 
@@ -763,7 +758,7 @@ public class BatchedItemOperations extends ItemValidator {
         if ((options & CHECK_REFERENCES) == CHECK_REFERENCES) {
             EffectiveNodeType ent = getEffectiveNodeType(targetState);
             if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
-                NodeReferencesId refsId = new NodeReferencesId(targetState.getUUID());
+                NodeReferencesId refsId = new NodeReferencesId(targetState.getNodeId());
                 if (stateMgr.hasNodeReferences(refsId)) {
                     try {
                         NodeReferences refs = stateMgr.getNodeReferences(refsId);
@@ -818,12 +813,12 @@ public class BatchedItemOperations extends ItemValidator {
         // access rights
         AccessManager accessMgr = session.getAccessManager();
         // make sure current session is granted read access on node
-        if (!accessMgr.isGranted(node.getId(), AccessManager.READ)) {
-            throw new PathNotFoundException(safeGetJCRPath(node.getId()));
+        if (!accessMgr.isGranted(node.getNodeId(), AccessManager.READ)) {
+            throw new PathNotFoundException(safeGetJCRPath(node.getNodeId()));
         }
         // make sure current session is granted write access on node
-        if (!accessMgr.isGranted(node.getId(), AccessManager.WRITE)) {
-            throw new AccessDeniedException(safeGetJCRPath(node.getId())
+        if (!accessMgr.isGranted(node.getNodeId(), AccessManager.WRITE)) {
+            throw new AccessDeniedException(safeGetJCRPath(node.getNodeId())
                     + ": not allowed to modify node");
         }
 
@@ -859,8 +854,8 @@ public class BatchedItemOperations extends ItemValidator {
         // access rights
         AccessManager accessMgr = session.getAccessManager();
         // make sure current session is granted read access on node
-        if (!accessMgr.isGranted(node.getId(), AccessManager.READ)) {
-            throw new PathNotFoundException(safeGetJCRPath(node.getId()));
+        if (!accessMgr.isGranted(node.getNodeId(), AccessManager.READ)) {
+            throw new PathNotFoundException(safeGetJCRPath(node.getNodeId()));
         }
     }
 
@@ -956,7 +951,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @param nodeName
      * @param nodeTypeName
      * @param mixinNames
-     * @param uuid
+     * @param id
      * @return
      * @throws ItemExistsException
      * @throws ConstraintViolationException
@@ -967,7 +962,7 @@ public class BatchedItemOperations extends ItemValidator {
                                      QName nodeName,
                                      QName nodeTypeName,
                                      QName[] mixinNames,
-                                     String uuid)
+                                     NodeId id)
             throws ItemExistsException, ConstraintViolationException,
             RepositoryException, IllegalStateException {
 
@@ -977,7 +972,7 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         NodeDef def = findApplicableNodeDefinition(nodeName, nodeTypeName, parent);
-        return createNodeState(parent, nodeName, nodeTypeName, mixinNames, uuid, def);
+        return createNodeState(parent, nodeName, nodeTypeName, mixinNames, id, def);
     }
 
     /**
@@ -991,7 +986,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @param nodeName
      * @param nodeTypeName
      * @param mixinNames
-     * @param uuid
+     * @param id
      * @param def
      * @return
      * @throws ItemExistsException
@@ -1003,7 +998,7 @@ public class BatchedItemOperations extends ItemValidator {
                                      QName nodeName,
                                      QName nodeTypeName,
                                      QName[] mixinNames,
-                                     String uuid,
+                                     NodeId id,
                                      NodeDef def)
             throws ItemExistsException, ConstraintViolationException,
             RepositoryException, IllegalStateException {
@@ -1016,12 +1011,12 @@ public class BatchedItemOperations extends ItemValidator {
         }
         // check for name collisions with existing nodes
         if (!def.allowsSameNameSiblings() && parent.hasChildNodeEntry(nodeName)) {
-            NodeId id = new NodeId(parent.getChildNodeEntry(nodeName, 1).getUUID());
-            throw new ItemExistsException(safeGetJCRPath(id));
+            NodeId errorId = parent.getChildNodeEntry(nodeName, 1).getId();
+            throw new ItemExistsException(safeGetJCRPath(errorId));
         }
-        if (uuid == null) {
-            // create new uuid
-            uuid = UUID.randomUUID().toString();    // create new version 4 uuid
+        if (id == null) {
+            // create new id
+            id = new NodeId(UUID.randomUUID());
         }
         if (nodeTypeName == null) {
             // no primary node type specified,
@@ -1034,14 +1029,14 @@ public class BatchedItemOperations extends ItemValidator {
                 throw new ConstraintViolationException(msg);
             }
         }
-        NodeState node = stateMgr.createNew(uuid, nodeTypeName, parent.getUUID());
+        NodeState node = stateMgr.createNew(id, nodeTypeName, parent.getNodeId());
         if (mixinNames != null && mixinNames.length > 0) {
             node.setMixinTypeNames(new HashSet(Arrays.asList(mixinNames)));
         }
         node.setDefinitionId(def.getId());
 
         // now add new child node entry to parent
-        parent.addChildNodeEntry(nodeName, node.getUUID());
+        parent.addChildNodeEntry(nodeName, id);
 
         EffectiveNodeType ent = getEffectiveNodeType(node);
 
@@ -1155,12 +1150,12 @@ public class BatchedItemOperations extends ItemValidator {
 
         // check for name collisions with existing properties
         if (parent.hasPropertyName(propName)) {
-            PropertyId id = new PropertyId(parent.getUUID(), propName);
-            throw new ItemExistsException(safeGetJCRPath(id));
+            PropertyId errorId = new PropertyId(parent.getNodeId(), propName);
+            throw new ItemExistsException(safeGetJCRPath(errorId));
         }
 
         // create property
-        PropertyState prop = stateMgr.createNew(propName, parent.getUUID());
+        PropertyState prop = stateMgr.createNew(propName, parent.getNodeId());
 
         prop.setDefinitionId(def.getId());
         if (def.getRequiredType() != PropertyType.UNDEFINED) {
@@ -1204,17 +1199,15 @@ public class BatchedItemOperations extends ItemValidator {
     public void removeNodeState(NodeState target)
             throws RepositoryException {
 
-        String parentUUID = target.getParentUUID();
-        if (parentUUID == null) {
+        NodeId parentId = target.getParentId();
+        if (parentId == null) {
             String msg = "root node cannot be removed";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        NodeId parentId = new NodeId(parentUUID);
-
         NodeState parent = getNodeState(parentId);
         // remove child node entry from parent
-        parent.removeChildNodeEntry(target.getUUID());
+        parent.removeChildNodeEntry(target.getNodeId());
         // store parent
         stateMgr.store(parent);
 
@@ -1314,7 +1307,7 @@ public class BatchedItemOperations extends ItemValidator {
             nodeState = getNodeState(nodePath);
         }
         PropertyId propId =
-                new PropertyId(nodeState.getUUID(), QName.JCR_ISCHECKEDOUT);
+                new PropertyId(nodeState.getNodeId(), QName.JCR_ISCHECKEDOUT);
         PropertyState propState;
         try {
             propState = (PropertyState) stateMgr.getItemState(propId);
@@ -1426,7 +1419,7 @@ public class BatchedItemOperations extends ItemValidator {
      *
      * @param parent
      * @param def
-     * @return
+     * @return the computed values
      */
     private InternalValue[] computeSystemGeneratedPropertyValues(NodeState parent,
                                                                  PropDef def) {
@@ -1444,7 +1437,8 @@ public class BatchedItemOperations extends ItemValidator {
             // mix:referenceable node type
             if (QName.JCR_UUID.equals(name)) {
                 // jcr:uuid property
-                genValues = new InternalValue[]{InternalValue.create(parent.getUUID())};
+                genValues = new InternalValue[]{InternalValue.create(
+                        parent.getNodeId().getUUID().toString())};
             }
         } else if (QName.NT_BASE.equals(declaringNT)) {
             // nt:base node type
@@ -1509,14 +1503,14 @@ public class BatchedItemOperations extends ItemValidator {
             // remove from tail to avoid problems with same-name siblings
             for (int i = tmp.size() - 1; i >= 0; i--) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
-                NodeId nodeId = new NodeId(entry.getUUID());
+                NodeId nodeId = entry.getId();
                 try {
                     NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
                     // check if child node can be removed
                     // (access rights, locking & versioning status);
                     // referential integrity (references) is checked
                     // on commit
-                    checkRemoveNode(nodeState, (NodeId) targetState.getId(),
+                    checkRemoveNode(nodeState, targetState.getNodeId(),
                             CHECK_ACCESS
                             | CHECK_LOCK
                             | CHECK_VERSIONING);
@@ -1539,7 +1533,7 @@ public class BatchedItemOperations extends ItemValidator {
         for (Iterator iter = tmp.iterator(); iter.hasNext();) {
             QName propName = (QName) iter.next();
             PropertyId propId =
-                    new PropertyId(targetState.getUUID(), propName);
+                    new PropertyId(targetState.getNodeId(), propName);
             try {
                 PropertyState propState =
                         (PropertyState) stateMgr.getItemState(propId);
@@ -1556,7 +1550,7 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         // now actually do unlink target state
-        targetState.setParentUUID(null);
+        targetState.setParentId(null);
         // destroy target state (pass overlayed state since target state
         // might have been modified during unlinking)
         stateMgr.destroy(targetState.getOverlayedState());
@@ -1569,7 +1563,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @param srcState
      * @param srcStateMgr
      * @param srcAccessMgr
-     * @param destParentUUID
+     * @param destParentId
      * @param flag           one of
      *                       <ul>
      *                       <li><code>COPY</code></li>
@@ -1583,14 +1577,13 @@ public class BatchedItemOperations extends ItemValidator {
     private NodeState copyNodeState(NodeState srcState,
                                     ItemStateManager srcStateMgr,
                                     AccessManager srcAccessMgr,
-                                    String destParentUUID,
+                                    NodeId destParentId,
                                     int flag,
                                     ReferenceChangeTracker refTracker)
             throws RepositoryException {
 
         NodeState newState;
         try {
-            String uuid;
             NodeId id;
             EffectiveNodeType ent = getEffectiveNodeType(srcState);
             boolean referenceable = ent.includesNodeType(QName.MIX_REFERENCEABLE);
@@ -1598,21 +1591,20 @@ public class BatchedItemOperations extends ItemValidator {
             switch (flag) {
                 case COPY:
                     // always create new uuid
-                    uuid = UUID.randomUUID().toString();    // create new version 4 uuid
+                    id = new NodeId(UUID.randomUUID());
                     if (referenceable) {
                         // remember uuid mapping
-                        refTracker.mappedUUID(srcState.getUUID(), uuid);
+                        refTracker.mappedUUID(srcState.getNodeId().getUUID(), id.getUUID());
                     }
                     break;
                 case CLONE:
                     if (!referenceable) {
                         // non-referenceable node: always create new uuid
-                        uuid = UUID.randomUUID().toString();    // create new version 4 uuid
+                        id = new NodeId(UUID.randomUUID());
                         break;
                     }
                     // use same uuid as source node
-                    uuid = srcState.getUUID();
-                    id = new NodeId(uuid);
+                    id = srcState.getNodeId();
                     if (stateMgr.hasItemState(id)) {
                         // node with this uuid already exists
                         throw new ItemExistsException(safeGetJCRPath(id));
@@ -1621,18 +1613,16 @@ public class BatchedItemOperations extends ItemValidator {
                 case CLONE_REMOVE_EXISTING:
                     if (!referenceable) {
                         // non-referenceable node: always create new uuid
-                        uuid = UUID.randomUUID().toString();    // create new version 4 uuid
+                        id = new NodeId(UUID.randomUUID());
                         break;
                     }
                     // use same uuid as source node
-                    uuid = srcState.getUUID();
-                    id = new NodeId(uuid);
+                    id = srcState.getNodeId();
                     if (stateMgr.hasItemState(id)) {
                         NodeState existingState = (NodeState) stateMgr.getItemState(id);
                         // make sure existing node is not the parent
                         // or an ancestor thereof
-                        NodeId newParentId = new NodeId(destParentUUID);
-                        Path p0 = hierMgr.getPath(newParentId);
+                        Path p0 = hierMgr.getPath(destParentId);
                         Path p1 = hierMgr.getPath(id);
                         try {
                             if (p1.equals(p0) || p1.isAncestorOf(p0)) {
@@ -1662,7 +1652,7 @@ public class BatchedItemOperations extends ItemValidator {
                 default:
                     throw new IllegalArgumentException("unknown flag");
             }
-            newState = stateMgr.createNew(uuid, srcState.getNodeTypeName(), destParentUUID);
+            newState = stateMgr.createNew(id, srcState.getNodeTypeName(), destParentId);
             // copy node state
             newState.setMixinTypeNames(srcState.getMixinTypeNames());
             newState.setDefinitionId(srcState.getDefinitionId());
@@ -1670,7 +1660,7 @@ public class BatchedItemOperations extends ItemValidator {
             Iterator iter = srcState.getChildNodeEntries().iterator();
             while (iter.hasNext()) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-                NodeId nodeId = new NodeId(entry.getUUID());
+                NodeId nodeId = entry.getId();
                 if (!srcAccessMgr.isGranted(nodeId, AccessManager.READ)) {
                     continue;
                 }
@@ -1685,17 +1675,17 @@ public class BatchedItemOperations extends ItemValidator {
 
                 // recursive copying of child node
                 NodeState newChildState = copyNodeState(srcChildState,
-                        srcStateMgr, srcAccessMgr, uuid, flag, refTracker);
+                        srcStateMgr, srcAccessMgr, id, flag, refTracker);
                 // store new child node
                 stateMgr.store(newChildState);
                 // add new child node entry to new node
-                newState.addChildNodeEntry(entry.getName(), newChildState.getUUID());
+                newState.addChildNodeEntry(entry.getName(), newChildState.getNodeId());
             }
             // copy properties
             iter = srcState.getPropertyNames().iterator();
             while (iter.hasNext()) {
                 QName propName = (QName) iter.next();
-                PropertyId propId = new PropertyId(srcState.getUUID(), propName);
+                PropertyId propId = new PropertyId(srcState.getNodeId(), propName);
                 if (!srcAccessMgr.isGranted(propId, AccessManager.READ)) {
                     continue;
                 }
@@ -1717,7 +1707,7 @@ public class BatchedItemOperations extends ItemValidator {
                 }
 
                 PropertyState newChildState =
-                        copyPropertyState(srcChildState, uuid, propName);
+                        copyPropertyState(srcChildState, id, propName);
 
                 if (versionable && flag == COPY) {
                     /**
@@ -1759,7 +1749,7 @@ public class BatchedItemOperations extends ItemValidator {
             }
             return newState;
         } catch (ItemStateException ise) {
-            String msg = "internal error: failed to copy state of " + srcState.getId();
+            String msg = "internal error: failed to copy state of " + srcState.getNodeId();
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
@@ -1769,20 +1759,20 @@ public class BatchedItemOperations extends ItemValidator {
      * Copies the specified property state.
      *
      * @param srcState
-     * @param parentUUID
+     * @param parentId
      * @param propName
      * @return
      * @throws RepositoryException
      */
     private PropertyState copyPropertyState(PropertyState srcState,
-                                            String parentUUID,
+                                            NodeId parentId,
                                             QName propName)
             throws RepositoryException {
 
         PropDefId defId = srcState.getDefinitionId();
         PropDef def = ntReg.getPropDef(defId);
 
-        PropertyState newState = stateMgr.createNew(propName, parentUUID);
+        PropertyState newState = stateMgr.createNew(propName, parentId);
 
         newState.setDefinitionId(defId);
         newState.setType(srcState.getType());
@@ -1799,7 +1789,7 @@ public class BatchedItemOperations extends ItemValidator {
             if (def.getDeclaringNodeType().equals(QName.MIX_REFERENCEABLE)
                     && propName.equals(QName.JCR_UUID)) {
                 // set correct value of jcr:uuid property
-                newState.setValues(new InternalValue[]{InternalValue.create(parentUUID)});
+                newState.setValues(new InternalValue[]{InternalValue.create(parentId.getUUID().toString())});
             } else {
                 InternalValue[] newValues = new InternalValue[values.length];
                 for (int i = 0; i < values.length; i++) {

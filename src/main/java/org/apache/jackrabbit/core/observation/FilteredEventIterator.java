@@ -154,7 +154,7 @@ class FilteredEventIterator implements EventIterator {
         while (next == null && actualEvents.hasNext()) {
             state = (EventState) actualEvents.next();
             // check denied set
-            if (denied == null || !denied.contains(state.getId())) {
+            if (denied == null || !denied.contains(state.getTargetId())) {
                 try {
                     next = filter.blocks(state) ? null : new EventImpl(filter.getSession(), state);
                 } catch (RepositoryException e) {

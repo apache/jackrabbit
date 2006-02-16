@@ -158,7 +158,7 @@ public class XASessionImpl extends SessionImpl
     protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
                                             HierarchyManager hierMgr) {
         return new XAItemManager(itemStateMgr, hierMgr, this,
-                ntMgr.getRootNodeDefinition(), rep.getRootNodeUUID());
+                ntMgr.getRootNodeDefinition(), rep.getRootNodeId());
     }
 
     /**

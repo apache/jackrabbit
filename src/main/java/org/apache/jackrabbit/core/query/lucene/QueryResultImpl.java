@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
@@ -45,7 +46,7 @@ public class QueryResultImpl implements QueryResult {
     /**
      * The UUIDs of the result nodes
      */
-    private final String[] uuids;
+    private final NodeId[] ids;
 
     /**
      * The scores of the result nodes
@@ -71,7 +72,7 @@ public class QueryResultImpl implements QueryResult {
      * Creates a new query result.
      *
      * @param itemMgr     the item manager of the session executing the query.
-     * @param uuids       the UUIDs of the result nodes.
+     * @param ids         the Ids of the result nodes.
      * @param scores      the score values of the result nodes.
      * @param selectProps the select properties of the query.
      * @param resolver    the namespace resolver of the session executing the query.
@@ -79,12 +80,12 @@ public class QueryResultImpl implements QueryResult {
      *  order.
      */
     public QueryResultImpl(ItemManager itemMgr,
-                           String[] uuids,
+                           NodeId[] ids,
                            Float[] scores,
                            QName[] selectProps,
                            NamespaceResolver resolver,
                            boolean docOrder) {
-        this.uuids = uuids;
+        this.ids = ids;
         this.scores = scores;
         this.itemMgr = itemMgr;
         this.selectProps = selectProps;
@@ -130,9 +131,9 @@ public class QueryResultImpl implements QueryResult {
      */
     private ScoreNodeIterator getNodeIterator() {
         if (docOrder) {
-            return new DocOrderNodeIteratorImpl(itemMgr, uuids, scores);
+            return new DocOrderNodeIteratorImpl(itemMgr, ids, scores);
         } else {
-            return new NodeIteratorImpl(itemMgr, uuids, scores);
+            return new NodeIteratorImpl(itemMgr, ids, scores);
         }
     }
 }

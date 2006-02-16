@@ -47,5 +47,6 @@ public abstract class ItemId implements Serializable {
      * @see NodeId
      */
     public abstract boolean denotesNode();
+
 }
 

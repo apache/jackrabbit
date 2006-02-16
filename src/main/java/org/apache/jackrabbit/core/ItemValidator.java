@@ -110,7 +110,7 @@ public class ItemValidator {
         QName[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
         for (int i = 0; i < requiredPrimaryTypes.length; i++) {
             if (!entPrimary.includesNodeType(requiredPrimaryTypes[i])) {
-                String msg = safeGetJCRPath(nodeState.getId())
+                String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": missing required primary type "
                         + requiredPrimaryTypes[i];
                 log.debug(msg);
@@ -122,7 +122,7 @@ public class ItemValidator {
         for (int i = 0; i < pda.length; i++) {
             PropDef pd = pda[i];
             if (!nodeState.hasPropertyName(pd.getName())) {
-                String msg = safeGetJCRPath(nodeState.getId())
+                String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": mandatory property " + pd.getName()
                         + " does not exist";
                 log.debug(msg);
@@ -134,7 +134,7 @@ public class ItemValidator {
         for (int i = 0; i < cnda.length; i++) {
             NodeDef cnd = cnda[i];
             if (!nodeState.hasChildNodeEntry(cnd.getName())) {
-                String msg = safeGetJCRPath(nodeState.getId())
+                String msg = safeGetJCRPath(nodeState.getNodeId())
                         + ": mandatory child node " + cnd.getName()
                         + " does not exist";
                 log.debug(msg);
@@ -167,12 +167,12 @@ public class ItemValidator {
             if (type == PropertyType.UNDEFINED) {
                 type = values[i].getType();
             } else if (type != values[i].getType()) {
-                throw new ConstraintViolationException(safeGetJCRPath(propState.getId())
+                throw new ConstraintViolationException(safeGetJCRPath(propState.getPropertyId())
                         + ": inconsistent value types");
             }
             if (def.getRequiredType() != PropertyType.UNDEFINED
                     && def.getRequiredType() != type) {
-                throw new ConstraintViolationException(safeGetJCRPath(propState.getId())
+                throw new ConstraintViolationException(safeGetJCRPath(propState.getPropertyId())
                         + ": requiredType constraint is not satisfied");
             }
         }
@@ -201,7 +201,7 @@ public class ItemValidator {
             return ntReg.getEffectiveNodeType(types);
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node "
-                    + safeGetJCRPath(nodeState.getId());
+                    + safeGetJCRPath(nodeState.getNodeId());
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }

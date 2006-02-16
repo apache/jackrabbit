@@ -42,6 +42,7 @@ import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
@@ -252,7 +253,7 @@ public class SessionImpl implements Session, Dumpable {
      * @return session item state manager
      */
     protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager manager) {
-        return new SessionItemStateManager(rep.getRootNodeUUID(),
+        return new SessionItemStateManager(rep.getRootNodeId(),
                 manager, getNamespaceResolver());
     }
 
@@ -280,7 +281,7 @@ public class SessionImpl implements Session, Dumpable {
     protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
                                             HierarchyManager hierMgr) {
         return new ItemManager(itemStateMgr, hierMgr, this,
-                ntMgr.getRootNodeDefinition(), rep.getRootNodeUUID());
+                ntMgr.getRootNodeDefinition(), rep.getRootNodeId());
     }
 
     /**
@@ -290,7 +291,7 @@ public class SessionImpl implements Session, Dumpable {
      */
     protected VersionManager createVersionManager(RepositoryImpl rep)
             throws RepositoryException {
-        
+
         return rep.getVersionManager();
     }
 
@@ -686,19 +687,33 @@ public class SessionImpl implements Session, Dumpable {
      * {@inheritDoc}
      */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
+        return getNodeByUUID(UUID.fromString(uuid));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Node getNodeByUUID(UUID uuid) throws ItemNotFoundException, RepositoryException {
+        NodeImpl node = getNodeById(new NodeId(uuid));
+        if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
+            return node;
+        } else {
+            // there is a node with that uuid but the node does not expose it
+            throw new ItemNotFoundException(uuid.toString());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeImpl getNodeById(NodeId id) throws ItemNotFoundException, RepositoryException {
         // check sanity of this session
         sanityCheck();
 
         try {
-            NodeImpl node = (NodeImpl) getItemManager().getItem(new NodeId(uuid));
-            if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
-                return node;
-            } else {
-                // there is a node with that uuid but the node does not expose it
-                throw new ItemNotFoundException(uuid);
-            }
+            return (NodeImpl) getItemManager().getItem(id);
         } catch (AccessDeniedException ade) {
-            throw new ItemNotFoundException(uuid);
+            throw new ItemNotFoundException(id.toString());
         }
     }
 
@@ -915,7 +930,7 @@ public class SessionImpl implements Session, Dumpable {
         srcParentNode.checkLock();
         destParentNode.checkLock();
 
-        String targetUUID = ((NodeState) targetNode.getItemState()).getUUID();
+        NodeId targetId = targetNode.getNodeId();
         int index = srcName.getIndex();
         if (index == 0) {
             index = 1;
@@ -923,7 +938,7 @@ public class SessionImpl implements Session, Dumpable {
 
         if (srcParentNode.isSame(destParentNode)) {
             // do rename
-            destParentNode.renameChildNode(srcName.getName(), index, targetUUID, destName.getName());
+            destParentNode.renameChildNode(srcName.getName(), index, targetId, destName.getName());
         } else {
             // do move:
             // 1. remove child node entry from old parent
@@ -933,11 +948,11 @@ public class SessionImpl implements Session, Dumpable {
             // 2. re-parent target node
             NodeState targetState =
                     (NodeState) targetNode.getOrCreateTransientItemState();
-            targetState.setParentUUID(destParentNode.internalGetUUID());
+            targetState.setParentId(destParentNode.getNodeId());
             // 3. add child node entry to new parent
             NodeState destParentState =
                     (NodeState) destParentNode.getOrCreateTransientItemState();
-            destParentState.addChildNodeEntry(destName.getName(), targetUUID);
+            destParentState.addChildNodeEntry(destName.getName(), targetId);
         }
 
         // change definition of target

@@ -127,10 +127,7 @@ public class ChangeLog {
      *         log; <code>false</code> otherwise
      */
     public boolean has(ItemId id) {
-        if (addedStates.containsKey(id) || modifiedStates.containsKey(id)) {
-            return true;
-        }
-        return false;
+        return addedStates.containsKey(id) || modifiedStates.containsKey(id);
     }
 
     /**
@@ -351,10 +348,10 @@ public class ChangeLog {
     public String toString() {
         StringBuffer buf = new StringBuffer();
         buf.append("{");
-        buf.append("#addedStates=" + addedStates.size());
-        buf.append(", #modifiedStates=" + modifiedStates.size());
-        buf.append(", #deletedStates=" + deletedStates.size());
-        buf.append(", #modifiedRefs=" + modifiedRefs.size());
+        buf.append("#addedStates=").append(addedStates.size());
+        buf.append(", #modifiedStates=").append(modifiedStates.size());
+        buf.append(", #deletedStates=").append(deletedStates.size());
+        buf.append(", #modifiedRefs=").append(modifiedRefs.size());
         buf.append("}");
         return buf.toString();
     }

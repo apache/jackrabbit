@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -72,7 +73,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * the frozen uuid of the original node
      */
-    private String frozenUUID = null;
+    private UUID frozenUUID = null;
 
     /**
      * the frozen primary type of the orginal node
@@ -109,7 +110,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             PropertyState prop = props[i];
             if (prop.getName().equals(QName.JCR_FROZENUUID)) {
                 // special property
-                frozenUUID = node.getPropertyValue(QName.JCR_FROZENUUID).internalValue().toString();
+                frozenUUID = UUID.fromString(node.getPropertyValue(QName.JCR_FROZENUUID).internalValue().toString());
             } else if (prop.getName().equals(QName.JCR_FROZENPRIMARYTYPE)) {
                 // special property
                 frozenPrimaryType = (QName) node.getPropertyValue(QName.JCR_FROZENPRIMARYTYPE).internalValue();
@@ -153,8 +154,8 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public String getId() {
-        return node.getUUID();
+    public NodeId getId() {
+        return node.getNodeId();
     }
 
     /**
@@ -169,7 +170,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             int i = 0;
             while (iter.hasNext()) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-                freezes[i++] = (InternalFreeze) vMgr.getItem(entry.getUUID());
+                freezes[i++] = (InternalFreeze) vMgr.getItem(entry.getId());
             }
             return freezes;
         } catch (RepositoryException e) {
@@ -180,11 +181,12 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public boolean hasFrozenHistory(String uuid) {
+    public boolean hasFrozenHistory(UUID uuid) {
         try {
-            NodeState.ChildNodeEntry entry  = node.getState().getChildNodeEntry(uuid);
+            NodeId id = new NodeId(uuid);
+            NodeState.ChildNodeEntry entry  = node.getState().getChildNodeEntry(id);
             if (entry != null) {
-                return vMgr.getItem(uuid) instanceof InternalFrozenVersionHistory;
+                return vMgr.getItem(id) instanceof InternalFrozenVersionHistory;
             }
         } catch (RepositoryException e) {
             // ignore
@@ -202,7 +204,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public String getFrozenUUID() {
+    public UUID getFrozenUUID() {
         return frozenUUID;
     }
 
@@ -234,7 +236,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @throws RepositoryException
      */
     protected static NodeStateEx checkin(NodeStateEx parent, QName name,
-                                            NodeImpl src)
+                                         NodeImpl src)
             throws RepositoryException {
         return checkin(parent, name, src, MODE_VERSION);
     }
@@ -253,7 +255,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
      * @throws RepositoryException
      */
     private static NodeStateEx checkin(NodeStateEx parent, QName name,
-                                            NodeImpl src, int mode)
+                                       NodeImpl src, int mode)
             throws RepositoryException {
 
         // create new node

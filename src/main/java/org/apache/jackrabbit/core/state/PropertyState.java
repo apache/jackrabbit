@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -39,15 +41,34 @@ public class PropertyState extends ItemState {
      */
     static final long serialVersionUID = 4569719974514326906L;
 
-    protected QName name;
-    protected InternalValue[] values;
-    protected int type;
-    protected boolean multiValued;
-
-    protected PropDefId defId;
+    /**
+     * the id of this property state
+     */
+    private PropertyId id;
 
     /**
-     * Create a new <code>PropertyState</code>
+     * the internal values
+     */
+    private InternalValue[] values;
+
+    /**
+     * the type of this property state
+     */
+    private int type;
+
+    /**
+     * flag indicating if this is a multivalue property
+     */
+    private boolean multiValued;
+
+    /**
+     * the property definition id
+     */
+    private PropDefId defId;
+
+    /**
+     * Constructs a new property state that is initially connected to an
+     * overlayed state.
      *
      * @param overlayedState the backing property state being overlayed
      * @param initialStatus  the initial status of the property state object
@@ -55,24 +76,20 @@ public class PropertyState extends ItemState {
      */
     public PropertyState(PropertyState overlayedState, int initialStatus,
                          boolean isTransient) {
-        super(initialStatus, isTransient);
-
-        connect(overlayedState);
+        super(overlayedState, initialStatus, isTransient);
         pull();
     }
 
     /**
      * Create a new <code>PropertyState</code>
      *
-     * @param name          name of the property
-     * @param parentUUID    the uuid of the parent node
+     * @param id            id of the property
      * @param initialStatus the initial status of the property state object
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    public PropertyState(QName name, String parentUUID, int initialStatus,
-                         boolean isTransient) {
-        super(parentUUID, new PropertyId(parentUUID, name), initialStatus, isTransient);
-        this.name = name;
+    public PropertyState(PropertyId id, int initialStatus, boolean isTransient) {
+        super(initialStatus, isTransient);
+        this.id = id;
         type = PropertyType.UNDEFINED;
         values = InternalValue.EMPTY_ARRAY;
         multiValued = false;
@@ -83,14 +100,12 @@ public class PropertyState extends ItemState {
      */
     protected synchronized void copy(ItemState state) {
         synchronized (state) {
-            super.copy(state);
-
             PropertyState propState = (PropertyState) state;
-            name = propState.getName();
-            type = propState.getType();
-            defId = propState.getDefinitionId();
-            values = propState.getValues();
-            multiValued = propState.isMultiValued();
+            id = propState.id;
+            type = propState.type;
+            defId = propState.defId;
+            values = propState.values;
+            multiValued = propState.multiValued;
         }
     }
 
@@ -106,12 +121,34 @@ public class PropertyState extends ItemState {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public ItemId getId() {
+        return id;
+    }
+
+    /**
+     * Returns the id of this property state.
+     * @return the id of this property state.
+     */
+    public PropertyId getPropertyId() {
+        return id;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeId getParentId() {
+        return id.getParentId();
+    }
+
+    /**
      * Returns the name of this property.
      *
      * @return the name of this property.
      */
     public QName getName() {
-        return name;
+        return id.getName();
     }
 
     /**
@@ -192,7 +229,7 @@ public class PropertyState extends ItemState {
     private void writeObject(ObjectOutputStream out) throws IOException {
         // important: fields must be written in same order as they are
         // read in readObject(ObjectInputStream)
-        out.writeUTF(name.toString());
+        out.writeUTF(getName().toString());
         out.writeInt(type);
         out.writeBoolean(multiValued);
         if (values == null) {
@@ -231,7 +268,7 @@ public class PropertyState extends ItemState {
     private void readObject(ObjectInputStream in) throws IOException {
         // important: fields must be read in same order as they are
         // written in writeObject(ObjectOutputStream)
-        name = QName.valueOf(in.readUTF());
+        QName name = QName.valueOf(in.readUTF());
         type = in.readInt();
         multiValued = in.readBoolean();
         short count = in.readShort(); // # of values

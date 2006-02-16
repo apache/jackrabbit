@@ -129,7 +129,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
         this.wspConfig = wspConfig;
         this.rep = rep;
         this.stateMgr = createItemStateManager(stateMgr);
-        this.hierMgr = new CachingHierarchyManager(rep.getRootNodeUUID(),
+        this.hierMgr = new CachingHierarchyManager(rep.getRootNodeId(),
                 this.stateMgr, session.getNamespaceResolver());
         this.session = session;
     }

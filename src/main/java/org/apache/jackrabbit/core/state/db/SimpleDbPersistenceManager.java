@@ -568,7 +568,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
 
         // check if insert or update
         boolean update = state.getStatus() != ItemState.STATUS_NEW;
-        //boolean update = exists((NodeId) state.getId());
+        //boolean update = exists(state.getId());
         PreparedStatement stmt = (update) ? nodeStateUpdate : nodeStateInsert;
 
         try {
@@ -581,13 +581,13 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
             // not have to additionally synchronize on the preparedStatement
 
             stmt.setBytes(1, out.toByteArray());
-            stmt.setString(2, state.getId().toString());
+            stmt.setString(2, state.getNodeId().toString());
             stmt.executeUpdate();
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write node state: " + state.getId();
+            String msg = "failed to write node state: " + state.getNodeId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
@@ -612,7 +612,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
 
         // check if insert or update
         boolean update = state.getStatus() != ItemState.STATUS_NEW;
-        //boolean update = exists((PropertyId) state.getId());
+        //boolean update = exists(state.getId());
         PreparedStatement stmt = (update) ? propertyStateUpdate : propertyStateInsert;
 
         try {
@@ -625,13 +625,13 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
             // not have to additionally synchronize on the preparedStatement
 
             stmt.setBytes(1, out.toByteArray());
-            stmt.setString(2, state.getId().toString());
+            stmt.setString(2, state.getPropertyId().toString());
             stmt.executeUpdate();
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write property state: " + state.getId();
+            String msg = "failed to write property state: " + state.getPropertyId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
@@ -650,10 +650,10 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
 
         PreparedStatement stmt = nodeStateDelete;
         try {
-            stmt.setString(1, state.getId().toString());
+            stmt.setString(1, state.getNodeId().toString());
             stmt.executeUpdate();
         } catch (Exception e) {
-            String msg = "failed to delete node state: " + state.getId();
+            String msg = "failed to delete node state: " + state.getNodeId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
@@ -681,7 +681,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
                         // delete internal resource representation of BLOB value
                         blobVal.delete(true);
                         // also remove from BLOBStore
-                        String blobId = blobStore.createId((PropertyId) state.getId(), i);
+                        String blobId = blobStore.createId(state.getPropertyId(), i);
                         try {
                             blobStore.remove(blobId);
                         } catch (Exception e) {
@@ -694,10 +694,10 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
 
         PreparedStatement stmt = propertyStateDelete;
         try {
-            stmt.setString(1, state.getId().toString());
+            stmt.setString(1, state.getPropertyId().toString());
             stmt.executeUpdate();
         } catch (Exception e) {
-            String msg = "failed to delete property state: " + state.getId();
+            String msg = "failed to delete property state: " + state.getPropertyId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {

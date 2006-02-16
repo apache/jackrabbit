@@ -91,14 +91,14 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Create a new instance of this class.
      *
-     * @param rootNodeUUID root node UUID
+     * @param rootNodeId   root node id
      * @param provider     item state manager
      * @param nsResolver   namespace resolver
      */
-    public CachingHierarchyManager(String rootNodeUUID,
+    public CachingHierarchyManager(NodeId rootNodeId,
                                    ItemStateManager provider,
                                    NamespaceResolver nsResolver) {
-        super(rootNodeUUID, provider, nsResolver);
+        super(rootNodeId, provider, nsResolver);
         upperLimit = DEFAULT_UPPER_LIMIT;
     }
 
@@ -288,7 +288,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     private void stateModified(NodeState modified) {
         synchronized (cacheMonitor) {
-            LRUEntry entry = (LRUEntry) idCache.get(modified.getId());
+            LRUEntry entry = (LRUEntry) idCache.get(modified.getNodeId());
             if (entry == null) {
                 // Item not cached, ignore
                 return;
@@ -309,7 +309,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 }
 
                 LRUEntry childEntry = (LRUEntry) child.get();
-                if (childEntry != null && !cne.getUUID().equals(childEntry.getUUID())) {
+                if (childEntry != null && !cne.getId().equals(childEntry.getId())) {
                     // Different child item, remove
                     child.remove();
                     evict(child);
@@ -367,19 +367,19 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * {@inheritDoc}
      */
-    public void nodeAdded(NodeState state, QName name, int index, String uuid) {
+    public void nodeAdded(NodeState state, QName name, int index, NodeId id) {
         try {
-            Path path = Path.create(getPath(state.getId()), name, index, true);
-            insert(path, new NodeId(uuid));
+            Path path = Path.create(getPath(state.getNodeId()), name, index, true);
+            insert(path, id);
         } catch (PathNotFoundException e) {
-            log.warn("Unable to get path of node " + state.getId() +
+            log.warn("Unable to get path of node " + state.getNodeId() +
                     ", event ignored.");
         } catch (MalformedPathException e) {
-            log.warn("Unable to create path of " + uuid, e);
+            log.warn("Unable to create path of " + id, e);
         } catch (ItemNotFoundException e) {
-            log.warn("Unable to get path of " + state.getId(), e);
+            log.warn("Unable to get path of " + state.getNodeId(), e);
         } catch (RepositoryException e) {
-            log.warn("Unable to get path of " + state.getId(), e);
+            log.warn("Unable to get path of " + state.getNodeId(), e);
         }
     }
 
@@ -398,34 +398,34 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry now = (NodeState.ChildNodeEntry) iter.next();
             NodeState.ChildNodeEntry old =
-                    ((NodeState) state.getOverlayedState()).getChildNodeEntry(now.getUUID());
+                    ((NodeState) state.getOverlayedState()).getChildNodeEntry(now.getId());
 
             if (old == null) {
                 log.warn("Reordered child node not found in old list.");
                 continue;
             }
 
-            nodeAdded(state, now.getName(), now.getIndex(), now.getUUID());
-            nodeRemoved(state, old.getName(), old.getIndex(), old.getUUID());
+            nodeAdded(state, now.getName(), now.getIndex(), now.getId());
+            nodeRemoved(state, old.getName(), old.getIndex(), old.getId());
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public void nodeRemoved(NodeState state, QName name, int index, String uuid) {
+    public void nodeRemoved(NodeState state, QName name, int index, NodeId id) {
         try {
-            Path path = Path.create(getPath(state.getId()), name, index, true);
-            remove(path, new NodeId(uuid));
+            Path path = Path.create(getPath(state.getNodeId()), name, index, true);
+            remove(path, id);
         } catch (PathNotFoundException e) {
-            log.warn("Unable to get path of node " + state.getId() +
+            log.warn("Unable to get path of node " + state.getNodeId() +
                     ", event ignored.");
         } catch (MalformedPathException e) {
-            log.warn("Unable to create path of " + uuid, e);
+            log.warn("Unable to create path of " + id, e);
         } catch (ItemNotFoundException e) {
-            log.warn("Unable to get path of " + state.getId(), e);
+            log.warn("Unable to get path of " + state.getNodeId(), e);
         } catch (RepositoryException e) {
-            log.warn("Unable to get path of " + state.getId(), e);
+            log.warn("Unable to get path of " + state.getNodeId(), e);
         }
     }
 
@@ -479,7 +479,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param path  path to item
      */
     private void cache(NodeState state, Path path) {
-        NodeId id = (NodeId) state.getId();
+        NodeId id = state.getNodeId();
 
         synchronized (cacheMonitor) {
             if (idCache.get(id) != null) {
@@ -734,15 +734,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
          */
         public NodeId getId() {
             return id;
-        }
-
-        /**
-         * Return node UUID.
-         *
-         * @return node UUID
-         */
-        public String getUUID() {
-            return id.getUUID();
         }
 
         /**

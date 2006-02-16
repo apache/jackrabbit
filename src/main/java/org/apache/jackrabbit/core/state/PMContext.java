@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.NodeId;
 
 import javax.jcr.NamespaceRegistry;
 import java.io.File;
@@ -53,25 +54,25 @@ public class PMContext {
     /**
      * uuid of the root node
      */
-    private final String rootNodeUUID;
+    private final NodeId rootNodeId;
 
     /**
      * Creates a new <code>PMContext</code>.
      *
      * @param homeDir the physical home directory
      * @param fs the virtual jackrabbit filesystem
-     * @param rootNodeUUID uuid of the root node
+     * @param rootNodeId id of the root node
      * @param nsReg        namespace registry
      * @param ntReg        node type registry
      */
     public PMContext(File homeDir,
                      FileSystem fs,
-                     String rootNodeUUID,
+                     NodeId rootNodeId,
                      NamespaceRegistry nsReg,
                      NodeTypeRegistry ntReg) {
         this.physicalHomeDir = homeDir;
         this.fs = fs;
-        this.rootNodeUUID = rootNodeUUID;
+        this.rootNodeId = rootNodeId;
         this.nsReg = nsReg;
         this.ntReg = ntReg;
     }
@@ -79,7 +80,7 @@ public class PMContext {
 
     /**
      * Returns the physical home directory for this persistence manager
-     * @return
+     * @return the physical home directory for this persistence manager
      */
     public File getHomeDir() {
         return physicalHomeDir;
@@ -87,19 +88,18 @@ public class PMContext {
 
     /**
      * Returns the virtual filesystem for this persistence manager
-     * @return
+     * @return the virtual filesystem for this persistence manager
      */
     public FileSystem getFileSystem() {
         return fs;
     }
 
     /**
-     * Returns the uuid of the root node
-     *
-     * @return the uuid of the root node
+     * Returns the id of the root node
+     * @return the id of the root node
      */
-    public String getRootNodeUUID() {
-        return rootNodeUUID;
+    public NodeId getRootNodeId() {
+        return rootNodeId;
     }
 
     /**

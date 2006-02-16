@@ -61,12 +61,12 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
     /**
      * the root node id (usually the id of /jcr:system/jcr:nodeTypes)
      */
-    private final String rootNodeId;
+    private final NodeId rootNodeId;
 
     /**
      * the id of the roots parent (usually id of /jcr:system)
      */
-    private final String parentId;
+    private final NodeId parentId;
 
     /**
      * the system session to generate the observation events
@@ -89,7 +89,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
      */
     public VirtualNodeTypeStateManager(
             NodeTypeRegistry ntReg, DelegatingObservationDispatcher obs,
-            String rootNodeId, String parentId) {
+            NodeId rootNodeId, NodeId parentId) {
         this.ntReg = ntReg;
         this.obsDispatcher = obs;
         this.rootNodeId = rootNodeId;
@@ -99,7 +99,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
 
     /**
      * returns the virtual node state provider for the node type states.
-     * @return
+     * @return the virtual item state provider
      */
     public synchronized VirtualItemStateProvider getVirtualItemStateProvider() {
         if (virtProvider == null) {
@@ -129,7 +129,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
             }
             if (systemSession != null) {
                 // generate observation events
-                NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(new NodeId(rootNodeId));
+                NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(rootNodeId);
                 NodeImpl child = root.getNode(ntName);
                 List events = new ArrayList();
                 recursiveAdd(events, root, child);
@@ -156,7 +156,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
         try {
             if (systemSession != null) {
                 // generated observation events
-                NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(new NodeId(rootNodeId));
+                NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(rootNodeId);
                 NodeImpl child = root.getNode(ntName);
                 List events = new ArrayList();
                 recursiveRemove(events, root, child);
@@ -183,9 +183,9 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
             throws RepositoryException {
 
         events.add(EventState.childNodeAdded(
-                parent.internalGetUUID(),
+                parent.getNodeId(),
                 parent.getPrimaryPath(),
-                node.internalGetUUID(),
+                node.getNodeId(),
                 node.getPrimaryPath().getNameElement(),
                 (NodeTypeImpl) parent.getPrimaryNodeType(),
                 parent.getMixinTypeNames(),
@@ -196,7 +196,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
         while (iter.hasNext()) {
             PropertyImpl prop = (PropertyImpl) iter.nextProperty();
             events.add(EventState.propertyAdded(
-                    node.internalGetUUID(),
+                    (NodeId) node.getId(),
                     node.getPrimaryPath(),
                     prop.getPrimaryPath().getNameElement(),
                     (NodeTypeImpl) node.getPrimaryNodeType(),
@@ -223,9 +223,9 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
             throws RepositoryException {
 
         events.add(EventState.childNodeRemoved(
-                parent.internalGetUUID(),
+                parent.getNodeId(),
                 parent.getPrimaryPath(),
-                node.internalGetUUID(),
+                node.getNodeId(),
                 node.getPrimaryPath().getNameElement(),
                 (NodeTypeImpl) parent.getPrimaryNodeType(),
                 parent.getMixinTypeNames(),

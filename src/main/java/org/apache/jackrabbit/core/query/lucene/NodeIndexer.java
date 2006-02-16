@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.query.TextFilter;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -37,11 +36,11 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import java.io.Reader;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
-import java.util.Collections;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -125,17 +124,17 @@ public class NodeIndexer {
 
         // special fields
         // UUID
-        doc.add(new Field(FieldNames.UUID, node.getUUID(), true, true, false));
+        doc.add(new Field(FieldNames.UUID, node.getNodeId().getUUID().toString(), true, true, false));
         try {
             // parent UUID
-            if (node.getParentUUID() == null) {
+            if (node.getParentId() == null) {
                 // root node
                 doc.add(new Field(FieldNames.PARENT, "", true, true, false));
                 doc.add(new Field(FieldNames.LABEL, "", false, true, false));
             } else {
-                doc.add(new Field(FieldNames.PARENT, node.getParentUUID(), true, true, false));
-                NodeState parent = (NodeState) stateProvider.getItemState(new NodeId(node.getParentUUID()));
-                NodeState.ChildNodeEntry child = parent.getChildNodeEntry(node.getUUID());
+                doc.add(new Field(FieldNames.PARENT, node.getParentId().toString(), true, true, false));
+                NodeState parent = (NodeState) stateProvider.getItemState(node.getParentId());
+                NodeState.ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
                 String name = child.getName().toJCRName(mappings);
                 doc.add(new Field(FieldNames.LABEL, name, false, true, false));
             }
@@ -151,7 +150,7 @@ public class NodeIndexer {
         Set props = node.getPropertyNames();
         for (Iterator it = props.iterator(); it.hasNext();) {
             QName propName = (QName) it.next();
-            PropertyId id = new PropertyId(node.getUUID(), propName);
+            PropertyId id = new PropertyId(node.getNodeId(), propName);
             try {
                 PropertyState propState = (PropertyState) stateProvider.getItemState(id);
                 InternalValue[] values = propState.getValues();
@@ -179,7 +178,7 @@ public class NodeIndexer {
      */
     private void throwRepositoryException(Exception e)
             throws RepositoryException {
-        String msg = "Error while indexing node: " + node.getUUID() + " of " +
+        String msg = "Error while indexing node: " + node.getNodeId() + " of " +
                 "type: " + node.getNodeTypeName();
         throw new RepositoryException(msg, e);
     }
@@ -268,15 +267,18 @@ public class NodeIndexer {
                 return;
             }
             if (node.hasPropertyName(QName.JCR_MIMETYPE)) {
-                PropertyState dataProp = (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), QName.JCR_DATA));
+                PropertyState dataProp = (PropertyState) stateProvider.getItemState(
+                        new PropertyId(node.getNodeId(), QName.JCR_DATA));
                 PropertyState mimeTypeProp =
-                        (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), QName.JCR_MIMETYPE));
+                        (PropertyState) stateProvider.getItemState(
+                                new PropertyId(node.getNodeId(), QName.JCR_MIMETYPE));
 
                 // jcr:encoding is not mandatory
                 String encoding = null;
                 if (node.hasPropertyName(QName.JCR_ENCODING)) {
                     PropertyState encodingProp =
-                            (PropertyState) stateProvider.getItemState(new PropertyId(node.getUUID(), QName.JCR_ENCODING));
+                            (PropertyState) stateProvider.getItemState(
+                                    new PropertyId(node.getNodeId(), QName.JCR_ENCODING));
                     encodingProp.getValues()[0].internalValue().toString();
                 }
 

@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -36,12 +37,14 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     /** Serialization UID of this class. */
     static final long serialVersionUID = 2017294661624942639L;
 
+    /**
+     * the default logger
+     */
     private static Logger log = Logger.getLogger(ItemState.class);
 
     /**
-     * flags defining the current status of this <code>ItemState</code> instance
+     * undefined state
      */
-
     public static final int STATUS_UNDEFINED = 0;
     /**
      * 'existing', i.e. persistent state
@@ -74,16 +77,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     protected int status = STATUS_UNDEFINED;
 
     /**
-     * the uuid of the (primary) parent node or <code>null</code> if this is the root node
-     */
-    protected String parentUUID;
-
-    /**
      * a modification counter used to prevent concurrent modifications
      */
     private short modCount;
-
-    protected ItemId id;
 
     /**
      * Flag indicating whether this state is transient
@@ -97,19 +93,18 @@ public abstract class ItemState implements ItemStateListener, Serializable {
             Collections.synchronizedMap(
                     new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
-    // the backing persistent item state (may be null)
+    /**
+     * the backing persistent item state (may be null)
+     */
     protected transient ItemState overlayedState;
 
     /**
-     * Protected constructor
+     * Constructs a new unconnected item state
      *
-     * @param parentUUID    the UUID of the (primary) parent node or <code>null</code>
-     * @param id            the id of the item state object
      * @param initialStatus the initial status of the item state object
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected ItemState(String parentUUID, ItemId id, int initialStatus,
-                        boolean isTransient) {
+    protected ItemState(int initialStatus, boolean isTransient) {
         switch (initialStatus) {
             case STATUS_EXISTING:
             case STATUS_NEW:
@@ -120,20 +115,20 @@ public abstract class ItemState implements ItemStateListener, Serializable {
                 log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
-        this.id = id;
-        this.parentUUID = parentUUID;
         modCount = 0;
         overlayedState = null;
         this.isTransient = isTransient;
     }
 
     /**
-     * Protected constructor
+     * Constructs a new node state that is initially connected to an overlayed
+     * state.
      *
+     * @param overlayedState the backing node state being overlayed
      * @param initialStatus the initial status of the new <code>ItemState</code> instance
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected ItemState(int initialStatus, boolean isTransient) {
+    protected ItemState(ItemState overlayedState, int initialStatus, boolean isTransient) {
         switch (initialStatus) {
             case STATUS_EXISTING:
             case STATUS_EXISTING_MODIFIED:
@@ -146,18 +141,14 @@ public abstract class ItemState implements ItemStateListener, Serializable {
                 throw new IllegalArgumentException(msg);
         }
         this.isTransient = isTransient;
+        connect(overlayedState);
     }
 
     /**
      * Copy state information from a state into this state
      * @param state source state information
      */
-    protected synchronized void copy(ItemState state) {
-        synchronized (state) {
-            parentUUID = state.getParentUUID();
-            id = state.getId();
-        }
-    }
+    abstract protected void copy(ItemState state);
 
     /**
      * Pull state information from overlayed state.
@@ -315,9 +306,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      *
      * @return the identifier of this item state..
      */
-    public ItemId getId() {
-        return id;
-    }
+    abstract public ItemId getId();
 
     /**
      * Returns <code>true</code> if this item state represents new or modified
@@ -347,26 +336,13 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Returns the UUID of the parent <code>NodeState</code> or <code>null</code>
+     * Returns the Idof the parent <code>NodeState</code> or <code>null</code>
      * if either this item state represents the root node or this item state is
      * 'free floating', i.e. not attached to the repository's hierarchy.
      *
-     * @return the parent <code>NodeState</code>'s UUID
+     * @return the parent <code>NodeState</code>'s Id
      */
-    public String getParentUUID() {
-        return parentUUID;
-    }
-
-    /**
-     * Sets the UUID of the parent <code>NodeState</code>.
-     *
-     * @param parentUUID the parent <code>NodeState</code>'s UUID or <code>null</code>
-     *                   if either this item state should represent the root node or this item state
-     *                   should be 'free floating', i.e. detached from the repository's hierarchy.
-     */
-    public void setParentUUID(String parentUUID) {
-        this.parentUUID = parentUUID;
-    }
+    abstract public NodeId getParentId();
 
     /**
      * Returns the status of this item.

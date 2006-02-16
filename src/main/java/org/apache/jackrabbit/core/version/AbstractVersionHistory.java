@@ -76,7 +76,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
      * @see javax.jcr.version.VersionHistory#getRootVersion()
      */
     public Version getRootVersion() throws RepositoryException {
-        return (Version) session.getNodeByUUID(
+        return (Version) session.getNodeById(
                 getInternalVersionHistory().getRootVersion().getId());
     }
 
@@ -99,7 +99,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
             if (v == null) {
                 throw new VersionException("No version with name '" + versionName + "' exists in this version history.");
             }
-            return (Version) session.getNodeByUUID(v.getId());
+            return (Version) session.getNodeById(v.getId());
         } catch (IllegalNameException e) {
             throw new VersionException(e);
         } catch (UnknownPrefixException e) {
@@ -117,7 +117,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
             if (v == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
-            return (Version) session.getNodeByUUID(v.getId());
+            return (Version) session.getNodeById(v.getId());
         } catch (IllegalNameException e) {
             throw new VersionException(e);
         } catch (UnknownPrefixException e) {
@@ -247,7 +247,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
      */
     public String getUUID()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return getInternalVersionHistory().getId();
+        return getInternalVersionHistory().getId().getUUID().toString();
     }
 
     /**
@@ -268,12 +268,10 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
     }
 
     /**
-     * Returns the UUID of the node that was versioned.
-     *
-     * @return
+     * {@inheritDoc}
      */
     public String getVersionableUUID() throws RepositoryException {
-        return getInternalVersionHistory().getVersionableUUID();
+        return getInternalVersionHistory().getVersionableUUID().toString();
     }
 
     /**
