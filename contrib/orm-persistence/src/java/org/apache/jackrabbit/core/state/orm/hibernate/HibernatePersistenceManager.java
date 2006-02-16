@@ -16,31 +16,6 @@
  */
 package org.apache.jackrabbit.core.state.orm.hibernate;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import javax.jcr.PropertyType;
-
-import org.apache.jackrabbit.core.value.BLOBFileValue;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.core.state.AbstractPersistenceManager;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PMContext;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.orm.ORMBlobValue;
-import org.apache.jackrabbit.core.state.orm.ORMNodeReference;
-import org.apache.jackrabbit.core.state.orm.ORMPropertyState;
-import org.apache.log4j.Logger;
 import net.sf.hibernate.Hibernate;
 import net.sf.hibernate.HibernateException;
 import net.sf.hibernate.ObjectNotFoundException;
@@ -49,11 +24,32 @@ import net.sf.hibernate.SessionFactory;
 import net.sf.hibernate.Transaction;
 import net.sf.hibernate.cfg.Configuration;
 import net.sf.hibernate.type.Type;
-import org.apache.jackrabbit.core.state.PersistenceManager;
-import org.apache.ojb.broker.PersistenceBroker;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.ojb.broker.PersistenceBrokerFactory;
-import org.apache.ojb.broker.PersistenceBrokerException;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PMContext;
+import org.apache.jackrabbit.core.state.PersistenceManager;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.orm.ORMBlobValue;
+import org.apache.jackrabbit.core.state.orm.ORMNodeReference;
+import org.apache.jackrabbit.core.state.orm.ORMPropertyState;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.QName;
+import org.apache.log4j.Logger;
+
+import javax.jcr.PropertyType;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Hibernate implementation of a Jackrabbit persistence manager.
@@ -155,7 +151,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
                 List propertyList = session.find(
                     "from org.apache.jackrabbit.core.state.orm.ORMPropertyState as prop WHERE " +
                     "prop.parentUUID = ? and prop.name = ?",
-                    new Object[] {propId.getParentUUID(),
+                    new Object[] {propId.getParentId().getUUID().toString(),
                     propId.getName().toString()},
                     new Type[] {Hibernate.STRING, Hibernate.STRING});
 
@@ -174,7 +170,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
                     List blobValueList = session.find(
                         "from org.apache.jackrabbit.core.state.orm.ORMBlobValue as bv WHERE " +
                         "bv.parentUUID = ? and bv.propertyName = ?",
-                        new Object[] {propId.getParentUUID(),
+                        new Object[] {propId.getParentId().getUUID().toString(),
                         propId.getName().toString()},
                         new Type[] {Hibernate.STRING, Hibernate.STRING});
 
@@ -236,11 +232,10 @@ public class HibernatePersistenceManager implements PersistenceManager {
                 ORMNodeReference curNodeReference = (ORMNodeReference)
                     nodeRefIter.
                     next();
-                refs.addReference(new PropertyId(curNodeReference.
-                                                 getPropertyParentUUID(),
-                                                 QName.
-                                                 valueOf(curNodeReference.
-                    getPropertyName())));
+                PropertyId id = new PropertyId(
+                        NodeId.valueOf(curNodeReference.getPropertyParentUUID()),
+                        QName.valueOf(curNodeReference.getPropertyName()));
+                refs.addReference(id);
             }
             tx.commit();
         } catch (HibernateException he) {
@@ -326,7 +321,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
             List propertyList = session.find(
                 "from org.apache.jackrabbit.core.state.orm.ORMPropertyState as prop WHERE " +
                 "prop.parentUUID = ? and prop.name = ?",
-                new Object[] {propId.getParentUUID(),
+                new Object[] {propId.getParentId().getUUID().toString(),
                 propId.getName().toString()},
                 new Type[] {Hibernate.STRING, Hibernate.STRING});
 
@@ -430,7 +425,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
                     // first we delete any existing blob values (this is faster
                     // than trying to load and update each value seperately)
                     session.delete("from org.apache.jackrabbit.core.state.orm.ORMBlobValue as bv where bv.parentUUID=? AND bv.propertyName=?",
-                                   new Object[] {state.getParentUUID(),
+                                   new Object[] {state.getParentId().getUUID().toString(),
                                    state.getName().toString()},
                                    new Type[] {Hibernate.STRING,
                                    Hibernate.STRING});
@@ -440,7 +435,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
                         if (state.getType() == PropertyType.BINARY) {
                             ORMBlobValue ormBlobValue = null;
                             ormBlobValue = new ORMBlobValue();
-                            ormBlobValue.setParentUUID(state.getParentUUID());
+                            ormBlobValue.setParentUUID(state.getParentId().getUUID().toString());
                             ormBlobValue.setPropertyName(state.getName().
                                 toString());
                             ormBlobValue.setIndex(new Integer(i));
@@ -483,7 +478,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
             while (nodeRefPropIdIter.hasNext()) {
                 PropertyId curPropertyId = (PropertyId) nodeRefPropIdIter.next();
                 ORMNodeReference curNodeReference = new ORMNodeReference(refs.
-                    getTargetId().toString(), curPropertyId.getParentUUID(),
+                    getTargetId().toString(), curPropertyId.getParentId().getUUID().toString(),
                     curPropertyId.getName().toString());
                 session.save(curNodeReference);
                 i++;
@@ -498,7 +493,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
      * @see org.apache.jackrabbit.core.state.AbstractPersistenceManager#destroy(NodeState)
      */
     public void destroy(NodeState state, Session session) throws ItemStateException, HibernateException {
-        log.debug("Deleting node " + state.getUUID());
+        log.debug("Deleting node " + state.getId().toString());
             HibernateNodeState nodeState = null;
             try {
                 List nodeList = session.find(
@@ -535,7 +530,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
                     session.delete(propState);
                     if (state.getType() == PropertyType.BINARY) {
                         session.delete("from org.apache.jackrabbit.core.state.orm.ORMBlobValue as bv where bv.parentUUID=? AND bv.propertyName=?",
-                                       new Object[] {state.getParentUUID(),
+                                       new Object[] {state.getParentId().getUUID().toString(),
                                        state.getName().toString()},
                                        new Type[] {Hibernate.STRING,
                                        Hibernate.STRING});
@@ -562,8 +557,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
      */
     public NodeState createNew(NodeId id)
     {
-        return new NodeState(id.getUUID(), null, null, NodeState.STATUS_NEW,
-                false);
+        return new NodeState(id, null, null, NodeState.STATUS_NEW, false);
     }
 
     /**
@@ -571,8 +565,7 @@ public class HibernatePersistenceManager implements PersistenceManager {
      */
     public PropertyState createNew(PropertyId id)
     {
-        return new PropertyState(id.getName(), id.getParentUUID(),
-                PropertyState.STATUS_NEW, false);
+        return new PropertyState(id, PropertyState.STATUS_NEW, false);
     }
 
     /**

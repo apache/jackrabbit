@@ -16,23 +16,25 @@
  */
 package org.apache.jackrabbit.core.lock;
 
+import org.apache.jackrabbit.core.NodeId;
+
 /**
  * Lock token
  */
 class LockToken {
 
     /**
-     * UUID of node holding lock
+     * ID of node holding lock
      */
-    public final String uuid;
+    public final NodeId id;
 
     /**
      * Create a new instance of this class. Used when creating new locks upon
      * a request.
-     * @param uuid uuid
+     * @param id the id.
      */
-    public LockToken(String uuid) {
-        this.uuid = uuid;
+    public LockToken(NodeId id) {
+        this.id = id;
     }
 
     /**
@@ -51,7 +53,7 @@ class LockToken {
         if (getCheckDigit(uuid) != s.charAt(s.length() - 1)) {
             throw new IllegalArgumentException("Bad check digit.");
         }
-        return new LockToken(uuid);
+        return new LockToken(NodeId.valueOf(uuid));
     }
 
     /**
@@ -61,9 +63,9 @@ class LockToken {
      */
     public String toString() {
         StringBuffer buf = new StringBuffer();
-        buf.append(uuid);
+        buf.append(id.toString());
         buf.append('-');
-        buf.append(getCheckDigit(uuid));
+        buf.append(getCheckDigit(id.toString()));
         return buf.toString();
     }
 

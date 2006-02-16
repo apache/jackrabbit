@@ -20,6 +20,7 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -174,7 +175,7 @@ class DocViewImportHandler extends TargetImportHandler {
             nodeName = ISO9075.decode(nodeName);
 
             // properties
-            String uuid = null;
+            NodeId id = null;
             QName nodeTypeName = null;
             QName[] mixinTypes = null;
 
@@ -221,7 +222,7 @@ class DocViewImportHandler extends TargetImportHandler {
                 } else if (propName.equals(QName.JCR_UUID)) {
                     // jcr:uuid
                     if (attrValue.length() > 0) {
-                        uuid = attrValue;
+                        id = NodeId.valueOf(attrValue);
                     }
                 } else {
                     propValues = new Importer.TextValue[1];
@@ -232,7 +233,7 @@ class DocViewImportHandler extends TargetImportHandler {
             }
 
             Importer.NodeInfo node =
-                    new Importer.NodeInfo(nodeName, nodeTypeName, mixinTypes, uuid);
+                    new Importer.NodeInfo(nodeName, nodeTypeName, mixinTypes, id);
             // all information has been collected, now delegate to importer
             importer.startNode(node, props, nsContext);
             // push current node data onto stack

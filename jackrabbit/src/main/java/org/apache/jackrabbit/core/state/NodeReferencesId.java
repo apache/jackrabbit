@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Identifies a <code>NodeReferences</code> object.
@@ -28,8 +29,17 @@ public class NodeReferencesId extends NodeId {
      *
      * @param uuid uuid of target node
      */
-    public NodeReferencesId(String uuid) {
+    public NodeReferencesId(UUID uuid) {
         super(uuid);
+    }
+
+    /**
+     * Create a new instance of this class. Takes a id as parameter.
+     *
+     * @param id the id of target node
+     */
+    public NodeReferencesId(NodeId id) {
+        super(id == null ? null : id.getUUID());
     }
 
     /**
@@ -48,29 +58,7 @@ public class NodeReferencesId extends NodeId {
         if (s == null) {
             throw new IllegalArgumentException("invalid NodeReferencesId literal");
         }
-        return new NodeReferencesId(s);
-    }
-
-    //-------------------------------------------< java.lang.Object overrides >
-    /**
-     * {@inheritDoc}
-     */
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof NodeReferencesId) {
-            return super.equals(obj);
-        }
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int hashCode() {
-        // use hash code of node id
-        return super.hashCode();
+        return new NodeReferencesId(NodeId.valueOf(s));
     }
 
 }

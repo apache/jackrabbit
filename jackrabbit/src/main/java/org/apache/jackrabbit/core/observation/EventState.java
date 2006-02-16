@@ -38,9 +38,9 @@ public class EventState {
     private final int type;
 
     /**
-     * The UUID of the parent node associated with this event.
+     * The Id of the parent node associated with this event.
      */
-    private final String parentUUID;
+    private final NodeId parentId;
 
     /**
      * The path of the parent node associated with this event.
@@ -52,7 +52,7 @@ public class EventState {
      * {@link javax.jcr.observation.Event#NODE_ADDED} or
      * {@link javax.jcr.observation.Event#NODE_REMOVED}.
      */
-    private final String childUUID;
+    private final NodeId childId;
 
     /**
      * The relative path of the child item associated with this event.
@@ -89,11 +89,10 @@ public class EventState {
      * Creates a new <code>EventState</code> instance.
      *
      * @param type       the type of this event.
-     * @param parentUUID the uuid of the parent node associated with this
-     *                   event.
+     * @param parentId   the id of the parent node associated with this event.
      * @param parentPath the path of the parent node associated with this
      *                   event.
-     * @param childUUID  the uuid of the child node associated with this event.
+     * @param childId    the id of the child node associated with this event.
      *                   If the event type is one of: <code>PROPERTY_ADDED</code>,
      *                   <code>PROPERTY_CHANGED</code> or <code>PROPERTY_REMOVED</code>
      *                   this parameter must be <code>null</code>.
@@ -104,27 +103,27 @@ public class EventState {
      * @param session    the {@link javax.jcr.Session} that caused this event.
      */
     private EventState(int type,
-                       String parentUUID,
+                       NodeId parentId,
                        Path parentPath,
-                       String childUUID,
+                       NodeId childId,
                        Path.PathElement childPath,
                        NodeTypeImpl nodeType,
                        Set mixins,
                        Session session) {
         int mask = (Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
         if ((type & mask) > 0) {
-            if (childUUID != null) {
-                throw new IllegalArgumentException("childUUID only allowed for Node events.");
+            if (childId != null) {
+                throw new IllegalArgumentException("childId only allowed for Node events.");
             }
         } else {
-            if (childUUID == null) {
-                throw new IllegalArgumentException("childUUID must not be null for Node events.");
+            if (childId == null) {
+                throw new IllegalArgumentException("childId must not be null for Node events.");
             }
         }
         this.type = type;
-        this.parentUUID = parentUUID;
+        this.parentId = parentId;
         this.parentPath = parentPath;
-        this.childUUID = childUUID;
+        this.childId = childId;
         this.childRelPath = childPath;
         this.nodeType = nodeType;
         this.mixins = mixins;
@@ -137,28 +136,28 @@ public class EventState {
      * Creates a new {@link javax.jcr.observation.Event} of type
      * {@link javax.jcr.observation.Event#NODE_ADDED}.
      *
-     * @param parentUUID the uuid of the parent node associated with
+     * @param parentId   the id of the parent node associated with
      *                   this <code>EventState</code>.
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
-     * @param childUUID  the uuid of the child node associated with this event.
+     * @param childId    the id of the child node associated with this event.
      * @param childPath  the relative path of the child node that was added.
      * @param nodeType   the node type of the parent node.
      * @param mixins     mixins assigned to the parent node.
      * @param session    the session that added the node.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState childNodeAdded(String parentUUID,
+    public static EventState childNodeAdded(NodeId parentId,
                                             Path parentPath,
-                                            String childUUID,
+                                            NodeId childId,
                                             Path.PathElement childPath,
                                             NodeTypeImpl nodeType,
                                             Set mixins,
                                             Session session) {
         return new EventState(Event.NODE_ADDED,
-                parentUUID,
+                parentId,
                 parentPath,
-                childUUID,
+                childId,
                 childPath,
                 nodeType,
                 mixins,
@@ -169,28 +168,28 @@ public class EventState {
      * Creates a new {@link javax.jcr.observation.Event} of type
      * {@link javax.jcr.observation.Event#NODE_REMOVED}.
      *
-     * @param parentUUID the uuid of the parent node associated with
+     * @param parentId   the id of the parent node associated with
      *                   this <code>EventState</code>.
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
-     * @param childUUID  the uuid of the child node associated with this event.
+     * @param childId    the id of the child node associated with this event.
      * @param childPath  the relative path of the child node that was removed.
      * @param nodeType   the node type of the parent node.
      * @param mixins     mixins assigned to the parent node.
      * @param session    the session that removed the node.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState childNodeRemoved(String parentUUID,
+    public static EventState childNodeRemoved(NodeId parentId,
                                               Path parentPath,
-                                              String childUUID,
+                                              NodeId childId,
                                               Path.PathElement childPath,
                                               NodeTypeImpl nodeType,
                                               Set mixins,
                                               Session session) {
         return new EventState(Event.NODE_REMOVED,
-                parentUUID,
+                parentId,
                 parentPath,
-                childUUID,
+                childId,
                 childPath,
                 nodeType,
                 mixins,
@@ -201,7 +200,7 @@ public class EventState {
      * Creates a new {@link javax.jcr.observation.Event} of type
      * {@link javax.jcr.observation.Event#PROPERTY_ADDED}.
      *
-     * @param parentUUID the uuid of the parent node associated with
+     * @param parentId   the id of the parent node associated with
      *                   this <code>EventState</code>.
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
@@ -211,14 +210,14 @@ public class EventState {
      * @param session    the session that added the property.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState propertyAdded(String parentUUID,
+    public static EventState propertyAdded(NodeId parentId,
                                            Path parentPath,
                                            Path.PathElement childPath,
                                            NodeTypeImpl nodeType,
                                            Set mixins,
                                            Session session) {
         return new EventState(Event.PROPERTY_ADDED,
-                parentUUID,
+                parentId,
                 parentPath,
                 null,
                 childPath,
@@ -231,7 +230,7 @@ public class EventState {
      * Creates a new {@link javax.jcr.observation.Event} of type
      * {@link javax.jcr.observation.Event#PROPERTY_REMOVED}.
      *
-     * @param parentUUID the uuid of the parent node associated with
+     * @param parentId   the id of the parent node associated with
      *                   this <code>EventState</code>.
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
@@ -241,14 +240,14 @@ public class EventState {
      * @param session    the session that removed the property.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState propertyRemoved(String parentUUID,
+    public static EventState propertyRemoved(NodeId parentId,
                                              Path parentPath,
                                              Path.PathElement childPath,
                                              NodeTypeImpl nodeType,
                                              Set mixins,
                                              Session session) {
         return new EventState(Event.PROPERTY_REMOVED,
-                parentUUID,
+                parentId,
                 parentPath,
                 null,
                 childPath,
@@ -261,7 +260,7 @@ public class EventState {
      * Creates a new {@link javax.jcr.observation.Event} of type
      * {@link javax.jcr.observation.Event#PROPERTY_CHANGED}.
      *
-     * @param parentUUID the uuid of the parent node associated with
+     * @param parentId   the id of the parent node associated with
      *                   this <code>EventState</code>.
      * @param parentPath the path of the parent node associated with
      *                   this <code>EventState</code>.
@@ -271,14 +270,14 @@ public class EventState {
      * @param session    the session that changed the property.
      * @return an <code>EventState</code> instance.
      */
-    public static EventState propertyChanged(String parentUUID,
+    public static EventState propertyChanged(NodeId parentId,
                                              Path parentPath,
                                              Path.PathElement childPath,
                                              NodeTypeImpl nodeType,
                                              Set mixins,
                                              Session session) {
         return new EventState(Event.PROPERTY_CHANGED,
-                parentUUID,
+                parentId,
                 parentPath,
                 null,
                 childPath,
@@ -299,8 +298,8 @@ public class EventState {
      *
      * @return the uuid of the parent node.
      */
-    public String getParentUUID() {
-        return parentUUID;
+    public NodeId getParentId() {
+        return parentId;
     }
 
     /**
@@ -313,14 +312,14 @@ public class EventState {
     }
 
     /**
-     * Returns the UUID of a child node operation.
+     * Returns the Id of a child node operation.
      * If this <code>EventState</code> was generated for a property
      * operation this method returns <code>null</code>.
      *
-     * @return the UUID of a child node operation.
+     * @return the id of a child node operation.
      */
-    public String getChildUUID() {
-        return childUUID;
+    public NodeId getChildId() {
+        return childId;
     }
 
     /**
@@ -375,13 +374,13 @@ public class EventState {
      *
      * @return the <code>ItemId</code>.
      */
-    ItemId getId() {
-        if (childUUID == null) {
+    ItemId getTargetId() {
+        if (childId == null) {
             // property event
-            return new PropertyId(parentUUID, childRelPath.getName());
+            return new PropertyId(parentId, childRelPath.getName());
         } else {
             // node event
-            return new NodeId(childUUID);
+            return childId;
         }
     }
 
@@ -394,7 +393,7 @@ public class EventState {
         if (stringValue == null) {
             StringBuffer sb = new StringBuffer();
             sb.append("EventState: ").append(valueOf(type));
-            sb.append(", Parent: ").append(parentUUID);
+            sb.append(", Parent: ").append(parentId);
             sb.append(", Child: ").append(childRelPath);
             sb.append(", UserId: ").append(session.getUserID());
             stringValue = sb.toString();
@@ -411,8 +410,8 @@ public class EventState {
         int h = hashCode;
         if (h == 0) {
             h = 37;
-            h = 37 * h + (int) type;
-            h = 37 * h + parentUUID.hashCode();
+            h = 37 * h + type;
+            h = 37 * h + parentId.hashCode();
             h = 37 * h + childRelPath.hashCode();
             h = 37 * h + session.hashCode();
             hashCode = h;
@@ -435,7 +434,7 @@ public class EventState {
         if (obj instanceof EventState) {
             EventState other = (EventState) obj;
             return this.type == other.type
-                    && this.parentUUID.equals(other.parentUUID)
+                    && this.parentId.equals(other.parentId)
                     && this.childRelPath.equals(other.childRelPath)
                     && this.session.equals(other.session);
         }

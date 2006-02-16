@@ -40,7 +40,7 @@ public class NodeStateTupleBinding extends TupleBinding {
 
     public Object entryToObject(TupleInput in) {
 
-        NodeState state = new NodeState(id.getUUID(), null, null, NodeState.STATUS_NEW, false);
+        NodeState state = new NodeState(id, null, null, NodeState.STATUS_NEW, false);
 
         try {
             Serializer.deserialize(state, in);

@@ -52,7 +52,7 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
     public String createId(PropertyId id, int index) {
         // the blobId is a file system path
         StringBuffer sb = new StringBuffer();
-        char[] chars = id.getParentUUID().toCharArray();
+        char[] chars = id.getParentId().getUUID().toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < chars.length; i++) {
             if (chars[i] == '-') {
@@ -96,7 +96,9 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
                 out.write(buffer, 0, read);
             }
         } finally {
-            out.close();
+            if (out != null) {
+                out.close();
+            }
         }
     }
 

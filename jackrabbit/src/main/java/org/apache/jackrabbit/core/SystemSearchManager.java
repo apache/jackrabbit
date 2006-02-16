@@ -51,8 +51,8 @@ public class SystemSearchManager extends SearchManager {
                  NamespaceRegistry nsReg,
                  NodeTypeRegistry ntReg,
                  ItemStateManager itemMgr,
-                 String rootNodeUUID) throws RepositoryException {
-        super(config, nsReg, ntReg, itemMgr, rootNodeUUID, null, null);
+                 NodeId rootNodeId) throws RepositoryException {
+        super(config, nsReg, ntReg, itemMgr, rootNodeId, null, null);
         this.nsReg = nsReg;
     }
 

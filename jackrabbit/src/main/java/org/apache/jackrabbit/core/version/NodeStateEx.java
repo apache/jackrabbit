@@ -85,14 +85,14 @@ class NodeStateEx {
     /**
      * returns the name of this node
      *
-     * @return
+     * @return the name of this node
      */
     public QName getName() {
         if (name == null) {
             try {
-                String parentId = nodeState.getParentUUID();
-                NodeState parent = (NodeState) stateMgr.getItemState(new NodeId(parentId));
-                name = parent.getChildNodeEntry(nodeState.getUUID()).getName();
+                NodeId parentId = nodeState.getParentId();
+                NodeState parent = (NodeState) stateMgr.getItemState(parentId);
+                name = parent.getChildNodeEntry(nodeState.getNodeId()).getName();
             } catch (ItemStateException e) {
                 // should never occurr
                 throw new IllegalStateException(e.toString());
@@ -102,26 +102,26 @@ class NodeStateEx {
     }
 
     /**
-     * Returns the uuid of this node
+     * Returns the id of this node.
      *
-     * @return
+     * @return the id of this node.
      */
-    public String getUUID() {
-        return nodeState.getUUID();
+    public NodeId getNodeId() {
+        return nodeState.getNodeId();
     }
 
     /**
-     * Returns the parent uuid of this node
+     * Returns the parent id of this node
      *
-     * @return
+     * @return the parent id of this node
      */
-    public String getParentUUID() {
-        return nodeState.getParentUUID();
+    public NodeId getParentId() {
+        return nodeState.getParentId();
     }
 
     /**
-     * Returns the node state wrpaee
-     * @return
+     * Returns the underlaying node state.
+     * @return the underlaying node state.
      */
     public NodeState getState() {
         return nodeState;
@@ -130,7 +130,7 @@ class NodeStateEx {
     /**
      * Returns the properties of this node
      *
-     * @return
+     * @return the properties of this node
      */
     public PropertyState[] getProperties() throws ItemStateException {
         Set set = nodeState.getPropertyNames();
@@ -138,7 +138,7 @@ class NodeStateEx {
         int i = 0;
         for (Iterator iter = set.iterator(); iter.hasNext();) {
             QName propName = (QName) iter.next();
-            PropertyId propId = new PropertyId(nodeState.getUUID(), propName);
+            PropertyId propId = new PropertyId(nodeState.getNodeId(), propName);
             props[i++] = (PropertyState) stateMgr.getItemState(propId);
         }
         return props;
@@ -148,10 +148,10 @@ class NodeStateEx {
      * Checks if the given property exists
      *
      * @param name
-     * @return
+     * @return <code>true</code> if the given property exists.
      */
     public boolean hasProperty(QName name) {
-        PropertyId propId = new PropertyId(nodeState.getUUID(), name);
+        PropertyId propId = new PropertyId(nodeState.getNodeId(), name);
         return stateMgr.hasItemState(propId);
     }
 
@@ -159,10 +159,10 @@ class NodeStateEx {
      * Returns the values of the given property of <code>null</code>
      *
      * @param name
-     * @return
+     * @return the values of the given property.
      */
     public InternalValue[] getPropertyValues(QName name) {
-        PropertyId propId = new PropertyId(nodeState.getUUID(), name);
+        PropertyId propId = new PropertyId(nodeState.getNodeId(), name);
         try {
             PropertyState ps = (PropertyState) stateMgr.getItemState(propId);
             return ps.getValues();
@@ -175,10 +175,10 @@ class NodeStateEx {
      * Returns the value of the given property or <code>null</code>
      *
      * @param name
-     * @return
+     * @return the value of the given property.
      */
     public InternalValue getPropertyValue(QName name) {
-        PropertyId propId = new PropertyId(nodeState.getUUID(), name);
+        PropertyId propId = new PropertyId(nodeState.getNodeId(), name);
         try {
             PropertyState ps = (PropertyState) stateMgr.getItemState(propId);
             return ps.getValues()[0];
@@ -234,13 +234,13 @@ class NodeStateEx {
      * @param name
      * @param type
      * @param multiValued
-     * @return
+     * @return the property state
      * @throws RepositoryException
      */
     private PropertyState getOrCreatePropertyState(QName name, int type, boolean multiValued)
             throws RepositoryException {
 
-        PropertyId propId = new PropertyId(nodeState.getUUID(), name);
+        PropertyId propId = new PropertyId(nodeState.getNodeId(), name);
         if (stateMgr.hasItemState(propId)) {
             try {
                 PropertyState propState = (PropertyState) stateMgr.getItemState(propId);
@@ -257,7 +257,7 @@ class NodeStateEx {
                 throw new RepositoryException("Unable to create property: " + e.toString());
             }
         } else {
-            PropertyState propState = stateMgr.createNew(name, nodeState.getUUID());
+            PropertyState propState = stateMgr.createNew(name, nodeState.getNodeId());
             propState.setType(type);
             propState.setMultiValued(multiValued);
 
@@ -290,7 +290,7 @@ class NodeStateEx {
         try {
             return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
-            String msg = "internal error: failed to build effective node type for node " + nodeState.getUUID();
+            String msg = "internal error: failed to build effective node type for node " + nodeState.getNodeId();
             throw new RepositoryException(msg, ntce);
         }
     }
@@ -301,7 +301,7 @@ class NodeStateEx {
      * checks if the given child node exists.
      *
      * @param name
-     * @return
+     * @return <code>true</code> if the given child exists.
      */
     public boolean hasNode(QName name) {
         return nodeState.hasChildNodeEntry(name);
@@ -311,7 +311,7 @@ class NodeStateEx {
      * removes the (first) child node with the given name.
      *
      * @param name
-     * @return
+     * @return <code>true</code> if the child was removed
      * @throws RepositoryException
      */
     public boolean removeNode(QName name) throws RepositoryException {
@@ -323,7 +323,7 @@ class NodeStateEx {
      *
      * @param name
      * @param index
-     * @return
+     * @return <code>true</code> if the child was removed.
      * @throws RepositoryException
      */
     public boolean removeNode(QName name, int index) throws RepositoryException {
@@ -332,7 +332,7 @@ class NodeStateEx {
             if (entry == null) {
                 return false;
             } else {
-                ItemState state = stateMgr.getItemState(new NodeId(entry.getUUID()));
+                ItemState state = stateMgr.getItemState(entry.getId());
                 stateMgr.destroy(state);
                 nodeState.removeChildNodeEntry(name, index);
                 nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
@@ -347,7 +347,7 @@ class NodeStateEx {
      * removes the property with the given name
      *
      * @param name
-     * @return
+     * @return <code>true</code> if the property was removed.
      * @throws RepositoryException
      */
     public boolean removeProperty(QName name) throws RepositoryException {
@@ -355,7 +355,7 @@ class NodeStateEx {
             if (!nodeState.hasPropertyName(name)) {
                 return false;
             } else {
-                PropertyId propId = new PropertyId(nodeState.getUUID(), name);
+                PropertyId propId = new PropertyId(nodeState.getNodeId(), name);
                 ItemState state = stateMgr.getItemState(propId);
                 stateMgr.destroy(state);
                 nodeState.removePropertyName(name);
@@ -373,7 +373,7 @@ class NodeStateEx {
      *
      * @param name
      * @param index
-     * @return
+     * @return the node state.
      * @throws RepositoryException
      */
     public NodeStateEx getNode(QName name, int index) throws RepositoryException {
@@ -382,7 +382,7 @@ class NodeStateEx {
             return null;
         }
         try {
-            NodeState state = (NodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+            NodeState state = (NodeState) stateMgr.getItemState(entry.getId());
             return new NodeStateEx(stateMgr, ntReg, state, name);
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to getNode: " + e.toString());
@@ -394,18 +394,18 @@ class NodeStateEx {
      *
      * @param nodeName
      * @param nodeTypeName
-     * @return
+     * @return the node state
      * @throws NoSuchNodeTypeException
      * @throws ConstraintViolationException
      * @throws RepositoryException
      */
     public NodeStateEx addNode(QName nodeName, QName nodeTypeName,
-                                  String uuid, boolean referenceable)
+                               NodeId id, boolean referenceable)
             throws NoSuchNodeTypeException, ConstraintViolationException, RepositoryException {
 
-        NodeStateEx node = createChildNode(nodeName, nodeTypeName, uuid);
+        NodeStateEx node = createChildNode(nodeName, nodeTypeName, id);
         if (referenceable) {
-            node.setPropertyValue(QName.JCR_UUID, InternalValue.create(node.getUUID()));
+            node.setPropertyValue(QName.JCR_UUID, InternalValue.create(node.getNodeId().getUUID().toString()));
         }
         return node;
     }
@@ -414,17 +414,17 @@ class NodeStateEx {
      * creates a new child node
      *
      * @param name
-     * @param uuid
-     * @return
+     * @param id
+     * @return the newly created node.
      */
-    private NodeStateEx createChildNode(QName name, QName nodeTypeName, String uuid)
+    private NodeStateEx createChildNode(QName name, QName nodeTypeName, NodeId id)
             throws RepositoryException {
-        String parentUUID = nodeState.getUUID();
+        NodeId parentId = nodeState.getNodeId();
         // create a new node state
-        if (uuid == null) {
-            uuid = UUID.randomUUID().toString();    // version 4 uuid
+        if (id == null) {
+            id = new NodeId(UUID.randomUUID());
         }
-        NodeState state = stateMgr.createNew(uuid, nodeTypeName, parentUUID);
+        NodeState state = stateMgr.createNew(id, nodeTypeName, parentId);
 
         NodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(name, nodeTypeName);
         state.setDefinitionId(cnd.getId());
@@ -434,7 +434,7 @@ class NodeStateEx {
         node.setPropertyValue(QName.JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
 
         // add new child node entryn
-        nodeState.addChildNodeEntry(name, state.getUUID());
+        nodeState.addChildNodeEntry(name, id);
         if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
             nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
         }
@@ -444,7 +444,7 @@ class NodeStateEx {
     /**
      * returns all child nodes
      *
-     * @return
+     * @return the child nodes.
      * @throws RepositoryException
      */
     public NodeStateEx[] getChildNodes() throws RepositoryException {
@@ -453,7 +453,7 @@ class NodeStateEx {
             NodeStateEx[] children = new NodeStateEx[entries.size()];
             for (int i = 0; i < entries.size(); i++) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) entries.get(i);
-                NodeState state = (NodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+                NodeState state = (NodeState) stateMgr.getItemState(entry.getId());
                 children[i] = new NodeStateEx(stateMgr, ntReg, state, entry.getName());
             }
             return children;
@@ -489,7 +489,8 @@ class NodeStateEx {
             Set props = state.getPropertyNames();
             for (Iterator iter = props.iterator(); iter.hasNext();) {
                 QName propName = (QName) iter.next();
-                PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), propName));
+                PropertyState pstate = (PropertyState) stateMgr.getItemState(
+                        new PropertyId(state.getNodeId(), propName));
                 if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
                     stateMgr.store(pstate);
                 }
@@ -498,7 +499,7 @@ class NodeStateEx {
             List nodes = state.getChildNodeEntries();
             for (int i = 0; i < nodes.size(); i++) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) nodes.get(i);
-                NodeState nstate = (NodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+                NodeState nstate = (NodeState) stateMgr.getItemState(entry.getId());
                 store(nstate);
             }
             // and store itself
@@ -515,7 +516,7 @@ class NodeStateEx {
         try {
             reload(nodeState);
             // refetch nodestate if discarded
-            nodeState = (NodeState) stateMgr.getItemState(nodeState.getId());
+            nodeState = (NodeState) stateMgr.getItemState(nodeState.getNodeId());
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
@@ -533,7 +534,8 @@ class NodeStateEx {
             Set props = state.getPropertyNames();
             for (Iterator iter = props.iterator(); iter.hasNext();) {
                 QName propName = (QName) iter.next();
-                PropertyState pstate = (PropertyState) stateMgr.getItemState(new PropertyId(state.getUUID(), propName));
+                PropertyState pstate = (PropertyState) stateMgr.getItemState(
+                        new PropertyId(state.getNodeId(), propName));
                 if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
                     pstate.discard();
                 }
@@ -542,7 +544,7 @@ class NodeStateEx {
             List nodes = state.getChildNodeEntries();
             for (int i = 0; i < nodes.size(); i++) {
                 NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) nodes.get(i);
-                NodeState nstate = (NodeState) stateMgr.getItemState(new NodeId(entry.getUUID()));
+                NodeState nstate = (NodeState) stateMgr.getItemState(entry.getId());
                 reload(nstate);
             }
             // and reload itself

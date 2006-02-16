@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.SessionImpl;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.Version;
@@ -46,7 +49,7 @@ class VersionIteratorImpl implements VersionIterator {
     /**
      * the session for wrapping the versions
      */
-    private final Session session;
+    private final SessionImpl session;
 
     /**
      * Creates a new VersionIterator that iterates over the version tree,
@@ -55,7 +58,7 @@ class VersionIteratorImpl implements VersionIterator {
      * @param rootVersion
      */
     public VersionIteratorImpl(Session session, InternalVersion rootVersion) {
-        this.session = session;
+        this.session = (SessionImpl) session;
 
         addVersion(rootVersion);
     }
@@ -67,11 +70,11 @@ class VersionIteratorImpl implements VersionIterator {
         if (versions.isEmpty()) {
             throw new NoSuchElementException();
         }
-        String id = (String) versions.removeFirst();
+        NodeId id = (NodeId) versions.removeFirst();
         pos++;
 
         try {
-            return (Version) session.getNodeByUUID(id);
+            return (Version) session.getNodeById(id);
         } catch (RepositoryException e) {
             throw new ConcurrentModificationException("Unable to provide element: " + e.toString());
         }
@@ -130,7 +133,7 @@ class VersionIteratorImpl implements VersionIterator {
      * @param v
      */
     private synchronized void addVersion(InternalVersion v) {
-        String id = v.getId();
+        NodeId id = v.getId();
         if (!versions.contains(id)) {
             versions.add(id);
             InternalVersion[] vs = v.getSuccessors();

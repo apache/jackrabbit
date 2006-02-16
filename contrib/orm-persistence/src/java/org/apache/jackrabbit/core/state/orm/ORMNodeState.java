@@ -16,20 +16,19 @@
  */
 package org.apache.jackrabbit.core.state.orm;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeState.ChildNodeEntry;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <p>This class represents an copy of Jackrabbit's node state, in an ORM
@@ -61,8 +60,8 @@ public abstract class ORMNodeState implements Serializable {
         getPropertyEntries().clear();
         getMixinTypeNames().clear();
         getParentUUIDs().clear();
-        uuid = state.getUUID();
-        parentUUID = state.getParentUUID();
+        uuid = state.getNodeId().getUUID().toString();
+        parentUUID = state.getParentId().getUUID().toString();
         if (state.getNodeTypeName() != null) {
             nodeTypeName = state.getNodeTypeName().toString();
         }
@@ -73,7 +72,7 @@ public abstract class ORMNodeState implements Serializable {
         int i=0;
         while (childNodeEntriesIter.hasNext()) {
             ChildNodeEntry curChildNodeEntry = (ChildNodeEntry) childNodeEntriesIter.next();
-            log.debug("childNodeEntry " + curChildNodeEntry.getIndex() + " name=" + curChildNodeEntry.getName() + " uuid=" + curChildNodeEntry.getUUID());
+            log.debug("childNodeEntry " + curChildNodeEntry.getIndex() + " name=" + curChildNodeEntry.getName() + " uuid=" + curChildNodeEntry.getId());
             ORMChildNodeEntry childNode = new ORMChildNodeEntry(this, curChildNodeEntry, uuid, i);
             getChildNodeEntries().add(childNode);
             i++;
@@ -145,13 +144,13 @@ public abstract class ORMNodeState implements Serializable {
     public void toPersistentNodeState(NodeState state) {
         state.setDefinitionId(NodeDefId.valueOf(getDefinitionId()));
         state.setNodeTypeName(QName.valueOf(getNodeTypeName()));
-        state.setParentUUID(getParentUUID());
+        state.setParentId(NodeId.valueOf(getParentUUID()));
 
         Iterator childNodeEntryIter = getChildNodeEntries().iterator();
         while (childNodeEntryIter.hasNext()) {
             ORMChildNodeEntry curChildNodeEntry = (ORMChildNodeEntry) childNodeEntryIter.next();
             log.debug("  Loaded child node " + QName.valueOf(curChildNodeEntry.getName()) + " uuid=" + curChildNodeEntry.getUuid());
-            state.addChildNodeEntry(QName.valueOf(curChildNodeEntry.getName()), curChildNodeEntry.getUuid());
+            state.addChildNodeEntry(QName.valueOf(curChildNodeEntry.getName()), NodeId.valueOf(curChildNodeEntry.getUuid()));
         }
         Iterator propertyEntryIter = getPropertyEntries().iterator();
         while (propertyEntryIter.hasNext()) {

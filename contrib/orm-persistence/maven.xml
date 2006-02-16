@@ -24,7 +24,7 @@
   <preGoal name="test:compile">
    <ant:path
        id="parent.test.src.dir"
-       location="${basedir}/../../src/test"/>
+       location="${basedir}/../../jackrabbit/src/test"/>
    <maven:addPath
        id="maven.test.compile.src.set"
        refid="parent.test.src.dir"/>
@@ -32,7 +32,7 @@
   
   <postGoal name="test:compile">
     <copy todir="${maven.test.dest}">
-      <fileset dir="${basedir}/../../src/test">
+      <fileset dir="${basedir}/../../jackrabbit/src/test">
         <exclude name="**/*.java"/>
       </fileset>
     </copy>  

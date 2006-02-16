@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.version.VersionException;
 
@@ -49,7 +50,7 @@ public interface InternalFrozenNode extends InternalFreeze {
      *
      * @return the frozen uuid.
      */
-    String getFrozenUUID();
+    UUID getFrozenUUID();
 
     /**
      * Returns the name of frozen primary type.
@@ -68,8 +69,9 @@ public interface InternalFrozenNode extends InternalFreeze {
     /**
      * Checks if this frozen node has the frozen version history
      * @param uuid
-     * @return
+     * @return <code>true</code> if this node has the history;
+     *         <code>false</code> otherwise.
      */
-    boolean hasFrozenHistory(String uuid);
+    boolean hasFrozenHistory(UUID uud);
 
 }

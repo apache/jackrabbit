@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
 
 import java.util.Iterator;
 
@@ -36,15 +35,16 @@ import java.util.Iterator;
  */
 public class ZombieHierarchyManager extends HierarchyManagerImpl {
 
-    private static Logger log = Logger.getLogger(ZombieHierarchyManager.class);
-
+    /**
+     * the attic
+     */
     protected ItemStateManager attic;
 
-    public ZombieHierarchyManager(String rootNodeUUID,
+    public ZombieHierarchyManager(NodeId rootNodeId,
                                   ItemStateManager provider,
                                   ItemStateManager attic,
                                   NamespaceResolver nsResolver) {
-        super(rootNodeUUID, provider, nsResolver);
+        super(rootNodeId, provider, nsResolver);
         this.attic = attic;
     }
 
@@ -83,13 +83,13 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      * <p/>
      * Also allows for removed items.
      */
-    protected String getParentUUID(ItemState state) {
+    protected NodeId getParentId(ItemState state) {
         if (state.hasOverlayedState()) {
             // use 'old' parent in case item has been removed
-            return state.getOverlayedState().getParentUUID();
+            return state.getOverlayedState().getParentId();
         }
         // delegate to base class
-        return super.getParentUUID(state);
+        return super.getParentId(state);
     }
 
     /**
@@ -121,18 +121,18 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      * Also allows for removed child node entries.
      */
     protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                                         String uuid) {
+                                                         NodeId id) {
         // check removed child node entries first
         Iterator iter = parent.getRemovedChildNodeEntries().iterator();
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry entry =
                     (NodeState.ChildNodeEntry) iter.next();
-            if (entry.getUUID().equals(uuid)) {
+            if (entry.getId().equals(id)) {
                 return entry;
             }
         }
         // no matching removed child node entry found in parent,
         // delegate to base class
-        return super.getChildNodeEntry(parent, uuid);
+        return super.getChildNodeEntry(parent, id);
     }
 }

@@ -20,6 +20,7 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.core.NodeId;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -75,7 +76,9 @@ class SysViewImportHandler extends TargetImportHandler {
             QName[] mixins = (QName[]) state.mixinNames.toArray(new QName[state.mixinNames.size()]);
             node.setMixinNames(mixins);
         }
-        node.setUUID(state.uuid);
+        if (state.uuid != null) {
+            node.setId(NodeId.valueOf(state.uuid));
+        }
         // call Importer
         try {
             if (start) {

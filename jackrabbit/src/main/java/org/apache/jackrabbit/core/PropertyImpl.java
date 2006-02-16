@@ -415,8 +415,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * {@inheritDoc}
      */
     public QName getQName() {
-        PropertyId propId = (PropertyId) id;
-        return propId.getName();
+        return ((PropertyId) id).getName();
     }
 
     /**
@@ -654,7 +653,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (val.getType() == PropertyType.REFERENCE) {
             // reference, i.e. target UUID
             UUID targetUUID = (UUID) val.internalValue();
-            return (Node) itemMgr.getItem(new NodeId(targetUUID.toString()));
+            return (Node) itemMgr.getItem(new NodeId(targetUUID));
         } else {
             throw new ValueFormatException("property must be of type REFERENCE");
         }
@@ -1128,8 +1127,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        PropertyId propId = (PropertyId) id;
-        QName name = propId.getName();
+        QName name = ((PropertyId) id).getName();
         try {
             return session.getNamespaceResolver().getJCRName(name);
         } catch (NoPrefixDeclaredException npde) {
@@ -1158,6 +1156,6 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        return (Node) itemMgr.getItem(new NodeId(state.getParentUUID()));
+        return (Node) itemMgr.getItem(state.getParentId());
     }
 }

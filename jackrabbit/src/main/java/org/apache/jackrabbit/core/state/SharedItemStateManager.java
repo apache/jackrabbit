@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
@@ -137,9 +138,9 @@ public class SharedItemStateManager
     private final boolean usesReferences;
 
     /**
-     * uuid of root node
+     * id of root node
      */
-    private final String rootNodeUUID;
+    private final NodeId rootNodeId;
 
     /**
      * Virtual item state providers
@@ -166,11 +167,11 @@ public class SharedItemStateManager
      * Creates a new <code>SharedItemStateManager</code> instance.
      *
      * @param persistMgr
-     * @param rootNodeUUID
+     * @param rootNodeId
      * @param ntReg
      */
     public SharedItemStateManager(PersistenceManager persistMgr,
-                                  String rootNodeUUID,
+                                  NodeId rootNodeId,
                                   NodeTypeRegistry ntReg,
                                   boolean usesReferences)
             throws ItemStateException {
@@ -178,10 +179,10 @@ public class SharedItemStateManager
         this.persistMgr = persistMgr;
         this.ntReg = ntReg;
         this.usesReferences = usesReferences;
-        this.rootNodeUUID = rootNodeUUID;
+        this.rootNodeId = rootNodeId;
         // create root node state if it doesn't yet exist
-        if (!hasNonVirtualItemState(new NodeId(rootNodeUUID))) {
-            createRootNodeState(rootNodeUUID, ntReg);
+        if (!hasNonVirtualItemState(rootNodeId)) {
+            createRootNodeState(rootNodeId, ntReg);
         }
     }
 
@@ -531,7 +532,7 @@ public class SharedItemStateManager
                 }
 
                 /* create event states */
-                events.createEventStates(rootNodeUUID, local,
+                events.createEventStates(rootNodeId, local,
                         SharedItemStateManager.this);
 
                 /* Push all changes from the local items to the shared items */
@@ -684,17 +685,17 @@ public class SharedItemStateManager
     /**
      * Create a new node state instance
      *
-     * @param uuid         uuid
+     * @param id         uuid
      * @param nodeTypeName node type name
-     * @param parentUUID   parent UUID
+     * @param parentId   parent UUID
      * @return new node state instance
      */
-    private NodeState createInstance(String uuid, QName nodeTypeName,
-                                     String parentUUID) {
+    private NodeState createInstance(NodeId id, QName nodeTypeName,
+                                     NodeId parentId) {
 
-        NodeState state = persistMgr.createNew(new NodeId(uuid));
+        NodeState state = persistMgr.createNew(id);
         state.setNodeTypeName(nodeTypeName);
-        state.setParentUUID(parentUUID);
+        state.setParentId(parentId);
         state.setStatus(ItemState.STATUS_NEW);
         state.addListener(this);
 
@@ -704,16 +705,16 @@ public class SharedItemStateManager
     /**
      * Create root node state
      *
-     * @param rootNodeUUID root node UUID
+     * @param rootNodeId root node id
      * @param ntReg        node type registry
      * @return root node state
      * @throws ItemStateException if an error occurs
      */
-    private NodeState createRootNodeState(String rootNodeUUID,
+    private NodeState createRootNodeState(NodeId rootNodeId,
                                           NodeTypeRegistry ntReg)
             throws ItemStateException {
 
-        NodeState rootState = createInstance(rootNodeUUID, QName.REP_ROOT, null);
+        NodeState rootState = createInstance(rootNodeId, QName.REP_ROOT, null);
 
         // FIXME need to manually setup root node by creating mandatory jcr:primaryType property
         // @todo delegate setup of root node to NodeTypeInstanceHandler
@@ -741,7 +742,7 @@ public class SharedItemStateManager
         // create jcr:primaryType property
         rootState.addPropertyName(propDef.getName());
 
-        PropertyState prop = createInstance(propDef.getName(), rootNodeUUID);
+        PropertyState prop = createInstance(propDef.getName(), rootNodeId);
         prop.setValues(new InternalValue[]{InternalValue.create(QName.REP_ROOT)});
         prop.setType(propDef.getRequiredType());
         prop.setMultiValued(propDef.isMultiple());
@@ -809,10 +810,10 @@ public class SharedItemStateManager
     private ItemState createInstance(ItemState other) {
         if (other.isNode()) {
             NodeState ns = (NodeState) other;
-            return createInstance(ns.getUUID(), ns.getNodeTypeName(), ns.getParentUUID());
+            return createInstance(ns.getNodeId(), ns.getNodeTypeName(), ns.getParentId());
         } else {
             PropertyState ps = (PropertyState) other;
-            return createInstance(ps.getName(), ps.getParentUUID());
+            return createInstance(ps.getName(), ps.getParentId());
         }
     }
 
@@ -820,11 +821,11 @@ public class SharedItemStateManager
      * Create a new property state instance
      *
      * @param propName   property name
-     * @param parentUUID parent UUID
+     * @param parentId parent Id
      * @return new property state instance
      */
-    private PropertyState createInstance(QName propName, String parentUUID) {
-        PropertyState state = persistMgr.createNew(new PropertyId(parentUUID, propName));
+    private PropertyState createInstance(QName propName, NodeId parentId) {
+        PropertyState state = persistMgr.createNew(new PropertyId(parentId, propName));
         state.setStatus(ItemState.STATUS_NEW);
         state.addListener(this);
 
@@ -876,12 +877,12 @@ public class SharedItemStateManager
             return ntReg.getEffectiveNodeType(types).includesNodeType(QName.MIX_REFERENCEABLE);
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node "
-                    + state.getId();
+                    + state.getNodeId();
             log.debug(msg);
             throw new ItemStateException(msg, ntce);
         } catch (NoSuchNodeTypeException nsnte) {
             String msg = "internal error: failed to build effective node type for node "
-                    + state.getId();
+                    + state.getNodeId();
             log.debug(msg);
             throw new ItemStateException(msg, nsnte);
         }
@@ -901,8 +902,8 @@ public class SharedItemStateManager
      *                        node references object
      * @throws ItemStateException if an error occurs
      */
-    protected void updateReferences(ChangeLog changes, 
-                                    VirtualItemStateProvider virtualProvider) 
+    protected void updateReferences(ChangeLog changes,
+                                    VirtualItemStateProvider virtualProvider)
             throws ItemStateException {
 
         // process added REFERENCE properties
@@ -915,16 +916,16 @@ public class SharedItemStateManager
                     // add the new 'reference'
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        String uuid = vals[i].toString();
-                        NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        if (virtualProvider != null && 
+                        NodeReferencesId refsId = new NodeReferencesId(
+                                (UUID) vals[i].internalValue());
+                        if (virtualProvider != null &&
                                 virtualProvider.hasNodeReferences(refsId)) {
                             continue;
                         }
                         NodeReferences refs =
                                 getOrCreateNodeReferences(refsId, changes);
                         // add reference
-                        refs.addReference((PropertyId) prop.getId());
+                        refs.addReference(prop.getPropertyId());
                         // update change log
                         changes.modified(refs);
                     }
@@ -945,9 +946,9 @@ public class SharedItemStateManager
                     // remove the old 'reference' from the target
                     InternalValue[] vals = oldProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        String uuid = vals[i].toString();
-                        NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        if (virtualProvider != null && 
+                        NodeReferencesId refsId = new NodeReferencesId(
+                                (UUID) vals[i].internalValue());
+                        if (virtualProvider != null &&
                                 virtualProvider.hasNodeReferences(refsId)) {
                             continue;
                         }
@@ -958,7 +959,7 @@ public class SharedItemStateManager
                             refs = getNodeReferences(refsId);
                         }
                         // remove reference
-                        refs.removeReference((PropertyId) oldProp.getId());
+                        refs.removeReference(oldProp.getPropertyId());
                         // update change log
                         changes.modified(refs);
                     }
@@ -969,16 +970,16 @@ public class SharedItemStateManager
                     // add the new 'reference' to the target
                     InternalValue[] vals = newProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        String uuid = vals[i].toString();
-                        NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        if (virtualProvider != null && 
+                        NodeReferencesId refsId = new NodeReferencesId(
+                                (UUID) vals[i].internalValue());
+                        if (virtualProvider != null &&
                                 virtualProvider.hasNodeReferences(refsId)) {
                             continue;
                         }
                         NodeReferences refs =
                                 getOrCreateNodeReferences(refsId, changes);
                         // add reference
-                        refs.addReference((PropertyId) newProp.getId());
+                        refs.addReference(newProp.getPropertyId());
                         // update change log
                         changes.modified(refs);
                     }
@@ -996,9 +997,9 @@ public class SharedItemStateManager
                     // remove the 'reference' from the target
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        String uuid = vals[i].toString();
-                        NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        if (virtualProvider != null && 
+                        NodeReferencesId refsId = new NodeReferencesId(
+                                (UUID) vals[i].internalValue());
+                        if (virtualProvider != null &&
                                 virtualProvider.hasNodeReferences(refsId)) {
                             continue;
                         }
@@ -1009,7 +1010,7 @@ public class SharedItemStateManager
                             refs = getNodeReferences(refsId);
                         }
                         // remove reference
-                        refs.removeReference((PropertyId) prop.getId());
+                        refs.removeReference(prop.getPropertyId());
                         // update change log
                         changes.modified(refs);
                     }
@@ -1072,7 +1073,7 @@ public class SharedItemStateManager
             if (state.isNode()) {
                 NodeState node = (NodeState) state;
                 if (isReferenceable(node)) {
-                    NodeReferencesId refsId = new NodeReferencesId(node.getUUID());
+                    NodeReferencesId refsId = new NodeReferencesId(node.getNodeId());
                     // either get node references from change log or
                     // load from persistence manager
                     NodeReferences refs = changes.get(refsId);
@@ -1084,9 +1085,9 @@ public class SharedItemStateManager
                     }
                     // in some versioning operations (such as restore) a node
                     // may actually be deleted and then again added with the
-                    // same UUID, i.e. the node is still referenceable.  
-                    if (refs.hasReferences() && !changes.has(node.getId())) {
-                        String msg = node.getId()
+                    // same UUID, i.e. the node is still referenceable.
+                    if (refs.hasReferences() && !changes.has(node.getNodeId())) {
+                        String msg = node.getNodeId()
                                 + ": the node cannot be removed because it is still being referenced.";
                         log.debug(msg);
                         throw new ReferentialIntegrityException(msg);

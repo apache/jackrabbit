@@ -178,9 +178,9 @@ public class MultiIndex {
     private final RedoLog redoLog;
 
     /**
-     * Set&lt;String> of uuids that should not be indexed.
+     * Set&lt;NodeId> of uuids that should not be indexed.
      */
-    private final Set excludedUUIDs;
+    private final Set excludedIDs;
 
     /**
      * The next transaction id.
@@ -198,22 +198,22 @@ public class MultiIndex {
      * @param indexDir the base file system
      * @param handler the search handler
      * @param stateMgr shared item state manager
-     * @param rootUUID uuid of the root node
-     * @param excludedUUIDs Set&lt;String> that contains uuids that should not
+     * @param rootId id of the root node
+     * @param excludedIDs   Set&lt;NodeId> that contains uuids that should not
      *                      be indexed nor further traversed.
      * @throws IOException if an error occurs
      */
     MultiIndex(File indexDir,
                SearchIndex handler,
                ItemStateManager stateMgr,
-               String rootUUID,
-               Set excludedUUIDs) throws IOException {
+               NodeId rootId,
+               Set excludedIDs) throws IOException {
 
         this.indexDir = indexDir;
         this.handler = handler;
         this.cache = new DocNumberCache(handler.getCacheSize());
-        this.redoLog = new RedoLog(new File(indexDir, REDO_LOG)); 
-        this.excludedUUIDs = new HashSet(excludedUUIDs);
+        this.redoLog = new RedoLog(new File(indexDir, REDO_LOG));
+        this.excludedIDs = new HashSet(excludedIDs);
 
         if (indexNames.exists(indexDir)) {
             indexNames.read(indexDir);
@@ -273,7 +273,7 @@ public class MultiIndex {
             if (indexNames.size() == 0) {
                 // traverse and index workspace
                 executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
-                NodeState rootState = (NodeState) stateMgr.getItemState(new NodeId(rootUUID));
+                NodeState rootState = (NodeState) stateMgr.getItemState(rootId);
                 createIndex(rootState, stateMgr);
                 executeAndLog(new Commit(getTransactionId()));
             }
@@ -837,16 +837,16 @@ public class MultiIndex {
      */
     private void createIndex(NodeState node, ItemStateManager stateMgr)
             throws IOException, ItemStateException, RepositoryException {
-        String uuid = node.getId().toString();
-        if (excludedUUIDs.contains(uuid)) {
+        NodeId id = node.getNodeId();
+        if (excludedIDs.contains(id)) {
             return;
         }
-        executeAndLog(new AddNode(getTransactionId(), uuid));
+        executeAndLog(new AddNode(getTransactionId(), id.getUUID().toString()));
         checkVolatileCommit();
         List children = node.getChildNodeEntries();
         for (Iterator it = children.iterator(); it.hasNext();) {
             NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
-            NodeState childState = (NodeState) stateMgr.getItemState(new NodeId(child.getUUID()));
+            NodeState childState = (NodeState) stateMgr.getItemState(child.getId());
             createIndex(childState, stateMgr);
         }
     }
@@ -1300,7 +1300,7 @@ public class MultiIndex {
         public void execute(MultiIndex index) throws IOException {
             if (doc == null) {
                 try {
-                    doc = index.createDocument(new NodeId(uuid));
+                    doc = index.createDocument(NodeId.valueOf(uuid));
                 } catch (RepositoryException e) {
                     // node does not exist anymore
                     log.debug(e.getMessage());

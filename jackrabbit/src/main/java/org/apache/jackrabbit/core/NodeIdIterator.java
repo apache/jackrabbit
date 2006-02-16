@@ -14,30 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version;
+package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.NodeId;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
- * This interface defines the base for all internal versioning items. Internal
- * versioning items are decoupled from their external form as exposed to the
- * repository or in form of the node extensions {@link javax.jcr.version.Version}
- * or {@link javax.jcr.version.VersionHistory}.
+ * <code>NodeIdIterator</code> extends the Iterator iterface by the NodeId
+ * specific methods.
  */
-public interface InternalVersionItem {
+public interface NodeIdIterator extends Iterator {
 
     /**
-     * Returns the id of this item.
+     * Returns the next nodeid in the iteration.
+     * @return the next nodeid.
      *
-     * @return the id of this item.
+     * @throws NoSuchElementException
      */
-    NodeId getId();
-
-    /**
-     * returns the parent version item or <code>null</code>.
-     *
-     * @return the parent version item.
-     */
-    InternalVersionItem getParent();
-
+    NodeId nextNodeId() throws NoSuchElementException;
 }

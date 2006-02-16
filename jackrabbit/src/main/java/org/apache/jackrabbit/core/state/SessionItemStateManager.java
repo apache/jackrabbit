@@ -63,11 +63,11 @@ public class SessionItemStateManager
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
      *
-     * @param rootNodeUUID
+     * @param rootNodeId
      * @param persistentStateMgr
      * @param nsResolver
      */
-    public SessionItemStateManager(String rootNodeUUID,
+    public SessionItemStateManager(NodeId rootNodeId,
                                    UpdatableItemStateManager persistentStateMgr,
                                    NamespaceResolver nsResolver) {
 
@@ -75,7 +75,7 @@ public class SessionItemStateManager
         // create transient item state manager
         transientStateMgr = new TransientItemStateManager();
         // create hierarchy manager that uses both transient and persistent state
-        hierMgr = new CachingHierarchyManager(rootNodeUUID, this, nsResolver);
+        hierMgr = new CachingHierarchyManager(rootNodeId, this, nsResolver);
     }
 
     /**
@@ -185,22 +185,22 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeState createNew(String uuid, QName nodeTypeName,
-                               String parentUUID)
+    public NodeState createNew(NodeId id, QName nodeTypeName,
+                               NodeId parentId)
             throws IllegalStateException {
-        return persistentStateMgr.createNew(uuid, nodeTypeName, parentUUID);
+        return persistentStateMgr.createNew(id, nodeTypeName, parentId);
     }
 
     /**
-     * Customized variant of {@link #createNew(String, QName, String)} that
+     * Customized variant of {@link #createNew(NodeId, QName, NodeId)} that
      * connects the newly created persistent state with the transient state.
      */
     public NodeState createNew(NodeState transientState)
             throws IllegalStateException {
 
-        NodeState persistentState = createNew(transientState.getUUID(),
+        NodeState persistentState = createNew(transientState.getNodeId(),
                 transientState.getNodeTypeName(),
-                transientState.getParentUUID());
+                transientState.getParentId());
         transientState.connect(persistentState);
         return persistentState;
     }
@@ -208,20 +208,20 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public PropertyState createNew(QName propName, String parentUUID)
+    public PropertyState createNew(QName propName, NodeId parentId)
             throws IllegalStateException {
-        return persistentStateMgr.createNew(propName, parentUUID);
+        return persistentStateMgr.createNew(propName, parentId);
     }
 
     /**
-     * Customized variant of {@link #createNew(String, QName, String)} that
+     * Customized variant of {@link #createNew(QName, NodeId)} that
      * connects the newly created persistent state with the transient state.
      */
     public PropertyState createNew(PropertyState transientState)
             throws IllegalStateException {
 
         PropertyState persistentState = createNew(transientState.getName(),
-                transientState.getParentUUID());
+                transientState.getParentId());
         transientState.connect(persistentState);
         return persistentState;
     }
@@ -263,7 +263,7 @@ public class SessionItemStateManager
     public void dispose() {
         // discard all transient changes
         transientStateMgr.disposeAllItemStates();
-        // dispose our (i.e. 'local') state manager 
+        // dispose our (i.e. 'local') state manager
         persistentStateMgr.dispose();
     }
 
@@ -281,7 +281,8 @@ public class SessionItemStateManager
     }
 
     /**
-     * @return
+     * @return <code>true</code> if this manager has any transient state;
+     *         <code>false</code> otherwise.
      */
     public boolean hasAnyTransientItemStates() {
         return transientStateMgr.hasAnyItemStates();
@@ -402,7 +403,7 @@ public class SessionItemStateManager
 
         // use a special attic-aware hierarchy manager
         ZombieHierarchyManager zombieHierMgr =
-                new ZombieHierarchyManager(hierMgr.getRootNodeId().getUUID(),
+                new ZombieHierarchyManager(hierMgr.getRootNodeId(),
                         this,
                         transientStateMgr.getAttic(),
                         hierMgr.getNamespaceResolver());
@@ -474,16 +475,16 @@ public class SessionItemStateManager
 
     //------< methods for creating & discarding transient ItemState instances >
     /**
-     * @param uuid
+     * @param id
      * @param nodeTypeName
-     * @param parentUUID
+     * @param parentId
      * @param initialStatus
      * @return
      * @throws ItemStateException
      */
-    public NodeState createTransientNodeState(String uuid, QName nodeTypeName, String parentUUID, int initialStatus)
+    public NodeState createTransientNodeState(NodeId id, QName nodeTypeName, NodeId parentId, int initialStatus)
             throws ItemStateException {
-        return transientStateMgr.createNodeState(uuid, nodeTypeName, parentUUID, initialStatus);
+        return transientStateMgr.createNodeState(id, nodeTypeName, parentId, initialStatus);
     }
 
     /**
@@ -501,15 +502,15 @@ public class SessionItemStateManager
     }
 
     /**
-     * @param parentUUID
+     * @param parentId
      * @param propName
      * @param initialStatus
      * @return
      * @throws ItemStateException
      */
-    public PropertyState createTransientPropertyState(String parentUUID, QName propName, int initialStatus)
+    public PropertyState createTransientPropertyState(NodeId parentId, QName propName, int initialStatus)
             throws ItemStateException {
-        return transientStateMgr.createPropertyState(parentUUID, propName, initialStatus);
+        return transientStateMgr.createPropertyState(parentId, propName, initialStatus);
     }
 
     /**

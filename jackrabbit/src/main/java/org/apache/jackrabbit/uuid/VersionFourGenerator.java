@@ -104,16 +104,6 @@ public final class VersionFourGenerator implements Constants {
     }
 
     /**
-     * <p>Returns a new version four UUID.</p>
-     *
-     * @return Object a new version 4 UUID.
-     */
-    private UUID nextUUID() {
-        //Call nextUUID with secure = false
-        return nextUUID(false);
-    }
-
-    /**
      * <p>Returns a new version four UUID using either <code>SecureRandom</code> or <code>Random</code>.</p>
      *
      * @param secure boolean flag indicating whether to use <code>SecureRandom</code> or <code>Random</code>.

@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -52,20 +53,20 @@ class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
      * Creates a new <code>ChangeLogBasedHierarchyMgr</code> that overlays
      * <code>manager</code> with <code>changes</code> and uses the deleted
      * map of the <code>changes</code> as an attic <code>ItemStateManager</code>.
-     * @param rootNodeUUID the uuid of the root node.
+     * @param rootNodeId the id of the root node.
      * @param manager the item state manager.
      * @param changes the changes that will be applied on the item state manager.
      * @param resolver the namespace resolver of the current session.
      */
-    ChangeLogBasedHierarchyMgr(String rootNodeUUID,
+    ChangeLogBasedHierarchyMgr(NodeId rootNodeId,
                                ItemStateManager manager,
                                ChangeLog changes,
                                NamespaceResolver resolver) {
-        super(rootNodeUUID,
+        super(rootNodeId,
                 new ChangeLogItemStateManager(manager, changes),
                 resolver);
         zombieHierMgr =
-                new ZombieHierarchyManager(rootNodeUUID, provider,
+                new ZombieHierarchyManager(rootNodeId, provider,
                         new AtticItemStateManager(changes), resolver);
     }
 

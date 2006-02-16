@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
@@ -69,7 +70,7 @@ class EventFilter {
     /**
      * Only allow Nodes with the specified <code>uuids</code>.
      */
-    private final String[] uuids;
+    private final NodeId[] ids;
 
     /**
      * Only allow Nodes with the specified {@link javax.jcr.nodetype.NodeType}s.
@@ -93,9 +94,9 @@ class EventFilter {
      *                   <code>path</code>.
      * @param isDeep     if <code>true</code> also allow events for {@link
      *                   Item}s below <code>absPath</code>.
-     * @param uuids      only allow events for {@link javax.jcr.Node}s with
-     *                   specified UUIDs. If <code>null</code> is passed no
-     *                   restriction regarding UUID is applied.
+     * @param ids        only allow events for {@link javax.jcr.Node}s with
+     *                   specified NodeIDs. If <code>null</code> is passed no
+     *                   restriction regarding NodeIds is applied.
      * @param nodeTypes  only allow events for specified {@link
      *                   javax.jcr.nodetype.NodeType}s. If <code>null</code> no
      *                   node type restriction is applied.
@@ -108,7 +109,7 @@ class EventFilter {
                 long eventTypes,
                 Path path,
                 boolean isDeep,
-                String[] uuids,
+                NodeId[] ids,
                 NodeTypeImpl[] nodeTypes,
                 boolean noLocal) {
 
@@ -117,7 +118,7 @@ class EventFilter {
         this.eventTypes = eventTypes;
         this.path = path;
         this.isDeep = isDeep;
-        this.uuids = uuids;
+        this.ids = ids;
         this.noLocal = noLocal;
         this.nodeTypes = nodeTypes;
     }
@@ -169,11 +170,11 @@ class EventFilter {
         }
 
         // check UUIDs
-        String parentUUID = eventState.getParentUUID();
-        if (uuids != null) {
+        NodeId parentId= eventState.getParentId();
+        if (ids != null) {
             boolean match = false;
-            for (int i = 0; i < uuids.length && !match; i++) {
-                match |= parentUUID.equals(uuids[i]);
+            for (int i = 0; i < ids.length && !match; i++) {
+                match |= parentId.equals(ids[i]);
             }
             if (!match) {
                 return true;

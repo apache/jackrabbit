@@ -51,10 +51,10 @@ public class HierarchyManagerImpl implements HierarchyManager {
     // used for outputting user-friendly paths and names
     protected final NamespaceResolver nsResolver;
 
-    public HierarchyManagerImpl(String rootNodeUUID,
+    public HierarchyManagerImpl(NodeId rootNodeId,
                                 ItemStateManager provider,
                                 NamespaceResolver nsResolver) {
-        rootNodeId = new NodeId(rootNodeUUID);
+        this.rootNodeId = rootNodeId;
         this.provider = provider;
         this.nsResolver = nsResolver;
     }
@@ -140,10 +140,10 @@ public class HierarchyManagerImpl implements HierarchyManager {
      *
      * @param state item state
      * @return <code>parentUUID</code> of the given item
-     * @see ZombieHierarchyManager#getParentUUID(ItemState)
+     * @see ZombieHierarchyManager#getParentId(ItemState)
      */
-    protected String getParentUUID(ItemState state) {
-        return state.getParentUUID();
+    protected NodeId getParentId(ItemState state) {
+        return state.getParentId();
     }
 
     /**
@@ -153,15 +153,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * Low-level hook provided for specialized derived classes.
      *
      * @param parent node state
-     * @param uuid   uuid of child node entry
+     * @param id   id of child node entry
      * @return the <code>ChildNodeEntry</code> of <code>parent</code> with
      *         the specified <code>uuid</code> or <code>null</code> if there's
      *         no such entry.
-     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, String)
+     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, NodeId)
      */
     protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                                         String uuid) {
-        return parent.getChildNodeEntry(uuid);
+                                                         NodeId id) {
+        return parent.getChildNodeEntry(id);
     }
 
     /**
@@ -243,7 +243,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             // child node
             NodeState.ChildNodeEntry nodeEntry =
                     getChildNodeEntry(parentState, name, index);
-            childId = new NodeId(nodeEntry.getUUID());
+            childId = nodeEntry.getId();
 
         } else if (parentState.hasPropertyName(name)) {
             // property
@@ -256,7 +256,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 throw new PathNotFoundException(safeGetJCRPath(path));
             }
 
-            childId = new PropertyId(parentState.getUUID(), name);
+            childId = new PropertyId(parentState.getNodeId(), name);
 
         } else {
             // no such item
@@ -283,26 +283,26 @@ public class HierarchyManagerImpl implements HierarchyManager {
             return;
         }
 
-        String parentUUID = getParentUUID(state);
-        if (parentUUID == null) {
+        NodeId parentId = getParentId(state);
+        if (parentId == null) {
             String msg = "failed to build path of " + state.getId()
                     + ": orphaned item";
             log.debug(msg);
             throw new ItemNotFoundException(msg);
         }
 
-        NodeState parent = (NodeState) getItemState(new NodeId(parentUUID));
+        NodeState parent = (NodeState) getItemState(parentId);
         // recursively build path of parent
         buildPath(builder, parent);
 
         if (state.isNode()) {
             NodeState nodeState = (NodeState) state;
-            String uuid = nodeState.getUUID();
-            NodeState.ChildNodeEntry entry = getChildNodeEntry(parent, uuid);
+            NodeId id = nodeState.getNodeId();
+            NodeState.ChildNodeEntry entry = getChildNodeEntry(parent, id);
             if (entry == null) {
                 String msg = "failed to build path of " + state.getId() + ": "
-                        + parent.getUUID() + " has no child entry for "
-                        + uuid;
+                        + parent.getNodeId() + " has no child entry for "
+                        + id;
                 log.debug(msg);
                 throw new ItemNotFoundException(msg);
             }
@@ -380,13 +380,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
             NodeState parentState;
             try {
                 NodeState nodeState = (NodeState) getItemState(nodeId);
-                String parentUUID = getParentUUID(nodeState);
-                if (parentUUID == null) {
+                NodeId parentId= getParentId(nodeState);
+                if (parentId == null) {
                     // this is the root or an orphaned node
                     // FIXME
                     return EMPTY_NAME;
                 }
-                parentState = (NodeState) getItemState(new NodeId(parentUUID));
+                parentState = (NodeState) getItemState(parentId);
             } catch (NoSuchItemStateException nsis) {
                 String msg = "failed to resolve name of " + nodeId;
                 log.debug(msg);
@@ -398,7 +398,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
 
             NodeState.ChildNodeEntry entry =
-                    getChildNodeEntry(parentState, nodeId.getUUID());
+                    getChildNodeEntry(parentState, nodeId);
             if (entry == null) {
                 String msg = "failed to resolve name of " + nodeId;
                 log.debug(msg);
@@ -406,8 +406,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
             return entry.getName();
         } else {
-            PropertyId propId = (PropertyId) itemId;
-            return propId.getName();
+            return ((PropertyId) itemId).getName();
         }
     }
 
@@ -422,12 +421,12 @@ public class HierarchyManagerImpl implements HierarchyManager {
         }
         try {
             ItemState state = getItemState(id);
-            String parentUUID = getParentUUID(state);
+            NodeId parentId = getParentId(state);
             int depth = 0;
-            while (parentUUID != null) {
+            while (parentId != null) {
                 depth++;
-                state = getItemState(new NodeId(parentUUID));
-                parentUUID = getParentUUID(state);
+                state = getItemState(parentId);
+                parentId = getParentId(state);
             }
             return depth;
         } catch (NoSuchItemStateException nsise) {
@@ -452,14 +451,14 @@ public class HierarchyManagerImpl implements HierarchyManager {
         int depth = 1;
         try {
             ItemState state = getItemState(descendantId);
-            String parentUUID = getParentUUID(state);
-            while (parentUUID != null) {
-                if (parentUUID.equals(ancestorId.getUUID())) {
+            NodeId parentId = getParentId(state);
+            while (parentId != null) {
+                if (parentId.equals(ancestorId)) {
                     return depth;
                 }
                 depth++;
-                state = getItemState(new NodeId(parentUUID));
-                parentUUID = getParentUUID(state);
+                state = getItemState(parentId);
+                parentId = getParentId(state);
             }
             // not an ancestor
             return -1;
@@ -487,13 +486,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
         }
         try {
             ItemState state = getItemState(itemId);
-            String parentUUID = getParentUUID(state);
-            while (parentUUID != null) {
-                if (parentUUID.equals(nodeId.getUUID())) {
+            NodeId parentId = getParentId(state);
+            while (parentId != null) {
+                if (parentId.equals(nodeId)) {
                     return true;
                 }
-                state = getItemState(new NodeId(parentUUID));
-                parentUUID = getParentUUID(state);
+                state = getItemState(parentId);
+                parentId = getParentId(state);
             }
             // not an ancestor
             return false;

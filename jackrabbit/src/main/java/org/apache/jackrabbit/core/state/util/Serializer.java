@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state.util;
 
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
@@ -74,10 +75,10 @@ public final class Serializer {
         // primaryType
         out.writeUTF(state.getNodeTypeName().toString());
         // parentUUID
-        if (state.getParentUUID() == null) {
+        if (state.getParentId() == null) {
             out.write(NULL_UUID_PLACEHOLDER_BYTES);
         } else {
-            out.write(UUID.stringToBytes(state.getParentUUID()));
+            out.write(state.getParentId().getUUID().getRawBytes());
         }
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
@@ -102,7 +103,7 @@ public final class Serializer {
         for (Iterator iter = c.iterator(); iter.hasNext();) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
             out.writeUTF(entry.getName().toString());   // name
-            out.write(UUID.stringToBytes(entry.getUUID()));    // uuid
+            out.write(entry.getId().getUUID().getRawBytes());    // uuid
         }
     }
 
@@ -126,7 +127,7 @@ public final class Serializer {
         byte[] uuidBytes = new byte[UUID.UUID_BYTE_LENGTH];
         in.readFully(uuidBytes);
         if (!Arrays.equals(uuidBytes, NULL_UUID_PLACEHOLDER_BYTES)) {
-            state.setParentUUID(UUID.bytesToString(uuidBytes));
+            state.setParentId(new NodeId(new UUID(uuidBytes)));
         }
         // definitionId
         s = in.readUTF();
@@ -154,7 +155,7 @@ public final class Serializer {
             QName name = QName.valueOf(in.readUTF());    // name
             // uuid
             in.readFully(uuidBytes);
-            state.addChildNodeEntry(name, UUID.bytesToString(uuidBytes));
+            state.addChildNodeEntry(name, new NodeId(new UUID(uuidBytes)));
         }
     }
 
@@ -194,7 +195,7 @@ public final class Serializer {
                 // put binary value in BLOB store
                 BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
                 InputStream in = blobVal.getStream();
-                String blobId = blobStore.createId((PropertyId) state.getId(), i);
+                String blobId = blobStore.createId(state.getPropertyId(), i);
                 try {
                     blobStore.put(blobId, in, blobVal.getLength());
                 } finally {

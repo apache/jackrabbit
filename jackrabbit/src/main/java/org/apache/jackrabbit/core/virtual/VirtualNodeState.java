@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.PropertyType;
@@ -50,19 +51,19 @@ public class VirtualNodeState extends NodeState {
      * creates a new virtual node state
      *
      * @param stateMgr
-     * @param parentUUID
-     * @param uuid
+     * @param parentId
+     * @param id
      * @param nodeTypeName
      * @param mixins
      * @throws RepositoryException
      */
     public VirtualNodeState(AbstractVISProvider stateMgr,
-                            String parentUUID,
-                            String uuid,
+                            NodeId parentId,
+                            NodeId id,
                             QName nodeTypeName,
                             QName[] mixins)
             throws RepositoryException {
-        super(uuid, nodeTypeName, parentUUID, ItemState.STATUS_EXISTING, false);
+        super(id, nodeTypeName, parentId, ItemState.STATUS_EXISTING, false);
         this.stateMgr = stateMgr;
         addListener(stateMgr);
         // add default properties
@@ -73,7 +74,7 @@ public class VirtualNodeState extends NodeState {
     /**
      * Returns the properties of this node
      *
-     * @return
+     * @return the properties.
      */
     public VirtualPropertyState[] getProperties() {
         return (VirtualPropertyState[]) properties.values().toArray(new VirtualPropertyState[properties.size()]);
@@ -84,7 +85,7 @@ public class VirtualNodeState extends NodeState {
      * Returns the values of the given property of <code>null</code>
      *
      * @param name
-     * @return
+     * @return the values
      */
     public InternalValue[] getPropertyValues(QName name) throws NoSuchItemStateException {
         VirtualPropertyState ps = getProperty(name);
@@ -99,7 +100,7 @@ public class VirtualNodeState extends NodeState {
      * Returns the value of the given property or <code>null</code>
      *
      * @param name
-     * @return
+     * @return the value
      */
     public InternalValue getPropertyValue(QName name) throws NoSuchItemStateException {
         VirtualPropertyState ps = getProperty(name);

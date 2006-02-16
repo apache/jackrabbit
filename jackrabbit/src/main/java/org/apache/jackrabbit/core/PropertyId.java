@@ -28,8 +28,8 @@ public class PropertyId extends ItemId {
     /** Serial version UID of this class. */
     static final long serialVersionUID = -3726624437800567892L;
 
-    /** UUID of the parent node. */
-    private final String parentUUID;
+    /** ID of the parent node. */
+    private final NodeId parentId;
 
     /** Qualified name of the property. */
     private final QName propName;
@@ -37,17 +37,17 @@ public class PropertyId extends ItemId {
     /**
      * Creates a property identifier instance for the identified property.
      *
-     * @param parentUUID UUID of the parent node
+     * @param parentId the id of the parent node
      * @param propName qualified name of the property
      */
-    public PropertyId(String parentUUID, QName propName) {
-        if (parentUUID == null) {
-            throw new IllegalArgumentException("parentUUID can not be null");
+    public PropertyId(NodeId parentId, QName propName) {
+        if (parentId == null) {
+            throw new IllegalArgumentException("parentId can not be null");
         }
         if (propName == null) {
             throw new IllegalArgumentException("propName can not be null");
         }
-        this.parentUUID = parentUUID;
+        this.parentId = parentId;
         this.propName = propName;
     }
 
@@ -63,12 +63,12 @@ public class PropertyId extends ItemId {
     }
 
     /**
-     * Returns the UUID of the parent node.
+     * Returns the Id of the parent node.
      *
-     * @return node UUID
+     * @return node Id
      */
-    public String getParentUUID() {
-        return parentUUID;
+    public NodeId getParentId() {
+        return parentId;
     }
 
     /**
@@ -103,7 +103,7 @@ public class PropertyId extends ItemId {
         String uuid = s.substring(0, i);
         QName name = QName.valueOf(s.substring(i + 1));
 
-        return new PropertyId(uuid, name);
+        return new PropertyId(NodeId.valueOf(uuid), name);
     }
 
     //-------------------------------------------< java.lang.Object overrides >
@@ -123,7 +123,7 @@ public class PropertyId extends ItemId {
         }
         if (obj instanceof PropertyId) {
             PropertyId other = (PropertyId) obj;
-            return parentUUID.equals(other.parentUUID)
+            return parentId.equals(other.parentId)
                     && propName.equals(other.propName);
         }
         return false;
@@ -136,7 +136,7 @@ public class PropertyId extends ItemId {
      * @see Object#toString()
      */
     public String toString() {
-        return parentUUID + "/" + propName.toString();
+        return parentId + "/" + propName;
     }
 
     /**
@@ -152,7 +152,7 @@ public class PropertyId extends ItemId {
         int h = hash;
         if (h == 0) {
             h = 17;
-            h = 37 * h + parentUUID.hashCode();
+            h = 37 * h + parentId.hashCode();
             h = 37 * h + propName.hashCode();
             hash = h;
         }

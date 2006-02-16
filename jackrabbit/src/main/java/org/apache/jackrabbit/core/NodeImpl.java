@@ -103,6 +103,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /** same as ((NodeState) state).getNodeTypeName(); cached to avoid type casts */
     protected final QName primaryTypeName;
 
+    /** the definition of this node */
     protected NodeDefinition definition;
 
     // flag set in status passed to getOrCreateProperty if property was created
@@ -162,7 +163,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 // check if property entry exists
                 NodeState thisState = (NodeState) state;
                 if (thisState.hasPropertyName(propName)) {
-                    return new PropertyId(thisState.getUUID(), propName);
+                    return new PropertyId(thisState.getNodeId(), propName);
                 } else {
                     // there's no property with that name
                     return null;
@@ -222,7 +223,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     NodeState.ChildNodeEntry cne =
                             thisState.getChildNodeEntry(pe.getName(), index);
                     if (cne != null) {
-                        return new NodeId(cne.getUUID());
+                        return cne.getId();
                     } else {
                         // there's no child node with that name
                         return null;
@@ -316,7 +317,9 @@ public class NodeImpl extends ItemImpl implements Node {
             // mix:referenceable node type
             if (name.equals(QName.JCR_UUID)) {
                 // jcr:uuid property
-                genValues = new InternalValue[]{InternalValue.create(thisState.getUUID())};
+                genValues = new InternalValue[]{
+                        InternalValue.create(thisState.getNodeId().getUUID().toString())
+                };
             }
 /*
        todo consolidate version history creation code (currently in ItemImpl.initVersionHistories)
@@ -443,13 +446,13 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException(msg);
         }
 
-        String parentUUID = ((NodeState) state).getUUID();
+        NodeId parentId = (NodeId) state.getId();
 
         // create a new property state
         PropertyState propState;
         try {
             propState =
-                    stateMgr.createTransientPropertyState(parentUUID, name,
+                    stateMgr.createTransientPropertyState(parentId, name,
                             ItemState.STATUS_NEW);
             propState.setType(type);
             propState.setMultiValued(def.isMultiple());
@@ -484,18 +487,18 @@ public class NodeImpl extends ItemImpl implements Node {
     protected synchronized NodeImpl createChildNode(QName name,
                                                     NodeDefinitionImpl def,
                                                     NodeTypeImpl nodeType,
-                                                    String uuid)
+                                                    NodeId id)
             throws RepositoryException {
-        String parentUUID = ((NodeState) state).getUUID();
+        NodeId parentId = (NodeId) state.getId();
         // create a new node state
         NodeState nodeState;
         try {
-            if (uuid == null) {
-                uuid = UUID.randomUUID().toString();    // version 4 uuid
+            if (id == null) {
+                id = new NodeId(UUID.randomUUID());
             }
             nodeState =
-                    stateMgr.createTransientNodeState(uuid, nodeType.getQName(),
-                            parentUUID, ItemState.STATUS_NEW);
+                    stateMgr.createTransientNodeState(id, nodeType.getQName(),
+                            parentId, ItemState.STATUS_NEW);
             nodeState.setDefinitionId(def.unwrap().getId());
         } catch (ItemStateException ise) {
             String msg = "failed to add child node " + name + " to "
@@ -518,7 +521,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         // add new child node entry
-        thisState.addChildNodeEntry(name, nodeState.getUUID());
+        thisState.addChildNodeEntry(name, nodeState.getNodeId());
 
         // add 'auto-create' properties defined in node type
         PropertyDefinition[] pda = nodeType.getAutoCreatedPropertyDefinitions();
@@ -538,7 +541,7 @@ public class NodeImpl extends ItemImpl implements Node {
         return node;
     }
 
-    protected void renameChildNode(QName oldName, int index, String uuid,
+    protected void renameChildNode(QName oldName, int index, NodeId id,
                                    QName newName)
             throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
@@ -573,7 +576,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // remove property
-        PropertyId propId = new PropertyId(thisState.getUUID(), propName);
+        PropertyId propId = new PropertyId(thisState.getNodeId(), propName);
         itemMgr.getItem(propId).setRemoved();
     }
 
@@ -594,7 +597,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // notify target of removal
-        NodeId childId = new NodeId(entry.getUUID());
+        NodeId childId = entry.getId();
         NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
         childNode.onRemove();
 
@@ -630,7 +633,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 NodeState.ChildNodeEntry entry =
                         (NodeState.ChildNodeEntry) tmp.get(i);
                 // recursively remove child node
-                NodeId childId = new NodeId(entry.getUUID());
+                NodeId childId = entry.getId();
                 NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
                 childNode.onRemove();
                 // remove the child node entry
@@ -646,12 +649,12 @@ public class NodeImpl extends ItemImpl implements Node {
             // remove the property entry
             thisState.removePropertyName(propName);
             // remove property
-            PropertyId propId = new PropertyId(thisState.getUUID(), propName);
+            PropertyId propId = new PropertyId(thisState.getNodeId(), propName);
             itemMgr.getItem(propId).setRemoved();
         }
 
         // finally remove this node
-        thisState.setParentUUID(null);
+        thisState.setParentId(null);
         itemMgr.getItem(id).setRemoved();
     }
 
@@ -662,7 +665,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     protected NodeImpl internalAddNode(String relPath, NodeTypeImpl nodeType,
-                                       String uuid)
+                                       NodeId id)
             throws ItemExistsException, PathNotFoundException, VersionException,
             ConstraintViolationException, LockException, RepositoryException {
         Path nodePath;
@@ -711,7 +714,7 @@ public class NodeImpl extends ItemImpl implements Node {
         parentNode.checkLock();
 
         // delegate the creation of the child node to the parent node
-        return parentNode.internalAddChildNode(nodeName, nodeType, uuid);
+        return parentNode.internalAddChildNode(nodeName, nodeType, id);
     }
 
     protected NodeImpl internalAddChildNode(QName nodeName,
@@ -722,7 +725,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     protected NodeImpl internalAddChildNode(QName nodeName,
-                                            NodeTypeImpl nodeType, String uuid)
+                                            NodeTypeImpl nodeType, NodeId id)
             throws ItemExistsException, ConstraintViolationException,
             RepositoryException {
         Path nodePath;
@@ -766,7 +769,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
             }
             // check same-name sibling setting of existing node
-            NodeId newId = new NodeId(cne.getUUID());
+            NodeId newId = cne.getId();
             if (!((NodeImpl) itemMgr.getItem(newId)).getDefinition().allowsSameNameSiblings()) {
                 throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
             }
@@ -780,7 +783,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // now do create the child node
-        return createChildNode(nodeName, def, nodeType, uuid);
+        return createChildNode(nodeName, def, nodeType, id);
     }
 
     private void setMixinTypesProperty(Set mixinNames) throws RepositoryException {
@@ -788,7 +791,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // get or create jcr:mixinTypes property
         PropertyImpl prop;
         if (thisState.hasPropertyName(QName.JCR_MIXINTYPES)) {
-            prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), QName.JCR_MIXINTYPES));
+            prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getNodeId(), QName.JCR_MIXINTYPES));
         } else {
             // find definition for the jcr:mixinTypes property and create property
             PropertyDefinitionImpl def = getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
@@ -908,8 +911,8 @@ public class NodeImpl extends ItemImpl implements Node {
                 throw new InvalidItemStateException(msg);
             }
             // copy state from transient state:
-            // parent uuid's
-            persistentState.setParentUUID(transientState.getParentUUID());
+            // parent id's
+            persistentState.setParentId(transientState.getParentId());
             // mixin types
             persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
             // id of definition
@@ -944,7 +947,7 @@ public class NodeImpl extends ItemImpl implements Node {
             stateMgr.disconnectTransientItemState(thisState);
         }
         // reapply transient changes
-        thisState.setParentUUID(transientState.getParentUUID());
+        thisState.setParentId(transientState.getParentId());
         thisState.setMixinTypeNames(transientState.getMixinTypeNames());
         thisState.setDefinitionId(transientState.getDefinitionId());
         thisState.setChildNodeEntries(transientState.getChildNodeEntries());
@@ -1153,7 +1156,8 @@ public class NodeImpl extends ItemImpl implements Node {
         HashSet set = new HashSet(thisState.getPropertyNames());
         for (Iterator iter = set.iterator(); iter.hasNext();) {
             QName propName = (QName) iter.next();
-            PropertyImpl prop = (PropertyImpl) itemMgr.getItem(new PropertyId(thisState.getUUID(), propName));
+            PropertyImpl prop = (PropertyImpl) itemMgr.getItem(
+                    new PropertyId(thisState.getNodeId(), propName));
             // check if property has been defined by mixin type (or one of its supertypes)
             NodeTypeImpl declaringNT = (NodeTypeImpl) prop.getDefinition().getDeclaringNodeType();
             if (!entRemaining.includesNodeType(declaringNT.getQName())) {
@@ -1167,7 +1171,7 @@ public class NodeImpl extends ItemImpl implements Node {
         ArrayList list = new ArrayList(thisState.getChildNodeEntries());
         for (Iterator iter = list.iterator(); iter.hasNext();) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-            NodeImpl node = (NodeImpl) itemMgr.getItem(new NodeId(entry.getUUID()));
+            NodeImpl node = (NodeImpl) itemMgr.getItem(entry.getId());
             // check if node has been defined by mixin type (or one of its supertypes)
             NodeTypeImpl declaringNT = (NodeTypeImpl) node.getDefinition().getDeclaringNodeType();
             if (!entRemaining.includesNodeType(declaringNT.getQName())) {
@@ -1208,8 +1212,8 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @return the uuid of this node
      */
-    public String internalGetUUID() {
-        return ((NodeState) state).getUUID();
+    public UUID internalGetUUID() {
+        return ((NodeId) state.getId()).getUUID();
     }
 
     /**
@@ -1373,9 +1377,8 @@ public class NodeImpl extends ItemImpl implements Node {
         if (cne == null) {
             throw new ItemNotFoundException();
         }
-        NodeId nodeId = new NodeId(cne.getUUID());
         try {
-            return (NodeImpl) itemMgr.getItem(nodeId);
+            return (NodeImpl) itemMgr.getItem(cne.getId());
         } catch (AccessDeniedException ade) {
             throw new ItemNotFoundException();
         }
@@ -1413,9 +1416,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (cne == null) {
             return false;
         }
-        NodeId nodeId = new NodeId(cne.getUUID());
-
-        return itemMgr.itemExists(nodeId);
+        return itemMgr.itemExists(cne.getId());
     }
 
     /**
@@ -1434,7 +1435,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         NodeState thisState = (NodeState) state;
-        PropertyId propId = new PropertyId(thisState.getUUID(), name);
+        PropertyId propId = new PropertyId(thisState.getNodeId(), name);
         try {
             return (PropertyImpl) itemMgr.getItem(propId);
         } catch (AccessDeniedException ade) {
@@ -1459,7 +1460,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!thisState.hasPropertyName(name)) {
             return false;
         }
-        PropertyId propId = new PropertyId(thisState.getUUID(), name);
+        PropertyId propId = new PropertyId(thisState.getNodeId(), name);
 
         return itemMgr.itemExists(propId);
     }
@@ -1487,7 +1488,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     public synchronized NodeImpl addNode(QName nodeName, QName nodeTypeName,
-                                         String uuid)
+                                         UUID uuid)
             throws ItemExistsException, NoSuchNodeTypeException, VersionException,
             ConstraintViolationException, LockException, RepositoryException {
         // check state of this instance
@@ -1507,7 +1508,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (nodeTypeName != null) {
             nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
         }
-        return internalAddChildNode(nodeName, nt, uuid);
+        return internalAddChildNode(nodeName, nt, new NodeId(uuid));
     }
 
     /**
@@ -1627,6 +1628,15 @@ public class NodeImpl extends ItemImpl implements Node {
         return session.getHierarchyManager().getName(id);
     }
 
+    /**
+     * Return the id of this <code>Node</code>.
+     *
+     * @return the id of this <code>Node</code>
+     */
+    public NodeId getNodeId() {
+        return (NodeId) id;
+    }
+
     //-----------------------------------------------------------------< Item >
     /**
      * {@inheritDoc}
@@ -1642,7 +1652,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (state.getParentUUID() == null) {
+        if (state.getId() == null) {
             // this is the root node
             return "";
         }
@@ -1678,14 +1688,14 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         // check if root node
-        String parentUUID = state.getParentUUID();
-        if (parentUUID == null) {
+        NodeId parentId = state.getParentId();
+        if (parentId == null) {
             String msg = "root node doesn't have a parent";
             log.debug(msg);
             throw new ItemNotFoundException(msg);
         }
 
-        return (Node) itemMgr.getItem(new NodeId(parentUUID));
+        return (Node) itemMgr.getItem(parentId);
     }
 
     //-----------------------------------------------------------------< Node >
@@ -2505,7 +2515,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         try {
-            NodeReferencesId targetId = new NodeReferencesId(((NodeId) id).getUUID());
+            NodeReferencesId targetId = new NodeReferencesId((NodeId) id);
             if (stateMgr.hasNodeReferences(targetId)) {
                 NodeReferences refs = stateMgr.getNodeReferences(targetId);
                 // refs.getReferences() returns a list of PropertyId's
@@ -2592,7 +2602,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new UnsupportedRepositoryOperationException();
         }
 
-        return ((NodeState) state).getUUID();
+        return internalGetUUID().toString();
     }
 
     /**
@@ -2666,17 +2676,17 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        String parentUUID = state.getParentUUID();
-        if (parentUUID == null) {
+        NodeId parentId = state.getParentId();
+        if (parentId == null) {
             // the root node cannot have same-name siblings; always return 1
             return 1;
         }
 
         try {
             NodeState parent =
-                    (NodeState) stateMgr.getItemState(new NodeId(parentUUID));
+                    (NodeState) stateMgr.getItemState(parentId);
             NodeState.ChildNodeEntry parentEntry =
-                    parent.getChildNodeEntry(((NodeState) state).getUUID());
+                    parent.getChildNodeEntry((NodeId) state.getId());
             return parentEntry.getIndex();
         } catch (ItemStateException ise) {
             // should never get here...
@@ -3264,9 +3274,9 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeTypeImpl nt = ntMgr.getNodeType(frozen.getFrozenPrimaryType());
 
         // get frozen uuid
-        String uuid = frozen.getFrozenUUID();
+        UUID uuid = frozen.getFrozenUUID();
 
-        NodeImpl node = internalAddChildNode(name, nt, uuid);
+        NodeImpl node = internalAddChildNode(name, nt, new NodeId(uuid));
 
         // get frozen mixin
         // todo: also respect mixing types on creation?
@@ -3308,9 +3318,9 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeTypeImpl nt = ntMgr.getNodeType(frozen.getFrozenPrimaryType());
 
         // get frozen uuid
-        String uuid = frozen.getFrozenUUID();
+        UUID uuid = frozen.getFrozenUUID();
 
-        NodeImpl node = internalAddNode(relPath, nt, uuid);
+        NodeImpl node = internalAddNode(relPath, nt, new NodeId(uuid));
 
         // get frozen mixin
         // todo: also respect mixing types on creation?
@@ -3435,14 +3445,14 @@ public class NodeImpl extends ItemImpl implements Node {
         while (niter.hasNext()) {
             NodeImpl child = (NodeImpl) niter.nextNode();
             NodeImpl dstNode = null;
-            String uuid = child.internalGetUUID();
+            NodeId id = (NodeId) child.getId();
             if (hasNode(child.getQName())) {
                 // todo: does not work properly for samename siblings
                 dstNode = getNode(child.getQName());
             } else if (child.isNodeType(QName.MIX_REFERENCEABLE)) {
                 // if child is referenceable, check if correspondance exist in this workspace
                 try {
-                    dstNode = (NodeImpl) session.getNodeByUUID(uuid);
+                    dstNode = session.getNodeById(id);
                     if (removeExisting) {
                         dstNode.internalRemove(false);
                         dstNode = null;
@@ -3456,10 +3466,10 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             } else {
                 // if child is not referenceable, clear uuid
-                uuid = null;
+                id = null;
             }
             if (dstNode == null) {
-                dstNode = internalAddChildNode(child.getQName(), (NodeTypeImpl) child.getPrimaryNodeType(), uuid);
+                dstNode = internalAddChildNode(child.getQName(), (NodeTypeImpl) child.getPrimaryNodeType(), id);
                 // add mixins
                 NodeType[] mixins = child.getMixinNodeTypes();
                 for (int i = 0; i < mixins.length; i++) {
@@ -3529,7 +3539,7 @@ public class NodeImpl extends ItemImpl implements Node {
         restored.add(version);
 
         // 2. N's jcr:baseVersion property will be changed to point to V.
-        UUID uuid = new UUID(((NodeId) version.getId()).getUUID());
+        UUID uuid = ((NodeId) version.getId()).getUUID();
         internalSetProperty(QName.JCR_BASEVERSION, InternalValue.create(uuid));
 
         // 4. N's jcr:predecessor property is set to null
@@ -3557,8 +3567,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check uuid
         if (isNodeType(QName.MIX_REFERENCEABLE)) {
-            String uuid = freeze.getFrozenUUID();
-            if (uuid != null && !uuid.equals(getUUID())) {
+            UUID uuid = freeze.getFrozenUUID();
+            if (!internalGetUUID().equals(uuid)) {
                 throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". UUID changed.");
             }
         }
@@ -3657,12 +3667,12 @@ public class NodeImpl extends ItemImpl implements Node {
 
             } else if (child instanceof InternalFrozenVersionHistory) {
                 InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;
-                VersionHistory history = (VersionHistory) session.getNodeByUUID(f.getVersionHistoryId());
-                String nodeId = history.getVersionableUUID();
+                VersionHistory history = (VersionHistory) session.getNodeById(f.getVersionHistoryId());
+                NodeId nodeId = NodeId.valueOf(history.getVersionableUUID());
 
                 // check if representing versionable already exists somewhere
-                if (itemMgr.itemExists(new NodeId(nodeId))) {
-                    NodeImpl n = (NodeImpl) session.getNodeByUUID(nodeId);
+                if (itemMgr.itemExists(nodeId)) {
+                    NodeImpl n = session.getNodeById(nodeId);
                     if (n.getParent().isSame(this)) {
                         // so order at end
                         // orderBefore(n.getName(), "");
