@@ -23,8 +23,8 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
-import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -40,17 +40,17 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Collection;
 
 /**
  * This Class implements a VersionManager.
@@ -62,11 +62,6 @@ public class VersionManagerImpl extends AbstractVersionManager
      * the default logger
      */
     private static Logger log = Logger.getLogger(VersionManager.class);
-
-    /**
-     * The root node UUID for the version storage
-     */
-    private final String VERSION_STORAGE_NODE_UUID;
 
     /**
      * The persistence manager for the versions
@@ -113,22 +108,21 @@ public class VersionManagerImpl extends AbstractVersionManager
      *
      */
     public VersionManagerImpl(PersistenceManager pMgr, NodeTypeRegistry ntReg,
-                              DelegatingObservationDispatcher obsMgr, String rootUUID,
-                              String rootParentUUID) throws RepositoryException {
+                              DelegatingObservationDispatcher obsMgr, NodeId rootId,
+                              NodeId rootParentId) throws RepositoryException {
         try {
             this.pMgr = pMgr;
             this.ntReg = ntReg;
             this.obsMgr = obsMgr;
-            this.VERSION_STORAGE_NODE_UUID = rootUUID;
 
             // need to store the version storage root directly into the persistence manager
-            if (!pMgr.exists(new NodeId(rootUUID))) {
-                NodeState root = pMgr.createNew(new NodeId(rootUUID));
-                root.setParentUUID(rootParentUUID);
+            if (!pMgr.exists(rootId)) {
+                NodeState root = pMgr.createNew(rootId);
+                root.setParentId(rootParentId);
                 root.setDefinitionId(ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicableChildNodeDef(
                         QName.JCR_VERSIONSTORAGE, QName.REP_VERSIONSTORAGE).getId());
                 root.setNodeTypeName(QName.REP_VERSIONSTORAGE);
-                PropertyState pt = pMgr.createNew(new PropertyId(rootUUID, QName.JCR_PRIMARYTYPE));
+                PropertyState pt = pMgr.createNew(new PropertyId(rootId, QName.JCR_PRIMARYTYPE));
                 pt.setDefinitionId(ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicablePropertyDef(
                         QName.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
                 pt.setMultiValued(false);
@@ -141,9 +135,9 @@ public class VersionManagerImpl extends AbstractVersionManager
                 pMgr.store(cl);
             }
             sharedStateMgr =
-                    new VersionItemStateManager(pMgr, VERSION_STORAGE_NODE_UUID, ntReg);
+                    new VersionItemStateManager(pMgr, rootId, ntReg);
             stateMgr = new LocalItemStateManager(sharedStateMgr, this);
-            NodeState nodeState = (NodeState) stateMgr.getItemState(new NodeId(VERSION_STORAGE_NODE_UUID));
+            NodeState nodeState = (NodeState) stateMgr.getItemState(rootId);
             historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, QName.JCR_VERSIONSTORAGE);
 
             // create the virtual item state provider
@@ -187,41 +181,40 @@ public class VersionManagerImpl extends AbstractVersionManager
         }
 
         if (history == null) {
-            throw new VersionException("History already exists for node " + node.getUUID());
+            throw new VersionException("History already exists for node " + node.getNodeId());
         }
-        return (VersionHistory) session.getNodeByUUID(history.getId());
+        return (VersionHistory) ((SessionImpl) session).getNodeById(history.getId());
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean hasItem(String id) {
-        return versionItems.containsKey(id) || stateMgr.hasItemState(new NodeId(id));
+    public boolean hasItem(NodeId id) {
+        return versionItems.containsKey(id) || stateMgr.hasItemState(id);
     }
 
     /**
      * {@inheritDoc}
      */
-    protected synchronized InternalVersionItem getItem(String uuid)
+    protected synchronized InternalVersionItem getItem(NodeId id)
             throws RepositoryException {
 
-        NodeId id = new NodeId(uuid);
         try {
-            InternalVersionItem item = (InternalVersionItem) versionItems.get(uuid);
+            InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
             if (item == null) {
                 if (stateMgr.hasItemState(id)) {
                     NodeState state = (NodeState) stateMgr.getItemState(id);
                     NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
-                    String parentUUID = pNode.getParentUUID();
+                    NodeId parentId = pNode.getParentId();
                     InternalVersionItem parent =
-                            (parentUUID != null) ? getItem(parentUUID) : null;
+                            (parentId != null) ? getItem(parentId) : null;
                     QName ntName = state.getNodeTypeName();
                     if (ntName.equals(QName.NT_FROZENNODE)) {
                         item = new InternalFrozenNodeImpl(this, pNode, parent);
                     } else if (ntName.equals(QName.NT_VERSIONEDCHILD)) {
                         item = new InternalFrozenVHImpl(this, pNode, parent);
                     } else if (ntName.equals(QName.NT_VERSION)) {
-                        item = ((InternalVersionHistory) parent).getVersion(uuid);
+                        item = ((InternalVersionHistory) parent).getVersion(id);
                     } else if (ntName.equals(QName.NT_VERSIONHISTORY)) {
                         item = new InternalVersionHistoryImpl(this, pNode);
                     } else {
@@ -229,7 +222,7 @@ public class VersionManagerImpl extends AbstractVersionManager
                     }
                 }
                 if (item != null) {
-                    versionItems.put(uuid, item);
+                    versionItems.put(id, item);
                 }
             }
             return item;
@@ -253,8 +246,8 @@ public class VersionManagerImpl extends AbstractVersionManager
             eventSource = (SessionImpl) node.getSession();
 
             String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
-            version = checkin(
-                    (InternalVersionHistoryImpl) getVersionHistory(histUUID), node);
+            version = checkin((InternalVersionHistoryImpl)
+                    getVersionHistory(NodeId.valueOf(histUUID)), node);
 
             // invalidate predecessors successor properties
             InternalVersion[] preds = version.getPredecessors();
@@ -263,7 +256,7 @@ public class VersionManagerImpl extends AbstractVersionManager
                 versProvider.onPropertyChanged(propId);
             }
         }
-        return (AbstractVersion) eventSource.getNodeByUUID(version.getId());
+        return (AbstractVersion) eventSource.getNodeById(version.getId());
     }
 
     /**
@@ -327,7 +320,7 @@ public class VersionManagerImpl extends AbstractVersionManager
         if (v == null) {
             return null;
         } else {
-            return (Version) eventSource.getNodeByUUID(v.getId());
+            return (Version) eventSource.getNodeByUUID(v.getId().getUUID());
         }
     }
 
@@ -366,7 +359,7 @@ public class VersionManagerImpl extends AbstractVersionManager
 
     public boolean setNodeReferences(NodeReferences refs) {
         try {
-            InternalVersionItem item = getItem(refs.getTargetId().getUUID());
+            InternalVersionItem item = getItem(refs.getTargetId());
             setItemReferences(item, refs.getReferences());
             return true;
         } catch (RepositoryException e) {
@@ -384,7 +377,7 @@ public class VersionManagerImpl extends AbstractVersionManager
         Iterator iter = references.iterator();
         while (iter.hasNext()) {
             PropertyId id = (PropertyId) iter.next();
-            if (!hasItem(id.getParentUUID())) {
+            if (!hasItem(id.getParentId())) {
                 refs.add(id);
             }
         }
@@ -425,7 +418,7 @@ public class VersionManagerImpl extends AbstractVersionManager
      * @return the id of the version history root node
      */
     NodeId getHistoryRootId() {
-        return (NodeId) historyRoot.getState().getId();
+        return historyRoot.getState().getNodeId();
     }
 
     /**
@@ -462,10 +455,10 @@ public class VersionManagerImpl extends AbstractVersionManager
     class VersionItemStateManager extends SharedItemStateManager {
 
         public VersionItemStateManager(PersistenceManager persistMgr,
-                                       String rootNodeUUID,
+                                       NodeId rootNodeId,
                                        NodeTypeRegistry ntReg)
                 throws ItemStateException {
-            super(persistMgr, rootNodeUUID, ntReg, false);
+            super(persistMgr, rootNodeId, ntReg, false);
         }
 
         protected void checkReferentialIntegrity(ChangeLog changes)

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -61,7 +62,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
     /**
      * the hashmap of all versions
-     * key = versionId (String)
+     * key = versionId (NodeId)
      * value = version
      */
     private HashMap versionCache = new HashMap();
@@ -84,12 +85,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * the id of this history
      */
-    private String historyId;
+    private NodeId historyId;
 
     /**
-     * the if of the versionable node
+     * the id of the versionable node
      */
-    private String versionableId;
+    private NodeId versionableId;
 
     /**
      * Creates a new VersionHistory object for the given node state.
@@ -111,10 +112,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         labelCache.clear();
 
         // get id
-        historyId = node.getUUID();
+        historyId = node.getNodeId();
 
         // get versionable id
-        versionableId = (String) node.getPropertyValue(QName.JCR_VERSIONABLEUUID).internalValue();
+        versionableId = NodeId.valueOf(node.getPropertyValue(QName.JCR_VERSIONABLEUUID).toString());
 
         // get entries
         NodeStateEx[] children = node.getChildNodes();
@@ -147,7 +148,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                 if (pState.getType() == PropertyType.REFERENCE) {
                     QName name = pState.getName();
                     UUID ref = (UUID) pState.getValues()[0].internalValue();
-                    InternalVersionImpl v = (InternalVersionImpl) getVersion(ref.toString());
+                    InternalVersionImpl v = (InternalVersionImpl) getVersion(new NodeId(ref));
                     labelCache.put(name, v);
                     v.internalAddLabel(name);
                 }
@@ -179,7 +180,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * out when refreshing this history.
      */
     InternalVersionImpl createVersionInstance(NodeStateEx child) {
-        InternalVersionImpl v = (InternalVersionImpl) tempVersionCache.remove(child.getUUID());
+        InternalVersionImpl v = (InternalVersionImpl) tempVersionCache.remove(child.getNodeId());
         if (v != null) {
             v.clear();
         }
@@ -192,7 +193,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public String getId() {
+    public NodeId getId() {
         return historyId;
     }
 
@@ -243,15 +244,15 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public boolean hasVersion(String uuid) {
-        return versionCache.containsKey(uuid);
+    public boolean hasVersion(NodeId id) {
+        return versionCache.containsKey(id);
     }
 
     /**
      * {@inheritDoc}
      */
-    public InternalVersion getVersion(String uuid) {
-        return (InternalVersion) versionCache.get(uuid);
+    public InternalVersion getVersion(NodeId id) {
+        return (InternalVersion) versionCache.get(id);
     }
 
     /**
@@ -278,8 +279,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public String getVersionableUUID() {
-        return versionableId;
+    public UUID getVersionableUUID() {
+        return versionableId.getUUID();
     }
 
     /**
@@ -292,8 +293,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public String getVersionLabelsUUID() {
-        return labelNode.getUUID();
+    public NodeId getVersionLabelsId() {
+        return labelNode.getNodeId();
     }
 
     /**
@@ -383,7 +384,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             if (version == null) {
                 labelNode.removeProperty(label);
             } else {
-                labelNode.setPropertyValue(label, InternalValue.create(new UUID(version.getId())));
+                labelNode.setPropertyValue(label, InternalValue.create(version.getId().getUUID()));
             }
             labelNode.store();
         } catch (RepositoryException e) {
@@ -418,15 +419,15 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         Value[] preds = src.getProperty(QName.JCR_PREDECESSORS).getValues();
         InternalValue[] predecessors = new InternalValue[preds.length];
         for (int i = 0; i < preds.length; i++) {
-            String predId = preds[i].getString();
+            UUID predId = UUID.fromString(preds[i].getString());
             // check if version exist
-            if (!versionCache.containsKey(predId)) {
+            if (!versionCache.containsKey(new NodeId(predId))) {
                 throw new RepositoryException("invalid predecessor in source node");
             }
-            predecessors[i] = InternalValue.create(new UUID(predId));
+            predecessors[i] = InternalValue.create(predId);
         }
 
-        String versionId = UUID.randomUUID().toString();
+        NodeId versionId = new NodeId(UUID.randomUUID());
         NodeStateEx vNode = node.addNode(name, QName.NT_VERSION, versionId, true);
 
         // initialize 'created' and 'predecessors'
@@ -464,7 +465,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      */
     static InternalVersionHistoryImpl create(AbstractVersionManager vMgr,
                                              NodeStateEx parent,
-                                             String historyId, QName name,
+                                             NodeId historyId, QName name,
                                              NodeState nodeState)
             throws RepositoryException {
 
@@ -472,14 +473,14 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         NodeStateEx pNode = parent.addNode(name, QName.NT_VERSIONHISTORY, historyId, true);
 
         // set the versionable uuid
-        pNode.setPropertyValue(QName.JCR_VERSIONABLEUUID, InternalValue.create(nodeState.getUUID()));
+        String versionableUUID = nodeState.getNodeId().getUUID().toString();
+        pNode.setPropertyValue(QName.JCR_VERSIONABLEUUID, InternalValue.create(versionableUUID));
 
         // create label node
         pNode.addNode(QName.JCR_VERSIONLABELS, QName.NT_VERSIONLABELS, null, false);
 
         // create root version
-        String versionId = UUID.randomUUID().toString();
-
+        NodeId versionId = new NodeId(UUID.randomUUID());
         NodeStateEx vNode = pNode.addNode(QName.JCR_ROOTVERSION, QName.NT_VERSION, versionId, true);
 
         // initialize 'created' and 'predecessors'
@@ -491,7 +492,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         NodeStateEx node = vNode.addNode(QName.JCR_FROZENNODE, QName.NT_FROZENNODE, null, true);
 
         // initialize the internal properties
-        node.setPropertyValue(QName.JCR_FROZENUUID, InternalValue.create(nodeState.getUUID()));
+        node.setPropertyValue(QName.JCR_FROZENUUID, InternalValue.create(versionableUUID));
         node.setPropertyValue(QName.JCR_FROZENPRIMARYTYPE,
                 InternalValue.create(nodeState.getNodeTypeName()));
 

@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import org.apache.jackrabbit.core.NodeId;
+
 import javax.jcr.version.VersionException;
 
 /**
@@ -30,7 +32,7 @@ public interface InternalFrozenVersionHistory extends InternalFreeze {
      *
      * @return the id of the version history
      */
-    String getVersionHistoryId();
+    NodeId getVersionHistoryId();
 
     /**
      * Returns the version history that was assigned to the node at
@@ -48,7 +50,7 @@ public interface InternalFrozenVersionHistory extends InternalFreeze {
      *
      * @return the id of the base version
      */
-    String getBaseVersionId();
+    NodeId getBaseVersionId();
 
     /**
      * Returns the base version that was assigned to the node at

@@ -44,7 +44,7 @@ public class PropertyStateTupleBinding extends TupleBinding {
 
     public Object entryToObject(TupleInput in) {
 
-        PropertyState state = new PropertyState(id.getName(), id.getParentUUID(), PropertyState.STATUS_NEW, false);
+        PropertyState state = new PropertyState(id, PropertyState.STATUS_NEW, false);
 
         try {
             Serializer.deserialize(state, in, blobStore);

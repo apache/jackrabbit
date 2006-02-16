@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.uuid.UUID;
+
 /**
  * Node identifier. An instance of this class identifies a node using its UUID.
  * Once created a node identifier instance is immutable.
@@ -26,14 +28,14 @@ public class NodeId extends ItemId {
     static final long serialVersionUID = 7026219091360041109L;
 
     /** UUID of the identified node */
-    private final String uuid;
+    private final UUID uuid;
 
     /**
      * Creates a node identifier instance for the identified node.
      *
      * @param uuid node UUID
      */
-    public NodeId(String uuid) {
+    public NodeId(UUID uuid) {
         if (uuid == null) {
             throw new IllegalArgumentException("uuid can not be null");
         }
@@ -56,7 +58,7 @@ public class NodeId extends ItemId {
      *
      * @return node UUID
      */
-    public String getUUID() {
+    public UUID getUUID() {
         return uuid;
     }
 
@@ -76,7 +78,7 @@ public class NodeId extends ItemId {
         if (s == null) {
             throw new IllegalArgumentException("invalid NodeId literal");
         }
-        return new NodeId(s);
+        return new NodeId(new UUID(s));
     }
 
     //-------------------------------------------< java.lang.Object overrides >
@@ -95,8 +97,7 @@ public class NodeId extends ItemId {
             return true;
         }
         if (obj instanceof NodeId) {
-            NodeId other = (NodeId) obj;
-            return uuid.equals(other.uuid);
+            return uuid.equals(((NodeId) obj).uuid);
         }
         return false;
     }
@@ -108,7 +109,7 @@ public class NodeId extends ItemId {
      * @see Object#toString()
      */
     public String toString() {
-        return uuid;
+        return uuid.toString();
     }
 
     /**

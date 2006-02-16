@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,11 +34,6 @@ public class NodeReferences implements Serializable {
      * Serial UID
      */
     static final long serialVersionUID = 7007727035982680717L;
-
-    /**
-     * Logger instance
-     */
-    private static Logger log = Logger.getLogger(NodeReferences.class);
 
     /**
      * id of the target node
@@ -78,7 +73,7 @@ public class NodeReferences implements Serializable {
      *
      * @return UUID of the target id
      */
-    public String getUUID() {
+    public UUID getUUID() {
         return targetId.getUUID();
     }
 
@@ -93,7 +88,7 @@ public class NodeReferences implements Serializable {
     }
 
     /**
-     * @return
+     * @return the list of references
      */
     public List getReferences() {
         return Collections.unmodifiableList(references);
@@ -115,7 +110,8 @@ public class NodeReferences implements Serializable {
 
     /**
      * @param refId
-     * @return
+     * @return <code>true</code> if the reference was reomved;
+     *        <code>false</code> otherwise.
      */
     public boolean removeReference(PropertyId refId) {
         return references.remove(refId);

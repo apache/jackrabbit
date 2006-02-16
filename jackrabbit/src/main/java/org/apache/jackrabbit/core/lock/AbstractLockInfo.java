@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
 
 import javax.jcr.Session;
 
@@ -80,11 +81,11 @@ abstract class AbstractLockInfo {
     }
 
     /**
-     * Return the UUID of the lock holding node
-     * @return uuid
+     * Return the ID of the lock holding node
+     * @return the id
      */
-    public String getUUID() {
-        return lockToken.uuid;
+    public NodeId getId() {
+        return lockToken.id;
     }
 
     /**

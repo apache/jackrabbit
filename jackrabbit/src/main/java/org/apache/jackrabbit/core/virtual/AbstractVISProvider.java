@@ -118,7 +118,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
         if (id instanceof NodeId) {
             ItemState s;
             if (nodes.contains(id)) {
-                s = (ItemState) nodes.get(id);
+                s = nodes.get(id);
             } else if (id.equals(rootNodeId)) {
                 s = getRootState();
             } else {
@@ -135,7 +135,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      */
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
-        throw new NoSuchItemStateException(id.getUUID());
+        throw new NoSuchItemStateException(id.toString());
     }
 
     /**
@@ -181,7 +181,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * Checks if this provide has the node state of the given node id
      *
      * @param id
-     * @return
+     * @return <code>true</code> if it has the node state
      */
     protected abstract boolean internalHasNodeState(NodeId id);
 
@@ -200,13 +200,13 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * Checks if this provider has the property state of the given id.
      *
      * @param id
-     * @return
+     * @return <code>true</code> if it has the property state
      */
     protected boolean internalHasPropertyState(PropertyId id) {
 
         try {
             // get parent state
-            NodeState parent = (NodeState) getItemState(new NodeId(id.getParentUUID()));
+            NodeState parent = (NodeState) getItemState(id.getParentId());
 
             // handle some default prop states
             if (parent instanceof VirtualNodeState) {
@@ -230,7 +230,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
             throws NoSuchItemStateException, ItemStateException {
 
         // get parent state
-        NodeState parent = (NodeState) getItemState(new NodeId(id.getParentUUID()));
+        NodeState parent = (NodeState) getItemState(id.getParentId());
 
         // handle some default prop states
         if (parent instanceof VirtualNodeState) {
@@ -247,7 +247,8 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
                                                     boolean multiValued)
             throws RepositoryException {
         PropDef def = getApplicablePropertyDef(parent, name, type, multiValued);
-        VirtualPropertyState prop = new VirtualPropertyState(name, parent.getUUID());
+        PropertyId id = new PropertyId(parent.getNodeId(), name);
+        VirtualPropertyState prop = new VirtualPropertyState(id);
         prop.setType(type);
         prop.setMultiValued(multiValued);
         prop.setDefinitionId(def.getId());
@@ -258,7 +259,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * {@inheritDoc}
      */
     public VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
-                                            String uuid, QName nodeTypeName)
+                                            NodeId id, QName nodeTypeName)
             throws RepositoryException {
 
         NodeDefId def;
@@ -275,10 +276,10 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
 
         // create a new node state
         VirtualNodeState state;
-        if (uuid == null) {
-            uuid = UUID.randomUUID().toString();    // version 4 uuid
+        if (id == null) {
+            id = new NodeId(UUID.randomUUID());
         }
-        state = new VirtualNodeState(this, parent.getUUID(), uuid, nodeTypeName, new QName[0]);
+        state = new VirtualNodeState(this, parent.getNodeId(), id, nodeTypeName, new QName[0]);
         state.setDefinitionId(def);
 
         cache(state);
@@ -288,7 +289,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     /**
      * returns the node type manager
      *
-     * @return
+     * @return the node type manager
      */
     protected NodeTypeRegistry getNodeTypeRegistry() {
         return ntReg;
@@ -333,7 +334,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
                 Iterator iter = state.getChildNodeEntries().iterator();
                 while (iter.hasNext()) {
                     NodeState.ChildNodeEntry pe = (NodeState.ChildNodeEntry) iter.next();
-                    invalidateItem(new NodeId(pe.getUUID()), true);
+                    invalidateItem(pe.getId(), true);
                 }
             }
             state.notifyStateUpdated();
@@ -385,7 +386,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
         try {
             return ntReg.getEffectiveNodeType((QName[]) set.toArray(new QName[set.size()]));
         } catch (NodeTypeConflictException ntce) {
-            String msg = "internal error: failed to build effective node type for node " + parent.getUUID();
+            String msg = "internal error: failed to build effective node type for node " + parent.getNodeId();
             throw new RepositoryException(msg, ntce);
         }
     }

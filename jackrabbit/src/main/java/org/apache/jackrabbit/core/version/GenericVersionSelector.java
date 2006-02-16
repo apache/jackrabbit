@@ -80,7 +80,7 @@ public class GenericVersionSelector implements VersionSelector {
     /**
      * Returns the name hint.
      *
-     * @return
+     * @return the name hint.
      */
     public String getName() {
         return name;
@@ -98,7 +98,7 @@ public class GenericVersionSelector implements VersionSelector {
     /**
      * Returns the label hint
      *
-     * @return
+     * @return the label hint.
      */
     public String getLabel() {
         return label;
@@ -116,7 +116,7 @@ public class GenericVersionSelector implements VersionSelector {
     /**
      * Returns the date hint
      *
-     * @return
+     * @return the date hint.
      */
     public Calendar getDate() {
         return date;
@@ -135,7 +135,7 @@ public class GenericVersionSelector implements VersionSelector {
      * Returns the flag, if the latest version should be selected, if no
      * version can be found using the given hint.
      *
-     * @return
+     * @return <code>true</code> if it returns latest.
      */
     public boolean isReturnLatest() {
         return returnLatest;

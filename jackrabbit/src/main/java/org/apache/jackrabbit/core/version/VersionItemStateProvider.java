@@ -22,18 +22,17 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -106,7 +105,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
      * @inheritDoc
      */
     public VirtualNodeState createNodeState(VirtualNodeState parent, QName name,
-                                            String uuid, QName nodeTypeName)
+                                            NodeId id, QName nodeTypeName)
             throws RepositoryException {
         throw new IllegalStateException("VersionManager should never create a VirtualNodeState");
     }
@@ -129,12 +128,12 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
                 PropertyState prop = (PropertyState) item;
                 if (prop.getName().equals(QName.JCR_SUCCESSORS)) {
                     try {
-                        InternalVersion v = vMgr.getVersion(prop.getParentUUID());
+                        InternalVersion v = vMgr.getVersion(prop.getParentId());
                         if (v != null) {
                             InternalVersion[] succs = v.getSuccessors();
                             InternalValue[] succV = new InternalValue[succs.length];
                             for (int i = 0; i < succs.length; i++) {
-                                succV[i] = InternalValue.create(new UUID(succs[i].getId()));
+                                succV[i] = InternalValue.create(succs[i].getId().getUUID());
                             }
                             prop.setValues(succV);
                         }
@@ -162,7 +161,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
 
     /**
      * @inheritDoc
-     */ 
+     */
     public boolean setNodeReferences(NodeReferences refs) {
         return vMgr.setNodeReferences(refs);
     }

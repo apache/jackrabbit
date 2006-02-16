@@ -426,11 +426,11 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             Serializer.serialize(state, out);
 
             // store in serialized format in map for better memory efficiency
-            stateStore.put(state.getId(), out.toByteArray());
+            stateStore.put(state.getNodeId(), out.toByteArray());
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write node state: " + state.getId();
+            String msg = "failed to write node state: " + state.getNodeId();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -451,11 +451,11 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             Serializer.serialize(state, out, blobStore);
 
             // store in serialized format in map for better memory efficiency
-            stateStore.put(state.getId(), out.toByteArray());
+            stateStore.put(state.getPropertyId(), out.toByteArray());
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to store property state: " + state.getId();
+            String msg = "failed to store property state: " + state.getPropertyId();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -470,7 +470,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         }
 
         // remove node state
-        stateStore.remove(state.getId());
+        stateStore.remove(state.getNodeId());
     }
 
     /**
@@ -497,7 +497,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         }
 
         // remove property state
-        stateStore.remove(state.getId());
+        stateStore.remove(state.getPropertyId());
     }
 
     /**
@@ -512,7 +512,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
 
         byte[] data = (byte[]) refsStore.get(id);
         if (data == null) {
-            throw new NoSuchItemStateException(id.getUUID());
+            throw new NoSuchItemStateException(id.toString());
         }
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);

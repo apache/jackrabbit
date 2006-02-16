@@ -16,24 +16,24 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 import org.apache.jackrabbit.core.config.SearchConfig;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.query.AbstractQueryImpl;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryImpl;
-import org.apache.jackrabbit.core.query.AbstractQueryImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.Path;
 import org.apache.log4j.Logger;
 
 import javax.jcr.NamespaceException;
@@ -46,16 +46,17 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.Properties;
 import java.util.WeakHashMap;
-import java.util.Map;
-import java.util.Collections;
 
 /**
  * Acts as a global entry point to execute queries and index nodes.
@@ -135,7 +136,7 @@ public class SearchManager implements SynchronousEventListener {
     /**
      * The root node for this search manager.
      */
-    private final String rootNodeUUID;
+    private final NodeId rootNodeId;
 
     /**
      * QueryHandler where query execution is delegated to
@@ -154,10 +155,10 @@ public class SearchManager implements SynchronousEventListener {
     private final NamespaceResolver nsResolver;
 
     /**
-     * UUID of the node that should be excluded from indexing or <code>null</code>
+     * ID of the node that should be excluded from indexing or <code>null</code>
      * if no node should be excluded.
      */
-    private final String excludedNodeUUID;
+    private final NodeId excludedNodeId;
 
     /**
      * Path that will be excluded from indexing.
@@ -200,10 +201,10 @@ public class SearchManager implements SynchronousEventListener {
      * @param nsReg            the namespace registry.
      * @param ntReg the node type registry.
      * @param itemMgr the shared item state manager.
-     * @param rootNodeUUID     the uuid of the root node.
+     * @param rootNodeId     the id of the root node.
      * @param parentMgr        the parent search manager or <code>null</code> if
      *                         there is no parent search manager.
-     * @param excludedNodeUUID uuid of the node that should be excluded from
+     * @param excludedNodeId id of the node that should be excluded from
      *                         indexing. Any descendant of that node will also
      *                         be excluded from indexing.
      * @throws RepositoryException if the search manager cannot be initialized
@@ -212,16 +213,16 @@ public class SearchManager implements SynchronousEventListener {
                          final NamespaceRegistry nsReg,
                          NodeTypeRegistry ntReg,
                          ItemStateManager itemMgr,
-                         String rootNodeUUID,
+                         NodeId rootNodeId,
                          SearchManager parentMgr,
-                         String excludedNodeUUID) throws RepositoryException {
+                         NodeId excludedNodeId) throws RepositoryException {
         this.fs = config.getFileSystem();
         this.config = config;
         this.ntReg = ntReg;
         this.itemMgr = itemMgr;
-        this.rootNodeUUID = rootNodeUUID;
+        this.rootNodeId = rootNodeId;
         this.parentHandler = (parentMgr != null) ? parentMgr.handler : null;
-        this.excludedNodeUUID = excludedNodeUUID;
+        this.excludedNodeId = excludedNodeId;
         this.nsResolver = new AbstractNamespaceResolver() {
             public String getURI(String prefix) throws NamespaceException {
                 try {
@@ -263,9 +264,9 @@ public class SearchManager implements SynchronousEventListener {
             idleTime = DEFAULT_IDLE_TIME;
         }
 
-        if (excludedNodeUUID != null) {
-            HierarchyManagerImpl hmgr = new HierarchyManagerImpl(rootNodeUUID, itemMgr, nsResolver);
-            excludePath = hmgr.getPath(new NodeId(excludedNodeUUID));
+        if (excludedNodeId != null) {
+            HierarchyManagerImpl hmgr = new HierarchyManagerImpl(rootNodeId, itemMgr, nsResolver);
+            excludePath = hmgr.getPath(excludedNodeId);
         }
 
         // initialize query handler
@@ -375,9 +376,9 @@ public class SearchManager implements SynchronousEventListener {
         }
 
         // nodes that need to be removed from the index.
-        Set removedNodes = new HashSet();
+        final Set removedNodes = new HashSet();
         // nodes that need to be added to the index.
-        Set addedNodes = new HashSet();
+        final Set addedNodes = new HashSet();
         // property events
         List propEvents = new ArrayList();
 
@@ -392,9 +393,9 @@ public class SearchManager implements SynchronousEventListener {
             }
             long type = e.getType();
             if (type == Event.NODE_ADDED) {
-                addedNodes.add(e.getChildUUID());
+                addedNodes.add(e.getChildId());
             } else if (type == Event.NODE_REMOVED) {
-                removedNodes.add(e.getChildUUID());
+                removedNodes.add(e.getChildId());
             } else {
                 propEvents.add(e);
             }
@@ -403,42 +404,76 @@ public class SearchManager implements SynchronousEventListener {
         // sort out property events
         for (int i = 0; i < propEvents.size(); i++) {
             EventImpl event = (EventImpl) propEvents.get(i);
-            String nodeUUID = event.getParentUUID();
+            NodeId nodeId = event.getParentId();
             if (event.getType() == Event.PROPERTY_ADDED) {
-                if (addedNodes.add(nodeUUID)) {
+                if (addedNodes.add(nodeId)) {
                     // only property added
                     // need to re-index
-                    removedNodes.add(nodeUUID);
+                    removedNodes.add(nodeId);
                 } else {
                     // the node where this prop belongs to is also new
                 }
             } else if (event.getType() == Event.PROPERTY_CHANGED) {
                 // need to re-index
-                addedNodes.add(nodeUUID);
-                removedNodes.add(nodeUUID);
+                addedNodes.add(nodeId);
+                removedNodes.add(nodeId);
             } else {
                 // property removed event is only generated when node still exists
-                addedNodes.add(nodeUUID);
-                removedNodes.add(nodeUUID);
+                addedNodes.add(nodeId);
+                removedNodes.add(nodeId);
             }
         }
 
-        Iterator addedStates = new AbstractIteratorDecorator(addedNodes.iterator()) {
+        NodeStateIterator addedStates = new NodeStateIterator() {
+            private final Iterator iter = addedNodes.iterator();
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+            public boolean hasNext() {
+                return iter.hasNext();
+            }
+
             public Object next() {
-                ItemState item = null;
-                String uuid = (String) super.next();
+                return nextNodeState();
+            }
+
+            public NodeState nextNodeState() {
+                NodeState item = null;
+                NodeId id= (NodeId) iter.next();
                 try {
-                    item = itemMgr.getItemState(new NodeId(uuid));
+                    item = (NodeState) itemMgr.getItemState(id);
                 } catch (ItemStateException e) {
-                    log.error("Unable to index node " + uuid + ": does not exist");
+                    log.error("Unable to index node " + id + ": does not exist");
                 }
                 return item;
             }
         };
+        NodeIdIterator removedIds = new NodeIdIterator() {
+            private final Iterator iter = removedNodes.iterator();
+
+            public NodeId nextNodeId() throws NoSuchElementException {
+                return (NodeId) iter.next();
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+            public boolean hasNext() {
+                return iter.hasNext();
+            }
+
+            public Object next() {
+                return nextNodeId();
+            }
+        };
+
         if (removedNodes.size() > 0 || addedNodes.size() > 0) {
             try {
                 ensureInitialized();
-                handler.updateNodes(removedNodes.iterator(), addedStates);
+                handler.updateNodes(removedIds, addedStates);
             } catch (RepositoryException e) {
                 log.error("Error indexing node.", e);
             } catch (IOException e) {
@@ -489,8 +524,8 @@ public class SearchManager implements SynchronousEventListener {
         try {
             handler = (QueryHandler) config.newInstance();
             QueryHandlerContext context
-                    = new QueryHandlerContext(fs, itemMgr, rootNodeUUID,
-                            ntReg, parentHandler, excludedNodeUUID);
+                    = new QueryHandlerContext(fs, itemMgr, rootNodeId,
+                            ntReg, parentHandler, excludedNodeId);
             handler.init(context);
         } catch (Exception e) {
             throw new RepositoryException(e.getMessage(), e);

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.QName;
@@ -36,7 +37,7 @@ public interface VersionManager {
      * returns the virtual item state provider that exposes the internal versions
      * as items.
      *
-     * @return
+     * @return the virtual item state provider.
      */
     VirtualItemStateProvider getVirtualItemStateProvider();
 
@@ -48,7 +49,7 @@ public interface VersionManager {
      * @param node
      * @return
      * @throws RepositoryException
-     * @see #getVersionHistory(Session, NodeState) 
+     * @see #getVersionHistory(Session, NodeState)
      */
     VersionHistory createVersionHistory(Session session, NodeState node)
             throws RepositoryException;
@@ -111,36 +112,36 @@ public interface VersionManager {
      * Checks if the version history with the given id exists
      *
      * @param id
-     * @return
+     * @return <code>true</code> if the version history exists.
      */
-    boolean hasVersionHistory(String id);
+    boolean hasVersionHistory(NodeId id);
 
     /**
      * Returns the version history with the given id
      *
      * @param id
-     * @return
+     * @return the version history.
      * @throws RepositoryException
      */
-    InternalVersionHistory getVersionHistory(String id)
+    InternalVersionHistory getVersionHistory(NodeId id)
             throws RepositoryException;
 
     /**
      * Checks if the version with the given id exists
      *
      * @param id
-     * @return
+     * @return <code>true</code> if the version exists.
      */
-    boolean hasVersion(String id);
+    boolean hasVersion(NodeId id);
 
     /**
      * Returns the version with the given id
      *
      * @param id
-     * @return
+     * @return the version.
      * @throws RepositoryException
      */
-    InternalVersion getVersion(String id) throws RepositoryException;
+    InternalVersion getVersion(NodeId id) throws RepositoryException;
 
     /**
      * Close this version manager. After having closed a persistence

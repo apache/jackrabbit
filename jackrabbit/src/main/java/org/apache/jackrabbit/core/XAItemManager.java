@@ -18,19 +18,14 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.AbstractVersion;
-import org.apache.jackrabbit.core.version.XAVersion;
 import org.apache.jackrabbit.core.version.AbstractVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.XAVersion;
 import org.apache.jackrabbit.core.version.XAVersionHistory;
-import org.apache.jackrabbit.core.version.XAVersionManager;
-import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.nodetype.NodeDefinition;
 
 /**
@@ -39,23 +34,18 @@ import javax.jcr.nodetype.NodeDefinition;
 public class XAItemManager extends ItemManager {
 
     /**
-     * Logger instance.
-     */
-    private static Logger log = Logger.getLogger(XAItemManager.class);
-
-    /**
      * Create a new instance of this class.
      * @param itemStateProvider the item state provider associated with
      *                          the new instance
      * @param session           the session associated with the new instance
      * @param rootNodeDef       the definition of the root node
-     * @param rootNodeUUID      the UUID of the root node
+     * @param rootNodeId        the id of the root node
      */
     protected XAItemManager(ItemStateManager itemStateProvider, HierarchyManager hierMgr,
                 SessionImpl session, NodeDefinition rootNodeDef,
-                String rootNodeUUID) {
+                NodeId rootNodeId) {
 
-        super(itemStateProvider, hierMgr, session, rootNodeDef, rootNodeUUID);
+        super(itemStateProvider, hierMgr, session, rootNodeDef, rootNodeId);
     }
 
     /**
@@ -66,7 +56,7 @@ public class XAItemManager extends ItemManager {
             ItemLifeCycleListener[] listeners) throws RepositoryException {
 
         InternalVersion version =
-                session.getVersionManager().getVersion(id.getUUID());
+                session.getVersionManager().getVersion(id);
         return new XAVersion(this, session, id, state, def, listeners, version);
     }
 
@@ -78,7 +68,7 @@ public class XAItemManager extends ItemManager {
             ItemLifeCycleListener[] listeners) throws RepositoryException {
 
         InternalVersionHistory history =
-                session.getVersionManager().getVersionHistory(id.getUUID());
+                session.getVersionManager().getVersionHistory(id);
         return new XAVersionHistory(this, session, id, state, def, listeners, history);
     }
 }

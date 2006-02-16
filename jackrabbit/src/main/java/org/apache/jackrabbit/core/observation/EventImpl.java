@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
@@ -112,19 +113,19 @@ public final class EventImpl implements Event {
      *
      * @return the uuid of the parent node.
      */
-    public String getParentUUID() {
-        return eventState.getParentUUID();
+    public NodeId getParentId() {
+        return eventState.getParentId();
     }
 
     /**
-     * Returns the UUID of a child node operation.
+     * Returns the id of a child node operation.
      * If this <code>Event</code> was generated for a property
      * operation this method returns <code>null</code>.
      *
-     * @return the UUID of a child node operation.
+     * @return the id of a child node operation.
      */
-    public String getChildUUID() {
-        return eventState.getChildUUID();
+    public NodeId getChildId() {
+        return eventState.getChildId();
     }
 
     /**

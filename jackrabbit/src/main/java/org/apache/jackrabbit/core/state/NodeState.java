@@ -21,6 +21,7 @@ import org.apache.commons.collections.OrderedMapIterator;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.name.QName;
 
@@ -49,34 +50,39 @@ public class NodeState extends ItemState {
     static final long serialVersionUID = -4116945555530446652L;
 
     /**
-     * the uuid of this node
-     */
-    protected String uuid;
-
-    /**
      * the name of this node's primary type
      */
-    protected QName nodeTypeName;
+    private QName nodeTypeName;
 
     /**
      * the names of this node's mixin types
      */
-    protected HashSet mixinTypeNames = new HashSet();
+    private HashSet mixinTypeNames = new HashSet();
+
+    /**
+     * the id of this node state.
+     */
+    private NodeId id;
+
+    /**
+     * the id of the parent node or <code>null</code> if this is the root node
+     */
+    private NodeId parentId;
 
     /**
      * id of this node's definition
      */
-    protected NodeDefId defId;
+    private NodeDefId defId;
 
     /**
      * insertion-ordered collection of ChildNodeEntry objects
      */
-    protected ChildNodeEntries childNodeEntries = new ChildNodeEntries();
+    private ChildNodeEntries childNodeEntries = new ChildNodeEntries();
 
     /**
      * set of property names (QName objects)
      */
-    protected HashSet propertyNames = new HashSet();
+    private HashSet propertyNames = new HashSet();
 
     /**
      * Listeners (weak references)
@@ -85,7 +91,8 @@ public class NodeState extends ItemState {
             new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     /**
-     * Constructor
+     * Constructs a new node state that is initially connected to an overlayed
+     * state.
      *
      * @param overlayedState the backing node state being overlayed
      * @param initialStatus  the initial status of the node state object
@@ -93,27 +100,25 @@ public class NodeState extends ItemState {
      */
     public NodeState(NodeState overlayedState, int initialStatus,
                      boolean isTransient) {
-        super(initialStatus, isTransient);
-
-        connect(overlayedState);
+        super(overlayedState, initialStatus, isTransient);
         pull();
     }
 
     /**
-     * Constructor
+     * Constructs a new node state this is not connected.
      *
-     * @param uuid          the UUID of the this node
+     * @param id            the Id of the this node
      * @param nodeTypeName  node type of this node
-     * @param parentUUID    the UUID of the parent node
+     * @param parentId      the Id of the parent node
      * @param initialStatus the initial status of the node state object
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    public NodeState(String uuid, QName nodeTypeName, String parentUUID,
+    public NodeState(NodeId id, QName nodeTypeName, NodeId parentId,
                      int initialStatus, boolean isTransient) {
-        super(parentUUID, new NodeId(uuid), initialStatus, isTransient);
-
+        super(initialStatus, isTransient);
+        this.id = id;
+        this.parentId = parentId;
         this.nodeTypeName = nodeTypeName;
-        this.uuid = uuid;
     }
 
     /**
@@ -121,19 +126,18 @@ public class NodeState extends ItemState {
      */
     protected synchronized void copy(ItemState state) {
         synchronized (state) {
-            super.copy(state);
-
             NodeState nodeState = (NodeState) state;
-            nodeTypeName = nodeState.getNodeTypeName();
+            id = nodeState.id;
+            parentId = nodeState.parentId;
+            nodeTypeName = nodeState.nodeTypeName;
             mixinTypeNames = (HashSet) nodeState.mixinTypeNames.clone();
-            defId = nodeState.getDefinitionId();
-            uuid = nodeState.getUUID();
+            defId = nodeState.defId;
             propertyNames = (HashSet) nodeState.propertyNames.clone();
             childNodeEntries = (ChildNodeEntries) nodeState.childNodeEntries.clone();
         }
     }
 
-    //-------------------------------------------------------< public methods >
+    //-----------------------------------------------------< public methods >---
     /**
      * Determines if this item state represents a node.
      *
@@ -142,6 +146,40 @@ public class NodeState extends ItemState {
      */
     public final boolean isNode() {
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeId getParentId() {
+        return parentId;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ItemId getId() {
+        return id;
+    }
+
+    /**
+     * Returns the id of this node state.
+     * @return the id of this node state.
+     */
+    public NodeId getNodeId() {
+        return id;
+    }
+
+    /**
+     * Sets the Id of the parent <code>NodeState</code>.
+     *
+     * @param parentId the parent <code>NodeState</code>'s Id or <code>null</code>
+     * if either this node state should represent the root node or this node
+     * state should be 'free floating', i.e. detached from the repository's
+     * hierarchy.
+     */
+    public void setParentId(NodeId parentId) {
+        this.parentId = parentId;
     }
 
     /**
@@ -191,15 +229,6 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns the UUID of the repository node this node state is representing.
-     *
-     * @return the UUID
-     */
-    public String getUUID() {
-        return uuid;
-    }
-
-    /**
      * Determines if there are any child node entries.
      *
      * @return <code>true</code> if there are child node entries,
@@ -225,12 +254,12 @@ public class NodeState extends ItemState {
      * Determines if there is a <code>ChildNodeEntry</code> with the
      * specified <code>uuid</code>.
      *
-     * @param uuid UUID of the child node
+     * @param id the id of the child node
      * @return <code>true</code> if there is a <code>ChildNodeEntry</code> with
      *         the specified <code>name</code>.
      */
-    public synchronized boolean hasChildNodeEntry(String uuid) {
-        return childNodeEntries.get(uuid) != null;
+    public synchronized boolean hasChildNodeEntry(NodeId id) {
+        return childNodeEntries.get(id) != null;
     }
 
     /**
@@ -275,14 +304,14 @@ public class NodeState extends ItemState {
      * Returns the <code>ChildNodeEntry</code> with the specified uuid or
      * <code>null</code> if there's no such entry.
      *
-     * @param uuid UUID of the child node
+     * @param id the id of the child node
      * @return the <code>ChildNodeEntry</code> with the specified uuid or
      *         <code>null</code> if there's no such entry.
      * @see #addChildNodeEntry
      * @see #removeChildNodeEntry
      */
-    public synchronized ChildNodeEntry getChildNodeEntry(String uuid) {
-        return childNodeEntries.get(uuid);
+    public synchronized ChildNodeEntry getChildNodeEntry(NodeId id) {
+        return childNodeEntries.get(id);
     }
 
     /**
@@ -313,12 +342,12 @@ public class NodeState extends ItemState {
      * Adds a new <code>ChildNodeEntry</code>.
      *
      * @param nodeName <code>QName</code> object specifying the name of the new entry.
-     * @param uuid     UUID the new entry is refering to.
+     * @param id The id the new entry is refering to.
      * @return the newly added <code>ChildNodeEntry</code>
      */
     public synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
-                                                         String uuid) {
-        ChildNodeEntry entry = childNodeEntries.add(nodeName, uuid);
+                                                         NodeId id) {
+        ChildNodeEntry entry = childNodeEntries.add(nodeName, id);
         notifyNodeAdded(entry);
         return entry;
     }
@@ -337,7 +366,7 @@ public class NodeState extends ItemState {
         ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
         if (oldEntry != null) {
             ChildNodeEntry newEntry =
-                    childNodeEntries.add(newName, oldEntry.getUUID());
+                    childNodeEntries.add(newName, oldEntry.getId());
             notifyNodeAdded(newEntry);
             notifyNodeRemoved(oldEntry);
             return true;
@@ -364,12 +393,12 @@ public class NodeState extends ItemState {
     /**
      * Removes a <code>ChildNodeEntry</code>.
      *
-     * @param uuid UUID of the entry to be removed
+     * @param id the Id of the entry to be removed
      * @return <code>true</code> if the specified child node entry was found
      *         in the list of child node entries and could be removed.
      */
-    public synchronized boolean removeChildNodeEntry(String uuid) {
-        ChildNodeEntry entry = childNodeEntries.remove(uuid);
+    public synchronized boolean removeChildNodeEntry(NodeId id) {
+        ChildNodeEntry entry = childNodeEntries.remove(id);
         if (entry != null) {
             notifyNodeRemoved(entry);
         }
@@ -583,7 +612,7 @@ public class NodeState extends ItemState {
         for (int i = 0; i < ours.size();) {
             ChildNodeEntry entry = (ChildNodeEntry) ours.get(i);
             ChildNodeEntry other = (ChildNodeEntry) others.get(i);
-            if (entry == other || entry.getUUID().equals(other.getUUID())) {
+            if (entry == other || entry.id.equals(other.id)) {
                 // no reorder, move to next child entry
                 i++;
             } else {
@@ -599,10 +628,10 @@ public class NodeState extends ItemState {
                 if (i + 1 < ours.size()) {
                     // if entry is the next in the other list then probably
                     // the other entry at position <code>i</code> was reordered
-                    if (entry.getUUID().equals(((ChildNodeEntry) others.get(i + 1)).getUUID())) {
+                    if (entry.id.equals(((ChildNodeEntry) others.get(i + 1)).id)) {
                         // scan for the uuid of the other entry in our list
                         for (int j = i; j < ours.size(); j++) {
-                            if (((ChildNodeEntry) ours.get(j)).getUUID().equals(other.uuid)) {
+                            if (((ChildNodeEntry) ours.get(j)).id.equals(other.id)) {
                                 // found it
                                 entry = (ChildNodeEntry) ours.get(j);
                                 break;
@@ -615,12 +644,12 @@ public class NodeState extends ItemState {
                 // remove the entry from both lists
                 // entries > i are already cleaned
                 for (int j = i; j < ours.size(); j++) {
-                    if (((ChildNodeEntry) ours.get(j)).getUUID().equals(entry.getUUID())) {
+                    if (((ChildNodeEntry) ours.get(j)).id.equals(entry.id)) {
                         ours.remove(j);
                     }
                 }
                 for (int j = i; j < ours.size(); j++) {
-                    if (((ChildNodeEntry) others.get(j)).getUUID().equals(entry.getUUID())) {
+                    if (((ChildNodeEntry) others.get(j)).id.equals(entry.id)) {
                         others.remove(j);
                     }
                 }
@@ -680,7 +709,7 @@ public class NodeState extends ItemState {
                 NodeStateListener l = (NodeStateListener) iter.next();
                 if (l != null) {
                     l.nodeAdded(this, added.getName(),
-                            added.getIndex(), added.getUUID());
+                            added.getIndex(), added.getId());
                 }
             }
         }
@@ -711,7 +740,7 @@ public class NodeState extends ItemState {
                 NodeStateListener l = (NodeStateListener) iter.next();
                 if (l != null) {
                     l.nodeRemoved(this, removed.getName(),
-                            removed.getIndex(), removed.getUUID());
+                            removed.getIndex(), removed.getId());
                 }
             }
         }
@@ -740,7 +769,7 @@ public class NodeState extends ItemState {
      */
     private static class ChildNodeEntries implements List, Cloneable, Serializable {
 
-        // insertion-ordered map of entries (key=uuid, value=entry)
+        // insertion-ordered map of entries (key=NodeId, value=entry)
         LinkedMap entries;
         // map used for lookup by name
         // (key=name, value=either a single entry or a list of sns entries)
@@ -751,8 +780,8 @@ public class NodeState extends ItemState {
             nameMap = new HashMap();
         }
 
-        ChildNodeEntry get(String uuid) {
-            return (ChildNodeEntry) entries.get(uuid);
+        ChildNodeEntry get(NodeId id) {
+            return (ChildNodeEntry) entries.get(id);
         }
 
         List get(QName nodeName) {
@@ -793,7 +822,7 @@ public class NodeState extends ItemState {
             return null;
         }
 
-        ChildNodeEntry add(QName nodeName, String uuid) {
+        ChildNodeEntry add(QName nodeName, NodeId id) {
             List siblings = null;
             int index = 0;
             Object obj = nameMap.get(nodeName);
@@ -813,13 +842,13 @@ public class NodeState extends ItemState {
 
             index++;
 
-            ChildNodeEntry entry = new ChildNodeEntry(nodeName, uuid, index);
+            ChildNodeEntry entry = new ChildNodeEntry(nodeName, id, index);
             if (siblings != null) {
                 siblings.add(entry);
             } else {
                 nameMap.put(nodeName, entry);
             }
-            entries.put(uuid, entry);
+            entries.put(id, entry);
 
             return entry;
         }
@@ -829,7 +858,7 @@ public class NodeState extends ItemState {
             while (iter.hasNext()) {
                 ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                 // delegate to add(QName, String) to maintain consistency
-                add(entry.getName(), entry.getUUID());
+                add(entry.getName(), entry.getId());
             }
         }
 
@@ -850,7 +879,7 @@ public class NodeState extends ItemState {
                 }
                 ChildNodeEntry removedEntry = (ChildNodeEntry) obj;
                 nameMap.remove(nodeName);
-                entries.remove(removedEntry.getUUID());
+                entries.remove(removedEntry.getId());
                 return removedEntry;
             }
 
@@ -863,16 +892,16 @@ public class NodeState extends ItemState {
             // remove from siblings list
             ChildNodeEntry removedEntry = (ChildNodeEntry) siblings.remove(index - 1);
             // remove from ordered entries map
-            entries.remove(removedEntry.getUUID());
+            entries.remove(removedEntry.getId());
 
             // update indices of subsequent same-name siblings
             for (int i = index - 1; i < siblings.size(); i++) {
                 ChildNodeEntry oldEntry = (ChildNodeEntry) siblings.get(i);
-                ChildNodeEntry newEntry = new ChildNodeEntry(nodeName, oldEntry.getUUID(), oldEntry.getIndex() - 1);
+                ChildNodeEntry newEntry = new ChildNodeEntry(nodeName, oldEntry.getId(), oldEntry.getIndex() - 1);
                 // overwrite old entry with updated entry in siblings list
                 siblings.set(i, newEntry);
                 // overwrite old entry with updated entry in ordered entries map
-                entries.put(newEntry.getUUID(), newEntry);
+                entries.put(newEntry.getId(), newEntry);
             }
 
             // clean up name lookup map if necessary
@@ -890,18 +919,31 @@ public class NodeState extends ItemState {
             return removedEntry;
         }
 
-        ChildNodeEntry remove(String uuid) {
-            ChildNodeEntry entry = (ChildNodeEntry) entries.get(uuid);
+        /**
+         * Removes the child node entry with the given id
+         * @param id
+         * @return the removed entry or <code>null</code>
+         */
+        ChildNodeEntry remove(NodeId id) {
+            ChildNodeEntry entry = (ChildNodeEntry) entries.get(id);
             if (entry != null) {
                 return remove(entry.getName(), entry.getIndex());
             }
             return entry;
         }
 
+        /**
+         * Removes the child node entry
+         * @param entry
+         * @return the removed entry or <code>null</code>
+         */
         public ChildNodeEntry remove(ChildNodeEntry entry) {
             return remove(entry.getName(), entry.getIndex());
         }
 
+        /**
+         * Removes all child node entries
+         */
         public void removeAll() {
             nameMap.clear();
             entries.clear();
@@ -932,7 +974,7 @@ public class NodeState extends ItemState {
             Iterator iter = iterator();
             while (iter.hasNext()) {
                 ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-                ChildNodeEntry otherEntry = (ChildNodeEntry) other.get(entry.uuid);
+                ChildNodeEntry otherEntry = other.get(entry.id);
                 if (entry == otherEntry) {
                     continue;
                 }
@@ -968,7 +1010,7 @@ public class NodeState extends ItemState {
             Iterator iter = iterator();
             while (iter.hasNext()) {
                 ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-                ChildNodeEntry otherEntry = (ChildNodeEntry) other.get(entry.uuid);
+                ChildNodeEntry otherEntry = other.get(entry.id);
                 if (entry == otherEntry) {
                     result.add(entry);
                 } else if (otherEntry != null
@@ -983,7 +1025,7 @@ public class NodeState extends ItemState {
         //-------------------------------------------< unmodifiable List view >
         public boolean contains(Object o) {
             if (o instanceof ChildNodeEntry) {
-                return entries.containsKey(((ChildNodeEntry) o).uuid);
+                return entries.containsKey(((ChildNodeEntry) o).id);
             } else {
                 return false;
             }
@@ -1005,7 +1047,7 @@ public class NodeState extends ItemState {
 
         public int indexOf(Object o) {
             if (o instanceof ChildNodeEntry) {
-                return entries.indexOf(((ChildNodeEntry) o).uuid);
+                return entries.indexOf(((ChildNodeEntry) o).id);
             } else {
                 return -1;
             }
@@ -1122,7 +1164,7 @@ public class NodeState extends ItemState {
                 NodeState.ChildNodeEntry entry =
                         (NodeState.ChildNodeEntry) iter.next();
                 out.writeUTF(entry.getName().toString());   // name
-                out.writeUTF(entry.getUUID());  // uuid
+                out.writeUTF(entry.getId().toString());  // uuid
             }
         }
 
@@ -1134,8 +1176,8 @@ public class NodeState extends ItemState {
             short count = in.readShort();   // count
             for (int i = 0; i < count; i++) {
                 QName name = QName.valueOf(in.readUTF());    // name
-                String s = in.readUTF();   // uuid
-                add(name, s);
+                String s = in.readUTF();   // nodeid
+                add(name, NodeId.valueOf(s));
             }
         }
 
@@ -1223,18 +1265,18 @@ public class NodeState extends ItemState {
 
         private final QName name;
         private final int index; // 1-based index for same-name siblings
-        private final String uuid;
+        private final NodeId id;
 
-        private ChildNodeEntry(QName name, String uuid, int index) {
+        private ChildNodeEntry(QName name, NodeId id, int index) {
             if (name == null) {
                 throw new IllegalArgumentException("name can not be null");
             }
             this.name = name;
 
-            if (uuid == null) {
-                throw new IllegalArgumentException("uuid can not be null");
+            if (id == null) {
+                throw new IllegalArgumentException("id can not be null");
             }
-            this.uuid = uuid;
+            this.id = id;
 
             if (index < 1) {
                 throw new IllegalArgumentException("index is 1-based");
@@ -1242,8 +1284,8 @@ public class NodeState extends ItemState {
             this.index = index;
         }
 
-        public String getUUID() {
-            return uuid;
+        public NodeId getId() {
+            return id;
         }
 
         public QName getName() {
@@ -1261,14 +1303,14 @@ public class NodeState extends ItemState {
             }
             if (obj instanceof ChildNodeEntry) {
                 ChildNodeEntry other = (ChildNodeEntry) obj;
-                return (name.equals(other.name) && uuid.equals(other.uuid)
+                return (name.equals(other.name) && id.equals(other.id)
                         && index == other.index);
             }
             return false;
         }
 
         public String toString() {
-            return name.toString() + "[" + index + "] -> " + uuid;
+            return name.toString() + "[" + index + "] -> " + id;
         }
 
         public int hashCode() {
@@ -1277,7 +1319,7 @@ public class NodeState extends ItemState {
             if (h == 0) {
                 h = 17;
                 h = 37 * h + name.hashCode();
-                h = 37 * h + uuid.hashCode();
+                h = 37 * h + id.hashCode();
                 h = 37 * h + index;
                 hash = h;
             }

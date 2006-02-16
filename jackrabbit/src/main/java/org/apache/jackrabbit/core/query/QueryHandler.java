@@ -17,13 +17,15 @@
 package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.NodeStateIterator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * Defines an interface for the actual node indexing and query execution.
@@ -59,24 +61,24 @@ public interface QueryHandler {
     void addNode(NodeState node) throws RepositoryException, IOException;
 
     /**
-     * Deletes the Node with <code>UUID</code> from the search index.
-     * @param uuid the <code>UUID</code> of the node to delete.
+     * Deletes the Node with <code>id</code> from the search index.
+     * @param id the <code>id</code> of the node to delete.
      * @throws IOException if an error occurs while deleting the node.
      */
-    void deleteNode(String uuid) throws IOException;
+    void deleteNode(NodeId id) throws IOException;
 
     /**
      * Updates the index in an atomic operation. Some nodes may be removed and
      * added again in the same updateNodes() call, which is equivalent to an
      * node update.
      *
-     * @param remove Iterator of uuid <code>String</code>s of nodes to delete
+     * @param remove Iterator of <code>NodeIds</code> of nodes to delete
      * @param add    Iterator of <code>NodeState</code> instance to add to the
      *               index.
      * @throws RepositoryException if an error occurs while indexing a node.
      * @throws IOException if an error occurs while updating the index.
      */
-    void updateNodes(Iterator remove, Iterator add)
+    void updateNodes(NodeIdIterator remove, NodeStateIterator add)
             throws RepositoryException, IOException;
 
     /**

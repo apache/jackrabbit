@@ -132,14 +132,12 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             key.setData(id.toString().getBytes(ENCODING));
             OperationStatus operationStatus = database.get(null, key, value, LockMode.DEFAULT);
             if (operationStatus.equals(OperationStatus.NOTFOUND)) {
-                throw new NoSuchItemStateException();
+                throw new NoSuchItemStateException(id.toString());
             }
             return (NodeState) tupleBinding.entryToObject(value);
-        } catch (NoSuchItemStateException e) {
-            throw e;
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -151,14 +149,12 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             key.setData(id.toString().getBytes(ENCODING));
             OperationStatus operationStatus = database.get(null, key, value, LockMode.DEFAULT);
             if (operationStatus.equals(OperationStatus.NOTFOUND)) {
-                throw new NoSuchItemStateException();
+                throw new NoSuchItemStateException(id.toString());
             }
             return (PropertyState) tupleBinding.entryToObject(value);
-        } catch (NoSuchItemStateException e) {
-            throw e;
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -170,14 +166,12 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             key.setData((id.toString() + ".references").getBytes(ENCODING));
             OperationStatus operationStatus = database.get(null, key, value, LockMode.DEFAULT);
             if (operationStatus.equals(OperationStatus.NOTFOUND)) {
-                throw new NoSuchItemStateException();
+                throw new NoSuchItemStateException(id.toString());
             }
             return (NodeReferences) tupleBinding.entryToObject(value);
-        } catch (NoSuchItemStateException e) {
-            throw e;
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -190,7 +184,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             return operationStatus.equals(OperationStatus.SUCCESS);
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -203,7 +197,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             return operationStatus.equals(OperationStatus.SUCCESS);
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -216,7 +210,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             return operationStatus.equals(OperationStatus.SUCCESS);
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -231,11 +225,13 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             transaction.commit();
         } catch (Exception e) {
             try {
-                transaction.abort();
+                if (transaction != null) {
+                    transaction.abort();
+                }
             } catch (Exception fe) {
                 log.fatal(fe);
             }
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         } finally {
             localTransaction.set(null);
         }
@@ -257,7 +253,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -275,7 +271,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -293,7 +289,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -308,7 +304,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -323,7 +319,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 
@@ -338,7 +334,7 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             }
         } catch (Exception e) {
             log.error(e);
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         }
     }
 }

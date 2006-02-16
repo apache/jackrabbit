@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.core.NodeId;
 
 /**
  * Extends the <code>ItemStateListener</code> allowing a client to be
@@ -32,10 +33,10 @@ public interface NodeStateListener extends ItemStateListener {
      * @param state node state that changed
      * @param name  name of node that was added
      * @param index index of new node
-     * @param uuid  uuid of new node
+     * @param id    id of new node
      */
     void nodeAdded(NodeState state,
-                   QName name, int index, String uuid);
+                   QName name, int index, NodeId id);
 
     /**
      * Called when the children nodes were replaced by other nodes, typically
@@ -51,8 +52,8 @@ public interface NodeStateListener extends ItemStateListener {
      * @param state node state that changed
      * @param name  name of node that was removed
      * @param index index of removed node
-     * @param uuid  uuid of removed node
+     * @param id    id of removed node
      */
     public void nodeRemoved(NodeState state,
-                            QName name, int index, String uuid);
+                            QName name, int index, NodeId id);
 }

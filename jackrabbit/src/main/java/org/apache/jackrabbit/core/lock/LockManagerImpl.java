@@ -16,8 +16,14 @@
  */
 package org.apache.jackrabbit.core.lock;
 
+import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PathMap;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -29,11 +35,11 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.observation.Event;
@@ -45,8 +51,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 
 
 /**
@@ -165,10 +169,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      */
     private void reapplyLock(LockToken lockToken) {
         try {
-            NodeId id = new NodeId(lockToken.uuid);
-
-            NodeImpl node = (NodeImpl) session.getItemManager().getItem(id);
-            Path path = getPath(node.getId());
+            NodeImpl node = (NodeImpl) session.getItemManager().getItem(lockToken.id);
+            Path path = getPath(lockToken.id);
 
             LockInfo info = new LockInfo(lockToken, false,
                     node.getProperty(QName.JCR_LOCKISDEEP).getBoolean(),
@@ -245,7 +247,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             throws LockException, RepositoryException {
 
         SessionImpl session = (SessionImpl) node.getSession();
-        LockInfo info = new LockInfo(new LockToken(node.internalGetUUID()),
+        LockInfo info = new LockInfo(new LockToken(node.getNodeId()),
                 isSessionScoped, isDeep, session.getUserID());
 
         acquire();
@@ -332,11 +334,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * @return lock info or <code>null</code> if node is not locked
      * @throws RepositoryException if an error occurs
      */
-    public AbstractLockInfo getLockInfo(String uuid) throws RepositoryException {
+    public AbstractLockInfo getLockInfo(NodeId id) throws RepositoryException {
         acquire();
 
         try {
-            Path path = getPath(new NodeId(uuid));
+            Path path = getPath(id);
 
             PathMap.Element element = lockMap.map(path, false);
             AbstractLockInfo info = (AbstractLockInfo) element.get();
@@ -383,8 +385,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                 throw new LockException("Node not locked: " + node.safeGetJCRPath());
             }
             if (element.hasPath(path) || info.deep) {
-                Node lockHolder = (Node) session.getItemManager().getItem(
-                        new NodeId(info.getUUID()));
+                Node lockHolder = (Node) session.getItemManager().getItem(info.getId());
                 return new LockImpl(info, lockHolder);
             } else {
                 throw new LockException("Node not locked: " + node.safeGetJCRPath());
@@ -489,7 +490,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             LockToken lockToken = LockToken.parse(lt);
 
             NodeImpl node = (NodeImpl) this.session.getItemManager().
-                    getItem(new NodeId(lockToken.uuid));
+                    getItem(lockToken.id);
             PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
                 AbstractLockInfo info = (AbstractLockInfo) element.get();
@@ -518,7 +519,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             LockToken lockToken = LockToken.parse(lt);
 
             NodeImpl node = (NodeImpl) this.session.getItemManager().
-                    getItem(new NodeId(lockToken.uuid));
+                    getItem(lockToken.id);
             PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
                 AbstractLockInfo info = (AbstractLockInfo) element.get();
@@ -555,7 +556,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             try {
                 lockMapLock.acquire();
                 break;
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException e) {
+                // ignore
+            }
         }
     }
 
@@ -601,9 +604,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     private class HierarchyEvent {
 
         /**
-         * UUID recorded in event
+         * ID recorded in event
          */
-        public final String uuid;
+        public final NodeId id;
 
         /**
          * Path recorded in event
@@ -629,12 +632,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         /**
          * Create a new instance of this class.
          *
-         * @param uuid uuid
+         * @param id id
          * @param path path
          * @param type event type
          */
-        public HierarchyEvent(String uuid, Path path, int type) {
-            this.uuid = uuid;
+        public HierarchyEvent(NodeId id, Path path, int type) {
+            this.id = id;
             this.path = path;
             this.type = type;
         }
@@ -719,7 +722,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             HierarchyEvent he;
 
             try {
-                he = new HierarchyEvent(event.getChildUUID(),
+                he = new HierarchyEvent(event.getChildId(),
                         Path.create(event.getPath(), nsResolver, true),
                         event.getType());
             } catch (MalformedPathException e) {
@@ -730,11 +733,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                 continue;
             }
 
-            HierarchyEvent heExisting = (HierarchyEvent) eventMap.get(he.uuid);
+            HierarchyEvent heExisting = (HierarchyEvent) eventMap.get(he.id);
             if (heExisting != null) {
                 heExisting.merge(he);
             } else {
-                eventMap.put(he.uuid, he);
+                eventMap.put(he.id, he);
             }
         }
         return eventMap.values().iterator();
@@ -764,8 +767,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         for (int i = 0; i < infos.size(); i++) {
             LockInfo info = (LockInfo) infos.get(i);
             try {
-                NodeImpl node = (NodeImpl) session.getItemManager().getItem(
-                        new NodeId(info.getUUID()));
+                NodeImpl node = (NodeImpl) session.getItemManager().
+                        getItem(info.getId());
                 lockMap.put(node.getPrimaryPath(), info);
             } catch (RepositoryException e) {
                 info.setLive(false);
@@ -798,7 +801,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             }
         } catch (PathNotFoundException e) {
             log.warn("Unable to determine path of added node's parent.", e);
-            return;
         } finally {
             release();
         }
@@ -821,7 +823,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             }
         } catch (PathNotFoundException e) {
             log.warn("Unable to determine path of moved node's parent.", e);
-            return;
         } finally {
             release();
         }
@@ -843,7 +844,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             }
         } catch (PathNotFoundException e) {
             log.warn("Unable to determine path of removed node's parent.", e);
-            return;
         } finally {
             release();
         }
@@ -886,8 +886,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                         setLockHolder(session);
                     }
                     try {
-                        NodeImpl node = (NodeImpl) session.getItemManager().getItem(
-                                new NodeId(getUUID()));
+                        NodeImpl node = (NodeImpl) session.getItemManager().getItem(getId());
                         node.unlock();
                     } catch (RepositoryException e) {
                         log.warn("Unable to unlock session-scoped lock on node '"

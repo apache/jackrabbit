@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
 
 import javax.jcr.ReferentialIntegrityException;
 import java.util.Iterator;
@@ -32,11 +31,6 @@ import java.util.Iterator;
  */
 public class LocalItemStateManager
         implements UpdatableItemStateManager, ItemStateListener {
-
-    /**
-     * Logger instance
-     */
-    private static Logger log = Logger.getLogger(LocalItemStateManager.class);
 
     /**
      * cache of weak references to ItemState objects issued by this
@@ -227,14 +221,14 @@ public class LocalItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeState createNew(String uuid, QName nodeTypeName,
-                               String parentUUID)
+    public NodeState createNew(NodeId id, QName nodeTypeName,
+                               NodeId parentId)
             throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
 
-        NodeState state = new NodeState(uuid, nodeTypeName, parentUUID,
+        NodeState state = new NodeState(id, nodeTypeName, parentId,
                 ItemState.STATUS_NEW, false);
         changeLog.added(state);
         return state;
@@ -243,13 +237,13 @@ public class LocalItemStateManager
     /**
      * {@inheritDoc}
      */
-    public PropertyState createNew(QName propName, String parentUUID)
+    public PropertyState createNew(QName propName, NodeId parentId)
             throws IllegalStateException {
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
-        PropertyState state = new PropertyState(propName, parentUUID,
-                ItemState.STATUS_NEW, false);
+        PropertyState state = new PropertyState(
+                new PropertyId(parentId, propName), ItemState.STATUS_NEW, false);
         changeLog.added(state);
         return state;
     }

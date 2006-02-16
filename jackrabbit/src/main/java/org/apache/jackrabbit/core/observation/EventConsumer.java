@@ -17,11 +17,9 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
@@ -148,14 +146,7 @@ class EventConsumer {
                 }
 
                 // check read permission
-                ItemId targetId;
-                if (state.getChildUUID() == null) {
-                    // target is a property
-                    targetId = new PropertyId(state.getParentUUID(), state.getChildRelPath().getName());
-                } else {
-                    // target is a node
-                    targetId = new NodeId(state.getChildUUID());
-                }
+                ItemId targetId = state.getTargetId();
                 boolean granted = false;
                 try {
                     granted = session.getAccessManager().isGranted(targetId, AccessManager.READ);
@@ -166,7 +157,7 @@ class EventConsumer {
                     if (denied == null) {
                         denied = new HashSet();
                     }
-                    denied.add(state.getId());
+                    denied.add(targetId);
                 }
             }
         }
@@ -220,19 +211,12 @@ class EventConsumer {
             if (state.getType() == Event.NODE_ADDED
                     || state.getType() == Event.PROPERTY_ADDED
                     || state.getType() == Event.PROPERTY_CHANGED) {
-                ItemId targetId;
-                if (state.getChildUUID() == null) {
-                    // target is a property
-                    targetId = new PropertyId(state.getParentUUID(), state.getChildRelPath().getName());
-                } else {
-                    // target is a node
-                    targetId = new NodeId(state.getChildUUID());
-                }
+                ItemId targetId = state.getTargetId();
                 if (!session.getAccessManager().isGranted(targetId, AccessManager.READ)) {
                     if (denied == null) {
                         denied = new HashSet();
                     }
-                    denied.add(state.getId());
+                    denied.add(targetId);
                 }
             }
         }

@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.state.orm;
 
-import java.io.Serializable;
-
 import org.apache.jackrabbit.core.state.NodeState.ChildNodeEntry;
+
+import java.io.Serializable;
 
 /**
  * <p>This class represents a child node entry row in the ORM object graph.</p>
@@ -39,7 +39,7 @@ public class ORMChildNodeEntry
 
     public ORMChildNodeEntry(ORMNodeState parent, ChildNodeEntry childNodeEntry, String parentUUID, int childrenIndex) {
         this.parent = parent;
-        uuid = childNodeEntry.getUUID();
+        uuid = childNodeEntry.getId().getUUID().toString();
         this.parentUUID = parentUUID;
         name = childNodeEntry.getName().toString();
         sameNameIndex = new Integer(childNodeEntry.getIndex());

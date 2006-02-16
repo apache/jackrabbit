@@ -17,37 +17,39 @@
 
 package org.apache.jackrabbit.core.query.test;
 
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.query.TextFilter;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.QName;
+
 import java.io.File;
 import java.io.Reader;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.core.query.TextFilter;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.InternalValue;
-
 public class AbstractTextFilterTest {
 
-	public void showResult(File file, TextFilter filter) throws Exception {
-		PropertyState state = new PropertyState(new QName("", ""), "", 1, true);
+    public void showResult(File file, TextFilter filter) throws Exception {
+        PropertyId id = new PropertyId(null, new QName("", ""));
+        PropertyState state = new PropertyState(id, 1, true);
 
-		InternalValue value = InternalValue.create(file);
-		state.setValues(new InternalValue[] { value });
+        InternalValue value = InternalValue.create(file);
+        state.setValues(new InternalValue[]{value});
 
-		Map fields = filter.doFilter(state, System.getProperty("encoding"));
-		for (Iterator it = fields.keySet().iterator(); it.hasNext();) {
-			String field = (String) it.next();
-			Reader r = (Reader) fields.get(field);
-			System.out.println("---------------");
-			System.out.println("Field: " + field);
-			int i;
-			while ((i = r.read()) != -1) {
-				System.out.print((char) i);
-			}
-			r.close();
-			System.out.println("");
-		}
-	}
+        Map fields = filter.doFilter(state, System.getProperty("encoding"));
+        for (Iterator it = fields.keySet().iterator(); it.hasNext();) {
+            String field = (String) it.next();
+            Reader r = (Reader) fields.get(field);
+            System.out.println("---------------");
+            System.out.println("Field: " + field);
+            int i;
+            while ((i = r.read()) != -1) {
+                System.out.print((char) i);
+            }
+            r.close();
+            System.out.println("");
+        }
+    }
 
 }

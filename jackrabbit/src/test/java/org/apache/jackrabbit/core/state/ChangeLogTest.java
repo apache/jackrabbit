@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 
 import java.util.Iterator;
 
@@ -32,8 +35,9 @@ public class ChangeLogTest extends AbstractJCRTest {
      * entry in either the added nor the removed states
      */
     public void testAddDelete() throws Exception {
-        ItemState state = new PropertyState(new QName("", "a"), "",
-                ItemState.STATUS_NEW, false);
+        PropertyId id = new PropertyId(
+                new NodeId(UUID.randomUUID()), new QName("", "a"));
+        ItemState state = new PropertyState(id, ItemState.STATUS_NEW, false);
 
         ChangeLog log = new ChangeLog();
 
@@ -51,8 +55,9 @@ public class ChangeLogTest extends AbstractJCRTest {
      * in the added states.
      */
     public void testAddModify() throws Exception {
-        ItemState state = new PropertyState(new QName("", "a"), "",
-                ItemState.STATUS_NEW, false);
+        PropertyId id = new PropertyId(
+                new NodeId(UUID.randomUUID()), new QName("", "a"));
+        ItemState state = new PropertyState(id, ItemState.STATUS_NEW, false);
 
         ChangeLog log = new ChangeLog();
 
@@ -72,8 +77,9 @@ public class ChangeLogTest extends AbstractJCRTest {
     public void testPreserveOrder() throws Exception {
         ItemState[] states = new ItemState[10];
         for (int i = 0; i < states.length; i++) {
-            states[i] = new PropertyState(new QName("", "a" + i), "",
-                    ItemState.STATUS_NEW, false);
+            PropertyId id = new PropertyId(
+                    new NodeId(UUID.randomUUID()), new QName("", "a" + i));
+            states[i] = new PropertyState(id, ItemState.STATUS_NEW, false);
         }
 
         ChangeLog log = new ChangeLog();

@@ -334,10 +334,10 @@ class ChildAxisQuery extends Query {
                 if (position != LocationStepQueryNode.NONE) {
                     for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
                         Document node = reader.document(i);
-                        String parentUUID = node.get(FieldNames.PARENT);
-                        String uuid = node.get(FieldNames.UUID);
+                        NodeId parentId = NodeId.valueOf(node.get(FieldNames.PARENT));
+                        NodeId id = NodeId.valueOf(node.get(FieldNames.UUID));
                         try {
-                            NodeState state = (NodeState) itemMgr.getItemState(new NodeId(parentUUID));
+                            NodeState state = (NodeState) itemMgr.getItemState(parentId);
                             if (nameTest == null) {
                                 // only select this node if it is the child at
                                 // specified position
@@ -346,14 +346,14 @@ class ChildAxisQuery extends Query {
                                     List childNodes = state.getChildNodeEntries();
                                     if (childNodes.size() == 0
                                             || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
-                                                .getUUID().equals(uuid)) {
+                                                .getId().equals(id)) {
                                         hits.flip(i);
                                     }
                                 } else {
                                     List childNodes = state.getChildNodeEntries();
                                     if (position < 1
                                             || childNodes.size() < position
-                                            || !((NodeState.ChildNodeEntry) childNodes.get(position - 1)).getUUID().equals(uuid)) {
+                                            || !((NodeState.ChildNodeEntry) childNodes.get(position - 1)).getId().equals(id)) {
                                         hits.flip(i);
                                     }
                                 }
@@ -363,7 +363,7 @@ class ChildAxisQuery extends Query {
                                 if (position == LocationStepQueryNode.LAST) {
                                     // only select last
                                     NodeState.ChildNodeEntry entry =
-                                            state.getChildNodeEntry(uuid);
+                                            state.getChildNodeEntry(id);
                                     if (entry == null) {
                                         // no such child node, probably deleted meanwhile
                                         hits.flip(i);
@@ -373,13 +373,13 @@ class ChildAxisQuery extends Query {
                                         List childNodes = state.getChildNodeEntries(name);
                                         if (childNodes.size() == 0
                                                 || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
-                                                    .getUUID().equals(uuid)) {
+                                                    .getId().equals(id)) {
                                             hits.flip(i);
                                         }
                                     }
                                 } else {
                                     NodeState.ChildNodeEntry entry =
-                                            state.getChildNodeEntry(uuid);
+                                            state.getChildNodeEntry(id);
                                     if (entry == null) {
                                         // no such child node, probably has been deleted meanwhile
                                         hits.flip(i);

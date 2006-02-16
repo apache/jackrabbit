@@ -232,6 +232,7 @@
     <preGoal name="test:test">
         <j:if test="${context.getVariable('maven.test.skip') != 'true'}">
             <attainGoal name="jackrabbit:test-init"/>
+            <attainGoal name="test:single"/>
         </j:if>
     </preGoal>
 
@@ -243,7 +244,6 @@
         <ant:copy file="applications/test/repository/namespaces/ns_reg.properties.install" 
             tofile="applications/test/repository/namespaces/ns_reg.properties"/>
         <j:set var="testcase" value="org.apache.jackrabbit.init.TestAll"/>
-        <attainGoal name="test:single"/>
     </goal>
 
     <postGoal name="jar:jar">

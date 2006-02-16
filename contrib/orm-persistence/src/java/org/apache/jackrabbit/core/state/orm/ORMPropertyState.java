@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.core.state.orm;
 
-import java.io.Serializable;
-
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.orm.ojb.ValuesToStringFieldConversion;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.ojb.broker.accesslayer.conversions.ConversionException;
+
 import javax.jcr.PropertyType;
+import java.io.Serializable;
 
 /**
  * <p>This class represents a property state in an ORM-compatible format.</p>
@@ -48,7 +48,7 @@ public class ORMPropertyState implements Serializable {
             PropertyId propId = (PropertyId) id;
             this.itemId = propId.toString();
             name = propId.getName().toString();
-            parentUUID = propId.getParentUUID();
+            parentUUID = propId.getParentId().getUUID().toString();
         } else {
             throw new ItemStateException("PropertyId expected, instead got " + id.getClass());
         }
@@ -62,7 +62,7 @@ public class ORMPropertyState implements Serializable {
         ConversionException {
         this.itemId = state.getId().toString();
         name = state.getName().toString();
-        parentUUID = state.getParentUUID();
+        parentUUID = state.getParentId().getUUID().toString();
         values = (String) new ValuesToStringFieldConversion().javaToSql(state.getValues());
         type = new Integer(state.getType());
         if (state.getDefinitionId() != null) {

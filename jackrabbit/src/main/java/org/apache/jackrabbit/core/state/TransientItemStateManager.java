@@ -122,42 +122,42 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
     //------------------< methods for listing & querying state of cache/attic >
 
     /**
-     * @return
+     * @return <code>true</code> if this manager has any state.
      */
     boolean hasAnyItemStates() {
         return !transientStore.isEmpty();
     }
 
     /**
-     * @return
+     * @return <code>true</code> if this manager has any state in attic
      */
     boolean hasAnyItemStatesInAttic() {
         return !atticStore.isEmpty();
     }
 
     /**
-     * @return
+     * @return the number of entries
      */
     int getEntriesCount() {
         return transientStore.size();
     }
 
     /**
-     * @return
+     * @return the number of entries in attic
      */
     int getEntriesInAtticCount() {
         return atticStore.size();
     }
 
     /**
-     * @return
+     * @return an iterator over all entries
      */
     Iterator getEntries() {
         return transientStore.values().iterator();
     }
 
     /**
-     * @return
+     * @return an iterator over all entries in attic
      */
     Iterator getEntriesInAttic() {
         return atticStore.values().iterator();
@@ -165,18 +165,16 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
 
     //----------------< methods for creating & discarding ItemState instances >
     /**
-     * @param uuid
+     * @param id
      * @param nodeTypeName
-     * @param parentUUID
+     * @param parentId
      * @param initialStatus
      * @return
      * @throws ItemStateException
      */
-    NodeState createNodeState(String uuid, QName nodeTypeName,
-                              String parentUUID, int initialStatus)
+    NodeState createNodeState(NodeId id, QName nodeTypeName,
+                              NodeId parentId, int initialStatus)
             throws ItemStateException {
-
-        NodeId id = new NodeId(uuid);
 
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
@@ -186,7 +184,7 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
                 throw new ItemStateException(msg);
             }
 
-            NodeState state = new NodeState(uuid, nodeTypeName, parentUUID,
+            NodeState state = new NodeState(id, nodeTypeName, parentId,
                     initialStatus, true);
             // put transient state in the map
             transientStore.put(state);
@@ -203,7 +201,7 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
     NodeState createNodeState(NodeState overlayedState, int initialStatus)
             throws ItemStateException {
 
-        ItemId id = overlayedState.getId();
+        ItemId id = overlayedState.getNodeId();
 
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
@@ -221,16 +219,16 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
     }
 
     /**
-     * @param parentUUID
+     * @param parentId
      * @param propName
      * @param initialStatus
      * @return
      * @throws ItemStateException
      */
-    PropertyState createPropertyState(String parentUUID, QName propName, int initialStatus)
+    PropertyState createPropertyState(NodeId parentId, QName propName, int initialStatus)
             throws ItemStateException {
 
-        PropertyId id = new PropertyId(parentUUID, propName);
+        PropertyId id = new PropertyId(parentId, propName);
 
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
@@ -240,7 +238,8 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
                 throw new ItemStateException(msg);
             }
 
-            PropertyState state = new PropertyState(propName, parentUUID, initialStatus, true);
+            PropertyState state = new PropertyState(
+                    new PropertyId(parentId, propName), initialStatus, true);
             // put transient state in the map
             transientStore.put(state);
             return state;
@@ -256,7 +255,7 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
     PropertyState createPropertyState(PropertyState overlayedState, int initialStatus)
             throws ItemStateException {
 
-        PropertyId id = new PropertyId(overlayedState.getParentUUID(),
+        PropertyId id = new PropertyId(overlayedState.getParentId(),
                 overlayedState.getName());
 
         // check map; synchronized to ensure an entry is not created twice.

@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.core.NodeId;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
@@ -59,17 +60,17 @@ public interface Importer {
         private QName name;
         private QName nodeTypeName;
         private QName[] mixinNames;
-        private String uuid;
+        private NodeId id;
 
         public NodeInfo() {
         }
 
         public NodeInfo(QName name, QName nodeTypeName, QName[] mixinNames,
-                        String uuid) {
+                        NodeId id) {
             this.name = name;
             this.nodeTypeName = nodeTypeName;
             this.mixinNames = mixinNames;
-            this.uuid = uuid;
+            this.id = id;
         }
 
         public void setName(QName name) {
@@ -96,12 +97,12 @@ public interface Importer {
             return mixinNames;
         }
 
-        public void setUUID(String uuid) {
-            this.uuid = uuid;
+        public void setId(NodeId id) {
+            this.id = id;
         }
 
-        public String getUUID() {
-            return uuid;
+        public NodeId getId() {
+            return id;
         }
     }
 

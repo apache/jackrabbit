@@ -34,8 +34,8 @@ class NodeIteratorImpl implements ScoreNodeIterator {
     /** Logger instance for this class */
     private static final Logger log = Logger.getLogger(NodeIteratorImpl.class);
 
-    /** The UUIDs of the nodes in the result set */
-    protected final String[] uuids;
+    /** The node ids of the nodes in the result set */
+    protected final NodeId[] ids;
 
     /** The score values for the nodes in the result set */
     protected final Float[] scores;
@@ -56,14 +56,14 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * Creates a new <code>NodeIteratorImpl</code> instance.
      * @param itemMgr the <code>ItemManager</code> to turn UUIDs into
      *   <code>Node</code> instances.
-     * @param uuids the UUIDs of the result nodes.
+     * @param ids the IDs of the result nodes.
      * @param scores the corresponding score values for each result node.
      */
     NodeIteratorImpl(ItemManager itemMgr,
-                     String[] uuids,
+                     NodeId[] ids,
                      Float[] scores) {
         this.itemMgr = itemMgr;
-        this.uuids = uuids;
+        this.ids = ids;
         this.scores = scores;
         fetchNext();
     }
@@ -113,7 +113,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
         if (skipNum < 0) {
             throw new IllegalArgumentException("skipNum must not be negative");
         }
-        if ((pos + skipNum) > uuids.length) {
+        if ((pos + skipNum) > ids.length) {
             throw new NoSuchElementException();
         }
         if (skipNum == 0) {
@@ -137,7 +137,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * @return the number of node in this iterator.
      */
     public long getSize() {
-        return uuids.length - invalid;
+        return ids.length - invalid;
     }
 
     /**
@@ -187,12 +187,12 @@ class NodeIteratorImpl implements ScoreNodeIterator {
     protected void fetchNext() {
         // reset
         next = null;
-        while (next == null && (pos + 1) < uuids.length) {
+        while (next == null && (pos + 1) < ids.length) {
             try {
-                next = (NodeImpl) itemMgr.getItem(new NodeId(uuids[pos + 1]));
+                next = (NodeImpl) itemMgr.getItem(ids[pos + 1]);
             } catch (RepositoryException e) {
                 log.warn("Exception retrieving Node with UUID: "
-                        + uuids[pos + 1] + ": " + e.toString());
+                        + ids[pos + 1] + ": " + e.toString());
                 // try next
                 invalid++;
                 pos++;

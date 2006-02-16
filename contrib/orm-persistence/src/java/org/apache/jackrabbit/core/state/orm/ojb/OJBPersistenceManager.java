@@ -16,18 +16,8 @@
  */
 package org.apache.jackrabbit.core.state.orm.ojb;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import javax.jcr.PropertyType;
-
-import org.apache.jackrabbit.core.value.BLOBFileValue;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -41,6 +31,9 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.orm.ORMBlobValue;
 import org.apache.jackrabbit.core.state.orm.ORMNodeReference;
 import org.apache.jackrabbit.core.state.orm.ORMPropertyState;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.QName;
 import org.apache.log4j.Logger;
 import org.apache.ojb.broker.PersistenceBroker;
 import org.apache.ojb.broker.PersistenceBrokerException;
@@ -48,6 +41,12 @@ import org.apache.ojb.broker.PersistenceBrokerFactory;
 import org.apache.ojb.broker.query.Criteria;
 import org.apache.ojb.broker.query.QueryByCriteria;
 import org.apache.ojb.broker.query.QueryByIdentity;
+
+import javax.jcr.PropertyType;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * OJB implementation of a Jackrabbit persistence manager.
@@ -96,19 +95,19 @@ public class OJBPersistenceManager implements PersistenceManager
         {
             log.debug("Request for " + nodeId.getUUID());
             OJBNodeState nodeState = new OJBNodeState();
-            nodeState.setUuid(nodeId.getUUID());
+            nodeState.setUuid(nodeId.getUUID().toString());
             QueryByIdentity query = new QueryByIdentity(nodeState);
             OJBNodeState result = (OJBNodeState) broker.getObjectByQuery(query);
             if (result == null)
             {
-                throw new NoSuchItemStateException(nodeId.getUUID());
+                throw new NoSuchItemStateException(nodeId.getUUID().toString());
             }
             NodeState state = createNew(nodeId);
             result.toPersistentNodeState(state);
             return state;
         } catch (PersistenceBrokerException e)
         {
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         } finally
         {
             if (broker != null)
@@ -143,7 +142,7 @@ public class OJBPersistenceManager implements PersistenceManager
                 // we must now load the binary values.
                 ArrayList internalValueList = new ArrayList();
                 Criteria criteria = new Criteria();
-                criteria.addEqualTo("parentUUID", state.getParentUUID());
+                criteria.addEqualTo("parentUUID", state.getParentId().toString());
                 criteria.addEqualTo("propertyName", state.getName().toString());
                 QueryByCriteria blobQuery = new QueryByCriteria(
                         ORMBlobValue.class, criteria);
@@ -170,7 +169,7 @@ public class OJBPersistenceManager implements PersistenceManager
             return state;
         } catch (PersistenceBrokerException e)
         {
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         } finally
         {
             if (broker != null)
@@ -197,14 +196,14 @@ public class OJBPersistenceManager implements PersistenceManager
             {
                 ORMNodeReference curNodeReference = (ORMNodeReference) resultIter
                         .next();
-                refs.addReference(new PropertyId(curNodeReference
-                        .getPropertyParentUUID(), QName
+                refs.addReference(new PropertyId(NodeId.valueOf(curNodeReference
+                        .getPropertyParentUUID()), QName
                         .valueOf(curNodeReference.getPropertyName())));
             }
             return refs;
         } catch (PersistenceBrokerException e)
         {
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         } finally
         {
             if (broker != null)
@@ -233,7 +232,7 @@ public class OJBPersistenceManager implements PersistenceManager
             }
         } catch (PersistenceBrokerException e)
         {
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         } finally
         {
             if (broker != null)
@@ -264,7 +263,7 @@ public class OJBPersistenceManager implements PersistenceManager
             }
         } catch (PersistenceBrokerException e)
         {
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         } finally
         {
             if (broker != null)
@@ -294,7 +293,7 @@ public class OJBPersistenceManager implements PersistenceManager
             return false;
         } catch (PersistenceBrokerException e)
         {
-            throw new ItemStateException(e);
+            throw new ItemStateException(e.getMessage(), e);
         } finally
         {
             if (broker != null)
@@ -349,7 +348,7 @@ public class OJBPersistenceManager implements PersistenceManager
                     {
                         Criteria criteria = new Criteria();
                         criteria
-                                .addEqualTo("parentUUID", state.getParentUUID());
+                                .addEqualTo("parentUUID", state.getParentId().getUUID().toString());
                         criteria.addEqualTo("propertyName", state.getName()
                                 .toString());
                         criteria.addEqualTo("index", new Integer(i));
@@ -364,7 +363,7 @@ public class OJBPersistenceManager implements PersistenceManager
                         } else
                         {
                             ormBlobValue = new ORMBlobValue();
-                            ormBlobValue.setParentUUID(state.getParentUUID());
+                            ormBlobValue.setParentUUID(state.getParentId().getUUID().toString());
                             ormBlobValue.setPropertyName(state.getName()
                                     .toString());
                             ormBlobValue.setIndex(new Integer(i));
@@ -407,7 +406,7 @@ public class OJBPersistenceManager implements PersistenceManager
         {
             PropertyId curPropertyId = (PropertyId) nodeRefPropIdIter.next();
             ORMNodeReference curNodeReference = new ORMNodeReference(refs
-                    .getTargetId().toString(), curPropertyId.getParentUUID(),
+                    .getTargetId().toString(), curPropertyId.getParentId().getUUID().toString(),
                     curPropertyId.getName().toString());
             broker.store(curNodeReference);
         }
@@ -443,7 +442,7 @@ public class OJBPersistenceManager implements PersistenceManager
         if (state.getType() == PropertyType.BINARY)
         {
             Criteria criteria = new Criteria();
-            criteria.addEqualTo("parentUUID", state.getParentUUID());
+            criteria.addEqualTo("parentUUID", state.getParentId().getUUID().toString());
             criteria.addEqualTo("propertyName", state.getName().toString());
             QueryByCriteria blobQuery = new QueryByCriteria(ORMBlobValue.class,
                     criteria);
@@ -474,8 +473,7 @@ public class OJBPersistenceManager implements PersistenceManager
      */
     public NodeState createNew(NodeId id)
     {
-        return new NodeState(id.getUUID(), null, null, NodeState.STATUS_NEW,
-                false);
+        return new NodeState(id, null, null, NodeState.STATUS_NEW, false);
     }
 
     /**
@@ -483,8 +481,7 @@ public class OJBPersistenceManager implements PersistenceManager
      */
     public PropertyState createNew(PropertyId id)
     {
-        return new PropertyState(id.getName(), id.getParentUUID(),
-                PropertyState.STATUS_NEW, false);
+        return new PropertyState(id, PropertyState.STATUS_NEW, false);
     }
 
     /**

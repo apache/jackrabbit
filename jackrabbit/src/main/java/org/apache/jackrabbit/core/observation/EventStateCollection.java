@@ -96,19 +96,19 @@ public final class EventStateCollection {
      * Creates {@link EventState} instances from <code>ItemState</code>
      * <code>changes</code>.
      *
-     * @param rootNodeUUID the UUID of the root node.
+     * @param rootNodeId   the id of the root node.
      * @param changes      the changes on <code>ItemState</code>s.
      * @param provider     an <code>ItemStateProvider</code> to provide <code>ItemState</code>
      *                     of items that are not contained in the <code>changes</code> collection.
      * @throws ItemStateException if an error occurs while creating events
      *                            states for the item state changes.
      */
-    public void createEventStates(String rootNodeUUID, ChangeLog changes, ItemStateManager provider) throws ItemStateException {
+    public void createEventStates(NodeId rootNodeId, ChangeLog changes, ItemStateManager provider) throws ItemStateException {
         // create a hierarchy manager, that is based on the ChangeLog and
         // the ItemStateProvider
         // todo use CachingHierarchyManager ?
         ChangeLogBasedHierarchyMgr hmgr =
-                new ChangeLogBasedHierarchyMgr(rootNodeUUID, provider, changes,
+                new ChangeLogBasedHierarchyMgr(rootNodeId, provider, changes,
                         session.getNamespaceResolver());
 
         /**
@@ -117,7 +117,7 @@ public final class EventStateCollection {
          * a very good reason for it! Some internal SynchronousEventListener
          * implementations depend on the order of the events fired.
          * LockManagerImpl for example expects that for any given path a
-         * childNodeRemoved event is fired before a childNodeAdded event.  
+         * childNodeRemoved event is fired before a childNodeAdded event.
          */
 
         // 1. modified items
@@ -146,40 +146,40 @@ public final class EventStateCollection {
                 NodeState n = (NodeState) state;
 
                 if (n.hasOverlayedState()) {
-                    String oldParentUUID = n.getOverlayedState().getParentUUID();
-                    String newParentUUID = n.getParentUUID();
-                    if (newParentUUID != null &&
-                            !oldParentUUID.equals(newParentUUID)) {
+                    NodeId oldParentId = n.getOverlayedState().getParentId();
+                    NodeId newParentId = n.getParentId();
+                    if (newParentId != null &&
+                            !oldParentId.equals(newParentId)) {
                         // node moved
                         // generate node removed & node added event
                         NodeState oldParent;
                         try {
-                            oldParent = (NodeState) changes.get(new NodeId(oldParentUUID));
+                            oldParent = (NodeState) changes.get(oldParentId);
                         } catch (NoSuchItemStateException e) {
                             // old parent has been deleted, retrieve from
                             // shared item state manager
-                            oldParent = (NodeState) provider.getItemState(new NodeId(oldParentUUID));
+                            oldParent = (NodeState) provider.getItemState(oldParentId);
                         }
 
                         NodeTypeImpl oldParentNodeType = getNodeType(oldParent, session);
                         Set mixins = oldParent.getMixinTypeNames();
-                        Path newPath = getPath(n.getId(), hmgr);
-                        Path oldPath = getZombiePath(n.getId(), hmgr);
+                        Path newPath = getPath(n.getNodeId(), hmgr);
+                        Path oldPath = getZombiePath(n.getNodeId(), hmgr);
                         if (!oldPath.equals(newPath)) {
-                            events.add(EventState.childNodeRemoved(oldParentUUID,
+                            events.add(EventState.childNodeRemoved(oldParentId,
                                     getParent(oldPath),
-                                    n.getUUID(),
+                                    n.getNodeId(),
                                     oldPath.getNameElement(),
                                     oldParentNodeType,
                                     mixins,
                                     session));
 
-                            NodeState newParent = (NodeState) changes.get(new NodeId(newParentUUID));
+                            NodeState newParent = (NodeState) changes.get(newParentId);
                             NodeTypeImpl newParentNodeType = getNodeType(newParent, session);
                             mixins = newParent.getMixinTypeNames();
-                            events.add(EventState.childNodeAdded(newParentUUID,
+                            events.add(EventState.childNodeAdded(newParentId,
                                     getParent(newPath),
-                                    n.getUUID(),
+                                    n.getNodeId(),
                                     newPath.getNameElement(),
                                     newParentNodeType,
                                     mixins,
@@ -192,8 +192,8 @@ public final class EventStateCollection {
                         NodeState parent = null;
                         try {
                             // root node does not have a parent UUID
-                            if (state.getParentUUID() != null) {
-                                parent = (NodeState) changes.get(new NodeId(state.getParentUUID()));
+                            if (state.getParentId() != null) {
+                                parent = (NodeState) changes.get(state.getParentId());
                             }
                         } catch (NoSuchItemStateException e) {
                             // should never happen actually. this would mean
@@ -207,7 +207,7 @@ public final class EventStateCollection {
                             NodeState.ChildNodeEntry moved = null;
                             for (Iterator removedNodes = parent.getRemovedChildNodeEntries().iterator(); removedNodes.hasNext();) {
                                 NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) removedNodes.next();
-                                if (child.getUUID().equals(n.getUUID())) {
+                                if (child.getId().equals(n.getNodeId())) {
                                     // found node re-added with different name
                                     moved = child;
                                 }
@@ -230,16 +230,16 @@ public final class EventStateCollection {
                                     log.error(msg);
                                     throw new ItemStateException(msg, e);
                                 }
-                                events.add(EventState.childNodeRemoved(parent.getUUID(),
+                                events.add(EventState.childNodeRemoved(parent.getNodeId(),
                                         parentPath,
-                                        n.getUUID(),
+                                        n.getNodeId(),
                                         oldPath.getNameElement(),
                                         nodeType,
                                         mixins,
                                         session));
-                                events.add(EventState.childNodeAdded(parent.getUUID(),
+                                events.add(EventState.childNodeAdded(parent.getNodeId(),
                                         parentPath,
-                                        n.getUUID(),
+                                        n.getNodeId(),
                                         newPath.getNameElement(),
                                         nodeType,
                                         mixins,
@@ -260,28 +260,28 @@ public final class EventStateCollection {
                         NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) ro.next();
                         QName name = child.getName();
                         int index = (child.getIndex() != 1) ? child.getIndex() : 0;
-                        Path parentPath = getPath(n.getId(), hmgr);
+                        Path parentPath = getPath(n.getNodeId(), hmgr);
                         Path.PathElement addedElem = Path.create(name, index).getNameElement();
                         // get removed index
                         NodeState overlayed = (NodeState) n.getOverlayedState();
-                        NodeState.ChildNodeEntry entry = overlayed.getChildNodeEntry(child.getUUID());
+                        NodeState.ChildNodeEntry entry = overlayed.getChildNodeEntry(child.getId());
                         if (entry == null) {
-                            throw new ItemStateException("Unable to retrieve old child index for item: " + child.getUUID());
+                            throw new ItemStateException("Unable to retrieve old child index for item: " + child.getId());
                         }
                         int oldIndex = (entry.getIndex() != 1) ? entry.getIndex() : 0;
                         Path.PathElement removedElem = Path.create(name, oldIndex).getNameElement();
 
-                        events.add(EventState.childNodeRemoved(n.getUUID(),
+                        events.add(EventState.childNodeRemoved(n.getNodeId(),
                                 parentPath,
-                                child.getUUID(),
+                                child.getId(),
                                 removedElem,
                                 nodeType,
                                 mixins,
                                 session));
 
-                        events.add(EventState.childNodeAdded(n.getUUID(),
+                        events.add(EventState.childNodeAdded(n.getNodeId(),
                                 parentPath,
-                                child.getUUID(),
+                                child.getId(),
                                 addedElem,
                                 nodeType,
                                 mixins,
@@ -291,10 +291,10 @@ public final class EventStateCollection {
             } else {
                 // property changed
                 Path path = getPath(state.getId(), hmgr);
-                NodeState parent = (NodeState) provider.getItemState(new NodeId(state.getParentUUID()));
+                NodeState parent = (NodeState) provider.getItemState(state.getParentId());
                 NodeTypeImpl nodeType = getNodeType(parent, session);
                 Set mixins = parent.getMixinTypeNames();
-                events.add(EventState.propertyChanged(state.getParentUUID(),
+                events.add(EventState.propertyChanged(state.getParentId(),
                         getParent(path),
                         path.getNameElement(),
                         nodeType,
@@ -310,13 +310,13 @@ public final class EventStateCollection {
             if (state.isNode()) {
                 // node deleted
                 NodeState n = (NodeState) state;
-                NodeState parent = (NodeState) provider.getItemState(new NodeId(n.getParentUUID()));
+                NodeState parent = (NodeState) provider.getItemState(n.getParentId());
                 NodeTypeImpl nodeType = getNodeType(parent, session);
                 Set mixins = parent.getMixinTypeNames();
                 Path path = getZombiePath(state.getId(), hmgr);
-                events.add(EventState.childNodeRemoved(n.getParentUUID(),
+                events.add(EventState.childNodeRemoved(n.getParentId(),
                         getParent(path),
-                        n.getUUID(),
+                        n.getNodeId(),
                         path.getNameElement(),
                         nodeType,
                         mixins,
@@ -325,12 +325,12 @@ public final class EventStateCollection {
                 // property removed
                 // only create an event if node still exists
                 try {
-                    NodeState n = (NodeState) changes.get(new NodeId(state.getParentUUID()));
+                    NodeState n = (NodeState) changes.get(state.getParentId());
                     // node state exists -> only property removed
                     NodeTypeImpl nodeType = getNodeType(n, session);
                     Set mixins = n.getMixinTypeNames();
                     Path path = getZombiePath(state.getId(), hmgr);
-                    events.add(EventState.propertyRemoved(state.getParentUUID(),
+                    events.add(EventState.propertyRemoved(state.getParentId(),
                             getParent(path),
                             path.getNameElement(),
                             nodeType,
@@ -349,7 +349,7 @@ public final class EventStateCollection {
             if (state.isNode()) {
                 // node created
                 NodeState n = (NodeState) state;
-                NodeId parentId = new NodeId(n.getParentUUID());
+                NodeId parentId = n.getParentId();
                 NodeState parent;
                 // unknown if parent node is also new
                 if (provider.hasItemState(parentId)) {
@@ -359,21 +359,21 @@ public final class EventStateCollection {
                 }
                 NodeTypeImpl nodeType = getNodeType(parent, session);
                 Set mixins = parent.getMixinTypeNames();
-                Path path = getPath(n.getId(), hmgr);
-                events.add(EventState.childNodeAdded(n.getParentUUID(),
+                Path path = getPath(n.getNodeId(), hmgr);
+                events.add(EventState.childNodeAdded(parentId,
                         getParent(path),
-                        n.getUUID(),
+                        n.getNodeId(),
                         path.getNameElement(),
                         nodeType,
                         mixins,
                         session));
             } else {
                 // property created / set
-                NodeState n = (NodeState) changes.get(new NodeId(state.getParentUUID()));
+                NodeState n = (NodeState) changes.get(state.getParentId());
                 NodeTypeImpl nodeType = getNodeType(n, session);
                 Set mixins = n.getMixinTypeNames();
                 Path path = getPath(state.getId(), hmgr);
-                events.add(EventState.propertyAdded(state.getParentUUID(),
+                events.add(EventState.propertyAdded(state.getParentId(),
                         getParent(path),
                         path.getNameElement(),
                         nodeType,
@@ -456,7 +456,7 @@ public final class EventStateCollection {
         } catch (Exception e) {
             // also catch eventual runtime exceptions here
             // should never happen actually
-            String msg = "Item " + node.getId() + " has unknown node type: " + node.getNodeTypeName();
+            String msg = "Item " + node.getNodeId() + " has unknown node type: " + node.getNodeTypeName();
             log.error(msg);
             throw new ItemStateException(msg, e);
         }

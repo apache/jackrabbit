@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
 
@@ -98,8 +99,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public String getId() {
-        return node.getUUID();
+    public NodeId getId() {
+        return node.getNodeId();
     }
 
     /**
@@ -126,7 +127,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
             if (entry == null) {
                 throw new InternalError("version has no frozen node: " + getId());
             }
-            return (InternalFrozenNode) vMgr.getItem(entry.getUUID());
+            return (InternalFrozenNode) vMgr.getItem(entry.getId());
         } catch (RepositoryException e) {
             throw new IllegalStateException("unable to retrieve frozen node: " + e);
         }
@@ -202,7 +203,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
         InternalValue[] values = node.getPropertyValues(QName.JCR_PREDECESSORS);
         if (values != null) {
             for (int i = 0; i < values.length; i++) {
-                InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(values[i].internalValue().toString());
+                NodeId vId = new NodeId((UUID) values[i].internalValue());
+                InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(vId);
                 predecessors.add(v);
                 v.addSuccessor(this);
             }
@@ -235,7 +237,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
     private void storePredecessors() throws RepositoryException {
         InternalValue[] values = new InternalValue[predecessors.size()];
         for (int i = 0; i < values.length; i++) {
-            values[i] = InternalValue.create(new UUID(((InternalVersion) predecessors.get(i)).getId()));
+            values[i] = InternalValue.create(
+                    ((InternalVersion) predecessors.get(i)).getId().getUUID());
         }
         node.setPropertyValues(QName.JCR_PREDECESSORS, PropertyType.STRING, values);
     }
@@ -308,7 +311,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * adds a label to the label cache. does not affect storage
      *
      * @param label
-     * @return
+     * @return <code>true</code> if the label was added
      */
     boolean internalAddLabel(QName label) {
         if (labelCache == null) {
@@ -321,7 +324,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * removes a label from the label cache. does not affect storage
      *
      * @param label
-     * @return
+     * @return <code>true</code> if the label was removed
      */
     boolean internalRemoveLabel(QName label) {
         if (labelCache == null) {
@@ -335,7 +338,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * checks, if a label is in the label cache
      *
      * @param label
-     * @return
+     * @return <code>true</code> if the label exists
      */
     boolean internalHasLabel(QName label) {
         if (labelCache == null) {
@@ -348,7 +351,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * returns the array of the cached labels
      *
-     * @return
+     * @return the internal labels
      */
     QName[] internalGetLabels() {
         if (labelCache == null) {

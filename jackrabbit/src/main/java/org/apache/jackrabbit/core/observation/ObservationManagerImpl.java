@@ -15,6 +15,7 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -116,13 +117,20 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
             log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
+        NodeId[] ids = null;
+        if (uuid != null) {
+            ids = new NodeId[uuid.length];
+            for (int i=0; i<uuid.length; i++) {
+                ids[i] = NodeId.valueOf(uuid[i]);
+            }
+        }
         // create filter
         EventFilter filter = new EventFilter(itemMgr,
                 session,
                 eventTypes,
                 path,
                 isDeep,
-                uuid,
+                ids,
                 nodeTypes,
                 noLocal);
 

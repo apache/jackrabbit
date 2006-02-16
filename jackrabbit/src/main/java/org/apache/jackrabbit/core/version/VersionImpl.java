@@ -56,7 +56,7 @@ public class VersionImpl extends AbstractVersion {
     /**
      * Returns the internal version
      *
-     * @return
+     * @return the internal version
      */
     protected InternalVersion getInternalVersion() {
         return version;

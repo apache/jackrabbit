@@ -160,17 +160,17 @@ public class WorkspaceImporter implements Importer {
             // remember uuid mapping
             EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
             if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
-                refTracker.mappedUUID(nodeInfo.getUUID(), node.getUUID());
+                refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
-            String msg = "a node with uuid " + nodeInfo.getUUID()
+            String msg = "a node with uuid " + nodeInfo.getId()
                     + " already exists!";
             log.debug(msg);
             throw new ItemExistsException(msg);
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING) {
             // make sure conflicting node is not importTarget or an ancestor thereof
-            Path p0 = hierMgr.getPath(importTarget.getId());
-            Path p1 = hierMgr.getPath(conflicting.getId());
+            Path p0 = hierMgr.getPath(importTarget.getNodeId());
+            Path p1 = hierMgr.getPath(conflicting.getNodeId());
             try {
                 if (p1.equals(p0) || p1.isAncestorOf(p0)) {
                     String msg = "cannot remove ancestor node";
@@ -205,15 +205,15 @@ public class WorkspaceImporter implements Importer {
             // do create new node
             node = itemOps.createNodeState(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
-                    nodeInfo.getUUID());
+                    nodeInfo.getId());
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
-            if (conflicting.getParentUUID() == null) {
+            NodeId parentId = conflicting.getParentId();
+            if (parentId == null) {
                 String msg = "root node cannot be replaced";
                 log.debug(msg);
                 throw new RepositoryException(msg);
             }
             // 'replace' current parent with parent of conflicting
-            NodeId parentId = new NodeId(conflicting.getParentUUID());
             try {
                 parent = itemOps.getNodeState(parentId);
             } catch (ItemNotFoundException infe) {
@@ -244,7 +244,7 @@ public class WorkspaceImporter implements Importer {
             // do create new node
             node = itemOps.createNodeState(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
-                    nodeInfo.getUUID());
+                    nodeInfo.getId());
         } else {
             String msg = "unknown uuidBehavior: " + uuidBehavior;
             log.debug(msg);
@@ -364,7 +364,7 @@ public class WorkspaceImporter implements Importer {
             // process node
 
             NodeState node = null;
-            String uuid = nodeInfo.getUUID();
+            NodeId id = nodeInfo.getId();
             QName nodeName = nodeInfo.getName();
             QName ntName = nodeInfo.getNodeTypeName();
             QName[] mixins = nodeInfo.getMixinNames();
@@ -380,7 +380,7 @@ public class WorkspaceImporter implements Importer {
                 // a node with that name already exists...
                 NodeState.ChildNodeEntry entry =
                         parent.getChildNodeEntry(nodeName, 1);
-                NodeId idExisting = new NodeId(entry.getUUID());
+                NodeId idExisting = entry.getId();
                 NodeState existing = (NodeState) itemOps.getItemState(idExisting);
                 NodeDef def = ntReg.getNodeDef(existing.getDefinitionId());
 
@@ -394,7 +394,7 @@ public class WorkspaceImporter implements Importer {
                         parents.push(null); // push null onto stack for skipped node
                         succeeded = true;
                         log.debug("skipping protected node "
-                                + itemOps.safeGetJCRPath(existing.getId()));
+                                + itemOps.safeGetJCRPath(existing.getNodeId()));
                         return;
                     }
                     if (def.isAutoCreated() && entExisting.includesNodeType(ntName)) {
@@ -402,14 +402,14 @@ public class WorkspaceImporter implements Importer {
                         // no need to create it
                         node = existing;
                     } else {
-                        throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getId()));
+                        throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getNodeId()));
                     }
                 }
             }
 
             if (node == null) {
                 // there's no node with that name...
-                if (uuid == null) {
+                if (id == null) {
                     // no potential uuid conflict, always create new node
 
                     NodeDef def =
@@ -431,7 +431,7 @@ public class WorkspaceImporter implements Importer {
                          *
                          * see http://issues.apache.org/jira/browse/JCR-61
                          */
-                        PropertyId propId = new PropertyId(parent.getUUID(), nodeName);
+                        PropertyId propId = new PropertyId(parent.getNodeId(), nodeName);
                         PropertyState conflicting = itemOps.getPropertyState(propId);
                         if (conflicting.getStatus() == ItemState.STATUS_NEW) {
                             // assume this property has been imported as well;
@@ -464,7 +464,7 @@ public class WorkspaceImporter implements Importer {
                     NodeState conflicting;
 
                     try {
-                        conflicting = itemOps.getNodeState(new NodeId(uuid));
+                        conflicting = itemOps.getNodeState(id);
                     } catch (ItemNotFoundException infe) {
                         conflicting = null;
                     }
@@ -491,7 +491,7 @@ public class WorkspaceImporter implements Importer {
                                 BatchedItemOperations.CHECK_ACCESS
                                 | BatchedItemOperations.CHECK_CONSTRAINTS);
                         // do create new node
-                        node = itemOps.createNodeState(parent, nodeName, ntName, mixins, uuid, def);
+                        node = itemOps.createNodeState(parent, nodeName, ntName, mixins, id, def);
                     }
                 }
             }
@@ -510,7 +510,7 @@ public class WorkspaceImporter implements Importer {
 
                 if (node.hasPropertyName(propName)) {
                     // a property with that name already exists...
-                    PropertyId idExisting = new PropertyId(node.getUUID(), propName);
+                    PropertyId idExisting = new PropertyId(node.getNodeId(), propName);
                     PropertyState existing =
                             (PropertyState) itemOps.getItemState(idExisting);
                     def = ntReg.getPropDef(existing.getDefinitionId());
@@ -527,7 +527,7 @@ public class WorkspaceImporter implements Importer {
                         // no need to create it
                         prop = existing;
                     } else {
-                        throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getId()));
+                        throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getPropertyId()));
                     }
                 }
                 if (prop == null) {
@@ -557,7 +557,7 @@ public class WorkspaceImporter implements Importer {
 
                 // check multi-valued characteristic
                 if ((tva.length == 0 || tva.length > 1) && !def.isMultiple()) {
-                    throw new ConstraintViolationException(itemOps.safeGetJCRPath(prop.getId())
+                    throw new ConstraintViolationException(itemOps.safeGetJCRPath(prop.getPropertyId())
                             + " is not multi-valued");
                 }
 
@@ -720,10 +720,10 @@ public class WorkspaceImporter implements Importer {
                 InternalValue[] newVals = new InternalValue[values.length];
                 for (int i = 0; i < values.length; i++) {
                     InternalValue val = values[i];
-                    String original = ((UUID) val.internalValue()).toString();
-                    String adjusted = refTracker.getMappedUUID(original);
+                    UUID original = (UUID) val.internalValue();
+                    UUID adjusted = refTracker.getMappedUUID(original);
                     if (adjusted != null) {
-                        newVals[i] = InternalValue.create(UUID.fromString(adjusted));
+                        newVals[i] = InternalValue.create(adjusted);
                         modified = true;
                     } else {
                         // reference doesn't need adjusting, just copy old value

@@ -82,7 +82,7 @@ public abstract class AbstractVersion extends NodeImpl implements Version {
         InternalVersion[] suc = getInternalVersion().getSuccessors();
         Version[] ret = new Version[suc.length];
         for (int i = 0; i < suc.length; i++) {
-            ret[i] = (Version) session.getNodeByUUID(suc[i].getId());
+            ret[i] = (Version) session.getNodeById(suc[i].getId());
         }
         return ret;
     }
@@ -95,7 +95,7 @@ public abstract class AbstractVersion extends NodeImpl implements Version {
         InternalVersion[] pred = getInternalVersion().getPredecessors();
         Version[] ret = new Version[pred.length];
         for (int i = 0; i < pred.length; i++) {
-            ret[i] = (Version) session.getNodeByUUID(pred[i].getId());
+            ret[i] = (Version) session.getNodeById(pred[i].getId());
         }
         return ret;
     }
@@ -104,7 +104,7 @@ public abstract class AbstractVersion extends NodeImpl implements Version {
      * {@inheritDoc}
      */
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
-        return getInternalVersion().getId();
+        return getInternalVersion().getId().getUUID().toString();
     }
 
     /**

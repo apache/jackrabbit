@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.QName;
 
 /**
  * This Class implements a virtual property state
@@ -33,16 +33,15 @@ public class VirtualPropertyState extends PropertyState {
 
     /**
      * Creates a new virtual property state
-     * @param name
-     * @param parentUUID
+     * @param id
      */
-    public VirtualPropertyState(QName name, String parentUUID) {
-        super(name, parentUUID, ItemState.STATUS_EXISTING, false);
+    public VirtualPropertyState(PropertyId id) {
+        super(id, ItemState.STATUS_EXISTING, false);
     }
 
     /**
      * Returns the virtual value provider, if registered.
-     * @return
+     * @return the virtual value provider
      */
     public VirtualValueProvider getValueProvider() {
         return valueProvider;
@@ -59,12 +58,12 @@ public class VirtualPropertyState extends PropertyState {
     /**
      * Returns the value of this state evt. by using the registered virtual
      * value provider.
-     * @return
+     * @return the values
      */
     public InternalValue[] getValues() {
         InternalValue[] values = null;
         if (valueProvider != null) {
-            values = valueProvider.getVirtualValues(name);
+            values = valueProvider.getVirtualValues(getName());
         }
         return valueProvider == null ? super.getValues() : values;
     }

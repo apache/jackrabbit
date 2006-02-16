@@ -31,16 +31,14 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
      * {@inheritDoc}
      */
     public NodeState createNew(NodeId id) {
-        return new NodeState(id.getUUID(), null, null,
-                NodeState.STATUS_NEW, false);
+        return new NodeState(id, null, null, NodeState.STATUS_NEW, false);
     }
 
     /**
      * {@inheritDoc}
      */
     public PropertyState createNew(PropertyId id) {
-        return new PropertyState(id.getName(), id.getParentUUID(),
-                PropertyState.STATUS_NEW, false);
+        return new PropertyState(id, PropertyState.STATUS_NEW, false);
     }
 
     /**

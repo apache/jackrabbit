@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -56,30 +58,30 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * {@inheritDoc}
      */
-    public InternalVersion getVersion(String uuid) throws RepositoryException {
-        return (InternalVersion) getItem(uuid);
+    public InternalVersion getVersion(NodeId id) throws RepositoryException {
+        return (InternalVersion) getItem(id);
     }
 
     /**
      * {@inheritDoc}
      */
-    public InternalVersionHistory getVersionHistory(String uuid)
+    public InternalVersionHistory getVersionHistory(NodeId id)
             throws RepositoryException {
 
-        return (InternalVersionHistory) getItem(uuid);
+        return (InternalVersionHistory) getItem(id);
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean hasVersionHistory(String id) {
+    public boolean hasVersionHistory(NodeId id) {
         return hasItem(id);
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean hasVersion(String id) {
+    public boolean hasVersion(NodeId id) {
         return hasItem(id);
     }
 
@@ -91,30 +93,30 @@ abstract class AbstractVersionManager implements VersionManager {
     public VersionHistory getVersionHistory(Session session, NodeState node)
             throws RepositoryException {
 
-        String vhId = getVersionHistoryId(node);
+        NodeId vhId = getVersionHistoryId(node);
         if (vhId == null) {
             return null;
         }
-        return (VersionHistory) session.getNodeByUUID(vhId);
+        return (VersionHistory) ((SessionImpl) session).getNodeById(vhId);
     }
 
     /**
      * Returns the item with the given persistent id. Subclass responsibility.
-     * @param uuid uuid of item
+     * @param id the id of the item
      * @return version item
      * @throws RepositoryException if an error occurs
      */
-    protected abstract InternalVersionItem getItem(String uuid)
+    protected abstract InternalVersionItem getItem(NodeId id)
             throws RepositoryException;
 
     /**
      * Return a flag indicating if the item specified exists.
      * Subclass responsibility.
-     * @param uuid uuid of item
+     * @param id the id of the item
      * @return <code>true</code> if the item exists;
      *         <code>false</code> otherwise
      */
-    protected abstract boolean hasItem(String uuid);
+    protected abstract boolean hasItem(NodeId id);
 
     /**
      * Returns the item references that reference the given version item.
@@ -144,7 +146,7 @@ abstract class AbstractVersionManager implements VersionManager {
 
         try {
             // create deep path
-            String uuid = node.getUUID();
+            String uuid = node.getNodeId().getUUID().toString();
             NodeStateEx root = historyRoot;
             for (int i = 0; i < 3; i++) {
                 QName name = new QName(QName.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
@@ -162,7 +164,7 @@ abstract class AbstractVersionManager implements VersionManager {
 
             // create new history node in the persistent state
             InternalVersionHistoryImpl hist = InternalVersionHistoryImpl.create(
-                    this, root, UUID.randomUUID().toString(), historyNodeName, node);
+                    this, root, new NodeId(UUID.randomUUID()), historyNodeName, node);
 
             // end update
             stateMgr.update();
@@ -190,10 +192,10 @@ abstract class AbstractVersionManager implements VersionManager {
      *         or <code>null</code> if that node doesn't have a version history.
      * @throws javax.jcr.RepositoryException if an error occurs
      */
-    String getVersionHistoryId(NodeState node) throws RepositoryException {
+    NodeId getVersionHistoryId(NodeState node) throws RepositoryException {
 
         // build and traverse path
-        String uuid = node.getUUID();
+        String uuid = node.getNodeId().getUUID().toString();
         NodeStateEx n = historyRoot;
         for (int i = 0; i < 3; i++) {
             QName name = new QName(QName.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
@@ -206,7 +208,7 @@ abstract class AbstractVersionManager implements VersionManager {
         if (!n.hasNode(historyNodeName)) {
             return null;
         }
-        return n.getNode(historyNodeName, 1).getUUID();
+        return n.getNode(historyNodeName, 1).getNodeId();
     }
 
     /**
@@ -224,7 +226,7 @@ abstract class AbstractVersionManager implements VersionManager {
         Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
         InternalVersion[] preds = new InternalVersion[values.length];
         for (int i = 0; i < values.length; i++) {
-            preds[i] = history.getVersion(values[i].getString());
+            preds[i] = history.getVersion(NodeId.valueOf(values[i].getString()));
         }
 
         // 0.1 search a predecessor, suitable for generating the new name

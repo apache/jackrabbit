@@ -92,7 +92,7 @@
 	<dependency>
 	    <groupId>cqfs</groupId>
 	    <artifactId>cqfs-jackrabbit</artifactId>
-	    <version>3.5.6-SNAPSHOT</version>
+	    <version>3.5.6</version>
 	    <properties>
 		<rar.bundle>true</rar.bundle>
 	    </properties>	    
@@ -100,7 +100,7 @@
 	<dependency>
 	    <groupId>cqfs</groupId>
 	    <artifactId>cqfs</artifactId>
-	    <version>3.5.6-SNAPSHOT</version>
+	    <version>3.5.6</version>
 	    <properties>
 		<rar.bundle>true</rar.bundle>
 	    </properties>	    

@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.version.VersionException;
 import java.util.Iterator;
@@ -52,20 +54,20 @@ public interface InternalVersionHistory extends InternalVersionItem {
     /**
      * Checks if the version for the given uuid exists in this history.
      *
-     * @param uuid the uuid of the version
+     * @param id the id of the version
      * @return <code>true</code> if the version exists;
      *         <code>false</code> otherwise.
      */
-    boolean hasVersion(String uuid);
+    boolean hasVersion(NodeId id);
 
     /**
      * Returns the version with the given uuid or <code>null</code> if the
      * respective version does not exist.
      *
-     * @param uuid the uuid of the version
+     * @param id the id of the version
      * @return the internal version ot <code>null</code>
      */
-    InternalVersion getVersion(String uuid);
+    InternalVersion getVersion(NodeId id);
 
     /**
      * Equivalalent to {@link javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)}
@@ -95,20 +97,20 @@ public interface InternalVersionHistory extends InternalVersionItem {
      *
      * @return the UUID of the versionable node.
      */
-    String getVersionableUUID();
+    UUID getVersionableUUID();
 
     /**
      * Returns a string  iterator over all version labels that exist in this
      * version history
      *
-     * @return
+     * @return the labels
      */
     QName[] getVersionLabels();
 
     /**
-     * Returns the UUID of the version labels node
+     * Returns the Id of the version labels node.
      *
-     * @return
+     * @return the id of the version labels node.
      */
-    String getVersionLabelsUUID();
+    NodeId getVersionLabelsId();
 }
