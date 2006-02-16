@@ -69,6 +69,10 @@ public class InternalValue {
 
     public static final InternalValue[] EMPTY_ARRAY = new InternalValue[0];
 
+    public static final InternalValue BOOLEAN_TRUE = create(true);
+
+    public static final InternalValue BOOLEAN_FALSE = create(false);
+
     private final Object val;
     private final int type;
 
@@ -107,7 +111,7 @@ public class InternalValue {
                     throw new ValueFormatException(ioe.getMessage());
                 }
             case PropertyType.BOOLEAN:
-                return new InternalValue(value.getBoolean());
+                return value.getBoolean() ? BOOLEAN_TRUE : BOOLEAN_FALSE;
             case PropertyType.DATE:
                 return new InternalValue(value.getDate());
             case PropertyType.DOUBLE:
