@@ -1508,7 +1508,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (nodeTypeName != null) {
             nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
         }
-        return internalAddChildNode(nodeName, nt, new NodeId(uuid));
+        return internalAddChildNode(nodeName, nt, uuid == null ? null : new NodeId(uuid));
     }
 
     /**
