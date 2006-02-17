@@ -336,7 +336,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Returns the Idof the parent <code>NodeState</code> or <code>null</code>
+     * Returns the NodeId of the parent <code>NodeState</code> or <code>null</code>
      * if either this item state represents the root node or this item state is
      * 'free floating', i.e. not attached to the repository's hierarchy.
      *

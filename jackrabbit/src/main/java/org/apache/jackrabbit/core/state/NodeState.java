@@ -252,7 +252,7 @@ public class NodeState extends ItemState {
 
     /**
      * Determines if there is a <code>ChildNodeEntry</code> with the
-     * specified <code>uuid</code>.
+     * specified <code>NodeId</code>.
      *
      * @param id the id of the child node
      * @return <code>true</code> if there is a <code>ChildNodeEntry</code> with
@@ -301,11 +301,11 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns the <code>ChildNodeEntry</code> with the specified uuid or
+     * Returns the <code>ChildNodeEntry</code> with the specified <code>NodeId</code> or
      * <code>null</code> if there's no such entry.
      *
      * @param id the id of the child node
-     * @return the <code>ChildNodeEntry</code> with the specified uuid or
+     * @return the <code>ChildNodeEntry</code> with the specified <code>NodeId</code> or
      *         <code>null</code> if there's no such entry.
      * @see #addChildNodeEntry
      * @see #removeChildNodeEntry
