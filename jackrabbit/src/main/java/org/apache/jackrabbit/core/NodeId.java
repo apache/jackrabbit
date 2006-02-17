@@ -30,6 +30,9 @@ public class NodeId extends ItemId {
     /** UUID of the identified node */
     private final UUID uuid;
 
+    /** the precalculated hashcode */
+    private final int hashCode;
+
     /**
      * Creates a node identifier instance for the identified node.
      *
@@ -40,6 +43,7 @@ public class NodeId extends ItemId {
             throw new IllegalArgumentException("uuid can not be null");
         }
         this.uuid = uuid;
+        this.hashCode = uuid.hashCode();
     }
 
     /**
@@ -81,16 +85,10 @@ public class NodeId extends ItemId {
         return new NodeId(new UUID(s));
     }
 
-    //-------------------------------------------< java.lang.Object overrides >
+    //-----------------------------------------< java.lang.Object overrides >---
 
     /**
-     * Compares node identifiers for equality.
-     *
-     * @param obj other object
-     * @return <code>true</code> if the given object is a node identifier
-     *         instance that identifies the same node as this identifier,
-     *         <code>false</code> otherwise
-     * @see Object#equals(Object)
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -103,27 +101,20 @@ public class NodeId extends ItemId {
     }
 
     /**
-     * Returns the node UUID.
+     * {@inheritDoc}
      *
-     * @return node UUID
-     * @see Object#toString()
+     * Returns the same as <code>this.getUUID().toString()</code>
      */
     public String toString() {
         return uuid.toString();
     }
 
     /**
-     * Returns the hash code of the node UUID. The computed hash code
-     * is memorized for better performance.
+     * {@inheritDoc}
      *
-     * @return hash code
-     * @see Object#hashCode()
+     * Returns the same as <code>this.getUUID().hashCode()</code>
      */
     public int hashCode() {
-        // NodeId is immutable, we can store the computed hash code value
-        if (hash == 0) {
-            hash = uuid.hashCode();
-        }
-        return hash;
+        return hashCode;
     }
 }

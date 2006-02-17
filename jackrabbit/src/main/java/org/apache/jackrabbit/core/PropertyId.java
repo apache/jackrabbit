@@ -34,6 +34,9 @@ public class PropertyId extends ItemId {
     /** Qualified name of the property. */
     private final QName propName;
 
+    /** the precalculated hash code */
+    private final int hashCode;
+
     /**
      * Creates a property identifier instance for the identified property.
      *
@@ -49,6 +52,11 @@ public class PropertyId extends ItemId {
         }
         this.parentId = parentId;
         this.propName = propName;
+
+        int h= 17;
+        h = 37 * h + parentId.hashCode();
+        h = 37 * h + propName.hashCode();
+        this.hashCode = h;
     }
 
     /**
@@ -106,16 +114,10 @@ public class PropertyId extends ItemId {
         return new PropertyId(NodeId.valueOf(uuid), name);
     }
 
-    //-------------------------------------------< java.lang.Object overrides >
+    //-----------------------------------------< java.lang.Object overrides >---
 
     /**
-     * Compares property identifiers for equality.
-     *
-     * @param obj other object
-     * @return <code>true</code> if the given object is a property identifier
-     *         instance that identifies the same property as this identifier,
-     *         <code>false</code> otherwise
-     * @see Object#equals(Object)
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -130,32 +132,21 @@ public class PropertyId extends ItemId {
     }
 
     /**
-     * Returns a string representation of this property identifier.
+     * {@inheritDoc}
      *
-     * @return property identifier string
-     * @see Object#toString()
+     * Returns the same as <code>this.getParentId() + "/" + this.getName()</code>
      */
     public String toString() {
         return parentId + "/" + propName;
     }
 
     /**
-     * Returns the hash code of this property identifier. The hash code
-     * is computed from the parent node UUID and the property name. The
-     * hash code is memorized for performance.
+     * {@inheritDoc}
      *
-     * @return hash code
-     * @see Object#hashCode()
+     * Returns the hash code of this property identifier. The hash code
+     * is computed from the parent node id and the property name.
      */
     public int hashCode() {
-        // PropertyId is immutable, we can store the computed hash code value
-        int h = hash;
-        if (h == 0) {
-            h = 17;
-            h = 37 * h + parentId.hashCode();
-            h = 37 * h + propName.hashCode();
-            hash = h;
-        }
-        return h;
+        return hashCode;
     }
 }
