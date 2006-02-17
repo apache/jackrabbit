@@ -19,11 +19,12 @@ package org.apache.jackrabbit.core.state;
 import org.apache.commons.collections.MapIterator;
 import org.apache.commons.collections.OrderedMapIterator;
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.util.WeakIdentityCollection;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -48,6 +49,8 @@ public class NodeState extends ItemState {
      * Serialization UID of this class.
      */
     static final long serialVersionUID = -4116945555530446652L;
+
+    private static Logger log = Logger.getLogger(NodeState.class);
 
     /**
      * the name of this node's primary type
@@ -87,8 +90,7 @@ public class NodeState extends ItemState {
     /**
      * Listeners (weak references)
      */
-    private final transient ReferenceMap listeners =
-            new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+    private final transient Collection listeners = new WeakIdentityCollection(3);
 
     /**
      * Constructs a new node state that is initially connected to an overlayed
@@ -675,8 +677,12 @@ public class NodeState extends ItemState {
     public void addListener(ItemStateListener listener) {
         if (listener instanceof NodeStateListener) {
             synchronized (listeners) {
-                if (!listeners.containsKey(listener)) {
-                    listeners.put(listener, listener);
+                if (listeners.contains(listener)) {
+                    log.debug("listener already registered: " + listener);
+                    // no need to add to call ItemState.addListener()
+                    return;
+                } else {
+                    listeners.add(listener);
                 }
             }
         }
@@ -704,7 +710,7 @@ public class NodeState extends ItemState {
      */
     protected void notifyNodeAdded(ChildNodeEntry added) {
         synchronized (listeners) {
-            MapIterator iter = listeners.mapIterator();
+            Iterator iter = listeners.iterator();
             while (iter.hasNext()) {
                 NodeStateListener l = (NodeStateListener) iter.next();
                 if (l != null) {
@@ -720,7 +726,7 @@ public class NodeState extends ItemState {
      */
     protected void notifyNodesReplaced() {
         synchronized (listeners) {
-            MapIterator iter = listeners.mapIterator();
+            Iterator iter = listeners.iterator();
             while (iter.hasNext()) {
                 NodeStateListener l = (NodeStateListener) iter.next();
                 if (l != null) {
@@ -735,7 +741,7 @@ public class NodeState extends ItemState {
      */
     protected void notifyNodeRemoved(ChildNodeEntry removed) {
         synchronized (listeners) {
-            MapIterator iter = listeners.mapIterator();
+            Iterator iter = listeners.iterator();
             while (iter.hasNext()) {
                 NodeStateListener l = (NodeStateListener) iter.next();
                 if (l != null) {

@@ -16,18 +16,16 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.Collection;
 
 /**
  * <code>ItemState</code> represents the state of an <code>Item</code>.
@@ -89,9 +87,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     /**
      * Listeners (weak references)
      */
-    private final transient Map listeners =
-            Collections.synchronizedMap(
-                    new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+    private final transient Collection listeners = new WeakIdentityCollection(5);
 
     /**
      * the backing persistent item state (may be null)
@@ -176,7 +172,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     void onDisposed() {
         // prepare this instance so it can be gc'ed
-        listeners.clear();
+        synchronized (listeners) {
+            listeners.clear();
+        }
         disconnect();
         overlayedState = null;
         status = STATUS_UNDEFINED;
@@ -223,11 +221,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected void notifyStateDiscarded() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la = new ItemStateListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (ItemStateListener) iter.next();
+        ItemStateListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -242,11 +238,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected void notifyStateCreated() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la = new ItemStateListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (ItemStateListener) iter.next();
+        ItemStateListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -261,11 +255,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     public void notifyStateUpdated() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la = new ItemStateListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (ItemStateListener) iter.next();
+        ItemStateListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -280,11 +272,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected void notifyStateDestroyed() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la = new ItemStateListener[listeners.size()];
-        Iterator iter = listeners.values().iterator();
-        int cnt = 0;
-        while (iter.hasNext()) {
-            la[cnt++] = (ItemStateListener) iter.next();
+        ItemStateListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -441,8 +431,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @param listener the new listener to be informed on modifications
      */
     public void addListener(ItemStateListener listener) {
-        if (!listeners.containsKey(listener)) {
-            listeners.put(listener, listener);
+        synchronized (listeners) {
+            assert (!listeners.contains(listener));
+            listeners.add(listener);
         }
     }
 
@@ -452,7 +443,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @param listener an existing listener
      */
     public void removeListener(ItemStateListener listener) {
-        listeners.remove(listener);
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
     }
 
     //----------------------------------------------------< ItemStateListener >
