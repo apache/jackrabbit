@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Set;
 
@@ -234,7 +235,10 @@ public class ItemValidator {
     public String safeGetJCRPath(ItemId id) {
         try {
             return safeGetJCRPath(hierMgr.getPath(id));
-        } catch (RepositoryException re) {
+        } catch (ItemNotFoundException e) {
+            // return string representation if id as a fallback
+            return id.toString();
+        } catch (RepositoryException e) {
             log.error(id + ": failed to build path");
             // return string representation if id as a fallback
             return id.toString();
