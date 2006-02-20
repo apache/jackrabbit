@@ -691,7 +691,15 @@ public class SessionImpl implements Session, Dumpable {
     }
 
     /**
-     * {@inheritDoc}
+     * Retrieve the referenceable node with the given <code>UUID</code>.
+     *
+     * @param uuid
+     * @return referenceable node with the given uuid
+     * @throws ItemNotFoundException if no node exists with the given uuid or
+     * if the existing node is not referenceable.
+     * @throws RepositoryException
+     * @see #getNodeByUUID(String)
+     * @see #getNodeById(NodeId)
      */
     public Node getNodeByUUID(UUID uuid) throws ItemNotFoundException, RepositoryException {
         NodeImpl node = getNodeById(new NodeId(uuid));
@@ -704,7 +712,13 @@ public class SessionImpl implements Session, Dumpable {
     }
 
     /**
-     * {@inheritDoc}
+     * Retrieve the <code>Node</code> with the given id.
+     *
+     * @param id
+     * @return node with the given <code>NodeId</code>.
+     * @throws ItemNotFoundException if no such node exists or if this
+     * <code>Session</code> does not have permission to access the node.
+     * @throws RepositoryException
      */
     public NodeImpl getNodeById(NodeId id) throws ItemNotFoundException, RepositoryException {
         // check sanity of this session
