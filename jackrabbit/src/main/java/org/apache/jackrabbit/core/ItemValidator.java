@@ -236,11 +236,11 @@ public class ItemValidator {
         try {
             return safeGetJCRPath(hierMgr.getPath(id));
         } catch (ItemNotFoundException e) {
-            // return string representation if id as a fallback
+            // return string representation of id as a fallback
             return id.toString();
         } catch (RepositoryException e) {
             log.error(id + ": failed to build path");
-            // return string representation if id as a fallback
+            // return string representation of id as a fallback
             return id.toString();
         }
     }
