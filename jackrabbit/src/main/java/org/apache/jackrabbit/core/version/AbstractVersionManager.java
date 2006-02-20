@@ -222,45 +222,29 @@ abstract class AbstractVersionManager implements VersionManager {
     protected InternalVersion checkin(InternalVersionHistoryImpl history, NodeImpl node)
             throws RepositoryException {
 
-        // 0. resolve the predecessors
+        // 1. search a predecessor, suitable for generating the new name
         Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
-        InternalVersion[] preds = new InternalVersion[values.length];
+        InternalVersion best = null;
         for (int i = 0; i < values.length; i++) {
-            preds[i] = history.getVersion(NodeId.valueOf(values[i].getString()));
-        }
-
-        // 0.1 search a predecessor, suitable for generating the new name
-        String versionName = null;
-        int maxDots = Integer.MAX_VALUE;
-        for (int i = 0; i < preds.length; i++) {
-            // take the first pred. without a successor
-            if (preds[i].getSuccessors().length == 0) {
-                versionName = preds[i].getName().getLocalName(); //assuming no namespaces in version names
-                // need to count the dots
-                int pos = -1;
-                int numDots = 0;
-                while (versionName.indexOf('.', pos + 1) >= 0) {
-                    pos = versionName.indexOf('.', pos + 1);
-                    numDots++;
-                }
-                if (numDots < maxDots) {
-                    maxDots = numDots;
-                    if (pos < 0) {
-                        versionName = "1.0";
-                    } else {
-                        versionName = versionName.substring(0, pos + 1)
-                                + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
-                    }
-                }
-                break;
+            InternalVersion pred = history.getVersion(NodeId.valueOf(values[i].getString()));
+            if (best == null || pred.getSuccessors().length < best.getSuccessors().length) {
+                best = pred;
             }
         }
-        // if no empty found, generate new name
-        if (versionName == null) {
-            versionName = preds[0].getName().getLocalName();
-            do {
-                versionName += ".1";
-            } while (history.hasVersion(new QName("", versionName)));
+
+        // 2. generate version name (assume no namespaces in version names)
+        String versionName = best.getName().getLocalName();
+        int pos = versionName.lastIndexOf('.');
+        if (pos>0) {
+            versionName = versionName.substring(0, pos + 1) +
+                (Integer.parseInt(versionName.substring(pos + 1)) + 1);
+        } else {
+            versionName = String.valueOf(best.getSuccessors().length + 1) + ".0";
+        }
+
+        // 3. check for colliding names
+        while (history.hasVersion(new QName("", versionName))) {
+            versionName += ".1";
         }
 
         try {
