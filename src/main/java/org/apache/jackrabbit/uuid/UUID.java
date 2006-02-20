@@ -27,13 +27,10 @@ import java.io.Serializable;
  * <p/>
  * <p>See: http://www.ietf.org/internet-drafts/draft-mealling-uuid-urn-01.txt</p>
  * <p/>
- * This is a lightweight implementation of an UUID, neglacting the different
+ * This is a lightweight implementation of an UUID, disregarding the different
  * versions of UUIDs.
  */
 public class UUID implements Constants, Serializable, Comparable {
-
-    /** the cvs/svn id */
-    static final String CVS_ID = "$URL: http://svn.day.com/repos/crx/trunk/repository/api/src/main/java/com/day/crx/uuid/UUID.java $ $Rev: 18768 $ $Date: 2006-02-14 19:52:29 +0100 (Di, 14 Feb 2006) $";
 
     static final long serialVersionUID = 2526142433736157231L;
 
