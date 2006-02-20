@@ -52,6 +52,11 @@ class VersionIteratorImpl implements VersionIterator {
     private final SessionImpl session;
 
     /**
+     * The number of versions available.
+     */
+    private final long size;
+
+    /**
      * Creates a new VersionIterator that iterates over the version tree,
      * starting the root node.
      *
@@ -61,6 +66,8 @@ class VersionIteratorImpl implements VersionIterator {
         this.session = (SessionImpl) session;
 
         addVersion(rootVersion);
+        // retrieve inital size, since size of the list is not stable
+        size = versions.size();
     }
 
     /**
@@ -94,7 +101,7 @@ class VersionIteratorImpl implements VersionIterator {
      * {@inheritDoc}
      */
     public long getSize() {
-        return versions.size();
+        return size;
     }
 
     /**
