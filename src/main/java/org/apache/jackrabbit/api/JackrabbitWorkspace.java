@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.api;
 
+import org.xml.sax.InputSource;
+
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
@@ -36,7 +38,21 @@ public interface JackrabbitWorkspace extends Workspace {
      *                               already exists or if another error occurs
      * @see #getAccessibleWorkspaceNames()
      */
-	void createWorkspace(String workspaceName)
-		throws AccessDeniedException, RepositoryException;
+    void createWorkspace(String workspaceName)
+            throws AccessDeniedException, RepositoryException;
 
+    /**
+     * Creates a workspace with the given name and a workspace configuration
+     * template.
+     *
+     * @param workspaceName name of the new workspace
+     * @param workspaceTemplate the configuration template of the new workspace
+     * @throws AccessDeniedException if the current session is not allowed to
+     *                               create the workspace
+     * @throws RepositoryException   if a workspace with the given name
+     *                               already exists or if another error occurs
+     * @see #getAccessibleWorkspaceNames()
+     */
+    public void createWorkspace(String workspaceName, InputSource workspaceTemplate)
+            throws AccessDeniedException, RepositoryException;
 }
