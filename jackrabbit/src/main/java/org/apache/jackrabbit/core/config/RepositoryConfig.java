@@ -438,7 +438,9 @@ public class RepositoryConfig {
     }
 
     /**
-     * Creates a new workspace configuration with the specified name.
+     * Creates a new workspace configuration with the specified name and the
+     * specified workspace <code>template</.
+     * <p/>
      * This method creates a workspace configuration subdirectory,
      * copies the workspace configuration template into it, and finally
      * adds the created workspace configuration to the repository.
@@ -446,11 +448,13 @@ public class RepositoryConfig {
      * the caller.
      *
      * @param name workspace name
+     * @param template the workspace template
      * @return created workspace configuration
      * @throws ConfigurationException if creating the workspace configuration
      *                                failed
      */
-    public synchronized WorkspaceConfig createWorkspaceConfig(String name)
+    private synchronized WorkspaceConfig internalCreateWorkspaceConfig(String name,
+                                                                       Element template)
             throws ConfigurationException {
 
         // The physical workspace home directory on disk (TODO encode name?)
@@ -541,6 +545,52 @@ public class RepositoryConfig {
                     "Failed to load the created configuration for workspace "
                     + name + ".");
         }
+    }
+
+    /**
+     * Creates a new workspace configuration with the specified name.
+     * This method creates a workspace configuration subdirectory,
+     * copies the workspace configuration template into it, and finally
+     * adds the created workspace configuration to the repository.
+     * The initialized workspace configuration object is returned to
+     * the caller.
+     *
+     * @param name workspace name
+     * @return created workspace configuration
+     * @throws ConfigurationException if creating the workspace configuration
+     *                                failed
+     */
+    public WorkspaceConfig createWorkspaceConfig(String name)
+            throws ConfigurationException {
+
+        // use workspace template from repository.xml
+        return internalCreateWorkspaceConfig(name, template);
+    }
+
+    /**
+     * Creates a new workspace configuration with the specified name. This
+     * method uses the provided workspace <code>template</code> to create the
+     * repository config instead of the template that is present in the
+     * repository configuration.
+     * <p/>
+     * This method creates a workspace configuration subdirectory,
+     * copies the workspace configuration template into it, and finally
+     * adds the created workspace configuration to the repository.
+     * The initialized workspace configuration object is returned to
+     * the caller.
+     *
+     * @param name workspace name
+     * @param template the workspace template
+     * @return created workspace configuration
+     * @throws ConfigurationException if creating the workspace configuration
+     *                                failed
+     */
+    public WorkspaceConfig createWorkspaceConfig(String name,
+                                                 InputSource template)
+            throws ConfigurationException {
+        ConfigurationParser parser = new ConfigurationParser(new Properties());
+        Element workspaceTemplate = parser.parseXML(template);
+        return internalCreateWorkspaceConfig(name, workspaceTemplate);
     }
 
     /**
