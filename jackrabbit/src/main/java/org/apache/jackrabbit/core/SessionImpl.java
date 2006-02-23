@@ -452,6 +452,24 @@ public class SessionImpl implements Session, Dumpable {
     }
 
     /**
+     * Creates a workspace with the given name and a workspace configuration
+     * template.
+     *
+     * @param workspaceName  name of the new workspace
+     * @param configTemplate the configuration template of the new workspace
+     * @throws AccessDeniedException if the current session is not allowed to
+     *                               create the workspace
+     * @throws RepositoryException   if a workspace with the given name already
+     *                               exists or if another error occurs
+     */
+    protected void createWorkspace(String workspaceName,
+                                   InputSource configTemplate)
+            throws AccessDeniedException, RepositoryException {
+        // @todo verify that this session has the right privileges for this operation
+        rep.createWorkspace(workspaceName, configTemplate);
+    }
+
+    /**
      * Notify the listeners that this session is about to be closed.
      */
     protected void notifyLoggingOut() {

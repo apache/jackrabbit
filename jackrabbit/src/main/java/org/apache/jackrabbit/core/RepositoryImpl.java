@@ -45,6 +45,7 @@ import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.log4j.Logger;
+import org.xml.sax.InputSource;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -662,6 +663,31 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
         // create the workspace configuration
         WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName);
+        WorkspaceInfo info = createWorkspaceInfo(config);
+        wspInfos.put(workspaceName, info);
+    }
+
+    /**
+     * Creates a workspace with the given name and given workspace configuration
+     * template.
+     *
+     * @param workspaceName  name of the new workspace
+     * @param configTemplate the workspace configuration template of the new
+     *                       workspace
+     * @throws RepositoryException if a workspace with the given name already
+     *                             exists or if another error occurs
+     * @see SessionImpl#createWorkspace(String,InputSource)
+     */
+    protected synchronized void createWorkspace(String workspaceName,
+                                                InputSource configTemplate)
+            throws RepositoryException {
+        if (wspInfos.containsKey(workspaceName)) {
+            throw new RepositoryException("workspace '"
+                    + workspaceName + "' already exists.");
+        }
+
+        // create the workspace configuration
+        WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName, configTemplate);
         WorkspaceInfo info = createWorkspaceInfo(config);
         wspInfos.put(workspaceName, info);
     }

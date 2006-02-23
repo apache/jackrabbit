@@ -177,6 +177,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
     }
 
     //--------------------------------------------------< JackrabbitWorkspace >
+
     /**
      * Creates a workspace with the given name.
      *
@@ -193,6 +194,26 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
         sanityCheck();
 
         session.createWorkspace(workspaceName);
+    }
+
+    /**
+     * Creates a workspace with the given name and a workspace configuration
+     * template.
+     *
+     * @param workspaceName name of the new workspace
+     * @param configTemplate the configuration template of the new workspace
+     * @throws AccessDeniedException if the current session is not allowed to
+     *                               create the workspace
+     * @throws RepositoryException   if a workspace with the given name
+     *                               already exists or if another error occurs
+     * @see #getAccessibleWorkspaceNames()
+     */
+    public void createWorkspace(String workspaceName, InputSource configTemplate)
+            throws AccessDeniedException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        session.createWorkspace(workspaceName, configTemplate);
     }
 
     /**
