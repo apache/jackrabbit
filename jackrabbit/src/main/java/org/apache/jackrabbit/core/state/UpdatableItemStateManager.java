@@ -44,7 +44,6 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      *
      * @return <code>true</code> if this manager is in edit mode, otherwise
      *         <code>false</code>
-     * @throws IllegalStateException if the manager is not in edit mode.
      */
     boolean inEditMode();
 

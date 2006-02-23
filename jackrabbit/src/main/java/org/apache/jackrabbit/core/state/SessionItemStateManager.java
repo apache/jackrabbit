@@ -178,7 +178,7 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public boolean inEditMode() throws IllegalStateException {
+    public boolean inEditMode() {
         return persistentStateMgr.inEditMode();
     }
 
