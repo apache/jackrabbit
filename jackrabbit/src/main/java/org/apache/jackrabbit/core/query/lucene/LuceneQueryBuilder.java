@@ -78,16 +78,6 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     private static final Logger log = Logger.getLogger(LuceneQueryBuilder.class);
 
     /**
-     * QName for jcr:primaryType
-     */
-    private static QName primaryType = QName.JCR_PRIMARYTYPE;
-
-    /**
-     * QName for jcr:mixinTypes
-     */
-    private static QName mixinTypes = QName.JCR_MIXINTYPES;
-
-    /**
      * Root node of the abstract query tree
      */
     private QueryRootNode root;
@@ -254,24 +244,44 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(NodeTypeQueryNode node, Object data) {
-        String field = "";
-        List values = new ArrayList();
+
+        List terms = new ArrayList();
         try {
-            values.add(node.getValue().toJCRName(nsMappings));
+            String mixinTypesField = QName.JCR_MIXINTYPES.toJCRName(nsMappings);
+            String primaryTypeField = QName.JCR_PRIMARYTYPE.toJCRName(nsMappings);
+
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
             NodeType base = ntMgr.getNodeType(node.getValue().toJCRName(session.getNamespaceResolver()));
+
             if (base.isMixin()) {
-                field = mixinTypes.toJCRName(nsMappings);
+                // search for nodes where jcr:mixinTypes is set to this mixin
+                Term t = new Term(FieldNames.PROPERTIES,
+                        FieldNames.createNamedValue(mixinTypesField,
+                                node.getValue().toJCRName(nsMappings)));
+                terms.add(t);
             } else {
-                field = primaryType.toJCRName(nsMappings);
+                // search for nodes where jcr:primaryType is set to this type
+                Term t = new Term(FieldNames.PROPERTIES,
+                        FieldNames.createNamedValue(primaryTypeField,
+                                node.getValue().toJCRName(nsMappings)));
+                terms.add(t);
             }
+
+            // now search for all node types that are derived from base
             NodeTypeIterator allTypes = ntMgr.getAllNodeTypes();
             while (allTypes.hasNext()) {
                 NodeType nt = allTypes.nextNodeType();
+                // only interested in types that can be used to create nodes
+                if (nt.isMixin()) {
+                    continue;
+                }
                 NodeType[] superTypes = nt.getSupertypes();
                 if (Arrays.asList(superTypes).contains(base)) {
-                    values.add(nsMappings.translatePropertyName(nt.getName(),
-                            session.getNamespaceResolver()));
+                    String ntName = nsMappings.translatePropertyName(nt.getName(),
+                            session.getNamespaceResolver());
+                    Term t = new Term(FieldNames.PROPERTIES,
+                            FieldNames.createNamedValue(primaryTypeField, ntName));
+                    terms.add(t);
                 }
             }
         } catch (IllegalNameException e) {
@@ -284,19 +294,15 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         } catch (RepositoryException e) {
             exceptions.add(e);
         }
-        if (values.size() == 0) {
+        if (terms.size() == 0) {
             // exception occured
             return new BooleanQuery();
-        } else if (values.size() == 1) {
-            Term t = new Term(FieldNames.PROPERTIES,
-                    FieldNames.createNamedValue(field, (String) values.get(0)));
-            return new TermQuery(t);
+        } else if (terms.size() == 1) {
+            return new TermQuery((Term) terms.get(0));
         } else {
             BooleanQuery b = new BooleanQuery();
-            for (Iterator it = values.iterator(); it.hasNext();) {
-                Term t = new Term(FieldNames.PROPERTIES,
-                        FieldNames.createNamedValue(field, (String) it.next()));
-                b.add(new TermQuery(t), false, false);
+            for (Iterator it = terms.iterator(); it.hasNext();) {
+                b.add(new TermQuery((Term) it.next()), false, false);
             }
             return b;
         }
@@ -466,7 +472,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // todo this will traverse the whole index, optimize!
                     Query subQuery = null;
                     try {
-                        subQuery = new MatchAllQuery(primaryType.toJCRName(nsMappings));
+                        subQuery = new MatchAllQuery(QName.JCR_PRIMARYTYPE.toJCRName(nsMappings));
                     } catch (NoPrefixDeclaredException e) {
                         // will never happen, prefixes are created when unknown
                     }
