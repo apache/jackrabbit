@@ -914,7 +914,7 @@ public class NodeTypeRegistry implements Dumpable {
 
         // build list of 'best' existing sub-aggregates
         ArrayList tmpResults = new ArrayList();
-        while (key.size() > 0) {
+        while (key.getNames().length > 0) {
             // check if we've already built this aggregate
             if (anEntCache.contains(key)) {
                 tmpResults.add(anEntCache.get(key));
@@ -949,7 +949,7 @@ public class NodeTypeRegistry implements Dumpable {
                  * no matching sub-aggregates found:
                  * build aggregate of remaining node types through iteration
                  */
-                QName[] remainder = key.toArray();
+                QName[] remainder = key.getNames();
                 for (int i = 0; i < remainder.length; i++) {
                     NodeTypeDef ntd = (NodeTypeDef) aRegisteredNTDefCache.get(remainder[i]);
                     EffectiveNodeType ent =
@@ -1398,7 +1398,7 @@ public class NodeTypeRegistry implements Dumpable {
 
     /**
      * @param nodeTypeName
-     * @return <code>true</code> if the specified nodetype is registered;
+     * @return <code>true</code> if the specified node type is registered;
      *         <code>false</code> otherwise.
      */
     public synchronized boolean isRegistered(QName nodeTypeName) {
@@ -1408,7 +1408,7 @@ public class NodeTypeRegistry implements Dumpable {
 
     /**
      * @param nodeTypeName
-     * @return <code>true</code> if the specified nodetype is built-in;
+     * @return <code>true</code> if the specified node type is built-in;
      *         <code>false</code> otherwise.
      */
     public synchronized boolean isBuiltIn(QName nodeTypeName) {
