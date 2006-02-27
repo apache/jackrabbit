@@ -271,16 +271,20 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             NodeTypeIterator allTypes = ntMgr.getAllNodeTypes();
             while (allTypes.hasNext()) {
                 NodeType nt = allTypes.nextNodeType();
-                // only interested in types that can be used to create nodes
-                if (nt.isMixin()) {
-                    continue;
-                }
                 NodeType[] superTypes = nt.getSupertypes();
                 if (Arrays.asList(superTypes).contains(base)) {
                     String ntName = nsMappings.translatePropertyName(nt.getName(),
                             session.getNamespaceResolver());
-                    Term t = new Term(FieldNames.PROPERTIES,
-                            FieldNames.createNamedValue(primaryTypeField, ntName));
+                    Term t;
+                    if (nt.isMixin()) {
+                        // search on jcr:mixinTypes
+                        t = new Term(FieldNames.PROPERTIES,
+                                FieldNames.createNamedValue(mixinTypesField, ntName));
+                    } else {
+                        // search on jcr:primaryType
+                        t = new Term(FieldNames.PROPERTIES,
+                                FieldNames.createNamedValue(primaryTypeField, ntName));
+                    }
                     terms.add(t);
                 }
             }
