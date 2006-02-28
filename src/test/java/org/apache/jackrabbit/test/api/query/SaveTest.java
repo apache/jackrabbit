@@ -66,19 +66,27 @@ public class SaveTest extends AbstractJCRTest {
 
     /**
      * Tests if an {@link javax.jcr.ItemExistsException} is thrown when a query
-     * is stored on an existing node.
+     * is stored on an existing node and same name siblings are not allowed.
      */
     public void testItemExistsException() throws RepositoryException {
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
-        query.storeAsNode(testRoot + "/" + nodeName1);
+        Node qNode = query.storeAsNode(testRoot + "/" + nodeName1);
 
         // create another one
         query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
             query.storeAsNode(testRoot + "/" + nodeName1);
-            fail("Query.storeAsNode() did not throw ItemExistsException");
+            if (!qNode.getDefinition().allowsSameNameSiblings()) {
+                // must throw if same name siblings are not allowed
+                fail("Query.storeAsNode() did not throw ItemExistsException");
+            }
         } catch (ItemExistsException e) {
-            // expected behaviour
+            if (qNode.getDefinition().allowsSameNameSiblings()) {
+                fail("Query.storeAsNode() must not throw ItemExistsException " +
+                        "when same name siblings are allowed");
+            } else {
+                // expected behaviour
+            }
         }
     }
 
