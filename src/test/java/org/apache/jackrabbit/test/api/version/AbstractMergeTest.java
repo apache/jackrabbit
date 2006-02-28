@@ -108,6 +108,7 @@ public abstract class AbstractMergeTest extends AbstractJCRTest {
             testRootNodeW2 = superuserW2.getRootNode();
         } else if (!superuserW2.getRootNode().hasNode(testPath)) {
             testRootNodeW2 = superuserW2.getRootNode().addNode(testPath, testNodeType);
+            superuserW2.save();
         } else {
             testRootNodeW2 = superuserW2.getRootNode().getNode(testPath);
         }
