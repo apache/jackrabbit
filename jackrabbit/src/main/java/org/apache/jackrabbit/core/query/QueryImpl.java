@@ -178,12 +178,7 @@ public class QueryImpl extends AbstractQueryImpl {
             if (!p.isAbsolute()) {
                 throw new RepositoryException(absPath + " is not an absolute path");
             }
-            if (session.itemExists(absPath)) {
-                throw new ItemExistsException(absPath);
-            }
-            if (!session.itemExists(p.getAncestor(1).toJCRPath(resolver))) {
-                throw new PathNotFoundException(p.getAncestor(1).toJCRPath(resolver));
-            }
+
             String relPath = p.toJCRPath(resolver).substring(1);
             Node queryNode = session.getRootNode().addNode(relPath,
                     QName.NT_QUERY.toJCRName(resolver));
