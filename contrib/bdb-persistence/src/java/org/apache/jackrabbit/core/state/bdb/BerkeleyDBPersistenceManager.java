@@ -169,6 +169,8 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
                 throw new NoSuchItemStateException(id.toString());
             }
             return (NodeReferences) tupleBinding.entryToObject(value);
+        } catch (NoSuchItemStateException e) {
+            throw e;
         } catch (Exception e) {
             log.error(e);
             throw new ItemStateException(e.getMessage(), e);
