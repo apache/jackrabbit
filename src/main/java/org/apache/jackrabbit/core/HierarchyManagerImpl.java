@@ -380,7 +380,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             NodeState parentState;
             try {
                 NodeState nodeState = (NodeState) getItemState(nodeId);
-                NodeId parentId= getParentId(nodeState);
+                NodeId parentId = getParentId(nodeState);
                 if (parentId == null) {
                     // this is the root or an orphaned node
                     // FIXME

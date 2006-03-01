@@ -26,9 +26,9 @@ import org.apache.jackrabbit.name.QName;
 public class PropertyId extends ItemId {
 
     /** Serial version UID of this class. */
-    static final long serialVersionUID = -3726624437800567892L;
+    static final long serialVersionUID = 1118783735407446009L;
 
-    /** ID of the parent node. */
+    /** id of the parent node. */
     private final NodeId parentId;
 
     /** Qualified name of the property. */
@@ -71,9 +71,9 @@ public class PropertyId extends ItemId {
     }
 
     /**
-     * Returns the Id of the parent node.
+     * Returns the identifier of the parent node.
      *
-     * @return node Id
+     * @return id of parent node
      */
     public NodeId getParentId() {
         return parentId;
@@ -114,8 +114,7 @@ public class PropertyId extends ItemId {
         return new PropertyId(NodeId.valueOf(uuid), name);
     }
 
-    //-----------------------------------------< java.lang.Object overrides >---
-
+    //-------------------------------------------< java.lang.Object overrides >
     /**
      * {@inheritDoc}
      */

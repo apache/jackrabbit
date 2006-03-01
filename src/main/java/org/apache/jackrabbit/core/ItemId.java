@@ -26,7 +26,7 @@ import java.io.Serializable;
 public abstract class ItemId implements Serializable {
 
     /** Serialization UID of this class. */
-    static final long serialVersionUID = -9147603369595196078L;
+    static final long serialVersionUID = -5138008726453328226L;
 
     /**
      * Returns <code>true</code> if this id denotes a <code>Node</code>.

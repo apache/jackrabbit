@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.InternalXAResource;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
@@ -389,18 +388,18 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
 
     /**
      * Add a virtual reference from some reference property to a virtual node.
-     * Ignored if <code>targetId</code> does not actually point to a virtual
-     * node.
+     * Ignored if <code>refsId.getTargetId()</code> does not denote a
+     * virtual node.
      * @param sourceId property id
-     * @param targetId node references id
+     * @param refsId node references id
      */
     private void addVirtualReference(PropertyId sourceId,
-                                     NodeReferencesId targetId)
+                                     NodeReferencesId refsId)
             throws NoSuchItemStateException, ItemStateException {
 
-        NodeReferences refs = virtualProvider.getNodeReferences(targetId);
-        if (refs == null && virtualProvider.hasItemState(new NodeId(targetId.getUUID()))) {
-            refs = new NodeReferences(targetId);
+        NodeReferences refs = virtualProvider.getNodeReferences(refsId);
+        if (refs == null && virtualProvider.hasItemState(refsId.getTargetId())) {
+            refs = new NodeReferences(refsId);
         }
         if (refs != null) {
             refs.addReference(sourceId);
@@ -410,18 +409,18 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
 
     /**
      * Remove a virtual reference from some reference property to a virtual node.
-     * Ignored if <code>targetId</code> does not actually point to a virtual
-     * node.
+     * Ignored if <code>refsId.getTargetId()</code> does not denote a
+     * virtual node.
      * @param sourceId property id
-     * @param targetId node references id
+     * @param refsId node references id
      */
     private void removeVirtualReference(PropertyId sourceId,
-                                        NodeReferencesId targetId)
+                                        NodeReferencesId refsId)
             throws NoSuchItemStateException, ItemStateException {
 
-        NodeReferences refs = virtualProvider.getNodeReferences(targetId);
-        if (refs == null && virtualProvider.hasItemState(new NodeId(targetId.getUUID()))) {
-            refs = new NodeReferences(targetId);
+        NodeReferences refs = virtualProvider.getNodeReferences(refsId);
+        if (refs == null && virtualProvider.hasItemState(refsId.getTargetId())) {
+            refs = new NodeReferences(refsId);
         }
         if (refs != null) {
             refs.removeReference(sourceId);

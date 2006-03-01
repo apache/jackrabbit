@@ -171,8 +171,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         return buildNodeFolderPath(id) + "/" + NODEFILENAME;
     }
 
-    private String buildNodeReferencesFilePath(NodeId id) {
-        return buildNodeFolderPath(id) + "/" + NODEREFSFILENAME;
+    private String buildNodeReferencesFilePath(NodeReferencesId id) {
+        return buildNodeFolderPath(id.getTargetId()) + "/" + NODEREFSFILENAME;
     }
 
     private void readState(DOMWalker walker, NodeState state)
@@ -360,7 +360,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new ItemStateException(msg);
         }
         // check targetId
-        if (!refs.getTargetId().equals(NodeReferencesId.valueOf(walker.getAttribute(TARGETID_ATTRIBUTE)))) {
+        if (!refs.getId().equals(NodeReferencesId.valueOf(walker.getAttribute(TARGETID_ATTRIBUTE)))) {
             String msg = "invalid serialized state: targetId  mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
@@ -796,7 +796,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        NodeReferencesId id = refs.getTargetId();
+        NodeReferencesId id = refs.getId();
         String refsFilePath = buildNodeReferencesFilePath(id);
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
@@ -815,7 +815,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 }
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
                 writer.write("<" + NODEREFERENCES_ELEMENT + " "
-                        + TARGETID_ATTRIBUTE + "=\"" + refs.getTargetId() + "\">\n");
+                        + TARGETID_ATTRIBUTE + "=\"" + refs.getId() + "\">\n");
                 // write references (i.e. the id's of the REFERENCE properties)
                 Iterator iter = refs.getReferences().iterator();
                 while (iter.hasNext()) {
@@ -842,7 +842,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        NodeReferencesId id = refs.getTargetId();
+        NodeReferencesId id = refs.getId();
         String refsFilePath = buildNodeReferencesFilePath(id);
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {

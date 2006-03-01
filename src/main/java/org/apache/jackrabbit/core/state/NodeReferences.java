@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.Serializable;
@@ -36,13 +37,13 @@ public class NodeReferences implements Serializable {
     static final long serialVersionUID = 7007727035982680717L;
 
     /**
-     * id of the target node
+     * identifier of this <code>NodeReferences</code> instance.
      */
-    protected NodeReferencesId targetId;
+    protected NodeReferencesId id;
 
     /**
      * list of PropertyId's (i.e. the id's of the properties that refer to
-     * the target node denoted by <code>targetId</code>).
+     * the target node denoted by <code>id.getTargetId()</code>).
      * <p/>
      * note that the list can contain duplicate entries because a specific
      * REFERENCE property can contain multiple references (if it's multi-valued)
@@ -53,32 +54,32 @@ public class NodeReferences implements Serializable {
     /**
      * Package private constructor
      *
-     * @param targetId
+     * @param id
      */
-    public NodeReferences(NodeReferencesId targetId) {
-        this.targetId = targetId;
+    public NodeReferences(NodeReferencesId id) {
+        this.id = id;
     }
 
     /**
-     * Return the target id of this node references object.
+     * Returns the identifier of this node references object.
      *
-     * @return target id
+     * @return the id of this node references object.
      */
-    public NodeReferencesId getTargetId() {
-        return targetId;
+    public NodeReferencesId getId() {
+        return id;
     }
 
     /**
-     * Return the UUID of the target id
+     * Returns the identifier of the target node.
      *
-     * @return UUID of the target id
+     * @return the id of the target node
      */
-    public UUID getUUID() {
-        return targetId.getUUID();
+    public NodeId getTargetId() {
+        return id.getTargetId();
     }
 
     /**
-     * Return a flag indicating whether this object holds any references
+     * Returns a flag indicating whether this object holds any references
      *
      * @return <code>true</code> if this object holds references,
      *         <code>false</code> otherwise
@@ -110,7 +111,7 @@ public class NodeReferences implements Serializable {
 
     /**
      * @param refId
-     * @return <code>true</code> if the reference was reomved;
+     * @return <code>true</code> if the reference was removed;
      *        <code>false</code> otherwise.
      */
     public boolean removeReference(PropertyId refId) {

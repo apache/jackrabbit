@@ -123,7 +123,7 @@ public class SessionImporter implements Importer {
         }
 
         // add node
-        UUID uuid = id == null ? UUID.randomUUID() : id.getUUID();
+        UUID uuid = (id == null) ? null : id.getUUID();
         node = parent.addNode(nodeName, nodeTypeName, uuid);
         // add mixins
         if (mixinNames != null) {

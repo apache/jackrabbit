@@ -521,7 +521,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             Serializer.deserialize(refs, in);
             return refs;
         } catch (Exception e) {
-            String msg = "failed to load references: " + id.getUUID();
+            String msg = "failed to load references: " + id;
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -542,11 +542,11 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             Serializer.serialize(refs, out);
 
             // store in serialized format in map for better memory efficiency
-            stateStore.put(refs.getTargetId(), out.toByteArray());
+            stateStore.put(refs.getId(), out.toByteArray());
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to store references: " + refs.getTargetId();
+            String msg = "failed to store references: " + refs.getId();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -561,7 +561,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         }
 
         // remove node references
-        stateStore.remove(refs.getTargetId());
+        stateStore.remove(refs.getId());
     }
 
     /**
