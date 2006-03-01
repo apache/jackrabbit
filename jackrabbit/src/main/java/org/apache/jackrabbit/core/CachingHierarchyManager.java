@@ -372,8 +372,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             Path path = Path.create(getPath(state.getNodeId()), name, index, true);
             insert(path, id);
         } catch (PathNotFoundException e) {
-            log.warn("Unable to get path of node " + state.getNodeId() +
-                    ", event ignored.");
+            log.warn("Unable to get path of node " + state.getNodeId()
+                    + ", event ignored.");
         } catch (MalformedPathException e) {
             log.warn("Unable to create path of " + id, e);
         } catch (ItemNotFoundException e) {
@@ -418,8 +418,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             Path path = Path.create(getPath(state.getNodeId()), name, index, true);
             remove(path, id);
         } catch (PathNotFoundException e) {
-            log.warn("Unable to get path of node " + state.getNodeId() +
-                    ", event ignored.");
+            log.warn("Unable to get path of node " + state.getNodeId()
+                    + ", event ignored.");
         } catch (MalformedPathException e) {
             log.warn("Unable to create path of " + id, e);
         } catch (ItemNotFoundException e) {

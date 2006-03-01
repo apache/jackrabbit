@@ -468,7 +468,7 @@ public class VersionManagerImpl extends AbstractVersionManager
             // check whether targets of modified node references exist
             for (Iterator iter = changes.modifiedRefs(); iter.hasNext();) {
                 NodeReferences refs = (NodeReferences) iter.next();
-                NodeId id = new NodeId(refs.getUUID());
+                NodeId id = refs.getTargetId();
                 // no need to check existence of target if there are no references
                 if (refs.hasReferences()) {
                     if (!changes.has(id) && !hasItemState(id)) {

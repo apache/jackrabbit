@@ -25,7 +25,7 @@ import org.apache.jackrabbit.uuid.UUID;
 public class NodeId extends ItemId {
 
     /** Serial version UID of this class. */
-    static final long serialVersionUID = 7026219091360041109L;
+    static final long serialVersionUID = 7380115476447060008L;
 
     /** UUID of the identified node */
     private final UUID uuid;
@@ -85,8 +85,7 @@ public class NodeId extends ItemId {
         return new NodeId(new UUID(s));
     }
 
-    //-----------------------------------------< java.lang.Object overrides >---
-
+    //-------------------------------------------< java.lang.Object overrides >
     /**
      * {@inheritDoc}
      */

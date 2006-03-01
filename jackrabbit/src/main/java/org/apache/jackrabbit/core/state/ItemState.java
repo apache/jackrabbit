@@ -33,15 +33,16 @@ import java.util.Collection;
 public abstract class ItemState implements ItemStateListener, Serializable {
 
     /** Serialization UID of this class. */
-    static final long serialVersionUID = 2017294661624942639L;
+    static final long serialVersionUID = -1473610775880779769L;
 
     /**
-     * the default logger
+     * Logger instance
      */
     private static Logger log = Logger.getLogger(ItemState.class);
 
+     //------------------< flags defining the current status of this instance >
     /**
-     * undefined state
+     * the status is undefined
      */
     public static final int STATUS_UNDEFINED = 0;
     /**
@@ -117,10 +118,10 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Constructs a new node state that is initially connected to an overlayed
+     * Constructs a new item state that is initially connected to an overlayed
      * state.
      *
-     * @param overlayedState the backing node state being overlayed
+     * @param overlayedState the backing item state being overlayed
      * @param initialStatus the initial status of the new <code>ItemState</code> instance
      * @param isTransient   flag indicating whether this state is transient or not
      */
@@ -141,7 +142,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Copy state information from a state into this state
+     * Copy state information from another state into this state
      * @param state source state information
      */
     abstract protected void copy(ItemState state);
@@ -292,9 +293,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     public abstract boolean isNode();
 
     /**
-     * Returns the identifier of this item state.
+     * Returns the identifier of this item.
      *
-     * @return the identifier of this item state..
+     * @return the id of this item.
      */
     abstract public ItemId getId();
 
@@ -308,7 +309,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     public boolean isTransient() {
         return isTransient;
-
     }
 
     /**

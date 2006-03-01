@@ -95,7 +95,7 @@ public class ChangeLog {
      * @param refs refs that has been modified
      */
     public void modified(NodeReferences refs) {
-        modifiedRefs.put(refs.getTargetId(), refs);
+        modifiedRefs.put(refs.getId(), refs);
     }
 
     /**

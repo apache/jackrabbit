@@ -446,13 +446,11 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException(msg);
         }
 
-        NodeId parentId = (NodeId) state.getId();
-
         // create a new property state
         PropertyState propState;
         try {
             propState =
-                    stateMgr.createTransientPropertyState(parentId, name,
+                    stateMgr.createTransientPropertyState(getNodeId(), name,
                             ItemState.STATUS_NEW);
             propState.setType(type);
             propState.setMultiValued(def.isMultiple());
@@ -489,7 +487,6 @@ public class NodeImpl extends ItemImpl implements Node {
                                                     NodeTypeImpl nodeType,
                                                     NodeId id)
             throws RepositoryException {
-        NodeId parentId = (NodeId) state.getId();
         // create a new node state
         NodeState nodeState;
         try {
@@ -498,7 +495,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
             nodeState =
                     stateMgr.createTransientNodeState(id, nodeType.getQName(),
-                            parentId, ItemState.STATUS_NEW);
+                            getNodeId(), ItemState.STATUS_NEW);
             nodeState.setDefinitionId(def.unwrap().getId());
         } catch (ItemStateException ise) {
             String msg = "failed to add child node " + name + " to "
@@ -1213,7 +1210,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return the uuid of this node
      */
     public UUID internalGetUUID() {
-        return ((NodeId) state.getId()).getUUID();
+        return ((NodeId) id).getUUID();
     }
 
     /**
@@ -1434,8 +1431,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        NodeState thisState = (NodeState) state;
-        PropertyId propId = new PropertyId(thisState.getNodeId(), name);
+        PropertyId propId = new PropertyId(getNodeId(), name);
         try {
             return (PropertyImpl) itemMgr.getItem(propId);
         } catch (AccessDeniedException ade) {
@@ -1629,7 +1625,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Return the id of this <code>Node</code>.
+     * Returns the identifier of this <code>Node</code>.
      *
      * @return the id of this <code>Node</code>
      */
@@ -1652,7 +1648,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        if (state.getId() == null) {
+        if (state.getParentId() == null) {
             // this is the root node
             return "";
         }
@@ -2686,7 +2682,7 @@ public class NodeImpl extends ItemImpl implements Node {
             NodeState parent =
                     (NodeState) stateMgr.getItemState(parentId);
             NodeState.ChildNodeEntry parentEntry =
-                    parent.getChildNodeEntry((NodeId) state.getId());
+                    parent.getChildNodeEntry(getNodeId());
             return parentEntry.getIndex();
         } catch (ItemStateException ise) {
             // should never get here...
@@ -3445,14 +3441,14 @@ public class NodeImpl extends ItemImpl implements Node {
         while (niter.hasNext()) {
             NodeImpl child = (NodeImpl) niter.nextNode();
             NodeImpl dstNode = null;
-            NodeId id = (NodeId) child.getId();
+            NodeId childId = child.getNodeId();
             if (hasNode(child.getQName())) {
                 // todo: does not work properly for samename siblings
                 dstNode = getNode(child.getQName());
             } else if (child.isNodeType(QName.MIX_REFERENCEABLE)) {
                 // if child is referenceable, check if correspondance exist in this workspace
                 try {
-                    dstNode = session.getNodeById(id);
+                    dstNode = session.getNodeById(childId);
                     if (removeExisting) {
                         dstNode.internalRemove(false);
                         dstNode = null;
@@ -3466,10 +3462,10 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             } else {
                 // if child is not referenceable, clear uuid
-                id = null;
+                childId = null;
             }
             if (dstNode == null) {
-                dstNode = internalAddChildNode(child.getQName(), (NodeTypeImpl) child.getPrimaryNodeType(), id);
+                dstNode = internalAddChildNode(child.getQName(), (NodeTypeImpl) child.getPrimaryNodeType(), childId);
                 // add mixins
                 NodeType[] mixins = child.getMixinNodeTypes();
                 for (int i = 0; i < mixins.length; i++) {

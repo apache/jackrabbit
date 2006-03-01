@@ -762,7 +762,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         }
 
         // check if insert or update
-        boolean update = exists(refs.getTargetId());
+        boolean update = exists(refs.getId());
         PreparedStatement stmt = (update) ? nodeReferenceUpdate : nodeReferenceInsert;
 
         try {
@@ -775,13 +775,13 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
             // not have to additionally synchronize on the preparedStatement
 
             stmt.setBytes(1, out.toByteArray());
-            stmt.setString(2, refs.getTargetId().toString());
+            stmt.setString(2, refs.getId().toString());
             stmt.executeUpdate();
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write node references: " + refs.getTargetId();
+            String msg = "failed to write node references: " + refs.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
@@ -800,10 +800,10 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
 
         PreparedStatement stmt = nodeReferenceDelete;
         try {
-            stmt.setString(1, refs.getTargetId().toString());
+            stmt.setString(1, refs.getId().toString());
             stmt.executeUpdate();
         } catch (Exception e) {
-            String msg = "failed to delete node references: " + refs.getTargetId();
+            String msg = "failed to delete node references: " + refs.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
