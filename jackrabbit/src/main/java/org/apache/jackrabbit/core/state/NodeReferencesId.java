@@ -19,27 +19,51 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
 
+import java.io.Serializable;
+
 /**
  * Identifies a <code>NodeReferences</code> object.
  */
-public class NodeReferencesId extends NodeId {
+public class NodeReferencesId implements Serializable {
+
+    /** Serialization UID of this class. */
+    static final long serialVersionUID = -3819311769214730025L;
 
     /**
-     * Create a new instance of this class. Takes a UUID as parameter.
+     * The id of the target node.
+     */
+    private final NodeId targetId;
+
+    /**
+     * Creates a new instance of this class. Takes a UUID as parameter.
      *
      * @param uuid uuid of target node
+     * @throws IllegalArgumentException if <code>uuid</code> is <code>null</code>.
      */
     public NodeReferencesId(UUID uuid) {
-        super(uuid);
+        targetId = new NodeId(uuid);
     }
 
     /**
-     * Create a new instance of this class. Takes a id as parameter.
+     * Creates a new instance of this class. Takes an id as parameter.
      *
      * @param id the id of target node
+     * @throws IllegalArgumentException if <code>id</code> is <code>null</code>.
      */
     public NodeReferencesId(NodeId id) {
-        super(id == null ? null : id.getUUID());
+        if (id == null) {
+            throw new IllegalArgumentException("id must not be null");
+        }
+        targetId = id;
+    }
+
+    /**
+     * Returns the id of the target node.
+     *
+     * @return the id of the target node.
+     */
+    public NodeId getTargetId() {
+        return targetId;
     }
 
     /**
@@ -54,11 +78,41 @@ public class NodeReferencesId extends NodeId {
      *                                  as a <code>NodeReferencesId</code>.
      * @see #toString()
      */
-    public static NodeId valueOf(String s) throws IllegalArgumentException {
+    public static NodeReferencesId valueOf(String s) throws IllegalArgumentException {
         if (s == null) {
             throw new IllegalArgumentException("invalid NodeReferencesId literal");
         }
         return new NodeReferencesId(NodeId.valueOf(s));
     }
 
+    /**
+     * Returns the same as <code>this.getTargetId().toString()</code>.
+     *
+     * @return the same as <code>this.getTargetId().toString()</code>.
+     */
+    public String toString() {
+        return targetId.toString();
+    }
+
+    /**
+     * Returns the same as <code>this.getTargetId().hashCode()</code>.
+     *
+     * @return the same as <code>this.getTargetId().hashCode()</code>.
+     */
+    public int hashCode() {
+        return targetId.hashCode();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof NodeReferencesId) {
+            return targetId.getUUID().equals(((NodeReferencesId) obj).targetId.getUUID());
+        }
+        return false;
+    }
 }

@@ -414,6 +414,47 @@ public class SessionImpl implements Session, Dumpable {
     }
 
     /**
+     * Retrieves the referenceable node with the given <code>UUID</code>.
+     *
+     * @param uuid uuid of the node to be retrieved
+     * @return referenceable node with the given uuid
+     * @throws ItemNotFoundException if no node exists with the given uuid or
+     * if the existing node is not referenceable.
+     * @throws RepositoryException if another error occurs.
+     * @see #getNodeByUUID(String)
+     * @see #getNodeById(NodeId)
+     */
+    public Node getNodeByUUID(UUID uuid) throws ItemNotFoundException, RepositoryException {
+        NodeImpl node = getNodeById(new NodeId(uuid));
+        if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
+            return node;
+        } else {
+            // there is a node with that uuid but the node does not expose it
+            throw new ItemNotFoundException(uuid.toString());
+        }
+    }
+
+    /**
+     * Retrieves the <code>Node</code> with the given id.
+     *
+     * @param id id of node to be retrieved
+     * @return node with the given <code>NodeId</code>.
+     * @throws ItemNotFoundException if no such node exists or if this
+     * <code>Session</code> does not have permission to access the node.
+     * @throws RepositoryException if another error occurs.
+     */
+    public NodeImpl getNodeById(NodeId id) throws ItemNotFoundException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+
+        try {
+            return (NodeImpl) getItemManager().getItem(id);
+        } catch (AccessDeniedException ade) {
+            throw new ItemNotFoundException(id.toString());
+        }
+    }
+
+    /**
      * Returns the names of all workspaces of this repository with respect of the
      * access rights of this session.
      *
@@ -706,47 +747,6 @@ public class SessionImpl implements Session, Dumpable {
      */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
         return getNodeByUUID(UUID.fromString(uuid));
-    }
-
-    /**
-     * Retrieve the referenceable node with the given <code>UUID</code>.
-     *
-     * @param uuid
-     * @return referenceable node with the given uuid
-     * @throws ItemNotFoundException if no node exists with the given uuid or
-     * if the existing node is not referenceable.
-     * @throws RepositoryException
-     * @see #getNodeByUUID(String)
-     * @see #getNodeById(NodeId)
-     */
-    public Node getNodeByUUID(UUID uuid) throws ItemNotFoundException, RepositoryException {
-        NodeImpl node = getNodeById(new NodeId(uuid));
-        if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
-            return node;
-        } else {
-            // there is a node with that uuid but the node does not expose it
-            throw new ItemNotFoundException(uuid.toString());
-        }
-    }
-
-    /**
-     * Retrieve the <code>Node</code> with the given id.
-     *
-     * @param id
-     * @return node with the given <code>NodeId</code>.
-     * @throws ItemNotFoundException if no such node exists or if this
-     * <code>Session</code> does not have permission to access the node.
-     * @throws RepositoryException
-     */
-    public NodeImpl getNodeById(NodeId id) throws ItemNotFoundException, RepositoryException {
-        // check sanity of this session
-        sanityCheck();
-
-        try {
-            return (NodeImpl) getItemManager().getItem(id);
-        } catch (AccessDeniedException ade) {
-            throw new ItemNotFoundException(id.toString());
-        }
     }
 
     /**

@@ -126,7 +126,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
     }
 
     private static String buildNodeReferencesFilePath(NodeReferencesId id) {
-        return buildNodeFolderPath(id) + FileSystem.SEPARATOR + NODEREFSFILENAME;
+        return buildNodeFolderPath(id.getTargetId()) + FileSystem.SEPARATOR + NODEREFSFILENAME;
     }
 
     //---------------------------------------------------< PersistenceManager >
@@ -356,7 +356,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
+        String refsFilePath = buildNodeReferencesFilePath(refs.getId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             refsFile.makeParentDirs();
@@ -367,7 +367,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 out.close();
             }
         } catch (Exception e) {
-            String msg = "failed to store references: " + refs.getTargetId();
+            String msg = "failed to store references: " + refs.getId();
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -440,7 +440,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
+        String refsFilePath = buildNodeReferencesFilePath(refs.getId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             if (refsFile.exists()) {
@@ -448,7 +448,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 refsFile.delete(true);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to delete references: " + refs.getTargetId();
+            String msg = "failed to delete node references: " + refs.getId();
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }

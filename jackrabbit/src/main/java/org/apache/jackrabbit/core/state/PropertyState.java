@@ -39,7 +39,7 @@ public class PropertyState extends ItemState {
     /**
      * Serialization UID of this class.
      */
-    static final long serialVersionUID = 4569719974514326906L;
+    static final long serialVersionUID = 90076676913237139L;
 
     /**
      * the id of this property state
@@ -128,8 +128,9 @@ public class PropertyState extends ItemState {
     }
 
     /**
-     * Returns the id of this property state.
-     * @return the id of this property state.
+     * Returns the identifier of this property.
+     * 
+     * @return the id of this property.
      */
     public PropertyId getPropertyId() {
         return id;
@@ -229,7 +230,8 @@ public class PropertyState extends ItemState {
     private void writeObject(ObjectOutputStream out) throws IOException {
         // important: fields must be written in same order as they are
         // read in readObject(ObjectInputStream)
-        out.writeUTF(getName().toString());
+        out.writeUTF(id.toString());
+        out.writeUTF(defId.toString());
         out.writeInt(type);
         out.writeBoolean(multiValued);
         if (values == null) {
@@ -268,7 +270,8 @@ public class PropertyState extends ItemState {
     private void readObject(ObjectInputStream in) throws IOException {
         // important: fields must be read in same order as they are
         // written in writeObject(ObjectOutputStream)
-        QName name = QName.valueOf(in.readUTF());
+        id = PropertyId.valueOf(in.readUTF());
+        defId = PropDefId.valueOf(in.readUTF());
         type = in.readInt();
         multiValued = in.readBoolean();
         short count = in.readShort(); // # of values

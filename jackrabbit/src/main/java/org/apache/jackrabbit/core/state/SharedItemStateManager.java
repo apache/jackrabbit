@@ -511,7 +511,7 @@ public class SharedItemStateManager
                 for (Iterator iter = local.modifiedRefs(); iter.hasNext();) {
                     NodeReferences refs = (NodeReferences) iter.next();
                     boolean virtual = false;
-                    NodeId id = new NodeId(refs.getUUID());
+                    NodeId id = refs.getId().getTargetId();
                     for (int i = 0; i < virtualProviders.length; i++) {
                         if (virtualProviders[i].hasItemState(id)) {
                             List virtualRefs = virtualNodeReferences[i];
@@ -1099,7 +1099,7 @@ public class SharedItemStateManager
         // check whether targets of modified node references exist
         for (Iterator iter = changes.modifiedRefs(); iter.hasNext();) {
             NodeReferences refs = (NodeReferences) iter.next();
-            NodeId id = new NodeId(refs.getUUID());
+            NodeId id = refs.getTargetId();
             // no need to check existence of target if there are no references
             if (refs.hasReferences()) {
                 // please note:
