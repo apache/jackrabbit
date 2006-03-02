@@ -35,7 +35,8 @@ public class NodeReferencesId implements Serializable {
     private final NodeId targetId;
 
     /**
-     * Creates a new instance of this class. Takes a UUID as parameter.
+     * Creates a new instance of this class. Takes the uuid of the target node
+     * as parameter.
      *
      * @param uuid uuid of target node
      * @throws IllegalArgumentException if <code>uuid</code> is <code>null</code>.
@@ -45,16 +46,17 @@ public class NodeReferencesId implements Serializable {
     }
 
     /**
-     * Creates a new instance of this class. Takes an id as parameter.
+     * Creates a new instance of this class. Takes the id of the target node
+     * as parameter.
      *
-     * @param id the id of target node
-     * @throws IllegalArgumentException if <code>id</code> is <code>null</code>.
+     * @param targetId id of target node
+     * @throws IllegalArgumentException if <code>targetId</code> is <code>null</code>.
      */
-    public NodeReferencesId(NodeId id) {
-        if (id == null) {
-            throw new IllegalArgumentException("id must not be null");
+    public NodeReferencesId(NodeId targetId) {
+        if (targetId == null) {
+            throw new IllegalArgumentException("targetId must not be null");
         }
-        targetId = id;
+        this.targetId = targetId;
     }
 
     /**
