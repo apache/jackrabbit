@@ -19,14 +19,11 @@ import org.apache.jackrabbit.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
 import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.server.SessionProviderImpl;
-import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
-import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.jcr.DavLocatorFactoryImpl;
 import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
@@ -38,7 +35,6 @@ import org.apache.log4j.Logger;
 import javax.jcr.Repository;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import java.io.IOException;
 import java.net.MalformedURLException;
 
 /**
@@ -166,70 +162,6 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
                 log.debug("Unable to build resource filter provider.");
             }
         }
-    }
-
-    /**
-     * Executes the respective method in the given webdav context.
-     * The method is overridden since not all webdav methods should be
-     * supported by this servlet.
-     *
-     * @param request
-     * @param response
-     * @param method
-     * @param resource
-     * @return
-     * @throws ServletException
-     * @throws IOException
-     * @throws org.apache.jackrabbit.webdav.DavException
-     */
-    protected boolean execute(WebdavRequest request, WebdavResponse response,
-                              int method, DavResource resource)
-            throws ServletException, IOException, DavException {
-        switch (method) {
-            case DavMethods.DAV_HEAD:
-                doHead(request, response, resource);
-                break;
-            case DavMethods.DAV_GET:
-                doGet(request, response, resource);
-                break;
-            case DavMethods.DAV_OPTIONS:
-                doOptions(request, response, resource);
-                break;
-            case DavMethods.DAV_PROPFIND:
-                doPropFind(request, response, resource);
-                break;
-            case DavMethods.DAV_PROPPATCH:
-                doPropPatch(request, response, resource);
-                break;
-            case DavMethods.DAV_PUT:
-                doPut(request, response, resource);
-                break;
-            case DavMethods.DAV_POST:
-                doPost(request, response, resource);
-                break;
-            case DavMethods.DAV_DELETE:
-                doDelete(request, response, resource);
-                break;
-            case DavMethods.DAV_COPY:
-                doCopy(request, response, resource);
-                break;
-            case DavMethods.DAV_MOVE:
-                doMove(request, response, resource);
-                break;
-            case DavMethods.DAV_MKCOL:
-                doMkCol(request, response, resource);
-                break;
-            case DavMethods.DAV_LOCK:
-                doLock(request, response, resource);
-                break;
-            case DavMethods.DAV_UNLOCK:
-                doUnlock(request, response, resource);
-                break;
-            default:
-                // any other method
-                return false;
-        }
-        return true;
     }
 
     /**
