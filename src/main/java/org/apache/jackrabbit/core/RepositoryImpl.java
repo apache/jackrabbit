@@ -1056,7 +1056,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             try {
                 subject = Subject.getSubject(acc);
             } catch (SecurityException se) {
-                throw new LoginException(se.getMessage());
+                throw new LoginException(
+                        "Unable to access authentication information", se);
             }
             if (subject == null) {
                 throw new LoginException("No Subject associated with AccessControlContext");
@@ -1066,7 +1067,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 return createSession(subject, workspaceName);
             } catch (AccessDeniedException ade) {
                 // authenticated subject is not authorized for the specified workspace
-                throw new LoginException(ade.getMessage());
+                throw new LoginException("Workspace access denied", ade);
             }
         }
 
