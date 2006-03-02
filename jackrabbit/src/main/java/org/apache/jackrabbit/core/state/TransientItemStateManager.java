@@ -238,8 +238,7 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
                 throw new ItemStateException(msg);
             }
 
-            PropertyState state = new PropertyState(
-                    new PropertyId(parentId, propName), initialStatus, true);
+            PropertyState state = new PropertyState(id, initialStatus, true);
             // put transient state in the map
             transientStore.put(state);
             return state;
@@ -255,8 +254,7 @@ class TransientItemStateManager implements ItemStateManager, Dumpable {
     PropertyState createPropertyState(PropertyState overlayedState, int initialStatus)
             throws ItemStateException {
 
-        PropertyId id = new PropertyId(overlayedState.getParentId(),
-                overlayedState.getName());
+        PropertyId id = overlayedState.getPropertyId();
 
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
