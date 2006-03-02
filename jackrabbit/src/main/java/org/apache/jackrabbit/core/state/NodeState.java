@@ -1332,7 +1332,7 @@ public class NodeState extends ItemState {
      * <p/>
      * <code>ChildNodeEntry</code> instances are immutable.
      */
-    public static class ChildNodeEntry {
+    public static final class ChildNodeEntry {
 
         private int hash = 0;
 
