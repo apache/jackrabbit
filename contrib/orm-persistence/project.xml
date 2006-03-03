@@ -139,7 +139,7 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>3.0.10-stable-bin</version>
+      <version>3.0.10</version>
     </dependency>
 
     <!-- Hibernate dependencies -->
