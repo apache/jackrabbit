@@ -1098,8 +1098,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 // to dependencies
                                 dependentIDs.add(oldParentId);
                             } else {
-                                if (oldParentId!= null &&
-                                        !oldParentId.equals(newParentId)) {
+                                if (!oldParentId.equals(newParentId)) {
                                     // node has been moved, add old and new parent
                                     // to dependencies
                                     dependentIDs.add(oldParentId);
