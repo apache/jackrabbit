@@ -1,5 +1,5 @@
 /*
- * $Id:$
+ * $Id$
  *
  * Copyright 2002-2004 Day Management AG, Switzerland.
  *
@@ -21,14 +21,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.util.nodetype;
+package org.apache.jackrabbit.core.nodetype.compact;
 
 import junit.framework.TestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all test cases for node type utilities.
+ * Test suite that includes all test cases for compact node type tools.
  */
 public class TestAll extends TestCase {
 
@@ -40,8 +40,8 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("Node Type Utilities Tests");
-        suite.addTestSuite(org.apache.jackrabbit.util.nodetype.SchemaConverterTest.class);
+        TestSuite suite = new TestSuite("Compact Node Type Tools Tests");
+        suite.addTestSuite(org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefTest.class);
         return suite;
     }
 }

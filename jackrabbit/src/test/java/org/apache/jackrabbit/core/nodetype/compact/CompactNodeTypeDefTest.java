@@ -1,5 +1,5 @@
 /*
- * $Id:$
+ * $Id$
  *
  * Copyright 2002-2004 Day Management AG, Switzerland.
  *
