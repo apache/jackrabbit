@@ -249,6 +249,13 @@
     <!-- Resources that are packaged up inside the JAR file -->
     <resources>
       <resource>
+        <targetPath>META-INF</targetPath>
+        <directory>.</directory>
+        <includes>
+          <include>README.txt</include>
+        </includes>
+      </resource>
+      <resource>
         <directory>src/java</directory>
         <includes>
           <include>**/*.xml</include>
