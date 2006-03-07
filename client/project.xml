@@ -92,6 +92,14 @@
         <sourceDirectory>${basedir}/src/java</sourceDirectory>
         <resources>
             <resource>
+                <targetPath>META-INF</targetPath>
+                <directory>..</directory>
+                <includes>
+                    <include>LICENSE.txt</include>
+                    <include>README.txt</include>
+                </includes>
+            </resource>
+            <resource>
                 <directory>src/java</directory>
                 <includes>
                     <include>**/*.xml</include>
