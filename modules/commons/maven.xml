@@ -14,10 +14,24 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<project default="jar:install">
+<project default="jar:install" xmlns:ant="jelly:ant">
   <!-- 
       override compile goal, since we just need the jar from the
       compiled classes of jackrabbit
   -->
-  <goal name="java:compile" />
+  <goal name="java:compile">
+    <ant:copy todir="${maven.build.dest}">
+      <ant:fileset dir="${basedir}/../../target/classes">
+        <ant:exclude name="META-INF/**"/>
+        <ant:exclude name="org/apache/jackrabbit/core/**"/>
+      </ant:fileset>
+    </ant:copy>
+    <ant:copy todir="${maven.build.dest}/META-INF">
+      <ant:fileset dir="${basedir}/../..">
+        <ant:include name="README.txt"/>
+        <ant:include name="NOTICE.txt"/>
+        <ant:include name="LICENSE.txt"/>
+      </ant:fileset>
+    </ant:copy>
+  </goal>
 </project>
