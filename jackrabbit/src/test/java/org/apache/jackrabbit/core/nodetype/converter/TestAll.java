@@ -21,7 +21,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.util.nodetype;
+package org.apache.jackrabbit.core.nodetype.converter;
 
 import junit.framework.TestCase;
 import junit.framework.Test;
@@ -41,7 +41,7 @@ public class TestAll extends TestCase {
      */
     public static Test suite() {
         TestSuite suite = new TestSuite("Node Type Utilities Tests");
-        suite.addTestSuite(org.apache.jackrabbit.util.nodetype.SchemaConverterTest.class);
+        suite.addTestSuite(SchemaConverterTest.class);
         return suite;
     }
 }
