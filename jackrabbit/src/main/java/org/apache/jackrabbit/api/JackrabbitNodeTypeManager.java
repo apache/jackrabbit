@@ -42,6 +42,12 @@ public interface JackrabbitNodeTypeManager extends NodeTypeManager {
     String TEXT_XML = "text/xml";
 
     /**
+     * The experimental content type for the compact node type definition
+     * files. 
+     */
+    String TEXT_X_JCR_CND = "text/x-jcr-cnd";
+
+    /**
      * Registers node types from the given node type XML stream.
      *
      * @param in node type XML stream
