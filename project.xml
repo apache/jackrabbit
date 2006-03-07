@@ -24,39 +24,6 @@
     <pomVersion>3</pomVersion>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-commons</artifactId>
-    <name>Jackrabbit</name>
     <currentVersion>1.0-SNAPSHOT</currentVersion>
     <name>Jackrabbit Commons</name>
-
-    <!-- ====================================================================== -->
-    <!-- B U I L D  D E S C R I P T I O N                                       -->
-    <!-- ====================================================================== -->
-    <build>
-        <sourceDirectory>${basedir}/../../src/java</sourceDirectory>
-        <sourceModifications>
-            <sourceModification>
-            <className>dummy</className>
-            <directory>${basedir}/../../src/java</directory>
-            <excludes>
-                <exclude>org/apache/jackrabbit/core/**</exclude>
-            </excludes>
-            </sourceModification>
-        </sourceModifications>
-
-        <!-- J A R  R E S O U R C E S -->
-        <!-- Resources that are packaged up inside the JAR file -->
-        <resources>
-            <resource>
-                <directory>${basedir}/../../src/java</directory>
-                <includes>
-                    <include>**/*.xml</include>
-                    <include>**/*.properties</include>
-                </includes>
-                <excludes>
-                    <exclude>org/apache/jackrabbit/core/**</exclude>
-                </excludes>
-            </resource>
-        </resources>
-    </build>
-
 </project>
