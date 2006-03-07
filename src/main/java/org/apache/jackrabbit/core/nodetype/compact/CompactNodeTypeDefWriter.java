@@ -16,21 +16,24 @@
  */
 package org.apache.jackrabbit.core.nodetype.compact;
 
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.Writer;
+import java.io.StringWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Iterator;
 
 /**
  * Prints node type defs in a compact notation
@@ -52,11 +55,6 @@ public class CompactNodeTypeDefWriter {
     private final static String INDENT = "  ";
 
     /**
-     * The list of NodeTypeDefs to write
-     */
-    private final List nodeTypeDefList;
-
-    /**
      * the current namespace resolver
      */
     private final NamespaceResolver resolver;
@@ -64,110 +62,113 @@ public class CompactNodeTypeDefWriter {
     /**
      * the underlying writer
      */
-    private final Writer out;
+    private Writer out;
 
     /**
-     * The namespaces to be written out.
+     * special writer used for namespaces
      */
-    private final Map namespaceMap = new HashMap();
+    private Writer nsWriter;
 
     /**
+     * namespaces(prefixes) that are used
+     */
+    private HashSet usedNamespaces = new HashSet();
+
+    /**
+     * Creates a new nodetype writer
+     *
+     * @param out the underlying writer
+     * @param r the namespace resolver
+     */
+    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r) {
+        this(out, r, false);
+    }
+
+    /**
+     * Creates a new nodetype writer
+     *
+     * @param out the underlaying writer
+     * @param r the naespace resolver
+     * @param includeNS if <code>true</code> all used namespace decl. are also
+     *        written.
+     */
+    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r, boolean includeNS) {
+        this.resolver = r;
+        if (includeNS) {
+            this.out = new StringWriter();
+            this.nsWriter = out;
+        } else {
+            this.out = out;
+            this.nsWriter = null;
+        }
+    }
+
+    /**
+     * Writes the given list of NodeTypeDefs to the output writer including the
+     * used namespaces.
      *
      * @param l
      * @param r
-     * @param w
-     */
-    public CompactNodeTypeDefWriter(List l, NamespaceResolver r, Writer w) throws NamespaceException {
-        nodeTypeDefList = l;
-        out = w;
-        resolver = r;
-        buildNamespaceMap();
-    }
-
-    /**
-     *
+     * @param out
      * @throws IOException
      */
-    public void write() throws IOException, NamespaceException {
-        for (Iterator i = namespaceMap.entrySet().iterator(); i.hasNext();){
-            Map.Entry e = (Map.Entry)i.next();
-            String prefix = (String)e.getKey();
-            String uri = (String)e.getValue();
-            out.write("<");
-            out.write(prefix);
-            out.write(" = \"");
-            out.write(uri);
-            out.write("\">\n");
+    public static void write(List l, NamespaceResolver r, Writer out)
+            throws IOException {
+        CompactNodeTypeDefWriter w = new CompactNodeTypeDefWriter(out, r, true);
+        Iterator iter = l.iterator();
+        while (iter.hasNext()) {
+            NodeTypeDef def = (NodeTypeDef) iter.next();
+            w.write(def);
         }
-        for (Iterator i = nodeTypeDefList.iterator(); i.hasNext();){
-            NodeTypeDef ntd = (NodeTypeDef)i.next();
-            writeName(ntd);
-            writeSupertypes(ntd);
-            writeOptions(ntd);
-            writePropDefs(ntd);
-            writeChildNodeDefs(ntd);
-        }
+        w.close();
     }
 
     /**
-     * closes this writer but not the underlying stream
+     * Write one NodeTypeDef to this writer
+     *
+     * @param d
+     * @throws IOException
+     */
+    public void write(NodeTypeDef d) throws IOException {
+        writeName(d);
+        writeSupertypes(d);
+        writeOptions(d);
+        writePropDefs(d);
+        writeNodeDefs(d);
+        out.write("\n\n");
+    }
+
+    /**
+     * Flushes all pending write operations and Closes this writer. please note,
+     * that the underlying writer remains open.
      *
      * @throws IOException
      */
     public void close() throws IOException {
+        if (nsWriter != null) {
+            nsWriter.write("\n");
+            out.close();
+            nsWriter.write(((StringWriter) out).getBuffer().toString());
+            out = nsWriter;
+            nsWriter = null;
+        }
         out.flush();
+        out = null;
     }
 
     /**
-     * buildNamespaceMap
+     * write name
      */
-    private void buildNamespaceMap() throws NamespaceException {
-        for (Iterator i = nodeTypeDefList.iterator(); i.hasNext();){
-            NodeTypeDef ntd = (NodeTypeDef)i.next();
-            addNamespace(ntd.getName());
-            addNamespace(ntd.getSupertypes());
-            PropDef[] pda = ntd.getPropertyDefs();
-            for (int j = 0; j < pda.length; j++){
-                PropDef pd = pda[j];
-                addNamespace(pd.getName());
-            }
-
-            NodeDef[] nda = ntd.getChildNodeDefs();
-            for (int j = 0; j < nda.length; j++){
-                NodeDef nd = nda[j];
-                addNamespace(nd.getName());
-                addNamespace(nd.getRequiredPrimaryTypes());
-                addNamespace(nd.getDefaultPrimaryType());
-            }
-        }
-    }
-
-    private void addNamespace(QName qn) throws NamespaceException {
-        String uri = qn.getNamespaceURI();
-        String prefix = resolver.getPrefix(uri);
-        namespaceMap.put(prefix, uri);
-    }
-
-    private void addNamespace(QName[] qna) throws NamespaceException {
-        for(int i = 0; i < qna.length; i++){
-            QName qn = qna[i];
-            addNamespace(qn);
-        }
-    }
-
-    /**
-     * writeName
-     */
-    private void writeName(NodeTypeDef ntd) throws IOException, NamespaceException {
+    private void writeName(NodeTypeDef ntd) throws IOException {
         out.write("[");
         out.write(resolve(ntd.getName()));
         out.write("]");
     }
 
     /**
-     * writeSupertypes
+     * write supertypes
      */
-    private void writeSupertypes(NodeTypeDef ntd) throws IOException, NamespaceException {
+    private void writeSupertypes(NodeTypeDef ntd) throws IOException {
         QName[] sta = ntd.getSupertypes();
         if (sta == null) return;
         String delim=" > ";
@@ -175,13 +176,13 @@ public class CompactNodeTypeDefWriter {
             if (!sta[i].equals(QName.NT_BASE)) {
                 out.write(delim);
                 out.write(resolve(sta[i]));
-                delim = ", ";
+                delim=", ";
             }
         }
     }
 
     /**
-     * writeOptions
+     * write options
      */
     private void writeOptions(NodeTypeDef ntd) throws IOException {
         if (ntd.hasOrderableChildNodes()) {
@@ -197,9 +198,9 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
-     * writePropDefs
+     * write prop defs
      */
-    private void writePropDefs(NodeTypeDef ntd) throws IOException, NamespaceException {
+    private void writePropDefs(NodeTypeDef ntd) throws IOException {
         PropDef[] pda = ntd.getPropertyDefs();
         for (int i = 0; i < pda.length; i++) {
             PropDef pd = pda[i];
@@ -208,9 +209,9 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
-     * writeNodeDefs
+     * write node defs
      */
-    private void writeChildNodeDefs(NodeTypeDef ntd) throws IOException, NamespaceException {
+    private void writeNodeDefs(NodeTypeDef ntd) throws IOException {
         NodeDef[] nda = ntd.getChildNodeDefs();
         for (int i = 0; i < nda.length; i++) {
             NodeDef nd = nda[i];
@@ -219,10 +220,10 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
-     * writePropDef
+     * write prop def
      * @param pd
      */
-    private void writePropDef(NodeTypeDef ntd, PropDef pd) throws IOException, NamespaceException {
+    private void writePropDef(NodeTypeDef ntd, PropDef pd) throws IOException {
         out.write("\n" + INDENT + "- ");
         writeItemDefName(pd.getName());
         out.write(" (");
@@ -250,7 +251,7 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
-     * writeDefaultValues
+     * write default values
      * @param dva
      */
     private void writeDefaultValues(InternalValue[] dva) throws IOException {
@@ -269,13 +270,13 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
-     * writeValueConstraints
+     * write value constraints
      * @param vca
      */
     private void writeValueConstraints(ValueConstraint[] vca) throws IOException {
         if (vca == null || vca.length == 0) return;
         String vc = vca[0].getDefinition(resolver);
-        out.write(" < '");
+        out.write("\n" + INDENT + INDENT + "< '");
         out.write(escape(vc));
         out.write("'");
         for (int i = 1; i < vca.length; i++) {
@@ -287,10 +288,10 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
-     * writeNodeDef
+     * write node def
      * @param nd
      */
-    private void writeNodeDef(NodeTypeDef ntd, NodeDef nd) throws IOException, NamespaceException {
+    private void writeNodeDef(NodeTypeDef ntd, NodeDef nd) throws IOException {
         out.write("\n" + INDENT + "+ ");
         writeItemDefName(nd.getName());
         writeRequiredTypes(nd.getRequiredPrimaryTypes());
@@ -314,7 +315,12 @@ public class CompactNodeTypeDefWriter {
         }
     }
 
-    private void writeItemDefName(QName name) throws IOException, NamespaceException {
+    /**
+     * Write item def name
+     * @param name
+     * @throws IOException
+     */
+    private void writeItemDefName(QName name) throws IOException {
         String s = resolve(name);
         // check for '-' and '+'
         if (s.indexOf('-') >= 0 || s.indexOf('+') >= 0) {
@@ -326,10 +332,10 @@ public class CompactNodeTypeDefWriter {
         }
     }
     /**
-     * putRequiredTypes
+     * write required types
      * @param reqTypes
      */
-    private void writeRequiredTypes(QName[] reqTypes) throws IOException, NamespaceException {
+    private void writeRequiredTypes(QName[] reqTypes) throws IOException {
         if (reqTypes != null && reqTypes.length > 0) {
             String delim = " (";
             for (int i = 0; i < reqTypes.length; i++) {
@@ -342,10 +348,10 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
-     * putDefaultType
+     * write default types
      * @param defType
      */
-    private void writeDefaultType(QName defType) throws IOException, NamespaceException {
+    private void writeDefaultType(QName defType) throws IOException {
         if (defType != null && !defType.getLocalName().equals("*")) {
             out.write(" = ");
             out.write(resolve(defType));
@@ -357,15 +363,30 @@ public class CompactNodeTypeDefWriter {
      * @param qname
      * @return the resolved name
      */
-    private String resolve(QName qname) throws NamespaceException {
+    private String resolve(QName qname) throws IOException {
         if (qname == null) {
             return "";
         }
-        String prefix = resolver.getPrefix(qname.getNamespaceURI());
-        if (prefix != null && !prefix.equals(QName.NS_EMPTY_PREFIX)) {
-            prefix += ":";
+        try {
+            String prefix = resolver.getPrefix(qname.getNamespaceURI());
+            if (prefix != null && !prefix.equals(QName.NS_EMPTY_PREFIX)) {
+                // check for writing namespaces
+                if (nsWriter != null) {
+                    if (!usedNamespaces.contains(prefix)) {
+                        usedNamespaces.add(prefix);
+                        nsWriter.write('<');
+                        nsWriter.write(prefix);
+                        nsWriter.write("='");
+                        nsWriter.write(escape(qname.getNamespaceURI()));
+                        nsWriter.write("'>\n");
+                    }
+                }
+                prefix += ":";
+            }
+            return prefix + qname.getLocalName();
+        } catch (NamespaceException e) {
+            return qname.toString();
         }
-        return prefix + qname.getLocalName();
     }
 
     /**
