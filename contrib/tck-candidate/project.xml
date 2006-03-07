@@ -21,7 +21,7 @@
     <!-- ====================================================================== -->
     <id>tck-candidate</id>
     <name>Jackrabbit TCK test candidate Web Application</name>
-    <currentVersion>1.0-SNAPSHOT</currentVersion>
+    <currentVersion>1.0</currentVersion>
 
 
     <!-- ====================================================================== -->
@@ -89,7 +89,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
