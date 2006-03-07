@@ -74,6 +74,15 @@
   <build>
     <sourceDirectory>src/java</sourceDirectory>
     <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+    <resources>
+      <resource>
+        <targetPath>META-INF</targetPath>
+        <directory>.</directory>
+        <includes>
+          <include>README.txt</include>
+        </includes>
+      </resource>
+    </resources>
     <unitTest>
       <includes>
         <include>**/*Test.java</include>
