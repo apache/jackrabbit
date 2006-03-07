@@ -1,4 +1,4 @@
-package org.apache.jackrabbit.util.nodetype;
+package org.apache.jackrabbit.core.nodetype.converter;
 
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
