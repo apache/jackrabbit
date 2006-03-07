@@ -20,7 +20,7 @@
   <artifactId>jackrabbit-textfilters</artifactId>
   <groupId>org.apache.jackrabbit</groupId>
   <name>Jackrabbit - Text filters</name>
-  <currentVersion>1.0-SNAPSHOT</currentVersion>
+  <currentVersion>1.0</currentVersion>
   <organization>
     <name>The Apache Software Foundation</name>
     <url>http://incubator.apache.org/projects/jackrabbit.html</url>
@@ -197,7 +197,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0</version>
       <type>jar</type>
     </dependency>
     <dependency>
