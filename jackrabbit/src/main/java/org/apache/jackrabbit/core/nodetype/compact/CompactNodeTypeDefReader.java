@@ -40,6 +40,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.HashSet;
 
 /**
  * CompactNodeTypeDefReader. Parses node type definitions written in the compact
@@ -269,7 +270,7 @@ public class CompactNodeTypeDefReader {
      * @throws ParseException
      */
     private void doSuperTypes(NodeTypeDef ntd) throws ParseException {
-        ArrayList supertypes = new ArrayList();
+        HashSet supertypes = new HashSet();
         if (!currentTokenEquals(Lexer.EXTENDS)) {
             return;
         }

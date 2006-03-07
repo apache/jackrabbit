@@ -23,23 +23,24 @@
  */
 package org.apache.jackrabbit.core.nodetype.compact;
 
+import junit.framework.TestCase;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDefDiff;
+import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
-import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDefDiff;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
+
 import javax.jcr.PropertyType;
 import javax.jcr.version.OnParentVersionAction;
-import java.util.List;
 import java.io.FileReader;
-import java.io.StringWriter;
 import java.io.StringReader;
-import junit.framework.TestCase;
+import java.io.StringWriter;
+import java.util.List;
 
 public class CompactNodeTypeDefTest extends TestCase {
     private static final String TEST_FILE = "applications/test/cnd-reader-test-input.cnd";
@@ -121,9 +122,7 @@ public class CompactNodeTypeDefTest extends TestCase {
 
         // Put imported node type def back into CND form with CND writer
         StringWriter sw = new StringWriter();
-        CompactNodeTypeDefWriter cndWriter = new CompactNodeTypeDefWriter(ntdList, nsm, sw);
-        cndWriter.write();
-        cndWriter.close();
+        CompactNodeTypeDefWriter.write(ntdList, nsm, sw);
 
         // Rerun the reader on the product of the writer
         cndReader = new CompactNodeTypeDefReader(new StringReader(sw.toString()), TEST_FILE);
