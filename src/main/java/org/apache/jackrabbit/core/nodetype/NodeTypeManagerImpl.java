@@ -23,6 +23,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.core.nodetype.compact.ParseException;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.log4j.Logger;
@@ -36,12 +38,14 @@ import javax.jcr.nodetype.NodeTypeIterator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -301,8 +305,29 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     //--------------------------------------------< JackrabbitNodeTypeManager >
 
     /**
-     * Registers the node types defined in the given XML stream. This is a
-     * trivial implementation that just invokes the existing
+     * Internal helper method for registering a list of node type definitions.
+     * Returns an array containing the registered node types. 
+     */
+    private NodeType[] registerNodeTypes(List defs)
+            throws InvalidNodeTypeDefException, RepositoryException {
+        ntReg.registerNodeTypes(defs);
+
+        Set types = new HashSet();
+        Iterator iterator = defs.iterator();
+        while (iterator.hasNext()) {
+            try {
+                NodeTypeDef def = (NodeTypeDef) iterator.next();
+                types.add(getNodeType(def.getName()));
+            } catch (NoSuchNodeTypeException e) {
+                // ignore
+            }
+        }
+        return (NodeType[]) types.toArray(new NodeType[types.size()]);
+    }
+
+    /**
+     * Registers the node types defined in the given XML stream.  This
+     * is a trivial implementation that just invokes the existing
      * {@link NodeTypeReader} and {@link NodeTypeRegistry} methods and
      * heuristically creates the returned node type array.
      *
@@ -312,17 +337,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             throws SAXException, RepositoryException {
         try {
             NodeTypeDef[] defs = NodeTypeReader.read(in.getByteStream());
-            ntReg.registerNodeTypes(Arrays.asList(defs));
-
-            Set types = new HashSet();
-            for (int i = 0; i < defs.length; i++) {
-                try {
-                    types.add(getNodeType(defs[i].getName()));
-                } catch (NoSuchNodeTypeException e) {
-                    // ignore
-                }
-            }
-            return (NodeType[]) types.toArray(new NodeType[types.size()]);
+            return registerNodeTypes(Arrays.asList(defs));
         } catch (InvalidNodeTypeDefException e) {
             throw new RepositoryException("Invalid node type definition", e);
         } catch (IOException e) {
@@ -335,16 +350,25 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     /** {@inheritDoc} */
     public NodeType[] registerNodeTypes(InputStream in, String contentType)
             throws IOException, RepositoryException {
-        if (contentType.equalsIgnoreCase(JackrabbitNodeTypeManager.TEXT_XML)
-            || contentType.equalsIgnoreCase(APPLICATION_XML)) {
-            try {
+        try {
+            if (contentType.equalsIgnoreCase(JackrabbitNodeTypeManager.TEXT_XML)
+                    || contentType.equalsIgnoreCase(APPLICATION_XML)) {
                 return registerNodeTypes(new InputSource(in));
-            } catch (SAXException e) {
-                throw new IOException(e.getMessage());
+            } else if (contentType.equalsIgnoreCase(
+                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND)) {
+                CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
+                        new InputStreamReader(in), "cnd input stream");
+                return registerNodeTypes(reader.getNodeTypeDefs());
+            } else {
+                throw new UnsupportedOperationException(
+                        "Unsupported content type: " + contentType);
             }
-        } else {
-            throw new UnsupportedOperationException(
-                    "Unsupported content type: " + contentType);
+        } catch (InvalidNodeTypeDefException e) {
+            throw new RepositoryException("Invalid node type definition", e);
+        } catch (SAXException e) {
+            throw new IOException(e.getMessage());
+        } catch (ParseException e) {
+            throw new IOException(e.getMessage());
         }
     }
 
