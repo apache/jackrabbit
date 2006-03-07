@@ -424,6 +424,11 @@ public class SharedItemStateManager
         private EventStateCollection events;
 
         /**
+         * Flag indicating whether we are holding write lock.
+         */
+        private boolean holdingWriteLock;
+
+        /**
          * Create a new instance of this class.
          */
         public Update(ChangeLog local, EventStateCollectionFactory factory,
@@ -454,6 +459,7 @@ public class SharedItemStateManager
             }
 
             acquireWriteLock();
+            holdingWriteLock = true;
 
             boolean succeeded = false;
 
@@ -572,8 +578,6 @@ public class SharedItemStateManager
                 }
             }
 
-            boolean holdingWriteLock = true;
-
             try {
                 /* Let the shared item listeners know about the change */
                 shared.persisted();
@@ -601,6 +605,7 @@ public class SharedItemStateManager
                 if (holdingWriteLock) {
                     // exception occured before downgrading lock
                     rwLock.writeLock().release();
+                    holdingWriteLock = false;
                 } else {
                     rwLock.readLock().release();
                 }
@@ -612,29 +617,35 @@ public class SharedItemStateManager
          * on the item state manager will have been released.
          */
         public void cancel() {
-            local.disconnect();
+            try {
+                local.disconnect();
 
-            for (Iterator iter = shared.modifiedStates(); iter.hasNext();) {
-                ItemState state = (ItemState) iter.next();
-                try {
-                    state.copy(loadItemState(state.getId()));
-                } catch (ItemStateException e) {
+                for (Iterator iter = shared.modifiedStates(); iter.hasNext();) {
+                    ItemState state = (ItemState) iter.next();
+                    try {
+                        state.copy(loadItemState(state.getId()));
+                    } catch (ItemStateException e) {
+                        state.discard();
+                    }
+                }
+                for (Iterator iter = shared.deletedStates(); iter.hasNext();) {
+                    ItemState state = (ItemState) iter.next();
+                    try {
+                        state.copy(loadItemState(state.getId()));
+                    } catch (ItemStateException e) {
+                        state.discard();
+                    }
+                }
+                for (Iterator iter = shared.addedStates(); iter.hasNext();) {
+                    ItemState state = (ItemState) iter.next();
                     state.discard();
                 }
-            }
-            for (Iterator iter = shared.deletedStates(); iter.hasNext();) {
-                ItemState state = (ItemState) iter.next();
-                try {
-                    state.copy(loadItemState(state.getId()));
-                } catch (ItemStateException e) {
-                    state.discard();
+            } finally {
+                if (holdingWriteLock) {
+                    rwLock.writeLock().release();
+                    holdingWriteLock = false;
                 }
             }
-            for (Iterator iter = shared.addedStates(); iter.hasNext();) {
-                ItemState state = (ItemState) iter.next();
-                state.discard();
-            }
-            rwLock.writeLock().release();
         }
     }
 
