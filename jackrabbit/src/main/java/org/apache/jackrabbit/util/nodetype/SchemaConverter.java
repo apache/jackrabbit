@@ -8,12 +8,14 @@ import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
-import org.apache.xerces.impl.xs.XMLSchemaLoader;
+import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
 import org.apache.xerces.xs.XSAttributeDeclaration;
 import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.xs.XSComplexTypeDefinition;
 import org.apache.xerces.xs.XSConstants;
 import org.apache.xerces.xs.XSElementDeclaration;
+import org.apache.xerces.xs.XSImplementation;
+import org.apache.xerces.xs.XSLoader;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSModelGroup;
 import org.apache.xerces.xs.XSNamedMap;
@@ -23,6 +25,7 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
+
 import javax.jcr.PropertyType;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.File;
@@ -66,22 +69,37 @@ public class SchemaConverter {
      * convertSchema
      */
     private void convertSchema(File file) throws SchemaConversionException {
-        XMLSchemaLoader loader = new XMLSchemaLoader();
-        String uri = file.toURI().toString();
-        XSModel xsModel = loader.loadURI(uri);
+        try {
+            // Find an XMLSchema loader instance
+            DOMImplementationRegistry registry =
+                DOMImplementationRegistry.newInstance();
+            XSImplementation implementation = (XSImplementation)
+                registry.getDOMImplementation("XS-Loader");
+            XSLoader loader = implementation.createXSLoader(null);
 
-        // Convert top level complex type definitions to node types
-        XSNamedMap map = xsModel.getComponents(XSConstants.TYPE_DEFINITION);
-        for (int i = 0; i < map.getLength(); i++) {
-            XSTypeDefinition tDef = (XSTypeDefinition) map.item(i);
-            checkAndConvert(tDef, null, null);
-        }
-        // Convert local (anonymous) complex type defs found in top level element declarations
-        map = xsModel.getComponents(XSConstants.ELEMENT_DECLARATION);
-        for (int i = 0; i < map.getLength(); i++) {
-            XSElementDeclaration eDec = (XSElementDeclaration) map.item(i);
-            XSTypeDefinition tDef = eDec.getTypeDefinition();
-            checkAndConvert(tDef, eDec.getNamespace(), eDec.getName());
+            // Load the XML Schema
+            String uri = file.toURI().toString();
+            XSModel xsModel = loader.loadURI(uri);
+
+            // Convert top level complex type definitions to node types
+            XSNamedMap map = xsModel.getComponents(XSConstants.TYPE_DEFINITION);
+            for (int i = 0; i < map.getLength(); i++) {
+                XSTypeDefinition tDef = (XSTypeDefinition) map.item(i);
+                checkAndConvert(tDef, null, null);
+            }
+            //  Convert local (anonymous) complex type defs found in top level element declarations
+            map = xsModel.getComponents(XSConstants.ELEMENT_DECLARATION);
+            for (int i = 0; i < map.getLength(); i++) {
+                XSElementDeclaration eDec = (XSElementDeclaration) map.item(i);
+                XSTypeDefinition tDef = eDec.getTypeDefinition();
+                checkAndConvert(tDef, eDec.getNamespace(), eDec.getName());
+            }
+        } catch (ClassNotFoundException e) {
+            throw new SchemaConversionException("XSLoader not found", e);
+        } catch (InstantiationException e) {
+            throw new SchemaConversionException("XSLoader instantiation error", e);
+        } catch (IllegalAccessException e) {
+            throw new SchemaConversionException("XSLoader access error", e);
         }
     }
 
