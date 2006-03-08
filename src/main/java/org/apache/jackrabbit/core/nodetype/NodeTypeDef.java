@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Iterator;
 
 /**
  * A <code>NodeTypeDef</code> holds the definition of a node type.
@@ -30,12 +31,12 @@ import java.util.Set;
 public class NodeTypeDef implements Cloneable {
 
     private QName name;
-    private QName[] supertypes;
+    private HashSet supertypes;
     private boolean mixin;
     private boolean orderableChildNodes;
     private QName primaryItemName;
-    private PropDef[] propDefs;
-    private NodeDef[] nodeDefs;
+    private HashSet propDefs;
+    private HashSet nodeDefs;
     private Set dependencies;
 
     /**
@@ -45,9 +46,9 @@ public class NodeTypeDef implements Cloneable {
         dependencies = null;
         name = null;
         primaryItemName = null;
-        nodeDefs = NodeDef.EMPTY_ARRAY;
-        propDefs = PropDef.EMPTY_ARRAY;
-        supertypes = QName.EMPTY_ARRAY;
+        nodeDefs = new HashSet();
+        propDefs = new HashSet();
+        supertypes = new HashSet();
         mixin = false;
         orderableChildNodes = false;
     }
@@ -68,18 +69,17 @@ public class NodeTypeDef implements Cloneable {
         if (dependencies == null) {
             dependencies = new HashSet();
             // supertypes
-            for (int i = 0; i < supertypes.length; i++) {
-                dependencies.add(supertypes[i]);
-            }
+            dependencies.addAll(supertypes);
             // child node definitions
-            for (int i = 0; i < nodeDefs.length; i++) {
+            for (Iterator iter = nodeDefs.iterator(); iter.hasNext();) {
+                NodeDef nd = (NodeDef) iter.next();
                 // default primary type
-                QName ntName = nodeDefs[i].getDefaultPrimaryType();
+                QName ntName = nd.getDefaultPrimaryType();
                 if (ntName != null && !name.equals(ntName)) {
                     dependencies.add(ntName);
                 }
                 // required primary type
-                QName[] ntNames = nodeDefs[i].getRequiredPrimaryTypes();
+                QName[] ntNames = nd.getRequiredPrimaryTypes();
                 for (int j = 0; j < ntNames.length; j++) {
                     if (ntNames[j] != null && !name.equals(ntNames[j])) {
                         dependencies.add(ntNames[j]);
@@ -87,10 +87,11 @@ public class NodeTypeDef implements Cloneable {
                 }
             }
             // property definitions
-            for (int i = 0; i < propDefs.length; i++) {
+            for (Iterator iter = propDefs.iterator(); iter.hasNext();) {
+                PropDef pd = (PropDef) iter.next();
                 // REFERENCE value constraints
-                if (propDefs[i].getRequiredType() == PropertyType.REFERENCE) {
-                    ValueConstraint[] ca = propDefs[i].getValueConstraints();
+                if (pd.getRequiredType() == PropertyType.REFERENCE) {
+                    ValueConstraint[] ca = pd.getValueConstraints();
                     if (ca != null) {
                         for (int j = 0; j < ca.length; j++) {
                             ReferenceConstraint rc = (ReferenceConstraint) ca[j];
@@ -126,7 +127,8 @@ public class NodeTypeDef implements Cloneable {
      */
     public void setSupertypes(QName[] names) {
         resetDependencies();
-        supertypes = names;
+        supertypes.clear();
+        supertypes.addAll(Arrays.asList(names));
     }
 
     /**
@@ -164,7 +166,8 @@ public class NodeTypeDef implements Cloneable {
      */
     public void setPropertyDefs(PropDef[] defs) {
         resetDependencies();
-        propDefs = defs;
+        propDefs.clear();
+        propDefs.addAll(Arrays.asList(defs));
     }
 
     /**
@@ -174,7 +177,8 @@ public class NodeTypeDef implements Cloneable {
      */
     public void setChildNodeDefs(NodeDef[] defs) {
         resetDependencies();
-        nodeDefs = defs;
+        nodeDefs.clear();
+        nodeDefs.addAll(Arrays.asList(defs));
     }
 
     /**
@@ -195,7 +199,10 @@ public class NodeTypeDef implements Cloneable {
      *         <code>null</code> if not set.
      */
     public QName[] getSupertypes() {
-        return supertypes;
+        if (supertypes.isEmpty()) {
+            return QName.EMPTY_ARRAY;
+        }
+        return (QName[]) supertypes.toArray(new QName[supertypes.size()]);
     }
 
     /**
@@ -234,7 +241,10 @@ public class NodeTypeDef implements Cloneable {
      *         <code>null</code> if not set.
      */
     public PropDef[] getPropertyDefs() {
-        return propDefs;
+        if (propDefs.isEmpty()) {
+            return PropDef.EMPTY_ARRAY;
+        }
+        return (PropDef[]) propDefs.toArray(new PropDef[propDefs.size()]);
     }
 
     /**
@@ -245,7 +255,10 @@ public class NodeTypeDef implements Cloneable {
      *         <code>null</code> if not set.
      */
     public NodeDef[] getChildNodeDefs() {
-        return nodeDefs;
+        if (nodeDefs.isEmpty()) {
+            return NodeDef.EMPTY_ARRAY;
+        }
+        return (NodeDef[]) nodeDefs.toArray(new NodeDef[nodeDefs.size()]);
     }
 
     //-------------------------------------------< java.lang.Object overrides >
@@ -253,11 +266,11 @@ public class NodeTypeDef implements Cloneable {
         NodeTypeDef clone = new NodeTypeDef();
         clone.name = name;
         clone.primaryItemName = primaryItemName;
-        clone.supertypes = (QName[]) supertypes.clone();
+        clone.supertypes = (HashSet) supertypes.clone();
         clone.mixin = mixin;
         clone.orderableChildNodes = orderableChildNodes;
-        clone.nodeDefs = (NodeDef[]) nodeDefs.clone();
-        clone.propDefs = (PropDef[]) propDefs.clone();
+        clone.nodeDefs = (HashSet) nodeDefs.clone();
+        clone.propDefs = (HashSet) propDefs.clone();
         return clone;
     }
 
@@ -269,11 +282,11 @@ public class NodeTypeDef implements Cloneable {
             NodeTypeDef other = (NodeTypeDef) obj;
             return (name == null ? other.name == null : name.equals(other.name))
                     && (primaryItemName == null ? other.primaryItemName == null : primaryItemName.equals(other.primaryItemName))
-                    && Arrays.equals(supertypes, other.supertypes)
+                    && supertypes.equals(other.supertypes)
                     && mixin == other.mixin
                     && orderableChildNodes == other.orderableChildNodes
-                    && Arrays.equals(propDefs, other.propDefs)
-                    && Arrays.equals(nodeDefs, other.nodeDefs);
+                    && propDefs.equals(other.propDefs)
+                    && nodeDefs.equals(other.nodeDefs);
         }
         return false;
     }
