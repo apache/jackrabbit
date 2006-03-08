@@ -35,7 +35,7 @@ import java.util.Hashtable;
 import java.util.Properties;
 
 /**
- * <code>DummyContext</code>  is a simple service provider that
+ * <code>DummyContext</code> is a simple service provider that
  * implements a flat namespace in memory. It is intended to be used for
  * testing purposes only.
  */
