@@ -20,6 +20,7 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
@@ -162,6 +163,9 @@ class DocViewImportHandler extends TargetImportHandler {
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * See also {@link DocViewSAXEventGenerator#leaving(javax.jcr.Node, int)}
+     * regarding special handling of multi-valued properties on export.
      */
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
@@ -188,35 +192,49 @@ class DocViewImportHandler extends TargetImportHandler {
                 // value(s)
                 String attrValue = atts.getValue(i);
                 Importer.TextValue[] propValues;
-/*
-                // @todo should attribute value be interpreted as LIST type (i.e. multi-valued property)?
-                String[] strings = Text.explode(attrValue, ' ', true);
-                propValues = new Value[strings.length];
-                for (int j = 0; j < strings.length; j++) {
-                    // decode encoded blanks in value
-                    strings[j] = Text.replace(strings[j], "_x0020_", " ");
-                    propValues[j] = InternalValue.create(strings[j]);
+
+                if (attrValue.startsWith("\n")) {
+                    // assume multi-valued property:
+                    // a leading line-feed (a valid whitespace NMTOKENS delimiter)
+                    // is interpreted as a hint that this attribute value is of
+                    // type NMTOKENS.
+                    // see DocViewSAXEventGenerator#leaving(Node, int)
+                    attrValue = attrValue.substring(1);
+                    String[] strings = Text.explode(attrValue, ' ', true);
+                    propValues = new Importer.TextValue[strings.length];
+                    for (int j = 0; j < strings.length; j++) {
+                        // decode encoded blanks in value
+                        strings[j] = Text.replace(strings[j], "_x0020_", " ");
+                        propValues[j] = new StringValue(strings[j]);
+                    }
+                } else {
+                    // assume single-valued property
+                    propValues = new Importer.TextValue[1];
+                    propValues[0] = new StringValue(attrValue);
                 }
-*/
+
                 if (propName.equals(QName.JCR_PRIMARYTYPE)) {
                     // jcr:primaryType
                     if (attrValue.length() > 0) {
                         try {
                             nodeTypeName = QName.fromJCRName(attrValue, nsContext);
-                        } catch (NameException be) {
+                        } catch (NameException ne) {
                             throw new SAXException("illegal jcr:primaryType value: "
-                                    + attrValue, be);
+                                    + attrValue, ne);
                         }
                     }
                 } else if (propName.equals(QName.JCR_MIXINTYPES)) {
                     // jcr:mixinTypes
-                    if (attrValue.length() > 0) {
-                        try {
-                            mixinTypes =
-                                    new QName[]{QName.fromJCRName(attrValue, nsContext)};
-                        } catch (NameException be) {
-                            throw new SAXException("illegal jcr:mixinTypes value: "
-                                    + attrValue, be);
+                    if (propValues.length > 0) {
+                        mixinTypes = new QName[propValues.length];
+                        for (int j = 0; j < propValues.length; j++) {
+                            String val = ((StringValue) propValues[j]).retrieve();
+                            try {
+                                mixinTypes[j] = QName.fromJCRName(val, nsContext);
+                            } catch (NameException ne) {
+                                throw new SAXException("illegal jcr:mixinTypes value: "
+                                        + val, ne);
+                            }
                         }
                     }
                 } else if (propName.equals(QName.JCR_UUID)) {
@@ -225,8 +243,6 @@ class DocViewImportHandler extends TargetImportHandler {
                         id = NodeId.valueOf(attrValue);
                     }
                 } else {
-                    propValues = new Importer.TextValue[1];
-                    propValues[0] = new StringValue(atts.getValue(i));
                     props.add(new Importer.PropInfo(propName,
                             PropertyType.UNDEFINED, propValues));
                 }

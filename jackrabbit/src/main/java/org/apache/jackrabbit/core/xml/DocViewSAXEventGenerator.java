@@ -98,6 +98,9 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * See also {@link DocViewImportHandler#startElement(String, String, String, org.xml.sax.Attributes)}
+     * regarding special handling of multi-valued properties on import.
      */
     protected void leavingProperties(Node node, int level)
             throws RepositoryException, SAXException {
@@ -146,18 +149,44 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                     StringBuffer attrValue = new StringBuffer();
                     // process property value(s)
                     boolean multiValued = prop.getDefinition().isMultiple();
-                    Value[] vals;
+
                     if (multiValued) {
-                        vals = prop.getValues();
-                    } else {
-                        vals = new Value[]{prop.getValue()};
-                    }
-                    for (int i = 0; i < vals.length; i++) {
-                        if (i > 0) {
-                            // use space as delimiter for multi-valued properties
-                            attrValue.append(" ");
+                        // multi-valued property:
+                        // according to "6.4.2.5 Multi-value Properties" of the
+                        // jsr-170 specification a multi-valued property can be
+                        // either skipped or it must be exported as NMTOKENS
+                        // type where "a mechanism must be adopted whereby upon
+                        // re-import the distinction between multi- and single-
+                        // value properties is not lost"...
+
+                        // the following implementation is a pragmatic approach
+                        // in the interest of improved useability:
+                        // the attribute value is constructed by concatenating
+                        // the serialized and escaped values, separated by a
+                        // space character each, into a single string and
+                        // prepending a new-line to help distinguish multi-
+                        // from single-valued properties on re-import.
+
+                        // use a leading line-feed (a valid whitespace
+                        // delimiter) as a hint on re-import that this attribute
+                        // value is of type NMTOKENS; note that line-feed rather
+                        // than space has been chosen as leading line-feeds are 
+                        // not affected by attribute-value normalization
+                        // (http://www.w3.org/TR/REC-xml/#AVNormalize)
+                        attrValue.append("\n");
+                        Value[] vals = prop.getValues();
+                        for (int i = 0; i < vals.length; i++) {
+                            if (i > 0) {
+                                // use space as delimiter for separate values
+                                attrValue.append(" ");
+                            }
+                            // serialize value (with encoded embedded spaces)
+                            attrValue.append(ValueHelper.serialize(vals[i], true));
                         }
-                        attrValue.append(ValueHelper.serialize(vals[i], true));
+                    } else {
+                        // single-valued property:
+                        // serialize value without encoding embedded spaces
+                        attrValue.append(ValueHelper.serialize(prop.getValue(), false));
                     }
                     attrs.addAttribute(qName.getNamespaceURI(),
                             qName.getLocalName(), attrName, CDATA_TYPE,
