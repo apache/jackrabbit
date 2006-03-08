@@ -96,6 +96,10 @@ See the Jackrabbit issue tracker for details and other outstanding issues:
 Change History
 --------------
 
+Changes since 1.0-rc1:
+
+  [JCR-335] Deadlock caused by versioning operations within transaction
+
 Changes since 0.9:
 
   [JCR-334] loadURI compile error with Maven 1.0.2
