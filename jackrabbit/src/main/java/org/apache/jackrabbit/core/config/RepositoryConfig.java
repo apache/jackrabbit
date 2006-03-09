@@ -16,21 +16,12 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Writer;
-import java.io.OutputStreamWriter;
-import java.io.FileWriter;
-import java.net.URI;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
+import org.apache.log4j.Logger;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -39,12 +30,21 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
-import org.w3c.dom.Element;
-import org.xml.sax.InputSource;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.net.URI;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Repository configuration. This configuration class is used to
@@ -58,6 +58,9 @@ import org.xml.sax.InputSource;
  * workspaces.
  */
 public class RepositoryConfig {
+
+    /** the default logger */
+    private static Logger log = Logger.getLogger(RepositoryConfig.class);
 
     /** Name of the workspace configuration file. */
     private static final String WORKSPACE_XML = "workspace.xml";
@@ -320,14 +323,13 @@ public class RepositoryConfig {
                 }
             }
         }
-
-        if (workspaces.isEmpty()) {
+        if (!workspaces.containsKey(defaultWorkspace)) {
+            if (!workspaces.isEmpty()) {
+                log.warn("Potential missconfiguration. No configuration found " +
+                        "for default workspace: " + defaultWorkspace);
+            }
             // create initial default workspace
             createWorkspaceConfig(defaultWorkspace);
-        } else if (!workspaces.containsKey(defaultWorkspace)) {
-            throw new ConfigurationException(
-                    "no configuration found for default workspace: "
-                    + defaultWorkspace);
         }
     }
 
