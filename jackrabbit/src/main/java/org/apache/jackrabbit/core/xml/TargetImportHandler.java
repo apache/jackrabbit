@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.log4j.Logger;
+import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.File;
@@ -29,6 +30,8 @@ import java.io.StringReader;
 import java.io.Writer;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+
+import javax.jcr.RepositoryException;
 
 /**
  * <code>TargetImportHandler</code> serves as the base class for the concrete
@@ -65,6 +68,38 @@ abstract class TargetImportHandler extends DefaultHandler {
                     // fall through...
                 }
             }
+        }
+    }
+
+    //-------------------------------------------------------< ContentHandler >
+
+    /**
+     * Initializes the underlying {@link Importer} instance. This method
+     * is called by the XML parser when the XML document starts.
+     *
+     * @throws SAXException if the importer can not be initialized
+     * @see DefaultHandler#startDocument()
+     */
+    public void startDocument() throws SAXException {
+        try {
+            importer.start();
+        } catch (RepositoryException re) {
+            throw new SAXException(re);
+        }
+    }
+
+    /**
+     * Closes the underlying {@link Importer} instance. This method
+     * is called by the XML parser when the XML document ends.
+     *
+     * @throws SAXException if the importer can not be closed
+     * @see DefaultHandler#endDocument()
+     */
+    public void endDocument() throws SAXException {
+        try {
+            importer.end();
+        } catch (RepositoryException re) {
+            throw new SAXException(re);
         }
     }
 

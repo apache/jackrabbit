@@ -150,16 +150,6 @@ class DocViewImportHandler extends TargetImportHandler {
     }
 
     //-------------------------------------------------------< ContentHandler >
-    /**
-     * {@inheritDoc}
-     */
-    public void startDocument() throws SAXException {
-        try {
-            importer.start();
-        } catch (RepositoryException re) {
-            throw new SAXException(re);
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -300,16 +290,5 @@ class DocViewImportHandler extends TargetImportHandler {
         }
         // we're done with this node, pop it from stack
         stack.pop();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void endDocument() throws SAXException {
-        try {
-            importer.end();
-        } catch (RepositoryException re) {
-            throw new SAXException(re);
-        }
     }
 }

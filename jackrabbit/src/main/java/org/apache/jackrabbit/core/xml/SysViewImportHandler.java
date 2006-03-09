@@ -99,16 +99,6 @@ class SysViewImportHandler extends TargetImportHandler {
     }
 
     //-------------------------------------------------------< ContentHandler >
-    /**
-     * {@inheritDoc}
-     */
-    public void startDocument() throws SAXException {
-        try {
-            importer.start();
-        } catch (RepositoryException re) {
-            throw new SAXException(re);
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -305,17 +295,6 @@ class SysViewImportHandler extends TargetImportHandler {
             currentPropValue = null;
         } else {
             throw new SAXException(new InvalidSerializedDataException("invalid element in system view xml document: " + localName));
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void endDocument() throws SAXException {
-        try {
-            importer.end();
-        } catch (RepositoryException re) {
-            throw new SAXException(re);
         }
     }
 
