@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.nodetype.xml;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
@@ -91,13 +90,21 @@ public class TestAll extends TestCase {
      * Returns the named property definition from the named node type
      * definition. If either of the definitions do not exist, an assertion
      * failure is generated.
+     * <p>
+     * If the given property name is <code>null</code>, then the residual
+     * property definition (if one exists) is returned. 
      *
      * @param typeName node type name
-     * @param propertyName property name
+     * @param propertyName property name, or <code>null</code>
      * @return property definition
      */
     private PropDef getProperty(String typeName, String propertyName) {
-        QName name = new QName(TEST_NAMESPACE, propertyName);
+        QName name;
+        if (propertyName != null) {
+            name = new QName(TEST_NAMESPACE, propertyName);
+        } else {
+            name = PropDef.ANY_NAME;
+        }
 
         NodeTypeDef def = getNodeType(typeName);
         PropDef[] defs = def.getPropertyDefs();
@@ -199,8 +206,8 @@ public class TestAll extends TestCase {
                 def.getPrimaryItemName());
         assertEquals("itemNodeType propertyDefs",
                 10, def.getPropertyDefs().length);
-        PropDef[] defs = def.getPropertyDefs();
-        assertTrue("itemNodeType wildcard property", defs[0].definesResidual());
+        PropDef pdef = getProperty("itemNodeType", null);
+        assertTrue("itemNodeType wildcard property", pdef.definesResidual());
     }
 
     /** Test for the empty item definition. */
@@ -481,12 +488,12 @@ public class TestAll extends TestCase {
         NodeDef def = getChildNode("childNodeType", "requiredTypeNode");
         assertEquals("requiredTypeNode requiredPrimaryTypes",
                 2, def.getRequiredPrimaryTypes().length);
+        QName[] types = def.getRequiredPrimaryTypes();
+        Arrays.sort(types);
         assertEquals("requiredTypeNode requiredPrimaryTypes[0]",
-                new QName(TEST_NAMESPACE, "baseType"),
-                def.getRequiredPrimaryTypes()[0]);
+                new QName(TEST_NAMESPACE, "baseType"), types[0]);
         assertEquals("requiredTypeNode requiredPrimaryTypes[1]",
-                new QName(TEST_NAMESPACE, "testType"),
-                def.getRequiredPrimaryTypes()[1]);
+                new QName(TEST_NAMESPACE, "testType"), types[1]);
     }
 
     /**
