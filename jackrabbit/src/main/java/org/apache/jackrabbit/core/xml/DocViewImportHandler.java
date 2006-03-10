@@ -20,7 +20,6 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
@@ -154,7 +153,7 @@ class DocViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      * <p/>
-     * See also {@link DocViewSAXEventGenerator#leaving(javax.jcr.Node, int)}
+     * See also {@link DocViewSAXEventGenerator#leavingProperties(javax.jcr.Node, int)}
      * regarding special handling of multi-valued properties on export.
      */
     public void startElement(String namespaceURI, String localName,
@@ -183,25 +182,13 @@ class DocViewImportHandler extends TargetImportHandler {
                 String attrValue = atts.getValue(i);
                 Importer.TextValue[] propValues;
 
-                if (attrValue.startsWith("\n")) {
-                    // assume multi-valued property:
-                    // a leading line-feed (a valid whitespace NMTOKENS delimiter)
-                    // is interpreted as a hint that this attribute value is of
-                    // type NMTOKENS.
-                    // see DocViewSAXEventGenerator#leaving(Node, int)
-                    attrValue = attrValue.substring(1);
-                    String[] strings = Text.explode(attrValue, ' ', true);
-                    propValues = new Importer.TextValue[strings.length];
-                    for (int j = 0; j < strings.length; j++) {
-                        // decode encoded blanks in value
-                        strings[j] = Text.replace(strings[j], "_x0020_", " ");
-                        propValues[j] = new StringValue(strings[j]);
-                    }
-                } else {
-                    // assume single-valued property
-                    propValues = new Importer.TextValue[1];
-                    propValues[0] = new StringValue(attrValue);
-                }
+                // always assume single-valued property for the time being
+                // until a way of properly serializing/detecting multi-valued
+                // properties on re-import is found (see JCR-325);
+                // see also DocViewSAXEventGenerator#leavingProperties(Node, int)
+                // todo proper multi-value serialization support
+                propValues = new Importer.TextValue[1];
+                propValues[0] = new StringValue(attrValue);
 
                 if (propName.equals(QName.JCR_PRIMARYTYPE)) {
                     // jcr:primaryType
