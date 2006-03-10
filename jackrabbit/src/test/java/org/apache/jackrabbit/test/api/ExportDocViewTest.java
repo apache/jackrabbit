@@ -436,8 +436,9 @@ public class ExportDocViewTest extends AbstractJCRTest {
     private void checkAttribute(Property prop, Attr attribute) throws RepositoryException {
 
         boolean isBinary = (prop.getType() == PropertyType.BINARY);
+        boolean isMultiple = prop.getDefinition().isMultiple();
         if (skipBinary) {
-            if (isBinary) {
+            if (isBinary && !(isMultiple && !exportMultivalProps)) {
                 assertEquals("Value of binary property " + prop.getPath() +
                         " exported although skipBinary is true",
                         attribute.getValue().length(), 0);
@@ -449,7 +450,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
         }
         // saveBinary
         else {
-            if (isBinary) {
+            if (isBinary && !(isMultiple && !exportMultivalProps)) {
                 assertTrue("Binary property " + prop.getPath() +
                         " not exported although skipBinary is false", attribute != null);
             }
@@ -473,9 +474,16 @@ public class ExportDocViewTest extends AbstractJCRTest {
         boolean isMultiple = prop.getDefinition().isMultiple();
         boolean isValidName = XMLChar.isValidName(name);
 
-        if (exportMultivalProps && isMultiple) {
-            assertTrue("Not all multivalued properties are exported: "
-                    + prop.getPath() + " is not exported.", attribute != null);
+        if (isMultiple) {
+            if (exportMultivalProps) {
+                assertTrue("Not all multivalued properties are exported: "
+                        + prop.getPath() + " is not exported.", attribute != null);
+            } else {
+                // skipping multi-valued properties entirely is legal
+                // according to "6.4.2.5 Multi-value Properties" of the
+                // jsr-170 specification
+                return;
+            }
         }
         // check anyway the other flag
         if (exportInvalidXmlNames && !isValidName) {
@@ -774,6 +782,9 @@ public class ExportDocViewTest extends AbstractJCRTest {
             PropertyIterator iter = node.getProperties();
             while (iter.hasNext()) {
                 Property prop = iter.nextProperty();
+                if (!exportMultivalProps && prop.getDefinition().isMultiple()) {
+                    continue;
+                }
                 if (!XMLChar.isValidName(prop.getName())) {
                     // property exported?
                     exportInvalidXmlNames = isExportedProp(prop, elem);
