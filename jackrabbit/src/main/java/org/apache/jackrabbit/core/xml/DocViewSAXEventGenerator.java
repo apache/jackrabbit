@@ -29,7 +29,6 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -136,6 +135,20 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
             while (iter.hasNext()) {
                 Property prop = (Property) iter.next();
                 String propName = prop.getName();
+
+                if (prop.getDefinition().isMultiple()) {
+                    // todo proper multi-value serialization support
+                    // skip multi-valued properties for the time being
+                    // until a way of properly handling/detecting multi-valued
+                    // properties on re-import is found (see JCR-325);
+                    // see also DocViewImportHandler#startElement()
+
+                    // skipping multi-valued properties entirely is legal
+                    // according to "6.4.2.5 Multi-value Properties" of the
+                    // jsr-170 specification
+                    continue;
+                }
+
                 // attribute name (encode property name to make sure it's a valid xml name)
                 String attrName = ISO9075.encode(propName);
                 QName qName = getQName(attrName);
@@ -147,47 +160,8 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                             qName.getLocalName(), attrName, CDATA_TYPE, "");
                 } else {
                     StringBuffer attrValue = new StringBuffer();
-                    // process property value(s)
-                    boolean multiValued = prop.getDefinition().isMultiple();
-
-                    if (multiValued) {
-                        // multi-valued property:
-                        // according to "6.4.2.5 Multi-value Properties" of the
-                        // jsr-170 specification a multi-valued property can be
-                        // either skipped or it must be exported as NMTOKENS
-                        // type where "a mechanism must be adopted whereby upon
-                        // re-import the distinction between multi- and single-
-                        // value properties is not lost"...
-
-                        // the following implementation is a pragmatic approach
-                        // in the interest of improved useability:
-                        // the attribute value is constructed by concatenating
-                        // the serialized and escaped values, separated by a
-                        // space character each, into a single string and
-                        // prepending a new-line to help distinguish multi-
-                        // from single-valued properties on re-import.
-
-                        // use a leading line-feed (a valid whitespace
-                        // delimiter) as a hint on re-import that this attribute
-                        // value is of type NMTOKENS; note that line-feed rather
-                        // than space has been chosen as leading line-feeds are 
-                        // not affected by attribute-value normalization
-                        // (http://www.w3.org/TR/REC-xml/#AVNormalize)
-                        attrValue.append("\n");
-                        Value[] vals = prop.getValues();
-                        for (int i = 0; i < vals.length; i++) {
-                            if (i > 0) {
-                                // use space as delimiter for separate values
-                                attrValue.append(" ");
-                            }
-                            // serialize value (with encoded embedded spaces)
-                            attrValue.append(ValueHelper.serialize(vals[i], true));
-                        }
-                    } else {
-                        // single-valued property:
-                        // serialize value without encoding embedded spaces
-                        attrValue.append(ValueHelper.serialize(prop.getValue(), false));
-                    }
+                    // serialize single-valued property
+                    attrValue.append(ValueHelper.serialize(prop.getValue(), false));
                     attrs.addAttribute(qName.getNamespaceURI(),
                             qName.getLocalName(), attrName, CDATA_TYPE,
                             attrValue.toString());
