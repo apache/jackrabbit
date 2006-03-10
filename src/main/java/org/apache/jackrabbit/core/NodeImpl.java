@@ -233,7 +233,7 @@ public class NodeImpl extends ItemImpl implements Node {
             /**
              * build and resolve absolute path
              */
-            p = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
+            p = Path.create(getPrimaryPath(), p, true);
             try {
                 ItemId id = session.getHierarchyManager().resolvePath(p);
                 if (id.denotesNode()) {
