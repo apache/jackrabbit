@@ -546,16 +546,6 @@ public class ExportDocViewTest extends AbstractJCRTest {
                 }
             } else {
                 val = prop.getString();
-                if (exportMultivalProps) {
-                    val = escapeValues(val);
-                } else {
-                    // we could not decide if the repository exports multivalued
-                    // properties so we consider both possibilities
-                    String escapedVal = escapeValues(val);
-                    if (escapedVal.equals(attrVal)) {
-                        val = escapedVal;
-                    }
-                }
             }
         }
         if (isBinary && skipBinary) {
@@ -565,8 +555,9 @@ public class ExportDocViewTest extends AbstractJCRTest {
                     " exported although skipBinary is true",
                     "", attrVal);
         } else {
-            assertEquals("Value of property " + prop.getPath() +
-                    " is not exported correctly: ", val, attrVal);
+            assertTrue("Value of property " + prop.getPath() +
+                    " is not exported correctly: " + attrVal,
+                    val.equals(attrVal) || escapeValues(val).equals(attrVal));
         }
     }
 
