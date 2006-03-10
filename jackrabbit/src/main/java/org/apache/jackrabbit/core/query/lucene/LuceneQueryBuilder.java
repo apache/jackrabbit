@@ -508,18 +508,37 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         if (context == null) {
             exceptions.add(new IllegalArgumentException("Unsupported query"));
         }
+
         try {
             String refProperty = node.getRefProperty().toJCRName(nsMappings);
             String nameTest = null;
             if (node.getNameTest() != null) {
                 nameTest = node.getNameTest().toJCRName(nsMappings);
             }
-            return new DerefQuery(context, refProperty, nameTest);
+
+            if (node.getIncludeDescendants()) {
+                Query refPropQuery = new MatchAllQuery(refProperty);
+                context = new DescendantSelfAxisQuery(context, refPropQuery, false);
+            }
+
+            context = new DerefQuery(context, refProperty, nameTest);
+
+            // attach predicates
+            Object[] predicates = node.acceptOperands(this, data);
+            if (predicates.length > 0) {
+                BooleanQuery andQuery = new BooleanQuery();
+                for (int i = 0; i < predicates.length; i++) {
+                    andQuery.add((Query) predicates[i], true, false);
+                }
+                andQuery.add(context, true, false);
+                context = andQuery;
+            }
+
         } catch (NoPrefixDeclaredException e) {
             // should never happen
             exceptions.add(e);
         }
-        // fallback in case of exception
+
         return context;
     }
 

@@ -43,6 +43,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(XPathAxisTest.class);
         suite.addTestSuite(SkipDeletedNodesTest.class);
         suite.addTestSuite(MixinTest.class);
+        suite.addTestSuite(DerefTest.class);
 
         // exclude long running tests per default
         //suite.addTestSuite(MassiveRangeTest.class);

@@ -86,7 +86,7 @@ public class SimpleNode implements Node {
     public Object childrenAccept(XPathVisitor visitor, Object data) {
         if (children != null) {
             for (int i = 0; i < children.length; ++i) {
-                children[i].jjtAccept(visitor, data);
+                data = children[i].jjtAccept(visitor, data);
             }
         }
         return data;
