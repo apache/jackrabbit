@@ -26,7 +26,7 @@ PropertyDefinition
   Mandatory false
   OnParentVersion COPY
   Protected false
-  Multiple true
+  Multiple false
 PropertyDefinition
   Name "*"
   RequiredType UNDEFINED
@@ -36,4 +36,4 @@ PropertyDefinition
   Mandatory false
   OnParentVersion COPY
   Protected false
-  Multiple false
+  Multiple true
