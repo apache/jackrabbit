@@ -37,7 +37,8 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -72,7 +73,7 @@ import java.util.Set;
  */
 public abstract class ItemImpl implements Item, ItemStateListener {
 
-    private static Logger log = Logger.getLogger(ItemImpl.class);
+    private static Logger log = LoggerFactory.getLogger(ItemImpl.class);
 
     protected static final int STATUS_NORMAL = 0;
     protected static final int STATUS_MODIFIED = 1;

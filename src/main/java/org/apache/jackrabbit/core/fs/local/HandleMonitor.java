@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.core.fs.local;
 
 import org.apache.jackrabbit.util.LazyFileInputStream;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -38,7 +39,7 @@ public class HandleMonitor {
     /**
      * The default logger
      */
-    private static Logger log = Logger.getLogger(HandleMonitor.class);
+    private static Logger log = LoggerFactory.getLogger(HandleMonitor.class);
 
     /**
      * the map of open handles (key=File, value=Handle)

@@ -19,7 +19,8 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -32,7 +33,7 @@ import java.util.NoSuchElementException;
 class NodeIteratorImpl implements ScoreNodeIterator {
 
     /** Logger instance for this class */
-    private static final Logger log = Logger.getLogger(NodeIteratorImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(NodeIteratorImpl.class);
 
     /** The node ids of the nodes in the result set */
     protected final NodeId[] ids;

@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
@@ -36,7 +37,7 @@ import java.util.Set;
  */
 public class SimpleLoginModule implements LoginModule {
 
-    private static Logger log = Logger.getLogger(SimpleLoginModule.class);
+    private static Logger log = LoggerFactory.getLogger(SimpleLoginModule.class);
 
     /**
      * Name of the anonymous user id option in the LoginModule configuration

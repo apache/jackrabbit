@@ -24,7 +24,8 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
@@ -46,7 +47,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * default logger
      */
-    private static Logger log = Logger.getLogger(InternalVersionHistory.class);
+    private static Logger log = LoggerFactory.getLogger(InternalVersionHistory.class);
 
     /**
      * the cache of the version labels

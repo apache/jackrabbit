@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -37,7 +38,7 @@ class CachingIndexReader extends FilterIndexReader {
     /**
      * The logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(CachingIndexReader.class);
+    private static final Logger log = LoggerFactory.getLogger(CachingIndexReader.class);
 
     /**
      * The current value of the global creation tick counter.

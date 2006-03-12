@@ -34,7 +34,8 @@ import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -70,7 +71,7 @@ import java.util.Iterator;
  */
 public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionFactory {
 
-    private static Logger log = Logger.getLogger(WorkspaceImpl.class);
+    private static Logger log = LoggerFactory.getLogger(WorkspaceImpl.class);
 
     /**
      * The configuration of this <code>Workspace</code>

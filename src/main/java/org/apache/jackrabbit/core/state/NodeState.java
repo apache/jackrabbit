@@ -24,7 +24,8 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -50,7 +51,7 @@ public class NodeState extends ItemState {
      */
     static final long serialVersionUID = 4392375681805781770L;
 
-    private static Logger log = Logger.getLogger(NodeState.class);
+    private static Logger log = LoggerFactory.getLogger(NodeState.class);
 
     /**
      * the name of this node's primary type

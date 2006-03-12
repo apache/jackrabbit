@@ -22,7 +22,8 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
@@ -42,7 +43,7 @@ public abstract class AbstractVersion extends NodeImpl implements Version {
     /**
      * Logger instance.
      */
-    private static Logger log = Logger.getLogger(AbstractVersion.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractVersion.class);
 
     /**
      * Create a new instance of this class.

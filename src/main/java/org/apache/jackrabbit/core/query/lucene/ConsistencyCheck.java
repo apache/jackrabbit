@@ -23,7 +23,8 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.document.Document;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
@@ -52,7 +53,7 @@ class ConsistencyCheck {
     /**
      * Logger instance for this class
      */
-    private static final Logger log = Logger.getLogger(ConsistencyCheck.class);
+    private static final Logger log = LoggerFactory.getLogger(ConsistencyCheck.class);
 
     /**
      * The ItemStateManager of the workspace.

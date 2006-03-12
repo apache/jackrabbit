@@ -19,7 +19,8 @@ package org.apache.jackrabbit.core.state;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -38,7 +39,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(ItemState.class);
+    private static Logger log = LoggerFactory.getLogger(ItemState.class);
 
      //------------------< flags defining the current status of this instance >
     /**

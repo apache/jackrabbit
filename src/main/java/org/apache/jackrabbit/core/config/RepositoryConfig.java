@@ -19,7 +19,8 @@ package org.apache.jackrabbit.core.config;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
@@ -60,7 +61,7 @@ import java.util.Properties;
 public class RepositoryConfig {
 
     /** the default logger */
-    private static Logger log = Logger.getLogger(RepositoryConfig.class);
+    private static Logger log = LoggerFactory.getLogger(RepositoryConfig.class);
 
     /** Name of the workspace configuration file. */
     private static final String WORKSPACE_XML = "workspace.xml";

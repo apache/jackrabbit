@@ -33,7 +33,8 @@ import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 
@@ -45,7 +46,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     /**
      * the default logger
      */
-    private static Logger log = Logger.getLogger(VersionItemStateProvider.class);
+    private static Logger log = LoggerFactory.getLogger(VersionItemStateProvider.class);
 
     /**
      * The version manager

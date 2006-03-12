@@ -27,7 +27,8 @@ import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
@@ -45,7 +46,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
     /**
      * the default logger
      */
-    private static Logger log = Logger.getLogger(VirtualNodeTypeStateManager.class);
+    private static Logger log = LoggerFactory.getLogger(VirtualNodeTypeStateManager.class);
 
 
     /**

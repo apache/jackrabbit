@@ -36,7 +36,8 @@ import org.apache.jackrabbit.core.state.util.Serializer;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.util.Text;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -148,7 +149,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(SimpleDbPersistenceManager.class);
+    private static Logger log = LoggerFactory.getLogger(SimpleDbPersistenceManager.class);
 
     protected static final String SCHEMA_OBJECT_PREFIX_VARIABLE =
             "${schemaObjectPrefix}";

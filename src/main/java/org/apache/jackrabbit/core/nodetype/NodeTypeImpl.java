@@ -23,7 +23,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -41,7 +42,7 @@ import java.util.HashSet;
  */
 public class NodeTypeImpl implements NodeType {
 
-    private static Logger log = Logger.getLogger(NodeTypeImpl.class);
+    private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
     private final NodeTypeDef ntd;
     private final EffectiveNodeType ent;

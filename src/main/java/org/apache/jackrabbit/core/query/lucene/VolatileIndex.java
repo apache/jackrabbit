@@ -23,7 +23,8 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.RAMDirectory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -38,7 +39,7 @@ class VolatileIndex extends AbstractIndex {
     /**
      * Logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(VolatileIndex.class);
+    private static final Logger log = LoggerFactory.getLogger(VolatileIndex.class);
 
     /**
      * Default value for {@link #bufferSize}.

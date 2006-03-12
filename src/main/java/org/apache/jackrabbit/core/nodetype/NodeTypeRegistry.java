@@ -23,7 +23,8 @@ import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -50,7 +51,7 @@ import java.util.Stack;
  */
 public class NodeTypeRegistry implements Dumpable {
 
-    private static Logger log = Logger.getLogger(NodeTypeRegistry.class);
+    private static Logger log = LoggerFactory.getLogger(NodeTypeRegistry.class);
 
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
             "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";

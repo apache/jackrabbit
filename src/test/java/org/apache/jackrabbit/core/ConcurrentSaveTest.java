@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Session;
 import javax.jcr.Node;
@@ -33,7 +34,7 @@ import java.util.List;
 public class ConcurrentSaveTest extends AbstractJCRTest {
 
     /** logger instance */
-    private static final Logger log = Logger.getLogger(ConcurrentSaveTest.class);
+    private static final Logger log = LoggerFactory.getLogger(ConcurrentSaveTest.class);
 
     private final int NUM_NODES = 1000;
     private Session addNodeSession;
