@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -35,7 +36,7 @@ import java.io.File;
 class PersistentIndex extends AbstractIndex {
 
     /** The logger instance for this class */
-    private static final Logger log = Logger.getLogger(PersistentIndex.class);
+    private static final Logger log = LoggerFactory.getLogger(PersistentIndex.class);
 
     /** Name of the write lock file */
     private static final String WRITE_LOCK = IndexWriter.WRITE_LOCK_NAME;

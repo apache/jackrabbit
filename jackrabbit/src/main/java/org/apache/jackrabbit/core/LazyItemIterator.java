@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -46,7 +47,7 @@ import java.util.ArrayList;
 class LazyItemIterator implements NodeIterator, PropertyIterator {
 
     /** Logger instance for this class */
-    private static Logger log = Logger.getLogger(LazyItemIterator.class);
+    private static Logger log = LoggerFactory.getLogger(LazyItemIterator.class);
 
     /** the item manager that is used to lazily fetch the items */
     private final ItemManager itemMgr;

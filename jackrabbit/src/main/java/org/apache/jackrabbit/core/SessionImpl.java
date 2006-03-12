@@ -43,7 +43,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.xml.sax.ContentHandler;
@@ -95,7 +96,7 @@ import java.util.Set;
  */
 public class SessionImpl implements Session, Dumpable {
 
-    private static Logger log = Logger.getLogger(SessionImpl.class);
+    private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
     /**
      * prededfined action constants in checkPermission

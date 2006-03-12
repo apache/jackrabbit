@@ -28,7 +28,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.value.ReferenceValue;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
@@ -51,7 +52,7 @@ import java.util.Stack;
  */
 public class SessionImporter implements Importer {
 
-    private static Logger log = Logger.getLogger(SessionImporter.class);
+    private static Logger log = LoggerFactory.getLogger(SessionImporter.class);
 
     private final SessionImpl session;
     private final NodeImpl importTargetNode;

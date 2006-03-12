@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.core.fs.db;
 
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.DriverManager;
 
@@ -53,7 +54,7 @@ public class DB2FileSystem extends DbFileSystem {
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(DB2FileSystem.class);
+    private static Logger log = LoggerFactory.getLogger(DB2FileSystem.class);
 
     /**
      * Creates a new <code>DB2FileSystem</code> instance.

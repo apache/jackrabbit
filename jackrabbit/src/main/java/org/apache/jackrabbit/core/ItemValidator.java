@@ -28,7 +28,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -45,7 +46,7 @@ public class ItemValidator {
     /**
      * Logger instance for this class
      */
-    private static Logger log = Logger.getLogger(ItemValidator.class);
+    private static Logger log = LoggerFactory.getLogger(ItemValidator.class);
 
     /**
      * node type registry

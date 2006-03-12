@@ -37,7 +37,8 @@ import org.apache.jackrabbit.core.state.util.Serializer;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import java.io.BufferedInputStream;
@@ -69,7 +70,7 @@ import java.util.Map;
  */
 public class InMemPersistenceManager extends AbstractPersistenceManager {
 
-    private static Logger log = Logger.getLogger(InMemPersistenceManager.class);
+    private static Logger log = LoggerFactory.getLogger(InMemPersistenceManager.class);
 
     protected boolean initialized;
 

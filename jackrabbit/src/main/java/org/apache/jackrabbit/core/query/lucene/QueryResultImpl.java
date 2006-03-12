@@ -21,7 +21,8 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -36,7 +37,7 @@ public class QueryResultImpl implements QueryResult {
     /**
      * The logger instance for this class
      */
-    private static final Logger log = Logger.getLogger(QueryResultImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(QueryResultImpl.class);
 
     /**
      * The item manager of the session executing the query

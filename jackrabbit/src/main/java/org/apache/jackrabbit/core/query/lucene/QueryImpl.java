@@ -32,7 +32,8 @@ import org.apache.jackrabbit.core.query.QueryParser;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.lucene.search.Query;
 
 import javax.jcr.RepositoryException;
@@ -53,7 +54,7 @@ public class QueryImpl implements ExecutableQuery {
     /**
      * The logger instance for this class
      */
-    private static final Logger log = Logger.getLogger(QueryImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(QueryImpl.class);
 
     /**
      * Represents a query that selects all nodes. E.g. in XPath: //*

@@ -27,7 +27,8 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermDocs;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.commons.collections.map.LRUMap;
 
 import java.io.IOException;
@@ -46,7 +47,7 @@ public class RangeQuery extends Query {
     /**
      * Logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(RangeQuery.class);
+    private static final Logger log = LoggerFactory.getLogger(RangeQuery.class);
 
     /**
      * Simple result cache for previously calculated hits.

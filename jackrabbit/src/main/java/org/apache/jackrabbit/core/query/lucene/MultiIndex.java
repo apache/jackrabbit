@@ -22,7 +22,8 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.uuid.Constants;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -74,7 +75,7 @@ public class MultiIndex {
     /**
      * The logger instance for this class
      */
-    private static final Logger log = Logger.getLogger(MultiIndex.class);
+    private static final Logger log = LoggerFactory.getLogger(MultiIndex.class);
 
     /**
      * Name of the file to persist search internal namespace mappings

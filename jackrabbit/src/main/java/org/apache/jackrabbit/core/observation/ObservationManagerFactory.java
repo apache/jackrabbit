@@ -22,7 +22,8 @@ import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -42,7 +43,7 @@ public final class ObservationManagerFactory extends EventDispatcher
      * Logger instance for this class
      */
     private static final Logger log
-            = Logger.getLogger(ObservationManagerFactory.class);
+            = LoggerFactory.getLogger(ObservationManagerFactory.class);
 
     /**
      * Dummy DispatchAction indicating the notification thread to end

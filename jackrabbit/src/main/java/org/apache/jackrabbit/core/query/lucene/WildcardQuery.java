@@ -29,7 +29,8 @@ import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Similarity;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.commons.collections.map.LRUMap;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class WildcardQuery extends Query {
     /**
      * Logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(WildcardQuery.class);
+    private static final Logger log = LoggerFactory.getLogger(WildcardQuery.class);
 
     /**
      * Name of the field to search.

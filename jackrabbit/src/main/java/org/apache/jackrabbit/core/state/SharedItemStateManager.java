@@ -33,7 +33,8 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
@@ -113,7 +114,7 @@ public class SharedItemStateManager
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(SharedItemStateManager.class);
+    private static Logger log = LoggerFactory.getLogger(SharedItemStateManager.class);
 
     /**
      * cache of weak references to ItemState objects issued by this

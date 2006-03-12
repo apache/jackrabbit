@@ -20,7 +20,8 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.name.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -36,7 +37,7 @@ import java.util.ArrayList;
 class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
 
     /** Logger instance for this class */
-    private static final Logger log = Logger.getLogger(DocOrderNodeIteratorImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(DocOrderNodeIteratorImpl.class);
 
     /** A node iterator with ordered nodes */
     private NodeIteratorImpl orderedNodes;

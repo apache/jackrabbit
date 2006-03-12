@@ -51,7 +51,8 @@ import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -98,7 +99,7 @@ import java.util.Set;
  */
 public class NodeImpl extends ItemImpl implements Node {
 
-    private static Logger log = Logger.getLogger(NodeImpl.class);
+    private static Logger log = LoggerFactory.getLogger(NodeImpl.class);
 
     /** same as ((NodeState) state).getNodeTypeName(); cached to avoid type casts */
     protected final QName primaryTypeName;

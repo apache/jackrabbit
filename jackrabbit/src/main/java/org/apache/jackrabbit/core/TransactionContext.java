@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.Status;
@@ -36,7 +37,7 @@ public class TransactionContext implements Runnable {
     /**
      * Logger instance.
      */
-    private static final Logger log = Logger.getLogger(TransactionContext.class);
+    private static final Logger log = LoggerFactory.getLogger(TransactionContext.class);
 
     /**
      * Transactional resources.

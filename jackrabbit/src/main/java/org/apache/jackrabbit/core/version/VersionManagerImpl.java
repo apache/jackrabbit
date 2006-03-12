@@ -37,7 +37,8 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
@@ -61,7 +62,7 @@ public class VersionManagerImpl extends AbstractVersionManager
     /**
      * the default logger
      */
-    private static Logger log = Logger.getLogger(VersionManager.class);
+    private static Logger log = LoggerFactory.getLogger(VersionManager.class);
 
     /**
      * The persistence manager for the versions

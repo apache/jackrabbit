@@ -33,7 +33,8 @@ import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -61,7 +62,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
     /**
      * Logger
      */
-    private static final Logger log = Logger.getLogger(LockManagerImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(LockManagerImpl.class);
 
     /**
      * Name of the lock file

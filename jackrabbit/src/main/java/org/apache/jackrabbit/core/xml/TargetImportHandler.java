@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -40,7 +41,7 @@ import javax.jcr.RepositoryException;
  */
 abstract class TargetImportHandler extends DefaultHandler {
 
-    private static Logger log = Logger.getLogger(TargetImportHandler.class);
+    private static Logger log = LoggerFactory.getLogger(TargetImportHandler.class);
 
     protected final Importer importer;
     protected final NamespaceResolver nsContext;

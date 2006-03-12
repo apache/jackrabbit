@@ -29,7 +29,8 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -62,7 +63,7 @@ import java.util.Set;
 public class SearchIndex extends AbstractQueryHandler {
 
     /** The logger instance for this class */
-    private static final Logger log = Logger.getLogger(SearchIndex.class);
+    private static final Logger log = LoggerFactory.getLogger(SearchIndex.class);
 
     /**
      * The default value for property {@link #minMergeDocs}.
@@ -714,7 +715,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setTextFilterClasses(String filterClasses) {
         List filters = new ArrayList();
-        StringTokenizer tokenizer = new StringTokenizer(filterClasses, ", \t\n\r\f");
+        StringTokenizer tokenizer = new StringTokenizer(filterClasses, ",ï¿½\t\n\r\f");
         while (tokenizer.hasMoreTokens()) {
             String className = tokenizer.nextToken();
             try {

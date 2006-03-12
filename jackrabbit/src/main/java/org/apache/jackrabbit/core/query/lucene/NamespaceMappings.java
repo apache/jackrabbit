@@ -22,7 +22,8 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceException;
 import java.io.BufferedOutputStream;
@@ -52,7 +53,7 @@ public class NamespaceMappings extends AbstractNamespaceResolver {
     /**
      * Default logger instance for this class
      */
-    private static Logger log = Logger.getLogger(NamespaceMappings.class);
+    private static Logger log = LoggerFactory.getLogger(NamespaceMappings.class);
 
     /**
      * Location of the file that persists the uri / prefix mappings

@@ -41,7 +41,8 @@ import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.Text;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import java.io.BufferedWriter;
@@ -66,7 +67,7 @@ import java.util.Set;
  */
 public class XMLPersistenceManager extends AbstractPersistenceManager {
 
-    private static Logger log = Logger.getLogger(XMLPersistenceManager.class);
+    private static Logger log = LoggerFactory.getLogger(XMLPersistenceManager.class);
 
     /**
      * hexdigits for toString
@@ -161,7 +162,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         } catch (NoSuchAlgorithmException nsae) {
             // should never get here as MD5 should always be available in the JRE
             String msg = "MD5 not available";
-            log.fatal(msg, nsae);
+            log.error(msg, nsae);
             throw new InternalError(msg + nsae);
         }
         return buildNodeFolderPath(id.getParentId()) + "/" + fileName;

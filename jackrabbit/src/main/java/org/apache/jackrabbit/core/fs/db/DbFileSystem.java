@@ -22,7 +22,8 @@ import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.io.BufferedReader;
@@ -117,7 +118,7 @@ public class DbFileSystem implements FileSystem {
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(DbFileSystem.class);
+    private static Logger log = LoggerFactory.getLogger(DbFileSystem.class);
 
     protected static final String SCHEMA_OBJECT_PREFIX_VARIABLE =
             "${schemaObjectPrefix}";

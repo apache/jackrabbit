@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.core.fs.db;
 
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -54,7 +55,7 @@ public class DerbyFileSystem extends DbFileSystem {
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(DerbyFileSystem.class);
+    private static Logger log = LoggerFactory.getLogger(DerbyFileSystem.class);
 
     /**
      * Creates a new <code>DerbyFileSystem</code> instance.

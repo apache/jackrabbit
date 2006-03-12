@@ -21,7 +21,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Collections;
@@ -40,7 +41,7 @@ class IndexMerger extends Thread implements IndexListener {
     /**
      * Logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(IndexMerger.class);
+    private static final Logger log = LoggerFactory.getLogger(IndexMerger.class);
 
     /**
      * Marker task to signal the background thread to quit.

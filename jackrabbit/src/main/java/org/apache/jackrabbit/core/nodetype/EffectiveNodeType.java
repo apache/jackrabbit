@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -40,7 +41,7 @@ import java.util.TreeSet;
  * Instances of <code>EffectiveNodeType</code> are immutable.
  */
 public class EffectiveNodeType implements Cloneable {
-    private static Logger log = Logger.getLogger(EffectiveNodeType.class);
+    private static Logger log = LoggerFactory.getLogger(EffectiveNodeType.class);
 
     // node type registry
     private final NodeTypeRegistry ntReg;

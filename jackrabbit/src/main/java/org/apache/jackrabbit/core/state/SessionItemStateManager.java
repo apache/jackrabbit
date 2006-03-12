@@ -25,7 +25,8 @@ import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
@@ -43,7 +44,7 @@ import java.util.List;
 public class SessionItemStateManager
         implements UpdatableItemStateManager, Dumpable {
 
-    private static Logger log = Logger.getLogger(SessionItemStateManager.class);
+    private static Logger log = LoggerFactory.getLogger(SessionItemStateManager.class);
 
     /**
      * State manager that allows updates

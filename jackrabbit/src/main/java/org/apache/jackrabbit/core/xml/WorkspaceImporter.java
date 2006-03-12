@@ -39,7 +39,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
@@ -65,7 +66,7 @@ import java.util.Stack;
  */
 public class WorkspaceImporter implements Importer {
 
-    private static Logger log = Logger.getLogger(WorkspaceImporter.class);
+    private static Logger log = LoggerFactory.getLogger(WorkspaceImporter.class);
 
     private final NodeState importTarget;
     private final WorkspaceImpl wsp;
