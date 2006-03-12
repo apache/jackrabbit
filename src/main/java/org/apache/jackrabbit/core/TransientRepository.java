@@ -16,8 +16,11 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -47,6 +50,39 @@ public class TransientRepository implements Repository {
      */
     private static final Logger logger =
         Logger.getLogger(TransientRepository.class);
+
+    /**
+     * Buffer size for copying the default repository configuration file.
+     */
+    private static final int BUFFER_SIZE = 4096;
+
+    /**
+     * Resource path of the default repository configuration file.
+     */
+    private static final String DEFAULT_REPOSITORY_XML =
+        "repository.xml";
+
+    /**
+     * Name of the repository configuration file property.
+     */
+    private static final String CONF_PROPERTY =
+        "org.apache.jackrabbit.repository.conf";
+
+    /**
+     * Default value of the repository configuration file property.
+     */
+    private static final String CONF_DEFAULT = "repository.xml";
+
+    /**
+     * Name of the repository home directory property.
+     */
+    private static final String HOME_PROPERTY =
+        "org.apache.jackrabbit.repository.home";
+
+    /**
+     * Default value of the repository home directory property.
+     */
+    private static final String HOME_DEFAULT = "repository";
 
     /**
      * Factory interface for creating {@link RepositoryImpl} instances.
@@ -118,22 +154,79 @@ public class TransientRepository implements Repository {
     }
 
     /**
+     * Creates a transient repository proxy that will use the repository
+     * configuration file and home directory specified in system properties
+     * <code>org.apache.jackrabbit.repository.conf</code> and
+     * <code>org.apache.jackrabbit.repository.home</code>. If these properties
+     * are not found, then the default values "<code>repository.xml</code>"
+     * and "<code>repository</code>" are used.
+     *
+     * @throws IOException if the static repository descriptors cannot be loaded
+     */
+    public TransientRepository()
+            throws IOException {
+        this(System.getProperty(CONF_PROPERTY, CONF_DEFAULT),
+             System.getProperty(HOME_PROPERTY, HOME_DEFAULT));
+    }
+
+    /**
      * Creates a transient repository proxy that will use the given repository
      * configuration file and home directory paths to initialize the underlying
-     * repository instances. The repository configuration file will be reloaded
-     * whenever 
-     * 
+     * repository instances. The repository configuration file is reloaded
+     * whenever the repository is restarted, so it is safe to modify the
+     * configuration when all sessions have been closed.
+     * <p>
+     * If the given repository configuration file does not exist, then a
+     * default configuration file is copied to the given location when the
+     * first session starts. Similarly, if the given repository home
+     * directory does not exist, it is automatically created when the first
+     * session starts. This is a convenience feature designed to reduce the
+     * need for manual configuration.
+     *
      * @param config repository configuration file
      * @param home repository home directory
      * @throws IOException if the static repository descriptors cannot be loaded
      */
     public TransientRepository(final String config, final String home)
-            throws ConfigurationException, IOException {
+            throws IOException {
         this(new RepositoryFactory() {
             public RepositoryImpl getRepository() throws RepositoryException {
                 try {
+                    // Make sure that the repository configuration file exists
+                    File configFile = new File(config);
+                    if (!configFile.exists()) {
+                        logger.info("Copying default configuration to " + config);
+                        OutputStream output = new FileOutputStream(configFile);
+                        try {
+                            InputStream input =
+                                TransientRepository.class.getResourceAsStream(
+                                        DEFAULT_REPOSITORY_XML);
+                            byte[] buffer = new byte[BUFFER_SIZE];
+                            try {
+                                int n = input.read(buffer); 
+                                while (n != -1) {
+                                    output.write(buffer, 0, n);
+                                    n = input.read(buffer);
+                                }
+                            } finally {
+                               input.close();
+                            }
+                        } finally {
+                            output.close();
+                        }
+                    }
+                    // Make sure that the repository home directory exists
+                    File homeDir = new File(home);
+                    if (!homeDir.exists()) {
+                        logger.info("Creating repository home directory " + home);
+                        homeDir.mkdirs();
+                    }
+                    // Load the configuration and create the repository
                     RepositoryConfig rc = RepositoryConfig.create(config, home);
                     return RepositoryImpl.create(rc);
+                } catch (IOException e) {
+                    throw new RepositoryException(
+                            "Automatic repository configuration failed", e);
                 } catch (ConfigurationException e) {
                     throw new RepositoryException(
                             "Invalid repository configuration: " + config, e);
