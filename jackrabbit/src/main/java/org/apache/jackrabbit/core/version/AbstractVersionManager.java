@@ -24,7 +24,8 @@ import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -41,7 +42,7 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * Logger instance.
      */
-    private static Logger log = Logger.getLogger(AbstractVersionManager.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractVersionManager.class);
 
     /**
      * State manager for the version storage.

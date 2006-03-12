@@ -29,7 +29,8 @@ import org.apache.jackrabbit.value.BooleanValue;
 import org.apache.jackrabbit.value.DateValue;
 import org.apache.jackrabbit.value.DoubleValue;
 import org.apache.jackrabbit.value.LongValue;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
@@ -55,7 +56,7 @@ import java.util.Calendar;
  */
 public class PropertyImpl extends ItemImpl implements Property {
 
-    private static Logger log = Logger.getLogger(PropertyImpl.class);
+    private static Logger log = LoggerFactory.getLogger(PropertyImpl.class);
 
     private PropertyDefinition definition;
 

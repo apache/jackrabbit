@@ -27,7 +27,8 @@ import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.version.XAVersionManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
@@ -47,7 +48,7 @@ public class XASessionImpl extends SessionImpl
     /**
      * Logger instance
      */
-    private static final Logger log = Logger.getLogger(XASessionImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(XASessionImpl.class);
 
     /**
      * Global transactions

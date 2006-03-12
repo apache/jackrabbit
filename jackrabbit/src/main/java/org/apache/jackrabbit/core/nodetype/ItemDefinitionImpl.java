@@ -19,7 +19,8 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -36,7 +37,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     /**
      * Logger instance for this class
      */
-    private static Logger log = Logger.getLogger(ItemDefinitionImpl.class);
+    private static Logger log = LoggerFactory.getLogger(ItemDefinitionImpl.class);
 
     /**
      * Literal for 'any name'.

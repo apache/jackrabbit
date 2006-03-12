@@ -4,7 +4,8 @@ import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
@@ -22,7 +23,7 @@ class XAEnvironment {
     /**
      * Logger instance for this class
      */
-    private static final Logger log = Logger.getLogger(XAEnvironment.class);
+    private static final Logger log = LoggerFactory.getLogger(XAEnvironment.class);
 
     /**
      * Global lock manager.

@@ -20,7 +20,8 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -47,7 +48,7 @@ class EventConsumer {
     /**
      * The default Logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(EventConsumer.class);
+    private static final Logger log = LoggerFactory.getLogger(EventConsumer.class);
 
     /**
      * The <code>Session</code> associated with this <code>EventConsumer</code>.

@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 import java.util.Collection;
@@ -34,7 +35,7 @@ import java.util.Set;
 public class ItemStateMap implements ItemStateStore, Dumpable {
 
     /** Logger instance */
-    private static Logger log = Logger.getLogger(ItemStateMap.class);
+    private static Logger log = LoggerFactory.getLogger(ItemStateMap.class);
 
     /**
      * the map backing this <code>ItemStateStore</code> implementation

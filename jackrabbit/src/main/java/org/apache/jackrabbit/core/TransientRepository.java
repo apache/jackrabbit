@@ -34,7 +34,8 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A repository proxy that automatically initializes and shuts down the
@@ -49,7 +50,7 @@ public class TransientRepository implements Repository {
      * The logger instance used to log the repository and session lifecycles.
      */
     private static final Logger logger =
-        Logger.getLogger(TransientRepository.class);
+        LoggerFactory.getLogger(TransientRepository.class);
 
     /**
      * Buffer size for copying the default repository configuration file.

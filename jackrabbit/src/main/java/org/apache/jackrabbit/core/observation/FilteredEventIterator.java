@@ -16,11 +16,13 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.log4j.Logger;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -33,7 +35,7 @@ class FilteredEventIterator implements EventIterator {
      * Logger instance for this class
      */
     private static final Logger log
-            = Logger.getLogger(FilteredEventIterator.class);
+            = LoggerFactory.getLogger(FilteredEventIterator.class);
 
     /**
      * The actual {@link EventState}s fired by the workspace (unfiltered)

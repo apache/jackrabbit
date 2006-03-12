@@ -30,7 +30,8 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
@@ -63,7 +64,7 @@ public final class EventStateCollection {
     /**
      * Logger instance for this class
      */
-    private static Logger log = Logger.getLogger(EventStateCollection.class);
+    private static Logger log = LoggerFactory.getLogger(EventStateCollection.class);
 
     /**
      * List of events

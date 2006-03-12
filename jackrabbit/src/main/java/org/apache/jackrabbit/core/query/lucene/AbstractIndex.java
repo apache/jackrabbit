@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -46,7 +47,7 @@ import java.util.BitSet;
 abstract class AbstractIndex {
 
     /** The logger instance for this class */
-    private static final Logger log = Logger.getLogger(AbstractIndex.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractIndex.class);
 
     /** PrintStream that pipes all calls to println(String) into log.info() */
     private static final LoggingPrintStream STREAM_LOGGER = new LoggingPrintStream();

@@ -27,7 +27,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
@@ -38,7 +39,7 @@ import javax.jcr.RepositoryException;
  */
 public class HierarchyManagerImpl implements HierarchyManager {
 
-    private static Logger log = Logger.getLogger(HierarchyManagerImpl.class);
+    private static Logger log = LoggerFactory.getLogger(HierarchyManagerImpl.class);
 
     /**
      * The parent name returned for orphaned or root nodes.

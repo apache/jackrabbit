@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.Collections;
@@ -45,7 +46,7 @@ import java.io.PrintStream;
 public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
 
     /** Logger instance */
-    private static Logger log = Logger.getLogger(LRUItemStateCache.class);
+    private static Logger log = LoggerFactory.getLogger(LRUItemStateCache.class);
 
     /**
      * primary cache storing weak references to <code>ItemState</code>

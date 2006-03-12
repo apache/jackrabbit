@@ -29,7 +29,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.helpers.DefaultHandler;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceException;
 import java.io.FileInputStream;
@@ -48,7 +49,7 @@ import java.util.HashMap;
  * to resolve namespaces.
  */
 public class NamespaceExtractor {
-    private static Logger log = Logger.getLogger(NamespaceExtractor.class);
+    private static Logger log = LoggerFactory.getLogger(NamespaceExtractor.class);
     private final NamespaceMapping mapping = new NamespaceMapping();
     private final Map basePrefixes = new HashMap();
     private String defaultBasePrefix;

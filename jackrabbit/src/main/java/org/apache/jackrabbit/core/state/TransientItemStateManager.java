@@ -21,7 +21,8 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ import java.util.Iterator;
  */
 class TransientItemStateManager implements ItemStateManager, Dumpable {
 
-    private static Logger log = Logger.getLogger(TransientItemStateManager.class);
+    private static Logger log = LoggerFactory.getLogger(TransientItemStateManager.class);
 
     /**
      * map of those states that have been removed transiently

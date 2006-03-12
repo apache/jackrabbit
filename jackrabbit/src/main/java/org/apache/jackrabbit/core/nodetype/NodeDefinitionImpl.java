@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
@@ -35,7 +36,7 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
     /**
      * Logger instance for this class
      */
-    private static Logger log = Logger.getLogger(NodeDefinitionImpl.class);
+    private static Logger log = LoggerFactory.getLogger(NodeDefinitionImpl.class);
 
     /**
      * Package private constructor.

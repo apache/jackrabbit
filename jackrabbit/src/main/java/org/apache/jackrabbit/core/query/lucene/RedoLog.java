@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -46,7 +47,7 @@ class RedoLog {
     /**
      * Logger instance for this class
      */
-    private static final Logger log = Logger.getLogger(RedoLog.class);
+    private static final Logger log = LoggerFactory.getLogger(RedoLog.class);
 
     /**
      * Implements a {@link ActionCollector} that counts all entries and sets

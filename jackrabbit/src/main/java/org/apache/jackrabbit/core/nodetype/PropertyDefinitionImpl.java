@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -36,7 +37,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
     /**
      * Logger instance for this class
      */
-    private static Logger log = Logger.getLogger(PropertyDefinitionImpl.class);
+    private static Logger log = LoggerFactory.getLogger(PropertyDefinitionImpl.class);
 
     /**
      * Package private constructor

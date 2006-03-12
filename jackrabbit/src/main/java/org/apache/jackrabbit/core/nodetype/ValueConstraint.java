@@ -26,7 +26,8 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.value.DateValue;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -44,7 +45,7 @@ import java.util.regex.PatternSyntaxException;
  */
 public abstract class ValueConstraint {
 
-    protected static Logger log = Logger.getLogger(ValueConstraint.class);
+    protected static Logger log = LoggerFactory.getLogger(ValueConstraint.class);
 
     public static final ValueConstraint[] EMPTY_ARRAY = new ValueConstraint[0];
 

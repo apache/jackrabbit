@@ -22,7 +22,8 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
@@ -36,7 +37,7 @@ class EventFilter {
     /**
      * Logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(EventFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(EventFilter.class);
 
     static final EventFilter BLOCK_ALL = new BlockAllFilter();
 

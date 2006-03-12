@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.commons.collections.map.LRUMap;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements a Document number cache with a fixed size and a LRU strategy.
@@ -27,7 +28,7 @@ final class DocNumberCache {
     /**
      * Logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(DocNumberCache.class);
+    private static final Logger log = LoggerFactory.getLogger(DocNumberCache.class);
 
     /**
      * Log cache statistics at most every 10 seconds.
@@ -151,7 +152,7 @@ final class DocNumberCache {
                 statistics.append(", #hits=").append((accesses - misses));
                 statistics.append(", #misses=").append(misses);
                 statistics.append(", cacheRatio=").append(ratio).append("%");
-                log.info(statistics);
+                log.info(statistics.toString());
                 accesses = 0;
                 misses = 0;
                 lastLog = System.currentTimeMillis();

@@ -25,7 +25,8 @@ import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.PropertyType;
@@ -41,7 +42,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     /**
      * Logger instance.
      */
-    private static Logger log = Logger.getLogger(XAItemStateManager.class);
+    private static Logger log = LoggerFactory.getLogger(XAItemStateManager.class);
 
     /**
      * Default change log attribute name.
@@ -149,11 +150,11 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 }
                 update = sharedStateMgr.beginUpdate(txLog, factory, virtualProvider);
             } catch (ReferentialIntegrityException rie) {
-                log.error(rie);
+                log.error(rie.getMessage(), rie);
                 txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to prepare transaction.", rie);
             } catch (ItemStateException ise) {
-                log.error(ise);
+                log.error(ise.getMessage(), ise);
                 txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to prepare transaction.", ise);
             }
@@ -169,7 +170,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
             try {
                 update.end();
             } catch (ItemStateException ise) {
-                log.error(ise);
+                log.error(ise.getMessage(), ise);
                 txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to commit transaction.", ise);
             }

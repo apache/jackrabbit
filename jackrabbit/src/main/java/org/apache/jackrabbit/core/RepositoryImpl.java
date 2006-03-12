@@ -44,7 +44,8 @@ import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 import javax.jcr.AccessDeniedException;
@@ -83,7 +84,7 @@ import java.nio.channels.FileChannel;
 public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         EventListener {
 
-    private static Logger log = Logger.getLogger(RepositoryImpl.class);
+    private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
 
     /**
      * repository home lock
@@ -205,7 +206,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             }
         } catch (FileSystemException fse) {
             String msg = "failed to create folder for repository meta data";
-            log.fatal(msg, fse);
+            log.error(msg, fse);
             throw new RepositoryException(msg, fse);
         }
         metaDataStore = new BasedFileSystem(repStore, fsRootPath);
@@ -244,8 +245,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             initWorkspace((WorkspaceInfo) wspInfos.get(wspName));
         } catch (RepositoryException e) {
             // if default workspace failed to initialize, shutdown again
-            log.fatal("Failed to initialize workspace '" + wspName + "'", e);
-            log.fatal("Unable to start repository, forcing shutdown...");
+            log.error("Failed to initialize workspace '" + wspName + "'", e);
+            log.error("Unable to start repository, forcing shutdown...");
             shutdown();
             throw e;
         }

@@ -20,7 +20,8 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -54,7 +55,7 @@ public class BLOBFileValue implements Value {
     /**
      * The default logger
      */
-    private static Logger log = Logger.getLogger(BLOBFileValue.class);
+    private static Logger log = LoggerFactory.getLogger(BLOBFileValue.class);
 
     /**
      * the property type

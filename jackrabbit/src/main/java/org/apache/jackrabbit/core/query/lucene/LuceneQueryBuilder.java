@@ -43,7 +43,8 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.ISO8601;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
@@ -75,7 +76,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * Logger for this class
      */
-    private static final Logger log = Logger.getLogger(LuceneQueryBuilder.class);
+    private static final Logger log = LoggerFactory.getLogger(LuceneQueryBuilder.class);
 
     /**
      * Root node of the abstract query tree

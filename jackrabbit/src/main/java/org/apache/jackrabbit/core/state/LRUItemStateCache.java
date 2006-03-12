@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,7 +31,7 @@ import java.util.Set;
  */
 public class LRUItemStateCache implements ItemStateCache {
     /** Logger instance */
-    private static Logger log = Logger.getLogger(LRUItemStateCache.class);
+    private static Logger log = LoggerFactory.getLogger(LRUItemStateCache.class);
 
     /** default maximum size of this cache */
     public static final int DEFAULT_MAX_SIZE = 1000;

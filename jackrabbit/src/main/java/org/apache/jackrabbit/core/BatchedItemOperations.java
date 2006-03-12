@@ -40,7 +40,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
@@ -67,7 +68,7 @@ import java.util.Set;
  */
 public class BatchedItemOperations extends ItemValidator {
 
-    private static Logger log = Logger.getLogger(BatchedItemOperations.class);
+    private static Logger log = LoggerFactory.getLogger(BatchedItemOperations.class);
 
     // flags used by the copy(...) methods
     protected static final int COPY = 0;

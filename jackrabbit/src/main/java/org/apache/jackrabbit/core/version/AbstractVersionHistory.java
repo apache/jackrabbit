@@ -26,7 +26,8 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
@@ -47,7 +48,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
     /**
      * Logger instance.
      */
-    private static Logger log = Logger.getLogger(AbstractVersionHistory.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractVersionHistory.class);
 
     /**
      * Create a new instance of this class.
