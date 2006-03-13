@@ -33,7 +33,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 /**
- * <code>Response</code>...
+ * <code>MultiStatusResponse</code> represents the DAV:multistatus element defined
+ * by RFC 2518:
+ * <pre>
+ * &lt;!ELEMENT response (href, ((href*, status)|(propstat+)), responsedescription?) &gt;
+ * &lt;!ELEMENT status (#PCDATA) &gt;
+ * &lt;!ELEMENT propstat (prop, status, responsedescription?) &gt;
+ * &lt;!ELEMENT responsedescription (#PCDATA) &gt;
+ * &lt;!ELEMENT prop ANY &gt;
+ * </pre>
  */
 public class MultiStatusResponse implements XmlSerializable, DavConstants {
 
@@ -61,8 +69,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     private Status status;
 
     /**
-     * Type of MultiStatus response: PropStat
-     * Hashmap containing all status
+     * Type of MultiStatus response: PropStat Hashmap containing all status
      */
     private HashMap statusMap = new HashMap();
 
@@ -92,8 +99,8 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
 
     /**
      * Constructs an WebDAV multistatus response for a given resource. This
-     * would be used by COPY, MOVE, DELETE, LOCK that require a multistatus
-     * in case of error with a resource other than the resource identified in the
+     * would be used by COPY, MOVE, DELETE, LOCK that require a multistatus in
+     * case of error with a resource other than the resource identified in the
      * Request-URI.<br>
      * The response description is set to <code>null</code>.
      *
@@ -106,8 +113,8 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
 
     /**
      * Constructs an WebDAV multistatus response for a given resource. This
-     * would be used by COPY, MOVE, DELETE, LOCK that require a multistatus
-     * in case of error with a resource other than the resource identified in the
+     * would be used by COPY, MOVE, DELETE, LOCK that require a multistatus in
+     * case of error with a resource other than the resource identified in the
      * Request-URI.
      *
      * @param href
@@ -126,8 +133,8 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     }
 
     /**
-     * Constucts a WebDAV multistatus response and retrieves the resource properties
-     * according to the given <code>DavPropertyNameSet</code>.
+     * Constucts a WebDAV multistatus response and retrieves the resource
+     * properties according to the given <code>DavPropertyNameSet</code>.
      *
      * @param resource
      * @param propNameSet
@@ -137,17 +144,20 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     }
 
     /**
-     * Constucts a WebDAV multistatus response and retrieves the resource properties
-     * according to the given <code>DavPropertyNameSet</code>. It adds all known
-     * property to the '200' set, while unknown properties are added to the '404' set.
+     * Constucts a WebDAV multistatus response and retrieves the resource
+     * properties according to the given <code>DavPropertyNameSet</code>. It
+     * adds all known property to the '200' set, while unknown properties are
+     * added to the '404' set.
      * <p/>
-     * Note, that the set of property names is ignored in case of a {@link #PROPFIND_ALL_PROP}
-     * and {@link #PROPFIND_PROPERTY_NAMES} propFindType.
+     * Note, that the set of property names is ignored in case of a {@link
+     * #PROPFIND_ALL_PROP} and {@link #PROPFIND_PROPERTY_NAMES} propFindType.
      *
-     * @param resource     The resource to retrieve the property from
-     * @param propNameSet  The property name set as obtained from the request body.
-     * @param propFindType any of the following values: {@link #PROPFIND_ALL_PROP},
-     *                     {@link #PROPFIND_BY_PROPERTY}, {@link #PROPFIND_PROPERTY_NAMES}
+     * @param resource The resource to retrieve the property from
+     * @param propNameSet The property name set as obtained from the request
+     * body.
+     * @param propFindType any of the following values: {@link
+     * #PROPFIND_ALL_PROP}, {@link #PROPFIND_BY_PROPERTY}, {@link
+     * #PROPFIND_PROPERTY_NAMES}
      */
     public MultiStatusResponse(DavResource resource, DavPropertyNameSet propNameSet,
                                int propFindType) {
@@ -216,12 +226,12 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
             Iterator iter = statusMap.keySet().iterator();
             while (iter.hasNext()) {
                 Integer statusKey = (Integer) iter.next();
-                Status status = new Status(statusKey.intValue());
+                Status st = new Status(statusKey.intValue());
                 PropContainer propCont = (PropContainer) statusMap.get(statusKey);
 
                 Element propstat = DomUtil.createElement(document, XML_PROPSTAT, NAMESPACE);
                 propstat.appendChild(propCont.toXml(document));
-                propstat.appendChild(status.toXml(document));
+                propstat.appendChild(st.toXml(document));
                 response.appendChild(propstat);
             }
         } else {
@@ -265,7 +275,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      * Adds a property to this response
      *
      * @param property the property to add
-     * @param status   the status of the response set to select
+     * @param status the status of the response set to select
      */
     public void add(DavProperty property, int status) {
         checkType(TYPE_PROPSTAT);
@@ -277,7 +287,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      * Adds a property name to this response
      *
      * @param propertyName the property name to add
-     * @param status       the status of the response set to select
+     * @param status the status of the response set to select
      */
     public void add(DavPropertyName propertyName, int status) {
         checkType(TYPE_PROPSTAT);
@@ -286,7 +296,6 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     }
 
     /**
-     *
      * @param status
      * @return
      */
@@ -303,9 +312,9 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
             statusMap.put(statusKey, propContainer);
         } else {
             propContainer = (PropContainer) entry;
-                }
+        }
         return propContainer;
-            }
+    }
 
     private void checkType(int type) {
         if (this.type != type) {
@@ -314,9 +323,9 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     }
 
     /**
-     * Get properties present in this response for the given status code. In case
-     * this MultiStatusResponse does not represent a 'propstat' response, always
-     * an empty {@link DavPropertySet} will be returned.
+     * Get properties present in this response for the given status code. In
+     * case this MultiStatusResponse does not represent a 'propstat' response,
+     * always an empty {@link DavPropertySet} will be returned.
      *
      * @param status
      * @return property set
@@ -326,16 +335,16 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
         if (statusMap.containsKey(key)) {
             Object mapEntry = statusMap.get(key);
             if (mapEntry != null && mapEntry instanceof DavPropertySet) {
-                return (DavPropertySet)mapEntry;
+                return (DavPropertySet) mapEntry;
             }
         }
         return new DavPropertySet();
     }
 
     /**
-     * Get property names present in this response for the given status code. In case
-     * this MultiStatusResponse does not represent a 'propstat' response, always
-     * an empty {@link DavPropertyNameSet} will be returned.
+     * Get property names present in this response for the given status code. In
+     * case this MultiStatusResponse does not represent a 'propstat' response,
+     * always an empty {@link DavPropertyNameSet} will be returned.
      *
      * @param status
      * @return property names
@@ -344,10 +353,20 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
         Integer key = new Integer(status);
         if (statusMap.containsKey(key)) {
             Object mapEntry = statusMap.get(key);
-            if (mapEntry != null && mapEntry instanceof DavPropertyNameSet) {
-                return (DavPropertyNameSet)mapEntry;
-        }
+            if (mapEntry != null) {
+                if (mapEntry instanceof DavPropertySet) {
+                    DavPropertyNameSet set = new DavPropertyNameSet();
+                    DavPropertyName[] names = ((DavPropertySet) mapEntry).getPropertyNames();
+                    for (int i = 0; i < names.length; i++) {
+                        set.add(names[i]);
                     }
+                    return set;
+                } else {
+                    // is alread a DavPropertyNameSet
+                    return (DavPropertyNameSet) mapEntry;
+                }
+            }
+        }
         return new DavPropertyNameSet();
     }
 
@@ -356,9 +375,9 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      *
      * @param responseElement
      * @return new <code>MultiStatusResponse</code> instance
-     * @throws IllegalArgumentException if the specified element is <code>null</code>
-     * or not a DAV:response element or if the mandatory DAV:href child is
-     * missing.
+     * @throws IllegalArgumentException if the specified element is
+     * <code>null</code> or not a DAV:response element or if the mandatory
+     * DAV:href child is missing.
      */
     public static MultiStatusResponse createFromXml(Element responseElement) {
         if (!DomUtil.matches(responseElement, XML_RESPONSE, NAMESPACE)) {
@@ -377,9 +396,9 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
             response = new MultiStatusResponse(href, status, responseDescription);
         } else {
             response = new MultiStatusResponse(href, responseDescription, TYPE_PROPSTAT);
-        // read propstat elements
+            // read propstat elements
             ElementIterator it = DomUtil.getChildren(responseElement, XML_PROPSTAT, NAMESPACE);
-        while (it.hasNext()) {
+            while (it.hasNext()) {
                 Element propstat = it.nextElement();
                 String propstatus = DomUtil.getChildText(propstat, XML_STATUS, NAMESPACE);
                 Element prop = DomUtil.getChildElement(propstat, XML_PROP, NAMESPACE);
@@ -388,17 +407,15 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
                     ElementIterator propIt = DomUtil.getChildren(prop);
                     while (propIt.hasNext()) {
                         Element el = propIt.nextElement();
-                        // current elem is now either a dav property xml representation
-                        // or the xml representation of a davpropertyname
-                        if (DomUtil.hasContent(el)) {
-                            // property
-                            DavProperty property = DefaultDavProperty.createFromXml(el);
-                            response.add(property, statusCode);
-                        } else {
-                            // property-name only
-                            DavPropertyName propName = DavPropertyName.createFromXml(el);
-                            response.add(propName, statusCode);
-                        }
+                        /*
+                        always build dav property from the given element, since
+                        destinction between prop-names and properties not having
+                        a value is not possible.
+                        retrieval of the set of 'property names' is possible from
+                        the given prop-set by calling DavPropertySet#getPropertyNameSet()
+                        */
+                        DavProperty property = DefaultDavProperty.createFromXml(el);
+                        response.add(property, statusCode);
                     }
                 }
             }
