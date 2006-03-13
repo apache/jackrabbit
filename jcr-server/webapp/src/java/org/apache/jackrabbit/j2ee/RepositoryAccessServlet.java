@@ -71,7 +71,7 @@ public class RepositoryAccessServlet extends HttpServlet {
      * @throws javax.servlet.ServletException
      */
     public void init() throws ServletException {
-	log.info("RepositoryAccessServlet initializing...");
+        log.info("RepositoryAccessServlet initializing...");
         // fetching the name
         String repositoryName = getServletConfig().getInitParameter(INIT_PARAM_REPOSITORY_NAME);
         if (repositoryName == null) {
@@ -85,17 +85,17 @@ public class RepositoryAccessServlet extends HttpServlet {
         // setup initial context
         getServletContext().setAttribute(CTX_ATTR_REPOSITORY_JNDI_CONTEXT, getInitialContext());
 
-	log.info("RepositoryAccessServlet initialized.");
+        log.info("RepositoryAccessServlet initialized.");
     }
 
     private InitialContext getInitialContext() {
-	// retrieve JNDI Context environment
-	try {
-	    Properties env = new Properties();
-	    Enumeration names = getServletConfig().getInitParameterNames();
-	    while (names.hasMoreElements()) {
-		String name = (String) names.nextElement();
-		if (name.startsWith("java.naming.")) {
+        // retrieve JNDI Context environment
+        try {
+            Properties env = new Properties();
+            Enumeration names = getServletConfig().getInitParameterNames();
+            while (names.hasMoreElements()) {
+                String name = (String) names.nextElement();
+                if (name.startsWith("java.naming.")) {
                     String initParam = getServletConfig().getInitParameter(name);
                     if (initParam.equals("")) {
                         log.info("  ignoring empty JNDI init param: " + name);
@@ -103,18 +103,18 @@ public class RepositoryAccessServlet extends HttpServlet {
                         env.put(name, initParam);
                         log.info("  adding property to JNDI environment: " + name + "=" + initParam);
                     }
-		}
-	    }
-	    return new InitialContext(env);
-	} catch (NamingException e) {
-	    log.error("Create initial context: " + e.toString());
-	    return null;
-	}
+                }
+            }
+            return new InitialContext(env);
+        } catch (NamingException e) {
+            log.error("Create initial context: " + e.toString());
+            return null;
+        }
     }
 
     private String getRMIUri() {
-	// setup repository name
-	return getServletConfig().getInitParameter(INIT_PARAM_RMI_URI);
+        // setup repository name
+        return getServletConfig().getInitParameter(INIT_PARAM_RMI_URI);
     }
 
     /**
@@ -204,7 +204,7 @@ public class RepositoryAccessServlet extends HttpServlet {
 abstract class ClientFactoryDelegater {
 
     public abstract Repository getRepository(String uri)
-	    throws RemoteException, MalformedURLException, NotBoundException;
+            throws RemoteException, MalformedURLException, NotBoundException;
 }
 
 /**
@@ -216,8 +216,8 @@ class RMIClientFactoryDelegater extends ClientFactoryDelegater {
     static String FactoryClassName = ClientRepositoryFactory.class.getName();
 
     public Repository getRepository(String uri)
-	    throws MalformedURLException, NotBoundException, RemoteException {
-	System.setProperty("java.rmi.server.useCodebaseOnly", "true");
-	return new ClientRepositoryFactory().getRepository(uri);
-   }
+            throws MalformedURLException, NotBoundException, RemoteException {
+        System.setProperty("java.rmi.server.useCodebaseOnly", "true");
+        return new ClientRepositoryFactory().getRepository(uri);
+    }
 }
