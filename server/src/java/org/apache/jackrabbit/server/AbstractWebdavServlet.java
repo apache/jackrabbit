@@ -80,10 +80,10 @@ import java.util.List;
 /**
  * <code>AbstractWebdavServlet</code>
  * <p/>
- * todo respect Position header
  */
 abstract public class AbstractWebdavServlet extends HttpServlet implements DavConstants {
 
+    // todo respect Position header
     /**
      * default logger
      */
@@ -380,15 +380,15 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         long modSince = request.getDateHeader("If-Modified-Since");
         if (modSince > IOUtil.UNDEFINED_TIME) {
-        long modTime = resource.getModificationTime();
+            long modTime = resource.getModificationTime();
             // test if resource has been modified. note that formatted modification
             // time lost the milli-second precision
             if (modTime != IOUtil.UNDEFINED_TIME && (modTime / 1000 * 1000) <= modSince) {
-            // resource has not been modified since the time indicated in the
-            // 'If-Modified-Since' header.
-            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-            return;
-        }
+                // resource has not been modified since the time indicated in the
+                // 'If-Modified-Since' header.
+                response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                return;
+            }
         }
 
         // spool resource properties and ev. resource content.
@@ -1022,14 +1022,14 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
             return;
         }
-            Document doc = request.getRequestDocument();
-            if (doc != null) {
-                SearchInfo sR = SearchInfo.createFromXml(doc.getDocumentElement());
-                response.sendMultiStatus(((SearchResource) resource).search(sR));
-            } else {
-                // request without request body is valid if requested resource
-                // is a 'query' resource.
-                response.sendMultiStatus(((SearchResource) resource).search(null));
+        Document doc = request.getRequestDocument();
+        if (doc != null) {
+            SearchInfo sR = SearchInfo.createFromXml(doc.getDocumentElement());
+            response.sendMultiStatus(((SearchResource) resource).search(sR));
+        } else {
+            // request without request body is valid if requested resource
+            // is a 'query' resource.
+            response.sendMultiStatus(((SearchResource) resource).search(null));
         }
     }
 
