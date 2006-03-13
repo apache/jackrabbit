@@ -116,15 +116,15 @@ public class DefaultDavProperty extends AbstractDavProperty {
      * @return
      */
     public static DefaultDavProperty createFromXml(Element propertyElement) {
-	if (propertyElement == null) {
-	    throw new IllegalArgumentException("Cannot create a new DavProperty from a 'null' element.");
-	}
-	DavPropertyName name = DavPropertyName.createFromXml(propertyElement);
-	Object value;
+        if (propertyElement == null) {
+            throw new IllegalArgumentException("Cannot create a new DavProperty from a 'null' element.");
+        }
+        DavPropertyName name = DavPropertyName.createFromXml(propertyElement);
+        Object value;
 
         if (!DomUtil.hasContent(propertyElement)) {
-		value = null;
-		} else {
+            value = null;
+        }  else {
             List c = DomUtil.getContent(propertyElement);
             if (c.size() == 1) {
                 Node n = (Node)c.get(0);
@@ -134,9 +134,9 @@ public class DefaultDavProperty extends AbstractDavProperty {
                     value = n.getNodeValue();
                 }
             } else /* size > 1 */ {
-		    value = c;
-		}
-	}
-	return new DefaultDavProperty(name, value, false);
+                value = c;
+            }
+        }
+        return new DefaultDavProperty(name, value, false);
     }
 }
