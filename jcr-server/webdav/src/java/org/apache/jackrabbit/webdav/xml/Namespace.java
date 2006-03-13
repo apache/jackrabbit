@@ -25,6 +25,8 @@ public class Namespace {
     private static Logger log = Logger.getLogger(Namespace.class);
 
     public static final Namespace EMPTY_NAMESPACE = Namespace.getNamespace("","");
+    public static final Namespace XML_NAMESPACE = Namespace.getNamespace("xml", "http://www.w3.org/XML/1998/namespace");
+    public static final Namespace XMLNS_NAMESPACE = Namespace.getNamespace("xmlns", "http://www.w3.org/2000/xmlns/");
 
     private final String prefix;
     private final String uri;
