@@ -32,6 +32,20 @@ public interface OrderingConstants {
     public static final Namespace NAMESPACE = DavConstants.NAMESPACE;
 
     /**
+     * Constant representing the DAV:custom ordering type URI, which indicates
+     * that the collection is not ordered.
+     */
+    public static final String ORDERING_TYPE_CUSTOM = "DAV:custom";
+
+    /**
+     * Constant representing the DAV:unordered ordering type URI, which indicates
+     * that the collection is to be ordered, but the semantics of the ordering
+     * is not being advertised.
+     */
+    public static final String ORDERING_TYPE_UNORDERED = "DAV:unordered";
+
+    //---< Headers >------------------------------------------------------------
+    /**
      * The "Ordering-Type" request header.
      */
     public static final String HEADER_ORDERING_TYPE = "Ordering-Type";
@@ -47,6 +61,7 @@ public interface OrderingConstants {
      */
     public static final String HEADER_POSITION = "Position";
 
+    //---< XML Element, Attribute Names >---------------------------------------
     /**
      * Xml elements used for reordering internal members of a collection.
      */
@@ -61,19 +76,7 @@ public interface OrderingConstants {
     public static final String XML_BEFORE = "before";
     public static final String XML_AFTER = "after";
 
-    /**
-     * Constant representing the DAV:custom ordering type URI, which indicates
-     * that the collection is not ordered.
-     */
-    public static final String ORDERING_TYPE_CUSTOM = "DAV:custom";
-
-    /**
-     * Constant representing the DAV:unordered ordering type URI, which indicates
-     * that the collection is to be ordered, but the semantics of the ordering
-     * is not being advertised.
-     */
-    public static final String ORDERING_TYPE_UNORDERED = "DAV:unordered";
-
+    //---< XML Element, Attribute Names >---------------------------------------
     /**
      * The DAV:ordering-type property indicates whether the collection is
      * ordered and, if so, uniquely identifies the semantics of the ordering.
