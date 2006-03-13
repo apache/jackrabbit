@@ -88,7 +88,7 @@ public class ResourceConfig {
             if (el != null) {
                 Object inst = buildClassFromConfig(el);
                 if (inst != null && inst instanceof IOManager) {
-                   ioManager = (IOManager)inst;
+                    ioManager = (IOManager)inst;
                 }
             } else {
                 log.error("Resource configuration: mandatory 'iomanager' element is missing.");
@@ -97,11 +97,11 @@ public class ResourceConfig {
             el = DomUtil.getChildElement(config, "collection", null);
             if (el != null) {
                 nodetypeNames = parseNodeTypesEntry(el);
-                    collectionNames = true;
+                collectionNames = true;
             } else if ((el = DomUtil.getChildElement(config, "noncollection", null)) != null) {
                 nodetypeNames = parseNodeTypesEntry(el);
-                    collectionNames = false;
-                }
+                collectionNames = false;
+            }
             // todo: should check if both 'noncollection' and 'collection' are present and write a warning
 
             el = DomUtil.getChildElement(config, "filter", null);
@@ -131,17 +131,17 @@ public class ResourceConfig {
         Element classElem = DomUtil.getChildElement(parent, "class", null);
         if (classElem != null) {
             // contains a 'class' child node
-        try {
+            try {
                 String className = DomUtil.getAttribute(classElem, "name", null);
-            if (className != null) {
-                Class c = Class.forName(className);
-                instance = c.newInstance();
+                if (className != null) {
+                    Class c = Class.forName(className);
+                    instance = c.newInstance();
                 } else {
-                log.error("Invalid configuration: missing 'class' element");
+                    log.error("Invalid configuration: missing 'class' element");
+                }
+            } catch (Exception e) {
+                log.error("Error while create class instance: " + e.getMessage());
             }
-        } catch (Exception e) {
-            log.error("Error while create class instance: " + e.getMessage());
-        }
         }
         return instance;
     }
@@ -179,7 +179,7 @@ public class ResourceConfig {
             while (it.hasNext()) {
                 Element e = it.nextElement();
                 l.add(DomUtil.getText(e));
-        }
+            }
             ntNames = (String[])l.toArray(new String[l.size()]);
         } else {
             ntNames = new String[0];
