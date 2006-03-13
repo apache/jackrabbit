@@ -83,7 +83,7 @@ public class Position implements OrderingConstants, XmlSerializable {
     public Position(String type, String segment) {
         if (!VALID_TYPES.contains(type)) {
             throw new IllegalArgumentException("Invalid type: " + type);
-    }
+        }
         if ((XML_AFTER.equals(type) || XML_BEFORE.equals(type)) && (segment == null || "".equals(segment))) {
             throw new IllegalArgumentException("If type is other than 'first' or 'last' a segment must be specified");
         }
