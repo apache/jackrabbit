@@ -67,7 +67,7 @@ public class OptionsInfo implements XmlSerializable {
            for (int i = 0; i < entriesLocalNames.length; i++) {
                this.entriesLocalNames.add(entriesLocalNames[i]);
            }
-        }
+       }
     }
 
     /**

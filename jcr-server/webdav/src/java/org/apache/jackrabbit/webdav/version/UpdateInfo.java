@@ -77,7 +77,7 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
 
         boolean done = false;
         ElementIterator it = DomUtil.getChildren(updateElement, XML_VERSION, NAMESPACE);
-            while (it.hasNext()) {
+        while (it.hasNext()) {
             List hrefList = new ArrayList();
             Element el = it.nextElement();
             hrefList.add(DomUtil.getChildText(el, DavConstants.XML_HREF, DavConstants.NAMESPACE));
@@ -102,10 +102,10 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
             Element wspElem = DomUtil.getChildElement(updateElement, XML_WORKSPACE, NAMESPACE);
             if (wspElem != null) {
                 workspaceHref = DomUtil.getChildTextTrim(wspElem, DavConstants.XML_HREF, DavConstants.NAMESPACE);
-        } else {
+            } else {
                 log.warn("DAV:update element must contain either DAV:version, DAV:label-name or DAV:workspace child element.");
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST);
-        }
+            }
         }
 
         // if property name set if present
