@@ -175,7 +175,7 @@ public class RepositoryStartupServlet extends HttpServlet {
         log.info("RepositoryStartupServlet initializing...");
         initRepository();
         try {
-            registerRMI();
+        registerRMI();
             registerJNDI();
         } catch (ServletException e) {
             // shutdown repository
@@ -366,14 +366,14 @@ public class RepositoryStartupServlet extends HttpServlet {
             }
         } else {
             // convert RMI port configuration
-            if (rmiPortStr != null) {
-                try {
-                    rmiPort = Integer.parseInt(rmiPortStr);
-                } catch (NumberFormatException e) {
-                    log.warn("Invalid port in rmi-port param: " + e + ". using default port.");
+        if (rmiPortStr != null) {
+            try {
+                rmiPort = Integer.parseInt(rmiPortStr);
+            } catch (NumberFormatException e) {
+                log.warn("Invalid port in rmi-port param: " + e + ". using default port.");
                     rmiPort = Registry.REGISTRY_PORT;
-                }
             }
+        }
         }
 
         // check RMI port
@@ -462,7 +462,7 @@ public class RepositoryStartupServlet extends HttpServlet {
                 } catch (RemoteException re) {
                     log.error("Cannot create the reference to the registry at "
                         + rmiHost + ":" + rmiPort, re);
-                }
+            }
             }
 
             // if we finally have a registry, register the repository with the
@@ -472,7 +472,7 @@ public class RepositoryStartupServlet extends HttpServlet {
                     + " to registry " + reg);
                 reg.bind(rmiName, remote);
                 this.rmiURI = rmiURI;
-                log.info("Repository bound via RMI with name: " + rmiURI);
+            log.info("Repository bound via RMI with name: " + rmiURI);
             } else {
                 log.info("RMI registry missing, cannot bind repository via RMI");
             }
