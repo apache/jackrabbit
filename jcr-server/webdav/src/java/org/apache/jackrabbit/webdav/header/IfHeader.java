@@ -384,7 +384,7 @@ public class IfHeader implements Header {
                         res.add(new IfListEntryToken(word, positive));
                         // also add the token to the list of all tokens
                         if (positive) {
-                        allTokens.add(word);
+                            allTokens.add(word);
                         } else {
                             allNotTokens.add(word);
                         }
