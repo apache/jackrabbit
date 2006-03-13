@@ -25,24 +25,24 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
  * respected. this means, an property is equal to another, if the names
  * and values are equal.<br>
  * The XML representation of a <code>DavProperty</code>:
-     * <pre>
-     * new DavProperty("displayname", "WebDAV Directory").toXml
-     * gives a element like:
-     * &lt;D:displayname&gt;WebDAV Directory&lt;/D:displayname&gt;
-     *
-     * new DavProperty("resourcetype", new Element("collection")).toXml
-     * gives a element like:
-     * &lt;D:resourcetype&gt;&lt;D:collection/&gt;&lt;/D:resourcetype&gt;
-     *
-     * Element[] customVals = { new Element("bla", customNamespace), new Element("bli", customNamespace) };
-     * new DavProperty("custom-property", customVals, customNamespace).toXml
-     * gives an element like
-     * &lt;Z:custom-property&gt;
-     *    &lt;Z:bla/&gt;
-     *    &lt;Z:bli/&gt;
-     * &lt;/Z:custom-property&gt;
-     * </pre>
-     */
+ * <pre>
+ * new DavProperty("displayname", "WebDAV Directory").toXml
+ * gives a element like:
+ * &lt;D:displayname&gt;WebDAV Directory&lt;/D:displayname&gt;
+ *
+ * new DavProperty("resourcetype", new Element("collection")).toXml
+ * gives a element like:
+ * &lt;D:resourcetype&gt;&lt;D:collection/&gt;&lt;/D:resourcetype&gt;
+ *
+ * Element[] customVals = { new Element("bla", customNamespace), new Element("bli", customNamespace) };
+ * new DavProperty("custom-property", customVals, customNamespace).toXml
+ * gives an element like
+ * &lt;Z:custom-property&gt;
+ *    &lt;Z:bla/&gt;
+ *    &lt;Z:bli/&gt;
+ * &lt;/Z:custom-property&gt;
+ * </pre>
+ */
 public interface DavProperty extends XmlSerializable, DavConstants {
 
     /**
