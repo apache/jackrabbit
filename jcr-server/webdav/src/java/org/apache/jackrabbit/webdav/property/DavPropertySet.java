@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.webdav.property;
 
 import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,8 @@ import java.util.NoSuchElementException;
  * property.
  */
 public class DavPropertySet extends PropContainer {
+
+    private static Logger log = Logger.getLogger(DavPropertySet.class);
 
     /**
      * the set of property
@@ -183,6 +186,7 @@ public class DavPropertySet extends PropContainer {
             add((DavProperty)contentEntry);
             return true;
         }
+        log.debug("DavProperty object expected. Found: " + contentEntry.getClass().toString());
         return false;
     }
 
