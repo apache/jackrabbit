@@ -174,11 +174,11 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
      */
     public Filter[] getFilters(String localName, Namespace namespace) {
         List l = new ArrayList();
-                for (int i = 0; i < filters.length; i++) {
+        for (int i = 0; i < filters.length; i++) {
             if (filters[i].isMatchingFilter(localName, namespace)) {
                l.add(filters[i]);
-                }
             }
+        }
         return (Filter[])l.toArray(new Filter[l.size()]);
     }
 
