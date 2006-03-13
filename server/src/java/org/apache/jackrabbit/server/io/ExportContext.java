@@ -78,7 +78,7 @@ public interface ExportContext extends IOContext {
     /**
      * Sets the ETag of the resource. A successfull export command
      * may set this member.
-     * 
+     *
      * @param etag the ETag
      */
     public void setETag(String etag);
