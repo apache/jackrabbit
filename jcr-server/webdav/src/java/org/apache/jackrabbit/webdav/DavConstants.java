@@ -29,9 +29,11 @@ import java.text.DateFormat;
 public interface DavConstants {
 
     /**
-     * Request and response headers and some value constants
+     * Default Namespace constant
      */
-    //-------------------------------------------------------------- Headers ---
+    public static final Namespace NAMESPACE = Namespace.getNamespace("D", "DAV:");
+
+    //---< Headers (Names and Value Constants) >--------------------------------
     public static final String HEADER_DAV = "DAV";
     public static final String HEADER_DESTINATION = "Destination";
     public static final String HEADER_IF = "If";
@@ -42,35 +44,28 @@ public interface DavConstants {
     public static final String HEADER_ETAG = "ETag";
     public static final String HEADER_LAST_MODIFIED = "Last-Modified";
 
-    //---------------------------------------------------- Lock-Token header ---
+    //--------------------------------------------------< Lock-Token Header >---
     public static final String HEADER_LOCK_TOKEN = "Lock-Token";
     public static final String OPAQUE_LOCK_TOKEN_PREFIX = "opaquelocktoken:";
 
-    //------------------------------------------------------- Timeout header ---
+    //-----------------------------------------------------< Timeout Header >---
     public static final String HEADER_TIMEOUT = "Timeout";
     public static final String TIMEOUT_INFINITE = "Infinite";
     // RFC 2518: timeout value for TimeType "Second" MUST NOT be greater than 2^32-1
     public static final long INFINITE_TIMEOUT = Integer.MAX_VALUE;
     public static final long UNDEFINED_TIMEOUT = Integer.MIN_VALUE;
     
-    //----------------------------------------------------- Overwrite header ---
+    //---------------------------------------------------< Overwrite Header >---
     public static final String HEADER_OVERWRITE = "Overwrite";
 
-    //--------------------------------------------------------- Depth header ---
+    //-------------------------------------------------------< Depth Header >---
     public static final String HEADER_DEPTH = "Depth";
     public static final String DEPTH_INFINITY_S = "infinity";
     public static final int DEPTH_INFINITY = Integer.MAX_VALUE;
     public static final int DEPTH_0 = 0;
     public static final int DEPTH_1 = 1;
 
-    /**
-     * Default Namespace constant
-     */
-    public static final Namespace NAMESPACE = Namespace.getNamespace("D", "DAV:");
-
-    /**
-     * Xml element names used for response and request body
-     */
+    //---< XML Element, Attribute Names >---------------------------------------
     public static final String XML_ALLPROP = "allprop";
     public static final String XML_COLLECTION = "collection";
     public static final String XML_DST = "dst";
@@ -92,9 +87,7 @@ public interface DavConstants {
     public static final String XML_SOURCE = "source";
     public static final String XML_STATUS = "status";
 
-    /**
-     * XML element names related to locking
-     */
+    //------------------------------------------------------------< locking >---
     public static final String XML_ACTIVELOCK = "activelock";
     public static final String XML_DEPTH = "depth";
     public static final String XML_LOCKTOKEN = "locktoken";
@@ -108,7 +101,8 @@ public interface DavConstants {
     public static final String XML_WRITE = "write";
     public static final String XML_OWNER = "owner";
 
-    /**
+    //---< Property Names >-----------------------------------------------------
+    /*
      * Webdav property names as defined by RFC 2518<br>
      * Note: Microsoft webdav clients as well as Webdrive request additional
      * property (e.g. href, name, owner, isRootLocation, isCollection)  within the
@@ -127,12 +121,12 @@ public interface DavConstants {
     public static final String PROPERTY_SOURCE = "source";
     public static final String PROPERTY_SUPPORTEDLOCK = "supportedlock";
 
-    //--------------------------------------------------- Propfind constants ---
+    //---< PropFind Constants >-------------------------------------------------
     public static final int PROPFIND_BY_PROPERTY = 0;
     public static final int PROPFIND_ALL_PROP = 1;
     public static final int PROPFIND_PROPERTY_NAMES = 2;
 
-    //--------------------------------------------------------- date formats ---
+    //---< Date Format Constants >----------------------------------------------
     /**
      * modificationDate date format per RFC 1123
      */
