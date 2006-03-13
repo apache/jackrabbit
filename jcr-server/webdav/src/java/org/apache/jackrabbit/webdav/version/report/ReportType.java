@@ -67,7 +67,7 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
      */
     public Report createReport(DeltaVResource resource, ReportInfo info) throws DavException {
         try {
-            Report report = (Report) reportClass.getConstructor(new Class[0]).newInstance(new Object[0]);
+            Report report = (Report) reportClass.newInstance();
             report.init(resource, info);
             return report;
         } catch (Exception e) {
@@ -109,7 +109,7 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
      */
     public String getReportName() {
         return key;
-            }
+    }
 
     /**
      *
@@ -117,7 +117,7 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
      */
     public String getLocalName() {
         return localName;
-        }
+    }
 
     /**
      *
@@ -143,25 +143,19 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
         if (localName == null || namespace == null || reportClass == null) {
             throw new IllegalArgumentException("A ReportType cannot be registered with a null name, namespace or report class");
         }
-
         String key = DomUtil.getQualifiedName(localName, namespace);
         if (types.containsKey(key)) {
             return (ReportType) types.get(key);
         } else {
-            // test if this report class has an empty constructor and implements Report interface
-            boolean isValidClass = false;
-            Class[] interfaces = reportClass.getInterfaces();
-            for (int i = 0; i < interfaces.length && !isValidClass; i++) {
-                isValidClass = (interfaces[i] == Report.class);
-            }
-            if (!isValidClass) {
-                throw new IllegalArgumentException("The specified report class must implement the Report interface.");
-            }
-
             try {
-                reportClass.getConstructor(new Class[0]);
-            } catch (NoSuchMethodException e) {
-                throw new IllegalArgumentException("The specified report class must provide a default constructor.");
+                Object report =  reportClass.newInstance();
+                if (!(report instanceof Report)) {
+                    throw new IllegalArgumentException("Unable to register Report class: " + reportClass + " does not implement the Report interface.");
+                }
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException("Error while validating Report class: " + e.getMessage());
+            } catch (InstantiationException e) {
+                throw new IllegalArgumentException("Error while validating Report class.: " + e.getMessage());
             }
 
             ReportType type = new ReportType(localName, namespace, key, reportClass);
