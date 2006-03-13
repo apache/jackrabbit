@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
@@ -27,7 +26,6 @@ import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.w3c.dom.Element;
@@ -46,7 +44,7 @@ import javax.jcr.RepositoryException;
  * </pre>
  * The response to a successful report request will be a Multi-Status response.
  */
-public class LocateByUuidReport implements Report {
+public class LocateByUuidReport extends AbstractJcrReport {
 
     private static Logger log = Logger.getLogger(LocateByUuidReport.class);
 
@@ -80,30 +78,23 @@ public class LocateByUuidReport implements Report {
     }
 
     /**
-     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, org.apache.jackrabbit.webdav.version.report.ReportInfo)
+     * @see Report#init(DavResource, ReportInfo)
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
-        if (!getType().isRequestedReportType(info)) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "dcr:locate-by-uuid element expected.");
-        }
+    public void init(DavResource resource, ReportInfo info) throws DavException {
+        // delegate basic validation to super class
+        super.init(resource, info);
+        // make also sure, the info contains a DAV:href child element
         if (!info.containsContentElement(DavConstants.XML_HREF, DavConstants.NAMESPACE)) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "dcr:locate-by-uuid element must at least contain a single DAV:href child.");
         }
-        if (resource == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Resource must not be null.");
-        }
-        DavSession davSession = resource.getSession();
-        if (davSession == null || davSession.getRepositorySession() == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource must provide a non-null session object in order to create the locate-by-uuid report.");
-    }
-
+        // immediately build the final multistatus element
         try {
             Element hrefElem = info.getContentElement(DavConstants.XML_HREF, DavConstants.NAMESPACE);
             String uuid = DomUtil.getTextTrim(hrefElem);
             DavResourceLocator resourceLoc = resource.getLocator();
-            Node n = davSession.getRepositorySession().getNodeByUUID(uuid);
+            Node n = getRepositorySession().getNodeByUUID(uuid);
             DavResourceLocator loc = resourceLoc.getFactory().createResourceLocator(resourceLoc.getPrefix(), resourceLoc.getWorkspacePath(), n.getPath(), false);
-            DavResource locatedResource = resource.getFactory().createResource(loc, davSession);
+            DavResource locatedResource = resource.getFactory().createResource(loc, resource.getSession());
             ms = new MultiStatus();
             ms.addResourceProperties(locatedResource, info.getPropertyNameSet(), info.getDepth());
         } catch (RepositoryException e) {

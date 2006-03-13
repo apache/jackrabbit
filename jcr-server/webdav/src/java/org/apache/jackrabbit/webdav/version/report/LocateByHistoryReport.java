@@ -23,7 +23,6 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
@@ -52,7 +51,7 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
 
     private ReportInfo info;
     private HashSet vhHrefSet = new HashSet();
-    private DeltaVResource resource;
+    private DavResource resource;
 
     /**
      *
@@ -64,13 +63,13 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
     }
 
     /**
-     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, ReportInfo) 
+     * @see Report#init(DavResource, ReportInfo)
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
+    public void init(DavResource resource, ReportInfo info) throws DavException {
         if (resource == null || !(resource instanceof VersionControlledResource)) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:version-tree report can only be created for version-controlled resources and version resources.");
         }
-            this.resource = resource;
+        this.resource = resource;
         setInfo(info);
     }
 
@@ -90,14 +89,14 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The DAV:locate-by-history element must contain a DAV:version-history-set child.");
         }
         ElementIterator it = DomUtil.getChildren(versionHistorySet, DavConstants.XML_HREF, DavConstants.NAMESPACE);
-            while (it.hasNext()) {
+        while (it.hasNext()) {
             String href = DomUtil.getText(it.nextElement());
             if (href != null && !"".equals(href)) {
-                    vhHrefSet.add(href);
-                }
+                vhHrefSet.add(href);
             }
-        this.info = info;
         }
+        this.info = info;
+    }
 
     /**
      * Always returns <code>true</code>.
@@ -119,7 +118,7 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
      */
     public Element toXml(Document document) {
         return getMultiStatus().toXml(document);
-        }
+    }
 
     /**
      * Retrieve the <code>MultiStatus</code> that is returned in response to a locate-by-history

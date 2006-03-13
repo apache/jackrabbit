@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.webdav.simple;
 
 import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 
 import javax.jcr.Session;
 import java.util.HashSet;
@@ -24,10 +25,7 @@ import java.util.HashSet;
  * Simple implementation of the {@link DavSession} interface. Stores
  * lock tokens but does not yet store references.
  */
-public class DavSessionImpl implements DavSession {
-
-    /** the underlying jcr session */
-    private final Session session;
+public class DavSessionImpl extends JcrDavSession {
 
     /** the lock tokens of this session */
     private final HashSet lockTokens = new HashSet();
@@ -37,7 +35,7 @@ public class DavSessionImpl implements DavSession {
      * @param session
      */
     public DavSessionImpl(Session session) {
-        this.session = session;
+        super(session);
     }
 
     /**
@@ -55,18 +53,11 @@ public class DavSessionImpl implements DavSession {
     }
 
     /**
-     * @see DavSession#getRepositorySession()
-     */
-    public Session getRepositorySession() {
-        return session;
-    }
-
-    /**
      * @see DavSession#addLockToken(String)
      */
     public void addLockToken(String token) {
+        super.addLockToken(token);
         lockTokens.add(token);
-        session.addLockToken(token);
     }
 
     /**
@@ -80,7 +71,7 @@ public class DavSessionImpl implements DavSession {
      * @see DavSession#removeLockToken(String)
      */
     public void removeLockToken(String token) {
+        super.removeLockToken(token);
         lockTokens.remove(token);
-        session.removeLockToken(token);
     }
 }

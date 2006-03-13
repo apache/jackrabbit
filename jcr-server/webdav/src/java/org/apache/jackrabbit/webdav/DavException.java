@@ -17,6 +17,7 @@ package org.apache.jackrabbit.webdav;
 
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
@@ -44,6 +45,7 @@ public class DavException extends Exception implements XmlSerializable {
     public static final String XML_ERROR = "error";
 
     private int errorCode = DavServletResponse.SC_INTERNAL_SERVER_ERROR;
+    private Element errorCondition;
 
     /**
      * Create a new <code>DavException</code>.
@@ -51,11 +53,10 @@ public class DavException extends Exception implements XmlSerializable {
      * @param errorCode integer specifying any of the status codes defined by
      * {@link DavServletResponse}.
      * @param message Human readable error message.
+     * @see DavException#DavException(int, String, Throwable, Element)
      */
     public DavException(int errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-        log.debug("DavException: (" + errorCode + ") " + message);
+        this(errorCode, message, null, null);
     }
 
     /**
@@ -63,9 +64,39 @@ public class DavException extends Exception implements XmlSerializable {
      *
      * @param errorCode integer specifying any of the status codes defined by
      * {@link DavServletResponse}.
+     * @param cause Cause of this DavException
+     * @see DavException#DavException(int, String, Throwable, Element)
+     */
+    public DavException(int errorCode, Throwable cause) {
+        this(errorCode, null, cause, null);
+    }
+
+    /**
+     * Create a new <code>DavException</code>.
+     *
+     * @param errorCode integer specifying any of the status codes defined by
+     * {@link DavServletResponse}.
+     * @see DavException#DavException(int, String, Throwable, Element)
      */
     public DavException(int errorCode) {
-        this(errorCode, statusPhrases.getProperty(String.valueOf(errorCode)));
+        this(errorCode, statusPhrases.getProperty(String.valueOf(errorCode)), null, null);
+    }
+
+    /**
+     * Create a new <code>DavException</code>.
+     *
+     * @param errorCode integer specifying any of the status codes defined by
+     * {@link DavServletResponse}.
+     * @param message Human readable error message.
+     * @param cause Cause of this <code>DavException</code>.
+     * @param errorCondition Xml element providing detailled information about
+     * the error. If the condition is not <code>null</code>, {@link #toXml(Document)}
+     */
+    public DavException(int errorCode, String message, Throwable cause, Element errorCondition) {
+        super(message, cause);
+        this.errorCode = errorCode;
+        this.errorCondition = errorCondition;
+        log.debug("DavException: (" + errorCode + ") " + message);
     }
 
     /**
@@ -99,21 +130,30 @@ public class DavException extends Exception implements XmlSerializable {
     }
 
     /**
-     * @return Always false
+     * @return true if a error condition has been specified, false otherwise.
      */
     public boolean hasErrorCondition() {
-        return false;
+        return errorCondition != null;
     }
 
     /**
-     * Returns <code>null</code>
+     * Returns a DAV:error element containing the error condition or
+     * <code>null</code> if no specific condition is available. See
+     * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
+     * Section 1.6 "Method Preconditions and Postconditions" for additional
+     * information.
      *
      * @param document
-     * @return <code>null</code>
+     * @return A DAV:error element indicating the error cause or <code>null</code>.
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      */
     public Element toXml(Document document) {
-        return null;
+        if (hasErrorCondition()) {
+            Element error = DomUtil.createElement(document, XML_ERROR, DavConstants.NAMESPACE);
+            error.appendChild(document.importNode(errorCondition, true));
+            return error;
+        } else {
+            return null;
+        }
     }
-
 }

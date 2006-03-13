@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.version.report;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
 
 /**
  * The <code>Report</code> interface defines METHODS needed in order to respond
@@ -56,5 +57,5 @@ public interface Report extends XmlSerializable {
      * @param info
      * @throws DavException
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException;
+    public void init(DavResource resource, ReportInfo info) throws DavException;
 }

@@ -289,9 +289,9 @@ public class DavLocatorFactoryImpl implements DavLocatorFactory {
         /**
          * Returns the same as {@link #getResourcePath()}. No encoding is performed
          * at all.
-         * @see DavResourceLocator#getJcrPath()
+         * @see DavResourceLocator#getRepositoryPath()
          */
-        public String getJcrPath() {
+        public String getRepositoryPath() {
             return getResourcePath();
         }
 

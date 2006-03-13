@@ -55,13 +55,14 @@ public interface DavLocatorFactory {
      * @param path
      * @param isResourcePath If true this method returns the same as
      * {@link DavLocatorFactory#createResourceLocator(String, String, String)},
-     * otherwise the given path is treated as {@link javax.jcr.Item#getPath JCR path}.
-     * The implementation may choose to modify the given item path if it contains
-     * escaped characters due to incompatibility of the JCR path with the URI
-     * definition. I.e. it would undo the modification that was applied when
-     * calling {@link DavResourceLocator#getJcrPath()}.
+     * otherwise the given path is treated as internal repository path.
+     * The implementation may choose to implement a conversion of the repository
+     * path to a valid resource path, e.g. (un)escaping of certain characters, due
+     * to incompatibility with the URI definition (or vice versa). Note that
+     * {@link DavResourceLocator#getRepositoryPath()} should in this case implement
+     * the reverse operation.
      * @return
-     * @see DavResourceLocator#getJcrPath()
+     * @see DavResourceLocator#getRepositoryPath()
      */
     public DavResourceLocator createResourceLocator(String prefix, String workspacePath, String path, boolean isResourcePath);
 }

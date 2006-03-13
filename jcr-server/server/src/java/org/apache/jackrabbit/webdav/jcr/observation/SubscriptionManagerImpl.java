@@ -18,7 +18,6 @@ package org.apache.jackrabbit.webdav.jcr.observation;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
@@ -26,9 +25,11 @@ import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.log4j.Logger;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.observation.ObservationManager;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,9 +40,8 @@ import java.util.Set;
  * <code>SubscriptionManager</code> collects all subscriptions requested, handles
  * the subscription timeout and provides METHODS to discover subscriptions
  * present on a given resource as well as events for an specific subscription.
- *
- * @todo make sure all expired subscriptions are removed!
  */
+// todo: make sure all expired subscriptions are removed!
 public class SubscriptionManagerImpl implements SubscriptionManager {
 
     private static Logger log = Logger.getLogger(SubscriptionManager.class);
@@ -57,9 +57,9 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
      * no subscriptions present.
      *
      * @param resource
-     * @todo is it correct to return subscriptions made by another session?
      */
     public SubscriptionDiscovery getSubscriptionDiscovery(ObservationResource resource) {
+        // todo: is it correct to return subscriptions made by another session?
         Subscription[] subsForResource = subscriptions.getByPath(resource.getLocator());
         return new SubscriptionDiscovery(subsForResource);
     }
@@ -79,20 +79,19 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             throws DavException {
 
         SubscriptionImpl subscription;
-        DavSession session = resource.getSession();
         if (subscriptionId == null) {
             // new subscription
             subscription = new SubscriptionImpl(info, resource);
-            registerSubscription(subscription, session);
+            registerSubscription(subscription, resource);
 
             // ajust references to this subscription
             subscriptions.put(subscription.getSubscriptionId(), subscription);
-            session.addReference(subscription.getSubscriptionId());
+            resource.getSession().addReference(subscription.getSubscriptionId());
         } else {
             // refresh/modify existing one
             subscription = validate(subscriptionId, resource);
             subscription.setInfo(info);
-            registerSubscription(subscription, session);
+            registerSubscription(subscription, resource);
         }
         return subscription;
     }
@@ -102,14 +101,15 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
      * repository's observation manager.
      *
      * @param subscription
-     * @param session
+     * @param resource
      * @throws DavException
      */
-    private void registerSubscription(SubscriptionImpl subscription, DavSession session)
-            throws DavException {
+    private void registerSubscription(SubscriptionImpl subscription,
+                                      ObservationResource resource) throws DavException {
         try {
-            ObservationManager oMgr = session.getRepositorySession().getWorkspace().getObservationManager();
-            String itemPath = subscription.getLocator().getJcrPath();
+            Session session = getRepositorySession(resource);
+            ObservationManager oMgr = session.getWorkspace().getObservationManager();
+            String itemPath = subscription.getLocator().getRepositoryPath();
             oMgr.addEventListener(subscription, subscription.getEventTypes(),
                     itemPath, subscription.isDeep(),
                     subscription.getUuidFilters(),
@@ -134,26 +134,28 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             throws DavException {
 
         SubscriptionImpl subs = validate(subscriptionId, resource);
-        unregisterSubscription(subs, resource.getSession());
+        unregisterSubscription(subs, resource);
     }
 
     /**
      * Remove the event listener defined by the specified subscription from
-     * the repository's observation manager.
+     * the repository's observation manager and clean up the references present
+     * on the <code>DavSession</code>.
      *
      * @param subscription
-     * @param session
+     * @param resource
      * @throws DavException
      */
     private void unregisterSubscription(SubscriptionImpl subscription,
-                                        DavSession session) throws DavException {
+                                        ObservationResource resource) throws DavException {
         try {
-            session.getRepositorySession().getWorkspace().getObservationManager().removeEventListener(subscription);
+            Session session = getRepositorySession(resource);
+            session.getWorkspace().getObservationManager().removeEventListener(subscription);
             String sId = subscription.getSubscriptionId();
 
             // clean up any references
             subscriptions.remove(sId);
-            session.removeReference(sId);
+            resource.getSession().removeReference(sId);
 
         } catch (RepositoryException e) {
             log.error("Unable to remove eventlistener: "+e.getMessage());
@@ -199,13 +201,21 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Attempt to operate on subscription with invalid resource path.");
             }
             if (subs.isExpired()) {
-                unregisterSubscription(subs, resource.getSession());
+                unregisterSubscription(subs, resource);
                 throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Attempt to  operate on expired subscription.");
             }
             return subs;
         } else {
             throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED, "Attempt to modify or to poll for non-existing subscription.");
         }
+    }
+
+    /**
+     * @param resource
+     * @return JCR session
+     */
+    private static Session getRepositorySession(ObservationResource resource) throws DavException {
+        return JcrDavSession.getRepositorySession(resource.getSession());
     }
 
     /**
