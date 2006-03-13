@@ -25,7 +25,7 @@ import org.w3c.dom.Document;
  */
 public class SubscriptionDiscovery extends AbstractDavProperty {
 
-    Subscription[] subscriptions = new Subscription[0];
+    private Subscription[] subscriptions = new Subscription[0];
 
     /**
      * Create a new <code>SubscriptionDiscovery</code> that lists the given
