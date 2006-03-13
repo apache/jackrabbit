@@ -23,7 +23,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * The <code>VersionControlledResource</code> represents in contrast to the
  * <code>VersionableResource</code> a resource, that has already been put
  * under version-control. This resource can be checked-in, checked-out and
- * has its on {@link javax.jcr.version.VersionHistory version history}.
+ * has its own {@link VersionHistoryResource version history}.
  * <p/>
  * RFC 3253 defines the following required properties for a
  * version-controlled resource (vc-resource):
