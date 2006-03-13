@@ -56,14 +56,14 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * @param depth
      */
     public void addResourceProperties(DavResource resource, DavPropertyNameSet propNameSet,
-				      int propFindType, int depth) {
-	addResponse(new MultiStatusResponse(resource, propNameSet, propFindType));
-	if (depth > 0) {
-	    DavResourceIterator iter = resource.getMembers();
-	    while (iter.hasNext()) {
-		addResourceProperties(iter.nextResource(), propNameSet, propFindType, depth-1);
-	    }
-	}
+                                      int propFindType, int depth) {
+        addResponse(new MultiStatusResponse(resource, propNameSet, propFindType));
+        if (depth > 0) {
+            DavResourceIterator iter = resource.getMembers();
+            while (iter.hasNext()) {
+                addResourceProperties(iter.nextResource(), propNameSet, propFindType, depth-1);
+            }
+        }
     }
 
     /**
@@ -79,8 +79,8 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * the corresponding method that allows to specify the type explicitely.
      */
     public void addResourceProperties(DavResource resource, DavPropertyNameSet propNameSet,
-				      int depth) {
-	addResourceProperties(resource, propNameSet, PROPFIND_BY_PROPERTY, depth);
+                                      int depth) {
+        addResourceProperties(resource, propNameSet, PROPFIND_BY_PROPERTY, depth);
     }
 
     /**
@@ -93,13 +93,13 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * @param depth
      */
     public void addResourceStatus(DavResource resource, int status, int depth) {
-	addResponse(new MultiStatusResponse(resource.getHref(), status));
-	if (depth > 0) {
-	    DavResourceIterator iter = resource.getMembers();
-	    while (iter.hasNext()) {
-		addResourceStatus(iter.nextResource(), status, depth-1);
-	    }
-	}
+        addResponse(new MultiStatusResponse(resource.getHref(), status));
+        if (depth > 0) {
+            DavResourceIterator iter = resource.getMembers();
+            while (iter.hasNext()) {
+                addResourceStatus(iter.nextResource(), status, depth-1);
+            }
+        }
     }
 
     /**
@@ -108,7 +108,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * @param response
      */
     public void addResponse(MultiStatusResponse response) {
-	responses.put(response.getHref(), response);
+        responses.put(response.getHref(), response);
     }
 
     /**
@@ -118,7 +118,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * multistatus.
      */
     public MultiStatusResponse[] getResponses() {
-	return (MultiStatusResponse[]) responses.values().toArray(new MultiStatusResponse[responses.size()]);
+        return (MultiStatusResponse[]) responses.values().toArray(new MultiStatusResponse[responses.size()]);
     }
 
     /**
@@ -136,7 +136,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * @return responseDescription
      */
     public String getResponseDescription() {
-	return responseDescription;
+        return responseDescription;
     }
 
     /**
@@ -146,16 +146,16 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * @param document
      */
     public Element toXml(Document document) {
-	Element multistatus = DomUtil.createElement(document, XML_MULTISTATUS, NAMESPACE);
+        Element multistatus = DomUtil.createElement(document, XML_MULTISTATUS, NAMESPACE);
         Iterator it = responses.values().iterator();
-	while(it.hasNext()) {
-	    multistatus.appendChild(((MultiStatusResponse)it.next()).toXml(document));
-	}
+        while(it.hasNext()) {
+            multistatus.appendChild(((MultiStatusResponse)it.next()).toXml(document));
+        }
         if (responseDescription != null) {
             Element respDesc = DomUtil.createElement(document, XML_RESPONSEDESCRIPTION, NAMESPACE, responseDescription);
             multistatus.appendChild(respDesc);
         }
-	return multistatus;
+        return multistatus;
     }
 
     /**
@@ -167,21 +167,21 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * or does not provide the required element.
      */
     public static MultiStatus createFromXml(Element multistatusElement) {
-	if (!DomUtil.matches(multistatusElement, XML_MULTISTATUS, NAMESPACE)) {
-	    throw new IllegalArgumentException("DAV:multistatus element expected.");
-	}
+        if (!DomUtil.matches(multistatusElement, XML_MULTISTATUS, NAMESPACE)) {
+            throw new IllegalArgumentException("DAV:multistatus element expected.");
+        }
 
         MultiStatus multistatus = new MultiStatus();
 
         ElementIterator it = DomUtil.getChildren(multistatusElement, XML_RESPONSE, NAMESPACE);
-	while (it.hasNext()) {
+        while (it.hasNext()) {
             Element respElem = it.nextElement();
             MultiStatusResponse response = MultiStatusResponse.createFromXml(respElem);
             multistatus.addResponse(response);
-	}
+        }
 
-	// optional response description on the multistatus element
-	multistatus.setResponseDescription(DomUtil.getChildText(multistatusElement, XML_RESPONSEDESCRIPTION, NAMESPACE));
+        // optional response description on the multistatus element
+        multistatus.setResponseDescription(DomUtil.getChildText(multistatusElement, XML_RESPONSEDESCRIPTION, NAMESPACE));
         return multistatus;
     }
 }
