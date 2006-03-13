@@ -39,15 +39,21 @@ public class NamespacesProperty extends AbstractDavProperty implements ItemResou
 
     private static Logger log = Logger.getLogger(NamespacesProperty.class);
 
-    private final Properties value;
+    private final Properties value = new Properties();
 
     public NamespacesProperty(NamespaceRegistry nsReg) throws RepositoryException {
         super(JCR_NAMESPACES, false);
-        String[] prefixes = nsReg.getPrefixes();
-        value = new Properties();
-        for (int i = 0; i < prefixes.length; i++) {
-            value.setProperty(prefixes[i], nsReg.getURI(prefixes[i]));
+        if (nsReg != null) {
+            String[] prefixes = nsReg.getPrefixes();
+            for (int i = 0; i < prefixes.length; i++) {
+                value.setProperty(prefixes[i], nsReg.getURI(prefixes[i]));
+            }
         }
+    }
+
+    public NamespacesProperty(Properties namespaces) {
+        super(JCR_NAMESPACES, false);
+        value.putAll(namespaces);
     }
 
     public NamespacesProperty(DavProperty property) throws DavException {
@@ -57,7 +63,6 @@ public class NamespacesProperty extends AbstractDavProperty implements ItemResou
             log.warn("Unexpected structure of dcr:namespace property.");
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-        value = new Properties();
         // retrieve list of prefix/uri pairs that build the new values of
         // the ns-registry
         Iterator it = ((List)v).iterator();
