@@ -15,8 +15,6 @@
  */
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -42,7 +40,7 @@ public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeCon
     private final Set nodetypeNames = new HashSet();
 
     public NodeTypeProperty(DavPropertyName name, NodeType nodeType, boolean isProtected) {
-        this(name, new NodeType[] {nodeType}, isProtected);
+        this(name, new NodeType[]{nodeType}, isProtected);
     }
 
     public NodeTypeProperty(DavPropertyName name, NodeType[] nodeTypes, boolean isProtected) {
@@ -55,41 +53,54 @@ public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeCon
         }
     }
 
+    public NodeTypeProperty(DavPropertyName name, String[] nodeTypeNames, boolean isProtected) {
+        super(name, isProtected);
+        for (int i = 0; i < nodeTypeNames.length; i++) {
+            if (nodeTypeNames[i] != null) {
+                nodetypeNames.add(nodeTypeNames[i]);
+            }
+        }
+    }
+
     /**
      * Create a new <code>NodeTypeProperty</code> from the specified general
      * DavProperty object.
      *
      * @param property
-     * @throws IllegalArgumentException if the content of the specified property
-     * contains elements other than {@link NodeTypeConstants#XML_NODETYPE}.
      */
-    public NodeTypeProperty(DavProperty property) throws DavException {
+    public NodeTypeProperty(DavProperty property) {
         super(property.getName(), property.isProtected());
-        Object propValue = property.getValue();
-        Iterator it;
-        if (propValue instanceof List) {
-            it = ((List)propValue).iterator();
-        } else if (propValue instanceof Element) {
-            List l = new ArrayList();
-            l.add(propValue);
-            it = l.iterator();
+        if (property instanceof NodeTypeProperty) {
+            nodetypeNames.addAll(((NodeTypeProperty)property).nodetypeNames);
         } else {
-            log.warn("Cannot build NodeTypeProperty from the given property.");
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Cannot build NodeTypeProperty from the given property.");
+            // assume property has be built from xml
+            Object propValue = property.getValue();
+            if (propValue instanceof List) {
+                retrieveNodeTypeNames(((List)propValue));
+            } else if (propValue instanceof Element) {
+                List l = new ArrayList();
+                l.add(propValue);
+                retrieveNodeTypeNames(l);
+            } else {
+                log.debug("NodeTypeProperty '" + property.getName() + "' has no/unparsable value.");
+            }
         }
+    }
 
-            while (it.hasNext()) {
-                Object content = it.next();
+    private void retrieveNodeTypeNames(List elementList) {
+        Iterator it = elementList.iterator();
+        while (it.hasNext()) {
+            Object content = it.next();
             if (!(content instanceof Element)) {
                 continue;
-                }
+            }
             Element el = (Element)content;
             if (XML_NODETYPE.equals(el.getLocalName()) && NodeTypeConstants.NAMESPACE.isSame(el.getNamespaceURI())) {
-                String nodetypeName = DomUtil.getText(el);
+                String nodetypeName = DomUtil.getChildText(el, XML_NODETYPENAME, NodeTypeConstants.NAMESPACE);
                 if (nodetypeName != null && !"".equals(nodetypeName)) {
                     nodetypeNames.add(nodetypeName);
-            }
-	} else {
+                }
+            } else {
                 log.debug("'dcr:nodetype' element expected -> ignoring element '" + ((Element)content).getNodeName() + "'");
             }
         }
