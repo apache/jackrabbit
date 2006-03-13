@@ -19,16 +19,15 @@ import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavResource;
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
@@ -60,7 +59,7 @@ import javax.jcr.PathNotFoundException;
  *
  * @see javax.jcr.Node#getCorrespondingNodePath(String)
  */
-public class LocateCorrespondingNodeReport implements Report {
+public class LocateCorrespondingNodeReport extends AbstractJcrReport {
 
     private static Logger log = Logger.getLogger(LocateCorrespondingNodeReport.class);
 
@@ -94,27 +93,20 @@ public class LocateCorrespondingNodeReport implements Report {
     }
 
     /**
-     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, org.apache.jackrabbit.webdav.version.report.ReportInfo)
+     * @see Report#init(DavResource, ReportInfo)
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
-        if (resource == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Resource must not be null.");
-        }
-        DavSession davSession = resource.getSession();
-        if (davSession == null || davSession.getRepositorySession() == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource must provide a non-null session object in order to create the dcr:locate-corresponding-node report.");
-        }
-        if (!getType().isRequestedReportType(info)) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "dcr:locate-corresponding-node expected.");
-    }
-
+    public void init(DavResource resource, ReportInfo info) throws DavException {
+        // general validation checks
+        super.init(resource, info);
+        // specific for this report: a workspace href must be provided
         Element workspace = info.getContentElement(DeltaVConstants.WORKSPACE.getName(), DeltaVConstants.WORKSPACE.getNamespace());
         String workspaceHref = DomUtil.getChildTextTrim(workspace, DavConstants.XML_HREF, DavConstants.NAMESPACE);
         if (workspaceHref == null || "".equals(workspaceHref)) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Request body must define the href of a source workspace");
         }
+        // retrieve href of the corresponding resource in the other workspace
         try {
-            this.correspHref = getCorrespondingResourceHref(resource, workspaceHref);
+            this.correspHref = getCorrespondingResourceHref(resource, getRepositorySession(), workspaceHref);
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -129,19 +121,28 @@ public class LocateCorrespondingNodeReport implements Report {
             elem.appendChild(DomUtil.hrefToXml(correspHref, document));
         }
         return elem;
-        }
+    }
 
-    private static String getCorrespondingResourceHref(DeltaVResource resource, String workspaceHref) throws RepositoryException {
-            DavResourceLocator rLoc = resource.getLocator();
-            String itemPath = rLoc.getJcrPath();
-            Session s = resource.getSession().getRepositorySession();
-            Item item = s.getItem(itemPath);
-            if (item.isNode()) {
-                String workspaceName = rLoc.getFactory().createResourceLocator(rLoc.getPrefix(), workspaceHref).getWorkspaceName();
-                String corrPath = ((Node)item).getCorrespondingNodePath(workspaceName);
-                DavResourceLocator corrLoc = rLoc.getFactory().createResourceLocator(rLoc.getPrefix(), "/" + workspaceName, corrPath, false);
+    /**
+     * Retrieve the href of the corresponding resource in the indicated workspace.
+     *
+     * @param resource
+     * @param session Session object used to access the {@link Node} object
+     * represented by the given resource.
+     * @param workspaceHref
+     * @return
+     * @throws RepositoryException
+     */
+    private static String getCorrespondingResourceHref(DavResource resource, Session session, String workspaceHref) throws RepositoryException {
+        DavResourceLocator rLoc = resource.getLocator();
+        String itemPath = rLoc.getRepositoryPath();
+        Item item = session.getItem(itemPath);
+        if (item.isNode()) {
+            String workspaceName = rLoc.getFactory().createResourceLocator(rLoc.getPrefix(), workspaceHref).getWorkspaceName();
+            String corrPath = ((Node)item).getCorrespondingNodePath(workspaceName);
+            DavResourceLocator corrLoc = rLoc.getFactory().createResourceLocator(rLoc.getPrefix(), "/" + workspaceName, corrPath, false);
             return corrLoc.getHref(true);
-            } else {
+        } else {
             throw new PathNotFoundException("Node with path " + itemPath + " does not exist.");
         }
     }

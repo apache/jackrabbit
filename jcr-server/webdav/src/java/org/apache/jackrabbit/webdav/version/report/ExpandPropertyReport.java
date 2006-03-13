@@ -63,7 +63,7 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
 
     private static Logger log = Logger.getLogger(ExpandPropertyReport.class);
 
-    private DeltaVResource resource;
+    private DavResource resource;
     private ReportInfo info;
     private Iterator propertyElements;
 
@@ -88,9 +88,9 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
     }
 
     /**
-     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, ReportInfo)
+     * @see Report#init(DavResource, ReportInfo)
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
+    public void init(DavResource resource, ReportInfo info) throws DavException {
         setResource(resource);
         setInfo(info);
     }
@@ -101,7 +101,7 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      * @param resource
      * @throws DavException if the specified resource is <code>null</code>
      */
-    private void setResource(DeltaVResource resource) throws DavException {
+    private void setResource(DavResource resource) throws DavException {
         if (resource == null) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource specified must not be null.");
         }
@@ -116,6 +116,9 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      * does not contain a DAV:expand-property element.
      */
     private void setInfo(ReportInfo info) throws DavException {
+        if (info == null) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The report info specified must not be null.");
+        }
         if (!getType().isRequestedReportType(info)) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:expand-property element expected.");
         }
@@ -143,10 +146,6 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      * @throws NullPointerException if info and resource have not been set.
      */
     private MultiStatus getMultiStatus() {
-        if (info == null || resource == null) {
-            throw new NullPointerException("Error while running DAV:version-tree report");
-        }
-
         MultiStatus ms = new MultiStatus();
         addResponses(resource, info.getDepth(), ms);
         return ms;

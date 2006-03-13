@@ -39,6 +39,7 @@ import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockDiscovery;
@@ -96,7 +97,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
     private DavResourceFactory factory;
     private LockManager lockManager;
-    private DavSession session;
+    private JcrDavSession session;
     private Node node;
     private DavResourceLocator locator;
 
@@ -117,8 +118,9 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @param session
      */
     public DavResourceImpl(DavResourceLocator locator, DavResourceFactory factory,
-                           DavSession session, ResourceConfig config) throws RepositoryException, DavException {
-        this.session = session;
+                           DavSession session, ResourceConfig config) throws DavException {
+        JcrDavSession.checkImplementation(session);
+        this.session = (JcrDavSession)session;
         this.factory = factory;
         this.locator = locator;
         this.filter = config.getItemFilter();
@@ -126,7 +128,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
         if (locator != null && locator.getResourcePath() != null) {
             try {
-                Item item = session.getRepositorySession().getItem(locator.getJcrPath());
+                Item item = getJcrSession().getItem(locator.getRepositoryPath());
                 if (item != null && item.isNode()) {
                     node = (Node) item;
                     // define what is a collection in webdav
@@ -134,6 +136,9 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                 }
             } catch (PathNotFoundException e) {
                 // ignore: exists field evaluates to false
+            } catch (RepositoryException e) {
+                // some other error
+                throw new JcrDavException(e);
             }
         } else {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -522,7 +527,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
         try {
-            String memberName = Text.getName(member.getLocator().getJcrPath());
+            String memberName = Text.getName(member.getLocator().getRepositoryPath());
             ImportContext ctx = getImportContext(inputContext, memberName);
             if (!ioManager.importContent(ctx, member)) {
                 // any changes should have been reverted in the importer
@@ -556,23 +561,25 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
 
-        try {
-            // make sure, non-jcr locks are removed.
-            if (!isJsrLockable()) {
-                ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
-                if (lock != null) {
-                    lockManager.releaseLock(lock.getToken(), member);
-                }
-            }
-            ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
-            if (lock != null && lockManager.hasLock(lock.getToken(), member)) {
-                lockManager.releaseLock(lock.getToken(), member);
-            }
 
-            String itemPath = member.getLocator().getJcrPath();
-            Item memItem = session.getRepositorySession().getItem(itemPath);
+        try {
+            String itemPath = member.getLocator().getRepositoryPath();
+            Item memItem = getJcrSession().getItem(itemPath);
             memItem.remove();
-            session.getRepositorySession().save();
+            getJcrSession().save();
+
+            // make sure, non-jcr locks are removed, once the removal is completed
+            try {
+                if (!isJsrLockable()) {
+                    ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
+                    if (lock != null) {
+                        lockManager.releaseLock(lock.getToken(), member);
+                    }
+                }
+            } catch (DavException e) {
+                // since check for 'locked' exception has been performed before
+                // ignore any error here
+            }
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -592,8 +599,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
         try {
-            String destItemPath = destination.getLocator().getJcrPath();
-            session.getRepositorySession().getWorkspace().move(locator.getJcrPath(), destItemPath);
+            String destItemPath = destination.getLocator().getRepositoryPath();
+            getJcrSession().getWorkspace().move(locator.getRepositoryPath(), destItemPath);
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -617,8 +624,8 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_FORBIDDEN, "Unable to perform shallow copy.");
         }
         try {
-            String destItemPath = destination.getLocator().getJcrPath();
-            session.getRepositorySession().getWorkspace().copy(locator.getJcrPath(), destItemPath);
+            String destItemPath = destination.getLocator().getRepositoryPath();
+            getJcrSession().getWorkspace().copy(locator.getRepositoryPath(), destItemPath);
         } catch (PathNotFoundException e) {
             // according to rfc 2518: missing parent
             throw new DavException(DavServletResponse.SC_CONFLICT, e.getMessage());
@@ -770,6 +777,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
+     * @see org.apache.jackrabbit.webdav.DavResource#getSession()
+     */
+    public DavSession getSession() {
+        return session;
+    }
+
+    /**
      * Returns the node that is wrapped by this resource.
      *
      * @return
@@ -887,7 +901,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         String pName = ISO9075.decode(propName.getName());
         String uri = propName.getNamespace().getURI();
         if (uri != null && !"".equals(uri)) {
-            Session s = session.getRepositorySession();
+            Session s = getJcrSession();
             String prefix;
             try {
                 // lookup 'prefix' in the session-ns-mappings / namespace-registry
@@ -934,9 +948,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         // removal of non existing property succeeds
     }
 
+    private Session getJcrSession() {
+        return session.getRepositorySession();
+    }
+
     private boolean isFilteredResource(DavResource resource) {
         // TODO: filtered nodetypes should be checked as well in order to prevent problems.
-        return filter != null && filter.isFilteredItem(resource.getDisplayName(), session.getRepositorySession());
+        return filter != null && filter.isFilteredItem(resource.getDisplayName(), getJcrSession());
     }
 
     private boolean isFilteredItem(Item item) {

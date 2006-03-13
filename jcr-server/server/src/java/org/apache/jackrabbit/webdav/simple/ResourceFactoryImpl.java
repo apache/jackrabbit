@@ -92,12 +92,8 @@ public class ResourceFactoryImpl implements DavResourceFactory {
      * @see DavResourceFactory#createResource(DavResourceLocator, DavSession)
      */
     public DavResource createResource(DavResourceLocator locator, DavSession session) throws DavException {
-        try {
-            DavResourceImpl res = new DavResourceImpl(locator, this, session, resourceConfig);
-            res.addLockManager(lockMgr);
-            return res;
-        } catch (RepositoryException e) {
-            throw new JcrDavException(e);
-        }
+        DavResourceImpl res = new DavResourceImpl(locator, this, session, resourceConfig);
+        res.addLockManager(lockMgr);
+        return res;
     }
 }

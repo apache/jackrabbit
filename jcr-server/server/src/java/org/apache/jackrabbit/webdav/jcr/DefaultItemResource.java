@@ -15,7 +15,6 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
@@ -23,7 +22,6 @@ import org.apache.jackrabbit.webdav.DavResourceIterator;
 import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.jcr.property.LengthsProperty;
@@ -64,7 +62,7 @@ public class DefaultItemResource extends AbstractItemResource {
      * @param locator
      * @param session
      */
-    public DefaultItemResource(DavResourceLocator locator, DavSession session,
+    public DefaultItemResource(DavResourceLocator locator, JcrDavSession session,
                                DavResourceFactory factory, Item item) {
         super(locator, session, factory, item);
     }
@@ -137,18 +135,15 @@ public class DefaultItemResource extends AbstractItemResource {
         }
         try {
             Property prop = (Property) item;
-            int type = prop.getType();
+            int defaultType = prop.getType();
+            ValuesProperty vp = new ValuesProperty(property, defaultType);
             if (property.getName().equals(JCR_VALUE)) {
-                String strVal = (property.getValue() != null) ? String.valueOf(property.getValue()) : "";
-                Value val = ValueHelper.deserialize(strVal, type, false);
-                prop.setValue(val);
+                prop.setValue(vp.getJcrValue(vp.getValueType()));
             } else if (property.getName().equals(JCR_VALUES)) {
-                prop.setValue(new ValuesProperty(property).getValues(prop.getType()));
+                prop.setValue(vp.getJcrValues());
             } else {
                 throw new DavException(DavServletResponse.SC_CONFLICT);
             }
-        } catch (IllegalArgumentException e) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -279,7 +274,7 @@ public class DefaultItemResource extends AbstractItemResource {
                     properties.add(new ValuesProperty(prop.getValues()));
                     properties.add(new LengthsProperty(prop.getLengths()));
                 } else {
-                    properties.add(new DefaultDavProperty(JCR_VALUE, ValueHelper.serialize(prop.getValue(), false)));
+                    properties.add(new ValuesProperty(prop.getValue()));
                     properties.add(new DefaultDavProperty(JCR_LENGTH, String.valueOf(prop.getLength()), true));
                 }
             } catch (RepositoryException e) {

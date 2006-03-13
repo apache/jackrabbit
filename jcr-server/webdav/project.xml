@@ -32,12 +32,6 @@
             <artifactId>jackrabbit-commons</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
-        <dependency>
-            <groupId>jsr170</groupId>
-            <artifactId>jcr</artifactId>
-            <version>${jackrabbit.build.version.jcr}</version>
-        </dependency>
-        
         <!-- non-jackrabbit dependencies -->
         <dependency>
             <groupId>log4j</groupId>

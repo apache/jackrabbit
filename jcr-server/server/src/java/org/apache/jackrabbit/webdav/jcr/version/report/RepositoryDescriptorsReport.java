@@ -16,13 +16,11 @@
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavSession;
-import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.w3c.dom.Element;
@@ -49,7 +47,7 @@ import javax.jcr.Repository;
  * @see javax.jcr.Repository#getDescriptorKeys()
  * @see javax.jcr.Repository#getDescriptor(String)
  */
-public class RepositoryDescriptorsReport implements Report, ItemResourceConstants {
+public class RepositoryDescriptorsReport extends AbstractJcrReport implements ItemResourceConstants {
 
     private static Logger log = Logger.getLogger(RepositoryDescriptorsReport.class);
 
@@ -57,8 +55,6 @@ public class RepositoryDescriptorsReport implements Report, ItemResourceConstant
      * The registered type of this report.
      */
     public static final ReportType REPOSITORY_DESCRIPTORS_REPORT = ReportType.register("repositorydescriptors", ItemResourceConstants.NAMESPACE, RepositoryDescriptorsReport.class);
-
-    private Repository repository;
 
     /**
      * Returns {@link #REPOSITORY_DESCRIPTORS_REPORT} type.
@@ -80,20 +76,11 @@ public class RepositoryDescriptorsReport implements Report, ItemResourceConstant
     }
 
     /**
-     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, org.apache.jackrabbit.webdav.version.report.ReportInfo) 
+     * @see Report#init(DavResource, ReportInfo) 
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
-        if (resource == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Resource must not be null.");
-        }
-        if (!getType().isRequestedReportType(info)) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "repositorydescriptors element expected.");
-        }
-        DavSession session = resource.getSession();
-        if (session == null || session.getRepositorySession() == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource must provide a non-null session object in order to create the repositorydescriptors report.");
-        }
-        repository = session.getRepositorySession().getRepository();
+    public void init(DavResource resource, ReportInfo info) throws DavException {
+        // delegate validation to abstract super classe
+        super.init(resource, info);
     }
 
     /**
@@ -105,6 +92,7 @@ public class RepositoryDescriptorsReport implements Report, ItemResourceConstant
      * @param document
      */
     public Element toXml(Document document) {
+        Repository repository = getRepositorySession().getRepository();
         Element report = DomUtil.createElement(document, "repositorydescriptors-report", NAMESPACE);
         String[] keys = repository.getDescriptorKeys();
         for (int i = 0; i < keys.length; i++) {
@@ -114,5 +102,4 @@ public class RepositoryDescriptorsReport implements Report, ItemResourceConstant
         }
         return report;
     }
-
 }

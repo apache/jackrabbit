@@ -21,7 +21,7 @@ import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.DavException;
@@ -38,6 +38,7 @@ import javax.jcr.query.Row;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Value;
+import javax.jcr.Session;
 
 /**
  * <code>SearchResourceImpl</code>...
@@ -46,10 +47,10 @@ public class SearchResourceImpl implements SearchResource {
 
     private static Logger log = Logger.getLogger(SearchResourceImpl.class);
 
-    private final DavSession session;
+    private final JcrDavSession session;
     private final DavResourceLocator locator;
 
-    public SearchResourceImpl(DavResourceLocator locator, DavSession session) {
+    public SearchResourceImpl(DavResourceLocator locator, JcrDavSession session) {
         this.session = session;
         this.locator = locator;
     }
@@ -61,7 +62,7 @@ public class SearchResourceImpl implements SearchResource {
     public QueryGrammerSet getQueryGrammerSet()  {
         QueryGrammerSet qgs = new QueryGrammerSet();
         try {
-            QueryManager qMgr = session.getRepositorySession().getWorkspace().getQueryManager();
+            QueryManager qMgr = getRepositorySession().getWorkspace().getQueryManager();
             String[] langs = qMgr.getSupportedQueryLanguages();
             for (int i = 0; i < langs.length; i++) {
                 // todo: define proper namespace
@@ -111,11 +112,11 @@ public class SearchResourceImpl implements SearchResource {
     private Query getQuery(SearchInfo sInfo)
             throws InvalidQueryException, RepositoryException, DavException {
 
-        Node rootNode = session.getRepositorySession().getRootNode();
-        QueryManager qMgr = session.getRepositorySession().getWorkspace().getQueryManager();
+        Node rootNode = getRepositorySession().getRootNode();
+        QueryManager qMgr = getRepositorySession().getWorkspace().getQueryManager();
 
         // test if query is defined by requested repository node
-        String itemPath = locator.getJcrPath();
+        String itemPath = locator.getRepositoryPath();
         if (!rootNode.getPath().equals(itemPath)) {
             String qNodeRelPath = itemPath.substring(1);
             if (rootNode.hasNode(qNodeRelPath)) {
@@ -135,7 +136,7 @@ public class SearchResourceImpl implements SearchResource {
 
         /* test if resource path does not exist -> thus indicating that
         the query must be made persistent by calling Query.save(String) */
-        if (!session.getRepositorySession().itemExists(itemPath)) {
+        if (!getRepositorySession().itemExists(itemPath)) {
             try {
                 q.storeAsNode(itemPath);
             } catch (RepositoryException e) {
@@ -177,5 +178,12 @@ public class SearchResourceImpl implements SearchResource {
             ms.addResponse(resp);
         }
         return ms;
+    }
+
+    /**
+     * @return
+     */
+    private Session getRepositorySession() {
+        return session.getRepositorySession();
     }
 }

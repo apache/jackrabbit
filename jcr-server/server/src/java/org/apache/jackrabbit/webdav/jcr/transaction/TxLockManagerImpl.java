@@ -21,9 +21,9 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.lock.LockManager;
@@ -40,6 +40,7 @@ import org.apache.log4j.Logger;
 import javax.jcr.RepositoryException;
 import javax.jcr.Item;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Session;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -50,15 +51,15 @@ import java.util.Iterator;
  * <code>TxLockManagerImpl</code> manages locks with locktype
  * '{@link TransactionConstants#TRANSACTION dcr:transaction}'.
  * <p/>
- * todo: removing all expired locks
- * todo: 'local' and 'global' are not accurate terms in the given context > replace
- * todo: the usage of the 'global' transaction is not according to the JTA specification,
- * which explicitely requires any transaction present on a servlet to be completed before
- * the service method returns. Starting/completing transactions on the session object,
- * which is possible with the jackrabbit implementation is a hack.
- * todo: review of this transaction part is therefore required. Is there a use-case
- * for those 'global' transactions at all...
  */
+ //todo: removing all expired locks
+ //todo: 'local' and 'global' are not accurate terms in the given context > replace
+ /*todo: the usage of the 'global' transaction is not according to the JTA specification,
+   which explicitely requires any transaction present on a servlet to be completed before
+   the service method returns. Starting/completing transactions on the session object,
+   which is possible with the jackrabbit implementation is a hack.*/
+ /*todo: review of this transaction part is therefore required. Is there a use-case
+   for those 'global' transactions at all...*/
 public class TxLockManagerImpl implements TxLockManager {
 
     private static Logger log = Logger.getLogger(TxLockManagerImpl.class);
@@ -233,6 +234,21 @@ public class TxLockManagerImpl implements TxLockManager {
     }
 
     /**
+     * Returns true if the given lock token belongs to a lock that applies to
+     * the given resource, false otherwise. The token may either be retrieved
+     * from the {@link DavConstants#HEADER_LOCK_TOKEN Lock-Token header} or
+     * from the {@link TransactionConstants#HEADER_TRANSACTIONID TransactionId header}.
+     *
+     * @param token
+     * @param resource
+     * @return
+     * @see LockManager#hasLock(String token, DavResource resource)
+     */
+    public boolean hasLock(String token, DavResource resource) {
+        return getLock(token, null, resource) != null;
+    }
+
+    /**
      * Return the lock applied to the given resource or <code>null</code>
      *
      * @param type
@@ -245,7 +261,7 @@ public class TxLockManagerImpl implements TxLockManager {
     public ActiveLock getLock(Type type, Scope scope, TransactionResource resource) {
         ActiveLock lock = null;
         if (TransactionConstants.TRANSACTION.equals(type)) {
-            String[] sessionTokens = resource.getSession().getRepositorySession().getLockTokens();
+            String[] sessionTokens = resource.getSession().getLockTokens();
             int i = 0;
             while (lock == null && i < sessionTokens.length) {
                 String lockToken = sessionTokens[i];
@@ -295,21 +311,6 @@ public class TxLockManagerImpl implements TxLockManager {
             }
         }
         return lock;
-    }
-
-    /**
-     * Returns true if the given lock token belongs to a lock that applies to
-     * the given resource, false otherwise. The token may either be retrieved
-     * from the {@link DavConstants#HEADER_LOCK_TOKEN Lock-Token header} or
-     * from the {@link TransactionConstants#HEADER_TRANSACTIONID TransactionId header}.
-     *
-     * @param token
-     * @param resource
-     * @return
-     * @see LockManager#hasLock(String token, DavResource resource)
-     */
-    public boolean hasLock(String token, DavResource resource) {
-        return getLock(token, null, resource) != null;
     }
 
     /**
@@ -374,7 +375,7 @@ public class TxLockManagerImpl implements TxLockManager {
     private static void addReferences(Transaction tx, TransactionMap responsibleMap,
                                       TransactionResource resource) throws DavException {
         log.info("Adding transactionId '" + tx.getId() + "' as session lock token.");
-        resource.getSession().getRepositorySession().addLockToken(tx.getId());
+        getRepositorySession(resource).addLockToken(tx.getId());
 
         responsibleMap.put(tx.getId(), tx);
         resource.getSession().addReference(tx.getId());
@@ -390,10 +391,18 @@ public class TxLockManagerImpl implements TxLockManager {
     private static void removeReferences(Transaction tx, TransactionMap responsibleMap,
                                          TransactionResource resource) {
         log.info("Removing transactionId '" + tx.getId() + "' from session lock tokens.");
-        resource.getSession().getRepositorySession().removeLockToken(tx.getId());
+        resource.getSession().removeLockToken(tx.getId());
 
         responsibleMap.remove(tx.getId());
         resource.getSession().removeReference(tx.getId());
+    }
+
+    /**
+     * @param resource
+     * @return JCR session
+     */
+    private static Session getRepositorySession(TransactionResource resource) throws DavException {
+        return JcrDavSession.getRepositorySession(resource.getSession());
     }
     //------------------------------------------< inner classes, interfaces >---
     /**
@@ -522,7 +531,7 @@ public class TxLockManagerImpl implements TxLockManager {
         public void start(TransactionResource resource) throws DavException {
             try {
                 // make sure, the given resource represents an existing repository item
-                if (!resource.getSession().getRepositorySession().itemExists(getResourcePath())) {
+                if (!getRepositorySession(resource).itemExists(getResourcePath())) {
                     throw new DavException(DavServletResponse.SC_CONFLICT, "Unable to start local transaction: no repository item present at " + getResourcePath());
                 }
             } catch (RepositoryException e) {
@@ -547,10 +556,9 @@ public class TxLockManagerImpl implements TxLockManager {
             }
         }
 
-        private Item getItem(TransactionResource resource) throws PathNotFoundException, RepositoryException {
-            DavSession session = resource.getSession();
-            String itemPath = resource.getLocator().getJcrPath();
-            return session.getRepositorySession().getItem(itemPath);
+        private Item getItem(TransactionResource resource) throws PathNotFoundException, RepositoryException, DavException {
+            String itemPath = resource.getLocator().getRepositoryPath();
+            return getRepositorySession(resource).getItem(itemPath);
         }
 
         public Transaction put(String key, Transaction value) throws DavException {
@@ -605,10 +613,8 @@ public class TxLockManagerImpl implements TxLockManager {
         }
 
         private XAResource getXAResource(TransactionResource resource) throws DavException {
-/*
-
-            currently commented, since server should be jackrabbit independant
-
+            /*
+            // commented, since server should be jackrabbit independant
 	    Session session = resource.getSession().getRepositorySession();
 	    if (session instanceof XASession) {
 		return ((XASession)session).getXAResource();

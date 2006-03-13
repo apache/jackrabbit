@@ -75,7 +75,12 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
     private static Logger log = Logger.getLogger(WebdavRequestImpl.class);
     private static final DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
-
+    static {
+        BUILDER_FACTORY.setNamespaceAware(true);
+        BUILDER_FACTORY.setIgnoringComments(true);
+        BUILDER_FACTORY.setIgnoringElementContentWhitespace(true);
+        BUILDER_FACTORY.setCoalescing(true);
+    }
     private final HttpServletRequest httpRequest;
     private final DavLocatorFactory factory;
     private final IfHeader ifHeader;
@@ -114,7 +119,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     public void setDavSession(DavSession session) {
         this.session = session;
         // set lock-tokens from header to the current session
-        if (session != null && session.getRepositorySession() != null) {
+        if (session != null) {
             String lt = getLockToken();
             if (lt != null) {
                 session.addLockToken(lt);
@@ -247,21 +252,20 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         if (httpRequest.getContentLength() == 0) {
             return requestDocument;
         }
-            // try to parse the request body
-            try {
-                InputStream in = httpRequest.getInputStream();
-                if (in != null) {
-                BUILDER_FACTORY.setNamespaceAware(true);
+        // try to parse the request body
+        try {
+            InputStream in = httpRequest.getInputStream();
+            if (in != null) {
                 DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
                 requestDocument = docBuilder.parse(in);
-                }
-            } catch (IOException e) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
-                }
+            }
+        } catch (IOException e) {
+            if (log.isDebugEnabled()) {
+                log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
+            }
         } catch (ParserConfigurationException e) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
             }
         } catch (SAXException e) {
             log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
@@ -388,7 +392,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         }
 
         ElementIterator it = DomUtil.getChildren(root, XML_SET, NAMESPACE);
-                while (it.hasNext()) {
+        while (it.hasNext()) {
             Element propEl = DomUtil.getChildElement(it.nextElement(), XML_PROP, NAMESPACE);
             if (propEl != null) {
                 ElementIterator properties = DomUtil.getChildren(propEl);
@@ -400,7 +404,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
         // get <remove> properties
         it = DomUtil.getChildren(root, XML_REMOVE, NAMESPACE);
-                while (it.hasNext()) {
+        while (it.hasNext()) {
             Element propEl = DomUtil.getChildElement(it.nextElement(), XML_PROP, NAMESPACE);
             if (propEl != null) {
                 ElementIterator names = DomUtil.getChildren(propEl);
@@ -514,7 +518,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * @param eTag
      * @return true, if its a strong etag
      */
-    private boolean isStrongETag(String eTag) {
+    private static boolean isStrongETag(String eTag) {
         return eTag != null && eTag.length() > 0 && !eTag.startsWith("W\\");
     }
 
@@ -532,7 +536,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     public TransactionInfo getTransactionInfo() throws DavException {
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
-                return new TransactionInfo(requestDocument.getDocumentElement());
+            return new TransactionInfo(requestDocument.getDocumentElement());
         }
         return null;
     }
@@ -597,7 +601,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
             Element root = requestDocument.getDocumentElement();
-                op = OrderPatch.createFromXml(root);
+            op = OrderPatch.createFromXml(root);
         } else {
             log.error("Error while building xml document from ORDERPATH request body.");
         }
@@ -625,7 +629,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         if (requestDocument != null) {
             Element root = requestDocument.getDocumentElement();
             int depth = getDepth(DEPTH_0);
-                lInfo = new LabelInfo(root, depth);
+            lInfo = new LabelInfo(root, depth);
         }
         return lInfo;
     }
@@ -637,7 +641,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         MergeInfo mInfo = null;
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
-                mInfo = new MergeInfo(requestDocument.getDocumentElement());
+            mInfo = new MergeInfo(requestDocument.getDocumentElement());
         }
         return mInfo;
     }
@@ -649,7 +653,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         UpdateInfo uInfo = null;
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
-                uInfo = new UpdateInfo(requestDocument.getDocumentElement());
+            uInfo = new UpdateInfo(requestDocument.getDocumentElement());
         }
         return uInfo;
     }

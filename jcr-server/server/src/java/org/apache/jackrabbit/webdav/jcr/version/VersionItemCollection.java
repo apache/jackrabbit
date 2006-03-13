@@ -34,6 +34,7 @@ import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
@@ -62,7 +63,9 @@ public class VersionItemCollection extends DefaultItemCollection
      * @param session
      * @param factory
      */
-    public VersionItemCollection(DavResourceLocator locator, DavSession session, DavResourceFactory factory, Item item) {
+    public VersionItemCollection(DavResourceLocator locator,
+                                 JcrDavSession session,
+                                 DavResourceFactory factory, Item item) {
         super(locator, session, factory, item);
         if (item == null || !(item instanceof Version)) {
             throw new IllegalArgumentException("Version item expected.");
