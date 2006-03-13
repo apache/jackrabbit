@@ -38,11 +38,18 @@ public interface SearchConstants {
     public static final Namespace NAMESPACE = DavConstants.NAMESPACE;
 
     /**
+     * Predefined basic query grammer.
+     */
+    public static final String BASICSEARCH = NAMESPACE.getPrefix()+"basicsearch";
+
+    //---< Headers >------------------------------------------------------------
+    /**
      * The DASL response header specifing the query languages supported by
      * the requested resource.
      */
     public static final String HEADER_DASL = "DASL";
 
+    //---< XML Element, Attribute Names >---------------------------------------
     /**
      * Xml element name for a single query grammar element inside
      * the {@link #QUERY_GRAMMER_SET supported-query-grammer-set property}.
@@ -69,11 +76,7 @@ public interface SearchConstants {
      */
     public static final String XML_QUERY_SCHEMA_DISCOVERY = "query-schema-discovery";
 
-    /**
-     * Predefined basic query grammer.
-     */
-    public static final String BASICSEARCH = NAMESPACE.getPrefix()+"basicsearch";
-
+    //---< Property Names >-----------------------------------------------------
     /**
      * Property indicating the set of query languages the given resource is
      * able deal with. The property has the following definition:<br>
