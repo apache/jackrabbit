@@ -23,9 +23,9 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
  * Xml.
  *
  * @see javax.jcr.nodetype.NodeType
- * @todo intercaps only for consistency with jackrabbit... webdav rfcs never use intercaps.
  */
 public interface NodeTypeConstants {
+    //todo: intercaps only for consistency with jackrabbit... webdav rfcs never use intercaps.
 
     public static final Namespace NAMESPACE = ItemResourceConstants.NAMESPACE;
 
