@@ -46,6 +46,7 @@ public interface DeltaVConstants {
      */
     public static final Namespace NAMESPACE = DavConstants.NAMESPACE;
 
+    //---< Headers >------------------------------------------------------------
     /**
      * For certain METHODS, if the request-URL identifies a version-controlled
      * resource, a label can be specified in a LabelInfo request header to cause the
@@ -71,6 +72,7 @@ public interface DeltaVConstants {
      */
     public static final String HEADER_LOCATION = "Location";
 
+    //---< Property Names >-----------------------------------------------------
     /**
      * The "DAV:comment" property is used to track a brief comment about a resource that is
      * suitable for presentation to a user. The DAV:comment of a version can be
@@ -136,7 +138,7 @@ public interface DeltaVConstants {
     public static final DavPropertyName WORKSPACE = DavPropertyName.create("workspace", NAMESPACE);
 
 
-    //--------------------------------------------------------------------------
+    //---< XML Element, Attribute Names >---------------------------------------
     /**
      * Xml elements
      */
