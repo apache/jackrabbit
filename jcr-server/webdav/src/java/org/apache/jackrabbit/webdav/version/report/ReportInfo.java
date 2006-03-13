@@ -107,7 +107,7 @@ public class ReportInfo implements XmlSerializable {
             reportElement.removeChild(propElement);
         } else {
             propertyNames = new DavPropertyNameSet();
-    }
+        }
 
         ElementIterator it = DomUtil.getChildren(reportElement);
         while (it.hasNext()) {
