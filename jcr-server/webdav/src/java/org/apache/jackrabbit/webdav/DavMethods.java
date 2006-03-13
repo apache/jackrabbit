@@ -314,7 +314,7 @@ public class DavMethods {
                                     DAV_BASELINE_CONTROL, DAV_MKACTIVITY };
     }
 
-   /**
+    /**
      * Returns <code>true</code> if the request is to create a resource.
      * True for <code>PUT</code>, <code>POST</code>, <code>MKCOL</code>
      * and <code>MKWORKSPACE</code> requests.
