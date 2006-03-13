@@ -120,7 +120,7 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
     /**
      * Since jcr locks do not reveal the time left until they expire, {@link #INFINITE_TIMEOUT}
      * is returned. A missing timeout causes problems with Microsoft clients.
-     * 
+     *
      * @return Always returns {@link #INFINITE_TIMEOUT}
      * @see ActiveLock#getTimeout()
      */
