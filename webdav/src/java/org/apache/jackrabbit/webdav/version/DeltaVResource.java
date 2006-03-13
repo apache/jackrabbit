@@ -17,7 +17,6 @@ package org.apache.jackrabbit.webdav.version;
 
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.version.report.Report;
@@ -52,10 +51,17 @@ public interface DeltaVResource extends DavResource {
     /**
      * The generic deltaV complient resource defines one additional method REPORT.
      *
-     * @see DeltaVResource#METHODS
      * @see org.apache.jackrabbit.webdav.DavResource#METHODS
      */
-    public String METHODS = "REPORT, MKWORKSPACE";
+    public String METHODS = "REPORT";
+
+    /**
+     * If the server support the Workspace featured defined by RFC 3253 certain
+     * <code>DeltaVResource</code>s may also support the MKWORKSPACE method.
+     *
+     * @see #addWorkspace(DavResource)
+     */
+    public String METHODS_INCL_MKWORKSPACE = "REPORT, MKWORKSPACE";
 
     /**
      * Retrieves the information requested in the OPTIONS request body and
@@ -84,8 +90,8 @@ public interface DeltaVResource extends DavResource {
      * @param workspace resource representing the new workspace to be created as
      * member of this resource.
      * @throws DavException if creating the new workspace fails.
-     * @todo MKWORKSPACE may include an xml request body...
      */
+    // TODO: MKWORKSPACE may include an xml request body...
     public void addWorkspace(DavResource workspace) throws DavException;
 
     /**
@@ -103,11 +109,4 @@ public interface DeltaVResource extends DavResource {
      * @see org.apache.jackrabbit.webdav.property.HrefProperty
      */
     public DavResource[] getReferenceResources(DavPropertyName hrefPropertyName) throws DavException;
-
-    /**
-     * Retrieve the <code>DavSession</code> associated with this resource.
-     *
-     * @return session object associated with this resource.
-     */
-    public DavSession getSession();
 }

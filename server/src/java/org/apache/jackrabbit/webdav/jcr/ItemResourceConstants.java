@@ -23,6 +23,8 @@ import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
 
+import javax.jcr.PropertyType;
+
 /**
  * <code>ItemResourceConstants</code> provides constants for any resources
  * representing repository items.
@@ -57,6 +59,11 @@ public interface ItemResourceConstants {
     // xml element names
     public static final String XML_PRIMARYNODETYPE = "primarynodetype";
     public static final String XML_VALUE = "value";
+    /**
+     * 'type' attribute for the {@link #XML_VALUE value} element, reflecting the
+     * {@link PropertyType type} of the value being transported.
+     */
+    public static final String ATTR_VALUE_TYPE = "type";
     public static final String XML_LENGTH = "length";
     public static final String XML_EXCLUSIVE_SESSION_SCOPED = "exclusive-session-scoped";
 

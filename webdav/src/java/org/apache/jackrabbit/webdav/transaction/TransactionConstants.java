@@ -19,7 +19,6 @@ import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.lock.Scope;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 
 /**
  * <code>TransactionConstants</code> interface provide constants for request
@@ -35,11 +34,13 @@ public interface TransactionConstants {
      */
     public static final Namespace NAMESPACE = Namespace.getNamespace("dcr", "http://www.day.com/jcr/webdav/1.0");
 
+    //---< Headers >------------------------------------------------------------
     /**
      * TransactionId Header
      */
     public static final String HEADER_TRANSACTIONID = "TransactionId";
 
+    //---< XML Element, Attribute Names >---------------------------------------
     /**
      * transaction XML element<br>
      * Used as element inside the {@link DavConstants#XML_LOCKTYPE locktype}
@@ -51,7 +52,6 @@ public interface TransactionConstants {
     /**
      * global XML element<br>
      * Used as element inside of the {@link DavConstants#XML_LOCKSCOPE lockscope} element.
-     * It indicates the transaction to be global (e.g. a JCR transaction).
      *
      * @see DavConstants#XML_LOCKSCOPE
      */
@@ -98,24 +98,7 @@ public interface TransactionConstants {
      */
     public static final String XML_ROLLBACK = "rollback";
 
-    /**
-     * String defining the 'isnew' property, that identifies a {@link TransactionResource}
-     * to be new within the given local transaction, meaning that it exists only in
-     * transient storage. This property is not defined by any of the Webdav RTFs.
-     * @see javax.jcr.Item#isNew()
-     * @see #XML_LOCAL
-     */
-    public static final DavPropertyName ISNEW = DavPropertyName.create("isnew", NAMESPACE);
-
-    /**
-     * String defining the 'ismodified' property, that is present on any {@link TransactionResource}
-     * that has been modified whithout the corresponding local transaction
-     * being completed yet. This property is not defined by any of the Webdav RTFs.
-     * @see javax.jcr.Item#isModified()
-     * @see #XML_LOCAL
-     */
-    public static final DavPropertyName ISMODIFIED = DavPropertyName.create("ismodified", NAMESPACE);
-
+    //---< Lock Type, Lock Scope >----------------------------------------------
     /**
      * "transaction" lock type constant.
      * @see #XML_TRANSACTION

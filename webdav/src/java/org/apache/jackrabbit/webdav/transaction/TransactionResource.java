@@ -17,7 +17,6 @@ package org.apache.jackrabbit.webdav.transaction;
 
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavSession;
 
 /**
  * <code>TransactionResource</code> extends the {@link DavResource} interface by
@@ -35,13 +34,6 @@ public interface TransactionResource extends DavResource {
      * @param transactionId
      */
     public void init(TxLockManager txMgr, String transactionId);
-
-    /**
-     * Retrieve the <code>DavSession</code> associated with this resource.
-     *
-     * @return session object associated with this resource.
-     */
-    public DavSession getSession();
 
     /**
      * The TransactionId or <code>null</code> according to the value of the

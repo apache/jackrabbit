@@ -100,14 +100,15 @@ public interface DavResourceLocator {
     public DavLocatorFactory getFactory();
 
     /**
-     * An implementation may choose to circumvent the incompatibility of the
-     * JCR path with the URI path by applying an appropriate escaping. This
-     * utility method allows to retrieve the jcr path that corresponds to
-     * the resource path as returned by {#link getResourcePath()}.
+     * An implementation may choose to circumvent the incompatibility of a
+     * repository path with the URI path by applying an appropriate conversion.
+     * This utility method allows to retrieve this transformed repository path.
+     * By default this method should return the same as {@link #getResourcePath()}
      *
-     * @return a jcr compatible form if the resource path.
+     * @return a repository compatible form if the resource path.
      * @see DavLocatorFactory#createResourceLocator(String, String, String, boolean)
-     * that allows to build a valid <code>DavResourceLocator</code> from a jcr path.
+     * that allows to build a valid <code>DavResourceLocator</code> from a given
+     * repository path.
      */
-    public String getJcrPath();
+    public String getRepositoryPath();
 }

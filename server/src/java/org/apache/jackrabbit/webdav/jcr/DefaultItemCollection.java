@@ -25,7 +25,6 @@ import org.apache.jackrabbit.webdav.DavResourceIterator;
 import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
@@ -92,7 +91,8 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param locator
      * @param session
      */
-    protected DefaultItemCollection(DavResourceLocator locator, DavSession session,
+    protected DefaultItemCollection(DavResourceLocator locator,
+                                    JcrDavSession session,
                                     DavResourceFactory factory, Item item) {
         super(locator, session, factory, item);
         if (exists() && !(item instanceof Node)) {
@@ -138,7 +138,7 @@ public class DefaultItemCollection extends AbstractItemResource
      */
     public InputStream getStream() {
         if (!initedProps)  {
-        initProperties();
+            initProperties();
         }
         if (content != null) {
             try {
@@ -329,8 +329,8 @@ public class DefaultItemCollection extends AbstractItemResource
         try {
             Node n = (Node) item;
             InputStream in = (inputContext != null) ? inputContext.getInputStream() : null;
-            String itemPath = getLocator().getJcrPath();
-            String memberName = getItemName(resource.getLocator().getJcrPath());
+            String itemPath = getLocator().getRepositoryPath();
+            String memberName = getItemName(resource.getLocator().getRepositoryPath());
             if (resource.isCollection()) {
                 if (in == null) {
                     // MKCOL without a request body, try if a default-primary-type is defined.
@@ -374,16 +374,16 @@ public class DefaultItemCollection extends AbstractItemResource
      */
     public DavResourceIterator getMembers() {
         ArrayList memberList = new ArrayList();
-	if (exists()) {
-	    try {
+        if (exists()) {
+            try {
                 Node n = (Node)item;
                 // add all node members
-		NodeIterator it = n.getNodes();
-		while (it.hasNext()) {
+                NodeIterator it = n.getNodes();
+                while (it.hasNext()) {
                     Node node = it.nextNode();
                     DavResourceLocator loc = getLocatorFromItem(node);
-		    memberList.add(createResourceFromLocator(loc));
-		}
+                    memberList.add(createResourceFromLocator(loc));
+                }
                 // add all property members
                 PropertyIterator propIt = n.getProperties();
                 while (propIt.hasNext()) {
@@ -391,15 +391,15 @@ public class DefaultItemCollection extends AbstractItemResource
                     DavResourceLocator loc = getLocatorFromItem(prop);
                     memberList.add(createResourceFromLocator(loc));
                 }
-	    } catch (RepositoryException e) {
-		// ignore
+            } catch (RepositoryException e) {
+                // ignore
                 log.error(e.getMessage());
-	    } catch (DavException e) {
+            } catch (DavException e) {
                 // should never occur.
                 log.error(e.getMessage());
             }
-	}
-	return new DavResourceIteratorImpl(memberList);
+        }
+        return new DavResourceIteratorImpl(memberList);
     }
 
     /**
@@ -414,7 +414,7 @@ public class DefaultItemCollection extends AbstractItemResource
     public void removeMember(DavResource member) throws DavException {
         Session session = getRepositorySession();
         try {
-            String itemPath = member.getLocator().getJcrPath();
+            String itemPath = member.getLocator().getRepositoryPath();
             if (!exists() || !session.itemExists(itemPath)) {
                 throw new DavException(DavServletResponse.SC_NOT_FOUND);
             }
@@ -740,7 +740,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * <li>{@link ExportViewReport export view report}</li>
      * <li>{@link LocateCorrespondingNodeReport locate corresponding node report}</li>
      * </ul>
-     * 
+     *
      * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
      */
     protected void initSupportedReports() {
@@ -763,7 +763,7 @@ public class DefaultItemCollection extends AbstractItemResource
                 content = File.createTempFile(prefix, null, null);
                 content.deleteOnExit();
                 FileOutputStream out = new FileOutputStream(content);
-                getSession().getRepositorySession().exportSystemView(item.getPath(), out, false, true);
+                getRepositorySession().exportSystemView(item.getPath(), out, false, true);
                 out.close();
                 properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, new Long(content.length())));
                 properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, "text/xml"));
@@ -777,25 +777,25 @@ public class DefaultItemCollection extends AbstractItemResource
             Node n = (Node)item;
             // overwrite the default modificationtime if possible
             try {
-		if (n.hasProperty(JcrConstants.JCR_LASTMODIFIED)) {
+                if (n.hasProperty(JcrConstants.JCR_LASTMODIFIED)) {
                     setModificationTime(n.getProperty(JcrConstants.JCR_LASTMODIFIED).getLong());
-		}
-	    } catch (RepositoryException e) {
-		log.warn("Error while accessing jcr:lastModified property");
-	    }
+                }
+            } catch (RepositoryException e) {
+                log.warn("Error while accessing jcr:lastModified property");
+            }
             // overwrite the default creation date if possible
             try {
                 if (n.hasProperty(JcrConstants.JCR_CREATED)) {
                     long creationTime = n.getProperty(JcrConstants.JCR_CREATED).getValue().getLong();
                     properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE,
-                            DavConstants.creationDateFormat.format(new Date(creationTime))));
+                        DavConstants.creationDateFormat.format(new Date(creationTime))));
                 }
             } catch (RepositoryException e) {
                 log.warn("Error while accessing jcr:created property");
             }
 
             // add node-specific resource properties
-	    try {
+            try {
                 properties.add(new NodeTypeProperty(JCR_PRIMARYNODETYPE, n.getPrimaryNodeType(), false));
                 properties.add(new NodeTypeProperty(JCR_MIXINNODETYPES, n.getMixinNodeTypes(), false));
                 properties.add(new DefaultDavProperty(JCR_INDEX, new Integer(n.getIndex()), true));

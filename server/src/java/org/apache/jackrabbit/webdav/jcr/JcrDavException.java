@@ -78,19 +78,40 @@ public class JcrDavException extends DavException {
 
     private Class exceptionClass;
 
-    public JcrDavException(Exception e, int errorCode) {
-        super(errorCode, e.getMessage());
-        exceptionClass = e.getClass();
+    /**
+     * Create a new <code>JcrDavException</code>.
+     *
+     * @param cause The original cause of this <code>DavException</code>. Note, that
+     * in contrast to {@link Throwable#Throwable(Throwable)}, {@link Throwable#Throwable(String, Throwable)} and
+     * {@link Throwable#initCause(Throwable)} the cause must not be <code>null</code>.
+     * @param errorCode Status code for the response.
+     * @throws NullPointerException if the given exception is <code>null</code>.
+     * @see DavException#DavException(int, String)
+     * @see DavException#DavException(int)
+     */
+    public JcrDavException(Throwable cause, int errorCode) {
+        super(errorCode, cause);
+        exceptionClass = cause.getClass();
         if (log.isDebugEnabled()) {
-            log.debug("Handling exception with error code " + errorCode, e);
+            log.debug("Handling exception with error code " + errorCode, cause);
         }
     }
 
-    public JcrDavException(RepositoryException e) {
-        this(e, ((Integer)codeMap.get(e.getClass())).intValue());
+    /**
+     * Same as {@link JcrDavException#JcrDavException(Throwable, int)} where the
+     * error code is retrieved from an internal mapping.
+     *
+     * @param cause Cause of this DavException
+     * @throws NullPointerException if the given exception is <code>null</code>.
+     * @see JcrDavException#JcrDavException(Throwable, int)
+     */
+    public JcrDavException(RepositoryException cause) {
+        this(cause, ((Integer)codeMap.get(cause.getClass())).intValue());
     }
 
     /**
+     * Always returns true.
+     *
      * @return true
      */
     public boolean hasErrorCondition() {
@@ -113,5 +134,4 @@ public class JcrDavException extends DavException {
         error.appendChild(excep);
         return error;
     }
-
 }

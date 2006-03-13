@@ -22,7 +22,6 @@ import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -76,7 +75,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @param session
      */
     public VersionControlledItemCollection(DavResourceLocator locator,
-                                           DavSession session, DavResourceFactory factory,
+                                           JcrDavSession session,
+                                           DavResourceFactory factory,
                                            Item item) {
         super(locator, session, factory, item);
         if (exists() && !(item instanceof Node)) {
@@ -338,7 +338,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                 String[] hrefs = updateInfo.getVersionHref();
                 Version[] versions = new Version[hrefs.length];
                 for (int  i = 0; i < hrefs.length; i++) {
-                    String itemPath = getLocatorFromHref(hrefs[i]).getJcrPath();
+                    String itemPath = getLocatorFromHref(hrefs[i]).getRepositoryPath();
                     versions[i] = vh.getVersion(getItemName(itemPath));
                 }
                 if (versions.length == 1) {

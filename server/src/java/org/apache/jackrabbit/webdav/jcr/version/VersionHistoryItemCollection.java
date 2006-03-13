@@ -22,6 +22,7 @@ import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.DefaultItemCollection;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
 import org.apache.jackrabbit.webdav.version.VersionResource;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
@@ -30,6 +31,7 @@ import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Item;
@@ -55,7 +57,8 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
      * @param factory
      */
     public VersionHistoryItemCollection(DavResourceLocator resourcePath,
-                                        DavSession session, DavResourceFactory factory,
+                                        JcrDavSession session,
+                                        DavResourceFactory factory,
                                         Item item) {
         super(resourcePath, session, factory, item);
         if (item == null || !(item instanceof VersionHistory)) {
@@ -85,7 +88,7 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
         if (exists()) {
             VersionHistory versionHistory = (VersionHistory) item;
             try {
-                versionHistory.removeVersion(getItemName(member.getLocator().getJcrPath()));
+                versionHistory.removeVersion(getItemName(member.getLocator().getRepositoryPath()));
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }

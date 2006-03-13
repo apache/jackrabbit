@@ -22,7 +22,7 @@ import org.apache.jackrabbit.webdav.DavResourceIterator;
 import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
@@ -53,7 +53,8 @@ public class RootCollection extends AbstractResource implements DavResource {
      * @param locator
      * @param session
      */
-    protected RootCollection(DavResourceLocator locator, DavSession session, DavResourceFactory factory) {
+    protected RootCollection(DavResourceLocator locator, JcrDavSession session,
+                             DavResourceFactory factory) {
         super(locator, session, factory);
         setModificationTime(new Date().getTime());
 
@@ -145,7 +146,7 @@ public class RootCollection extends AbstractResource implements DavResource {
     public DavResourceIterator getMembers() {
         List memberList = new ArrayList();
         try {
-            String[] wsNames = getSession().getRepositorySession().getWorkspace().getAccessibleWorkspaceNames();
+            String[] wsNames = getRepositorySession().getWorkspace().getAccessibleWorkspaceNames();
             for (int i = 0; i < wsNames.length; i++) {
                 DavResourceLocator childLoc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), "/"+wsNames[i], ItemResourceConstants.ROOT_ITEM_PATH);
                 memberList.add(createResourceFromLocator(childLoc));

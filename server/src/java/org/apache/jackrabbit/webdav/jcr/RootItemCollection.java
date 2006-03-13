@@ -19,7 +19,6 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -37,9 +36,8 @@ import java.util.Properties;
  * <code>RootItemCollection</code> represents the root node of the underlying
  * repository. However, the display name the name of the workspace is returned
  * the root node is located.
- *
- * @todo currently the jcr root node is the same for all workspace resources... this is wrong...
  */
+//todo currently the jcr root node is the same for all workspace resources... this is wrong...
 public class RootItemCollection extends VersionControlledItemCollection {
 
     private static Logger log = Logger.getLogger(RootItemCollection.class);
@@ -50,7 +48,7 @@ public class RootItemCollection extends VersionControlledItemCollection {
      * @param locator
      * @param session
      */
-    protected RootItemCollection(DavResourceLocator locator, DavSession session,
+    protected RootItemCollection(DavResourceLocator locator, JcrDavSession session,
                                  DavResourceFactory factory, Item item) {
         super(locator, session, factory, item);
     }
@@ -98,33 +96,33 @@ public class RootItemCollection extends VersionControlledItemCollection {
     public void setProperty(DavProperty property) throws DavException {
         if (JCR_NAMESPACES.equals(property.getName())) {
             NamespacesProperty nsp = new NamespacesProperty(property);
-                try {
+            try {
                 Properties changes = nsp.getNamespaces();
-                    NamespaceRegistry nsReg = getRepositorySession().getWorkspace().getNamespaceRegistry();
-                    String[] registeredPrefixes = nsReg.getPrefixes();
-                    for (int i = 0; i < registeredPrefixes.length; i++) {
-                        String prfx = registeredPrefixes[i];
+                NamespaceRegistry nsReg = getRepositorySession().getWorkspace().getNamespaceRegistry();
+                String[] registeredPrefixes = nsReg.getPrefixes();
+                for (int i = 0; i < registeredPrefixes.length; i++) {
+                    String prfx = registeredPrefixes[i];
                     if (!changes.containsKey(prfx)) {
-                            // prefix not present amongst the new values any more > unregister
-                            nsReg.unregisterNamespace(prfx);
+                        // prefix not present amongst the new values any more > unregister
+                        nsReg.unregisterNamespace(prfx);
                     } else if (changes.get(prfx).equals(nsReg.getURI(prfx))) {
-                            // present with same uri-value >> no action required
+                        // present with same uri-value >> no action required
                         changes.remove(prfx);
-                        }
                     }
-
-                    // try to register any prefix/uri pair that has a changed uri or
-                    // it has not been present before.
-                Iterator prefixIt = changes.keySet().iterator();
-                    while (prefixIt.hasNext()) {
-                        String prefix = (String)prefixIt.next();
-                    String uri = (String)changes.get(prefix);
-                        nsReg.registerNamespace(prefix, uri);
-                    }
-                } catch (RepositoryException e) {
-                    throw new JcrDavException(e);
                 }
-            } else {
+
+                // try to register any prefix/uri pair that has a changed uri or
+                // it has not been present before.
+                Iterator prefixIt = changes.keySet().iterator();
+                while (prefixIt.hasNext()) {
+                    String prefix = (String)prefixIt.next();
+                    String uri = (String)changes.get(prefix);
+                    nsReg.registerNamespace(prefix, uri);
+                }
+            } catch (RepositoryException e) {
+                throw new JcrDavException(e);
+            }
+        } else {
             super.setProperty(property);
         }
     }

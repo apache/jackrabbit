@@ -17,11 +17,11 @@ package org.apache.jackrabbit.server.jcr;
 
 import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletRequest;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.log4j.Logger;
 
@@ -98,30 +98,15 @@ public class JCRWebdavServer implements DavSessionProvider {
     /**
      * Private inner class implementing the <code>DavSession</code> interface.
      */
-    private class DavSessionImpl implements DavSession {
-
-        /** the underlying jcr session */
-        private final Session session;
+    private class DavSessionImpl extends JcrDavSession {
 
         /**
          * Private constructor.
          *
-         * @param request
-         * @throws DavException in case a {@link javax.jcr.LoginException} or {@link javax.jcr.RepositoryException} occurs.
+         * @param session
          */
-        private DavSessionImpl(DavServletRequest request) throws DavException {
-            try {
-                String workspaceName = request.getRequestLocator().getWorkspaceName();
-                session = sessionProvider.getSession(request, repository, workspaceName);
-            } catch (LoginException e) {
-                // LoginException results in UNAUTHORIZED,
-                throw new JcrDavException(e);
-            } catch (RepositoryException e) {
-                // RepositoryException results in FORBIDDEN
-                throw new JcrDavException(e);
-            } catch (ServletException e) {
-                throw new DavException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
+        private DavSessionImpl(Session session) {
+            super(session);
         }
 
         /**
@@ -143,34 +128,6 @@ public class JCRWebdavServer implements DavSessionProvider {
          */
         public void removeReference(Object reference) {
             cache.removeReference(this, reference);
-        }
-
-        /**
-         * @see DavSession#getRepositorySession()
-         */
-        public Session getRepositorySession() {
-            return session;
-        }
-
-        /**
-         * @see DavSession#addLockToken(String)
-         */
-        public void addLockToken(String token) {
-            session.addLockToken(token);
-        }
-
-        /**
-         * @see DavSession#getLockTokens()
-         */
-        public String[] getLockTokens() {
-            return session.getLockTokens();
-        }
-
-        /**
-         * @see DavSession#removeLockToken(String)
-         */
-        public void removeLockToken(String token) {
-            session.removeLockToken(token);
         }
     }
 
@@ -212,11 +169,12 @@ public class JCRWebdavServer implements DavSessionProvider {
             }
             // no cached session present -> create new one.
             if (session == null) {
-                session = new DavSessionImpl(request);
+                Session repSession = getRepositorySession(request);
+                session = new DavSessionImpl(repSession);
                 sessionMap.put(session, new HashSet());
-                log.info("login: User '" + session.getRepositorySession().getUserID() + "' logged in.");
+                log.info("login: User '" + repSession.getUserID() + "' logged in.");
             } else {
-                log.info("login: Retrieved cached session for user '" + session.getRepositorySession().getUserID() + "'");
+                log.info("login: Retrieved cached session for user '" + getUserID(session) + "'");
             }
             addReference(session, request);
             return session;
@@ -256,8 +214,15 @@ public class JCRWebdavServer implements DavSessionProvider {
                 if (referenceSet.isEmpty()) {
                     log.info("No more references present on webdav session -> clean up.");
                     sessionMap.remove(session);
-                    sessionProvider.releaseSession(session.getRepositorySession());
-                    log.info("Login: User '" + session.getRepositorySession().getUserID() + "' logged out");
+                    try {
+                        Session repSession = DavSessionImpl.getRepositorySession(session);
+                        sessionProvider.releaseSession(repSession);
+                        log.info("Login: User '" + getUserID(session) + "' logged out");
+                    } catch (DavException e) {
+                        // should not occure, since we original built a DavSessionImpl
+                        // that wraps a repository session.
+                        log.error("Unexpected error: " + e.getMessage(), e.getCause());
+                    }
                 } else {
                     log.debug(referenceSet.size() + " references remaining on webdav session " + session);
                 }
@@ -289,6 +254,42 @@ public class JCRWebdavServer implements DavSessionProvider {
          */
         private DavSession getSessionByReference(Object reference) {
             return (DavSession) referenceToSessionMap.get(reference);
+        }
+
+        /**
+         * Retrieve the {@link Session} object for the given request.
+         *
+         * @param request
+         * @return JCR session object used to build the <code>DavSession</code>
+         * @throws DavException
+         * @throws DavException in case a {@link javax.jcr.LoginException} or {@link javax.jcr.RepositoryException} occurs.
+         */
+        private Session getRepositorySession(WebdavRequest request) throws DavException {
+            try {
+                String workspaceName = request.getRequestLocator().getWorkspaceName();
+                return sessionProvider.getSession(request, repository, workspaceName);
+            } catch (LoginException e) {
+                // LoginException results in UNAUTHORIZED,
+                throw new JcrDavException(e);
+            } catch (RepositoryException e) {
+                // RepositoryException results in FORBIDDEN
+                throw new JcrDavException(e);
+            } catch (ServletException e) {
+                throw new DavException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        private String getUserID(DavSession session) {
+            try {
+                Session s = DavSessionImpl.getRepositorySession(session);
+                if (s != null) {
+                    return s.getUserID();
+                }
+            } catch (DavException e) {
+                log.error(e);
+            }
+            // fallback
+            return session.toString();
         }
     }
 

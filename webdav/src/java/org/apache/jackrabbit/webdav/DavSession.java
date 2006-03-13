@@ -15,20 +15,15 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import javax.jcr.Session;
-
 /**
- * <code>DavSession</code> wraps a {@link Session repository session}
- * object, that is obtained on
- * {@link javax.jcr.Repository#login(javax.jcr.Credentials, String) login} to
- * the underlying repository.
+ * <code>DavSession</code> allows to pass session information between request,
+ * response and resource(s).
  */
 public interface DavSession {
 
     /**
-     * Adds a reference to this <code>DavSession</code> indicating that
-     * the underlying {@link Session} object is needed for actions spanning over
-     * multiple requests.
+     * Adds a reference to this <code>DavSession</code> indicating that this
+     * session must not be discarded after completion of the current request.
      *
      * @param reference to be added.
      */
@@ -36,18 +31,11 @@ public interface DavSession {
 
     /**
      * Releasing a reference to this <code>DavSession</code>. If no more
-     * references are present, the underlying {@link Session} may be discarded.
+     * references are present, this session may be discarded.
      *
      * @param reference to be removed.
      */
     public void removeReference(Object reference);
-
-    /**
-     * Unwrap the {@link Session repository session} object.
-     *
-     * @return the session object wrapped by this <code>DavSession</code>
-     */
-    public Session getRepositorySession();
 
     /**
      * Adds a lock token to this <code>DavSession</code>.

@@ -16,13 +16,12 @@
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeConstants;
 import org.apache.jackrabbit.webdav.jcr.nodetype.PropertyDefinitionImpl;
@@ -59,12 +58,11 @@ import java.util.Iterator;
  * </pre>
  *
  * @see NodeTypeConstants#NAMESPACE
- *
- * @todo currently the nodetype report is not consistent with the general way of representing nodetype names (with NodetypeElement) in order to be compatible with the jackrabbit nodetype registry...
- * @todo for the same reason, not the complete nodetype-definition, but only the nodetype def as stored is represented.
- * @todo no namespace definition with response (> jackrabbit)... and nodetype element has same name as the one used with dav-properties
  */
-public class NodeTypesReport implements Report, NodeTypeConstants {
+//todo: currently the nodetype report is not consistent with the general way of representing nodetype names (with NodetypeElement) in order to be compatible with the jackrabbit nodetype registry...
+//todo: for the same reason, not the complete nodetype-definition, but only the nodetype def as stored is represented.
+//todo: no namespace definition with response (> jackrabbit)... and nodetype element has same name as the one used with dav-properties
+public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConstants {
 
     private static Logger log = Logger.getLogger(NodeTypesReport.class);
 
@@ -73,7 +71,6 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
      */
     public static final ReportType NODETYPES_REPORT = ReportType.register("nodetypes", NodeTypeConstants.NAMESPACE, NodeTypesReport.class);
 
-    private Session session;
     private NodeTypeIterator ntIter;
 
     /**
@@ -96,26 +93,18 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
     }
 
     /**
-     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, org.apache.jackrabbit.webdav.version.report.ReportInfo)
+     * @see Report#init(DavResource, ReportInfo)
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
-        if (resource == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Resource must not be null.");
-        }
-        if (!getType().isRequestedReportType(info)) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "dcr:nodetypes element expected.");
-        }
-        DavSession davSession = resource.getSession();
-        if (davSession == null || davSession.getRepositorySession() == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource must provide a non-null session object in order to create the nodetypes report.");
-    }
-        session = davSession.getRepositorySession();
+    public void init(DavResource resource, ReportInfo info) throws DavException {
+        // delegate basic validation to super class
+        super.init(resource, info);
+        // report specific validation and preparation for xml serialization
         try {
-            ntIter = getNodeTypes(session, info);
+            ntIter = getNodeTypes(getRepositorySession(), info);
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
-        if (session == null || ntIter == null) {
+        if (ntIter == null) {
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
@@ -131,40 +120,40 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
     public Element toXml(Document document) {
         Element report = document.createElement(NODETYPES_ELEMENT);
         // loop over the nodetypes to be returned in the report
-            while (ntIter.hasNext()) {
-                NodeType nt = ntIter.nextNodeType();
+        while (ntIter.hasNext()) {
+            NodeType nt = ntIter.nextNodeType();
             Element ntDef = document.createElement(NODETYPE_ELEMENT);
-                ntDef.setAttribute(NAME_ATTRIBUTE, nt.getName());
-                ntDef.setAttribute(ISMIXIN_ATTRIBUTE, Boolean.toString(nt.isMixin()));
-                ntDef.setAttribute(HASORDERABLECHILDNODES_ATTRIBUTE, Boolean.toString(nt.hasOrderableChildNodes()));
+            ntDef.setAttribute(NAME_ATTRIBUTE, nt.getName());
+            ntDef.setAttribute(ISMIXIN_ATTRIBUTE, Boolean.toString(nt.isMixin()));
+            ntDef.setAttribute(HASORDERABLECHILDNODES_ATTRIBUTE, Boolean.toString(nt.hasOrderableChildNodes()));
 
-		// declared supertypes
-		NodeType[] snts = nt.getDeclaredSupertypes();
+            // declared supertypes
+            NodeType[] snts = nt.getDeclaredSupertypes();
             Element supertypes = DomUtil.addChildElement(ntDef, SUPERTYPES_ELEMENT, null);
-		for (int i = 0; i < snts.length; i++) {
+            for (int i = 0; i < snts.length; i++) {
                 DomUtil.addChildElement(supertypes, SUPERTYPE_ELEMENT, null, snts[i].getName());
-		}
+            }
 
-		// declared childnode defs
-		NodeDefinition[] cnd = nt.getChildNodeDefinitions();
-		for (int i = 0; i < cnd.length; i++) {
-		    if (cnd[i].getDeclaringNodeType().getName().equals(nt.getName())) {
+            // declared childnode defs
+            NodeDefinition[] cnd = nt.getChildNodeDefinitions();
+            for (int i = 0; i < cnd.length; i++) {
+                if (cnd[i].getDeclaringNodeType().getName().equals(nt.getName())) {
                     ntDef.appendChild(NodeDefinitionImpl.create(cnd[i]).toXml(document));
-		    }
-		}
-
-		// declared propertyDefs
-		PropertyDefinition[] pd = nt.getPropertyDefinitions();
-		for (int i = 0; i < pd.length; i++) {
-		    if (pd[i].getDeclaringNodeType().getName().equals(nt.getName())) {
-                    ntDef.appendChild(PropertyDefinitionImpl.create(pd[i]).toXml(document));
-		    }
-		}
-
-                String primaryItemName = nt.getPrimaryItemName();
-                if (primaryItemName != null) {
-                    ntDef.setAttribute(PRIMARYITEMNAME_ATTRIBUTE, primaryItemName);
                 }
+            }
+
+            // declared propertyDefs
+            PropertyDefinition[] pd = nt.getPropertyDefinitions();
+            for (int i = 0; i < pd.length; i++) {
+                if (pd[i].getDeclaringNodeType().getName().equals(nt.getName())) {
+                    ntDef.appendChild(PropertyDefinitionImpl.create(pd[i]).toXml(document));
+                }
+            }
+
+            String primaryItemName = nt.getPrimaryItemName();
+            if (primaryItemName != null) {
+                ntDef.setAttribute(PRIMARYITEMNAME_ATTRIBUTE, primaryItemName);
+            }
             report.appendChild(ntDef);
         }
         return report;
@@ -184,12 +173,12 @@ public class NodeTypesReport implements Report, NodeTypeConstants {
 
         // check the simple types first...
         if (info.containsContentElement(XML_REPORT_ALLNODETYPES, NAMESPACE)) {
-                    ntIter = ntMgr.getAllNodeTypes();
+            ntIter = ntMgr.getAllNodeTypes();
         } else if (info.containsContentElement(XML_REPORT_MIXINNODETYPES, NAMESPACE)) {
-                    ntIter = ntMgr.getMixinNodeTypes();
+            ntIter = ntMgr.getMixinNodeTypes();
         } else if (info.containsContentElement(XML_REPORT_PRIMARYNODETYPES, NAMESPACE)) {
-                    ntIter = ntMgr.getPrimaryNodeTypes();
-                }
+            ntIter = ntMgr.getPrimaryNodeTypes();
+        }
         // None of the simple types. test if a report for individual nodetypes
         // was request. If not, the request body is not valid.
         if (ntIter == null) {

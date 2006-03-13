@@ -18,6 +18,7 @@ package org.apache.jackrabbit.j2ee;
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
 import org.apache.jackrabbit.server.SessionProviderImpl;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.server.jcr.JCRWebdavServer;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
@@ -25,6 +26,7 @@ import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.DavLocatorFactoryImpl;
 import org.apache.jackrabbit.webdav.jcr.DavResourceFactoryImpl;
 import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionManagerImpl;
@@ -33,6 +35,7 @@ import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Repository;
+import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.ServletContext;
 
@@ -93,7 +96,7 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
     public void init() throws ServletException {
         super.init();
 
-	// set resource path prefix
+        // set resource path prefix
         pathPrefix = getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX);
         getServletContext().setAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX, pathPrefix);
         log.debug(INIT_PARAM_RESOURCE_PATH_PREFIX + " = " + pathPrefix);
@@ -130,10 +133,17 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
 
         // test if the requested path matches to the existing session
         // this may occur if the session was retrieved from the cache.
-        String wsName = request.getDavSession().getRepositorySession().getWorkspace().getName();
-        if (!resource.getLocator().isSameWorkspace(wsName)) {
+        try {
+            Session repositorySesssion = JcrDavSession.getRepositorySession(request.getDavSession());
+            String wsName = repositorySesssion.getWorkspace().getName();
+            if (!resource.getLocator().isSameWorkspace(wsName)) {
+                return false;
+            }
+        } catch (DavException e) {
+            log.error(e);
             return false;
         }
+
 
         // make sure, the TransactionId header is valid
         String txId = request.getTransactionId();
@@ -188,7 +198,7 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
     }
 
     /**
-     * Returns the <code>DavResourceFactory</code>. 
+     * Returns the <code>DavResourceFactory</code>.
      *
      * @see AbstractWebdavServlet#getResourceFactory()
      */
