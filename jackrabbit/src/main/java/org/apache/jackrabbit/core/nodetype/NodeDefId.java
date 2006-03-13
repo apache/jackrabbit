@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.name.QName;
 
 import java.io.Serializable;
-import java.util.TreeSet;
+import java.util.Arrays;
 
 /**
  * <code>NodeDefId</code> uniquely identifies a <code>NodeDef</code> in the
@@ -60,13 +60,19 @@ public class NodeDefId implements Serializable {
             sb.append(def.getName().toString());
         }
         sb.append('/');
-        // set of required node type names, sorted in ascending order
-        TreeSet set = new TreeSet();
+
+        // required node type names, sorted in ascending order
+        // format: "[name1, name2, name3]", see AbstractCollection#toString()
         QName[] names = def.getRequiredPrimaryTypes();
+        Arrays.sort(names);
+        sb.append('[');
         for (int i = 0; i < names.length; i++) {
-            set.add(names[i]);
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(names[i]);
         }
-        sb.append(set.toString());
+        sb.append(']');
 
         id = sb.toString().hashCode();
     }
