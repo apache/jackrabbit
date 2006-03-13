@@ -91,7 +91,7 @@ public class MergeInfo implements DeltaVConstants, XmlSerializable {
                 String href = DomUtil.getTextTrim(it.nextElement());
                 if (href != null) {
                     sourceHrefs.add(href);
-        }
+                }
             }
         }
         return (String[])sourceHrefs.toArray(new String[sourceHrefs.size()]);

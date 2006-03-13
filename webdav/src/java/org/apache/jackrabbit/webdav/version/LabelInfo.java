@@ -122,7 +122,7 @@ public class LabelInfo implements DeltaVConstants, XmlSerializable {
                 Element el = DomUtil.getChildElement(labelElement, typeNames[i], NAMESPACE);
                 label = DomUtil.getChildText(el, XML_LABEL_NAME, NAMESPACE);
             }
-            }
+        }
         if (label == null) {
             log.warn("DAV:label element must contain at least one set, add or remove element defining a label-name.");
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
