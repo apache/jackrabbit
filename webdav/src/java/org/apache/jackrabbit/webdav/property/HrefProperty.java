@@ -74,37 +74,41 @@ public class HrefProperty extends AbstractDavProperty {
      * object, consisting of {@link #XML_HREF href} <code>Element</code> entries.
      *
      * @param prop
-     * @throws IllegalArgumentException if the property {@link DavProperty#getValue() value}
-     * is not a <code>List</code>.
      */
     public HrefProperty(DavProperty prop) {
         super(prop.getName(), prop.isProtected());
-        ArrayList hrefList = new ArrayList();
-        Object val = prop.getValue();
-        if (val instanceof List) {
-            Iterator it = ((List)val).iterator();
-            while (it.hasNext()) {
-                Object o = it.next();
-                if (o instanceof Element && XML_HREF.equals(((Element)o).getLocalName())) {
-                    String href = DomUtil.getText((Element)o);
-                    if (href != null) {
-                        hrefList.add(href);
+        if (prop instanceof HrefProperty) {
+            // already an HrefProperty: no parsing required
+            this.value = ((HrefProperty)prop).value;
+        } else {
+            // assume property has be built from xml
+            ArrayList hrefList = new ArrayList();
+            Object val = prop.getValue();
+            if (val instanceof List) {
+                Iterator it = ((List)val).iterator();
+                while (it.hasNext()) {
+                    Object o = it.next();
+                    if (o instanceof Element && XML_HREF.equals(((Element)o).getLocalName())) {
+                        String href = DomUtil.getText((Element)o);
+                        if (href != null) {
+                            hrefList.add(href);
+                        } else {
+                            log.warn("Valid DAV:href element expected instead of " + o.toString());
+                        }
                     } else {
-                        log.warn("Valid DAV:href element expected instead of " + o.toString());
+                        log.warn("DAV: href element expected in the content of " + getName().toString());
                     }
+                }
+            } else if (val instanceof Element && XML_HREF.equals(((Element)val).getLocalName())) {
+                String href = DomUtil.getTextTrim((Element)val);
+                if (href != null) {
+                    hrefList.add(href);
                 } else {
-                    log.warn("DAV: href element expected in the content of " + getName().toString());
+                    log.warn("Valid DAV:href element expected instead of " + val.toString());
                 }
             }
-        } else if (val instanceof Element && XML_HREF.equals(((Element)val).getLocalName())) {
-            String href = DomUtil.getTextTrim((Element)val);
-            if (href != null) {
-                hrefList.add(href);
-            } else {
-                log.warn("Valid DAV:href element expected instead of " + val.toString());
-            }
+            value = (String[]) hrefList.toArray(new String[hrefList.size()]);
         }
-        value = (String[]) hrefList.toArray(new String[hrefList.size()]);
     }
 
     /**
