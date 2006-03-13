@@ -172,7 +172,7 @@ public class ExportContextImpl extends AbstractExportContext {
                     Object value = properties.get(name);
                     if (name != null && value != null) {
                         outputCtx.setProperty(name.toString(), value.toString());
-                    // check for content-length
+                        // check for content-length
                         hasContentLength = DavConstants.HEADER_CONTENT_LENGTH.equals(name.toString());
                     }
                 }
