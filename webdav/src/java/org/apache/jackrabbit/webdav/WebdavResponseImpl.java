@@ -67,9 +67,9 @@ public class WebdavResponseImpl implements WebdavResponse {
         this.httpResponse = httpResponse;
         if (noCache) {
             /* set cache control headers */
-        addHeader("Pragma", "No-cache");  // http1.0
-        addHeader("Cache-Control", "no-cache"); // http1.1
-    }
+            addHeader("Pragma", "No-cache");  // http1.0
+            addHeader("Cache-Control", "no-cache"); // http1.1
+        }
     }
 
     /**
@@ -151,10 +151,10 @@ public class WebdavResponseImpl implements WebdavResponse {
                 serializer.setNamespaces(true);
                 serializer.asDOMSerializer().serialize(doc);
 
-            byte[] bytes = out.toByteArray();
-            httpResponse.setContentType("text/xml; charset=UTF-8");
-            httpResponse.setContentLength(bytes.length);
-            httpResponse.getOutputStream().write(bytes);
+                byte[] bytes = out.toByteArray();
+                httpResponse.setContentType("text/xml; charset=UTF-8");
+                httpResponse.setContentLength(bytes.length);
+                httpResponse.getOutputStream().write(bytes);
 
             } catch (ParserConfigurationException e) {
                 log.error(e.getMessage());
