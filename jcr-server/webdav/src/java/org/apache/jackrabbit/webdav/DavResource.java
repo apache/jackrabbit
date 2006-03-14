@@ -323,5 +323,12 @@ public interface DavResource {
      * @return the factory that created this resource.
      */
     public DavResourceFactory getFactory();
+
+    /**
+     * Retrieve the <code>DavSession</code> associated with this resource.
+     *
+     * @return session object associated with this resource.
+     */
+    public DavSession getSession();
 }
 

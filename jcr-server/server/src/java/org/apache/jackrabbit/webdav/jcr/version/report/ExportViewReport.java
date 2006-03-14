@@ -18,13 +18,11 @@ package org.apache.jackrabbit.webdav.jcr.version.report;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavSession;
-import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.util.Text;
 import org.xml.sax.SAXException;
 import org.w3c.dom.Element;
@@ -60,7 +58,7 @@ import java.io.IOException;
  * </pre>
  * If no view type is specified the DocView is generated.
  */
-public class ExportViewReport implements Report {
+public class ExportViewReport extends AbstractJcrReport {
 
     private static Logger log = Logger.getLogger(ExportViewReport.class);
 
@@ -71,9 +69,7 @@ public class ExportViewReport implements Report {
      */
     public static final ReportType EXPORTVIEW_REPORT = ReportType.register(REPORT_NAME, ItemResourceConstants.NAMESPACE, ExportViewReport.class);
 
-    private String absItemPath;
-    private Session session;
-    private ReportInfo info;
+    private String absNodePath;
 
     /**
      * Returns {@link #EXPORTVIEW_REPORT} report type.
@@ -95,31 +91,22 @@ public class ExportViewReport implements Report {
     }
 
     /**
-     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, org.apache.jackrabbit.webdav.version.report.ReportInfo)
+     * @see Report#init(DavResource, ReportInfo)
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
-        if (!getType().isRequestedReportType(info)) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "dcr:exportview element expected.");
-        }
-        if (resource == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Resource must not be null.");
-        }
-
-        this.info = info;
-
-        DavSession davSession = resource.getSession();
-        if (davSession == null || davSession.getRepositorySession() == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource must provide a non-null session object in order to create the exportview report.");
-        }
-        session = davSession.getRepositorySession();
-        absItemPath = resource.getLocator().getJcrPath();
+    public void init(DavResource resource, ReportInfo info) throws DavException {
+        // delegate validation to super class
+        super.init(resource, info);
+        // report specific validation: resource must represent an existing
+        // repository node
+        absNodePath = resource.getLocator().getRepositoryPath();
         try {
-            if (!session.itemExists(absItemPath)) {
-                throw new JcrDavException(new PathNotFoundException(absItemPath + " does not exist."));
-    }
+            if (!(getRepositorySession().itemExists(absNodePath) && getRepositorySession().getItem(absNodePath).isNode())) {
+                throw new JcrDavException(new PathNotFoundException(absNodePath + " does not exist."));
+            }
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
+
     }
 
     /**
@@ -130,22 +117,21 @@ public class ExportViewReport implements Report {
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      */
     public Element toXml(Document document) {
-        boolean skipBinary = info.containsContentElement("skipbinary", ItemResourceConstants.NAMESPACE);
-        boolean noRecurse = info.containsContentElement("norecurse", ItemResourceConstants.NAMESPACE);
-
+        boolean skipBinary = getReportInfo().containsContentElement("skipbinary", ItemResourceConstants.NAMESPACE);
+        boolean noRecurse = getReportInfo().containsContentElement("norecurse", ItemResourceConstants.NAMESPACE);
         // todo improve...
         try {
             // create tmpFile in default system-tmp directory
-            String prefix = "_tmp_" + Text.getName(absItemPath);
+            String prefix = "_tmp_" + Text.getName(absNodePath);
             File tmpfile = File.createTempFile(prefix, null, null);
             tmpfile.deleteOnExit();
 
             FileOutputStream out = new FileOutputStream(tmpfile);
-            if (info.containsContentElement("sysview", ItemResourceConstants.NAMESPACE)) {
-                session.exportSystemView(absItemPath, out, skipBinary, noRecurse);
+            if (getReportInfo().containsContentElement("sysview", ItemResourceConstants.NAMESPACE)) {
+                getRepositorySession().exportSystemView(absNodePath, out, skipBinary, noRecurse);
             } else {
                 // default is docview
-                session.exportDocumentView(absItemPath, out, skipBinary, noRecurse);
+                getRepositorySession().exportDocumentView(absNodePath, out, skipBinary, noRecurse);
             }
             out.close();
 

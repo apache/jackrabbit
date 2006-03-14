@@ -17,7 +17,6 @@ package org.apache.jackrabbit.webdav.observation;
 
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavSession;
 
 /**
  * <code>ObservationResource</code> extends the {@link DavResource} interface by
@@ -34,13 +33,6 @@ public interface ObservationResource extends DavResource {
      * @param subsMgr subscription manager object
      */
     public void init(SubscriptionManager subsMgr);
-
-    /**
-     * Retrieve the <code>DavSession</code> associated with this resource.
-     *
-     * @return session object associated with this resource.
-     */
-    public DavSession getSession();
 
     /**
      * Subscribe this resource for event listening defined by the specified

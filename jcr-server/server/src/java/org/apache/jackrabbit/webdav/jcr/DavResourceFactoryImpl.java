@@ -40,7 +40,6 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 
 /**
  * <code>DavResourceFactoryImpl</code>...
@@ -82,8 +81,9 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
     public DavResource createResource(DavResourceLocator locator,
                                       DavServletRequest request,
                                       DavServletResponse response) throws DavException {
+        JcrDavSession.checkImplementation(request.getDavSession());
+        JcrDavSession session = (JcrDavSession)request.getDavSession();
 
-        DavSession session = request.getDavSession();
         DavResource resource;
         if (locator.isRootLocation()) {
             resource = new RootCollection(locator, session, this);
@@ -135,16 +135,18 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
      * root location}.
      */
     public DavResource createResource(DavResourceLocator locator, DavSession session) throws DavException {
+        JcrDavSession.checkImplementation(session);
+        JcrDavSession sessionImpl = (JcrDavSession)session;
         DavResource resource;
         try {
-            resource = createResourceForItem(locator, session);
+            resource = createResourceForItem(locator, sessionImpl);
         } catch (RepositoryException e) {
             log.info("Creating resource for non-existing repository item ...");
             if (locator.isRootLocation()) {
-                resource =  new RootCollection(locator, session, this);
+                resource =  new RootCollection(locator, sessionImpl, this);
             } else {
-		// todo: is this correct?
-		resource = new VersionControlledItemCollection(locator, session, this, null);
+                // todo: is this correct?
+                resource = new VersionControlledItemCollection(locator, sessionImpl, this, null);
             }
         }
 
@@ -161,33 +163,33 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
      * unspecified nodes and finally property items.
      *
      * @param locator
-     * @param session
+     * @param sessionImpl
      * @return DavResource representing a repository item.
      * @throws RepositoryException if {@link javax.jcr.Session#getItem(String)} fails.
      */
-    private DavResource createResourceForItem(DavResourceLocator locator, DavSession session) throws RepositoryException {
+    private DavResource createResourceForItem(DavResourceLocator locator, JcrDavSession sessionImpl) throws RepositoryException, DavException {
         DavResource resource;
-        Item item = getItem(session, locator);
+        Item item = getItem(sessionImpl, locator);
         if (item.isNode()) {
             // create special resources for Version and VersionHistory
             if (item instanceof Version) {
-                resource = new VersionItemCollection(locator, session, this, item);
+                resource = new VersionItemCollection(locator, sessionImpl, this, item);
             } else if (item instanceof VersionHistory) {
-                resource = new VersionHistoryItemCollection(locator, session, this, item);
+                resource = new VersionHistoryItemCollection(locator, sessionImpl, this, item);
             } else if (ItemResourceConstants.ROOT_ITEM_PATH.equals(item.getPath())) {
-                resource =  new RootItemCollection(locator, session, this, item);
+                resource =  new RootItemCollection(locator, sessionImpl, this, item);
             }  else{
-                resource = new VersionControlledItemCollection(locator, session, this, item);
+                resource = new VersionControlledItemCollection(locator, sessionImpl, this, item);
             }
         } else {
-            resource = new DefaultItemResource(locator, session, this, item);
+            resource = new DefaultItemResource(locator, sessionImpl, this, item);
         }
         return resource;
     }
 
-    private Item getItem(DavSession davSession, DavResourceLocator locator) throws PathNotFoundException, RepositoryException {
-        Session s = davSession.getRepositorySession();
-        return s.getItem(locator.getJcrPath());
+    private Item getItem(JcrDavSession sessionImpl, DavResourceLocator locator)
+        throws PathNotFoundException, RepositoryException {
+        return sessionImpl.getRepositorySession().getItem(locator.getRepositoryPath());
     }
 
     /**

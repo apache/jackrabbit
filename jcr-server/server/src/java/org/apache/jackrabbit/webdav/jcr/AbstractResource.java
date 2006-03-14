@@ -88,7 +88,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     private static Logger log = Logger.getLogger(AbstractResource.class);
 
     private final DavResourceLocator locator;
-    private final DavSession session;
+    private final JcrDavSession session;
     private final DavResourceFactory factory;
 
     private SubscriptionManager subsMgr;
@@ -108,11 +108,11 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      * @param locator
      * @param session
      */
-    AbstractResource(DavResourceLocator locator, DavSession session, DavResourceFactory factory) {
+    AbstractResource(DavResourceLocator locator, JcrDavSession session,
+                     DavResourceFactory factory) {
         if (session == null) {
-            throw new IllegalArgumentException("Creating AbstractItemResource: DavSession must not be null.");
+            throw new IllegalArgumentException("Creating AbstractItemResource: DavSession must not be null and must provide a JCR session.");
         }
-
         this.locator = locator;
         this.session = session;
         this.factory = factory;
@@ -161,7 +161,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      */
     void setModificationTime(long modificationTime) {
         if (modificationTime > IOUtil.UNDEFINED_TIME) {
-        this.modificationTime = modificationTime;
+            this.modificationTime = modificationTime;
             String lastModified = IOUtil.getLastModified(modificationTime);
             properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, lastModified));
         }
@@ -531,7 +531,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
 
         if (supportedReports.isSupportedReport(reportInfo)) {
             Report report = ReportType.getType(reportInfo).createReport(this, reportInfo);
-                return report;
+            return report;
         } else {
             throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Unkown report "+ reportInfo.getReportName() +"requested.");
         }
@@ -591,7 +591,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         // create a new resource object
         try {
             DavResource res;
-            if (getRepositorySession().itemExists(loc.getJcrPath())) {
+            if (getRepositorySession().itemExists(loc.getRepositoryPath())) {
                 res = createResourceFromLocator(loc);
             } else {
                 throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -608,7 +608,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      * @see org.apache.jackrabbit.webdav.search.SearchResource#getQueryGrammerSet()
      */
     public QueryGrammerSet getQueryGrammerSet() {
-        return new SearchResourceImpl(getLocator(), getSession()).getQueryGrammerSet();
+        return new SearchResourceImpl(getLocator(), session).getQueryGrammerSet();
     }
 
     /**
@@ -618,7 +618,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      * @see SearchResource#search(org.apache.jackrabbit.webdav.search.SearchInfo)
      */
     public MultiStatus search(SearchInfo sInfo) throws DavException {
-        return new SearchResourceImpl(getLocator(), getSession()).search(sInfo);
+        return new SearchResourceImpl(getLocator(), session).search(sInfo);
     }
     //--------------------------------------------------------------------------
     /**
@@ -723,7 +723,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      * @return repository session present in the {@link #session}.
      */
     protected Session getRepositorySession() {
-        return getSession().getRepositorySession();
+        return session.getRepositorySession();
     }
 
     /**

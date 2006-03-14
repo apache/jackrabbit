@@ -31,11 +31,13 @@ public interface ObservationConstants {
      */
     public static final Namespace NAMESPACE = Namespace.getNamespace("dcr", "http://www.day.com/jcr/webdav/1.0");
 
+    //---< Headers >------------------------------------------------------------
     /**
      * The SubscriptionId request header<br>
      */
     public static final String HEADER_SUBSCRIPTIONID = "SubscriptionId";
 
+    //---< XML Element, Attribute Names >---------------------------------------
     /**
      * subscription Xml element<br>
      * Mandatory element inside the {@link #SUBSCRIPTIONDISCOVERY subscriptiondiscovery}
@@ -61,36 +63,7 @@ public interface ObservationConstants {
     public static final String XML_EVENT = "event";
     public static final String XML_EVENTUSERID = "eventuserid";
 
-    /**
-     * Element representing the 'nodeadded' event type.
-     * @see javax.jcr.observation.Event#NODE_ADDED
-     */
-    public static final String EVENT_NODEADDED = "nodeadded";
-
-    /**
-     * Element representing the 'noderemoved' event type.
-     * @see javax.jcr.observation.Event#NODE_REMOVED
-     */
-    public static final String EVENT_NODEREMOVED = "noderemoved";
-
-    /**
-     * Element representing the 'propertyadded' event type.
-     * @see javax.jcr.observation.Event#PROPERTY_ADDED
-     */
-    public static final String EVENT_PROPERTYADDED = "propertyadded";
-
-    /**
-     * Element representing the 'propertyremoved' event type.
-     * @see javax.jcr.observation.Event#PROPERTY_REMOVED
-     */
-    public static final String EVENT_PROPERTYREMOVED = "propertyremoved";
-
-    /**
-     * Element representing the 'propertychanged' event type.
-     * @see javax.jcr.observation.Event#PROPERTY_CHANGED
-     */
-    public static final String EVENT_PROPERTYCHANGED = "propertychanged";
-
+    //---< Property Names >-----------------------------------------------------
     /**
      * The protected subscription discovery property is used to find out about
      * existing subscriptions present on the specified resource.

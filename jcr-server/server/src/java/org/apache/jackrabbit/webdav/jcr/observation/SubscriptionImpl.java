@@ -53,6 +53,36 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     private static Logger log = Logger.getLogger(SubscriptionImpl.class);
     private static final long DEFAULT_TIMEOUT = 300000; // 5 minutes
 
+    /**
+     * Element representing the 'nodeadded' event type.
+     * @see javax.jcr.observation.Event#NODE_ADDED
+     */
+    private static final String EVENT_NODEADDED = "nodeadded";
+
+    /**
+     * Element representing the 'noderemoved' event type.
+     * @see javax.jcr.observation.Event#NODE_REMOVED
+     */
+    private static final String EVENT_NODEREMOVED = "noderemoved";
+
+    /**
+     * Element representing the 'propertyadded' event type.
+     * @see javax.jcr.observation.Event#PROPERTY_ADDED
+     */
+    private static final String EVENT_PROPERTYADDED = "propertyadded";
+
+    /**
+     * Element representing the 'propertyremoved' event type.
+     * @see javax.jcr.observation.Event#PROPERTY_REMOVED
+     */
+    private static final String EVENT_PROPERTYREMOVED = "propertyremoved";
+
+    /**
+     * Element representing the 'propertychanged' event type.
+     * @see javax.jcr.observation.Event#PROPERTY_CHANGED
+     */
+    private static final String EVENT_PROPERTYCHANGED = "propertychanged";
+
     private SubscriptionInfo info;
     private long expirationTime;
 

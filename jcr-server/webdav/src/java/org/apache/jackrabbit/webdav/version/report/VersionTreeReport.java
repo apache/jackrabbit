@@ -18,7 +18,6 @@ package org.apache.jackrabbit.webdav.version.report;
 import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.version.VersionResource;
 import org.apache.jackrabbit.webdav.DavException;
@@ -40,7 +39,7 @@ public class VersionTreeReport implements Report, DeltaVConstants {
     private static Logger log = Logger.getLogger(VersionTreeReport.class);
 
     private ReportInfo info;
-    private DeltaVResource resource;
+    private DavResource resource;
 
     /**
      * Returns {@link ReportType#VERSION_TREE}
@@ -68,9 +67,9 @@ public class VersionTreeReport implements Report, DeltaVConstants {
      * @param resource
      * @param info
      * @throws org.apache.jackrabbit.webdav.DavException
-     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, ReportInfo)
+     * @see Report#init(DavResource, ReportInfo)
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
+    public void init(DavResource resource, ReportInfo info) throws DavException {
         setResource(resource);
         setInfo(info);
     }
@@ -80,9 +79,9 @@ public class VersionTreeReport implements Report, DeltaVConstants {
      *
      * @param resource
      * @throws DavException if the given resource is neither
-     * {@link org.apache.jackrabbit.webdav.version.VersionControlledResource} nor {@link org.apache.jackrabbit.webdav.version.VersionResource}.
+     * {@link VersionControlledResource} nor {@link VersionResource}.
      */
-    private void setResource(DeltaVResource resource) throws DavException {
+    private void setResource(DavResource resource) throws DavException {
         if (resource != null && (resource instanceof VersionControlledResource || resource instanceof VersionResource)) {
             this.resource = resource;
         } else {
@@ -144,13 +143,13 @@ public class VersionTreeReport implements Report, DeltaVConstants {
     private void buildResponse(DavResource res, DavPropertyNameSet propNameSet,
                                int depth, MultiStatus ms) {
         try {
-        VersionResource[] versions = getVersions(res);
-        for (int i = 0; i < versions.length; i++) {
-            if (propNameSet.isEmpty()) {
-                ms.addResourceStatus(versions[i], DavServletResponse.SC_OK, 0);
-            } else {
-                ms.addResourceProperties(versions[i], propNameSet, 0);
-            }
+            VersionResource[] versions = getVersions(res);
+            for (int i = 0; i < versions.length; i++) {
+                if (propNameSet.isEmpty()) {
+                    ms.addResourceStatus(versions[i], DavServletResponse.SC_OK, 0);
+                } else {
+                    ms.addResourceProperties(versions[i], propNameSet, 0);
+                }
             }
         } catch (DavException e) {
             log.error(e);

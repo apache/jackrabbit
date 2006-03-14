@@ -16,13 +16,12 @@
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
 import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.w3c.dom.Element;
@@ -50,7 +49,7 @@ import javax.jcr.RepositoryException;
  *
  * @see javax.jcr.Workspace#getNamespaceRegistry() 
  */
-public class RegisteredNamespacesReport implements Report, ItemResourceConstants {
+public class RegisteredNamespacesReport extends AbstractJcrReport implements ItemResourceConstants {
 
     private static Logger log = Logger.getLogger(RegisteredNamespacesReport.class);
 
@@ -81,24 +80,13 @@ public class RegisteredNamespacesReport implements Report, ItemResourceConstants
     }
 
     /**
-     * @see Report#init(org.apache.jackrabbit.webdav.version.DeltaVResource, org.apache.jackrabbit.webdav.version.report.ReportInfo)
+     * @see Report#init(DavResource, ReportInfo)
      */
-    public void init(DeltaVResource resource, ReportInfo info) throws DavException {
-        if (info == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "ReportInfo must not be null.");
-        }
-        if (resource == null) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Resource must not be null.");
-        }
-        if (!getType().isRequestedReportType(info)) {
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "registerednamespaces element expected.");
-        }
+    public void init(DavResource resource, ReportInfo info) throws DavException {
+        // delegate validation to abstract super class
+        super.init(resource, info);
         try {
-            DavSession session = resource.getSession();
-            if (session == null || session.getRepositorySession() == null) {
-                throw new DavException(DavServletResponse.SC_BAD_REQUEST, "The resource must provide a non-null session object in order to create the registerednamespaces report.");
-            }
-            nsReg = session.getRepositorySession().getWorkspace().getNamespaceRegistry();
+            nsReg = getRepositorySession().getWorkspace().getNamespaceRegistry();
         } catch (RepositoryException e) {
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
@@ -115,8 +103,8 @@ public class RegisteredNamespacesReport implements Report, ItemResourceConstants
     public Element toXml(Document document)  {
         Element report = DomUtil.createElement(document, "registerednamespaces-report", NAMESPACE);
         try {
-	    String[] prefixes = nsReg.getPrefixes();
-	    for (int i = 0; i < prefixes.length; i++) {
+            String[] prefixes = nsReg.getPrefixes();
+            for (int i = 0; i < prefixes.length; i++) {
                 Element elem = DomUtil.addChildElement(report, XML_NAMESPACE, NAMESPACE);
                 DomUtil.addChildElement(elem, XML_PREFIX, NAMESPACE, prefixes[i]);
                 DomUtil.addChildElement(elem, XML_URI, NAMESPACE, nsReg.getURI(prefixes[i]));

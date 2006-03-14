@@ -20,7 +20,6 @@ import org.apache.jackrabbit.webdav.transaction.TxLockEntry;
 import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavException;
@@ -60,7 +59,8 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @param locator
      * @param session
      */
-    AbstractItemResource(DavResourceLocator locator, DavSession session, DavResourceFactory factory, Item item) {
+    AbstractItemResource(DavResourceLocator locator, JcrDavSession session,
+                         DavResourceFactory factory, Item item) {
         super(locator, session, factory);
         this.item = item;
 
@@ -156,8 +156,8 @@ abstract class AbstractItemResource extends AbstractResource implements
         }
 
         try {
-            String itemPath = getLocator().getJcrPath();
-            String destItemPath = destination.getLocator().getJcrPath();
+            String itemPath = getLocator().getRepositoryPath();
+            String destItemPath = destination.getLocator().getRepositoryPath();
             if (getTransactionId() == null) {
                 // if not part of a transaction directely import on workspace
                 getRepositorySession().getWorkspace().move(itemPath, destItemPath);
@@ -199,8 +199,8 @@ abstract class AbstractItemResource extends AbstractResource implements
         }
 
         try {
-            String itemPath = getLocator().getJcrPath();
-            String destItemPath = destination.getLocator().getJcrPath();
+            String itemPath = getLocator().getRepositoryPath();
+            String destItemPath = destination.getLocator().getRepositoryPath();
             Workspace workspace = getRepositorySession().getWorkspace();
             if (getLocator().isSameWorkspace(destination.getLocator())) {
                 workspace.copy(itemPath, destItemPath);

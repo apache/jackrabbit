@@ -112,8 +112,8 @@ public class DavSessionProviderImpl implements DavSessionProvider {
      */
     public void releaseSession(WebdavRequest request) {
         DavSession ds = request.getDavSession();
-        if (ds != null) {
-            Session repSession = ds.getRepositorySession();
+        if (ds != null && ds instanceof DavSessionImpl) {
+            Session repSession = ((DavSessionImpl)ds).getRepositorySession();
             String[] lockTokens = repSession.getLockTokens();
             for (int i = 0; i < lockTokens.length; i++) {
                 repSession.removeLockToken(lockTokens[i]);
