@@ -98,6 +98,16 @@ Change History
 
 Changes since 1.0-rc1:
 
+  [JCR-348] Add automatic default configuration
+  [JCR-347] Jcr-server: Parsing NodeTypeProperty not compliant with definition
+  [JCR-346] Jcr-Server: ItemDefinitionImpl.toXml throws NPE for the root node
+  [JCR-345] Jcr-Server: DavException doesn't allow to specify an exception ...
+  [JCR-344] Jcr-server: DeltaVResource lists MKWORKSPACE in the method ...
+  [JCR-343] Jcr-server: Report#init limits the Report interface to DeltaV ...
+  [JCR-342] Jcr-Server: DavResource#getDavSession() missing
+  [JCR-341] Jcr-Server: registration of ReportTypes fails
+  [JCR-340] Jcr-Server: ValuesProperty missing property type information
+  [JCR-337] Jcr-Server: remove jcr depedency from dav-library
   [JCR-335] Deadlock caused by versioning operations within transaction
 
 Changes since 0.9:
