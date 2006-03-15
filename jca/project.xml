@@ -48,7 +48,16 @@
 	    <properties>
 		<rar.bundle>true</rar.bundle>
 	    </properties>	    
-	</dependency> 
+	</dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.0</version>
+            <url>http://www.slf4j.org/download.html</url>
+            <properties>
+                <rar.bundle>true</rar.bundle>
+            </properties>
+        </dependency>
 	<dependency>
 	    <artifactId>log4j</artifactId>
 	    <groupId>log4j</groupId>
