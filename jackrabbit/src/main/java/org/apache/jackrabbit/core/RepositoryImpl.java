@@ -112,7 +112,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     public static final NodeId NODETYPES_NODE_ID = NodeId.valueOf("deadbeef-cafe-cafe-cafe-babecafebabe");
 
     /**
-     * the name of the filesystem resource containing the properties of the
+     * the name of the file system resource containing the properties of the
      * repository.
      */
     private static final String PROPERTIES_RESOURCE = "rep.properties";
@@ -142,7 +142,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     // configuration of the repository
     protected final RepositoryConfig repConfig;
 
-    // the master filesystem
+    // the virtual repository file system
     private final FileSystem repStore;
 
     // sub file system where the repository stores meta data such as uuid of root node, etc.
@@ -198,7 +198,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         acquireRepositoryLock() ;
 
         // setup file systems
-        repStore = repConfig.getFileSystem();
+        repStore = repConfig.getFileSystemConfig().createFileSystem();
         String fsRootPath = "/meta";
         try {
             if (!repStore.exists(fsRootPath) || !repStore.isFolder(fsRootPath)) {
@@ -280,13 +280,14 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     protected VersionManager createVersionManager(VersioningConfig vConfig,
                                                   DelegatingObservationDispatcher delegatingDispatcher)
             throws RepositoryException {
+        FileSystem fs = vConfig.getFileSystemConfig().createFileSystem();
         PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
-                vConfig.getFileSystem(),
+                fs,
                 vConfig.getPersistenceManagerConfig(),
                 rootNodeId,
                 nsReg,
                 ntReg);
-        return new VersionManagerImpl(pm, ntReg, delegatingDispatcher,
+        return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
                 VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID);
     }
 
@@ -874,14 +875,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             // close repository file system
             repStore.close();
         } catch (FileSystemException e) {
-            log.error("error while closing repository filesystem", e);
-        }
-
-        try {
-            // close versioning file system
-            repConfig.getVersioningConfig().getFileSystem().close();
-        } catch (FileSystemException e) {
-            log.error("error while closing versioning filesystem", e);
+            log.error("error while closing repository file system", e);
         }
 
         // make sure this instance is not used anymore
@@ -904,6 +898,14 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      */
     public RepositoryConfig getConfig() {
         return repConfig;
+    }
+
+    /**
+     * Returns the repository file system.
+     * @return repository file system
+     */
+    protected FileSystem getFileSystem() {
+        return repStore;
     }
 
     /**
@@ -1505,8 +1507,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             log.info("initializing workspace '" + getName() + "'...");
 
             FileSystemConfig fsConfig = config.getFileSystemConfig();
-            fsConfig.init();
-            fs = fsConfig.getFileSystem();
+            fs = fsConfig.createFileSystem();
 
             persistMgr = createPersistenceManager(new File(config.getHomeDir()),
                     fs,
@@ -1587,8 +1588,12 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             }
 
             // close workspace file system
-            FileSystemConfig fsConfig = config.getFileSystemConfig();
-            fsConfig.dispose();
+            try {
+                fs.close();
+            } catch (FileSystemException fse) {
+                log.error("error while closing file system of workspace "
+                        + config.getName(), fse);
+            }
             fs = null;
 
             // reset idle timestamp
