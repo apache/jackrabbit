@@ -20,7 +20,8 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.SessionNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -49,7 +50,7 @@ import javax.jcr.Session;
  */
 abstract class AbstractSAXEventGenerator {
 
-    private static Logger log = Logger.getLogger(AbstractSAXEventGenerator.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractSAXEventGenerator.class);
 
     /**
      * the session to be used for resolving namespace mappings

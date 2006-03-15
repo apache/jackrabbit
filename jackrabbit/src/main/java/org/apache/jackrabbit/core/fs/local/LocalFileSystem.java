@@ -20,7 +20,8 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.apache.jackrabbit.util.LazyFileInputStream;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -36,7 +37,7 @@ import java.io.RandomAccessFile;
  */
 public class LocalFileSystem implements FileSystem {
 
-    private static Logger log = Logger.getLogger(LocalFileSystem.class);
+    private static Logger log = LoggerFactory.getLogger(LocalFileSystem.class);
 
     private File root;
 

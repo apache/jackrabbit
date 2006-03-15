@@ -21,7 +21,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -38,7 +39,7 @@ import java.util.Stack;
  */
 class DocViewImportHandler extends TargetImportHandler {
 
-    private static Logger log = Logger.getLogger(DocViewImportHandler.class);
+    private static Logger log = LoggerFactory.getLogger(DocViewImportHandler.class);
 
     /**
      * stack of NodeInfo instances; an instance is pushed onto the stack

@@ -21,7 +21,8 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
@@ -34,7 +35,7 @@ public final class EventImpl implements Event {
     /**
      * Logger instance for this class
      */
-    private static final Logger log = Logger.getLogger(EventImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(EventImpl.class);
 
     /**
      * The session of the {@link javax.jcr.observation.EventListener} this

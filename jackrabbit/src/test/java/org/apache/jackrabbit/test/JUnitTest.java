@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import junit.framework.TestCase;
-import org.apache.log4j.Logger;
 
 /**
  * Abstract base class for any JUnit test case.
@@ -27,7 +29,7 @@ public abstract class JUnitTest extends TestCase {
     /**
      * Logger instance for test cases
      */
-    private static final Logger logger = Logger.getLogger(JUnitTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(JUnitTest.class);
 
     /**
      * Output stream for general messages from tests.

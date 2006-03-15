@@ -20,7 +20,8 @@ import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
@@ -50,7 +51,7 @@ import javax.jcr.RepositoryException;
  */
 public class ImportHandler extends DefaultHandler {
 
-    private static Logger log = Logger.getLogger(ImportHandler.class);
+    private static Logger log = LoggerFactory.getLogger(ImportHandler.class);
 
     protected final Importer importer;
     protected final NamespaceRegistryImpl nsReg;

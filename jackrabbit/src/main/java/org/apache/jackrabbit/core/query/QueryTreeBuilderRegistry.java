@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.spi.ServiceRegistry;
 import javax.jcr.query.InvalidQueryException;
@@ -32,7 +33,7 @@ public class QueryTreeBuilderRegistry {
     /**
      * Logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(QueryTreeBuilderRegistry.class);
+    private static final Logger log = LoggerFactory.getLogger(QueryTreeBuilderRegistry.class);
 
     /**
      * List of <code>QueryTreeBuilder</code> instances known to the classloader.

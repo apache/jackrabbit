@@ -20,7 +20,8 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.EventListener;
@@ -37,7 +38,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
     /**
      * The logger instance of this class
      */
-    private static final Logger log = Logger.getLogger(ObservationManagerImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ObservationManagerImpl.class);
 
     /**
      * The <code>Session</code> this <code>ObservationManager</code>

@@ -35,7 +35,8 @@ import org.apache.jackrabbit.core.state.ItemStateReferenceMap;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.util.HashSet;
@@ -49,7 +50,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     /**
      * the default logger
      */
-    private static Logger log = Logger.getLogger(AbstractVISProvider.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractVISProvider.class);
 
     /**
      * the root node

@@ -38,7 +38,8 @@ import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
@@ -78,7 +79,7 @@ import java.util.Map;
  */
 public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
-    private static Logger log = Logger.getLogger(ItemManager.class);
+    private static Logger log = LoggerFactory.getLogger(ItemManager.class);
 
     private final NodeDefinition rootNodeDef;
     private final NodeId rootNodeId;

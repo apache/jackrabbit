@@ -27,7 +27,8 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -50,7 +51,7 @@ public class NodeIndexer {
     /**
      * The logger instance for this class.
      */
-    private static final Logger log = Logger.getLogger(NodeIndexer.class);
+    private static final Logger log = LoggerFactory.getLogger(NodeIndexer.class);
 
     /**
      * The <code>NodeState</code> of the node to index

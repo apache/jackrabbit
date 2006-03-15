@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.state.db;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -60,7 +61,7 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(DerbyPersistenceManager.class);
+    private static Logger log = LoggerFactory.getLogger(DerbyPersistenceManager.class);
 
     /**
      * Creates a new <code>SimpleDbPersistenceManager</code> instance.

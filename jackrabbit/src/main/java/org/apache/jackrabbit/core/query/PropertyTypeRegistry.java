@@ -22,7 +22,8 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -41,7 +42,7 @@ import java.util.Map;
 public class PropertyTypeRegistry implements NodeTypeRegistryListener {
 
     /** The logger instance for this class */
-    private static final Logger log = Logger.getLogger(PropertyTypeRegistry.class);
+    private static final Logger log = LoggerFactory.getLogger(PropertyTypeRegistry.class);
 
     /**
      * Empty <code>TypeMapping</code> array as return value if no type is

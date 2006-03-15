@@ -20,7 +20,8 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -40,7 +41,7 @@ import java.util.List;
  */
 public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
-    private static Logger log = Logger.getLogger(DocViewSAXEventGenerator.class);
+    private static Logger log = LoggerFactory.getLogger(DocViewSAXEventGenerator.class);
 
     public static final String CDATA_TYPE = "CDATA";
 

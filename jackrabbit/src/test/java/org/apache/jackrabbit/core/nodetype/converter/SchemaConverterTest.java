@@ -22,7 +22,8 @@ import org.apache.jackrabbit.util.name.NamespaceMapping;
 import org.apache.jackrabbit.util.name.NamespaceExtractor;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.io.*;
@@ -43,7 +44,7 @@ import javax.jcr.NamespaceException;
  */
 public class SchemaConverterTest extends TestCase {
 
-    private static Logger log = Logger.getLogger(SchemaConverterTest.class);
+    private static Logger log = LoggerFactory.getLogger(SchemaConverterTest.class);
     private static final String TEST_INPUT_FILE = "applications/test/xsd-converter-test-input.xsd";
     private static final String MODEL_RESULT_FILE = "applications/test/xsd-converter-model-output.cnd";
     private static final String DEFAULT_PREFIX = "test";

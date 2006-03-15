@@ -26,7 +26,8 @@ import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
@@ -51,7 +52,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(CachingHierarchyManager.class);
+    private static Logger log = LoggerFactory.getLogger(CachingHierarchyManager.class);
 
     /**
      * Mapping of paths to children in the path map

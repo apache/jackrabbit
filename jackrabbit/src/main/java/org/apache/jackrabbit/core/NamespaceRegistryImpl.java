@@ -23,7 +23,8 @@ import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.xerces.util.XMLChar;
 
 import javax.jcr.AccessDeniedException;
@@ -44,7 +45,7 @@ import java.util.Properties;
 public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         implements NamespaceRegistry {
 
-    private static Logger log = Logger.getLogger(NamespaceRegistryImpl.class);
+    private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
     private static final String NS_REG_RESOURCE = "ns_reg.properties";
 
