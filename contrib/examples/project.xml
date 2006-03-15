@@ -29,7 +29,7 @@
     <logo>http://incubator.apache.org/images/apache-incubator-logo.png</logo>
   </organization>
   <inceptionYear>2005</inceptionYear>
-  <package>org.apache.jackrabbit.examples*</package>
+  <package>org.apache.jackrabbit.examples.*</package>
   <logo>/images/jackrabbitlogo.gif</logo>
   <description>
     The Jackrabbit Examples package contains example code for illustrating
@@ -78,6 +78,12 @@
       <groupId>geronimo-spec</groupId>
       <artifactId>geronimo-spec-jta</artifactId>
       <version>1.0-M1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.0</version>
+      <url>http://www.slf4j.org/download.html</url>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
