@@ -21,17 +21,9 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 
 /**
  * File system configuration. This bean configuration class
- * is used to create a configured file system object. The file system
- * is instantiated by the {@link #init() init()} method, and accessible
- * using the {@link #getFileSystem() getFileSystem()} method. Calling
- * {@link #dispose() dispose()} will close and dispose a file system instance
- * previously created by the {@link #init() init()} method.
- *
+ * is used to create a configured file system object.
  */
 public class FileSystemConfig extends BeanConfig {
-
-    /** The initialized file system implementation. */
-    private FileSystem fs;
 
     /**
      * Creates a file system configuration object.
@@ -40,67 +32,27 @@ public class FileSystemConfig extends BeanConfig {
      */
     public FileSystemConfig(BeanConfig config) {
         super(config);
-        fs = null;
     }
 
     /**
      * Instantiates and initializes the configured file system
      * implementation class.
      *
+     * @return new initialized file system instance.
      * @throws ConfigurationException on file system initialization errors
-     * @throws IllegalStateException if the file system has already been
-     *                               initialized
      */
-    public void init() throws ConfigurationException, IllegalStateException {
-        if (fs == null) {
-            try {
-                fs = (FileSystem) newInstance();
-                fs.init();
-            } catch (ClassCastException e) {
-                throw new ConfigurationException(
-                        "Invalid file system implementation class "
-                        + getClassName() + ".", e);
-            } catch (FileSystemException e) {
-                throw new ConfigurationException(
-                        "File system initialization failure.", e);
-            }
-        } else {
-            throw new IllegalStateException(
-            "File system has already been initialized.");
-        }
-    }
-
-    /**
-     * Closes and disposes a file system instance previously created by the
-     * {@link #init() init()} method, i.e. resets this instance to the
-     * <i>uninitialized</i> state.
-     */
-    public void dispose() {
-        if (fs != null) {
-            try {
-                fs.close();
-            } catch (FileSystemException fse) {
-                // ignore...
-            }
-            fs = null;
-        } else {
-            throw new IllegalStateException("File system has not been initialized.");
-        }
-    }
-
-    /**
-     * Returns the configured file system. The {@link #init() init()} method
-     * must have been called before this method can be invoked.
-     *
-     * @return configured file system
-     * @throws IllegalStateException if the file system has not been initialized
-     */
-    public FileSystem getFileSystem() throws IllegalStateException {
-        if (fs != null) {
+    public FileSystem createFileSystem() throws ConfigurationException {
+        try {
+            FileSystem fs = (FileSystem) newInstance();
+            fs.init();
             return fs;
-        } else {
-            throw new IllegalStateException(
-                    "File system has not been initialized.");
+        } catch (ClassCastException e) {
+            throw new ConfigurationException(
+                    "Invalid file system implementation class "
+                    + getClassName() + ".", e);
+        } catch (FileSystemException e) {
+            throw new ConfigurationException(
+                    "File system initialization failure.", e);
         }
     }
 }

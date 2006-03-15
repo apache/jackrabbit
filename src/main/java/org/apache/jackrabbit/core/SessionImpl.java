@@ -310,7 +310,7 @@ public class SessionImpl implements Session, Dumpable {
         AccessManagerConfig amConfig = rep.getConfig().getAccessManagerConfig();
         try {
             AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
-                    rep.getConfig().getFileSystem(),
+                    rep.getFileSystem(),
                     subject,
                     hierMgr,
                     wsp.getName());
