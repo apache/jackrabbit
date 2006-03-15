@@ -71,17 +71,6 @@ public class WorkspaceConfig {
     }
 
     /**
-     * Initializes the search index implementation.
-     *
-     * @throws ConfigurationException on initialization errors
-     */
-    public void init() throws ConfigurationException {
-        if (sc != null) {
-            sc.init();
-        }
-    }
-
-    /**
      * Returns the workspace home directory.
      *
      * @return workspace home directory

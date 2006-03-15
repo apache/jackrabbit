@@ -62,15 +62,6 @@ public class VersioningConfig {
     }
 
     /**
-     * Initializes the versioning file system.
-     *
-     * @throws ConfigurationException on file system configuration errors
-     */
-    public void init() throws ConfigurationException {
-        fsc.init();
-    }
-
-    /**
      * Returns the versioning home directory.
      *
      * @return versioning home directory
@@ -80,12 +71,12 @@ public class VersioningConfig {
     }
 
     /**
-     * Returns the versioning file system implementation.
+     * Returns the configuration for the <code>FileSystem</code>.
      *
-     * @return file system implementation
+     * @return the <code>FileSystemConfig</code> for this <code>VersionConfig</code>.
      */
-    public FileSystem getFileSystem() {
-        return fsc.getFileSystem();
+    public FileSystemConfig getFileSystemConfig() {
+        return fsc;
     }
 
     /**

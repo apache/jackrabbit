@@ -52,7 +52,7 @@ import java.util.Properties;
  * create configured repository objects.
  * <p>
  * The contained configuration information are: the home directory and name
- * of the repository, the access manager, file system, versioning
+ * of the repository, the access manager, file system and versioning
  * configuration, repository index configuration, the workspace directory,
  * the default workspace name, and the workspace configuration template. In
  * addition the workspace configuration object keeps track of all configured
@@ -244,7 +244,7 @@ public class RepositoryConfig {
             String defaultWorkspace, int workspaceMaxIdleTime,
             Element template, VersioningConfig vc, SearchConfig sc,
             ConfigurationParser parser) {
-        this.workspaces = new HashMap();
+        workspaces = new HashMap();
         this.home = home;
         this.name = name;
         this.amc = amc;
@@ -261,17 +261,17 @@ public class RepositoryConfig {
     }
 
     /**
-     * Initializes the repository configuration. This method first initializes
-     * the repository file system and versioning configurations and then
-     * loads and initializes the configurations for all available workspaces.
+     * Initializes the repository configuration. This method loads the
+     * configurations for all available workspaces.
      *
      * @throws ConfigurationException on initialization errors
+     * @throws IllegalStateException if the repository configuration has already
+     *                               been initialized
      */
-    protected void init() throws ConfigurationException {
-        fsc.init();
-        vc.init();
-        if (sc != null) {
-            sc.init();
+    public void init() throws ConfigurationException, IllegalStateException {
+        if (!workspaces.isEmpty()) {
+            throw new IllegalStateException(
+                    "Repository configuration has already been initialized.");
         }
 
         // Get the physical workspace root directory (create it if not found)
@@ -285,7 +285,7 @@ public class RepositoryConfig {
             // a configuration directoy had been specified; search for
             // workspace configurations in virtual repository file system
             // rather than in physical workspace root directory on disk
-            FileSystem fs = fsc.getFileSystem();
+            FileSystem fs = fsc.createFileSystem();
             try {
                 if (!fs.exists(workspaceConfigDirectory)) {
                     fs.createFolder(workspaceConfigDirectory);
@@ -296,7 +296,6 @@ public class RepositoryConfig {
                                 + FileSystem.SEPARATOR + dirNames[i];
                         WorkspaceConfig wc = loadWorkspaceConfig(fs, configDir);
                         if (wc != null) {
-                            wc.init();
                             addWorkspaceConfig(wc);
                         }
                     }
@@ -306,6 +305,10 @@ public class RepositoryConfig {
                 throw new ConfigurationException(
                         "error while loading workspace configurations from path "
                         + workspaceConfigDirectory, e);
+            } finally {
+                try {
+                    fs.close();
+                } catch (FileSystemException ignore) {}
             }
         } else {
             // search for workspace configurations in physical workspace root
@@ -319,7 +322,6 @@ public class RepositoryConfig {
             for (int i = 0; i < files.length; i++) {
                 WorkspaceConfig wc = loadWorkspaceConfig(files[i]);
                 if (wc != null) {
-                    wc.init();
                     addWorkspaceConfig(wc);
                 }
             }
@@ -475,78 +477,93 @@ public class RepositoryConfig {
             }
         }
 
-        Writer configWriter;
-
-        // get a writer for the workspace configuration file
+        FileSystem virtualFS;
         if (workspaceConfigDirectory != null) {
-            // a configuration directoy had been specified; create workspace
-            // configuration in virtual repository file system rather than
-            // on disk
-            FileSystem fs = fsc.getFileSystem();
-            String configDir = workspaceConfigDirectory
-                    + FileSystem.SEPARATOR + name;
-            String configFile = configDir + FileSystem.SEPARATOR + WORKSPACE_XML;
-            try {
-                // Create the directory
-                fs.createFolder(configDir);
-                configWriter = new OutputStreamWriter(
-                        fs.getOutputStream(configFile));
-            } catch (FileSystemException e) {
-                throw new ConfigurationException(
-                        "failed to create workspace configuration at path "
-                        + configFile, e);
-            }
+            // a configuration directoy had been specified;
+            // workspace configurations are maintained in
+            // virtual repository file system
+            virtualFS = fsc.createFileSystem();
         } else {
-            File file = new File(directory, WORKSPACE_XML);
-            try {
-                configWriter = new FileWriter(file);
-            } catch (IOException e) {
-                throw new ConfigurationException(
-                        "failed to create workspace configuration at path "
-                        + file.getPath(), e);
-            }
+            // workspace configurations are maintained on disk
+            virtualFS = null;
         }
-
-        // Create the workspace.xml file using the configuration template and
-        // the configuration writer.
         try {
-            template.setAttribute("name", name);
+            Writer configWriter;
 
-            TransformerFactory factory = TransformerFactory.newInstance();
-            Transformer transformer = factory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.transform(
-                    new DOMSource(template), new StreamResult(configWriter));
-        } catch (TransformerConfigurationException e) {
-            throw new ConfigurationException(
-                    "Cannot create a workspace configuration writer", e);
-        } catch (TransformerException e) {
-            throw new ConfigurationException(
-                    "Cannot create a workspace configuration file", e);
+            // get a writer for the workspace configuration file
+            if (virtualFS != null) {
+                // a configuration directoy had been specified; create workspace
+                // configuration in virtual repository file system rather than
+                // on disk
+                String configDir = workspaceConfigDirectory
+                        + FileSystem.SEPARATOR + name;
+                String configFile = configDir + FileSystem.SEPARATOR + WORKSPACE_XML;
+                try {
+                    // Create the directory
+                    virtualFS.createFolder(configDir);
+                    configWriter = new OutputStreamWriter(
+                            virtualFS.getOutputStream(configFile));
+                } catch (FileSystemException e) {
+                    throw new ConfigurationException(
+                            "failed to create workspace configuration at path "
+                            + configFile, e);
+                }
+            } else {
+                File file = new File(directory, WORKSPACE_XML);
+                try {
+                    configWriter = new FileWriter(file);
+                } catch (IOException e) {
+                    throw new ConfigurationException(
+                            "failed to create workspace configuration at path "
+                            + file.getPath(), e);
+                }
+            }
+
+            // Create the workspace.xml file using the configuration template and
+            // the configuration writer.
+            try {
+                template.setAttribute("name", name);
+
+                TransformerFactory factory = TransformerFactory.newInstance();
+                Transformer transformer = factory.newTransformer();
+                transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+                transformer.transform(
+                        new DOMSource(template), new StreamResult(configWriter));
+            } catch (TransformerConfigurationException e) {
+                throw new ConfigurationException(
+                        "Cannot create a workspace configuration writer", e);
+            } catch (TransformerException e) {
+                throw new ConfigurationException(
+                        "Cannot create a workspace configuration file", e);
+            } finally {
+                try {
+                    configWriter.close();
+                } catch (IOException ignore) {}
+            }
+
+            // Load the created workspace configuration.
+            WorkspaceConfig wc;
+            if (virtualFS != null) {
+                String configDir = workspaceConfigDirectory
+                        + FileSystem.SEPARATOR + name;
+                wc = loadWorkspaceConfig(virtualFS, configDir);
+            } else {
+                wc = loadWorkspaceConfig(directory);
+            }
+            if (wc != null) {
+                addWorkspaceConfig(wc);
+                return wc;
+            } else {
+                throw new ConfigurationException(
+                        "Failed to load the created configuration for workspace "
+                        + name + ".");
+            }
         } finally {
             try {
-                configWriter.close();
-            } catch (IOException ignore) {}
-        }
-
-        // Load the created workspace configuration.
-        WorkspaceConfig wc;
-        if (workspaceConfigDirectory != null) {
-            FileSystem fs = fsc.getFileSystem();
-            String configDir = workspaceConfigDirectory
-                    + FileSystem.SEPARATOR + name;
-            wc = loadWorkspaceConfig(fs, configDir);
-        } else {
-            wc = loadWorkspaceConfig(directory);
-        }
-        if (wc != null) {
-            wc.init();
-            addWorkspaceConfig(wc);
-            return wc;
-        } else {
-            throw new ConfigurationException(
-                    "Failed to load the created configuration for workspace "
-                    + name + ".");
+                if (virtualFS != null) {
+                    virtualFS.close();
+                }
+            } catch (FileSystemException ignore) {}
         }
     }
 
@@ -565,7 +582,6 @@ public class RepositoryConfig {
      */
     public WorkspaceConfig createWorkspaceConfig(String name)
             throws ConfigurationException {
-
         // use workspace template from repository.xml
         return internalCreateWorkspaceConfig(name, template);
     }
@@ -606,12 +622,12 @@ public class RepositoryConfig {
     }
 
     /**
-     * Returns the repository file system implementation.
+     * Returns the repository file system configuration.
      *
-     * @return file system implementation
+     * @return file system configuration
      */
-    public FileSystem getFileSystem() {
-        return fsc.getFileSystem();
+    public FileSystemConfig getFileSystemConfig() {
+        return fsc;
     }
 
     /**

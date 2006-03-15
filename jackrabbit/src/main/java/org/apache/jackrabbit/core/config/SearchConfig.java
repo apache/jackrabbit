@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-
 import java.util.Properties;
 
 /**
@@ -25,7 +23,7 @@ import java.util.Properties;
  * is used to create configured search index objects.
  * <p>
  * In addition to generic bean configuration information, this
- * class also contains an optionally configured file system implementation
+ * class also contains an optional file system configuration
  * used by the search index.
  *
  * @see WorkspaceConfig#getSearchConfig()
@@ -53,36 +51,12 @@ public class SearchConfig extends BeanConfig {
     }
 
     /**
-     * Initializes the search index file system if one is configured.
-     *
-     * @throws ConfigurationException on file system configuration errors
-     */
-    public void init() throws ConfigurationException {
-        if (fsc != null) {
-            fsc.init();
-        }
-    }
-
-    /**
      * Returns the search implementation class name.
      *
      * @return search implementation class name
      */
     public String getHandlerClassName() {
         return getClassName();
-    }
-
-    /**
-     * Returns the search index file system, or <code>null</code> if none is
-     * configured.
-     *
-     * @return search index file system
-     */
-    public FileSystem getFileSystem() {
-        if (fsc == null) {
-            return null;
-        }
-        return fsc.getFileSystem();
     }
 
     /**
@@ -94,5 +68,4 @@ public class SearchConfig extends BeanConfig {
     public FileSystemConfig getFileSystemConfig() {
         return fsc;
     }
-
 }

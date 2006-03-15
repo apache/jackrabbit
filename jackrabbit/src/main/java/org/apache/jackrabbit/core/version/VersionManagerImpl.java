@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
@@ -70,6 +71,11 @@ public class VersionManagerImpl extends AbstractVersionManager
     private final PersistenceManager pMgr;
 
     /**
+     * The file system for this version manager
+     */
+    private final FileSystem fs;
+
+    /**
      * the shared state manager for the version storage
      */
     private SharedItemStateManager sharedStateMgr;
@@ -108,11 +114,13 @@ public class VersionManagerImpl extends AbstractVersionManager
      * Creates a bew vesuion manager
      *
      */
-    public VersionManagerImpl(PersistenceManager pMgr, NodeTypeRegistry ntReg,
+    public VersionManagerImpl(PersistenceManager pMgr, FileSystem fs,
+                              NodeTypeRegistry ntReg,
                               DelegatingObservationDispatcher obsMgr, NodeId rootId,
                               NodeId rootParentId) throws RepositoryException {
         try {
             this.pMgr = pMgr;
+            this.fs = fs;
             this.ntReg = ntReg;
             this.obsMgr = obsMgr;
 
@@ -161,6 +169,7 @@ public class VersionManagerImpl extends AbstractVersionManager
      */
     public void close() throws Exception {
         pMgr.close();
+        fs.close();
     }
 
     /**

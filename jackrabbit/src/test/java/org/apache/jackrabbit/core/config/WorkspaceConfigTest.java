@@ -47,7 +47,6 @@ public class WorkspaceConfigTest extends TestCase {
                 "org/apache/jackrabbit/core/config/workspace.xml");
         WorkspaceConfig config =
             parser.parseWorkspaceConfig(new InputSource(xml));
-        config.init();
 
         assertEquals("target", config.getHomeDir());
         assertEquals("default", config.getName());
