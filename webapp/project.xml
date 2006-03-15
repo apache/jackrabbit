@@ -152,7 +152,13 @@
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
-
+        <dependency>
+            <!-- slf4j-log4j12 -->
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.0</version>
+            <url>http://www.slf4j.org/download.html</url>
+        </dependency>
         <!--
           cqfs-jackrabbit and cqfs are optional runtime dependencies 
           (an alternative FileSystem implementation); 
