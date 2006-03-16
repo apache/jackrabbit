@@ -14,21 +14,6 @@ reference implementation, the Jackrabbit 1.0 release implements the
 full JCR API, including level 1, level 2, and all the optional features
 like versioning, transactions, and observation. 
 
-Incubation
-----------
-
-Apache Jackrabbit is an effort undergoing incubation at the
-Apache Software Foundation. Incubation is required of all newly
-accepted projects until a further review indicates that the
-infrastructure, communications, and decision making process
-have stabilized in a manner consistent with other successful
-ASF projects. While incubation status is not necessarily a
-reflection of the completeness or stability of the code, it
-does indicate that the project has yet to be fully endorsed
-by the ASF.  The incubation status is recorded at
-
-   http://incubator.apache.org/projects/jackrabbit.html
-
 Release Contents
 ----------------
 
@@ -98,6 +83,8 @@ Change History
 
 Changes since 1.0-rc1:
 
+  [JCR-354] Use a pre-generated version of XPath.jjt
+  [JCR-351] Default to anonymous access when no Credentials are given
   [JCR-348] Add automatic default configuration
   [JCR-347] Jcr-server: Parsing NodeTypeProperty not compliant with definition
   [JCR-346] Jcr-Server: ItemDefinitionImpl.toXml throws NPE for the root node
