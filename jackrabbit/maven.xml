@@ -115,11 +115,7 @@
             <ant:not>
                 <ant:uptodate targetfile="${maven.gen.src}/java/org/apache/jackrabbit/core/query/xpath/XPath.java">
                     <ant:srcfiles dir="${maven.src.dir}/main/javacc/xpath">
-                        <ant:include name="javacc.xsl"/>
-                        <ant:include name="jjtree.xsl"/>
-                        <ant:include name="jjtree-jackrabbit.xsl"/>
-                        <ant:include name="strip.xsl"/>
-                        <ant:include name="xpath-grammar.xml"/>
+                        <ant:include name="XPath.jjt"/>
                     </ant:srcfiles>
                 </ant:uptodate>
             </ant:not>
@@ -167,27 +163,13 @@
 
     <!-- Generates the XPath Parser -->
     <goal name="jackrabbit:generate-xpath-parser">
-        <!-- Generate the JavaCC grammar file using XSLT -->
-        <ant:mkdir dir="${maven.gen.src}/javacc"/>
-        <!-- The following is a hack to get xslt work with maven (See: http://maven.apache.org/faq.html#BadXSLT ) -->
-        ${systemScope.setProperty('javax.xml.transform.TransformerFactory','org.apache.xalan.processor.TransformerFactoryImpl')}
-        <ant:xslt style="${maven.src.dir}/main/javacc/xpath/strip.xsl"
-            in="${maven.src.dir}/main/javacc/xpath/xpath-grammar.xml"
-            out="${maven.gen.src}/javacc/stripped-xpath-grammar.xml"
-            force="yes">
-        </ant:xslt>
-        <ant:xslt style="${maven.src.dir}/main/javacc/xpath/jjtree-jackrabbit.xsl"
-            in="${maven.gen.src}/javacc/stripped-xpath-grammar.xml"
-            out="${maven.gen.src}/javacc/XPath.jjt"
-            force="yes">
-        </ant:xslt>
         <!-- Generate the XPath parser using JavaCC -->
         <j:set var="maven.javacc.jjtree.package"
                value="org.apache.jackrabbit.core.query.xpath"/>
         <j:set var="maven.javacc.javacc.package"
                value="${maven.javacc.jjtree.package}"/>
         <j:set var="maven.javacc.jjtree.grammar"
-               value="${maven.gen.src}/javacc/XPath.jjt"/>
+               value="${maven.src.dir}/main/javacc/xpath/XPath.jjt"/>
         <attainGoal name="javacc"/>
         <!-- Remove files that have been customized in Jackrabbit. -->
         <ant:delete>
@@ -195,6 +177,28 @@
             <ant:include name="SimpleNode.java"/>
           </ant:fileset>
         </ant:delete>
+    </goal>
+
+    <!--
+      Generates the XPath parser JJT file. This goal needs to be manually
+      invoked to regenerate the XPath.jjt file whenever the XML and XSL
+      source files are updated. The resulting file is stored as a normal
+      source file instead of automatically generating it to avoid the XSLT
+      problems described in JCR-46.
+    -->
+    <goal name="jackrabbit:generate-xpath-parser-jjt">
+        <!-- Generate the JavaCC grammar file using XSLT -->
+        <ant:mkdir dir="${maven.gen.src}/javacc"/>
+        <!-- The following is a hack to get xslt work with maven (See: http://maven.apache.org/faq.html#BadXSLT ) -->
+        ${systemScope.setProperty('javax.xml.transform.TransformerFactory','org.apache.xalan.processor.TransformerFactoryImpl')}
+        <ant:xslt style="${maven.src.dir}/main/javacc/xpath/strip.xsl"
+            in="${maven.src.dir}/main/javacc/xpath/xpath-grammar.xml"
+            out="${maven.gen.src}/javacc/stripped-xpath-grammar.xml"
+            force="yes"/>
+        <ant:xslt style="${maven.src.dir}/main/javacc/xpath/jjtree-jackrabbit.xsl"
+            in="${maven.gen.src}/javacc/stripped-xpath-grammar.xml"
+            out="${maven.gen.src}/javacc/XPath.jjt"
+            force="yes"/>
     </goal>
 
     <!-- Generates the fulltext query Parser -->
