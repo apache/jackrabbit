@@ -84,17 +84,6 @@
           with Maven 1.1 and Java 5.
         </p>
         <p>
-          <strong>Note for Java 5 users:</strong>
-          As discussed in
-          <a href="http://issues.apache.org/jira/browse/JCR-46">JCR-46</a>, you
-          need to <a href="http://xml.apache.org/xalan-j/downloads.html">download</a>
-          the <a href="http://xml.apache.org/xalan-j/">Xalan-Java</a> files
-          <code>xalan.jar</code> and <code>serializer.jar</code> and place them
-          in <code>$MAVEN_HOME/lib/endorsed</code> (or <code>$JAVA_HOME/jre/lib/endorsed</code>
-          if you use Maven 1.1) to avoid problems in generating the JavaCC
-          grammar files used by Jackrabbit.
-        </p>
-        <p>
           See the Maven 1.x
           <a href="http://maven.apache.org/maven-1.x/start/install.html">installation</a>
           and <a href="http://maven.apache.org/maven-1.x/start/quick-start.html">quick-start</a>
