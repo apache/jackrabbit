@@ -45,6 +45,11 @@ public class SimpleLoginModule implements LoginModule {
     private static final String OPT_ANONYMOUS = "anonymousId";
 
     /**
+     * Name of the default user id option in the LoginModule configuration
+     */
+    private static final String OPT_DEFAULT = "defaultUserId";
+
+    /**
      * The default user id for anonymous login
      */
     private static final String DEFAULT_ANONYMOUS_ID = "anonymous";
@@ -68,9 +73,52 @@ public class SimpleLoginModule implements LoginModule {
     private String anonymousUserId = DEFAULT_ANONYMOUS_ID;
 
     /**
+     * The default user id. Only used when not <code>null</code>.
+     */
+    private String defaultUserId = null;
+
+    /**
      * Constructor
      */
     public SimpleLoginModule() {
+    }
+
+    /**
+     * Returns the anonymous user id.
+     *
+     * @return anonymous user id
+     */
+    public String getAnonymousId() {
+        return anonymousUserId;
+    }
+
+    /**
+     * Sets the default user id to be used when no login credentials
+     * are presented.
+     * 
+     * @param defaultUserId default user id
+     */
+    public void setAnonymousId(String anonymousId) {
+        this.anonymousUserId = anonymousId;
+    }
+
+    /**
+     * Returns the default user id.
+     *
+     * @return default user id
+     */
+    public String getDefaultUserId() {
+        return defaultUserId;
+    }
+
+    /**
+     * Sets the default user id to be used when no login credentials
+     * are presented.
+     * 
+     * @param defaultUserId default user id
+     */
+    public void setDefaultUserId(String defaultUserId) {
+        this.defaultUserId = defaultUserId;
     }
 
     //----------------------------------------------------------< LoginModule >
@@ -90,6 +138,9 @@ public class SimpleLoginModule implements LoginModule {
         if (userId != null) {
             anonymousUserId = userId;
         }
+        if (options.containsKey(OPT_DEFAULT)) {
+            defaultUserId = (String) options.get(OPT_DEFAULT);
+        }
     }
 
     /**
@@ -101,17 +152,14 @@ public class SimpleLoginModule implements LoginModule {
             throw new LoginException("no CallbackHandler available");
         }
 
-        Callback[] callbacks = new Callback[]{
-            new CredentialsCallback()
-        };
-
         boolean authenticated = false;
         principals.clear();
         try {
-            callbackHandler.handle(callbacks);
-            // credentials
-            CredentialsCallback ccb = (CredentialsCallback) callbacks[0];
+            // Get credentials using a JAAS callback
+            CredentialsCallback ccb = new CredentialsCallback();
+            callbackHandler.handle(new Callback[] { ccb });
             Credentials creds = ccb.getCredentials();
+            // Use the credentials to set up principals
             if (creds != null) {
                 if (creds instanceof SimpleCredentials) {
                     SimpleCredentials sc = (SimpleCredentials) creds;
@@ -133,6 +181,12 @@ public class SimpleLoginModule implements LoginModule {
                     }
                     authenticated = true;
                 }
+            } else if (defaultUserId != null) {
+                principals.add(new UserPrincipal(defaultUserId));
+                authenticated = true;
+            } else {
+                principals.add(new AnonymousPrincipal());
+                authenticated = true;
             }
         } catch (java.io.IOException ioe) {
             throw new LoginException(ioe.toString());

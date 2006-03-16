@@ -149,6 +149,11 @@
         <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule">
            <!-- anonymous user name ('anonymous' is the default value) -->
            <param name="anonymousId" value="anonymous"/>
+           <!--
+              default user name to be used instead of the anonymous user
+              when no login credentials are provided (unset by default)
+           -->
+           <!-- <param name="defaultUserId" value="superuser"/> -->
         </LoginModule>
     </Security>
 
