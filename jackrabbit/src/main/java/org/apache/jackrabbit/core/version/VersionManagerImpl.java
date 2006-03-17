@@ -111,7 +111,7 @@ public class VersionManagerImpl extends AbstractVersionManager
     private final Object eventSourceLock = new Object();
 
     /**
-     * Creates a bew vesuion manager
+     * Creates a new version manager
      *
      */
     public VersionManagerImpl(PersistenceManager pMgr, FileSystem fs,
