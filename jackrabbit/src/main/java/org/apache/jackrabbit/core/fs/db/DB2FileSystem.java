@@ -20,8 +20,6 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.DriverManager;
-
 /**
  * <code>DB2FileSystem</code> is a JDBC-based <code>FileSystem</code>
  * implementation for Jackrabbit that persists file system entries in a
@@ -84,9 +82,7 @@ public class DB2FileSystem extends DbFileSystem {
 
         try {
             // setup jdbc connection
-            Class.forName(driver);
-            con = DriverManager.getConnection(url, user, password);
-            con.setAutoCommit(true);
+            initConnection();
 
             // make sure schemaObjectPrefix consists of legal name characters only
             prepareSchemaObjectPrefix();

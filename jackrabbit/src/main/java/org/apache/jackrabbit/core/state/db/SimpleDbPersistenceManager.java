@@ -293,9 +293,7 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         }
 
         // setup jdbc connection
-        Class.forName(driver);
-        con = DriverManager.getConnection(url, user, password);
-        con.setAutoCommit(false);
+        initConnection();
 
         // make sure schemaObjectPrefix consists of legal name characters only
         prepareSchemaObjectPrefix();
@@ -900,7 +898,18 @@ public class SimpleDbPersistenceManager extends AbstractPersistenceManager {
         }
     }
 
-    //-------------------------------------------------< misc. helper methods >
+    //----------------------------------< misc. helper methods & overridables >
+    /**
+     * Initialize the JDBC connection.
+     *
+     * @throws Exception if an error occurs
+     */
+    protected void initConnection() throws Exception {
+        Class.forName(driver);
+        con = DriverManager.getConnection(url, user, password);
+        con.setAutoCommit(false);
+    }
+
     /**
      * Resets the given <code>PreparedStatement</code> by clearing the parameters
      * and warnings contained.
