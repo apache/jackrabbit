@@ -94,6 +94,42 @@
           from sources. Follow the links on the
           <a href="doc/index.html">documentation page</a> for more information.
         </p>
+        <p>
+          Take a look at the <a href="faq.html">Frequently Asked Questions</a>
+          or browse the
+          <a href="http://mail-archives.apache.org/mod_mbox/incubator-jackrabbit-dev/"
+             class="externalLink" title="jackrabbit-dev archives"
+             >mailing list archives</a> (see also the searchable archives at
+          <a href="http://www.mail-archive.com/jackrabbit-dev@incubator.apache.org/"
+             class="externalLink" title="jackrabbit-dev archive at mail-archive"
+             >The Mail Archive</a> and
+          <a href="http://dir.gmane.org/gmane.comp.apache.jackrabbit.devel"
+             class="externalLink" title="jackrabbit-dev archive at gmane"
+             >Gmane</a>) for answers to questions not covered by the
+          documentation pages. If you need more help or want to discuss
+          Jackrabbit generally, don't hesitate to join the Jackrabbit
+          development mailing list called
+          jackrabbit-dev&lt;at&gt;incubator.apache.org (you can subscribe
+          by sending an empty message to
+          jackrabbit-dev-subscribe&lt;at&gt;incubator.apache.org).
+        </p>
+        <p>
+          Jackrabbit is an open source project and welcomes all contributions.
+          You can participate by answering questions on the mailing list,
+          filing
+          <a href="http://issues.apache.org/jira/browse/JCR"
+             class="externalLink" title="Jackrabbit issue tracker"
+             >bug reports</a> for any problems or improvement ideas you come
+          up with, contributing to the
+          <a href="http://wiki.apache.org/jackrabbit/" class="externalLink"
+             >Jackrabbit Wiki</a>, or writing documentation and code. See the
+          <a href="http://www.apache.org/foundation/how-it-works.html"
+             class="externalLink">How the ASF works</a> page for background
+          information on the
+          <a href="http://www.apache.org/" class="externalLink"
+           title="Apache Software Foundation">Apache Software Foundation</a>
+          and the way we work.
+        </p>
       </subsection>
     </section>
   </body>
