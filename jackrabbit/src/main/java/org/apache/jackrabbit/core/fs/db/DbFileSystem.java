@@ -261,9 +261,7 @@ public class DbFileSystem implements FileSystem {
 
         try {
             // setup jdbc connection
-            Class.forName(driver);
-            con = DriverManager.getConnection(url, user, password);
-            con.setAutoCommit(true);
+            initConnection();
 
             // make sure schemaObjectPrefix consists of legal name characters only
             prepareSchemaObjectPrefix();
@@ -1166,7 +1164,18 @@ public class DbFileSystem implements FileSystem {
         }
     }
 
-    //-------------------------------------------------< misc. helper methods >
+    //----------------------------------< misc. helper methods & overridables >
+    /**
+     * Initialize the JDBC connection.
+     *
+     * @throws Exception if an error occurs
+     */
+    protected void initConnection() throws Exception {
+        Class.forName(driver);
+        con = DriverManager.getConnection(url, user, password);
+        con.setAutoCommit(false);
+    }
+
     /**
      * Makes sure that <code>schemaObjectPrefix</code> does only consist of
      * characters that are allowed in names on the target database. Illegal
