@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.state.db;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
@@ -73,22 +74,21 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
         schemaObjectPrefix = "";
         user = "";
         password = "";
-        initialized = false;
     }
 
-    //---------------------------------< SimpleDbPersistenceManager overrides >
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Overridden in order to properly shutdown the embedded Derby database.
-     */
-    public synchronized void close() throws Exception {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
+    //------------------------------------------< DatabasePersistenceManager >
 
+    /**
+     * Closes the given connection by shutting down the embedded Derby
+     * database.
+     *
+     * @param connection database connection
+     * @throws SQLException if an error occurs
+     * @see DatabasePersistenceManager#closeConnection(Connection)
+     */
+    protected void closeConnection(Connection connection) throws SQLException {
         // prepare connection url for issuing shutdown command
-        String url = con.getMetaData().getURL();
+        String url = connection.getMetaData().getURL();
         int pos = url.lastIndexOf(';');
         if (pos != -1) {
             // strip any attributes from connection url
@@ -100,10 +100,7 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
         // otherwise Derby would mysteriously complain about some pending uncommitted
         // changes which can't possibly be true.
         // @todo further investigate
-        con.setAutoCommit(true);
-
-        // call base class implementation
-        super.close();
+        connection.setAutoCommit(true);
 
         // now it's safe to shutdown the embedded Derby database
         try {
