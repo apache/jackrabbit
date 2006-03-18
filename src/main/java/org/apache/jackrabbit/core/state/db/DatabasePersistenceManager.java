@@ -314,7 +314,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             blobStore = null;
 
             // close jdbc connection
-            con.close();
+            closeConnection(con);
 
         } finally {
             initialized = false;
@@ -785,13 +785,38 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     }
 
     //----------------------------------< misc. helper methods & overridables >
+
     /**
-     * Initialize the JDBC connection.
+     * Abstract factory method for creating a new database connection. This
+     * method is called by {@link #init(PMContext)} when the persistence
+     * manager is started. The returned connection should come with the default
+     * JDBC settings, as the {@link #init(PMContext)} method will explicitly
+     * set the <code>autoCommit</code> and other properties as needed.
+     * <p>
+     * Note that the returned database connection is kept during the entire
+     * lifetime of the persistence manager, after which it is closed by
+     * {@link #close()} using the {@link #closeConnection(Connection)} method.
      *
      * @return new connection
      * @throws Exception if an error occurs
      */
-    abstract Connection getConnection() throws Exception;
+    protected abstract Connection getConnection() throws Exception;
+
+    /**
+     * Closes the given database connection. This method is called by
+     * {@link #close()} to close the connection acquired using
+     * {@link #getConnection()} when the persistence manager was started.
+     * <p>
+     * The default implementation just calls the {@link Connection#close()}
+     * method of the given connection, but subclasses can override this
+     * method to provide more extensive database and connection cleanup.
+     * 
+     * @param connection
+     * @throws Exception
+     */
+    protected void closeConnection(Connection connection) throws Exception {
+        connection.close();
+    }
 
     /**
      * Resets the given <code>PreparedStatement</code> by clearing the parameters
