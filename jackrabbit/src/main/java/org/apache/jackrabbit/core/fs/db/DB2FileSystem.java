@@ -82,7 +82,8 @@ public class DB2FileSystem extends DbFileSystem {
 
         try {
             // setup jdbc connection
-            initConnection();
+            con = getConnection();
+            con.setAutoCommit(false);
 
             // make sure schemaObjectPrefix consists of legal name characters only
             prepareSchemaObjectPrefix();
