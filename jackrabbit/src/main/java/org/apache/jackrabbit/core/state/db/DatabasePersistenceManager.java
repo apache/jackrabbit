@@ -811,8 +811,8 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
      * method of the given connection, but subclasses can override this
      * method to provide more extensive database and connection cleanup.
      * 
-     * @param connection
-     * @throws Exception
+     * @param connection database connection
+     * @throws Exception if an error occurs
      */
     protected void closeConnection(Connection connection) throws Exception {
         connection.close();
