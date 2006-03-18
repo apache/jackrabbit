@@ -96,6 +96,7 @@ Changes since 1.0-rc1:
   [JCR-340] Jcr-Server: ValuesProperty missing property type information
   [JCR-337] Jcr-Server: remove jcr depedency from dav-library
   [JCR-335] Deadlock caused by versioning operations within transaction
+  [JCR-215] Code depends on Log4J directly
 
 Changes since 0.9:
 
