@@ -46,14 +46,16 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 /**
- * Abstract base class for database file systems. This class contains common
+ * Base class for database file systems. This class contains common
  * functionality for database file system subclasses that normally differ only
- * in the way the database connection is acquired.
+ * in the way the database connection is acquired. Subclasses should override
+ * the {@link #getConnection()} method to return the configured database
+ * connection.
  * <p>
  * See the {@link DbFileSystem} for a detailed description of the available
  * configuration options and database behaviour.
  */
-public abstract class DatabaseFileSystem implements FileSystem {
+public class DatabaseFileSystem implements FileSystem {
 
     /**
      * Logger instance
@@ -161,8 +163,7 @@ public abstract class DatabaseFileSystem implements FileSystem {
 
         try {
             // setup jdbc connection
-            con = getConnection();
-            con.setAutoCommit(false);
+            initConnection();
 
             // make sure schemaObjectPrefix consists of legal name characters only
             prepareSchemaObjectPrefix();
@@ -1068,11 +1069,26 @@ public abstract class DatabaseFileSystem implements FileSystem {
     //----------------------------------< misc. helper methods & overridables >
 
     /**
+     * Initializes the database connection used by this file system. 
+     * <p>
+     * Subclasses should normally override the {@link #getConnection()}
+     * method instead of this one. The default implementation calls
+     * {@link #getConnection()} to get the database connection and disables
+     * the autocommit feature.
+     *
+     * @throws Exception if an error occurs
+     */
+    protected void initConnection() throws Exception {
+        con = getConnection();
+        con.setAutoCommit(false);
+    }
+    
+    /**
      * Abstract factory method for creating a new database connection. This
-     * method is called by {@link #init()} when the file system is started.
-     * The returned connection should come with the default JDBC settings,
-     * as the {@link #init()} method will explicitly set the
-     * <code>autoCommit</code> and other properties as needed.
+     * method is called by {@link #initConnection()} when the file system is
+     * started. The returned connection should come with the default JDBC
+     * settings, as the {@link #initConnection()} method will explicitly set
+     * the <code>autoCommit</code> and other properties as needed.
      * <p>
      * Note that the returned database connection is kept during the entire
      * lifetime of the file system, after which it is closed by
@@ -1081,7 +1097,9 @@ public abstract class DatabaseFileSystem implements FileSystem {
      * @return new connection
      * @throws Exception if an error occurs
      */
-    protected abstract Connection getConnection() throws Exception;
+    protected Connection getConnection() throws Exception {
+        throw new UnsupportedOperationException("Override in a subclass!");
+    }
 
     /**
      * Closes the given database connection. This method is called by
