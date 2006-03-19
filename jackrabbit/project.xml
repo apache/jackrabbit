@@ -86,7 +86,15 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    
+
+    <versions>
+        <version>
+            <name>Jackrabbit 0.9</name>
+            <tag>tags/0.9</tag>
+            <id>0.9-incubating</id>
+        </version>
+    </versions>
+
     <!-- ====================================================================== -->
     <!-- P E O P L E                                                            -->
     <!-- ====================================================================== -->
