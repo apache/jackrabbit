@@ -45,7 +45,10 @@ import org.apache.xerces.xs.XSWildcard;
 import javax.jcr.PropertyType;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * SchemaConverter
@@ -226,8 +229,8 @@ public class SchemaConverter {
 
             // If the content model of this complex type is element or mixed then we must convert the
             // contained XSParticle into a set of node and/or property defs
-        } else if (ctdef.getContentType() == XSComplexTypeDefinition.CONTENTTYPE_ELEMENT ||
-                ctdef.getContentType() == XSComplexTypeDefinition.CONTENTTYPE_MIXED) {
+        } else if (ctdef.getContentType() == XSComplexTypeDefinition.CONTENTTYPE_ELEMENT
+                || ctdef.getContentType() == XSComplexTypeDefinition.CONTENTTYPE_MIXED) {
             XSParticle p = ctdef.getParticle();
 
             // particleToDefs takes the two lists and adds to them as necessary. It also returns
@@ -333,8 +336,8 @@ public class SchemaConverter {
                 // If the complex type definition contains a simple content model
                 // and does not contain any attribute uses or attribute wildcards
                 // then the enclosing element is converted to a property def
-                if (ctDef.getContentType() == XSComplexTypeDefinition.CONTENTTYPE_SIMPLE &&
-                        ctDef.getAttributeUses().getLength() == 0 && ctDef.getAttributeWildcard() == null) {
+                if (ctDef.getContentType() == XSComplexTypeDefinition.CONTENTTYPE_SIMPLE
+                        && ctDef.getAttributeUses().getLength() == 0 && ctDef.getAttributeWildcard() == null) {
                     XSSimpleTypeDefinition std = ctDef.getSimpleType();
                     PropDef pd = simpleTypeToPropDef(std, name, mandatory, multiple);
                     propDefList.add(pd);
@@ -513,7 +516,9 @@ public class SchemaConverter {
      */
     private void addXMLTextNodeType() {
         // If the XML text node type already exists, do nothing
-        if (nodeTypeDefs.containsKey(XML_TEXT_NODETYPE_NAME)) return;
+        if (nodeTypeDefs.containsKey(XML_TEXT_NODETYPE_NAME)) {
+            return;
+        }
 
         // Otherwise create a new node type def and set its attributes
         NodeTypeDef ntd = new NodeTypeDef();

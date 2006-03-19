@@ -62,7 +62,7 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
 
         session = helper.getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
-        
+
         // Get the NodeTypeManager from the Workspace.
         // Note that it must be cast from the generic JCR NodeTypeManager to the
         // Jackrabbit-specific implementation.
@@ -93,9 +93,9 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
          * Constructs node types with the following structure:
          * [foo]
          * + myBarInFoo (bar)
-         * 
+         *
          * [bar]
-         * + myFooInBar (foo) 
+         * + myFooInBar (foo)
          */
         final NodeTypeDef foo = new NodeTypeDef();
         foo.setName(new QName("", "foo"));
@@ -143,7 +143,7 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
          * Constructs node types with the following structure:
          * [foo]
          * + myNTInFoo (I_am_an_invalid_required_primary_type)
-         * 
+         *
          */
         final NodeTypeDef foo = new NodeTypeDef();
         foo.setName(new QName("", "foo"));
@@ -180,13 +180,13 @@ public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
          * [Folder] > CmsObject
          * + folders (Folder)
          * + documents (Document)
-         * 
+         *
          * [CmsObject]
          * + parentFolder (Folder)
-         * 
+         *
          * [Document] > CmsObject
          * - size (long)
-         * 
+         *
          */
 
         final NodeTypeDef folder = new NodeTypeDef();

@@ -366,7 +366,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         }
 
         PreparedStatement stmt = nodeStateSelect;
-        synchronized(stmt) {
+        synchronized (stmt) {
             ResultSet rs = null;
             InputStream in = null;
             try {
@@ -407,7 +407,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         }
 
         PreparedStatement stmt = propertyStateSelect;
-        synchronized(stmt) {
+        synchronized (stmt) {
             ResultSet rs = null;
             InputStream in = null;
             try {
@@ -601,7 +601,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         }
 
         PreparedStatement stmt = nodeReferenceSelect;
-        synchronized(stmt) {
+        synchronized (stmt) {
             ResultSet rs = null;
             InputStream in = null;
             try {
@@ -706,7 +706,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         }
 
         PreparedStatement stmt = nodeStateSelectExist;
-        synchronized(stmt) {
+        synchronized (stmt) {
             ResultSet rs = null;
             try {
                 stmt.setString(1, id.toString());
@@ -735,7 +735,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         }
 
         PreparedStatement stmt = propertyStateSelectExist;
-        synchronized(stmt) {
+        synchronized (stmt) {
             ResultSet rs = null;
             try {
                 stmt.setString(1, id.toString());
@@ -764,7 +764,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         }
 
         PreparedStatement stmt = nodeReferenceSelectExist;
-        synchronized(stmt) {
+        synchronized (stmt) {
             ResultSet rs = null;
             try {
                 stmt.setString(1, targetId.toString());
@@ -788,7 +788,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     //----------------------------------< misc. helper methods & overridables >
 
     /**
-     * Initializes the database connection used by this file system. 
+     * Initializes the database connection used by this file system.
      * <p>
      * Subclasses should normally override the {@link #getConnection()}
      * method instead of this one. The default implementation calls
@@ -828,7 +828,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
      * The default implementation just calls the {@link Connection#close()}
      * method of the given connection, but subclasses can override this
      * method to provide more extensive database and connection cleanup.
-     * 
+     *
      * @param connection database connection
      * @throws Exception if an error occurs
      */
@@ -997,7 +997,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
          */
         public InputStream get(String blobId) throws Exception {
             PreparedStatement stmt = blobSelect;
-            synchronized(stmt) {
+            synchronized (stmt) {
                 try {
                     stmt.setString(1, blobId);
                     stmt.execute();

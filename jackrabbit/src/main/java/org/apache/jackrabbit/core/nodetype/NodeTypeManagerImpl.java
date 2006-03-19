@@ -307,7 +307,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
 
     /**
      * Internal helper method for registering a list of node type definitions.
-     * Returns an array containing the registered node types. 
+     * Returns an array containing the registered node types.
      */
     private NodeType[] registerNodeTypes(List defs)
             throws InvalidNodeTypeDefException, RepositoryException {

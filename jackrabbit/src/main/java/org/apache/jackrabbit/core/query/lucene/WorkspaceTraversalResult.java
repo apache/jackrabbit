@@ -274,7 +274,7 @@ public class WorkspaceTraversalResult implements QueryResult {
         /**
          * Offset that always returns the value 0.
          */
-        static final Offset ZERO = new Offset() {
+        Offset ZERO = new Offset() {
             public long getValue() {
                 return 0;
             }

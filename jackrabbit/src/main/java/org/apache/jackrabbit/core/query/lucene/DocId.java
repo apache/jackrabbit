@@ -138,21 +138,21 @@ abstract class DocId {
         /**
          * @inheritDoc
          */
-        final int getDocumentNumber(IndexReader reader) {
+        int getDocumentNumber(IndexReader reader) {
             return docNumber;
         }
 
         /**
          * @inheritDoc
          */
-        final DocId applyOffset(int offset) {
+        DocId applyOffset(int offset) {
             return new PlainDocId(docNumber + offset);
         }
 
         /**
          * @inheritDoc
          */
-        final boolean isValid(BitSet deleted) {
+        boolean isValid(BitSet deleted) {
             return !deleted.get(docNumber);
         }
 
@@ -161,7 +161,7 @@ abstract class DocId {
          *
          * @return a String representation for this <code>DocId</code>.
          */
-        final public String toString() {
+        public String toString() {
             return "PlainDocId(" + docNumber + ")";
         }
     }
@@ -200,7 +200,7 @@ abstract class DocId {
         /**
          * @inheritDoc
          */
-        final int getDocumentNumber(IndexReader reader) throws IOException {
+        int getDocumentNumber(IndexReader reader) throws IOException {
             synchronized (this) {
                 if (reader == this.reader) {
                     return docNumber;
@@ -229,7 +229,7 @@ abstract class DocId {
          *
          * @inheritDoc
          */
-        final DocId applyOffset(int offset) {
+        DocId applyOffset(int offset) {
             return this;
         }
 
@@ -239,7 +239,7 @@ abstract class DocId {
          * @param deleted the deleted documents.
          * @return always <code>true</code>.
          */
-        final boolean isValid(BitSet deleted) {
+        boolean isValid(BitSet deleted) {
             return true;
         }
 
@@ -248,7 +248,7 @@ abstract class DocId {
          *
          * @return a String representation for this <code>DocId</code>.
          */
-        final public String toString() {
+        public String toString() {
             return "UUIDDocId(" + uuid + ")";
         }
     }

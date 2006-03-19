@@ -29,5 +29,6 @@ public interface EventStateCollectionFactory {
      * @return a new <code>EventStateCollection</code>
      * @throws RepositoryException if creation fails for some reason
      */
-    public EventStateCollection createEventStateCollection() throws RepositoryException;
+    EventStateCollection createEventStateCollection() throws RepositoryException;
+
 }

@@ -146,7 +146,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * Copy state information from another state into this state
      * @param state source state information
      */
-    abstract protected void copy(ItemState state);
+    protected abstract void copy(ItemState state);
 
     /**
      * Pull state information from overlayed state.
@@ -298,7 +298,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      *
      * @return the id of this item.
      */
-    abstract public ItemId getId();
+    public abstract ItemId getId();
 
     /**
      * Returns <code>true</code> if this item state represents new or modified
@@ -333,7 +333,7 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      *
      * @return the parent <code>NodeState</code>'s Id
      */
-    abstract public NodeId getParentId();
+    public abstract NodeId getParentId();
 
     /**
      * Returns the status of this item.

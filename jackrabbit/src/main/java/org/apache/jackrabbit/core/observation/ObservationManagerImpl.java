@@ -121,7 +121,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
         NodeId[] ids = null;
         if (uuid != null) {
             ids = new NodeId[uuid.length];
-            for (int i=0; i<uuid.length; i++) {
+            for (int i = 0; i < uuid.length; i++) {
                 ids[i] = NodeId.valueOf(uuid[i]);
             }
         }

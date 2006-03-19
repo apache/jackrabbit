@@ -31,7 +31,7 @@ import javax.sql.DataSource;
  * <p>
  * <strong>WARNING:</strong> The acquired database connection is kept
  * for the entire lifetime of the file system instance. The configured data
- * source should be prepared for this. 
+ * source should be prepared for this.
  */
 public class JNDIDatabaseFileSystem extends DatabaseFileSystem {
 

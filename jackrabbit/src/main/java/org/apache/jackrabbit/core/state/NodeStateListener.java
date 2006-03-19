@@ -54,6 +54,5 @@ public interface NodeStateListener extends ItemStateListener {
      * @param index index of removed node
      * @param id    id of removed node
      */
-    public void nodeRemoved(NodeState state,
-                            QName name, int index, NodeId id);
+    void nodeRemoved(NodeState state, QName name, int index, NodeId id);
 }

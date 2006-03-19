@@ -674,7 +674,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
          */
         public void append() {
             if (tail == null) {
-                head = tail = this;
+                head = this;
+                tail = this;
             } else {
                 previous = tail;
                 tail.next = this;
@@ -698,7 +699,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (tail == this) {
                 tail = previous;
             }
-            previous = next = null;
+            previous = null;
+            next = null;
         }
 
         /**

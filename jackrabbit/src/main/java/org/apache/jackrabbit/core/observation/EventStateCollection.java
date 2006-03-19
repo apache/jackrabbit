@@ -149,8 +149,7 @@ public final class EventStateCollection {
                 if (n.hasOverlayedState()) {
                     NodeId oldParentId = n.getOverlayedState().getParentId();
                     NodeId newParentId = n.getParentId();
-                    if (newParentId != null &&
-                            !oldParentId.equals(newParentId)) {
+                    if (newParentId != null && !oldParentId.equals(newParentId)) {
                         // node moved
                         // generate node removed & node added event
                         NodeState oldParent;

@@ -34,7 +34,7 @@ public interface QueryTreeBuilder {
      * @throws javax.jcr.query.InvalidQueryException
      *          if the statement is malformed.
      */
-    public QueryRootNode createQueryTree(String statement, NamespaceResolver resolver)
+    QueryRootNode createQueryTree(String statement, NamespaceResolver resolver)
             throws InvalidQueryException;
 
     /**
@@ -45,7 +45,7 @@ public interface QueryTreeBuilder {
      * @return <code>true</code> if this builder can handle <code>language</code>;
      *         <code>false</code> otherwise.
      */
-    public boolean canHandle(String language);
+    boolean canHandle(String language);
 
     /**
      * Creates a String representation of the query node tree in the syntax this
@@ -58,6 +58,7 @@ public interface QueryTreeBuilder {
      *                               into a String representation due to
      *                               restrictions in this syntax.
      */
-    public String toString(QueryRootNode root, NamespaceResolver resolver)
+    String toString(QueryRootNode root, NamespaceResolver resolver)
             throws InvalidQueryException;
+
 }

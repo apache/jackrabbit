@@ -52,7 +52,7 @@ public class CompactNodeTypeDefWriter {
     /**
      * the indention string
      */
-    private final static String INDENT = "  ";
+    private static final String INDENT = "  ";
 
     /**
      * the current namespace resolver
@@ -170,13 +170,14 @@ public class CompactNodeTypeDefWriter {
      */
     private void writeSupertypes(NodeTypeDef ntd) throws IOException {
         QName[] sta = ntd.getSupertypes();
-        if (sta == null) return;
-        String delim=" > ";
-        for (int i=0; i<sta.length; i++) {
-            if (!sta[i].equals(QName.NT_BASE)) {
-                out.write(delim);
-                out.write(resolve(sta[i]));
-                delim=", ";
+        if (sta != null) {
+            String delim = " > ";
+            for (int i = 0; i < sta.length; i++) {
+                if (!sta[i].equals(QName.NT_BASE)) {
+                    out.write(delim);
+                    out.write(resolve(sta[i]));
+                    delim = ", ";
+                }
             }
         }
     }
@@ -255,17 +256,18 @@ public class CompactNodeTypeDefWriter {
      * @param dva
      */
     private void writeDefaultValues(InternalValue[] dva) throws IOException {
-        if (dva == null || dva.length == 0) return;
-        String delim=" = '";
-        for (int i = 0; i < dva.length; i++) {
-            out.write(delim);
-            try {
-                out.write(escape(dva[i].toJCRValue(resolver).getString()));
-            } catch (RepositoryException e) {
-                out.write(escape(dva[i].toString()));
+        if (dva != null && dva.length > 0) {
+            String delim = " = '";
+            for (int i = 0; i < dva.length; i++) {
+                out.write(delim);
+                try {
+                    out.write(escape(dva[i].toJCRValue(resolver).getString()));
+                } catch (RepositoryException e) {
+                    out.write(escape(dva[i].toString()));
+                }
+                out.write("'");
+                delim = ", '";
             }
-            out.write("'");
-            delim=", '";
         }
     }
 
@@ -274,16 +276,17 @@ public class CompactNodeTypeDefWriter {
      * @param vca
      */
     private void writeValueConstraints(ValueConstraint[] vca) throws IOException {
-        if (vca == null || vca.length == 0) return;
-        String vc = vca[0].getDefinition(resolver);
-        out.write("\n" + INDENT + INDENT + "< '");
-        out.write(escape(vc));
-        out.write("'");
-        for (int i = 1; i < vca.length; i++) {
-            vc = vca[i].getDefinition(resolver);
-            out.write(", '");
+        if (vca != null && vca.length > 0) {
+            String vc = vca[0].getDefinition(resolver);
+            out.write("\n" + INDENT + INDENT + "< '");
             out.write(escape(vc));
             out.write("'");
+            for (int i = 1; i < vca.length; i++) {
+                vc = vca[i].getDefinition(resolver);
+                out.write(", '");
+                out.write(escape(vc));
+                out.write("'");
+            }
         }
     }
 
@@ -341,7 +344,7 @@ public class CompactNodeTypeDefWriter {
             for (int i = 0; i < reqTypes.length; i++) {
                 out.write(delim);
                 out.write(resolve(reqTypes[i]));
-                delim=", ";
+                delim = ", ";
             }
             out.write(")");
         }

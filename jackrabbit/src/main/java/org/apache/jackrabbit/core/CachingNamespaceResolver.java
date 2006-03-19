@@ -118,7 +118,7 @@ class CachingNamespaceResolver
      */
     public void namespaceAdded(String prefix, String uri) {
         // since it is a new namespace there's no need to flush the
-        // cached mappings 
+        // cached mappings
     }
 
     /**

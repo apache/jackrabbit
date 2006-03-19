@@ -195,7 +195,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
         this.repConfig = repConfig;
 
-        acquireRepositoryLock() ;
+        acquireRepositoryLock();
 
         // setup file systems
         repStore = repConfig.getFileSystemConfig().createFileSystem();
@@ -301,8 +301,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         File lock = new File(home, REPOSITORY_LOCK);
 
         if (lock.exists()) {
-            log.warn("Existing lock file at " + lock.getAbsolutePath() +
-                    " deteteced. Repository was not shut down properly.");
+            log.warn("Existing lock file at " + lock.getAbsolutePath()
+                    + " deteteced. Repository was not shut down properly.");
         } else {
             try {
                 lock.createNewFile();
@@ -319,9 +319,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         }
         if (repLock == null) {
             throw new RepositoryException(
-                    "The repository home at " + home.getAbsolutePath() +
-                    " appears to be in use since the file at " +
-                    lock.getAbsolutePath() + " is locked by another process.");
+                    "The repository home at " + home.getAbsolutePath()
+                    + " appears to be in use since the file at "
+                    + lock.getAbsolutePath() + " is locked by another process.");
         }
     }
 
@@ -561,9 +561,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     systemSearchMgr = new SystemSearchManager(repConfig.getSearchConfig(),
                             nsReg, ntReg, defSysSession.getItemStateManager(), SYSTEM_ROOT_NODE_ID);
                     ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
-                    obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED |
-                            Event.NODE_REMOVED | Event.PROPERTY_ADDED |
-                            Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
+                    obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED
+                            | Event.NODE_REMOVED | Event.PROPERTY_ADDED
+                            | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
                             "/" + QName.JCR_SYSTEM.toJCRName(defSysSession.getNamespaceResolver()),
                             true, null, null, false);
                 } else {
@@ -782,7 +782,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    protected synchronized final SessionImpl createSession(AuthContext loginContext,
+    protected final synchronized SessionImpl createSession(AuthContext loginContext,
                               String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
@@ -812,7 +812,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    protected synchronized final SessionImpl createSession(Subject subject,
+    protected final synchronized SessionImpl createSession(Subject subject,
                                               String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
@@ -846,7 +846,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         // shut down workspaces
         for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
             WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
-            synchronized(wspInfo) {
+            synchronized (wspInfo) {
                 if (wspInfo.isInitialized()) {
                     wspInfo.dispose();
                 }
@@ -935,7 +935,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 props.setProperty(STATS_PROP_COUNT_PROPERTY, Long.toString(propsCount));
             }
         } catch (IOException e) {
-            String msg = "Failed to load repository properties: " +e.toString();
+            String msg = "Failed to load repository properties: " + e.toString();
             log.error(msg);
             throw new RepositoryException(msg, e);
         }

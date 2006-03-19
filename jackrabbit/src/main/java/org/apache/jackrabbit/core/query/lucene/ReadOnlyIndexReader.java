@@ -112,21 +112,21 @@ class ReadOnlyIndexReader extends FilterIndexReader {
     /**
      * @exception UnsupportedOperationException always
      */
-    final protected void doDelete(int docNum) {
+    protected final void doDelete(int docNum) {
         throw new UnsupportedOperationException("IndexReader is read-only");
     }
 
     /**
      * @exception UnsupportedOperationException always
      */
-    final protected void doUndeleteAll() {
+    protected final void doUndeleteAll() {
         throw new UnsupportedOperationException("IndexReader is read-only");
     }
 
     /**
      * @exception UnsupportedOperationException always
      */
-    final protected void doCommit() {
+    protected final void doCommit() {
         throw new UnsupportedOperationException("IndexReader is read-only");
     }
 

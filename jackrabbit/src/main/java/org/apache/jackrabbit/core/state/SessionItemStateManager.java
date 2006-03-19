@@ -349,7 +349,7 @@ public class SessionItemStateManager
 
                 // ensure capacity
                 if (depth > la.length) {
-                    List old[] = la;
+                    List[] old = la;
                     la = new List[depth + 10];
                     System.arraycopy(old, 0, la, 0, old.length);
                 }
@@ -425,7 +425,7 @@ public class SessionItemStateManager
 
                 // ensure capacity
                 if (depth > la.length) {
-                    List old[] = la;
+                    List[] old = la;
                     la = new List[depth + 10];
                     System.arraycopy(old, 0, la, 0, old.length);
                 }

@@ -54,7 +54,7 @@ public final class FastCharStream implements CharStream {
     /**
      * @inheritDoc
      */
-    public final char readChar() throws IOException {
+    public char readChar() throws IOException {
         if (position >= input.length()) {
             throw new IOException("read past eof");
         }
@@ -64,7 +64,7 @@ public final class FastCharStream implements CharStream {
     /**
      * @inheritDoc
      */
-    public final char BeginToken() throws IOException {
+    public char BeginToken() throws IOException {
         tokenStart = position;
         return readChar();
     }
@@ -72,21 +72,21 @@ public final class FastCharStream implements CharStream {
     /**
      * @inheritDoc
      */
-    public final void backup(int amount) {
+    public void backup(int amount) {
         position -= amount;
     }
 
     /**
      * @inheritDoc
      */
-    public final String GetImage() {
+    public String GetImage() {
         return input.substring(tokenStart, position);
     }
 
     /**
      * @inheritDoc
      */
-    public final char[] GetSuffix(int len) {
+    public char[] GetSuffix(int len) {
         char[] value = new char[len];
         for (int i = 0; i < len; i++) {
             value[i] = input.charAt(position - len + i);
@@ -97,48 +97,48 @@ public final class FastCharStream implements CharStream {
     /**
      * @inheritDoc
      */
-    public final void Done() {
+    public void Done() {
     }
 
     /**
      * @inheritDoc
      */
-    public final int getColumn() {
+    public int getColumn() {
         return position;
     }
 
     /**
      * @inheritDoc
      */
-    public final int getLine() {
+    public int getLine() {
         return 1;
     }
 
     /**
      * @inheritDoc
      */
-    public final int getEndColumn() {
+    public int getEndColumn() {
         return position;
     }
 
     /**
      * @inheritDoc
      */
-    public final int getEndLine() {
+    public int getEndLine() {
         return 1;
     }
 
     /**
      * @inheritDoc
      */
-    public final int getBeginColumn() {
+    public int getBeginColumn() {
         return tokenStart;
     }
 
     /**
      * @inheritDoc
      */
-    public final int getBeginLine() {
+    public int getBeginLine() {
         return 1;
     }
 }

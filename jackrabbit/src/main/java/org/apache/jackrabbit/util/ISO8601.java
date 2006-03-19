@@ -258,7 +258,7 @@ public final class ISO8601 {
         buf.append(XXX_FORMAT.format(cal.get(Calendar.MILLISECOND)));
         // time zone designator (Z or +00:00 or -00:00)
         TimeZone tz = cal.getTimeZone();
-        // determine offset of timezone from UTC (incl. daylight saving) 
+        // determine offset of timezone from UTC (incl. daylight saving)
         int offset = tz.getOffset(cal.getTimeInMillis());
         if (offset != 0) {
             int hours = Math.abs((offset / (60 * 1000)) / 60);

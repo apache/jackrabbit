@@ -27,12 +27,12 @@ import org.apache.jackrabbit.name.QName;
  */
 public interface ItemDef {
 
-    public static final ItemDef[] EMPTY_ARRAY = new ItemDef[0];
+    ItemDef[] EMPTY_ARRAY = new ItemDef[0];
 
     /**
      * The special wildcard name used as the name of residual item definitions.
      */
-    public static final QName ANY_NAME = new QName("", "*");
+    QName ANY_NAME = new QName("", "*");
 
     /**
      * Gets the name of the child item.
