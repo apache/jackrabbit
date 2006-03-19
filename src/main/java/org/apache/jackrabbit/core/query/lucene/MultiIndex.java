@@ -429,7 +429,7 @@ public class MultiIndex {
         Map indexReaders = new HashMap();
 
         try {
-            for (Iterator it = indexes.iterator(); it.hasNext(); ) {
+            for (Iterator it = indexes.iterator(); it.hasNext();) {
                 PersistentIndex index = (PersistentIndex) it.next();
                 if (names.contains(index.getName())) {
                     indexReaders.put(index.getReadOnlyIndexReader(listener), index);
@@ -437,7 +437,7 @@ public class MultiIndex {
             }
         } catch (IOException e) {
             // close readers obtained so far
-            for (Iterator it = indexReaders.keySet().iterator(); it.hasNext(); ) {
+            for (Iterator it = indexReaders.keySet().iterator(); it.hasNext();) {
                 ReadOnlyIndexReader reader = (ReadOnlyIndexReader) it.next();
                 try {
                     reader.close();
@@ -466,7 +466,7 @@ public class MultiIndex {
     synchronized PersistentIndex getOrCreateIndex(String indexName, boolean create)
             throws IOException {
         // check existing
-        for (Iterator it = indexes.iterator(); it.hasNext(); ) {
+        for (Iterator it = indexes.iterator(); it.hasNext();) {
             PersistentIndex idx = (PersistentIndex) it.next();
             if (idx.getName().equals(indexName)) {
                 return idx;
@@ -517,7 +517,7 @@ public class MultiIndex {
             executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
             // delete obsolete indexes
             Set names = new HashSet(Arrays.asList(obsoleteIndexes));
-            for (Iterator it = names.iterator(); it.hasNext(); ) {
+            for (Iterator it = names.iterator(); it.hasNext();) {
                 // do not try to delete indexes that are already gone
                 String indexName = (String) it.next();
                 if (indexNames.contains(indexName)) {
@@ -528,7 +528,7 @@ public class MultiIndex {
             executeAndLog(new AddIndex(getTransactionId(), index.getName()));
 
             // delete documents in index
-            for (Iterator it = deleted.iterator(); it.hasNext(); ) {
+            for (Iterator it = deleted.iterator(); it.hasNext();) {
                 Term id = (Term) it.next();
                 executeAndLog(new DeleteNode(getTransactionId(), id.text()));
             }
@@ -927,8 +927,8 @@ public class MultiIndex {
                 && idleTime > handler.getVolatileIdleTime() * 1000) {
             try {
                 if (redoLog.hasEntries()) {
-                    log.debug("Flushing index after being idle for " +
-                            idleTime + " ms.");
+                    log.debug("Flushing index after being idle for "
+                            + idleTime + " ms.");
                     synchronized (updateMonitor) {
                         updateInProgress = true;
                     }
@@ -1501,7 +1501,7 @@ public class MultiIndex {
          */
         public void execute(MultiIndex index) throws IOException {
             // get index if it exists
-            for (Iterator it = index.indexes.iterator(); it.hasNext(); ) {
+            for (Iterator it = index.indexes.iterator(); it.hasNext();) {
                 PersistentIndex idx = (PersistentIndex) it.next();
                 if (idx.getName().equals(indexName)) {
                     idx.close();

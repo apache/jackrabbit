@@ -174,7 +174,7 @@ class VolatileIndex extends AbstractIndex {
      * @param old the document to dispose.
      */
     private void disposeDocument(Document old) {
-        for (Enumeration e = old.fields(); e.hasMoreElements(); ) {
+        for (Enumeration e = old.fields(); e.hasMoreElements();) {
             Field f = (Field) e.nextElement();
             if (f.readerValue() != null) {
                 try {

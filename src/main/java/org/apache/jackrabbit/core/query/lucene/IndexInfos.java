@@ -81,7 +81,7 @@ class IndexInfos {
 
     /**
      * Returns the name of the file where infos are stored.
-     * 
+     *
      * @return the name of the file where infos are stored.
      */
     String getFileName() {

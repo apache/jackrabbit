@@ -163,7 +163,7 @@ class IndexMerger extends Thread implements IndexListener {
                 // sum up docs in bucket
                 List indexesToMerge = new ArrayList();
                 int mergeDocs = 0;
-                for (Iterator it = bucket.iterator(); it.hasNext() && mergeDocs <= targetMergeDocs; ) {
+                for (Iterator it = bucket.iterator(); it.hasNext() && mergeDocs <= targetMergeDocs;) {
                     indexesToMerge.add(it.next());
                 }
                 if (indexesToMerge.size() > 2) {
@@ -341,12 +341,12 @@ class IndexMerger extends Thread implements IndexListener {
         /**
          * The name of the index.
          */
-        final String name;
+        private final String name;
 
         /**
          * The number of documents the index contains.
          */
-        final int numDocs;
+        private final int numDocs;
 
         /**
          * Creates a new index struct.
@@ -391,7 +391,7 @@ class IndexMerger extends Thread implements IndexListener {
      */
     private static final class Merge {
 
-        final Index[] indexes;
+        private final Index[] indexes;
 
         /**
          * Merge task, to merge <code>indexes</code> into a new index with

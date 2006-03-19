@@ -62,7 +62,7 @@ public final class DOMWalker {
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
-            throw (IOException)new IOException(e.getMessage()).initCause(e);
+            throw (IOException) new IOException(e.getMessage()).initCause(e);
         }
     }
 

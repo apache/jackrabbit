@@ -300,7 +300,7 @@ public class WeakIdentityCollection implements Collection {
 
         /**
          * @inheritDoc
-         */ 
+         */
         public Object next() {
             if (index >= size) {
                 throw new NoSuchElementException();

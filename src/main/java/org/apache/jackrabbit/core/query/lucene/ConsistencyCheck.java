@@ -111,7 +111,7 @@ class ConsistencyCheck {
             return;
         }
         int notRepairable = 0;
-        for (Iterator it = errors.iterator(); it.hasNext(); ) {
+        for (Iterator it = errors.iterator(); it.hasNext();) {
             ConsistencyCheckError error = (ConsistencyCheckError) it.next();
             try {
                 if (error.repairable()) {
@@ -176,12 +176,12 @@ class ConsistencyCheck {
         }
 
         // create multiple entries errors
-        for (Iterator it = multipleEntries.iterator(); it.hasNext(); ) {
+        for (Iterator it = multipleEntries.iterator(); it.hasNext();) {
             errors.add(new MultipleEntries((String) it.next()));
         }
 
         // run through documents
-        for (Iterator it = documents.values().iterator(); it.hasNext(); ) {
+        for (Iterator it = documents.values().iterator(); it.hasNext();) {
             Document d = (Document) it.next();
             String uuid = d.get(FieldNames.UUID);
             String parentUUID = d.get(FieldNames.PARENT);

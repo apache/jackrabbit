@@ -32,4 +32,5 @@ public interface NodeIdIterator extends Iterator {
      * @throws NoSuchElementException
      */
     NodeId nextNodeId() throws NoSuchElementException;
+
 }

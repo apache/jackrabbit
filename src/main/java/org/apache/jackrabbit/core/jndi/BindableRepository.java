@@ -57,7 +57,7 @@ import java.io.Serializable;
  * repository is properly closed when the JVM shuts down. The
  * {@link RegistryHelper#unregisterRepository(javax.naming.Context, String)}
  * method should be used to explicitly close the repository if
- * needed. 
+ * needed.
  */
 class BindableRepository implements Repository, Referenceable, Serializable {
 
@@ -87,7 +87,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      * called.
      */
     private transient Thread hook;
-    
+
     /**
      * Creates a BindableRepository instance with the given configuration
      * information, but does not create the underlying repository instance.
@@ -120,7 +120,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     /**
      * Creates the underlying repository instance. A shutdown hook is
      * registered to make sure that the initialized repository gets closed
-     * when the JVM shuts down. 
+     * when the JVM shuts down.
      *
      * @throws RepositoryException if the repository cannot be created
      */
@@ -249,7 +249,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
             throw new IOException(re.getMessage());
         }
     }
-    
+
     /**
      * Delegated to the underlying repository instance.
      */

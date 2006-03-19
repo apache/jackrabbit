@@ -27,7 +27,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
  */
 public interface PropDef extends ItemDef {
 
-    public static final PropDef[] EMPTY_ARRAY = new PropDef[0];
+    PropDef[] EMPTY_ARRAY = new PropDef[0];
 
     /**
      * Returns an identifier for this property definition.

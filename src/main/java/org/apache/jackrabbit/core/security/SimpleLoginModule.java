@@ -95,7 +95,7 @@ public class SimpleLoginModule implements LoginModule {
     /**
      * Sets the default user id to be used when no login credentials
      * are presented.
-     * 
+     *
      * @param defaultUserId default user id
      */
     public void setAnonymousId(String anonymousId) {
@@ -114,7 +114,7 @@ public class SimpleLoginModule implements LoginModule {
     /**
      * Sets the default user id to be used when no login credentials
      * are presented.
-     * 
+     *
      * @param defaultUserId default user id
      */
     public void setDefaultUserId(String defaultUserId) {
@@ -167,7 +167,7 @@ public class SimpleLoginModule implements LoginModule {
 
                     Object attr = sc.getAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE);
                     if (attr != null && attr instanceof Subject) {
-                        Subject impersonator = (Subject) attr;
+                        // Subject impersonator = (Subject) attr;
                         // @todo check privileges to 'impersonate' the user represented by the supplied credentials
                     } else {
                         // @todo implement simple username/password authentication

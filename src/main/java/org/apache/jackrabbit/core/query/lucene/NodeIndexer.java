@@ -179,8 +179,8 @@ public class NodeIndexer {
      */
     private void throwRepositoryException(Exception e)
             throws RepositoryException {
-        String msg = "Error while indexing node: " + node.getNodeId() + " of " +
-                "type: " + node.getNodeTypeName();
+        String msg = "Error while indexing node: " + node.getNodeId() + " of "
+            + "type: " + node.getNodeTypeName();
         throw new RepositoryException(msg, e);
     }
 
@@ -285,7 +285,7 @@ public class NodeIndexer {
 
                 String mimeType = mimeTypeProp.getValues()[0].internalValue().toString();
                 Map fields = Collections.EMPTY_MAP;
-                for (Iterator it = textFilters.iterator(); it.hasNext(); ) {
+                for (Iterator it = textFilters.iterator(); it.hasNext();) {
                     TextFilter filter = (TextFilter) it.next();
                     // use the first filter that can handle the mimeType
                     if (filter.canFilter(mimeType)) {

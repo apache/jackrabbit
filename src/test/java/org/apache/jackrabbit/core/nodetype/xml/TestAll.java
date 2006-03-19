@@ -92,7 +92,7 @@ public class TestAll extends TestCase {
      * failure is generated.
      * <p>
      * If the given property name is <code>null</code>, then the residual
-     * property definition (if one exists) is returned. 
+     * property definition (if one exists) is returned.
      *
      * @param typeName node type name
      * @param propertyName property name, or <code>null</code>

@@ -36,7 +36,7 @@ public interface ScoreNodeIterator extends NodeIterator {
      * @throws java.util.NoSuchElementException
      *          if there is no next node.
      */
-    public float getScore();
+    float getScore();
 
     /**
      * Returns the next <code>Node</code> in the result set.
@@ -45,5 +45,6 @@ public interface ScoreNodeIterator extends NodeIterator {
      * @throws java.util.NoSuchElementException
      *          if iteration has no more <code>Node</code>s.
      */
-    public NodeImpl nextNodeImpl();
+    NodeImpl nextNodeImpl();
+
 }

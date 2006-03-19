@@ -100,9 +100,9 @@ final class DocNumberCache {
                 // ignore if reader is older than the one in entry
                 if (reader.getCreationTick() <= e.reader.getCreationTick()) {
                     if (log.isDebugEnabled()) {
-                        log.debug("Ignoring put(). New entry is not from a newer reader. " +
-                                "existing: " + e.reader.getCreationTick() +
-                                ", new: " + reader.getCreationTick());
+                        log.debug("Ignoring put(). New entry is not from a newer reader. "
+                                + "existing: " + e.reader.getCreationTick()
+                                + ", new: " + reader.getCreationTick());
                     }
                     e = null;
                 }
@@ -164,7 +164,7 @@ final class DocNumberCache {
     /**
      * Returns the segment index for character c.
      */
-    private static final int getSegmentIndex(char c) {
+    private static int getSegmentIndex(char c) {
         if (c > '9') {
             c += 9;
         }

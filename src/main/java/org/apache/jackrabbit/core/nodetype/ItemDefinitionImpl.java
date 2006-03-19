@@ -76,7 +76,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     /**
      * Checks whether this is a residual item definition.
      *
-     * @return <code>true</code> if this is a residual item definition  
+     * @return <code>true</code> if this is a residual item definition
      */
     public boolean definesResidual() {
         return itemDef.definesResidual();

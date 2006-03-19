@@ -549,13 +549,10 @@ public class ValueHelper {
             // pass InputStream wrapper to BinaryValue constructor
             return new BinaryValue(new FilterInputStream(new FileInputStream(tmpFile)) {
 
-                File f = tmpFile;
-
                 public void close() throws IOException {
                     in.close();
                     // temp file can now safely be removed
-                    f.delete();
-                    f = null;
+                    tmpFile.delete();
                 }
             });
 /*

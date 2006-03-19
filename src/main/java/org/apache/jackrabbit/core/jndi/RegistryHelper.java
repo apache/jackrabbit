@@ -73,7 +73,7 @@ public class RegistryHelper {
      */
     public static void unregisterRepository(Context ctx, String name)
             throws NamingException {
-        ((BindableRepository) ctx.lookup(name)).shutdown() ;
+        ((BindableRepository) ctx.lookup(name)).shutdown();
         ctx.unbind(name);
     }
 }

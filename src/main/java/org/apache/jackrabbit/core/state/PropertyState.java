@@ -129,7 +129,7 @@ public class PropertyState extends ItemState {
 
     /**
      * Returns the identifier of this property.
-     * 
+     *
      * @return the id of this property.
      */
     public PropertyId getPropertyId() {
@@ -287,7 +287,7 @@ public class PropertyState extends ItemState {
                     // create InputStream wrapper of size 'length'
                     values[i] = InternalValue.create(new InputStream() {
 
-                        long consumed = 0;
+                        private long consumed = 0;
 
                         public int read() throws IOException {
                             if (consumed >= length) {
@@ -298,7 +298,7 @@ public class PropertyState extends ItemState {
                             return b;
                         }
 
-                        public int read(byte b[], int off, int len) throws IOException {
+                        public int read(byte[] b, int off, int len) throws IOException {
                             if (consumed >= length) {
                                 return -1;  // eof
                             }

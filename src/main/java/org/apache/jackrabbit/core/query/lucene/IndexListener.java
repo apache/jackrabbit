@@ -30,5 +30,6 @@ public interface IndexListener {
      *
      * @param id the <code>Term</code> that identifies the deleted document.
      */
-    public void documentDeleted(Term id);
+    void documentDeleted(Term id);
+
 }

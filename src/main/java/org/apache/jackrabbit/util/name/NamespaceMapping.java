@@ -94,7 +94,7 @@ public class NamespaceMapping extends AbstractNamespaceResolver {
      * @param uri
      * @throws NamespaceException
      */
-    public void setMapping(String prefix, String uri) throws NamespaceException{
+    public void setMapping(String prefix, String uri) throws NamespaceException {
         if (prefix == null) {
             throw new NamespaceException("Prefix must not be null");
         }
@@ -118,7 +118,7 @@ public class NamespaceMapping extends AbstractNamespaceResolver {
      * The returned Map is a copy of the internal Map.
      * @return Map
      */
-    public Map getPrefixToURIMapping(){
+    public Map getPrefixToURIMapping() {
         return new HashMap(prefixToURI);
     }
 
@@ -127,7 +127,7 @@ public class NamespaceMapping extends AbstractNamespaceResolver {
      * The returned Map is a copy of the internal Map.
      * @return Map
      */
-    public Map getURIToPrefixMapping(){
+    public Map getURIToPrefixMapping() {
         return new HashMap(URIToPrefix);
     }
 
@@ -137,7 +137,7 @@ public class NamespaceMapping extends AbstractNamespaceResolver {
      * @param obj
      * @return boolean
      */
-    public boolean equals(Object obj){
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -154,13 +154,13 @@ public class NamespaceMapping extends AbstractNamespaceResolver {
      *
      * @return String
      */
-    public String toString(){
-        String s= "";
+    public String toString() {
+        String s = "";
         Set mapping = prefixToURI.entrySet();
-        for(Iterator i = mapping.iterator(); i.hasNext();){
-            Map.Entry entry = (Map.Entry)i.next();
-            String prefix = (String)entry.getKey();
-            String uri = (String)entry.getValue();
+        for (Iterator i = mapping.iterator(); i.hasNext();) {
+            Map.Entry entry = (Map.Entry) i.next();
+            String prefix = (String) entry.getKey();
+            String uri = (String) entry.getValue();
             s += "'" + prefix + "' == '" + uri + "'\n";
         }
         return s;

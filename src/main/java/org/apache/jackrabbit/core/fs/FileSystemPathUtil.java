@@ -30,7 +30,7 @@ public final class FileSystemPathUtil {
     private static final char[] HEX_TABLE = "0123456789abcdef".toCharArray();
 
     /**
-     * The escape character used to mark hex escape sequences. 
+     * The escape character used to mark hex escape sequences.
      */
     private static final char ESCAPE_CHAR = '%';
 

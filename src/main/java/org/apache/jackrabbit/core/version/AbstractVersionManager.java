@@ -236,9 +236,9 @@ abstract class AbstractVersionManager implements VersionManager {
         // 2. generate version name (assume no namespaces in version names)
         String versionName = best.getName().getLocalName();
         int pos = versionName.lastIndexOf('.');
-        if (pos>0) {
-            versionName = versionName.substring(0, pos + 1) +
-                (Integer.parseInt(versionName.substring(pos + 1)) + 1);
+        if (pos > 0) {
+            versionName = versionName.substring(0, pos + 1)
+                + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
         } else {
             versionName = String.valueOf(best.getSuccessors().length + 1) + ".0";
         }
@@ -330,7 +330,7 @@ abstract class AbstractVersionManager implements VersionManager {
             v = history.setVersionLabel(version, label, move);
             stateMgr.update();
             success = true;
-        } catch(ItemStateException e) {
+        } catch (ItemStateException e) {
             log.error("Error while storing: " + e.toString());
         } finally {
             if (!success) {
