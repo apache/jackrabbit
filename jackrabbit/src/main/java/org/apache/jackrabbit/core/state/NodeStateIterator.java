@@ -31,4 +31,5 @@ public interface NodeStateIterator extends Iterator {
      * @throws NoSuchElementException
      */
     NodeState nextNodeState() throws NoSuchElementException;
+
 }

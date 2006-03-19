@@ -24,16 +24,16 @@ import javax.jcr.Repository;
  */
 public interface JackrabbitRepository extends Repository {
 
-	/**
-	 * Shuts down the repository. A Jackrabbit repository instance contains
-	 * a acquired resources and cached data that needs to be released and
-	 * persisted when the repository is no longer used. This method handles
-	 * all these shutdown tasks and <em>must</em> therefore be called by the
-	 * client application once the repository instance is no longer used.
-	 * <p>
-	 * Possible errors are logged rather than thrown as exceptions as there
-	 * is little that a client application could do in such a case. 
-	 */
-	void shutdown();
+    /**
+     * Shuts down the repository. A Jackrabbit repository instance contains
+     * a acquired resources and cached data that needs to be released and
+     * persisted when the repository is no longer used. This method handles
+     * all these shutdown tasks and <em>must</em> therefore be called by the
+     * client application once the repository instance is no longer used.
+     * <p>
+     * Possible errors are logged rather than thrown as exceptions as there
+     * is little that a client application could do in such a case.
+     */
+    void shutdown();
 
 }

@@ -159,8 +159,8 @@ public class SharedItemStateManager
                  * thread owns the write lock (reentrant).
                  */
                 protected boolean allowReader() {
-                    return activeWriter_ == null ||
-                      activeWriter_ == Thread.currentThread();
+                    return activeWriter_ == null
+                        || activeWriter_ == Thread.currentThread();
                 }
             };
 
@@ -930,8 +930,8 @@ public class SharedItemStateManager
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         NodeReferencesId refsId = new NodeReferencesId(
                                 (UUID) vals[i].internalValue());
-                        if (virtualProvider != null &&
-                                virtualProvider.hasNodeReferences(refsId)) {
+                        if (virtualProvider != null
+                                && virtualProvider.hasNodeReferences(refsId)) {
                             continue;
                         }
                         NodeReferences refs =
@@ -960,8 +960,8 @@ public class SharedItemStateManager
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         NodeReferencesId refsId = new NodeReferencesId(
                                 (UUID) vals[i].internalValue());
-                        if (virtualProvider != null &&
-                                virtualProvider.hasNodeReferences(refsId)) {
+                        if (virtualProvider != null
+                                && virtualProvider.hasNodeReferences(refsId)) {
                             continue;
                         }
                         // either get node references from change log or load from
@@ -984,8 +984,8 @@ public class SharedItemStateManager
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         NodeReferencesId refsId = new NodeReferencesId(
                                 (UUID) vals[i].internalValue());
-                        if (virtualProvider != null &&
-                                virtualProvider.hasNodeReferences(refsId)) {
+                        if (virtualProvider != null
+                                && virtualProvider.hasNodeReferences(refsId)) {
                             continue;
                         }
                         NodeReferences refs =
@@ -1011,8 +1011,8 @@ public class SharedItemStateManager
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         NodeReferencesId refsId = new NodeReferencesId(
                                 (UUID) vals[i].internalValue());
-                        if (virtualProvider != null &&
-                                virtualProvider.hasNodeReferences(refsId)) {
+                        if (virtualProvider != null
+                                && virtualProvider.hasNodeReferences(refsId)) {
                             continue;
                         }
                         // either get node references from change log or

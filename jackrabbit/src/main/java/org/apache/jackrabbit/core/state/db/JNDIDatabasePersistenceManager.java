@@ -32,7 +32,7 @@ import javax.sql.DataSource;
  * <p>
  * <strong>WARNING:</strong> The acquired database connection is kept
  * for the entire lifetime of the persistence manager instance. The
- * configured data source should be prepared for this. 
+ * configured data source should be prepared for this.
  */
 public class JNDIDatabasePersistenceManager extends DatabasePersistenceManager {
 

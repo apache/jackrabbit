@@ -89,7 +89,7 @@ public final class CachingMultiReader extends MultiReader implements HierarchyRe
      * @return the document number of <code>n</code>'s parent.
      * @throws IOException if an error occurs while reading from the index.
      */
-    final public int getParent(int n) throws IOException {
+    public int getParent(int n) throws IOException {
         DocId id = getParentDocId(n);
         return id.getDocumentNumber(this);
     }
@@ -103,7 +103,7 @@ public final class CachingMultiReader extends MultiReader implements HierarchyRe
      * @return the DocId of <code>n</code>'s parent.
      * @throws IOException if an error occurs while reading from the index.
      */
-    final public DocId getParentDocId(int n) throws IOException {
+    public DocId getParentDocId(int n) throws IOException {
         int i = readerIndex(n);
         DocId id = subReaders[i].getParent(n - starts[i]);
         return id.applyOffset(starts[i]);
@@ -171,7 +171,7 @@ public final class CachingMultiReader extends MultiReader implements HierarchyRe
      * @param n document number.
      * @return the reader index.
      */
-    final private int readerIndex(int n) {
+    private int readerIndex(int n) {
         int lo = 0;                                      // search starts array
         int hi = subReaders.length - 1;                  // for first element less
 
@@ -202,12 +202,12 @@ public final class CachingMultiReader extends MultiReader implements HierarchyRe
         /**
          * The index reader.
          */
-        final ReadOnlyIndexReader reader;
+        private final ReadOnlyIndexReader reader;
 
         /**
          * The reader offset in this multi reader instance.
          */
-        final int offset;
+        private final int offset;
 
         /**
          * Creates a new <code>OffsetReader</code>.

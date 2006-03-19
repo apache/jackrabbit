@@ -851,7 +851,6 @@ public class DatabaseFileSystem implements FileSystem {
             final File tmpFile = fileFactory.createTransientFile("bin", null, null);
 
             return new FilterOutputStream(new FileOutputStream(tmpFile)) {
-                File f = tmpFile;
 
                 public void close() throws IOException {
                     super.close();
@@ -862,8 +861,8 @@ public class DatabaseFileSystem implements FileSystem {
                         if (isFile(filePath)) {
                             stmt = updateDataStmt;
                             synchronized (stmt) {
-                                long length = f.length();
-                                in = new FileInputStream(f);
+                                long length = tmpFile.length();
+                                in = new FileInputStream(tmpFile);
                                 stmt.setBinaryStream(1, in, (int) length);
                                 stmt.setLong(2, System.currentTimeMillis());
                                 stmt.setLong(3, length);
@@ -875,8 +874,8 @@ public class DatabaseFileSystem implements FileSystem {
                             stmt = insertFileStmt;
                             stmt.setString(1, parentDir);
                             stmt.setString(2, name);
-                            long length = f.length();
-                            in = new FileInputStream(f);
+                            long length = tmpFile.length();
+                            in = new FileInputStream(tmpFile);
                             stmt.setBinaryStream(3, in, (int) length);
                             stmt.setLong(4, System.currentTimeMillis());
                             stmt.setLong(5, length);
@@ -893,8 +892,7 @@ public class DatabaseFileSystem implements FileSystem {
                             in.close();
                         }
                         // temp file can now safely be removed
-                        f.delete();
-                        f = null;
+                        tmpFile.delete();
                     }
                 }
             };
@@ -950,8 +948,8 @@ public class DatabaseFileSystem implements FileSystem {
             }
 
             return new RandomAccessOutputStream() {
-                File f = tmpFile;
-                RandomAccessFile raf = new RandomAccessFile(f, "rw");
+                private final RandomAccessFile raf =
+                    new RandomAccessFile(tmpFile, "rw");
 
                 public void close() throws IOException {
                     raf.close();
@@ -962,8 +960,8 @@ public class DatabaseFileSystem implements FileSystem {
                         if (isFile(filePath)) {
                             stmt = updateDataStmt;
                             synchronized (stmt) {
-                                long length = f.length();
-                                in = new FileInputStream(f);
+                                long length = tmpFile.length();
+                                in = new FileInputStream(tmpFile);
                                 stmt.setBinaryStream(1, in, (int) length);
                                 stmt.setLong(2, System.currentTimeMillis());
                                 stmt.setLong(3, length);
@@ -975,8 +973,8 @@ public class DatabaseFileSystem implements FileSystem {
                             stmt = insertFileStmt;
                             stmt.setString(1, parentDir);
                             stmt.setString(2, name);
-                            long length = f.length();
-                            in = new FileInputStream(f);
+                            long length = tmpFile.length();
+                            in = new FileInputStream(tmpFile);
                             stmt.setBinaryStream(3, in, (int) length);
                             stmt.setLong(4, System.currentTimeMillis());
                             stmt.setLong(5, length);
@@ -993,9 +991,7 @@ public class DatabaseFileSystem implements FileSystem {
                             in.close();
                         }
                         // temp file can now safely be removed
-                        f.delete();
-                        f = null;
-                        raf = null;
+                        tmpFile.delete();
                     }
                 }
 
@@ -1011,11 +1007,11 @@ public class DatabaseFileSystem implements FileSystem {
                     // nop
                 }
 
-                public void write(byte b[]) throws IOException {
+                public void write(byte[] b) throws IOException {
                     raf.write(b);
                 }
 
-                public void write(byte b[], int off, int len) throws IOException {
+                public void write(byte[] b, int off, int len) throws IOException {
                     raf.write(b, off, len);
                 }
             };
@@ -1069,7 +1065,7 @@ public class DatabaseFileSystem implements FileSystem {
     //----------------------------------< misc. helper methods & overridables >
 
     /**
-     * Initializes the database connection used by this file system. 
+     * Initializes the database connection used by this file system.
      * <p>
      * Subclasses should normally override the {@link #getConnection()}
      * method instead of this one. The default implementation calls
@@ -1082,7 +1078,7 @@ public class DatabaseFileSystem implements FileSystem {
         con = getConnection();
         con.setAutoCommit(false);
     }
-    
+
     /**
      * Abstract factory method for creating a new database connection. This
      * method is called by {@link #initConnection()} when the file system is
@@ -1109,7 +1105,7 @@ public class DatabaseFileSystem implements FileSystem {
      * The default implementation just calls the {@link Connection#close()}
      * method of the given connection, but subclasses can override this
      * method to provide more extensive database and connection cleanup.
-     * 
+     *
      * @param connection database connection
      * @throws Exception if an error occurs
      */
@@ -1282,10 +1278,10 @@ public class DatabaseFileSystem implements FileSystem {
         String[] names = listFolders(srcPath);
 
         for (int i = 0; i < names.length; i++) {
-            String src = (FileSystemPathUtil.denotesRoot(srcPath) ?
-                    srcPath + names[i] : srcPath + FileSystem.SEPARATOR + names[i]);
-            String dest = (FileSystemPathUtil.denotesRoot(destPath) ?
-                    destPath + names[i] : destPath + FileSystem.SEPARATOR + names[i]);
+            String src = (FileSystemPathUtil.denotesRoot(srcPath)
+                    ? srcPath + names[i] : srcPath + FileSystem.SEPARATOR + names[i]);
+            String dest = (FileSystemPathUtil.denotesRoot(destPath)
+                    ? destPath + names[i] : destPath + FileSystem.SEPARATOR + names[i]);
             copyDeepFolder(src, dest);
         }
 

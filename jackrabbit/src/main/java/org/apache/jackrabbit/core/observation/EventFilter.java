@@ -171,7 +171,7 @@ class EventFilter {
         }
 
         // check UUIDs
-        NodeId parentId= eventState.getParentId();
+        NodeId parentId = eventState.getParentId();
         if (ids != null) {
             boolean match = false;
             for (int i = 0; i < ids.length && !match; i++) {

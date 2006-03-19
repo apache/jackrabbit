@@ -193,7 +193,7 @@ public class SearchIndex extends AbstractQueryHandler {
             throw new IOException("SearchIndex requires 'path' parameter in configuration!");
         }
 
-        Set excludedIDs= new HashSet();
+        Set excludedIDs = new HashSet();
         if (context.getExcludedNodeId() != null) {
             excludedIDs.add(context.getExcludedNodeId());
         }
@@ -212,7 +212,7 @@ public class SearchIndex extends AbstractQueryHandler {
                     if (errors.size() == 0) {
                         log.info("No errors detected.");
                     }
-                    for (Iterator it = errors.iterator(); it.hasNext(); ) {
+                    for (Iterator it = errors.iterator(); it.hasNext();) {
                         ConsistencyCheckError err = (ConsistencyCheckError) it.next();
                         log.info(err.toString());
                     }
@@ -274,8 +274,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 try {
                     doc = createDocument(state, getNamespaceMappings());
                 } catch (RepositoryException e) {
-                    log.error("Exception while creating document for node: " +
-                            state.getNodeId() + ": " + e.toString());
+                    log.error("Exception while creating document for node: "
+                            + state.getNodeId() + ": " + e.toString());
                 }
                 return doc;
             }
@@ -738,7 +738,7 @@ public class SearchIndex extends AbstractQueryHandler {
     public String getTextFilterClasses() {
         StringBuffer names = new StringBuffer();
         String delim = "";
-        for (Iterator it = textFilters.iterator(); it.hasNext(); ) {
+        for (Iterator it = textFilters.iterator(); it.hasNext();) {
             names.append(delim);
             names.append(it.next().getClass().getName());
             delim = ",";

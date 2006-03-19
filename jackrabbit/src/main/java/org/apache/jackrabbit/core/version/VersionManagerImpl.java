@@ -291,7 +291,7 @@ public class VersionManagerImpl extends AbstractVersionManager
 
             // save away predecessors before removing version
             AbstractVersion version = (AbstractVersion) historyImpl.getNode(name);
-            InternalVersion preds[] = version.getInternalVersion().getPredecessors();
+            InternalVersion[] preds = version.getInternalVersion().getPredecessors();
 
             InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
                     historyImpl.getInternalVersionHistory();

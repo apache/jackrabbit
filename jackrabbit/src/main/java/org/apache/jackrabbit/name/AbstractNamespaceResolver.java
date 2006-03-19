@@ -127,7 +127,7 @@ public abstract class AbstractNamespaceResolver implements NamespaceResolver {
         synchronized (listeners) {
             int i = 0;
             currentListeners = new NamespaceListener[listeners.size()];
-            for (Iterator it = listeners.iterator(); it.hasNext(); ) {
+            for (Iterator it = listeners.iterator(); it.hasNext();) {
                 currentListeners[i++] = (NamespaceListener) it.next();
             }
         }
@@ -156,7 +156,7 @@ public abstract class AbstractNamespaceResolver implements NamespaceResolver {
         synchronized (listeners) {
             int i = 0;
             currentListeners = new NamespaceListener[listeners.size()];
-            for (Iterator it = listeners.iterator(); it.hasNext(); ) {
+            for (Iterator it = listeners.iterator(); it.hasNext();) {
                 currentListeners[i++] = (NamespaceListener) it.next();
             }
         }

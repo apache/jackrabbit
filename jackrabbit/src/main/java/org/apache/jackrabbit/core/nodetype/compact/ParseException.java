@@ -94,19 +94,19 @@ public class ParseException extends Exception {
      */
     public String getMessage() {
         StringBuffer b = new StringBuffer(super.getMessage());
-        String delim =" (";
+        String delim = " (";
         if (systemId != null && !systemId.equals("")) {
             b.append(delim);
             b.append(systemId);
             delim = ", ";
         }
-        if (lineNumber>=0) {
+        if (lineNumber >= 0) {
             b.append(delim);
             b.append("line ");
             b.append(lineNumber);
             delim = ", ";
         }
-        if (colNumber>=0) {
+        if (colNumber >= 0) {
             b.append(delim);
             b.append("col ");
             b.append(colNumber);
@@ -122,7 +122,7 @@ public class ParseException extends Exception {
      * {@inheritDoc}
      */
     public String toString() {
-        return super.toString();// + " (" + systemId + ", line " + lineNumber +", col " + colNumber +")";
+        return super.toString(); // + " (" + systemId + ", line " + lineNumber +", col " + colNumber +")";
     }
 
 }

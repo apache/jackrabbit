@@ -288,8 +288,8 @@ public class SearchManager implements SynchronousEventListener {
                             log.warn("Unable to shutdown idle query handler", e);
                         }
                     } else {
-                        log.debug("SearchManager is idle but " + inUse +
-                                " queries are still in use.");
+                        log.debug("SearchManager is idle but " + inUse
+                                + " queries are still in use.");
                     }
                 }
             }
@@ -446,7 +446,7 @@ public class SearchManager implements SynchronousEventListener {
 
             public NodeState nextNodeState() {
                 NodeState item = null;
-                NodeId id= (NodeId) iter.next();
+                NodeId id = (NodeId) iter.next();
                 try {
                     item = (NodeState) itemMgr.getItemState(id);
                 } catch (ItemStateException e) {
@@ -509,8 +509,8 @@ public class SearchManager implements SynchronousEventListener {
                 activeQueries.put(obj, null);
                 return (AbstractQueryImpl) obj;
             } else {
-                throw new IllegalArgumentException(queryImplClassName +
-                        " is not of type " + AbstractQueryImpl.class.getName());
+                throw new IllegalArgumentException(queryImplClassName
+                        + " is not of type " + AbstractQueryImpl.class.getName());
             }
         } catch (Throwable t) {
             throw new RepositoryException("Unable to create query: " + t.toString());

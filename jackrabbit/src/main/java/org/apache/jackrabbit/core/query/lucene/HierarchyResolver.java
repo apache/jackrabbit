@@ -33,5 +33,6 @@ public interface HierarchyResolver {
      * @return the document number of <code>n</code>'s parent.
      * @throws java.io.IOException if an error occurs while reading from the index.
      */
-    public int getParent(int n) throws IOException;
+    int getParent(int n) throws IOException;
+
 }

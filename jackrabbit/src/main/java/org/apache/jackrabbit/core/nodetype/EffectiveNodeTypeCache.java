@@ -36,11 +36,12 @@ class EffectiveNodeTypeCache implements Cloneable, Dumpable {
     /**
      * ordered set of keys
      */
-    final TreeSet sortedKeys;
+    private final TreeSet sortedKeys;
+
     /**
      * cache of pre-built aggregations of node types
      */
-    final HashMap aggregates;
+    private final HashMap aggregates;
 
     EffectiveNodeTypeCache() {
         sortedKeys = new TreeSet();

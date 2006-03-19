@@ -266,8 +266,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                     throw new LockException("Parent node has deep lock.");
                 }
             }
-            if (info.deep && element.hasPath(path) &&
-                    element.getChildrenCount() > 0) {
+            if (info.deep && element.hasPath(path)
+                    && element.getChildrenCount() > 0) {
                 throw new LockException("Some child node is locked.");
             }
 
@@ -607,12 +607,12 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         /**
          * ID recorded in event
          */
-        public final NodeId id;
+        private final NodeId id;
 
         /**
          * Path recorded in event
          */
-        public final Path path;
+        private final Path path;
 
         /**
          * Old path in move operation

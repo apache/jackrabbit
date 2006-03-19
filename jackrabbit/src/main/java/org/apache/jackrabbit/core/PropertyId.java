@@ -53,7 +53,7 @@ public class PropertyId extends ItemId {
         this.parentId = parentId;
         this.propName = propName;
 
-        int h= 17;
+        int h = 17;
         h = 37 * h + parentId.hashCode();
         h = 37 * h + propName.hashCode();
         this.hashCode = h;

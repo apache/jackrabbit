@@ -204,13 +204,15 @@ class XAEnvironment {
      * Add lock token to this environment.
      * @param lt lock token
      */
-    public void addLockToken(String lt) {}
+    public void addLockToken(String lt) {
+    }
 
     /**
      * Remove lock token from this environment.
      * @param lt lock token
      */
-    public void removeLockToken(String lt) {}
+    public void removeLockToken(String lt) {
+    }
 
     /**
      * Prepare update. Locks global lock manager and feeds all lock/
@@ -390,8 +392,8 @@ class XAEnvironment {
          * associated lock information is subject to change.
          */
         public boolean mayChange() {
-            if (status != Status.STATUS_COMMITTED &&
-                    status != Status.STATUS_ROLLEDBACK) {
+            if (status != Status.STATUS_COMMITTED
+                    && status != Status.STATUS_ROLLEDBACK) {
                 return true;
             }
             return super.mayChange();

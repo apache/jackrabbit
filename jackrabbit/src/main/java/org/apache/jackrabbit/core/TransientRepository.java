@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -131,7 +131,7 @@ public class TransientRepository implements Repository, SessionListener {
     /**
      * Creates a transient repository proxy that will use the given repository
      * factory to initialize the underlying repository instances.
-     * 
+     *
      * @param factory repository factory
      * @throws IOException if the static repository descriptors cannot be loaded
      */
@@ -203,7 +203,7 @@ public class TransientRepository implements Repository, SessionListener {
                                         DEFAULT_REPOSITORY_XML);
                             byte[] buffer = new byte[BUFFER_SIZE];
                             try {
-                                int n = input.read(buffer); 
+                                int n = input.read(buffer);
                                 while (n != -1) {
                                     output.write(buffer, 0, n);
                                     n = input.read(buffer);
@@ -388,7 +388,7 @@ public class TransientRepository implements Repository, SessionListener {
             // remaining active sessions including the one that just emitted
             // the loggedOut() message to us!
             repository.loggedOut(session);
-            
+
             stopRepository();
         }
     }

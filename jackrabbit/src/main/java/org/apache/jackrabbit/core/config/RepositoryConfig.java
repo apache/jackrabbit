@@ -308,7 +308,8 @@ public class RepositoryConfig {
             } finally {
                 try {
                     fs.close();
-                } catch (FileSystemException ignore) {}
+                } catch (FileSystemException ignore) {
+                }
             }
         } else {
             // search for workspace configurations in physical workspace root
@@ -328,8 +329,8 @@ public class RepositoryConfig {
         }
         if (!workspaces.containsKey(defaultWorkspace)) {
             if (!workspaces.isEmpty()) {
-                log.warn("Potential misconfiguration. No configuration found " +
-                        "for default workspace: " + defaultWorkspace);
+                log.warn("Potential misconfiguration. No configuration found "
+                        + "for default workspace: " + defaultWorkspace);
             }
             // create initial default workspace
             createWorkspaceConfig(defaultWorkspace);
@@ -419,7 +420,8 @@ public class RepositoryConfig {
             if (configReader != null) {
                 try {
                     configReader.close();
-                } catch (IOException ignore) {}
+                } catch (IOException ignore) {
+                }
             }
         }
     }
@@ -538,7 +540,8 @@ public class RepositoryConfig {
             } finally {
                 try {
                     configWriter.close();
-                } catch (IOException ignore) {}
+                } catch (IOException ignore) {
+                }
             }
 
             // Load the created workspace configuration.
@@ -563,7 +566,8 @@ public class RepositoryConfig {
                 if (virtualFS != null) {
                     virtualFS.close();
                 }
-            } catch (FileSystemException ignore) {}
+            } catch (FileSystemException ignore) {
+            }
         }
     }
 

@@ -149,9 +149,11 @@ public class NodeState extends ItemState {
             mixinTypeNames = nodeState.mixinTypeNames;
             defId = nodeState.defId;
             propertyNames = nodeState.propertyNames;
-            sharedPropertyNames = nodeState.sharedPropertyNames = true;
+            sharedPropertyNames = true;
+            nodeState.sharedPropertyNames = true;
             childNodeEntries = nodeState.childNodeEntries;
-            sharedChildNodeEntries = nodeState.sharedChildNodeEntries = true;
+            sharedChildNodeEntries = true;
+            nodeState.sharedChildNodeEntries = true;
         }
     }
 
@@ -842,10 +844,10 @@ public class NodeState extends ItemState {
     private static class ChildNodeEntries implements List, Cloneable, Serializable {
 
         // insertion-ordered map of entries (key=NodeId, value=entry)
-        LinkedMap entries;
+        private LinkedMap entries;
         // map used for lookup by name
         // (key=name, value=either a single entry or a list of sns entries)
-        HashMap nameMap;
+        private HashMap nameMap;
 
         ChildNodeEntries() {
             entries = new LinkedMap();
@@ -1169,7 +1171,7 @@ public class NodeState extends ItemState {
             return toArray(array);
         }
 
-        public Object[] toArray(Object a[]) {
+        public Object[] toArray(Object[] a) {
             if (!a.getClass().getComponentType().isAssignableFrom(ChildNodeEntry.class)) {
                 throw new ArrayStoreException();
             }
@@ -1281,7 +1283,7 @@ public class NodeState extends ItemState {
         //----------------------------------------------------< inner classes >
         class EntriesIterator implements ListIterator {
 
-            OrderedMapIterator mapIter;
+            private final OrderedMapIterator mapIter;
 
             EntriesIterator() {
                 mapIter = entries.orderedMapIterator();
