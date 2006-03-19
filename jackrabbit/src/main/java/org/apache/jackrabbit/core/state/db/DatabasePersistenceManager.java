@@ -60,6 +60,8 @@ import java.sql.DatabaseMetaData;
  * Abstract base class for database persistence managers. This class
  * contains common functionality for database persistence manager subclasses
  * that normally differ only in the way the database connection is acquired.
+ * Subclasses should override the {@link #getConnection()} method to return
+ * the configured database connection.
  * <p>
  * See the {@link SimpleDbPersistenceManager} for a detailed description
  * of the available configuration options and database behaviour.
@@ -178,8 +180,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         }
 
         // setup jdbc connection
-        con = getConnection();
-        con.setAutoCommit(false);
+        initConnection();
 
         // make sure schemaObjectPrefix consists of legal name characters only
         prepareSchemaObjectPrefix();
@@ -787,6 +788,21 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     //----------------------------------< misc. helper methods & overridables >
 
     /**
+     * Initializes the database connection used by this file system. 
+     * <p>
+     * Subclasses should normally override the {@link #getConnection()}
+     * method instead of this one. The default implementation calls
+     * {@link #getConnection()} to get the database connection and disables
+     * the autocommit feature.
+     *
+     * @throws Exception if an error occurs
+     */
+    protected void initConnection() throws Exception {
+        con = getConnection();
+        con.setAutoCommit(false);
+    }
+
+    /**
      * Abstract factory method for creating a new database connection. This
      * method is called by {@link #init(PMContext)} when the persistence
      * manager is started. The returned connection should come with the default
@@ -800,7 +816,9 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
      * @return new connection
      * @throws Exception if an error occurs
      */
-    protected abstract Connection getConnection() throws Exception;
+    protected Connection getConnection() throws Exception {
+        throw new UnsupportedOperationException("Override in a subclass!");
+    }
 
     /**
      * Closes the given database connection. This method is called by
