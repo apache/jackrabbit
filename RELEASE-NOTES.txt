@@ -31,7 +31,7 @@ jar files contain a README.txt file with more information.
     The general-purpose JCR utility library built from the main
     Jackrabbit source tree.
 
-* jackrabbit-jca-1.0-src.jar and jackrabbit-jca-1.0.jar
+* jackrabbit-jca-1.0-src.jar and jackrabbit-jca-1.0.rar
 
     JCA resource adapter for Jackrabbit.
 
@@ -59,9 +59,16 @@ in the KEYS file located in the parent directory.
 Known Issues
 ------------
 
-The main known issues in this release are listed below:
+The known issues in this release are listed below:
 
+  [JCR-365] Web client/WebDAV fails to unescape workspace names
+  [JCR-362] restore sometime throws error about missing tmp files
+  [JCR-359] JCA project tests assume Windows paths
+  [JCR-353] TransientRepository does not shutdown if first login fails
+  [JCR-339] null pointer when cloning to different workspace under ...
+  [JCR-338] Query Builder and jcr:deref problem. Can't add predicate ...
   [JCR-336] Concurrent locking operations fail
+  [JCR-335] Deadlock caused by versioning operations within transaction
   [JCR-333] NodeTypeDef depends on supertype ordering
   [JCR-325] docview roundtripping does not work with multivalue ...
   [JCR-323] import/export does not work on the root node
@@ -74,7 +81,7 @@ The main known issues in this release are listed below:
   [JCR-43]  Restore on node creates same-name-sibling of OPV-Version ...
   [JCR-18]  Multithreading issue with versioning
 
-See the Jackrabbit issue tracker for details and other outstanding issues:
+See the Jackrabbit issue tracker for more details:
 
   http://issues.apache.org/jira/browse/JCR
 
@@ -83,6 +90,7 @@ Change History
 
 Changes since 1.0-rc1:
 
+  [JCR-363] Node.setProperty(String, ...) implementation not according to ...
   [JCR-354] Use a pre-generated version of XPath.jjt
   [JCR-351] Default to anonymous access when no Credentials are given
   [JCR-348] Add automatic default configuration
@@ -95,7 +103,6 @@ Changes since 1.0-rc1:
   [JCR-341] Jcr-Server: registration of ReportTypes fails
   [JCR-340] Jcr-Server: ValuesProperty missing property type information
   [JCR-337] Jcr-Server: remove jcr depedency from dav-library
-  [JCR-335] Deadlock caused by versioning operations within transaction
   [JCR-215] Code depends on Log4J directly
 
 Changes since 0.9:
@@ -107,8 +114,9 @@ Changes since 0.9:
   [JCR-327] Mixins as supertypes do not appear to be queryable
   [JCR-326] Initialize the cause of a login exception in the repository
   [JCR-318] RepositoryHelper.unregisterRepository() does not allow ...
-  [JCR-312] CompactNodeTypeDefReader adds nt:base as declared ...
-  [JCR-311] Unnecessary parameter in NodeTypeRegistry.persistCustom...
+  [JCR-317] replace UUID strings by UUID classes in NodeId, etc..
+  [JCR-316] Fixed README.txt on textfilters project
+  [JCR-315] Support for OpenOffice text extraction
   [JCR-309] Extract the public API interfaces from o.a.j.core to o.a.j.api
   [JCR-308] Nodes having OPV=Ignore are removed on restore
   [JCR-307] serious performance degradation of node operations when ...
