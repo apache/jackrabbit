@@ -159,7 +159,8 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
             // fallback: try finding applicable definition
             NodeImpl parent = (NodeImpl) getItem(state.getParentId());
-            def = parent.getApplicablePropertyDefinition(state.getName(), state.getType(), state.isMultiValued());
+            def = parent.getApplicablePropertyDefinition(
+                    state.getName(), state.getType(), state.isMultiValued(), true);
             state.setDefinitionId(def.unwrap().getId());
         }
         return def;
