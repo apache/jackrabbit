@@ -1716,26 +1716,20 @@ public class BatchedItemOperations extends ItemValidator {
                      * copied properties declared by mix:versionable need to be
                      * adjusted accordingly.
                      */
-                    // jcr:versionHistory
                     if (propName.equals(QName.JCR_VERSIONHISTORY)) {
+                        // jcr:versionHistory
                         VersionHistory vh = getOrCreateVersionHistory(newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getUUID()))});
-                    }
-
-                    // jcr:baseVersion
-                    if (propName.equals(QName.JCR_BASEVERSION)) {
+                    } else if (propName.equals(QName.JCR_BASEVERSION)) {
+                        // jcr:baseVersion
                         VersionHistory vh = getOrCreateVersionHistory(newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
-                    }
-
-                    // jcr:predecessors
-                    if (propName.equals(QName.JCR_PREDECESSORS)) {
+                    } else if (propName.equals(QName.JCR_PREDECESSORS)) {
+                        // jcr:predecessors
                         VersionHistory vh = getOrCreateVersionHistory(newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
-                    }
-
-                    // jcr:isCheckedOut
-                    if (propName.equals(QName.JCR_ISCHECKEDOUT)) {
+                    } else if (propName.equals(QName.JCR_ISCHECKEDOUT)) {
+                        // jcr:isCheckedOut
                         newChildState.setValues(new InternalValue[]{InternalValue.create(true)});
                     }
                 }
