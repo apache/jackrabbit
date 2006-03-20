@@ -25,7 +25,7 @@
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit</artifactId>
     <name>Jackrabbit</name>
-    <currentVersion>1.0</currentVersion>
+    <currentVersion>1.0-rc2</currentVersion>
     <organization>
         <name>The Apache Software Foundation</name>
         <url>http://incubator.apache.org/projects/jackrabbit.html</url>
