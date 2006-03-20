@@ -8,18 +8,6 @@ it possible to remotely access JCR content repositories. JCR-RMI is
 developed as a part of the incubating Apache Jackrabbit project, but
 the implementation is compatible with all JCR content repositories.
 
-Apache Jackrabbit is an effort undergoing incubation at the
-Apache Software Foundation. Incubation is required of all newly
-accepted projects until a further review indicates that the
-infrastructure, communications, and decision making process
-have stabilized in a manner consistent with other successful
-ASF projects. While incubation status is not necessarily a
-reflection of the completeness or stability of the code, it
-does indicate that the project has yet to be fully endorsed
-by the ASF.  The incubation status is recorded at
-
-   http://incubator.apache.org/projects/jackrabbit.html
-
 License (see also LICENSE.txt)
 ==============================
 
