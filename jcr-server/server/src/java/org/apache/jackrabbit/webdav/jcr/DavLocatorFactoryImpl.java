@@ -95,12 +95,12 @@ public class DavLocatorFactoryImpl implements DavLocatorFactory {
             if (pos == -1) {
                 // request to a 'workspace' resource that in the same time
                 // represent the root node of the repository.
-                workspacePath = href;
+                workspacePath = Text.unescape(href);
                 resourcePath = ItemResourceConstants.ROOT_ITEM_PATH;
             } else {
                 // separate the workspace name from the path of the repository
                 // item.
-                workspacePath = href.substring(0, pos);
+                workspacePath = Text.unescape(href.substring(0, pos));
                 resourcePath = Text.unescape(href.substring(pos));
             }
         }
@@ -163,7 +163,7 @@ public class DavLocatorFactoryImpl implements DavLocatorFactory {
 
             StringBuffer buf = new StringBuffer(prefix);
             if (workspacePath != null) {
-                buf.append(workspacePath);
+                buf.append(Text.escapePath(workspacePath));
             }
             if (resourcePath != null) {
                 buf.append(Text.escapePath(resourcePath));
