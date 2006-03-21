@@ -31,6 +31,8 @@ import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.WebdavRequestImpl;
 import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.WebdavResponseImpl;
+import org.apache.jackrabbit.webdav.security.AclResource;
+import org.apache.jackrabbit.webdav.security.AclProperty;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.InputContextImpl;
 import org.apache.jackrabbit.webdav.io.OutputContext;
@@ -297,6 +299,9 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 break;
             case DavMethods.DAV_MKWORKSPACE:
                 doMkWorkspace(request, response, resource);
+                break;
+            case DavMethods.DAV_ACL:
+                doAcl(request, response, resource);
                 break;
             default:
                 // any other method
@@ -864,12 +869,17 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
     protected void doReport(WebdavRequest request, WebdavResponse response,
                             DavResource resource)
             throws DavException, IOException {
-        if (!(resource instanceof DeltaVResource)) {
+        ReportInfo info = request.getReportInfo();
+        Report report;
+        if (resource instanceof DeltaVResource) {
+            report = ((DeltaVResource) resource).getReport(info);
+        } else if (resource instanceof AclResource) {
+            report = ((AclResource) resource).getReport(info);
+        } else {
             response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
             return;
         }
-        ReportInfo info = request.getReportInfo();
-        Report report = ((DeltaVResource) resource).getReport(info);
+        
         int statusCode = (report.isMultiStatusReport()) ? DavServletResponse.SC_MULTI_STATUS : DavServletResponse.SC_OK;
         response.sendXmlResponse(report, statusCode);
     }
@@ -1031,6 +1041,29 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             // is a 'query' resource.
             response.sendMultiStatus(((SearchResource) resource).search(null));
         }
+    }
+
+    /**
+     * The ACL method
+     *
+     * @param request
+     * @param response
+     * @param resource
+     * @throws DavException
+     * @throws IOException
+     */
+    protected void doAcl(WebdavRequest request, WebdavResponse response,
+                         DavResource resource) throws DavException, IOException {
+        if (!(resource instanceof AclResource)) {
+            response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+            return;
+        }
+        Document doc = request.getRequestDocument();
+        if (doc == null) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "ACL request requires a DAV:acl body.");
+        }
+        AclProperty acl = AclProperty.createFromXml(doc.getDocumentElement());
+        ((AclResource)resource).alterAcl(acl);
     }
 
     /**
