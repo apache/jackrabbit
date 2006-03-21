@@ -28,8 +28,8 @@
     <currentVersion>1.0-SNAPSHOT</currentVersion>
     <organization>
         <name>The Apache Software Foundation</name>
-        <url>http://incubator.apache.org/projects/jackrabbit.html</url>
-        <logo>http://incubator.apache.org/images/apache-incubator-logo.png</logo>
+        <url>http://www.apache.org/</url>
+        <logo>http://www.apache.org/images/asf_logo_wide.png</logo>
     </organization>
     <inceptionYear>2004</inceptionYear>
     <package>org.apache.jackrabbit.*</package>
@@ -43,16 +43,16 @@
         frameworks) to use for interaction with modern content repositories -- content management systems that provide 
         content services such as versioning, transactions, indexing, workflow, etc.
     </description>
-    <shortDescription>Implementation of the Content Repository for Java</shortDescription>
-    <url>http://incubator.apache.org/projects/jackrabbit.html</url>
+    <shortDescription>The Open Source Content Repository for Java</shortDescription>
+    <url>http://jackrabbit.apache.org/</url>
     <issueTrackingUrl>http://issues.apache.org/jira/browse/JCR</issueTrackingUrl>
     <siteDirectory>../jackrabbit-site</siteDirectory>
-    <distributionSite>incubator.apache.org</distributionSite>
+    <distributionSite>people.apache.org</distributionSite>
     <distributionDirectory>/www/www.apache.org/dist/java-repository/</distributionDirectory>
     <repository>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</developerConnection>
-        <url>http://svn.apache.org/viewcvs</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk</developerConnection>
+        <url>http://svn.apache.org/viewcvs/jackrabbit/trunk</url>
     </repository>
     <versions/>
 
@@ -90,7 +90,7 @@
             <name>Jackrabbit Source Control List</name>
             <subscribe>commits-subscribe at jackrabbit.apache.org</subscribe>
             <unsubscribe>commits-unsubscribe at jackrabbit.apache.org</unsubscribe>
-            <archive>http://incubator.apache.org/mail/jackrabbit-commits/</archive>
+            <archive>http://mail-archives.apache.org/mod_mbox/jackrabbit-commits/</archive>
         </mailingList>
     </mailingLists>
 
@@ -109,6 +109,12 @@
             <id>0.9-incubating</id>
         </version>
     </versions>
+
+    <branches>
+        <branch>
+            <tag>branches/1.0</tag>
+        </branch>
+    </branches>
 
     <!-- ====================================================================== -->
     <!-- P E O P L E                                                            -->
