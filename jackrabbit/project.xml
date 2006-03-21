@@ -70,7 +70,7 @@
             <archive>http://mail-archives.apache.org/mod_mbox/jackrabbit-users/</archive>
         </mailingList>
         <mailingList>
-            <name>Jackrabbit Developer List</name>
+            <name>Jackrabbit Development List</name>
             <post>dev at jackrabbit.apache.org</post>
             <subscribe>dev-subscribe at jackrabbit.apache.org</subscribe>
             <unsubscribe>dev-unsubscribe at jackrabbit.apache.org</unsubscribe>
@@ -78,13 +78,8 @@
             <otherArchives>
               <otherArchive>http://dir.gmane.org/gmane.comp.apache.jackrabbit.devel</otherArchive>
               <otherArchive>http://www.mail-archive.com/jackrabbit-dev@incubator.apache.org/</otherArchive>
+              <otherArchive>http://www.mail-archive.com/dev@jackrabbit.apache.org/</otherArchive>
             </otherArchives>
-        </mailingList>
-        <mailingList>
-            <name>Jackrabbit Security List</name>
-            <post>security at jackrabbit.apache.org</post>
-            <subscribe>security-subscribe at jackrabbit.apache.org</subscribe>
-            <unsubscribe>security-unsubscribe at jackrabbit.apache.org</unsubscribe>
         </mailingList>
         <mailingList>
             <name>Jackrabbit Source Control List</name>
