@@ -57,9 +57,9 @@
          <p>
             Access to the source tree to see the latest and greatest code is possible
             through anonymous SVN access at
-            <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>.
+            <a href="http://svn.apache.org/repos/asf/jackrabbit/trunk">http://svn.apache.org/repos/asf/jackrabbit/trunk</a>.
             The source tree can also be browsed using
-            <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/">the ViewCVS interface</a>.
+            <a href="http://svn.apache.org/viewcvs.cgi/jackrabbit/trunk/">the ViewCVS interface</a>.
          </p>
          <p>
             See the <a href="doc/building.html">Building Jackrabbit</a> page
