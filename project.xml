@@ -57,24 +57,39 @@
     <versions/>
 
     <mailingLists>
-        <!--
+        <mailingList>
+            <name>Jackrabbit Announce List</name>
+            <subscribe>announce-subscribe at jackrabbit.apache.org</subscribe>
+            <unsubscribe>announce-unsubscribe at jackrabbit.apache.org</unsubscribe>
+        </mailingList>
         <mailingList>
             <name>Jackrabbit Users List</name>
-            <subscribe>user-subscribe@jackrabbit.apache.org</subscribe>
-            <unsubscribe>user-unsubscribe@jackrabbit.apache.org</unsubscribe>
-            <archive>http://mail-archives.apache.org/eyebrowse/SummarizeList?listName=user@jackrabbit.apache.org</archive>
+            <post>users at jackrabbit.apache.org</post>
+            <subscribe>users-subscribe at jackrabbit.apache.org</subscribe>
+            <unsubscribe>users-unsubscribe at jackrabbit.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/jackrabbit-users/</archive>
         </mailingList>
-        -->
         <mailingList>
             <name>Jackrabbit Developer List</name>
-            <subscribe>jackrabbit-dev-subscribe at incubator.apache.org</subscribe>
-            <unsubscribe>jackrabbit-dev-unsubscribe at incubator.apache.org</unsubscribe>
-            <archive>http://incubator.apache.org/mail/jackrabbit-dev/</archive>
+            <post>dev at jackrabbit.apache.org</post>
+            <subscribe>dev-subscribe at jackrabbit.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe at jackrabbit.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/jackrabbit-dev/</archive>
+            <otherArchives>
+              <otherArchive>http://dir.gmane.org/gmane.comp.apache.jackrabbit.devel</otherArchive>
+              <otherArchive>http://www.mail-archive.com/jackrabbit-dev@incubator.apache.org/</otherArchive>
+            </otherArchives>
+        </mailingList>
+        <mailingList>
+            <name>Jackrabbit Security List</name>
+            <post>security at jackrabbit.apache.org</post>
+            <subscribe>security-subscribe at jackrabbit.apache.org</subscribe>
+            <unsubscribe>security-unsubscribe at jackrabbit.apache.org</unsubscribe>
         </mailingList>
         <mailingList>
             <name>Jackrabbit Source Control List</name>
-            <subscribe>jackrabbit-commits-subscribe at incubator.apache.org</subscribe>
-            <unsubscribe>jackrabbit-commits-unsubscribe at incubator.apache.org</unsubscribe>
+            <subscribe>commits-subscribe at jackrabbit.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe at jackrabbit.apache.org</unsubscribe>
             <archive>http://incubator.apache.org/mail/jackrabbit-commits/</archive>
         </mailingList>
     </mailingLists>
