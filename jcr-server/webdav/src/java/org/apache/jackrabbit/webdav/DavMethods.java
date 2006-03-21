@@ -253,6 +253,13 @@ public class DavMethods {
     public static final String METHOD_MKACTIVITY = "MKACTIVITY";
 
     /**
+     * The webdav ACL method and public constant defined by
+     * <a href="http://www.ietf.org/rfc/rfc3744.txt">RFC 3744</a>
+     */
+    public static final int DAV_ACL = DAV_MKACTIVITY + 1;
+    public static final String METHOD_ACL = "ACL";
+
+    /**
      * Returns webdav method type code, error result <= 0
      * Valid type codes > 0
      */
@@ -304,6 +311,7 @@ public class DavMethods {
         addMethodCode(METHOD_MKWORKSPACE, DAV_MKWORKSPACE);
         addMethodCode(METHOD_BASELINE_CONTROL, DAV_BASELINE_CONTROL);
         addMethodCode(METHOD_MKACTIVITY, DAV_MKACTIVITY);
+        addMethodCode(METHOD_ACL, DAV_ACL);
 
         labelMethods = new int[] { DAV_GET, DAV_HEAD, DAV_OPTIONS, DAV_PROPFIND,
                                    DAV_LABEL, DAV_COPY };
