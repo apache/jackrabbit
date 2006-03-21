@@ -97,7 +97,7 @@
         <p>
           Take a look at the <a href="faq.html">Frequently Asked Questions</a>
           or browse the
-          <a href="http://mail-archives.apache.org/mod_mbox/incubator-jackrabbit-dev/"
+          <a href="http://mail-archives.apache.org/mod_mbox/jackrabbit-dev/"
              class="externalLink" title="jackrabbit-dev archives"
              >mailing list archives</a> (see also the searchable archives at
           <a href="http://www.mail-archive.com/jackrabbit-dev@incubator.apache.org/"
@@ -108,10 +108,11 @@
              >Gmane</a>) for answers to questions not covered by the
           documentation pages. If you need more help or want to discuss
           Jackrabbit generally, don't hesitate to join the Jackrabbit
-          development mailing list called
-          jackrabbit-dev&lt;at&gt;incubator.apache.org (you can subscribe
+          users mailing list at
+          users&lt;at&gt;jackrabbit.apache.org (you can subscribe
           by sending an empty message to
-          jackrabbit-dev-subscribe&lt;at&gt;incubator.apache.org).
+          users-subscribe&lt;at&gt;jackrabbit.apache.org). There is a similar
+          development mailing list at dev&lt;at&gt;jackrabbit.apache.org.
         </p>
         <p>
           Jackrabbit is an open source project and welcomes all contributions.
