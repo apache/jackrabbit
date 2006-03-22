@@ -51,7 +51,7 @@ class SysViewImportHandler extends TargetImportHandler {
     private int currentPropType = PropertyType.UNDEFINED;
     // list of AppendableValue objects
     private ArrayList currentPropValues = new ArrayList();
-    private AppendableValue currentPropValue;
+    private BufferedStringValue currentPropValue;
 
     /**
      * Constructs a new <code>SysViewImportHandler</code>.
@@ -68,24 +68,25 @@ class SysViewImportHandler extends TargetImportHandler {
         if (!start && !end) {
             return;
         }
-        Importer.NodeInfo node = new Importer.NodeInfo();
-        node.setName(state.nodeName);
-        node.setNodeTypeName(state.nodeTypeName);
+        QName[] mixinNames = null;
         if (state.mixinNames != null) {
-            QName[] mixins = (QName[]) state.mixinNames.toArray(new QName[state.mixinNames.size()]);
-            node.setMixinNames(mixins);
+            mixinNames = (QName[]) state.mixinNames.toArray(
+                    new QName[state.mixinNames.size()]);
         }
+        NodeId id = null;
         if (state.uuid != null) {
-            node.setId(NodeId.valueOf(state.uuid));
+            id = NodeId.valueOf(state.uuid);
         }
+        NodeInfo node =
+            new NodeInfo(state.nodeName, state.nodeTypeName, mixinNames, id);
         // call Importer
         try {
             if (start) {
-                importer.startNode(node, state.props, nsContext);
+                importer.startNode(node, state.props);
                 // dispose temporary property values
                 for (Iterator iter = state.props.iterator(); iter.hasNext();) {
-                    Importer.PropInfo pi = (Importer.PropInfo) iter.next();
-                    disposePropertyValues(pi);
+                    PropInfo pi = (PropInfo) iter.next();
+                    pi.dispose();
                 }
 
             }
@@ -171,7 +172,7 @@ class SysViewImportHandler extends TargetImportHandler {
             // sv:value element
 
             // reset temp fields
-            currentPropValue = new BufferedStringValue();
+            currentPropValue = new BufferedStringValue(nsContext);
         } else {
             throw new SAXException(new InvalidSerializedDataException("unexpected element found in system view xml document: "
                     + localName));
@@ -238,7 +239,7 @@ class SysViewImportHandler extends TargetImportHandler {
             // check if all system properties (jcr:primaryType, jcr:uuid etc.)
             // have been collected and create node as necessary
             if (currentPropName.equals(QName.JCR_PRIMARYTYPE)) {
-                AppendableValue val = (AppendableValue) currentPropValues.get(0);
+                BufferedStringValue val = (BufferedStringValue) currentPropValues.get(0);
                 String s = null;
                 try {
                     s = val.retrieve();
@@ -255,8 +256,8 @@ class SysViewImportHandler extends TargetImportHandler {
                     state.mixinNames = new ArrayList(currentPropValues.size());
                 }
                 for (int i = 0; i < currentPropValues.size(); i++) {
-                    AppendableValue val =
-                            (AppendableValue) currentPropValues.get(i);
+                    BufferedStringValue val =
+                            (BufferedStringValue) currentPropValues.get(i);
                     String s = null;
                     try {
                         s = val.retrieve();
@@ -271,18 +272,17 @@ class SysViewImportHandler extends TargetImportHandler {
                     }
                 }
             } else if (currentPropName.equals(QName.JCR_UUID)) {
-                AppendableValue val = (AppendableValue) currentPropValues.get(0);
+                BufferedStringValue val = (BufferedStringValue) currentPropValues.get(0);
                 try {
                     state.uuid = val.retrieve();
                 } catch (IOException ioe) {
                     throw new SAXException("error while retrieving value", ioe);
                 }
             } else {
-                Importer.PropInfo prop = new Importer.PropInfo();
-                prop.setName(currentPropName);
-                prop.setType(currentPropType);
-                prop.setValues((Importer.TextValue[])
-                        currentPropValues.toArray(new Importer.TextValue[currentPropValues.size()]));
+                PropInfo prop = new PropInfo(
+                        currentPropName, currentPropType,
+                        (TextValue[]) currentPropValues.toArray(
+                                new TextValue[currentPropValues.size()]));
                 state.props.add(prop);
             }
             // reset temp fields

@@ -33,11 +33,8 @@ import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.util.Base64;
-import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,11 +49,6 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.Reader;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -346,8 +338,7 @@ public class WorkspaceImporter implements Importer {
     /**
      * {@inheritDoc}
      */
-    public void startNode(NodeInfo nodeInfo, List propInfos,
-                          NamespaceResolver nsContext)
+    public void startNode(NodeInfo nodeInfo, List propInfos)
             throws RepositoryException {
         if (aborted) {
             // the import has been aborted, get outta here...
@@ -502,140 +493,7 @@ public class WorkspaceImporter implements Importer {
             Iterator iter = propInfos.iterator();
             while (iter.hasNext()) {
                 PropInfo pi = (PropInfo) iter.next();
-                QName propName = pi.getName();
-                TextValue[] tva = pi.getValues();
-                int type = pi.getType();
-
-                PropertyState prop = null;
-                PropDef def = null;
-
-                if (node.hasPropertyName(propName)) {
-                    // a property with that name already exists...
-                    PropertyId idExisting = new PropertyId(node.getNodeId(), propName);
-                    PropertyState existing =
-                            (PropertyState) itemOps.getItemState(idExisting);
-                    def = ntReg.getPropDef(existing.getDefinitionId());
-                    if (def.isProtected()) {
-                        // skip protected property
-                        log.debug("skipping protected property "
-                                + itemOps.safeGetJCRPath(idExisting));
-                        continue;
-                    }
-                    if (def.isAutoCreated() && (existing.getType() == type
-                            || type == PropertyType.UNDEFINED)
-                            && def.isMultiple() == existing.isMultiValued()) {
-                        // this property has already been auto-created,
-                        // no need to create it
-                        prop = existing;
-                    } else {
-                        throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getPropertyId()));
-                    }
-                }
-                if (prop == null) {
-                    // there's no property with that name,
-                    // find applicable definition
-
-                    // multi- or single-valued property?
-                    if (tva.length == 1) {
-                        // could be single- or multi-valued (n == 1)
-                        def = itemOps.findApplicablePropertyDefinition(propName,
-                                type, node);
-                    } else {
-                        // can only be multi-valued (n == 0 || n > 1)
-                        def = itemOps.findApplicablePropertyDefinition(propName,
-                                type, true, node);
-                    }
-
-                    if (def.isProtected()) {
-                        // skip protected property
-                        log.debug("skipping protected property " + propName);
-                        continue;
-                    }
-
-                    // create new property
-                    prop = itemOps.createPropertyState(node, propName, type, def);
-                }
-
-                // check multi-valued characteristic
-                if ((tva.length == 0 || tva.length > 1) && !def.isMultiple()) {
-                    throw new ConstraintViolationException(itemOps.safeGetJCRPath(prop.getPropertyId())
-                            + " is not multi-valued");
-                }
-
-                // convert serialized values to InternalValue objects
-                InternalValue[] iva = new InternalValue[tva.length];
-                int targetType = def.getRequiredType();
-                if (targetType == PropertyType.UNDEFINED) {
-                    if (type == PropertyType.UNDEFINED) {
-                        targetType = PropertyType.STRING;
-                    } else {
-                        targetType = type;
-                    }
-                }
-                for (int i = 0; i < tva.length; i++) {
-                    TextValue tv = tva[i];
-                    if (targetType == PropertyType.BINARY) {
-                        // base64 encoded BINARY type;
-                        // decode using Reader
-                        try {
-                            if (tv.length() < 0x10000) {
-                                // < 65kb: deserialize BINARY type in memory
-                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                Base64.decode(tv.retrieve(), baos);
-                                // no need to close ByteArrayOutputStream
-                                //baos.close();
-                                iva[i] = InternalValue.create(baos.toByteArray());
-                            } else {
-                                // >= 65kb: deserialize BINARY type
-                                // using Reader and temporay file
-                                TransientFileFactory fileFactory = TransientFileFactory.getInstance();
-                                File tmpFile = fileFactory.createTransientFile("bin", null, null);
-                                FileOutputStream out = new FileOutputStream(tmpFile);
-                                Reader reader = tv.reader();
-                                try {
-                                    Base64.decode(reader, out);
-                                } finally {
-                                    reader.close();
-                                    out.close();
-                                }
-                                iva[i] = InternalValue.create(tmpFile);
-                            }
-                        } catch (IOException ioe) {
-                            String msg = "failed to decode binary value";
-                            log.debug(msg, ioe);
-                            throw new RepositoryException(msg, ioe);
-                        }
-                    } else {
-                        // retrieve serialized value
-                        String serValue;
-                        try {
-                            serValue = tv.retrieve();
-                        } catch (IOException ioe) {
-                            String msg = "failed to retrieve serialized value";
-                            log.debug(msg, ioe);
-                            throw new RepositoryException(msg, ioe);
-                        }
-
-                        // convert serialized value to InternalValue using
-                        // current namespace context of xml document
-                        iva[i] = InternalValue.create(serValue, targetType,
-                                nsContext);
-                    }
-                }
-
-                // set values
-                prop.setValues(iva);
-
-                // make sure property is valid according to its definition
-                itemOps.validate(prop);
-
-                if (prop.getType() == PropertyType.REFERENCE) {
-                    // store reference for later resolution
-                    refTracker.processedReference(prop);
-                }
-
-                // store property
-                itemOps.store(prop);
+                pi.apply(node, itemOps, ntReg, refTracker);
             }
 
             // store affected nodes
