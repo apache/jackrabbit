@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.core.NodeId;
@@ -56,8 +55,8 @@ class DocViewImportHandler extends TargetImportHandler {
      * @param importer
      * @param nsContext
      */
-    DocViewImportHandler(Importer importer, NamespaceResolver nsContext) {
-        super(importer, nsContext);
+    DocViewImportHandler(Importer importer) {
+        super(importer);
     }
 
     /**

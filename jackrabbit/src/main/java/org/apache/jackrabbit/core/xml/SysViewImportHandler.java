@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.core.NodeId;
@@ -60,8 +59,8 @@ class SysViewImportHandler extends TargetImportHandler {
      * @param importer
      * @param nsContext
      */
-    SysViewImportHandler(Importer importer, NamespaceResolver nsContext) {
-        super(importer, nsContext);
+    SysViewImportHandler(Importer importer) {
+        super(importer);
     }
 
     private void processNode(ImportState state, boolean start, boolean end)
