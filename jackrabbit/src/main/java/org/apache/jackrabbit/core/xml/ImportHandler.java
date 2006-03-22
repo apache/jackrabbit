@@ -16,10 +16,13 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -28,7 +31,6 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.NamespaceSupport;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
@@ -58,28 +60,22 @@ public class ImportHandler extends DefaultHandler {
     protected final NamespaceResolver nsResolver;
 
     protected Locator locator;
-    protected ContentHandler targetHandler;
-    protected boolean systemViewXML;
-    protected boolean initialized;
 
-    protected final NamespaceContext nsContext;
+    private TargetImportHandler targetHandler;
 
     /**
-     * this flag is used to determine whether a namespace context needs to be
-     * started in the startElement event or if the namespace context has already
-     * been started in a preceeding startPrefixMapping event;
-     * the flag is set per element in the first startPrefixMapping event and is
-     * cleared again in the following startElement event;
+     * The local namespace mappings reported by
+     * {@link #startPrefixMapping(String, String)}. These mappings are used
+     * to instantiate the local namespace context in
+     * {@link #startElement(String, String, String, Attributes)}.
      */
-    protected boolean nsContextStarted;
+    private Map localNamespaceMappings;
 
     public ImportHandler(Importer importer, NamespaceResolver nsResolver,
                          NamespaceRegistryImpl nsReg) {
         this.importer = importer;
         this.nsResolver = nsResolver;
         this.nsReg = nsReg;
-
-        nsContext = new NamespaceContext();
     }
 
     //---------------------------------------------------------< ErrorHandler >
@@ -119,27 +115,18 @@ public class ImportHandler extends DefaultHandler {
      * {@inheritDoc}
      */
     public void startDocument() throws SAXException {
-        systemViewXML = false;
-        initialized = false;
         targetHandler = null;
 
-        /**
-         * start initial context containing existing mappings reflected
-         * by nsResolver
-         */
-        nsContext.reset();
-        nsContext.pushContext();
         try {
+            localNamespaceMappings = new HashMap();
             String[] uris = nsReg.getURIs();
             for (int i = 0; i < uris.length; i++) {
-                nsContext.declarePrefix(nsResolver.getPrefix(uris[i]), uris[i]);
+                localNamespaceMappings.put(
+                        nsResolver.getPrefix(uris[i]), uris[i]);
             }
         } catch (RepositoryException re) {
             throw new SAXException(re);
         }
-
-        // initialize flag
-        nsContextStarted = false;
     }
 
     /**
@@ -148,48 +135,45 @@ public class ImportHandler extends DefaultHandler {
     public void endDocument() throws SAXException {
         // delegate to target handler
         targetHandler.endDocument();
-        // cleanup
-        nsContext.reset();
     }
 
     /**
-     * {@inheritDoc}
+     * Records the given namespace mapping to be included in the local
+     * namespace context. The local namespace context is instantiated
+     * in {@link #startElement(String, String, String, Attributes)} using
+     * all the the namespace mappings recorded for the current XML element.
+     * <p>
+     * The namespace is also recorded in the persistent namespace registry
+     * unless it is already known.
+     *
+     * @param prefix namespace prefix
+     * @param uri namespace URI
      */
     public void startPrefixMapping(String prefix, String uri)
             throws SAXException {
-        // check if new context needs to be started
-        if (!nsContextStarted) {
-            // entering new namespace context
-            nsContext.pushContext();
-            nsContextStarted = true;
-        }
+        localNamespaceMappings.put(prefix, uri);
 
         try {
             // this will trigger NamespaceException if namespace is unknown
-            nsContext.getPrefix(uri);
+            nsReg.getPrefix(uri);
         } catch (NamespaceException nse) {
-            // namespace is not yet registered ...
-            String newPrefix;
-            if ("".equals(prefix)) {
-                /**
-                 * the xml document specifies a default namespace
-                 * (i.e. an empty prefix); we need to create a random
-                 * prefix as the empty prefix is reserved according
-                 * to the JCR spec.
-                 */
-                newPrefix = nsReg.getUniquePrefix(uri);
-            } else {
-                newPrefix = prefix;
-            }
-            // register new namespace
             try {
-                nsReg.registerNamespace(newPrefix, uri);
+                // namespace is not yet registered ...
+                if (prefix.length() == 0) {
+                    /**
+                     * the xml document specifies a default namespace
+                     * (i.e. an empty prefix); we need to create a random
+                     * prefix as the empty prefix is reserved according
+                     * to the JCR spec.
+                     */
+                    prefix = nsReg.getUniquePrefix(uri);
+                }
+                // register new namespace
+                nsReg.registerNamespace(prefix, uri);
             } catch (RepositoryException re) {
                 throw new SAXException(re);
             }
         }
-        // map namespace in this context to given prefix
-        nsContext.declarePrefix(prefix, uri);
     }
 
     /**
@@ -207,29 +191,21 @@ public class ImportHandler extends DefaultHandler {
      */
     public void startElement(String namespaceURI, String localName, String qName,
                              Attributes atts) throws SAXException {
-        // check if new context needs to be started
-        if (!nsContextStarted) {
-            // there hasn't been a preceeding startPrefixMapping event
-            // so enter new namespace context
-            nsContext.pushContext();
-        } else {
-            // reset flag
-            nsContextStarted = false;
-        }
-
-        if (!initialized) {
+        if (targetHandler == null) {
             // the namespace of the first element determines the type of XML
             // (system view/document view)
-            systemViewXML = QName.NS_SV_URI.equals(namespaceURI);
-
-            if (systemViewXML) {
-                targetHandler = new SysViewImportHandler(importer, nsContext);
+            if (QName.NS_SV_URI.equals(namespaceURI)) {
+                targetHandler = new SysViewImportHandler(importer);
             } else {
-                targetHandler = new DocViewImportHandler(importer, nsContext);
+                targetHandler = new DocViewImportHandler(importer);
             }
+
             targetHandler.startDocument();
-            initialized = true;
         }
+
+        // Start a namespace context for this element
+        targetHandler.startNamespaceContext(localNamespaceMappings);
+        localNamespaceMappings.clear();
 
         // delegate to target handler
         targetHandler.startElement(namespaceURI, localName, qName, atts);
@@ -244,15 +220,14 @@ public class ImportHandler extends DefaultHandler {
     }
 
     /**
+     * Delegates the call to the underlying target handler and asks the
+     * handler to end the current namespace context.
      * {@inheritDoc}
      */
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
-        // leaving element, pop namespace context
-        nsContext.popContext();
-
-        // delegate to target handler
         targetHandler.endElement(namespaceURI, localName, qName);
+        targetHandler.endNamespaceContext();
     }
 
     /**
@@ -260,92 +235,5 @@ public class ImportHandler extends DefaultHandler {
      */
     public void setDocumentLocator(Locator locator) {
         this.locator = locator;
-    }
-
-    //--------------------------------------------------------< inner classes >
-    /**
-     * <code>NamespaceContext</code> supports scoped namespace declarations.
-     */
-    class NamespaceContext extends AbstractNamespaceResolver {
-
-        private final NamespaceSupport nsContext;
-
-        /**
-         * NamespaceSupport doesn't accept "" as default uri;
-         * internally we're using " " instead
-         */
-        private static final String DUMMY_DEFAULT_URI = " ";
-
-        NamespaceContext() {
-            nsContext = new NamespaceSupport();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        void popContext() {
-            nsContext.popContext();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        void pushContext() {
-            nsContext.pushContext();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        void reset() {
-            nsContext.reset();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        boolean declarePrefix(String prefix, String uri) {
-            if (QName.NS_DEFAULT_URI.equals(uri)) {
-                uri = DUMMY_DEFAULT_URI;
-            }
-            return nsContext.declarePrefix(prefix, uri);
-        }
-
-        //------------------------------------------------< NamespaceResolver >
-        /**
-         * {@inheritDoc}
-         */
-        public String getURI(String prefix) throws NamespaceException {
-            String uri = nsContext.getURI(prefix);
-            if (uri == null) {
-                throw new NamespaceException("unknown prefix");
-            } else if (DUMMY_DEFAULT_URI.equals(uri)) {
-                return QName.NS_DEFAULT_URI;
-            } else {
-                return uri;
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public String getPrefix(String uri) throws NamespaceException {
-            if (QName.NS_DEFAULT_URI.equals(uri)) {
-                uri = DUMMY_DEFAULT_URI;
-            }
-            String prefix = nsContext.getPrefix(uri);
-            if (prefix == null) {
-                /**
-                 * NamespaceSupport#getPrefix will never return the empty
-                 * (default) prefix; we have to do a reverse-lookup to check
-                 * whether it's the current default namespace
-                 */
-                if (uri.equals(nsContext.getURI(QName.NS_EMPTY_PREFIX))) {
-                    return QName.NS_EMPTY_PREFIX;
-                }
-                throw new NamespaceException("unknown uri");
-            }
-            return prefix;
-        }
     }
 }
