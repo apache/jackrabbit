@@ -60,7 +60,8 @@ public interface NamespaceResolver {
     /**
      * Returns the qualified name in the prefixed JCR name format.
      *
-     * @return name the qualified name
+     * @param name a qualified name
+     * @return the raw JCR name
      * @throws NoPrefixDeclaredException if the namespace can not be resolved
      */
     public String getJCRName(QName name) throws NoPrefixDeclaredException;
