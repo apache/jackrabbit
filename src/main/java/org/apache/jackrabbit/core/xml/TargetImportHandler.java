@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +30,7 @@ import java.io.StringReader;
 import java.io.Writer;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
@@ -44,12 +44,18 @@ abstract class TargetImportHandler extends DefaultHandler {
     private static Logger log = LoggerFactory.getLogger(TargetImportHandler.class);
 
     protected final Importer importer;
-    protected final NamespaceResolver nsContext;
 
-    protected TargetImportHandler(Importer importer,
-                                  NamespaceResolver nsContext) {
+    /**
+     * The current namespace context. A new namespace context is created
+     * for each XML element and the parent reference is used to link the
+     * namespace contexts together in a tree hierarchy. This variable contains
+     * a reference to the namespace context associated with the XML element
+     * that is currently being processed.
+     */
+    protected NamespaceContext nsContext;
+
+    protected TargetImportHandler(Importer importer) {
         this.importer = importer;
-        this.nsContext = nsContext;
     }
 
     /**
@@ -84,6 +90,7 @@ abstract class TargetImportHandler extends DefaultHandler {
     public void startDocument() throws SAXException {
         try {
             importer.start();
+            nsContext = null;
         } catch (RepositoryException re) {
             throw new SAXException(re);
         }
@@ -102,6 +109,27 @@ abstract class TargetImportHandler extends DefaultHandler {
         } catch (RepositoryException re) {
             throw new SAXException(re);
         }
+    }
+
+    /**
+     * Starts a local namespace context for the current XML element.
+     * This method is called by {@link ImportHandler} when the processing of
+     * an XML element starts. The given local namespace mappings have been
+     * recorded by {@link ImportHandler#startPrefixMapping(String, String)}
+     * for the current XML element.
+     *
+     * @param mappings local namespace mappings
+     */
+    public final void startNamespaceContext(Map mappings) {
+        nsContext = new NamespaceContext(nsContext, mappings);
+    }
+
+    /**
+     * Restores the parent namespace context. This method is called by
+     * {@link ImportHandler} when the processing of an XML element ends.
+     */
+    public final void endNamespaceContext() {
+        nsContext = nsContext.getParent();
     }
 
     //--------------------------------------------------------< inner classes >
