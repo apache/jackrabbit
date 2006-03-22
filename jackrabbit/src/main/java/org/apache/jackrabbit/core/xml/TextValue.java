@@ -16,38 +16,30 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NamespaceResolver;
 
-import javax.jcr.RepositoryException;
-import java.util.List;
-
 /**
- * The <code>Importer</code> interface ...
+ * <code>TextValue</code> represents a serialized property value read
+ * from a System or Document View XML document.
  */
-public interface Importer {
+public interface TextValue {
+
+    Value getValue(int type, NamespaceResolver resolver)
+        throws ValueFormatException, RepositoryException;
+
+    InternalValue getInternalValue(int type)
+        throws ValueFormatException, RepositoryException;
 
     /**
-     * @throws RepositoryException
+     * Dispose this value, i.e. free all bound resources. Once a value has
+     * been disposed, further method invocations will cause an IOException
+     * to be thrown.
      */
-    void start() throws RepositoryException;
-
-    /**
-     * @param nodeInfo
-     * @param propInfos list of <code>PropInfo</code> instances
-     * @throws RepositoryException
-     */
-    void startNode(NodeInfo nodeInfo, List propInfos)
-            throws RepositoryException;
-
-    /**
-     * @param nodeInfo
-     * @throws RepositoryException
-     */
-    void endNode(NodeInfo nodeInfo) throws RepositoryException;
-
-    /**
-     * @throws RepositoryException
-     */
-    void end() throws RepositoryException;
+    void dispose();
 
 }

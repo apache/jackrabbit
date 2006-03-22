@@ -27,6 +27,8 @@ import org.xml.sax.SAXException;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -47,7 +49,7 @@ class DocViewImportHandler extends TargetImportHandler {
      */
     private final Stack stack = new Stack();
     // buffer used to merge adjacent character data
-    private BufferedStringValue textHandler = new BufferedStringValue();
+    private BufferedStringValue textHandler = null;
 
     /**
      * Constructs a new <code>DocViewImportHandler</code>.
@@ -73,7 +75,7 @@ class DocViewImportHandler extends TargetImportHandler {
     private void appendCharacters(char[] ch, int start, int length)
             throws SAXException {
         if (textHandler == null) {
-            textHandler = new BufferedStringValue();
+            textHandler = new BufferedStringValue(nsContext);
         }
         try {
             textHandler.append(ch, start, length);
@@ -122,17 +124,16 @@ class DocViewImportHandler extends TargetImportHandler {
                     reader.close();
                 }
 
-                Importer.NodeInfo node =
-                        new Importer.NodeInfo(QName.JCR_XMLTEXT, null, null, null);
-                Importer.TextValue[] values =
-                        new Importer.TextValue[]{textHandler};
+                NodeInfo node =
+                        new NodeInfo(QName.JCR_XMLTEXT, null, null, null);
+                TextValue[] values =
+                        new TextValue[]{textHandler};
                 ArrayList props = new ArrayList();
-                Importer.PropInfo prop =
-                        new Importer.PropInfo(QName.JCR_XMLCHARACTERS,
-                                PropertyType.STRING, values);
+                PropInfo prop = new PropInfo(
+                        QName.JCR_XMLCHARACTERS, PropertyType.STRING, values);
                 props.add(prop);
                 // call Importer
-                importer.startNode(node, props, nsContext);
+                importer.startNode(node, props);
                 importer.endNode(node);
 
                 // reset handler
@@ -180,15 +181,15 @@ class DocViewImportHandler extends TargetImportHandler {
 
                 // value(s)
                 String attrValue = atts.getValue(i);
-                Importer.TextValue[] propValues;
+                TextValue[] propValues;
 
                 // always assume single-valued property for the time being
                 // until a way of properly serializing/detecting multi-valued
                 // properties on re-import is found (see JCR-325);
                 // see also DocViewSAXEventGenerator#leavingProperties(Node, int)
                 // todo proper multi-value serialization support
-                propValues = new Importer.TextValue[1];
-                propValues[0] = new StringValue(attrValue);
+                propValues = new TextValue[1];
+                propValues[0] = new StringValue(attrValue, nsContext);
 
                 if (propName.equals(QName.JCR_PRIMARYTYPE)) {
                     // jcr:primaryType
@@ -205,12 +206,14 @@ class DocViewImportHandler extends TargetImportHandler {
                     if (propValues.length > 0) {
                         mixinTypes = new QName[propValues.length];
                         for (int j = 0; j < propValues.length; j++) {
-                            String val = ((StringValue) propValues[j]).retrieve();
+                            Value value = 
+                                propValues[j].getValue(PropertyType.NAME, nsContext);
                             try {
-                                mixinTypes[j] = QName.fromJCRName(val, nsContext);
+                                mixinTypes[j] =
+                                    QName.fromJCRName(value.getString(), nsContext);
                             } catch (NameException ne) {
                                 throw new SAXException("illegal jcr:mixinTypes value: "
-                                        + val, ne);
+                                        + value.getString(), ne);
                             }
                         }
                     }
@@ -220,15 +223,15 @@ class DocViewImportHandler extends TargetImportHandler {
                         id = NodeId.valueOf(attrValue);
                     }
                 } else {
-                    props.add(new Importer.PropInfo(propName,
-                            PropertyType.UNDEFINED, propValues));
+                    props.add(new PropInfo(
+                            propName, PropertyType.UNDEFINED, propValues));
                 }
             }
 
-            Importer.NodeInfo node =
-                    new Importer.NodeInfo(nodeName, nodeTypeName, mixinTypes, id);
+            NodeInfo node =
+                    new NodeInfo(nodeName, nodeTypeName, mixinTypes, id);
             // all information has been collected, now delegate to importer
-            importer.startNode(node, props, nsContext);
+            importer.startNode(node, props);
             // push current node data onto stack
             stack.push(node);
         } catch (RepositoryException re) {
@@ -268,7 +271,7 @@ class DocViewImportHandler extends TargetImportHandler {
         // process buffered character data
         processCharacters();
 
-        Importer.NodeInfo node = (Importer.NodeInfo) stack.peek();
+        NodeInfo node = (NodeInfo) stack.peek();
         try {
             // call Importer
             importer.endNode(node);
