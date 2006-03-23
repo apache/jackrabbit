@@ -16,14 +16,15 @@
  */
 package org.apache.jackrabbit.core;
 
+import EDU.oswego.cs.dl.util.concurrent.Mutex;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.core.config.FileSystemConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.config.FileSystemConfig;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -42,8 +43,8 @@ import org.apache.jackrabbit.core.state.PersistenceManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -67,16 +68,16 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
-import java.util.HashSet;
-import java.nio.channels.FileLock;
-import java.nio.channels.FileChannel;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -787,7 +788,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @throws RepositoryException      if another error occurs
      */
     protected final synchronized SessionImpl createSession(AuthContext loginContext,
-                              String workspaceName)
+                                                           String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
         WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
@@ -817,7 +818,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @throws RepositoryException      if another error occurs
      */
     protected final synchronized SessionImpl createSession(Subject subject,
-                                              String workspaceName)
+                                                           String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
         WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
@@ -1294,6 +1295,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         private long idleTimestamp;
 
         /**
+         * mutex for this workspace, used for locking transactions
+         */
+        private final Mutex xaLock = new Mutex();
+
+        /**
          * Creates a new <code>WorkspaceInfo</code> based on the given
          * <code>config</code>.
          *
@@ -1601,6 +1607,31 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             initialized = false;
 
             log.info("workspace '" + getName() + "' has been shutdown");
+        }
+
+        /**
+         * Locks this workspace info. This is used (and only should be) by
+         * the {@link XASessionImpl} in order to lock all internal resources
+         * during a commit.
+         *
+         * @throws TransactionException
+         */
+        void lockAcquire() throws TransactionException {
+            try {
+                xaLock.acquire();
+            } catch (InterruptedException e) {
+                throw new TransactionException("Error while acquiering lock", e);
+            }
+
+        }
+
+        /**
+         * Unlocks this workspace info. This is used (and only should be) by
+         * the {@link XASessionImpl} in order to lock all internal resources
+         * during a commit.
+         */
+        void lockRelease() {
+            xaLock.release();
         }
     }
 

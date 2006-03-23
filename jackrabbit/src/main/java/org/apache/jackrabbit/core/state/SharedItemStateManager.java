@@ -44,8 +44,8 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Set;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Shared <code>ItemStateManager</code> (SISM). Caches objects returned from a
@@ -451,14 +451,6 @@ public class SharedItemStateManager
 
             virtualNodeReferences = new List[virtualProviders.length];
 
-            try {
-                events = factory.createEventStateCollection();
-            } catch (RepositoryException e) {
-                String msg = "Unable to create event state collection.";
-                log.error(msg);
-                throw new ItemStateException(msg, e);
-            }
-
             acquireWriteLock();
             holdingWriteLock = true;
 
@@ -477,6 +469,19 @@ public class SharedItemStateManager
                  * Check whether reference targets exist/were not removed
                  */
                 checkReferentialIntegrity(local);
+
+                /**
+                 * prepare the events. this needs to be after the referential
+                 * integrity check, since another transaction could have modified
+                 * the states.
+                 */
+                try {
+                    events = factory.createEventStateCollection();
+                } catch (RepositoryException e) {
+                    String msg = "Unable to create event state collection.";
+                    log.error(msg);
+                    throw new ItemStateException(msg, e);
+                }
 
                 /**
                  * Reconnect all items contained in the change log to their
