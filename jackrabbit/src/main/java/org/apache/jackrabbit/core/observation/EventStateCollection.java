@@ -82,15 +82,30 @@ public final class EventStateCollection {
     private final SessionImpl session;
 
     /**
+     * The prefix to use for the event paths or <code>null</code> if no prefix
+     * should be used.
+     */
+    private final Path pathPrefix;
+
+    /**
      * Creates a new empty <code>EventStateCollection</code>.
+     * <p/>
+     * Because the item state manager in {@link #createEventStates} may represent
+     * only a subset of the over all item state hierarchy, this constructor
+     * also takes a path prefix argument. If non <code>null</code> all events
+     * created by this collection are prefixed with this path.
      *
      * @param dispatcher event dispatcher
-     * @param session the session that created these events.
+     * @param session    the session that created these events.
+     * @param pathPrefix the path to prefix the event paths or <code>null</code>
+     *                   if no prefix should be used.
      */
     EventStateCollection(EventDispatcher dispatcher,
-                         SessionImpl session) {
+                         SessionImpl session,
+                         Path pathPrefix) {
         this.dispatcher = dispatcher;
         this.session = session;
+        this.pathPrefix = pathPrefix;
     }
 
     /**
@@ -99,17 +114,17 @@ public final class EventStateCollection {
      *
      * @param rootNodeId   the id of the root node.
      * @param changes      the changes on <code>ItemState</code>s.
-     * @param provider     an <code>ItemStateProvider</code> to provide <code>ItemState</code>
+     * @param stateMgr     an <code>ItemStateManager</code> to provide <code>ItemState</code>
      *                     of items that are not contained in the <code>changes</code> collection.
      * @throws ItemStateException if an error occurs while creating events
      *                            states for the item state changes.
      */
-    public void createEventStates(NodeId rootNodeId, ChangeLog changes, ItemStateManager provider) throws ItemStateException {
+    public void createEventStates(NodeId rootNodeId, ChangeLog changes, ItemStateManager stateMgr) throws ItemStateException {
         // create a hierarchy manager, that is based on the ChangeLog and
         // the ItemStateProvider
         // todo use CachingHierarchyManager ?
         ChangeLogBasedHierarchyMgr hmgr =
-                new ChangeLogBasedHierarchyMgr(rootNodeId, provider, changes,
+                new ChangeLogBasedHierarchyMgr(rootNodeId, stateMgr, changes,
                         session.getNamespaceResolver());
 
         /**
@@ -158,7 +173,7 @@ public final class EventStateCollection {
                         } catch (NoSuchItemStateException e) {
                             // old parent has been deleted, retrieve from
                             // shared item state manager
-                            oldParent = (NodeState) provider.getItemState(oldParentId);
+                            oldParent = (NodeState) stateMgr.getItemState(oldParentId);
                         }
 
                         NodeTypeImpl oldParentNodeType = getNodeType(oldParent, session);
@@ -291,7 +306,7 @@ public final class EventStateCollection {
             } else {
                 // property changed
                 Path path = getPath(state.getId(), hmgr);
-                NodeState parent = (NodeState) provider.getItemState(state.getParentId());
+                NodeState parent = (NodeState) stateMgr.getItemState(state.getParentId());
                 NodeTypeImpl nodeType = getNodeType(parent, session);
                 Set mixins = parent.getMixinTypeNames();
                 events.add(EventState.propertyChanged(state.getParentId(),
@@ -310,7 +325,7 @@ public final class EventStateCollection {
             if (state.isNode()) {
                 // node deleted
                 NodeState n = (NodeState) state;
-                NodeState parent = (NodeState) provider.getItemState(n.getParentId());
+                NodeState parent = (NodeState) stateMgr.getItemState(n.getParentId());
                 NodeTypeImpl nodeType = getNodeType(parent, session);
                 Set mixins = parent.getMixinTypeNames();
                 Path path = getZombiePath(state.getId(), hmgr);
@@ -352,8 +367,8 @@ public final class EventStateCollection {
                 NodeId parentId = n.getParentId();
                 NodeState parent;
                 // unknown if parent node is also new
-                if (provider.hasItemState(parentId)) {
-                    parent = (NodeState) provider.getItemState(parentId);
+                if (stateMgr.hasItemState(parentId)) {
+                    parent = (NodeState) stateMgr.getItemState(parentId);
                 } else {
                     parent = (NodeState) changes.get(parentId);
                 }
@@ -413,6 +428,17 @@ public final class EventStateCollection {
      */
     public void dispatch() {
         dispatcher.dispatchEvents(this);
+    }
+
+    /**
+     * Returns the path prefix for this event state collection or <code>null</code>
+     * if no path prefix was set in the constructor of this collection. See
+     * also {@link EventStateCollection#EventStateCollection}.
+     *
+     * @return the path prefix for this event state collection.
+     */
+    public Path getPathPrefix() {
+        return pathPrefix;
     }
 
     /**
@@ -491,7 +517,7 @@ public final class EventStateCollection {
     private Path getPath(ItemId itemId, HierarchyManager hmgr)
             throws ItemStateException {
         try {
-            return hmgr.getPath(itemId);
+            return prefixPath(hmgr.getPath(itemId));
         } catch (RepositoryException e) {
             // should never happen actually
             String msg = "Unable to resolve path for item: " + itemId;
@@ -511,12 +537,39 @@ public final class EventStateCollection {
     private Path getZombiePath(ItemId itemId, ChangeLogBasedHierarchyMgr hmgr)
             throws ItemStateException {
         try {
-            return hmgr.getZombiePath(itemId);
+            return prefixPath(hmgr.getZombiePath(itemId));
         } catch (RepositoryException e) {
             // should never happen actually
             String msg = "Unable to resolve zombie path for item: " + itemId;
             log.error(msg);
             throw new ItemStateException(msg, e);
+        }
+    }
+
+    /**
+     * Prefixes the Path <code>p</code> with {@link #pathPrefix}.
+     *
+     * @param p the Path to prefix.
+     * @return the prefixed path or <code>p</code> itself if {@link #pathPrefix}
+     *         is <code>null</code>.
+     * @throws RepositoryException if the path cannot be prefixed.
+     */
+    private Path prefixPath(Path p) throws RepositoryException {
+        if (pathPrefix == null) {
+            return p;
+        }
+        Path.PathBuilder builder = new Path.PathBuilder(pathPrefix.getElements());
+        Path.PathElement[] elements = p.getElements();
+        for (int i = 0; i < elements.length; i++) {
+            if (elements[i].denotesRoot()) {
+                continue;
+            }
+            builder.addLast(elements[i]);
+        }
+        try {
+            return builder.getPath();
+        } catch (MalformedPathException e) {
+            throw new RepositoryException(e);
         }
     }
 }

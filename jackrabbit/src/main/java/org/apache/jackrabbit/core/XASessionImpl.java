@@ -150,7 +150,7 @@ public class XASessionImpl extends SessionImpl
             throws RepositoryException {
 
         VersionManagerImpl vMgr = (VersionManagerImpl) rep.getVersionManager();
-        return new XAVersionManager(vMgr, rep.getNodeTypeRegistry(), wsp);
+        return new XAVersionManager(vMgr, rep.getNodeTypeRegistry(), this);
     }
 
     /**
