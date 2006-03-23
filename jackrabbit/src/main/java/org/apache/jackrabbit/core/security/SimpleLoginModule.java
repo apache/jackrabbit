@@ -93,13 +93,12 @@ public class SimpleLoginModule implements LoginModule {
     }
 
     /**
-     * Sets the default user id to be used when no login credentials
-     * are presented.
+     * Sets the anonymous user id.
      *
-     * @param defaultUserId default user id
+     * @param anonymousId anonymous user id
      */
     public void setAnonymousId(String anonymousId) {
-        this.anonymousUserId = anonymousId;
+        anonymousUserId = anonymousId;
     }
 
     /**
