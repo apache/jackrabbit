@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.name.Path;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -59,8 +60,9 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * @param session event source
      * @return new <code>EventStateCollection</code> instance
      */
-    public EventStateCollection createEventStateCollection(SessionImpl session) {
-        return new EventStateCollection(this, session);
+    public EventStateCollection createEventStateCollection(SessionImpl session,
+                                                           Path pathPrefix) {
+        return new EventStateCollection(this, session, pathPrefix);
     }
 
     //------------------------------------------------------< EventDispatcher >
@@ -83,7 +85,7 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * {@inheritDoc}
      */
     void dispatchEvents(EventStateCollection events) {
-        dispatch(events.getEvents(), events.getSession());
+        dispatch(events.getEvents(), events.getSession(), events.getPathPrefix());
     }
 
     /**
@@ -94,11 +96,11 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * @param eventList
      * @param session
      */
-    public void dispatch(List eventList, SessionImpl session) {
+    public void dispatch(List eventList, SessionImpl session, Path pathPrefix) {
         Iterator iter = dispatchers.iterator();
         while (iter.hasNext()) {
             ObservationManagerFactory fac = (ObservationManagerFactory) iter.next();
-            EventStateCollection events = new EventStateCollection(fac, session);
+            EventStateCollection events = new EventStateCollection(fac, session, pathPrefix);
             events.addAll(eventList);
             events.prepare();
             events.dispatch();

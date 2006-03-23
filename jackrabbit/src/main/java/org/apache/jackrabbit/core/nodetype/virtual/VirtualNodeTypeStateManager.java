@@ -27,6 +27,8 @@ import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +50,23 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
      */
     private static Logger log = LoggerFactory.getLogger(VirtualNodeTypeStateManager.class);
 
+    /**
+     * Path: /jcr:system/jcr:nodeTypes
+     */
+    private static final Path NODE_TYPES_PATH;
+
+    static {
+        try {
+            Path.PathBuilder builder = new Path.PathBuilder();
+            builder.addRoot();
+            builder.addLast(QName.JCR_SYSTEM);
+            builder.addLast(QName.JCR_NODETYPES);
+            NODE_TYPES_PATH = builder.getPath();
+        } catch (MalformedPathException e) {
+            // will not happen. path is always valid
+            throw new InternalError("Cannot initialize path");
+        }
+    }
 
     /**
      * an item state provider for the virtual nodetype states
@@ -134,7 +153,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                 NodeImpl child = root.getNode(ntName);
                 List events = new ArrayList();
                 recursiveAdd(events, root, child);
-                obsDispatcher.dispatch(events, systemSession);
+                obsDispatcher.dispatch(events, systemSession, NODE_TYPES_PATH);
             }
         } catch (RepositoryException e) {
             log.error("Unable to index new nodetype: " + e.toString());
@@ -161,7 +180,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                 NodeImpl child = root.getNode(ntName);
                 List events = new ArrayList();
                 recursiveRemove(events, root, child);
-                obsDispatcher.dispatch(events, systemSession);
+                obsDispatcher.dispatch(events, systemSession, NODE_TYPES_PATH);
             }
             if (virtProvider != null) {
                 // allow provider to update
