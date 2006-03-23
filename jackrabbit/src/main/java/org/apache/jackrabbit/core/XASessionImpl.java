@@ -127,8 +127,16 @@ public class XASessionImpl extends SessionImpl
         XALockManager lockMgr = (XALockManager) getLockManager();
         XAVersionManager versionMgr = (XAVersionManager) getVersionManager();
 
+        /**
+         * Create array that contains all resources that paricipate in this
+         * transactions. Because some resources depend on each other, there is
+         * also a workspace scoped lock resource inserted, that guards the
+         * entire transaction from deadlocks (see JCR-335) 
+         */
         txResources = new InternalXAResource[] {
-            stateMgr, lockMgr, versionMgr
+            ((XAWorkspace) wsp).getXAResourceBegin(),
+            stateMgr, lockMgr, versionMgr,
+            ((XAWorkspace) wsp).getXAResourceEnd()
         };
         stateMgr.setVirtualProvider(versionMgr);
     }
