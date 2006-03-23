@@ -187,6 +187,6 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      * which is attached to this <code>ObservationManager</code> instance.
      */
     public EventStateCollection createEventStateCollection() {
-        return new EventStateCollection(obsMgrFactory, session);
+        return new EventStateCollection(obsMgrFactory, session, null);
     }
 }

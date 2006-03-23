@@ -251,6 +251,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             throw e;
         }
 
+        // initialize system search manager
+        getSystemSearchManager(wspName);
+
         // amount of time in seconds before an idle workspace is automatically
         // shut down
         int maxIdleTime = repConfig.getWorkspaceMaxIdleTime();
@@ -558,8 +561,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             try {
                 if (repConfig.getSearchConfig() != null) {
                     SystemSession defSysSession = getSystemSession(wspName);
-                    systemSearchMgr = new SystemSearchManager(repConfig.getSearchConfig(),
-                            nsReg, ntReg, defSysSession.getItemStateManager(), SYSTEM_ROOT_NODE_ID);
+                    systemSearchMgr = new SearchManager(repConfig.getSearchConfig(),
+                            nsReg, ntReg, defSysSession.getItemStateManager(),
+                            SYSTEM_ROOT_NODE_ID, null, null);
                     ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
                     obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED
                             | Event.NODE_REMOVED | Event.PROPERTY_ADDED
