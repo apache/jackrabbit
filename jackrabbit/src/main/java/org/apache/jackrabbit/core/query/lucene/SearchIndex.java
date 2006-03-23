@@ -715,7 +715,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setTextFilterClasses(String filterClasses) {
         List filters = new ArrayList();
-        StringTokenizer tokenizer = new StringTokenizer(filterClasses, ",�\t\n\r\f");
+        StringTokenizer tokenizer = new StringTokenizer(filterClasses, ", \t\n\r\f");
         while (tokenizer.hasMoreTokens()) {
             String className = tokenizer.nextToken();
             try {
