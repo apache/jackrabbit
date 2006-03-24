@@ -34,7 +34,6 @@ import java.util.Map;
  *       JAAS <code>LoginModule</code></li>
  * </ul>
  *
- * @version $Id$
  */
 public abstract class AuthContext {
 
