@@ -45,7 +45,6 @@ import org.apache.jackrabbit.net.URLFactory;
  * This class is not intended to be subclassed or instantiated by clients.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 abstract class ClassPathEntry {
 

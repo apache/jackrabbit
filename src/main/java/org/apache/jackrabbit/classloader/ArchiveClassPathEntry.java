@@ -41,7 +41,6 @@ import org.apache.jackrabbit.net.URLFactory;
  * resolving to a property containing the jar archive to access.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 class ArchiveClassPathEntry extends ClassPathEntry {
 
@@ -422,7 +421,6 @@ class ArchiveClassPathEntry extends ClassPathEntry {
      * JAR or ZIP archive.
      *
      * @author Felix Meschberger
-     * @version $Rev:$, $Date:$
      */
     private static class ArchiveClassPathResource extends ClassLoaderResource {
 

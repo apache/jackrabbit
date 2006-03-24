@@ -61,7 +61,6 @@ import org.apache.jackrabbit.net.URLFactory;
  * This class is not intended to be extended by clients.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class RepositoryClassLoader extends URLClassLoader {
 

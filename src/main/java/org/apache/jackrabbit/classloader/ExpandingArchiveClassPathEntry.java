@@ -45,7 +45,6 @@ import org.apache.commons.logging.LogFactory;
  * path of an item resolving to a property containing the jar archive to access.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  *
  * @see org.apache.jackrabbit.classloader.ArchiveClassPathEntry
  * @see org.apache.jackrabbit.classloader.ClassPathEntry

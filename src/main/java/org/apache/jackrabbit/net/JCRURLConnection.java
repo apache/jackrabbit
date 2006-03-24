@@ -112,7 +112,6 @@ import org.apache.jackrabbit.classloader.Util;
  * This class is not intended to be subclassed or instantiated by clients.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 public class JCRURLConnection extends URLConnection {
 
