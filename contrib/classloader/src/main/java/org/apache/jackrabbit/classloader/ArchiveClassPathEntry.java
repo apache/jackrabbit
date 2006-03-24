@@ -1,9 +1,8 @@
 /*
- * Copyright 2004-2005 The Apache Software Foundation or its licensors,
- *                     as applicable.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  The ASF licenses this file to You
+ * under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -41,7 +40,6 @@ import org.apache.jackrabbit.net.URLFactory;
  * resolving to a property containing the jar archive to access.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 class ArchiveClassPathEntry extends ClassPathEntry {
 
@@ -422,7 +420,6 @@ class ArchiveClassPathEntry extends ClassPathEntry {
      * JAR or ZIP archive.
      *
      * @author Felix Meschberger
-     * @version $Rev:$, $Date:$
      */
     private static class ArchiveClassPathResource extends ClassLoaderResource {
 

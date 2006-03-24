@@ -1,9 +1,8 @@
 /*
- * Copyright 2004-2005 The Apache Software Foundation or its licensors,
- *                     as applicable.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  The ASF licenses this file to You
+ * under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -30,7 +29,6 @@ import java.io.InputStream;
  * ServletInputStream's header, will stop it blocking, providing it's been sent
  * with a correct content length.
  *
- * @version $Revision: 13729 $, $Date: 2004/06/04 15:48:16 $
  * @author InigoSurguy
  */
 public class BoundedInputStream extends InputStream {
