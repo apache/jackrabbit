@@ -29,7 +29,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
  * as file, URL, and streams.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class PropertiesNodeConfiguration extends PropertiesConfiguration
         implements RepositoryConfiguration {

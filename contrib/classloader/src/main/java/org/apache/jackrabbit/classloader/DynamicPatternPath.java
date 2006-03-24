@@ -41,7 +41,6 @@ import org.apache.commons.logging.LogFactory;
  * interested in notification to changes in the matched path list.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 /* package */ class DynamicPatternPath extends PatternPath
         implements EventListener {

@@ -120,7 +120,6 @@ import org.apache.jackrabbit.extension.ExtensionDescriptor;
  * </table>
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class ItemConfiguration extends HierarchicalConfiguration implements
         RepositoryConfiguration {
@@ -551,7 +550,6 @@ public class ItemConfiguration extends HierarchicalConfiguration implements
      * removal of a configuration node.
      *
      * @author Felix Meschberger
-     * @version $Rev:$, $Date$
      */
     private class ItemNode extends Node {
 
@@ -613,7 +611,6 @@ public class ItemConfiguration extends HierarchicalConfiguration implements
      * {@link #processDocument(Node)} method.
      *
      * @author Felix Meschberger
-     * @version $Rev:$, $Date$
      */
     private static class ItemBuilderVisitor extends BuilderVisitor {
 

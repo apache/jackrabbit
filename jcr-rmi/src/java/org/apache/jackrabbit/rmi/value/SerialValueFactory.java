@@ -39,10 +39,8 @@ import javax.jcr.ValueFormatException;
  * methods of the <code>ValueFactory</code> interface are declared final to
  * guard against breaking the rules.
  *
- * @version $Revision$, $Date$
  * @author Jukka Zitting
  * @author Felix Meschberger
- * @since 0.16.4.1
  */
 public class SerialValueFactory implements ValueFactory {
 

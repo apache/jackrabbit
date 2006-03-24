@@ -27,7 +27,6 @@ import org.apache.commons.configuration.ConfigurationException;
  * a JCR repository and storing the configuration in a JCR repository.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public interface RepositoryConfiguration extends Configuration {
 

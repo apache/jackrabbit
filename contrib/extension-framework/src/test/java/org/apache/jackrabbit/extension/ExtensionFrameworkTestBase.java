@@ -51,7 +51,6 @@ import org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory;
  * The <code>ExtensionFrameworkTestBase</code> TODO
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class ExtensionFrameworkTestBase extends TestCase {
 

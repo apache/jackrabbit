@@ -42,7 +42,6 @@ import org.apache.jackrabbit.net.URLFactory;
  * resources in repository properties or JAR or ZIP archives.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 class ClassLoaderResource {
 

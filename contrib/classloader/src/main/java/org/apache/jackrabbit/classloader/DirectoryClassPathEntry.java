@@ -33,7 +33,6 @@ import org.apache.commons.logging.LogFactory;
  * resources.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 class DirectoryClassPathEntry extends ClassPathEntry {
 

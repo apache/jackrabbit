@@ -35,7 +35,6 @@ import javax.jcr.Session;
  * This class is not intended to be subclassed or instantiated by clients.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  *
  * @see org.apache.jackrabbit.net.JCRURLConnection
  * @see org.apache.jackrabbit.net.URLFactory

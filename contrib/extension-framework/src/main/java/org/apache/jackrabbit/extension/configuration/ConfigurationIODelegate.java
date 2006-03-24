@@ -43,7 +43,6 @@ import org.apache.commons.configuration.FileConfiguration;
  * saveing from/to a JCR repository, not just the above mentioned.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class ConfigurationIODelegate {
 

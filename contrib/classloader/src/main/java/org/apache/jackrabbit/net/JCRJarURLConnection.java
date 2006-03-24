@@ -71,7 +71,6 @@ import org.apache.commons.logging.LogFactory;
  * This class is not intended to be subclassed or instantiated by clients.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 public class JCRJarURLConnection extends JCRURLConnection {
 

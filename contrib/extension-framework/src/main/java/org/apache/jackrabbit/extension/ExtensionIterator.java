@@ -31,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
  * over instances of the {@link ExtensionDescriptor}s.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class ExtensionIterator implements Iterator {
 

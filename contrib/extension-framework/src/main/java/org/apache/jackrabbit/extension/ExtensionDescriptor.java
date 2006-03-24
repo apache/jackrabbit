@@ -47,7 +47,6 @@ import org.apache.jackrabbit.extension.configuration.RepositoryConfiguration;
  * identification and the extension name. See {@link #compareTo(Object)}.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  *
  * @see org.apache.jackrabbit.extension.ExtensionType
  * @see org.apache.jackrabbit.extension.ExtensionManager

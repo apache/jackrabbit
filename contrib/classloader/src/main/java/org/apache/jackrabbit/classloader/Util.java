@@ -38,7 +38,6 @@ import org.apache.commons.logging.LogFactory;
  * utility methods.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class Util {
 
