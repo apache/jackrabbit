@@ -25,7 +25,6 @@ import javax.security.auth.spi.LoginModule;
  * in a non-JAAS environment.
  *
  * @see RepositoryConfig#getLoginModuleConfig()
- * @version $Id$
  */
 public class LoginModuleConfig extends BeanConfig {
 
