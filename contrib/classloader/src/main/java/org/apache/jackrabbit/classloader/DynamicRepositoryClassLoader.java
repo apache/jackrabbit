@@ -65,7 +65,6 @@ import org.apache.jackrabbit.classloader.DynamicPatternPath.Listener;
  * This class is not intended to be extended by clients.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class DynamicRepositoryClassLoader extends RepositoryClassLoader
         implements EventListener, Listener {

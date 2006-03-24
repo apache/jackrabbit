@@ -42,7 +42,6 @@ import org.apache.jackrabbit.classloader.RepositoryClassLoader;
  * identifier, they are considered equal.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  *
  * @see org.apache.jackrabbit.extension.ExtensionManager
  * @see org.apache.jackrabbit.extension.ExtensionDescriptor

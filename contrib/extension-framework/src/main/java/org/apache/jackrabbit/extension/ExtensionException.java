@@ -21,7 +21,6 @@ package org.apache.jackrabbit.extension;
  * thrown in the Jackrabbit Extension Framework.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class ExtensionException extends Exception {
 

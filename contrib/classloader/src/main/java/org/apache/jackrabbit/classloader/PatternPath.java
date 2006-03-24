@@ -76,7 +76,6 @@ import org.apache.jackrabbit.util.Text;
  * </pre>
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 /* package */ class PatternPath {
 

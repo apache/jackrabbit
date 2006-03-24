@@ -43,7 +43,6 @@ import org.apache.jackrabbit.core.nodetype.compact.ParseException;
  * fail with link errors.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 /* package */ class NodeTypeSupport {
 

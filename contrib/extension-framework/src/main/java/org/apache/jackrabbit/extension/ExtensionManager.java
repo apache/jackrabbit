@@ -46,7 +46,6 @@ import org.apache.jackrabbit.classloader.RepositoryClassLoader;
  * types on demand.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public final class ExtensionManager {
 

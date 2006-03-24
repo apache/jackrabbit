@@ -29,7 +29,6 @@ import org.apache.commons.configuration.XMLConfiguration;
  * file, URL, and streams.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class XMLNodeConfiguration extends XMLConfiguration implements
         RepositoryConfiguration {

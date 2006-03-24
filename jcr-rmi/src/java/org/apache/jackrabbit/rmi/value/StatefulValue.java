@@ -34,9 +34,7 @@ import javax.jcr.Value;
  * the concrete implementations of this class should be used or overwritten as
  * appropriate.
  *
- * @version $Revision$, $Date$
  * @author Felix Meschberger
- * @since 0.16.4.1
  *
  * @see org.apache.jackrabbit.rmi.value.SerialValue
  */

@@ -60,7 +60,6 @@ import com.sun.org.omg.CORBA.ExcDescriptionSeqHelper;
  * The <code>ClassLoaderTestBase</code> TODO
  *
  * @author fmeschbe
- * @version $Rev:$, $Date$
  */
 public class ClassLoaderTestBase extends TestCase {
 

@@ -49,7 +49,6 @@ import javax.jcr.Session;
  * the <code>URLEncoder</code> class and <i>UTF-8</i> character encoding.
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date:$
  */
 class FileParts {
 

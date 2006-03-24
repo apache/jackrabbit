@@ -35,9 +35,7 @@ import javax.jcr.ValueFormatException;
  * an <code>IllegalStateException</code> for this line of committed non-stream
  * states.
  *
- * @version $Revision$, $Date$
  * @author Felix Meschberger
- * @since 0.16.4.1
  */
 public abstract class BaseNonStreamValue implements StatefulValue {
 

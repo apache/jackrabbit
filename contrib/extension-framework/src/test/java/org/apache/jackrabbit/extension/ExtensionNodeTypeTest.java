@@ -23,7 +23,6 @@ import javax.jcr.nodetype.NodeTypeManager;
  * The <code>ExtensionNodeTypeTest</code> TODO
  *
  * @author Felix Meschberger
- * @version $Rev:$, $Date$
  */
 public class ExtensionNodeTypeTest extends ExtensionFrameworkTestBase {
 
