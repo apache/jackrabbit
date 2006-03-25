@@ -29,27 +29,6 @@
            See the <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">Jira Road Map</a>
            for the open issues and work in progress towards future releases.
          </p>
-
-<!--
-         <p>
-            The latest binary release is always available on the 
-            <a href="http://jakarta.apache.org/site/binindex.cgi#commons-uid">
-            Jakarta Binary Downloads page</a>,
-            its source is available from 
-            <a href="http://jakarta.apache.org/site/sourceindex.cgi#commons-uid">
-            Jakarta Source Downloads page</a>.
-         </p>
-         <p>
-            Older releases are retained by the Apache Software Foundation but are 
-            moved into a
-            <a href="http://archive.apache.org/dist/jakarta/commons/uid/">
-            special archive area</a>.
-         </p>
-         <p>
-           <a href="http://cvs.apache.org/builds/jakarta-commons/nightly/commons-uid/">
-           Nightly source and binary drops</a> are also available.
-         </p>
--->
       </section>
 
       <section name="Source code">

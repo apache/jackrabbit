@@ -16,10 +16,10 @@
   -->
 <document>
   <properties>
-    <title>Welcome to Jackrabbit</title>
+    <title>Welcome to Apache Jackrabbit</title>
   </properties>
   <body>
-    <section name="Jackrabbit - The Open Source Content Repository for Java">
+    <section name="Apache Jackrabbit - The Open Source Content Repository for Java">
       <p>
         The Apache Jackrabbit project is an effort to build and maintain
         an open source implementation of the Content Repository for
@@ -37,13 +37,13 @@
         <a href="http://www.apache.org/" class="externalLink"
            title="Apache Software Foundation">Apache Software Foundation</a>.
       </p>
-      <subsection name="Jackrabbit News">
+      <subsection name="Apache Jackrabbit News">
         <dl>
-          <dt><strong>March 15, 2006: Jackrabbit graduates from the Incubator</strong></dt>
+          <dt><strong>March 15, 2006: Apache Jackrabbit graduates from the Incubator</strong></dt>
           <dd>
             The <a href="http://www.apache.org/foundation/board/"
-            class="externalLink">ASF board of directors</a> approved the
-            resolution of the Jackrabbit as an Apache top level project (TLP).
+            class="externalLink">ASF board of directors</a> approved a
+            resolution to create the Apache Jackrabbit top level project (TLP).
             This finalizes the <a href="http://incubator.apache.org"
             class="externalLink" title="Apache Incubator">incubation</a>
             process for Jackrabbit and makes it an official ASF project.
@@ -63,7 +63,7 @@
           </dd>
         </dl>
       </subsection>
-      <subsection name="Getting Started with Jackrabbit">
+      <subsection name="Getting Started with Apache Jackrabbit">
         <p>
           To get started with Jackrabbit you should first become familiar with
           the JCR API. Download the
@@ -114,7 +114,7 @@
           development mailing list at dev&lt;at&gt;jackrabbit.apache.org.
         </p>
         <p>
-          Jackrabbit is an open source project and welcomes all contributions.
+          Apache Jackrabbit is an open source project and welcomes all contributions.
           You can participate by answering questions on the mailing list,
           filing
           <a href="http://issues.apache.org/jira/browse/JCR"
