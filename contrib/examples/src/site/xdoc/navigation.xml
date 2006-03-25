@@ -18,13 +18,13 @@
  <title>Jackrabbit Deployment Test</title>
  <body>
     <links>
-        <item name="Jackrabbit Home" href="http://incubator.apache.org/jackrabbit/" />
+        <item name="Jackrabbit Home" href="http://jackrabbit.apache.org/" />
         <item name="Jackrabbit Wiki" href="http://wiki.apache.org/jackrabbit/" />
     </links>
     <menu name="Jackrabbit Deployment Test">
-        <item name="Home"                           href="/index.html" />
-        <item name="Model 1 Notes"                  href="/model1notes.html" />
-        <item name="Model 2 Notes"                  href="/model2notes.html" />
+        <item name="Home"            href="/index.html" />
+        <item name="Model 1 Notes"   href="/model1notes.html" />
+        <item name="Model 2 Notes"   href="/model2notes.html" />
     </menu>
   </body>
 </project>

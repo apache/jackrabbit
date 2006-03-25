@@ -86,7 +86,7 @@ assigned to Tomcat.
 More Information
 ================
 
-Jackrabbit:         http://incubator.apache.org/jackrabbit/
+Jackrabbit:         http://jackrabbit.apache.org/
 Tomcat:             http://tomcat.apache.org
 Maven:              http://maven.apache.org
 Maven 1.x Download: http://maven.apache.org/maven-1.x/start/download.html
