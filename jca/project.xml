@@ -3,17 +3,17 @@
     <pomVersion>3</pomVersion>    
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-jca</artifactId>
-    <name>Jackrabbit JCA</name>
+    <name>Apache Jackrabbit JCA</name>
     <currentVersion>1.0</currentVersion>   
     <organization>
 	<name>The Apache Software Foundation</name>
-	<url>http://incubator.apache.org/projects/jackrabbit.html</url>
-	<logo>http://incubator.apache.org/images/apache-incubator-logo.png</logo>
+	<url>http://www.apache.org/</url>
+	<logo>http://www.apache.org/images/asf_logo_wide.png</logo>
     </organization>
     <inceptionYear>2005</inceptionYear>
     <package>org.apache.jackrabbit.jca</package>
     <description>
-	A resource adapter for Jackrabbit as specified by JCA 1.0.
+	A resource adapter for Apache Jackrabbit as specified by JCA 1.0.
     </description>
     <dependencies>
 	<dependency>

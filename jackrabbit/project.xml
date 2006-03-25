@@ -23,18 +23,18 @@
     <pomVersion>3</pomVersion>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit</artifactId>
-    <name>Jackrabbit</name>
+    <name>Apache Jackrabbit</name>
     <currentVersion>1.0</currentVersion>
     <organization>
         <name>The Apache Software Foundation</name>
-        <url>http://incubator.apache.org/projects/jackrabbit.html</url>
-        <logo>http://incubator.apache.org/images/apache-incubator-logo.png</logo>
+        <url>http://www.apache.org/</url>
+        <logo>http://www.apache.org/images/asf_logo_wide.png</logo>
     </organization>
     <inceptionYear>2004</inceptionYear>
     <package>org.apache.jackrabbit.*</package>
     <logo>/images/jackrabbitlogo.gif</logo>
     <description>
-        The Jackrabbit Project has been formed to develop an open source implementation of the Content Repository
+        The Apache Jackrabbit Project has been formed to develop an open source implementation of the Content Repository
         for Java Technology API (JCR), being specified within the Java Community Process as
         &lt;a href="http://www.jcp.org/en/jsr/detail?id=170"&gt;JSR-170&lt;/a&gt;. &lt;a href="http://www.day.com/"&gt;Day Software&lt;/a&gt;,
         the JSR-170 specification lead, has licensed an initial implementation of the JCR reference implementation 
@@ -43,38 +43,36 @@
         content services such as versioning, transactions, indexing, workflow, etc.
     </description>
     <shortDescription>Implementation of the Content Repository for Java</shortDescription>
-    <url>http://incubator.apache.org/projects/jackrabbit.html</url>
+    <url>http://jackrabbit.apache.org/</url>
     <issueTrackingUrl>http://issues.apache.org/jira/browse/JCR</issueTrackingUrl>
     <siteDirectory>../jackrabbit-site</siteDirectory>
-    <distributionSite>incubator.apache.org</distributionSite>
+    <distributionSite>www.apache.org</distributionSite>
     <distributionDirectory>/www/www.apache.org/dist/java-repository/</distributionDirectory>
     <repository>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</developerConnection>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk</developerConnection>
         <url>http://svn.apache.org/viewcvs</url>
     </repository>
     <versions/>
 
     <mailingLists>
-        <!--
         <mailingList>
             <name>Jackrabbit Users List</name>
-            <subscribe>user-subscribe@jackrabbit.apache.org</subscribe>
-            <unsubscribe>user-unsubscribe@jackrabbit.apache.org</unsubscribe>
-            <archive>http://mail-archives.apache.org/eyebrowse/SummarizeList?listName=user@jackrabbit.apache.org</archive>
+            <subscribe>users-subscribe at jackrabbit.apache.org</subscribe>
+            <unsubscribe>users-unsubscribe at jackrabbit.apache.org</unsubscribe>
+            <archive>http://jackrabbit.apache.org/mail/users/</archive>
         </mailingList>
-        -->
         <mailingList>
-            <name>Jackrabbit Developer List</name>
-            <subscribe>jackrabbit-dev-subscribe at incubator.apache.org</subscribe>
-            <unsubscribe>jackrabbit-dev-unsubscribe at incubator.apache.org</unsubscribe>
-            <archive>http://incubator.apache.org/mail/jackrabbit-dev/</archive>
+            <name>Jackrabbit Development List</name>
+            <subscribe>dev-subscribe at jackrabbit.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe at jackrabbit.apache.org</unsubscribe>
+            <archive>http://jackrabbit.apache.org/mail/dev/</archive>
         </mailingList>
         <mailingList>
             <name>Jackrabbit Source Control List</name>
-            <subscribe>jackrabbit-commits-subscribe at incubator.apache.org</subscribe>
-            <unsubscribe>jackrabbit-commits-unsubscribe at incubator.apache.org</unsubscribe>
-            <archive>http://incubator.apache.org/mail/jackrabbit-commits/</archive>
+            <subscribe>commits-subscribe at jackrabbit.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe at jackrabbit.apache.org</unsubscribe>
+            <archive>http://jackrabbit.apache.org/mail/commits/</archive>
         </mailingList>
     </mailingLists>
 

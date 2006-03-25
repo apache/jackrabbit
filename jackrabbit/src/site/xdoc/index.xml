@@ -37,23 +37,6 @@
             <ul>
                 <li><a href="http://cvs.apache.org/dist/incubator/jackrabbit/0.9-incubating/">Apache Jackrabbit 0.9</a> - 14 February 2006</li>
             </ul>
-            <!--
-            <br/>
-            <p>
-                The latest binary release is always available on the
-                <a href="http://jakarta.apache.org/site/binindex.cgi#commons-uid">Jakarta Binary Downloads page</a>,
-                its source is available from
-                <a href="http://jakarta.apache.org/site/sourceindex.cgi#commons-uid">Jakarta Source Downloads page</a>.
-            </p>
-            <p>
-                Older releases are retained by the Apache Software Foundation but are moved into a
-                <a href="http://archive.apache.org/dist/jakarta/commons/uid/">special archive area</a>.
-            </p>
-            <p>
-                <a href="http://cvs.apache.org/builds/jakarta-commons/nightly/commons-uid/">Nightly source and binary drops</a>
-                are also available.
-            </p>
-            -->
         </section>
         <section name="Documentation">
             <p>
@@ -77,18 +60,13 @@
                 administrational features that are not (yet) specified by JCR.
                 (see <a href="doc/arch/overview.html">Architecture Overview</a>).
                 You can also browse the internal Jackrabbit API in the
-                <a href="http://incubator.apache.org/jackrabbit/apidocs/index.html">Jackrabbit Javadocs</a>.
+                <a href="http://jackrabbit.apache.org/apidocs/index.html">Jackrabbit Javadocs</a>.
             </p>
         </section>
         <section name="Downloads">
             <p>
                 For a quick guide to getting the source code, see the 
                 <a href="downloads.html">Downloads</a> page.
-            </p>
-        </section>
-        <section name ="About">
-            <p>
-                Have a look <a href="about.html">here</a> for more project-level details.
             </p>
         </section>
     </body>

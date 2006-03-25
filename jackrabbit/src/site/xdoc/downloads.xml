@@ -30,35 +30,15 @@
            for the open issues and work in progress towards future releases.
          </p>
 
-<!--
-         <p>
-            The latest binary release is always available on the 
-            <a href="http://jakarta.apache.org/site/binindex.cgi#commons-uid">
-            Jakarta Binary Downloads page</a>,
-            its source is available from 
-            <a href="http://jakarta.apache.org/site/sourceindex.cgi#commons-uid">
-            Jakarta Source Downloads page</a>.
-         </p>
-         <p>
-            Older releases are retained by the Apache Software Foundation but are 
-            moved into a
-            <a href="http://archive.apache.org/dist/jakarta/commons/uid/">
-            special archive area</a>.
-         </p>
-         <p>
-           <a href="http://cvs.apache.org/builds/jakarta-commons/nightly/commons-uid/">
-           Nightly source and binary drops</a> are also available.
-         </p>
--->
       </section>
 
       <section name="Source code">
          <p>
             Access to the source tree to see the latest and greatest code is possible
             through anonymous SVN access at
-            <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk">http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</a>.
+            <a href="http://svn.apache.org/repos/asf/jackrabbit/trunk">http://svn.apache.org/repos/asf/jackrabbit/trunk</a>.
             The source tree can also be browsed using
-            <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/">the ViewCVS interface</a>.
+            <a href="http://svn.apache.org/viewcvs.cgi/jackrabbit/trunk/">the ViewCVS interface</a>.
          </p>
          <p>
             See the <a href="doc/building.html">Building Jackrabbit</a> page
@@ -66,20 +46,5 @@
          </p>
 
       </section>
-<!--
-      <section name="Release Candidate">
-         <p>
-            Release candidates for the upcoming 1.1 release can be downloaded 
-            <a href="http://cvs.apache.org/~psteitz/builds/">here</a>.
-         </p>
-         <p>
-            Please review and report any problem on the 
-            <a href="mail-lists.html">mailing list</a>.
-         </p>
-         <p>
-            Final release target is 20 October 2003. 
-         </p>
-      </section>
--->
    </body>
 </document>

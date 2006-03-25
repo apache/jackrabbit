@@ -30,11 +30,11 @@
         The first step in building Jackrabbit is to check out the Jackrabbit
         sources from the <a href="http://subversion.tigris.org/">Subversion</a>
         source repository at
-        <a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/">http://svn.apache.org/repos/af/incubator/jackrabbit/</a>.
+        <a href="http://svn.apache.org/repos/asf/jackrabbit/">http://svn.apache.org/repos/asf/jackrabbit/</a>.
         The trunk of the source repository is divided in two parts:
       </p>
       <dl>
-        <dt><a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit/">trunk/jackrabbit</a></dt>
+        <dt><a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit/">trunk/jackrabbit</a></dt>
         <dd>
           This is the main Jackrabbit source tree that contains everything you
           need for a fully functional Jackrabbit installation. This source tree
@@ -43,7 +43,7 @@
           "jackrabbit-commons" utility library used also in other JCR tools
           and implementations.
         </dd>
-        <dt><a href="http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/contrib/">trunk/contrib</a></dt>
+        <dt><a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/">trunk/contrib</a></dt>
         <dd>
           This is a collection of additional Jackrabbit modules and other
           contributed subprojects like the RMI and WebDAV network layers for
@@ -61,7 +61,7 @@
           client installed you can checkout the main Jackrabbit source tree
           with the following command or its equivalent in the client you are using:
         </p>
-  <source>svn checkout http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit</source>
+  <source>svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit</source>
         <p>
           The above checkout will create a subdirectory named
           <code>jackrabbit</code> that contains the latest Jackrabbit sources.
