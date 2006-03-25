@@ -22,8 +22,8 @@
   <currentVersion>0.16.4-dev</currentVersion>
   <organization>
     <name>The Apache Software Foundation</name>
-    <url>http://incubator.apache.org/projects/jackrabbit.html</url>
-    <logo>http://incubator.apache.org/images/apache-incubator-logo.png</logo>
+    <url>http://www.apache.org/</url>
+    <logo>http://www.apache.org/images/asf_logo_wide.png</logo>
   </organization>
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.*</package>

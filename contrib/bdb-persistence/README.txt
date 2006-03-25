@@ -5,7 +5,8 @@
 
 ~~ About
 
-A berkeleydb persistence manager for the jackrabbit project ( http://incubator.apache.org/jackrabbit )
+A berkeleydb persistence manager for the Apache Jackrabbit project
+    http://jackrabbit.apache.org/
 It use the berkeleydb java edition
 
 ~~ Installation/Configuration

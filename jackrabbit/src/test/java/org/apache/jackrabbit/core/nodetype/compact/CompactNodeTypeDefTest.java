@@ -37,7 +37,7 @@ import java.util.List;
 public class CompactNodeTypeDefTest extends TestCase {
     private static final String TEST_FILE = "applications/test/cnd-reader-test-input.cnd";
     private static final String NS_PREFIX = "ex";
-    private static final String NS_URI = "http://apache.org/incubator/jackrabbit/example";
+    private static final String NS_URI = "http://example.org/jackrabbit/example";
 
     private static final QName NODE_TYPE_NAME = new QName(NS_URI, "NodeType");
     private static final QName PARENT_NODE_TYPE_1 = new QName(NS_URI, "ParentNodeType1");

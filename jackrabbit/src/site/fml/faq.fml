@@ -70,12 +70,6 @@
           technology compatibility kit (TCK) released along with the final
           JCR API.
         </p>
-        <p>
-          The Jackrabbit project is currently <a href="http://issues.apache.org/jira/browse/JCR?report=com.atlassian.jira.plugin.system.project:roadmap-panel">working towards</a>
-          making the first official release and is aiming to graduate from
-          the <a href="http://incubator.apache.org/">Apache Incubator</a>
-          shortly before or after the first release.
-        </p>
       </answer>
     </faq>
   </part>
@@ -173,8 +167,8 @@
           For Jackrabbit features (like access control and node type management)
           not covered by the JCR API, see the
           <a href="http://wiki.apache.org/jackrabbit/ExamplesPage">Examples page</a>
-          on the wiki, the <a hŕef="apidocs/index.html">Jackrabbit javadocs</a>,
-          or contact the <a href="http://incubator.apache.org/jackrabbit/mail-lists.html">Jackrabbit mailing list</a>.
+          on the wiki, the <a href="apidocs/index.html">Jackrabbit javadocs</a>,
+          or contact the <a href="http://jackrabbit.apache.org/mail-lists.html">Jackrabbit mailing list</a>.
         </p>
       </answer>
     </faq>
