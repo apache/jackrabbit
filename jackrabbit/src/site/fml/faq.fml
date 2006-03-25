@@ -167,7 +167,7 @@
           For Jackrabbit features (like access control and node type management)
           not covered by the JCR API, see the
           <a href="http://wiki.apache.org/jackrabbit/ExamplesPage">Examples page</a>
-          on the wiki, the <a hŕef="apidocs/index.html">Jackrabbit javadocs</a>,
+          on the wiki, the <a href="apidocs/index.html">Jackrabbit javadocs</a>,
           or contact the <a href="http://jackrabbit.apache.org/mail-lists.html">Jackrabbit mailing list</a>.
         </p>
       </answer>
