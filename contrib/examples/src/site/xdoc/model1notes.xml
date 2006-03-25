@@ -34,7 +34,7 @@
                 will not cover it here and instead focus on using JNDI to configure and access the
                 repository. If you want more information about coding the repository's creation
                 and management directly, see the
-                <a href="http://incubator.apache.org/jackrabbit/doc/firststeps.html">First Hops</a>
+                <a href="http://jackrabbit.apache.org/doc/firststeps.html">First Hops</a>
                 tutorial in the main Jackrabbit documentation.
             </p>
         </section>
@@ -131,7 +131,7 @@ Repository embeddedRepository =
         <section name="Model 1 Considerations">
             <p>
                 The
-                <a href="http://incubator.apache.org/jackrabbit/doc/deploy/howto-model1.html">Model
+                <a href="http://jackrabbit.apache.org/doc/deploy/howto-model1.html">Model
                 1 documentation</a> stresses the importance of shutting down the repository when
                 your webapp is un-deployed. Unfortunately, this is currently impossible. The
                 object created by the <code>BindableRepositoryFactory</code> is an instance of
