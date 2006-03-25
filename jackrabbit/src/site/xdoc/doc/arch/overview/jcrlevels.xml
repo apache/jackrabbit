@@ -37,7 +37,7 @@ administrational features that are needed to run a repository
 but are not (yet) specified by JCR. (see <a href="arch/overview.html">Architecture Overview</a>)
 </p>
 <p>
-Browse current Jackrabbit API: <a href="http://incubator.apache.org/jackrabbit/apidocs/index.html">http://incubator.apache.org/jackrabbit/apidocs/index.html</a>
+Browse current Jackrabbit API: <a href="http://jackrabbit.apache.org/apidocs/index.html">http://jackrabbit.apache.org/apidocs/index.html</a>
 </p>
 </section>
 <section name="JSR-170 Levels">

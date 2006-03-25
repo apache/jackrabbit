@@ -22,10 +22,8 @@
 	<currentVersion>1.0-SNAPSHOT</currentVersion>
 	<organization>
 		<name>The Apache Software Foundation</name>
-		<url>http://incubator.apache.org/projects/jackrabbit.html</url>
-		<logo>
-			http://incubator.apache.org/images/apache-incubator-logo.png
-		</logo>
+		<url>http://www.apache.org/</url>
+		<logo>http://www.apache.org/images/asf_logo_wide.png</logo>
 	</organization>
 	<inceptionYear>2005</inceptionYear>
 	<package>org.apache.jackrabbit.*</package>
@@ -40,8 +38,8 @@
 	</shortDescription>
 
 	<repository>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/contrib/bdb-persistence</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/contrib/bdb-persistence</developerConnection>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/bdb-persistence</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/bdb-persistence</developerConnection>
 		<url>http://svn.apache.org/viewcvs</url>
 	</repository>
 	<developers>

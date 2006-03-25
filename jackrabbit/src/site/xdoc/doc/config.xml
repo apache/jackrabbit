@@ -84,7 +84,7 @@
 </Repository>
 ]]></source>
         <p>
-          See <a href="http://svn.apache.org/viewcvs.cgi/incubator/jackrabbit/trunk/jackrabbit/src/main/config/repository.xml?view=markup">src/main/config/repository.xml</a>
+          See <a href="http://svn.apache.org/viewcvs.cgi/jackrabbit/trunk/jackrabbit/src/main/config/repository.xml?view=markup">src/main/config/repository.xml</a>
           for a working example configuration file. The file also contains
           a commented Document Type Definition (DTD) for the XML configuration
           file format.

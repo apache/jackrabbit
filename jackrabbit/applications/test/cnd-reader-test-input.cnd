@@ -1,4 +1,4 @@
-<ex = "http://apache.org/incubator/jackrabbit/example">
+<ex = "http://example.org/jackrabbit/example">
 [ex:NodeType] > ex:ParentNodeType1, ex:ParentNodeType2
   orderable mixin
   - ex:property (long) = '1', '2' primary mandatory autocreated protected multiple version < '[1,10]'

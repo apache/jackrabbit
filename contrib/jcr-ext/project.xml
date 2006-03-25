@@ -26,8 +26,8 @@
   <shortDescription>Utilities for JCR implementations</shortDescription>
 
   <repository>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/contrib/jcr-ext</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/contrib/jcr-ext</developerConnection>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/jcr-ext</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/jcr-ext</developerConnection>
     <url>http://svn.apache.org/viewcvs</url>
   </repository>
 

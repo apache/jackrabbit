@@ -1,6 +1,6 @@
-=======================================================================
-Welcome to Apache Jackrabbit  <http://incubator.apache.org/jackrabbit/>
-=======================================================================
+=============================================================
+Welcome to Apache Jackrabbit  <http://jackrabbit.apache.org/>
+=============================================================
 
 License (see also LICENSE.txt)
 ==============================
@@ -26,17 +26,17 @@ Getting Started
 Mailing Lists
 -------------
 
-To get involved with the Jackrabbit project, start by having a
+To get involved with the Apache Jackrabbit project, start by having a
 look at our website (link at top of page) and join our mailing
 lists by sending an empty message to
 
-   jackrabbit-dev-subscribe     :at: incubator.apache.org
+   dev-subscribe     :at: jackrabbit.apache.org
 and
-   jackrabbit-commits-subscribe :at: incubator.apache.org
+   commits-subscribe :at: jackrabbit.apache.org
 
 and the dev mailing list archives can be found at
 
-   http://incubator.apache.org/mail/jackrabbit-dev/
+   http://jackrabbit.apache.org/mail/dev/
 
 
 Downloading
@@ -44,15 +44,15 @@ Downloading
 
 The Jackrabbit source code is available via Subversion at
 
-   https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk
+   https://svn.apache.org/repos/asf/jackrabbit/trunk
 
 and anonymous access is available at
 
-   http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk
+   http://svn.apache.org/repos/asf/jackrabbit/trunk
 
 or with viewcvs at
 
-   http://svn.apache.org/viewcvs/incubator/jackrabbit/trunk/
+   http://svn.apache.org/viewcvs/jackrabbit/trunk/
 
 The Jackrabbit main project is located in the "jackrabbit" subdirectory
 and the "contrib" subdirectory contains various additional modules and
@@ -60,7 +60,7 @@ contributed projects.
 
 To checkout the main Jackrabbit source tree, run
 
-   svn checkout http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk/jackrabbit
+   svn checkout http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit
 
 Once you have a copy of the source code tree, you can use Apache Maven
 
@@ -74,7 +74,7 @@ command to build and test all the Jackrabbit sources is:
 
 For more instructions, please see the documentation at:
 
-   http://incubator.apache.org/jackrabbit/doc/building.html
+   http://jackrabbit.apache.org/doc/building.html
 
 Credits
 =======
@@ -94,4 +94,4 @@ Tobias Bocanegra        versioning
 Changes
 =======
 
-See <http://incubator.apache.org/jackrabbit/changelog-report.html>
+See <http://jackrabbit.apache.org/changelog-report.html>
