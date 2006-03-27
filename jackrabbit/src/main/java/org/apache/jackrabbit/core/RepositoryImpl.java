@@ -843,9 +843,19 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         log.info("Shutting down repository...");
 
         // close active user sessions
-        while (!activeSessions.isEmpty()) {
-           ((Session) activeSessions.values().iterator().next()).logout();
-       }
+        // (copy sessions to array to avoid ConcurrentModificationException;
+        // manually copy entries rather than calling ReferenceMap#toArray() in
+        // order to work around  http://issues.apache.org/bugzilla/show_bug.cgi?id=25551)
+        int cnt = 0;
+        SessionImpl[] sa = new SessionImpl[activeSessions.size()];
+        for (Iterator it = activeSessions.values().iterator(); it.hasNext(); cnt++) {
+            sa[cnt] = (SessionImpl) it.next();
+        }
+        for (int i = 0; i < sa.length; i++) {
+            if (sa[i] != null) {
+                sa[i].logout();
+            }
+        }
 
         // shut down workspaces
         for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
