@@ -64,8 +64,8 @@ Upgrading from 0.9
 ------------------
 
 Due to a change in query functionality (JCR-257) a full rebuild of the
-full text indexes is required on existing content repositories is required
-when upgrading from the 0.9 release. Reindexing can be triggered by manually
+full text indexes is required on existing content repositories when
+upgrading from the 0.9 release. Reindexing can be triggered by manually
 removing the index directories when the repository has been shut down.
 
 Known Issues
