@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.name.QName;
 
 import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * This class implements the <code>NodeDef</code> interface and additionally
@@ -28,29 +29,34 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * The name of the default primary type.
      */
-    private QName defaultPrimaryType = null;
+    private QName defaultPrimaryType;
 
     /**
      * The names of the required primary types.
      */
-    private QName[] requiredPrimaryTypes = new QName[] { QName.NT_BASE };
+    private HashSet requiredPrimaryTypes;
 
     /**
      * The 'allowsSameNameSiblings' flag.
      */
-    private boolean allowsSameNameSiblings = false;
+    private boolean allowsSameNameSiblings;
 
     /**
      * The identifier of this node definition. The identifier is lazily computed
      * based on the characteristics of this node definition and reset on every
      * attribute change.
      */
-    private NodeDefId id = null;
+    private NodeDefId id;
 
     /**
      * Default constructor.
      */
     public NodeDefImpl() {
+        defaultPrimaryType = null;
+        requiredPrimaryTypes = new HashSet();
+        requiredPrimaryTypes.add(QName.NT_BASE);
+        allowsSameNameSiblings = false;
+        id = null;
     }
 
     /**
@@ -70,12 +76,13 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      * @param requiredPrimaryTypes
      */
     public void setRequiredPrimaryTypes(QName[] requiredPrimaryTypes) {
-        // reset id field in order to force lazy recomputation of identifier
-        id = null;
         if (requiredPrimaryTypes == null) {
             throw new IllegalArgumentException("requiredPrimaryTypes can not be null");
         }
-        this.requiredPrimaryTypes = requiredPrimaryTypes;
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        this.requiredPrimaryTypes.clear();
+        this.requiredPrimaryTypes.addAll(Arrays.asList(requiredPrimaryTypes));
     }
 
     /**
@@ -171,7 +178,11 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      * {@inheritDoc}
      */
     public QName[] getRequiredPrimaryTypes() {
-        return requiredPrimaryTypes;
+        if (requiredPrimaryTypes.isEmpty()) {
+            return QName.EMPTY_ARRAY;
+        }
+        return (QName[]) requiredPrimaryTypes.toArray(
+                new QName[requiredPrimaryTypes.size()]);
     }
 
     /**
@@ -208,7 +219,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
         if (obj instanceof NodeDefImpl) {
             NodeDefImpl other = (NodeDefImpl) obj;
             return super.equals(obj)
-                    && Arrays.equals(requiredPrimaryTypes, other.requiredPrimaryTypes)
+                    && requiredPrimaryTypes.equals(other.requiredPrimaryTypes)
                     && (defaultPrimaryType == null
                             ? other.defaultPrimaryType == null
                             : defaultPrimaryType.equals(other.defaultPrimaryType))

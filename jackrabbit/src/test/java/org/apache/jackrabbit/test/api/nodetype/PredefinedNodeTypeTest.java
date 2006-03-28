@@ -272,12 +272,12 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         writer.println("PrimaryItemName");
         writer.println("  " + type.getPrimaryItemName());
         NodeDefinition[] nodes = type.getDeclaredChildNodeDefinitions();
-        Arrays.sort(nodes, ITEM_DEF_COMPARATOR);
+        Arrays.sort(nodes, NODE_DEF_COMPARATOR);
         for (int i = 0; i < nodes.length; i++) {
             writer.print(getChildNodeDefSpec(nodes[i]));
         }
         PropertyDefinition[] properties = type.getDeclaredPropertyDefinitions();
-        Arrays.sort(properties, ITEM_DEF_COMPARATOR);
+        Arrays.sort(properties, PROPERTY_DEF_COMPARATOR);
         for (int i = 0; i < properties.length; i++) {
             writer.print(getPropertyDefSpec(properties[i]));
         }
@@ -385,20 +385,47 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
     }
 
     /**
-     * Comparator for ordering property and node definition arrays. Item
-     * definitions are ordered by name, with the wildcard item definition
-     * ("*") ordered last.
+     * Comparator for ordering node definition arrays. Node definitions are
+     * ordered by name, with the wildcard item definition ("*") ordered last.
      */
-    private static final Comparator ITEM_DEF_COMPARATOR = new Comparator() {
+    private static final Comparator NODE_DEF_COMPARATOR = new Comparator() {
         public int compare(Object a, Object b) {
-            ItemDefinition ida = (ItemDefinition) a;
-            ItemDefinition idb = (ItemDefinition) b;
-            if (ida.getName().equals("*") && !idb.getName().equals("*")) {
+            NodeDefinition nda = (NodeDefinition) a;
+            NodeDefinition ndb = (NodeDefinition) b;
+            if (nda.getName().equals("*") && !ndb.getName().equals("*")) {
                 return 1;
-            } else if (!ida.getName().equals("*") && idb.getName().equals("*")) {
+            } else if (!nda.getName().equals("*") && ndb.getName().equals("*")) {
                 return -1;
             } else {
-                return ida.getName().compareTo(idb.getName());
+                return nda.getName().compareTo(ndb.getName());
+            }
+        }
+    };
+
+    /**
+     * Comparator for ordering property definition arrays. Property definitions
+     * are ordered by name, with the wildcard item definition ("*") ordered
+     * last, and isMultiple flag, with <code>isMultiple==true</code> ordered last.
+     */
+    private static final Comparator PROPERTY_DEF_COMPARATOR = new Comparator() {
+        public int compare(Object a, Object b) {
+            PropertyDefinition pda = (PropertyDefinition) a;
+            PropertyDefinition pdb = (PropertyDefinition) b;
+            if (pda.getName().equals("*") && !pdb.getName().equals("*")) {
+                return 1;
+            } else if (!pda.getName().equals("*") && pdb.getName().equals("*")) {
+                return -1;
+            }
+            int result = pda.getName().compareTo(pdb.getName());
+            if (result != 0) {
+                return result;
+            }
+            if (pda.isMultiple() && !pdb.isMultiple()) {
+                return 1;
+            } else if (!pda.isMultiple() && pdb.isMultiple()) {
+                return -1;
+            } else {
+                return 0;
             }
         }
     };
