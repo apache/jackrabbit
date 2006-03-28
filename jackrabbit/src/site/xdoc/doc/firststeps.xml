@@ -15,181 +15,347 @@
    limitations under the License.
   -->
 <document>
- <properties>
-  <title>First Hops</title>
- </properties>
+  <properties>
+    <title>First Hops</title>
+  </properties>
+  <body>
+    <section name="First Hops with Jackrabbit">
+      <p>
+        Welcome to your first hops into the world of Jackrabbit! This
+        introduction gives you a hands-on experience with Jackrabbit and
+        the JCR API. Once you have finished hopping through this document,
+        you should be all set to continue on your own with the official
+        <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html"
+           class="externalLink"
+           title="JSR-170: Content Repository for Java(TM) technology API"
+           >JCR specification</a> and the
+        <a href="index.html">documentation</a> on this site.
+      </p>
 
- <body>
-  <section name="First Hops">
-   <p>
-     This is a short hands-on introduction to Jackrabbit and the features
-     of the JCR API. See the rest of the Jackrabbit web site and the
-     <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html">JCR specification</a>
-     for more detailed information.
-   </p>
-   <p>
-     You need to have Jackrabbit locally available to compile and run the
-     examples on this page. See the <a href="building.html">Building Jackrabbit</a>
-     section for instructions to download and build the Jackrabbit sources.
-     The examples on this page expect that your classpath contains the
-     <code>jackrabbit-1.0-SNAPSHOT.jar</code> generated into the
-     <code>target</code> directory by <code>maven jar</code> and all the
-     dependency jar files copied into the <code>target/lib</code> directory
-     by <code>maven copy-deps</code>. Please check your classpath settings
-     if you get a <code>ClassNotFoundException</code> when compiling the
-     example classes.
-   </p>
-   <p>
-    Note that this introduction is meant to be as short and simple as
-    possible, rather than usable as a real application. Thus the example
-    classes should not be interpreted as the best practice.
-   </p>
+      <subsection name="Hop 0: Getting started">
+        <p>
+          Before you can start using Jackrabbit, you need to have it installed
+          on your computer. You can do this either by downloading a
+          <a href="../downloads.html">binary release</a> and all the required
+          <a href="../dependencies.html">dependencies</a> or by building
+          <a href="building.html">the Jackrabbit sources</a>.
+        </p>
+        <p>
+          Once you have Jackrabbit available locally, you should make sure
+          that you have at least version 1.4 of the
+          <a href="http://java.sun.com/j2se/" class="externalLink"
+             >Java 2 Platform, Standard Edition</a> (J2SE) installed and the
+          following libraries configured in your Java classpath:
+        </p>
+        <dl>
+          <dt>
+            <code>jackrabbit-1.0.jar</code> or
+            <code>jackrabbit-1.0-SNAPSHOT.jar</code>
+          </dt>
+          <dd>
+            depending on whether you use a binary release or a locally
+            compiled version,
+          </dd>
 
-  <subsection name="Run Jackrabbit">
-   <p>
-    The first thing a JCR application needs to do is to get a
-    <code>Repository</code> instance and start a <code>Session</code>
-    for using the content repository. The first example application
-    show below does little more than this, it just prints out the node
-    type name of the root node to demonstrate that the session has indeed
-    been opened. After that the application closes the session and exits.
-   </p>
-   <p><strong>FirstHop.java</strong></p>
-<source>import javax.jcr.*;
-import org.apache.jackrabbit.core.TransientRepository;
+          <dt><code>jcr-1.0.jar</code></dt>
+          <dd>for the JCR 1.0 API,</dd>
+
+          <dt>
+            <code>slf4j-log4j12-1.0.jar</code> and
+            <code>log4j-1.2.8.jar</code>
+          </dt>
+          <dd>
+            for logging using
+            <a href="http://www.slf4j.org/" class="externalLink"
+               title="Simple Logging Facade for Java">SLF4J</a> with
+            <a href="http://logging.apache.org/log4j/" class="externalLink"
+               >Log4J</a> (you should be fine with any Log4J 1.2.x version,
+            or you could even replace both of these jars with another SLF4J
+            implementation),
+          </dd>
+
+          <dt><code>commons-collections-3.1.jar</code></dt>
+          <dd>for advanced data structures used by Jackrabbit,</dd>
+
+          <dt>
+            <code>xercesImpl-2.6.2.jar</code> and
+            <code>xmlParserApis-2.0.2.jar</code>
+          </dt>
+          <dd>
+            for advanced XML support (you should be fine with any recent
+            <a href="http://xerces.apache.org/xerces2-j/"
+               class="externalLink">Xerces2 Java Parser</a> implementation
+            and the extra XML API library is only needed for JDK 1.4),
+          </dd>
+
+          <dt><code>derby-10.1.1.0.jar</code></dt>
+          <dd>
+            or any recent
+            <a href="http://db.apache.org/derby/" class="externalLink"
+               >Derby</a> release for embedded database storage,
+          </dd>
+
+          <dt><code>concurrent-1.3.4.jar</code></dt>
+          <dd>for advanced thread synchronization, and</dd>
+
+          <dt><code>lucene-1.4.3.jar</code></dt>
+          <dd>for full text indexing and searching.</dd>
+        </dl>
+        <p>
+          You should also add the current directory in your classpath to make
+          it easy to compile and run the example classes. You may also want
+          to copy the following
+          <a href="hops/log4j.properties">log4j.properties</a> file to the
+          current directory to avoid warnings of missing log configuration.
+          If you want to see the internal Jackrabbit log, just change the
+          log level to <code>INFO</code> or even <code>DEBUG</code>.
+        </p>
+<source>log4j.logger.org.apache.jackrabbit=WARN,stdout
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
+</source>
+        <p>
+          HINT: If you have build Jackrabbit from sources with
+          <a href="http://maven.apache.org/maven-1.x/" class="externalLink"
+             >Maven 1.x</a>, then you can get all the dependencies copied
+          to <code>target/lib</code> by running <code>maven copy-deps</code>
+          in the Jackrabbit project directory.
+        </p>
+        <p>
+          HINT: You probably have an error in your classpath if you get a
+          <code>ClassNotFoundException</code> message when trying to compile
+          or run the examples below.
+        </p>
+      </subsection>
+
+      <subsection name="Hop 1: Logging in to Jackrabbit">
+        <p>
+          Once you are done with the setup tasks, we can start doing some
+          real work. As a warm-up we'll create a Jackrabbit content
+          repository and start a login session for accessing it. The full
+          example application that does this is shown below, with line-by-line
+          explanations following shortly after.
+        </p>
+        <p><strong>FirstHop.java</strong></p>
+<source><strong>import</strong> javax.jcr.Repository;
+<strong>import</strong> javax.jcr.Session;
+<strong>import</strong> org.apache.jackrabbit.core.TransientRepository;
 
 /**
- * <i>First Jackrabbit example application. Opens a content repository as</i>
- * <i>an anonymous user and prints the node type name of the root node of</i>
- * <i>the default workspace.</i>
+ * <em>First hop example. Logs in to a content repository and prints a</em>
+ * <em>status message.</em>
  */
-public class FirstHop {
+<strong>public class</strong> FirstHop {
 
-    /** <i>The Jackrabbit configuration file</i> */
-    private static final String CONFIG_FILE = "<b>repository.xml</b>";
-
-    /** <i>The Jackrabbit repository directory</i> */
-    private static final String DIRECTORY = "<b>repository</b>";
-
-    /** <i>Runs the FirstHop example.</i> */
-    public static void main(String[] args) {
-        try {
-            // <i>Set up a Jackrabbit repository with the specified</i>
-            // <i>configuration file and repository directory</i>
-            Repository repository =
-                new TransientRepository(CONFIG_FILE, DIRECTORY);
-
-            // <i>Login to the default workspace as a dummy user</i>
-            Session session = repository.login(
-                new SimpleCredentials("username", "password".toCharArray()));
-
-            // <i>Print the node type name of the root node</i>
-            Node root = session.getRootNode();
-            System.out.println(root.getPrimaryNodeType().getName());
-
-            // <i>Close the session</i>
+    /**
+     * <em>The main entry point of the example application.</em>
+     *
+     * @param args <em>command line arguments (ignored)</em>
+     * @throws Exception <em>if an error occurs</em>
+     */
+    <strong>public static void</strong> main(String[] args) <strong>throws</strong> Exception {
+        Repository repository = new TransientRepository();
+        Session session = repository.login();
+        <strong>try</strong> {
+            String user = session.getUserID();
+            String name = repository.getDescriptor(Repository.REP_NAME_DESC);
+            System.out.println(
+                    "<em>Logged in as </em>" + user + "<em> to a </em>" + name + "<em> repository.</em>");
+        } <strong>finally</strong> {
             session.logout();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
-}</source>
-   <p>
-    The highlighted configuration parameters <code>CONFIG_FILE</code> and
-    <code>DIRECTORY</code> specify the names of the repository configuration
-    file and the repository directory. The repository configuration file
-    is an XML file that specifies the components and options used by the
-    Jackrabbit content repository. Below is an example configuration that
-    you can use as the <code>repository.xml</code> file in your working
-    directory.
-   </p>
-   <p><strong>repository.xml</strong></p>
-<source><![CDATA[<?xml version="1.0"?>
-<Repository>
-    <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-        <param name="path" value="${rep.home}/repository"/>
-    </FileSystem>
-    <Security appName="Jackrabbit">
-        <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager"/>
-    </Security>
-    <Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default" />
-    <Workspace name="${wsp.name}">
-        <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-            <param name="path" value="${wsp.home}"/>
-        </FileSystem>
-        <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" />
-        <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
-            <param name="path" value="${wsp.home}/index"/>
-        </SearchIndex>
-    </Workspace>
-    <Versioning rootPath="${rep.home}/versions">
-        <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-            <param name="path" value="${rep.home}/versions"/>
-        </FileSystem>
-        <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" />
-    </Versioning>
-</Repository>]]></source>
-   <p>
-    The keyword <code>${rep.home}</code> refers to the repository home
-    directory, which is used as the root directory for all of the
-    information that the repository persists. At runtime the keyword is
-    replaced by the repository home directory path given to the Jackrabbit
-    instance (in this case using the <code>DIRECTORY</code> parameter).
-    The repository home directory needs to exists but it can be empty;
-    after the first repository startup, the repository will automatically
-    be filled with a file structure similar to this:
-   </p>
-<source>repository/
-   meta/
-   namespaces/
-   nodetypes/
-   versions/
+}
+</source>
+        <p>
+          You can also download the source file as
+          <a href="hops/FirstHop.java">FirstHop.java</a>. If you have your
+          classpath set up, you can compile the application with
+          <code>javac FirstHop.java</code> and run it with
+          <code>java FirstHop</code> to get the following output.
+        </p>
+        <source>Logged in as anonymous to a Jackrabbit repository.</source>
+        <p>
+          In addition to producing the above status line the application
+          copies a default repository configuration file to
+          <code>repository.xml</code> and creates an initial Jackrabbit
+          content repository in the <code>repository</code> subdirectory.
+          You can use the system properties
+          <code>org.apache.jackrabbit.repository.conf</code> and
+          <code>org.apache.jackrabbit.repository.home</code> to set alternative
+          configuration file and repository directory locations.
+        </p>
+        <p>
+          Read on for a detailed breakdown of the FirstHop application:
+        </p>
+        <dl>
+          <dt><code><strong>import</strong> javax.jcr.Repository;</code></dt>
+          <dt><code><strong>import</strong> javax.jcr.Session;</code></dt>
+          <dd>
+            <p>
+              The JCR API interfaces are located in the <code>javax.jcr</code>
+              package found in the <code>jcr-1.0.jar</code> library. The
+              promise of the JCR API is that if you only use these interfaces
+              in your content application, it should remain mostly independent
+              of the underlying content repository implementation.
+            </p>
+            <p>
+              The
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Repository.html"
+                 class="externalLink" title="javax.jcr.Repository"
+                 >Repository</a> interface represents a given content repository
+              instance and the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Session.html"
+                 class="externalLink" title="javax.jcr.Session"
+                 >Session</a> interface represents a single login session for
+              accessing the repository. A session is needed to access any
+              content within a repository.
+            </p>
+            <p>
+              Note that a Session instance is not guaranteed to be thread-safe
+              so you should start multiple sessions if you need to access
+              repository content simultaneously from different threads. This
+              is especially important for things like web applications.
+            </p>
+          </dd>
+          
+          <dt><code><strong>import</strong> org.apache.jackrabbit.core.TransientRepository;</code></dt>
+          <dd>
+            <p>
+              The best practice for deploying Jackrabbit is to use
+              <a href="http://java.sun.com/products/jndi/" class="externalLink"
+                 title="Java Naming and Directory Interface">JNDI</a> or some
+              other configuration mechanism in a container environment to keep
+              the application code free of direct Jackrabbit dependencies, but
+              since we are creating a simple standalone application we can take
+              a shortcut by using the
+              <a href="../apidocs/org/apache/jackrabbit/core/TransientRepository.html"
+                 title="org.apache.jackrabbit.core.TransientRepository"
+                 >TransientRepository</a> class from Jackrabbit core.
+            </p>
+          </dd>
 
-tx/
+          <dt><code><strong>public class</strong> FirstHop</code></dt>
+          <dt><code><strong>public static void</strong> main(String[] args) <strong>throws</strong> Exception</code></dt>
+          <dd>
+            <p>
+              The FirstHop example is a simple standalone application that fits
+              nicely in the main() method and lets the JVM take care of the
+              possible exceptions. More substantial content applications could
+              also be written as web application or EJB components with
+              different setup and error handling patterns.
+            </p>
+          </dd>
 
-workspaces/
-   default/
-      workspace.xml
-      blobs/
-      data/
-      index/</source>
-   <p>
-     In addition to the repository configuration file, you also need to
-     create a
-     <a href="http://java.sun.com/security/jaas/doc/api.html">JAAS configuration</a>
-     file used for Jackrabbit login settings. The contents of a simple
-     configuration file named <code>jaas.config</code> is shown below.
-   </p>
-   <p><strong>jaas.config</strong></p>
-<source>Jackrabbit {
-org.apache.jackrabbit.core.security.SimpleLoginModule required;
-};</source>
-   <p>
-    You need to include the JAAS configuration option
-    <code>-Djava.security.auth.login.config==jaas.config</code> to the
-    <code>java</code> command when running the example code to activate
-    the authentication settings. The SimpleLoginModule accepts any
-    username/password combination, so the hardcoded values will do just fine.
-   </p>
-   <p>
-     If you want, you can also add
-     <a href="http://logging.apache.org/log4j/">log4j</a> configuration
-     if you are interested in the internal log messages produced by Jackrabbit.
-   </p>
-   <p>
-    You should now have the files <code>FirstHop.java</code>,
-    <code>repository.xml</code>, <code>jaas.config</code>, and the subdirectory
-    <code>repository</code> available in your working directory. You should
-    also have the Java classpath configured according to the instructions
-    at the beginning of this page. Once all is ready, you can compile and
-    run the <code>FirstHop</code> application, which should produce the
-    following output (in addition to possible logging messages):
-   </p>
-<source>rep:root</source>
-  </subsection>
+          <dt><code>Repository repository = new TransientRepository();</code></dt>
+          <dd>
+            <p>
+              The
+              <a href="../apidocs/org/apache/jackrabbit/core/TransientRepository.html"
+                 title="org.apache.jackrabbit.core.TransientRepository"
+                 >TransientRepository</a> class implements the JCR
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Repository.html"
+                 class="externalLink" title="javax.jcr.Repository"
+                 >Repository</a> interface, so you can simply assign a
+              TransientRepository instance to a Repository variable.
+              The
+              <a href="../apidocs/org/apache/jackrabbit/core/TransientRepository.html#TransientRepository()"
+                 title="TransientRepository()">default constructor</a>
+              contains a utility feature that will take care of the initial
+              configuration and repository construction when the first session
+              is started. Thus there is no need for
+              <a href="config.html">manual configuration</a> for now unless
+              you want direct control over the repository setup.
+            </p>
+            <p>
+              The TransientRepository implementation will automatically
+              initialize the content repository when the first session is
+              started and shut it down when the last session is closed. Thus
+              there is no need for explicit repository shutdown as long as
+              all sessions are properly closed. Note that a Jackrabbit
+              repository directory contains a lock file that prevents it from
+              being accessed simultaneously by multiple processes. You will
+              see repository startup exceptions caused by the lock file if you
+              fail to properly close all sessions or otherwise shut down the
+              repository before leaving the process that accesses a repository.
+              Normally you can just manually remove the lock file in such cases
+              but such cases always present a chance of repository corruption
+              especially if you use a non-transactional persistence manager.
+            </p>
+          </dd>
 
-  <subsection name="Adding Content">
+          <dt><code>Session session = repository.login();</code></dt>
+          <dd>
+            <p>
+              The default
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Repository.html#login()"
+                 class="externalLink">Repository.login()</a> method starts
+              a repository session using the default workspace and no user
+              credentials. Jackrabbit tries to use
+              <a href="http://java.sun.com/products/jaas/"
+                 class="externalLink"
+                 title="Java Authentication and Authorization Service"
+                 >JAAS</a> authentication in such cases, but defaults to the
+              anonymous user if a JAAS Subject is not found.
+            </p>
+            <p>
+              Since we use the TransientRepository class as the Repository
+              implementation, this step will also cause the repository
+              to be initialized.
+            </p>
+          </dd>
+
+          <dt><code><strong>try</strong> { ... } <strong>finally</strong> { session.logout(); }</code></dt>
+          <dd>
+            <p>
+              It is a good practice to properly release all acquired resources,
+              and the JCR sessions are no exception. The try-finally idiom is
+              a good way to ensure that a resource really gets released, as
+              the release method gets called even if the intervening code
+              throws an exception or otherwise jumps outside the scope (for
+              example using a <code>return</code>, <code>break</code>, or
+              <code>continue</code> statement).
+            </p>
+            <p>
+              The
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Session.html#logout()"
+                 class="externalLink">Session.logout()</a> method in the
+              <code>finally</code> branch closes the session and since this
+              is the only session we have started, the repository is gets
+              automatically shut down.
+            </p>
+          </dd>
+
+          <dt><code>String user = session.getUserID();</code></dt>
+          <dd>
+            <p>
+              The username or identifier of the user associated with a session
+              is available using the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Session.html#getUserID()"
+                 class="externalLink">Session.getUserID()</a> method.
+              Jackrabbit returns "anonymous" by default.
+            </p>
+          </dd>
+
+          <dt><code>String name = repository.getDescriptor(Repository.REP_NAME_DESC);</code></dt>
+          <dd>
+            <p>
+              Each content repository implementation publishes a number of
+              string descriptors that describe the various implementation
+              properties, like the implementation level and the supported
+              optional JCR features. See the 
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Repository.html"
+                 class="externalLink">Repository</a> interface for a list of
+              the standard repository descriptors. The <code>REP_NAME_DESC</code>
+              descriptor contains the name of the repository implementation,
+              in this case "Jackrabbit".
+            </p>
+          </dd>
+        </dl>
+      </subsection>
+      <subsection name="Hop 2: Adding content">
+        <p>TODO: Update to match the FirstHop style.</p>
    <p>
     Since an empty repository is not very useful, lets add some content to
     it. The following example application uses the same setup code as the
@@ -206,24 +372,14 @@ import org.apache.jackrabbit.core.TransientRepository;
  */
 public class SecondHop {
 
-    /** <i>The Jackrabbit configuration file</i> */
-    private static final String CONFIG_FILE = "repository.xml";
-
-    /** <i>The Jackrabbit repository directory</i> */
-    private static final String DIRECTORY = "repository";
-
     /** <i>Runs the SecondHop example.</i> */
-    public static void main(String[] args) {
-        try {
-            // <i>Set up a Jackrabbit repository with the specified</i>
-            // <i>configuration file and repository directory</i>
-            Repository repository =
-                new TransientRepository(CONFIG_FILE, DIRECTORY);
+    public static void main(String[] args) throws Exception {
+        Repository repository = new TransientRepository();
 
-            // <i>Login to the default workspace as a dummy user</i>
-            Session session = repository.login(
-                new SimpleCredentials("username", "password".toCharArray()));
-<b>
+        // <i>Login to the default workspace as a dummy user</i>
+        Session session = repository.login(
+            new SimpleCredentials("username", "password".toCharArray()));
+        try {
             // <i>Use the root node as a starting point</i>
             Node root = session.getRootNode();
 
@@ -237,20 +393,18 @@ public class SecondHop {
                 // <i>Save the changes to the repository</i>
                 session.save();
                 System.out.println("done.");
-            }
+           }
 
             // <i>Use the property path to get and print the added property</i>
             Property property = root.getProperty("testnode/testprop");
             System.out.println(property.getString());
-</b>
-            // <i>Close the session</i>
+        } finally {
             session.logout();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
-}</source>
+}
+</source>
    <p>
     Compiling and running this class should produce the following output
     when started for the first time. On subsequent runs the application
@@ -260,7 +414,8 @@ public class SecondHop {
 Hello, World!</source>
   </subsection>
 
-  <subsection name="Importing content">
+  <subsection name="Hop 3: Importing content">
+        <p>TODO: Update to match the FirstHop style.</p>
    <p>
     To add content a bit more efficiently, you may want to try
     JCR's import facilities, such as <code>Session.importXML</code>.
@@ -338,27 +493,19 @@ import java.io.FileInputStream;
  */
 public class ThirdHop {
 
-    /** <i>The Jackrabbit configuration file</i> */
-    private static final String CONFIG_FILE = "repository.xml";
-
-    /** <i>The Jackrabbit repository directory</i> */
-    private static final String DIRECTORY = "repository";
-
     /** <i>Runs the ThirdHop example.</i> */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        // <i>Set up a Jackrabbit repository with the specified</i>
+        // <i>configuration file and repository directory</i>
+        Repository repository = new TransientRepository();
+
+        // <i>Login to the default workspace as a dummy user</i>
+        Session session = repository.login(
+            new SimpleCredentials("username", "password".toCharArray()));
         try {
-            // <i>Set up a Jackrabbit repository with the specified</i>
-            // <i>configuration file and repository directory</i>
-            Repository repository =
-                new TransientRepository(CONFIG_FILE, DIRECTORY);
-
-            // <i>Login to the default workspace as a dummy user</i>
-            Session session = repository.login(
-                new SimpleCredentials("username", "password".toCharArray()));
-
             // <i>Use the root node as a starting point</i>
             Node root = session.getRootNode();
-<b>
+
             // <i>Import the XML file unless already imported</i>
             if (!root.hasNode("importxml")) {
                 System.out.print("Importing xml... ");
@@ -375,14 +522,11 @@ public class ThirdHop {
             }
 
             dump(root);
-</b>
-            // <i>Close the session</i>
+        } finally {
             session.logout();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
-<b>
+
     /** <i>Recursively outputs the contents of the given node.</i> */
     private static void dump(Node node) throws RepositoryException {
         // <i>First output the node path</i>
@@ -416,8 +560,9 @@ public class ThirdHop {
             dump(nodes.nextNode());
         }
     }
-</b>
-}</source>
+
+}
+</source>
     <p>
       Running the ThirdHop class should produce output like the following:
     </p>

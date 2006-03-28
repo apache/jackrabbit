@@ -15,59 +15,122 @@
    limitations under the License.
   -->
 <document>
-    <properties>
-        <title>Welcome to Jackrabbit</title>
-    </properties>
-    <body>
-        <section name="The Open Source Content Repository for Java">
-            <p>
-                The Apache Jackrabbit project is an effort to build and maintain an open source
-                implementation of the Content Repository for Java Technology API (JCR).
-            </p>
-            <p>
-                JCR 1.0 is specified in
-                <a href="http://jcp.org/en/jsr/detail?id=170" class="externalLink" title="External Link">Java Specification Request 170 (JSR-170)</a>.
-                Work on JCR v2.0 has begun in <a href="http://jcp.org/en/jsr/detail?id=283" class="externalLink" title="External Link">JSR 283</a>.
-            </p>
-        </section>
-        <section name="Releases">
-            <p>
-                The following releases are available:
-            </p>
-            <ul>
-                <li><a href="http://cvs.apache.org/dist/incubator/jackrabbit/0.9-incubating/">Apache Jackrabbit 0.9</a> - 14 February 2006</li>
-            </ul>
-        </section>
-        <section name="Documentation">
-            <p>
-                For a basic overview and details on getting started, have a look at
-                the <a href="doc/index.html">Jackrabbit documentation</a> on this site.
-            </p>
-            <p>
-                Jackrabbit exposes most of its functionality to client applications thought that the JCR v1.0 API.
-                If you want more detail on the API you can browse the
-                <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0" class="externalLink" title="External Link">Javadoc</a>
-                or download it as a
-                <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0.javadoc" class="externalLink" title="External Link">zipped package</a>
-                (right click and select "Save as...").
-            </p>
-            <p>
-                If you really want to know all the details, the best current documentation available
-                is the <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html" class="externalLink" title="External Link">JCR v1.0 specification</a> itself.
-            </p>
-            <p>
-                In addition to implementing the JCR API, Jackrabbit has many extensions and
-                administrational features that are not (yet) specified by JCR.
-                (see <a href="doc/arch/overview.html">Architecture Overview</a>).
-                You can also browse the internal Jackrabbit API in the
-                <a href="http://jackrabbit.apache.org/apidocs/index.html">Jackrabbit Javadocs</a>.
-            </p>
-        </section>
-        <section name="Downloads">
-            <p>
-                For a quick guide to getting the source code, see the 
-                <a href="downloads.html">Downloads</a> page.
-            </p>
-        </section>
-    </body>
+  <properties>
+    <title>Welcome to Apache Jackrabbit</title>
+  </properties>
+  <body>
+    <section name="Apache Jackrabbit - The Open Source Content Repository for Java">
+      <p>
+        The Apache Jackrabbit project is an effort to build and maintain
+        an open source implementation of the Content Repository for
+        Java technology API (JCR). The JCR 1.0 API is specified in the
+        <a href="http://jcp.org/en/jsr/detail?id=170" class="externalLink"
+           title="JSR 170: Content Repository for Java(TM) technology API"
+          >Java Specification Request 170</a> (JSR 170) and work on the
+        JCR version 2.0 has begun in
+        <a href="http://jcp.org/en/jsr/detail?id=283" class="externalLink"
+           title="JSR 283: Content Repository for JavaTM Technology API Version 2.0"
+          >JSR 283</a>.
+      </p>
+      <p>
+        Apache Jackrabbit is a project of the
+        <a href="http://www.apache.org/" class="externalLink"
+           title="Apache Software Foundation">Apache Software Foundation</a>.
+      </p>
+      <subsection name="Apache Jackrabbit News">
+        <dl>
+          <dt><strong>March 15, 2006: Apache Jackrabbit graduates from the Incubator</strong></dt>
+          <dd>
+            The <a href="http://www.apache.org/foundation/board/"
+            class="externalLink">ASF board of directors</a> approved a
+            resolution to create the Apache Jackrabbit top level project (TLP).
+            This finalizes the <a href="http://incubator.apache.org"
+            class="externalLink" title="Apache Incubator">incubation</a>
+            process for Jackrabbit and makes it an official ASF project.
+          </dd>
+          <dt><strong>February 14, 2006: Jackrabbit 0.9 released</strong></dt>
+          <dd>
+            From the
+            <a href="http://cvs.apache.org/dist/incubator/jackrabbit/0.9-incubating/RELEASE-NOTES.txt"
+               class="externalLink" title="Jackrabbit 0.9 Release Notes"
+               >release notes</a>: "<em>The version 0.9 release is
+            the first official release of the Jackrabbit project. The goal
+            of this release is to provide a tested and packaged version of
+            Jackrabbit for users who have so far been using custom snapshots.
+            This release also provides a well defined baseline for the
+            upcoming Jackrabbit version 1.0.</em>"
+            See the <a href="downloads.html">downloads page</a> for more details.
+          </dd>
+        </dl>
+      </subsection>
+      <subsection name="Getting Started with Apache Jackrabbit">
+        <p>
+          To get started with Jackrabbit you should first become familiar with
+          the JCR API. Download the
+          <a href="http://jcp.org/aboutJava/communityprocess/final/jsr170/index.html"
+             class="externalLink"
+             title="JSR 170: Content Repository for Java(TM) technology API"
+             >JSR 170 specification</a>, browse the
+          <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/"
+             class="externalLink" title="JCR 1.0 API documentation"
+             >API documentation</a>, check our introduction to
+          <a href="doc/arch/overview/jcrlevels.html">JCR levels</a>,
+          or read some of the
+          <a href="http://wiki.apache.org/jackrabbit/JcrLinks"
+             class="externalLink" title="JCR Links">JCR articles</a> to
+          understand the content repository model that Jackrabbit implements.
+          You can also take a look at the various JCR and Jackrabbit
+          <a href="http://wiki.apache.org/jackrabbit/JcrLinks"
+             class="externalLink" title="JCR Links">applications</a>
+          to get an idea of what to do with a content repository.
+        </p>
+        <p>
+          If you are interested in using Jackrabbit, you should check the
+          <a href="doc/arch/overview.html">Jackrabbit architecture</a> and
+          try out the <a href="doc/firststeps.html">First Hops</a> examples
+          we have prepared. You can either <a href="downloads.html">download</a>
+          a binary release or <a href="doc/building.html">build</a> Jackrabbit
+          from sources. Follow the links on the
+          <a href="doc/index.html">documentation page</a> for more information.
+        </p>
+        <p>
+          Take a look at the <a href="faq.html">Frequently Asked Questions</a>
+          or browse the
+          <a href="http://mail-archives.apache.org/mod_mbox/jackrabbit-dev/"
+             class="externalLink" title="jackrabbit-dev archives"
+             >mailing list archives</a> (see also the searchable archives at
+          <a href="http://www.mail-archive.com/jackrabbit-dev@incubator.apache.org/"
+             class="externalLink" title="jackrabbit-dev archive at mail-archive"
+             >The Mail Archive</a> and
+          <a href="http://dir.gmane.org/gmane.comp.apache.jackrabbit.devel"
+             class="externalLink" title="jackrabbit-dev archive at gmane"
+             >Gmane</a>) for answers to questions not covered by the
+          documentation pages. If you need more help or want to discuss
+          Jackrabbit generally, don't hesitate to join the Jackrabbit
+          users mailing list at
+          users&lt;at&gt;jackrabbit.apache.org (you can subscribe
+          by sending an empty message to
+          users-subscribe&lt;at&gt;jackrabbit.apache.org). There is a similar
+          development mailing list at dev&lt;at&gt;jackrabbit.apache.org.
+        </p>
+        <p>
+          Apache Jackrabbit is an open source project and welcomes all contributions.
+          You can participate by answering questions on the mailing list,
+          filing
+          <a href="http://issues.apache.org/jira/browse/JCR"
+             class="externalLink" title="Jackrabbit issue tracker"
+             >bug reports</a> for any problems or improvement ideas you come
+          up with, contributing to the
+          <a href="http://wiki.apache.org/jackrabbit/" class="externalLink"
+             >Jackrabbit Wiki</a>, or writing documentation and code. See the
+          <a href="http://www.apache.org/foundation/how-it-works.html"
+             class="externalLink">How the ASF works</a> page for background
+          information on the
+          <a href="http://www.apache.org/" class="externalLink"
+           title="Apache Software Foundation">Apache Software Foundation</a>
+          and the way we work.
+        </p>
+      </subsection>
+    </section>
+  </body>
 </document>

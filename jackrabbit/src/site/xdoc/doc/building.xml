@@ -31,7 +31,7 @@
         sources from the <a href="http://subversion.tigris.org/">Subversion</a>
         source repository at
         <a href="http://svn.apache.org/repos/asf/jackrabbit/">http://svn.apache.org/repos/asf/jackrabbit/</a>.
-        The trunk of the source repository is divided in two parts:
+        The trunk of the source repository is divided in several parts:
       </p>
       <dl>
         <dt><a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit/">trunk/jackrabbit</a></dt>
@@ -46,11 +46,47 @@
         <dt><a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/">trunk/contrib</a></dt>
         <dd>
           This is a collection of additional Jackrabbit modules and other
-          contributed subprojects like the RMI and WebDAV network layers for
-          the JCR API. See the individual contrib projects for installation
-          and usage instructions.
+          contributed subprojects. See the individual contrib projects for
+          installation and usage instructions.
+        </dd>
+        <dt><a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/jca/">trunk/jca</a></dt>
+        <dd>
+          This package includes a JCA resource adapter for Jackrabbit. It's following the JCA 1.0
+          specification and can be deployed on a wide range of application servers.
+        </dd>
+        <dt><a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/jcr-rmi/">trunk/jcr-rmi</a></dt>
+        <dd>
+          JCR-RMI is a transparent Remote Method Invocation (RMI) layer for
+          the Content Repository for Java Technology API (JCR). The layer makes
+          it possible to remotely access JCR content repositories. JCR-RMI is
+          developed as a part of the Apache Jackrabbit project, but
+          the implementation is compatible with all JCR content repositories.
+        </dd>
+        <dt><a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/jcr-server/">trunk/jcr-server</a></dt>
+        <dd>
+          This package includes a WebDAV library and WebDAV based JCR client/server
+          connection facility.
+        </dd>
+        <dt><a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/textfilters/">trunk/textfilters</a></dt>
+        <dd>
+          This project contains TextFilter implementations for the following binary formats:
+            <ul>
+              <li>Microsoft Excel</li>
+              <li>Microsoft PowerPoint</li>
+              <li>Microsoft Word</li>
+              <li>PDF</li>
+              <li>HTML</li>
+              <li>OpenOffice Documents</li>
+              <li>RTF</li>
+              <li>XML</li>
+            </ul>
         </dd>
       </dl>
+      <p>
+        The above list may not include the newest Jackrabbit projects. To see
+        the most up to date list of projects, look in the
+        <a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/">repository</a>.
+      </p>
 
       <subsection name="Checking out the sources with Subversion">
         <p>
