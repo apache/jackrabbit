@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.0 
+Release Notes -- Apache Jackrabbit -- Version 1.0
 
 Introduction
 ------------
@@ -8,19 +8,22 @@ an open source implementation of the Content Repository for Java
 Technology API (JCR) specified in the Java Specification Request 170
 (JSR-170).
 
-The Jackrabbit 1.0 release is a fully conforming and stable JSR-170
+Apache Jackrabbit 1.0 is a fully conforming and stable JSR-170
 implementation. Developed from the same source tree as the JSR-170
-reference implementation, the Jackrabbit 1.0 release implements the
-full JCR API, including level 1, level 2, and all the optional features
-like versioning, transactions, and observation. 
+reference implementation, the 1.0 release implements the full JCR API,
+including level 1, level 2, and all the optional features like
+versioning, transactions, and observation.
+
+See the Apache Jackrabbit website at http://jackrabbit.apache.org/
+for more information.
 
 Release Contents
 ----------------
 
 This release contains the main Jackrabbit implementation and a
 number of additional components. Each component is released as
-a source jar file and one or more compiled binary jar files. All
-jar files contain a README.txt file with more information.
+a source jar file and one or more compiled binary files. All
+files contain a README.txt file with more information.
 
 * jackrabbit-1.0-src.jar and jackrabbit-1.0.jar
 
@@ -49,27 +52,34 @@ jar files contain a README.txt file with more information.
     Collection of full text indexing filters for Jackrabbit. Includes
     filters for example for PDF and MS Excel, PowerPoint, and Word.
 
-Note that external runtime dependencies are not included in this
-release, you need to download the dependencies separately.
+Note that external runtime dependencies are only included for the war
+and rar archives. Other dependencies can be downloaded either manually
+or automatically using the Maven build system.
 
-Each release file is accompanied by an MD5 checksum and a PGP
-signature. The public key used for the signatures is located
+Each release file is accompanied by SHA1 and MD5 checksums and a PGP
+signature. The public key used for the signatures can be found
 in the KEYS file located in the parent directory.
+
+Upgrading from 0.9
+------------------
+
+Due to a change in query functionality (JCR-257) a full rebuild of the
+full text indexes is required on existing content repositories is required
+when upgrading from the 0.9 release. Reindexing can be triggered by manually
+removing the index directories when the repository has been shut down.
 
 Known Issues
 ------------
 
 The known issues in this release are listed below:
 
-  [JCR-365] Web client/WebDAV fails to unescape workspace names
+  [JCR-374] Missing 'node removed' event when removing a version
+  [JCR-371] ItemStateException on concurrently committing transactions ...
+  [JCR-369] IllegalNameException when importing document view with ...
   [JCR-362] restore sometime throws error about missing tmp files
   [JCR-359] JCA project tests assume Windows paths
-  [JCR-353] TransientRepository does not shutdown if first login fails
-  [JCR-339] null pointer when cloning to different workspace under ...
-  [JCR-338] Query Builder and jcr:deref problem. Can't add predicate ...
   [JCR-336] Concurrent locking operations fail
   [JCR-335] Deadlock caused by versioning operations within transaction
-  [JCR-333] NodeTypeDef depends on supertype ordering
   [JCR-325] docview roundtripping does not work with multivalue ...
   [JCR-323] import/export does not work on the root node
   [JCR-320] BinaryValue equals fails for two objects with two ...
@@ -81,12 +91,27 @@ The known issues in this release are listed below:
   [JCR-43]  Restore on node creates same-name-sibling of OPV-Version ...
   [JCR-18]  Multithreading issue with versioning
 
-See the Jackrabbit issue tracker for more details:
+Note that JCR-374 causes two observation unit test failures to be reported.
 
-  http://issues.apache.org/jira/browse/JCR
+See the issue tracker at http://issues.apache.org/jira/browse/JCR for
+more details.
 
 Change History
 --------------
+
+Changes since 1.0-rc2:
+
+  [JCR-375] jcr:encoding not respected in NodeIndexer
+  [JCR-373] all references to incubator need to be replaced with new ...
+  [JCR-370] SearchIndex class contains garbled String
+  [JCR-368] Add support for simple test cases
+  [JCR-365] Web client/WebDAV fails to unescape workspace names
+  [JCR-357] Move to jackrabbit.apache.org
+  [JCR-356] Replace license headers with new policy text
+  [JCR-353] TransientRepository does not shutdown if first login fails
+  [JCR-338] Query Builder and jcr:deref problem. Can't add predicate ...
+  [JCR-333] NodeTypeDef depends on supertype ordering
+  [JCR-257] Use separate index for jcr:system tree
 
 Changes since 1.0-rc1:
 
@@ -129,6 +154,6 @@ Changes since 0.9-rc1:
 
 Changes since the beginning:
 
-The first Jackrabbit release was the result of more than two years
+The first Apache Jackrabbit release was the result of more than two years
 of development and contained the resolutions of more than 270 tracked
-issues. See the Jackrabbit issue tracker for the full history.
+issues. See the issue tracker for the full history.
