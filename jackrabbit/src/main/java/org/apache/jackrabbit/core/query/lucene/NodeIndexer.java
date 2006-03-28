@@ -279,7 +279,7 @@ public class NodeIndexer {
                     PropertyState encodingProp =
                             (PropertyState) stateProvider.getItemState(
                                     new PropertyId(node.getNodeId(), QName.JCR_ENCODING));
-                    encodingProp.getValues()[0].internalValue().toString();
+                    encoding = encodingProp.getValues()[0].internalValue().toString();
                 }
 
                 String mimeType = mimeTypeProp.getValues()[0].internalValue().toString();
