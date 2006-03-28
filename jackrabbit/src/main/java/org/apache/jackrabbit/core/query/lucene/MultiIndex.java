@@ -77,11 +77,6 @@ public class MultiIndex {
     private static final Logger log = LoggerFactory.getLogger(MultiIndex.class);
 
     /**
-     * Name of the file to persist search internal namespace mappings
-     */
-    private static final String NS_MAPPING_FILE = "ns_mappings.properties";
-
-    /**
      * Default name of the redo log file
      */
     private static final String REDO_LOG = "redo.log";
@@ -201,19 +196,22 @@ public class MultiIndex {
      * @param rootId id of the root node
      * @param excludedIDs   Set&lt;NodeId> that contains uuids that should not
      *                      be indexed nor further traversed.
+     * @param mapping the namespace mapping to use
      * @throws IOException if an error occurs
      */
     MultiIndex(File indexDir,
                SearchIndex handler,
                ItemStateManager stateMgr,
                NodeId rootId,
-               Set excludedIDs) throws IOException {
+               Set excludedIDs,
+               NamespaceMappings mapping) throws IOException {
 
         this.indexDir = indexDir;
         this.handler = handler;
         this.cache = new DocNumberCache(handler.getCacheSize());
         this.redoLog = new RedoLog(new File(indexDir, REDO_LOG));
         this.excludedIDs = new HashSet(excludedIDs);
+        this.nsMappings = mapping;
 
         if (indexNames.exists(indexDir)) {
             indexNames.read(indexDir);
@@ -224,10 +222,6 @@ public class MultiIndex {
 
         // try to remove deletable files if there are any
         attemptDelete();
-
-        // read namespace mappings
-        File mapFile = new File(indexDir, NS_MAPPING_FILE);
-        nsMappings = new NamespaceMappings(mapFile);
 
         // initialize IndexMerger
         merger = new IndexMerger(this);

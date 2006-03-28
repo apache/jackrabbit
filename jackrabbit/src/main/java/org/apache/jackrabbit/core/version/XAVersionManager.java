@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -52,7 +53,7 @@ import java.util.Map;
  * manager.
  */
 public class XAVersionManager extends AbstractVersionManager
-        implements VirtualItemStateProvider, InternalXAResource {
+        implements EventStateCollectionFactory, VirtualItemStateProvider, InternalXAResource {
 
     /**
      * Attribute name for associated change log.
@@ -75,6 +76,11 @@ public class XAVersionManager extends AbstractVersionManager
     private NodeTypeRegistry ntReg;
 
     /**
+     * The session that uses this version manager.
+     */
+    private SessionImpl session;
+
+    /**
      * Items that have been modified and are part of the XA environment.
      */
     private Map xaItems;
@@ -83,13 +89,14 @@ public class XAVersionManager extends AbstractVersionManager
      * Creates a new instance of this class.
      */
     public XAVersionManager(VersionManagerImpl vMgr, NodeTypeRegistry ntReg,
-                            EventStateCollectionFactory factory)
+                            SessionImpl session)
             throws RepositoryException {
 
         this.vMgr = vMgr;
         this.ntReg = ntReg;
+        this.session = session;
         this.stateMgr = new XAItemStateManager(vMgr.getSharedStateMgr(),
-                factory, CHANGE_LOG_ATTRIBUTE_NAME);
+                this, CHANGE_LOG_ATTRIBUTE_NAME);
 
         NodeState state;
         try {
@@ -98,6 +105,16 @@ public class XAVersionManager extends AbstractVersionManager
             throw new RepositoryException("Unable to retrieve history root", e);
         }
         this.historyRoot = new NodeStateEx(stateMgr, ntReg, state, QName.JCR_VERSIONSTORAGE);
+    }
+
+    //------------------------------------------< EventStateCollectionFactory >
+
+    /**
+     * @inheritDoc
+     */
+    public EventStateCollection createEventStateCollection()
+            throws RepositoryException {
+        return vMgr.createEventStateCollection(session);
     }
 
     //-------------------------------------------------------< VersionManager >

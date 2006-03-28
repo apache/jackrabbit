@@ -36,6 +36,8 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +64,24 @@ public class VersionManagerImpl extends AbstractVersionManager
      * the default logger
      */
     private static Logger log = LoggerFactory.getLogger(VersionManager.class);
+
+    /**
+     * The path to the version storage: /jcr:system/jcr:versionStorage
+     */
+    private static final Path VERSION_STORAGE_PATH;
+
+    static {
+        try {
+            Path.PathBuilder builder = new Path.PathBuilder();
+            builder.addRoot();
+            builder.addLast(QName.JCR_SYSTEM);
+            builder.addLast(QName.JCR_VERSIONSTORAGE);
+            VERSION_STORAGE_PATH = builder.getPath();
+        } catch (MalformedPathException e) {
+            // will not happen. path is always valid
+            throw new InternalError("Cannot initialize path");
+        }
+    }
 
     /**
      * The persistence manager for the versions
@@ -444,7 +464,16 @@ public class VersionManagerImpl extends AbstractVersionManager
         if (eventSource == null) {
             throw new RepositoryException("Unknown event source.");
         }
-        return obsMgr.createEventStateCollection(eventSource);
+        return createEventStateCollection(eventSource);
+    }
+
+    /**
+     * Creates an {@link EventStateCollection} using the given <code>source</code>.
+     * @param source the Session that did the changes.
+     * @return <code>EventStateCollection</code>.
+     */
+    EventStateCollection createEventStateCollection(SessionImpl source) {
+        return obsMgr.createEventStateCollection(source, VERSION_STORAGE_PATH);
     }
 
     //--------------------------------------------------------< inner classes >

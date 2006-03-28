@@ -65,6 +65,11 @@ public class SearchIndex extends AbstractQueryHandler {
     private static final Logger log = LoggerFactory.getLogger(SearchIndex.class);
 
     /**
+     * Name of the file to persist search internal namespace mappings
+     */
+    private static final String NS_MAPPING_FILE = "ns_mappings.properties";
+
+    /**
      * The default value for property {@link #minMergeDocs}.
      */
     public static final int DEFAULT_MIN_MERGE_DOCS = 100;
@@ -197,8 +202,21 @@ public class SearchIndex extends AbstractQueryHandler {
             excludedIDs.add(context.getExcludedNodeId());
         }
 
-        index = new MultiIndex(new File(path), this,
-                context.getItemStateManager(), context.getRootId(), excludedIDs);
+        File indexDir = new File(path);
+
+        NamespaceMappings nsMappings;
+        if (context.getParentHandler() instanceof SearchIndex) {
+            // use system namespace mappings
+            SearchIndex sysIndex = (SearchIndex) context.getParentHandler();
+            nsMappings = sysIndex.getNamespaceMappings();
+        } else {
+            // read local namespace mappings
+            File mapFile = new File(indexDir, NS_MAPPING_FILE);
+             nsMappings = new NamespaceMappings(mapFile);
+        }
+
+        index = new MultiIndex(indexDir, this, context.getItemStateManager(),
+                context.getRootId(), excludedIDs, nsMappings);
         if (index.getRedoLogApplied() || forceConsistencyCheck) {
             log.info("Running consistency check...");
             try {
