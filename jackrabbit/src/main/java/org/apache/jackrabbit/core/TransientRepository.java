@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * when no longer used, this class can be used to avoid having to explicitly
  * shut down the repository.
  */
-public class TransientRepository implements Repository {
+public class TransientRepository implements Repository, SessionListener {
 
     /**
      * The logger instance used to log the repository and session lifecycles.
@@ -59,8 +59,7 @@ public class TransientRepository implements Repository {
     /**
      * Resource path of the default repository configuration file.
      */
-    private static final String DEFAULT_REPOSITORY_XML =
-        "repository.xml";
+    private static final String DEFAULT_REPOSITORY_XML = "repository.xml";
 
     /**
      * Name of the repository configuration file property.
@@ -252,6 +251,31 @@ public class TransientRepository implements Repository {
     }
 
     /**
+     * Starts the underlying repository.
+     *
+     * @throws RepositoryException if the repository cannot be started
+     */
+    private synchronized void startRepository() throws RepositoryException {
+        assert repository == null && sessions.isEmpty();
+        logger.debug("Initializing transient repository");
+        repository = factory.getRepository();
+        logger.info("Transient repository initialized");
+    }
+
+    /**
+     * Stops the underlying repository.
+     */
+    private synchronized void stopRepository() {
+        assert repository != null && sessions.isEmpty();
+        logger.debug("Shutting down transient repository");
+        repository.shutdown();
+        logger.info("Transient repository shut down");
+        repository = null;
+    }
+
+    //------------------------------------------------------------<Repository>
+
+    /**
      * Returns the available descriptor keys. If the underlying repository
      * is initialized, then the call is proxied to it, otherwise the static
      * descriptor keys are returned.
@@ -287,29 +311,6 @@ public class TransientRepository implements Repository {
     }
 
     /**
-     * Removes the given session from the set of open sessions. If no open
-     * sessions remain, then the underlying repository instance is shut down.
-     *
-     * @param session closed session
-     */
-    private synchronized void removeSession(SessionImpl session) {
-        sessions.remove(session);
-        logger.info("Session closed");
-        if (sessions.isEmpty()) {
-            // FIXME: This is an ugly hack to avoid an infinite loop when
-            // RepositoryImpl.shutdown() repeatedly calls logout() on all
-            // remaining active sessions including the one that just emitted
-            // the loggedOut() message to us!
-            repository.loggedOut(session);
-
-            logger.debug("Shutting down transient repository");
-            repository.shutdown();
-            logger.info("Transient repository shut down");
-            repository = null;
-        }
-    }
-
-    /**
      * Logs in to the content repository. Initializes the underlying repository
      * instance if needed. The opened session is added to the set of open
      * sessions and a session listener is added to track when the session gets
@@ -323,29 +324,26 @@ public class TransientRepository implements Repository {
      */
     public synchronized Session login(Credentials credentials, String workspaceName)
             throws RepositoryException {
-        if (repository == null) {
-            logger.debug("Initializing transient repository");
-            repository = factory.getRepository();
-            logger.info("Transient repository initialized");
+        // Start the repository if this is the first login
+        if (sessions.isEmpty()) {
+            startRepository();
         }
 
-        logger.debug("Opening a new session");
-        SessionImpl session = (SessionImpl)
-            repository.login(credentials, workspaceName);
-        sessions.add(session);
-        session.addListener(new SessionListener() {
-            
-            public void loggedOut(SessionImpl session) {
-                removeSession(session);
-            }
-            
-            public void loggingOut(SessionImpl session) {
-            }
-            
-        });
-        logger.info("Session opened");
+        try {
+            logger.debug("Opening a new session");
+            Session session = repository.login(credentials, workspaceName);
+            sessions.add(session);
+            ((SessionImpl) session).addListener(this);
+            logger.info("Session opened");
 
-        return session;
+            return session;
+        } finally {
+            // Stop the repository if the login failed
+            // and no other sessions are active
+            if (sessions.isEmpty()) {
+                stopRepository();
+            }
+        }
     }
 
     /**
@@ -384,6 +382,36 @@ public class TransientRepository implements Repository {
      */
     public Session login() throws RepositoryException {
         return login(null, null);
+    }
+
+    //-------------------------------------------------------<SessionListener>
+
+    /**
+     * Removes the given session from the set of open sessions. If no open
+     * sessions remain, then the underlying repository instance is shut down.
+     *
+     * @param session closed session
+     * @see SessionListener#loggedOut(SessionImpl)
+     */
+    public synchronized void loggedOut(SessionImpl session) {
+        assert sessions.contains(session);
+        sessions.remove(session);
+        logger.info("Session closed");
+        if (sessions.isEmpty()) {
+            // FIXME: This is an ugly hack to avoid an infinite loop when
+            // RepositoryImpl.shutdown() repeatedly calls logout() on all
+            // remaining active sessions including the one that just emitted
+            // the loggedOut() message to us!
+            repository.loggedOut(session);
+            
+            stopRepository();
+        }
+    }
+
+    /**
+     * Ignored. {@inheritDoc}
+     */
+    public void loggingOut(SessionImpl session) {
     }
 
 }
