@@ -274,9 +274,13 @@ class DerefQuery extends Query {
                 }
 
                 // retrieve uuids of target nodes
+                String prefix = FieldNames.createNamedValue(refProperty, "");
                 for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
                     String[] values = reader.document(i).getValues(FieldNames.PROPERTIES);
-                    String prefix = FieldNames.createNamedValue(refProperty, "");
+                    if (values == null) {
+                        // no reference properties at all on this node
+                        continue;
+                    }
                     for (int v = 0; v < values.length; v++) {
                         if (values[v].startsWith(prefix)) {
                             uuids.add(values[v].substring(prefix.length()));

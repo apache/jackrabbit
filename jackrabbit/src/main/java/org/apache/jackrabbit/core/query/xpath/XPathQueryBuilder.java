@@ -323,7 +323,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             case JJTSTEPEXPR:
                 if (isAttributeAxis(node)) {
                     if (queryNode.getType() == QueryNode.TYPE_RELATION
-                            || queryNode.getType() == QueryNode.TYPE_DEREF
+                            || (queryNode.getType() == QueryNode.TYPE_DEREF && ((DerefQueryNode) queryNode).getRefProperty() == null)
                             || queryNode.getType() == QueryNode.TYPE_ORDER
                             || queryNode.getType() == QueryNode.TYPE_PATH
                             || queryNode.getType() == QueryNode.TYPE_TEXTSEARCH) {
@@ -349,7 +349,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     }
                 } else {
                     if (queryNode.getType() == QueryNode.TYPE_PATH) {
-                        queryNode = createLocationStep(node, (NAryQueryNode) queryNode);
+                        createLocationStep(node, (NAryQueryNode) queryNode);
                     } else if (queryNode.getType() == QueryNode.TYPE_TEXTSEARCH) {
                         // ignore
                     } else {
@@ -456,6 +456,14 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     specs[specs.length - 1].setAscending(false);
                 }
                 break;
+            case JJTPREDICATELIST:
+                if (queryNode.getType() == QueryNode.TYPE_PATH) {
+                    // switch to last location
+                    QueryNode[] operands = ((PathQueryNode) queryNode).getOperands();
+                    queryNode = operands[operands.length - 1];
+                }
+                node.childrenAccept(this, queryNode);
+                break;
             default:
                 // per default traverse
                 node.childrenAccept(this, queryNode);
@@ -475,16 +483,16 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      */
     private LocationStepQueryNode createLocationStep(SimpleNode node, NAryQueryNode parent) {
         LocationStepQueryNode queryNode = null;
-        boolean descenant = false;
+        boolean descendant = false;
         Node p = node.jjtGetParent();
         for (int i = 0; i < p.jjtGetNumChildren(); i++) {
             SimpleNode c = (SimpleNode) p.jjtGetChild(i);
             if (c == node) {
-                queryNode = new LocationStepQueryNode(parent, null, descenant);
+                queryNode = new LocationStepQueryNode(parent, null, descendant);
                 parent.addOperand(queryNode);
                 break;
             }
-            descenant = (c.getId() == JJTSLASHSLASH
+            descendant = (c.getId() == JJTSLASHSLASH
                     || c.getId() == JJTROOTDESCENDANTS);
         }
 
@@ -780,6 +788,14 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             } else if (JCR_DEREF.toJCRName(resolver).equals(fName)) {
                 // check number of arguments
                 if (node.jjtGetNumChildren() == 3) {
+                    boolean descendant = false;
+                    if (queryNode.getType() == QueryNode.TYPE_LOCATION) {
+                        LocationStepQueryNode loc = (LocationStepQueryNode) queryNode;
+                        // remember if descendant axis
+                        descendant = loc.getIncludeDescendants();
+                        queryNode = loc.getParent();
+                        ((NAryQueryNode) queryNode).removeOperand(loc);
+                    }
                     if (queryNode.getType() == QueryNode.TYPE_PATH) {
                         PathQueryNode pathNode = (PathQueryNode) queryNode;
                         DerefQueryNode derefNode = new DerefQueryNode(pathNode, null, false);
@@ -810,6 +826,20 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         } else {
                             exceptions.add(new InvalidQueryException("Wrong second argument type for jcr:like"));
                         }
+
+                        // check if descendant
+                        if (!descendant) {
+                            Node p = node.jjtGetParent();
+                            for (int i = 0; i < p.jjtGetNumChildren(); i++) {
+                                SimpleNode c = (SimpleNode) p.jjtGetChild(i);
+                                if (c == node) {
+                                    break;
+                                }
+                                descendant = (c.getId() == JJTSLASHSLASH
+                                        || c.getId() == JJTROOTDESCENDANTS);
+                            }
+                        }
+                        derefNode.setIncludeDescendants(descendant);
                         pathNode.addPathStep(derefNode);
                     } else {
                         exceptions.add(new InvalidQueryException("Unsupported location for jcr:deref()"));
