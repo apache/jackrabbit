@@ -171,6 +171,22 @@ public class TransientRepository implements Repository {
 
     /**
      * Creates a transient repository proxy that will use the given repository
+     * configuration to initialize the underlying repository instance.
+     *
+     * @param config repository configuration
+     * @throws IOException if the static repository descriptors cannot be loaded
+     */
+    public TransientRepository(final RepositoryConfig config)
+            throws IOException {
+        this(new RepositoryFactory() {
+            public RepositoryImpl getRepository() throws RepositoryException {
+                return RepositoryImpl.create(config);
+            }
+        });
+    }
+
+    /**
+     * Creates a transient repository proxy that will use the given repository
      * configuration file and home directory paths to initialize the underlying
      * repository instances. The repository configuration file is reloaded
      * whenever the repository is restarted, so it is safe to modify the
