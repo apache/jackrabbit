@@ -25,29 +25,29 @@ number of additional components. Each component is released as
 a source jar file and one or more compiled binary files. All
 files contain a README.txt file with more information.
 
-* jackrabbit-1.0-src.jar and jackrabbit-1.0.jar
+* jackrabbit-1.0-rc3-src.jar and jackrabbit-1.0-rc3.jar
 
     The main Jackrabbit implementation.
 
-* jackrabbit-commons-1.0.jar
+* jackrabbit-commons-1.0-rc3.jar
 
     The general-purpose JCR utility library built from the main
     Jackrabbit source tree.
 
-* jackrabbit-jca-1.0-src.jar and jackrabbit-jca-1.0.rar
+* jackrabbit-jca-1.0-rc3-src.jar and jackrabbit-jca-1.0-rc3.rar
 
     JCA resource adapter for Jackrabbit.
 
-* jcr-server-1.0-src.jar, jcr-webdav-1.0.jar, jcr-client-1.0.jar,
-* jcr-server-1.0.jar, jackrabbit-server.war
+* jcr-server-1.0-rc3-src.jar, jcr-webdav-1.0-rc3.jar, jcr-client-1.0-rc3.jar,
+* jcr-server-1.0-rc3.jar, jackrabbit-server.war
 
     WebDAV network layer for the JCR API.
 
-* jcr-rmi-1.0-src.jar and jcr-rmi-1.0.jar
+* jcr-rmi-1.0-rc3-src.jar and jcr-rmi-1.0-rc3.jar
 
     RMI network layer for the JCR API.
 
-* jackrabbit-textfilters-1.0-src.jar and jackrabbit-textfilters-1.0.jar
+* jackrabbit-textfilters-1.0-rc3-src.jar and jackrabbit-textfilters-1.0-rc3.jar
 
     Collection of full text indexing filters for Jackrabbit. Includes
     filters for example for PDF and MS Excel, PowerPoint, and Word.
