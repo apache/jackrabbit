@@ -29,7 +29,7 @@
     <dependencies>
         <!-- internal dependencies -->
         <dependency>
-            <artifactId>jcr-server</artifactId>
+            <artifactId>jackrabbit-jcr-server</artifactId>
             <groupId>org.apache.jackrabbit</groupId>
             <version>${pom.currentVersion}</version>
             <properties>
@@ -37,7 +37,7 @@
             </properties>
         </dependency>
         <dependency>
-            <artifactId>jcr-webdav</artifactId>
+            <artifactId>jackrabbit-jcr-webdav</artifactId>
             <groupId>org.apache.jackrabbit</groupId>
             <version>${pom.currentVersion}</version>
             <properties>
@@ -45,7 +45,7 @@
             </properties>
         </dependency>
         <dependency>
-            <artifactId>jcr-client</artifactId>
+            <artifactId>jackrabbit-jcr-client</artifactId>
             <groupId>org.apache.jackrabbit</groupId>
             <version>${pom.currentVersion}</version>
             <properties>
@@ -54,7 +54,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-commons</artifactId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -72,7 +72,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit</artifactId>
+            <artifactId>jackrabbit-core</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -80,7 +80,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jcr-rmi</artifactId>
+            <artifactId>jackrabbit-jcr-rmi</artifactId>
             <version>${jackrabbit.build.version.jcr.rmi}</version>
             <properties>
                 <war.bundle>true</war.bundle>
