@@ -35,6 +35,28 @@ After building all dependencies one can build the actual server webapp
   cd ../webapp
   maven
 
+
+What do I download as a total newbie?
+=====================================
+
+That depends on what you want:
+
+* You want a deployable Jackrabbit installation with WebDAV and
+  optional RMI support? Download jackrabbit-server-1.0.war.
+
+* You want to add webdav support to your existing JCR implementation?
+  Download all the jar files.
+
+* You want to use a generic webdav library as a dependency in some
+  other project? Download jackrabbit-jcr-webdav-1.0.jar.
+
+There isn't much in the way of documentation about these
+things, but that will hopefully improve over time.  Please feel
+free to add to our documentation wiki at
+
+  http://wiki.apache.org/jackrabbit/
+
+
 License (see also LICENSE.txt)
 ==============================
 
