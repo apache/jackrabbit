@@ -24,11 +24,11 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.rmi.iterator.ArrayEventIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ClientEventPoll</code> class is the registry for client-side
@@ -53,7 +53,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 public class ClientEventPoll extends Thread {
 
     /** logger */
-    private static final Log log = LogFactory.getLog(ClientEventPoll.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(ClientEventPoll.class);
 
     /**
      * The time in milliseconds the {@link #run()} method should be waiting
