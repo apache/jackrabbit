@@ -29,7 +29,7 @@ JCR utilities:
      jackrabbit-core-1.0.jar
      jackrabbit-jcr-commons-1.0.jar
 
-This release contains also additional components that contain extra
+This release contains also additional components that offer extra
 functionality for use with either Apache Jackrabbit core or any
 JCR compliant content repository. These modules should be considered
 alpha quality:
@@ -110,7 +110,7 @@ Change History
 
 Changes since 1.0-rc3:
 
-  [JCR-379] Remove the cqfs dependencies in jcr-server/webapp
+  [JCR-379] Remove the unneeded cqfs dependencies
   [JCR-378] jackrabbit-server.war is missing the slf4j-log4j12 library
   [JCR-377] Change project names to start with jackrabbit
   [JCR-376] JCR-RMI depends on commons-logging
