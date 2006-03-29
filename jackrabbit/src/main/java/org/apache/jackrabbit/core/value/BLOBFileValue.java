@@ -238,7 +238,7 @@ public class BLOBFileValue implements Value {
                 return -1;
             }
         } else {
-            // this instance is backed by a in-memory buffer
+            // this instance is backed by an in-memory buffer
             return buffer.length;
         }
     }
@@ -261,7 +261,7 @@ public class BLOBFileValue implements Value {
             // this instance is backed by a temp file
             file.delete();
         } else if (buffer != null) {
-            // this instance is backed by a in-memory buffer
+            // this instance is backed by an in-memory buffer
             buffer = EMPTY_BYTE_ARRAY;
         }
     }
@@ -307,7 +307,7 @@ public class BLOBFileValue implements Value {
                 log.warn("Error while deleting BLOBFileValue: " + fse.getMessage());
             }
         } else {
-            // this instance is backed by a in-memory buffer
+            // this instance is backed by an in-memory buffer
             buffer = EMPTY_BYTE_ARRAY;
         }
     }
@@ -340,7 +340,7 @@ public class BLOBFileValue implements Value {
                         + ": the specified resource does not exist", fse);
             }
         } else {
-            // this instance is backed by a in-memory buffer
+            // this instance is backed by an in-memory buffer
             in = new ByteArrayInputStream(buffer);
         }
         try {
@@ -359,9 +359,13 @@ public class BLOBFileValue implements Value {
 
     //-------------------------------------------< java.lang.Object overrides >
     /**
-     * Returns the path string of the backing file.
+     * Returns a string representation of this <code>BLOBFileValue</code>
+     * instance. The string representation of a resource backed value is
+     * the path of the underlying resource. If this instance is backed by an
+     * in-memory buffer the generic object string representation of the byte
+     * array will be used instead.
      *
-     * @return The path string of the backing file.
+     * @return A string representation of this <code>BLOBFileValue</code> instance.
      */
     public String toString() {
         if (file != null) {
@@ -371,7 +375,7 @@ public class BLOBFileValue implements Value {
             // this instance is backed by a resource in the virtual file system
             return fsResource.toString();
         } else {
-            // this instance is backed by a in-memory buffer
+            // this instance is backed by an in-memory buffer
             return buffer.toString();
         }
     }
