@@ -20,10 +20,10 @@ import java.rmi.RemoteException;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ServerEventListenerProxy</code> class is the server-side event
@@ -46,8 +46,8 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 public class ServerEventListenerProxy implements EventListener {
 
     /** logger */
-    private static final Log log =
-        LogFactory.getLog(ServerEventListenerProxy.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(ServerEventListenerProxy.class);
 
     /** The factory used to convert event iterators to remote events */
     private final RemoteAdapterFactory factory;
