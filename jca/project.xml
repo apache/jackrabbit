@@ -18,7 +18,7 @@
     <dependencies>
 	<dependency>
 	    <groupId>org.apache.jackrabbit</groupId>
-	    <artifactId>jackrabbit</artifactId>
+	    <artifactId>jackrabbit-core</artifactId>
 	    <version>${pom.currentVersion}</version>
 	    <properties>
 		<rar.bundle>true</rar.bundle>

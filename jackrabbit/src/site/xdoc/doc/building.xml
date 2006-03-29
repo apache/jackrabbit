@@ -40,7 +40,7 @@
           need for a fully functional Jackrabbit installation. This source tree
           is often referred to as "the Jackrabbit core". In addition to the
           main Jackrabbit jar library, this source tree is also used for the
-          "jackrabbit-commons" utility library used also in other JCR tools
+          "jackrabbit-jcr-commons" utility library used also in other JCR tools
           and implementations.
         </dd>
         <dt><a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/contrib/">trunk/contrib</a></dt>

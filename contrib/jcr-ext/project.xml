@@ -61,7 +61,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-commons</artifactId>
+      <artifactId>jackrabbit-jcr-commons</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>

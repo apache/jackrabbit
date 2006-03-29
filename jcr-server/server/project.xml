@@ -19,7 +19,7 @@
     <!-- P R O J E C T  D E S C R I P T I O N                                   -->
     <!-- ====================================================================== -->
     <extend>${basedir}/../project.xml</extend>
-    <artifactId>jcr-server</artifactId>
+    <artifactId>jackrabbit-jcr-server</artifactId>
     <name>JCRWebdavServer Server Library</name>
 
     <!-- ====================================================================== -->
@@ -28,13 +28,13 @@
     <dependencies>
         <!-- internal dependencies -->
         <dependency>
-            <artifactId>jcr-webdav</artifactId>
+            <artifactId>jackrabbit-jcr-webdav</artifactId>
             <groupId>org.apache.jackrabbit</groupId>
             <version>${pom.currentVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-commons</artifactId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
 
