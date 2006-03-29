@@ -16,9 +16,9 @@
   -->
 <project>
   <pomVersion>3</pomVersion>
-  <artifactId>jackrabbit-textfilters</artifactId>
+  <artifactId>jackrabbit-index-filters</artifactId>
   <groupId>org.apache.jackrabbit</groupId>
-  <name>Jackrabbit - Text filters</name>
+  <name>Jackrabbit - Index filters</name>
   <currentVersion>1.0</currentVersion>
   <organization>
     <name>The Apache Software Foundation</name>
@@ -193,7 +193,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit</artifactId>
+      <artifactId>jackrabbit-core</artifactId>
       <version>${pom.currentVersion}</version>
       <type>jar</type>
     </dependency>

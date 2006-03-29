@@ -80,7 +80,7 @@
         <!-- dependencies from jcr that we want to bundle -->
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit</artifactId>
+            <artifactId>jackrabbit-core</artifactId>
             <version>1.0-SNAPSHOT</version>
             <properties>
                 <war.bundle>true</war.bundle>

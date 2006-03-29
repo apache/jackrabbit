@@ -56,7 +56,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit</artifactId>
+            <artifactId>jackrabbit-core</artifactId>
             <version>1.0-SNAPSHOT</version>
             <type>jar</type>
         </dependency>

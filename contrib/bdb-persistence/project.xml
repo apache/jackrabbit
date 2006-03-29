@@ -76,7 +76,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.jackrabbit</groupId>
-			<artifactId>jackrabbit</artifactId>
+			<artifactId>jackrabbit-core</artifactId>
 			<version>${pom.currentVersion}</version>
 			<type>jar</type>
 		</dependency>
