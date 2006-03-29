@@ -410,42 +410,6 @@ public class InternalValue {
     }
 
     /**
-     * Returns the string representation of this internal value. If this is a
-     * <i>binary</i> value then the path of its backing file will be returned.
-     *
-     * @return string representation of this internal value
-     */
-    public String toString() {
-        if (type == PropertyType.DATE) {
-            return ISO8601.format((Calendar) val);
-        } else {
-            return val.toString();
-        }
-    }
-
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof InternalValue) {
-            InternalValue other = (InternalValue) obj;
-            return val.equals(other.val);
-        }
-        return false;
-    }
-
-    /**
-     * Returns zero to satisfy the Object equals/hashCode contract.
-     * This class is mutable and not meant to be used as a hash key.
-     *
-     * @return always zero
-     * @see Object#hashCode()
-     */
-    public int hashCode() {
-        return 0;
-    }
-
-    /**
      * @param s
      * @param type
      * @return
@@ -474,6 +438,41 @@ public class InternalValue {
             default:
                 throw new IllegalArgumentException("illegal type");
         }
+    }
+
+    //-------------------------------------------< java.lang.Object overrides >
+    /**
+     * Returns the string representation of this internal value.
+     *
+     * @return string representation of this internal value
+     */
+    public String toString() {
+        if (type == PropertyType.DATE) {
+            return ISO8601.format((Calendar) val);
+        } else {
+            return val.toString();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof InternalValue) {
+            InternalValue other = (InternalValue) obj;
+            return val.equals(other.val);
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int hashCode() {
+        return val.hashCode();
     }
 
     //-------------------------------------------------------< implementation >
