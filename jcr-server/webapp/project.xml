@@ -89,15 +89,6 @@
         
         <!-- non-jackrabbit dependencies -->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.0</version>
-            <url>http://www.slf4j.org/download.html</url>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
-        <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.8</version>
@@ -166,34 +157,6 @@
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.0</version>
             <url>http://www.slf4j.org/download.html</url>
-        </dependency>
-        <!--
-          cqfs-jackrabbit and cqfs are optional runtime dependencies 
-          (an alternative FileSystem implementation); 
-          commons-logging is a dependency of cqfs
-        -->
-        <dependency>
-          <groupId>cqfs</groupId>
-          <artifactId>cqfs-jackrabbit</artifactId>
-          <version>3.5.6</version>
-          <url>http://www.day.com/maven/cqfs/jars/cqfs-jackrabbit-3.5.6.jar</url>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
-        <dependency>
-          <groupId>cqfs</groupId>
-          <artifactId>cqfs</artifactId>
-          <version>3.5.6</version>
-          <url>http://www.day.com/maven/cqfs/jars/cqfs-3.5.6.jar</url>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
-        <dependency>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-          <version>1.0</version>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
