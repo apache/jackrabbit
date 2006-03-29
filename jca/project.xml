@@ -91,30 +91,6 @@
 	    </properties>	    
 	</dependency> 
 	<dependency>
-	    <groupId>commons-logging</groupId>
-	    <artifactId>commons-logging</artifactId>
-	    <version>1.0</version>
-	    <properties>
-		<rar.bundle>true</rar.bundle>
-	    </properties>	    
-	</dependency>     
-	<dependency>
-	    <groupId>cqfs</groupId>
-	    <artifactId>cqfs-jackrabbit</artifactId>
-	    <version>3.5.6</version>
-	    <properties>
-		<rar.bundle>true</rar.bundle>
-	    </properties>	    
-	</dependency>
-	<dependency>
-	    <groupId>cqfs</groupId>
-	    <artifactId>cqfs</artifactId>
-	    <version>3.5.6</version>
-	    <properties>
-		<rar.bundle>true</rar.bundle>
-	    </properties>	    
-	</dependency>    
-	<dependency>
 	    <groupId>geronimo-spec</groupId>
 	    <artifactId>geronimo-spec-j2ee-connector</artifactId>
 	    <version>1.0-M1</version>

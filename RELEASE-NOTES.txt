@@ -20,38 +20,47 @@ for more information.
 Release Contents
 ----------------
 
-This release contains the main Jackrabbit implementation and a
-number of additional components. Each component is released as
-a source jar file and one or more compiled binary files. All
-files contain a README.txt file with more information.
+The main contents of this release are the Apache Jackrabbit core
+content repository implementation and the related general-purpose
+JCR utilities:
 
-* jackrabbit-1.0-src.jar and jackrabbit-1.0.jar
+     jackrabbit-core-1.0-src.jar
 
-    The main Jackrabbit implementation.
+     jackrabbit-core-1.0.jar
+     jackrabbit-jcr-commons-1.0.jar
 
-* jackrabbit-commons-1.0.jar
+This release contains also additional components that contain extra
+functionality for use with either Apache Jackrabbit core or any
+JCR compliant content repository. These modules should be considered
+alpha quality:
 
-    The general-purpose JCR utility library built from the main
-    Jackrabbit source tree.
+ * RMI network layer for the JCR API.
 
-* jackrabbit-jca-1.0-src.jar and jackrabbit-jca-1.0.rar
+     jackrabbit-jcr-rmi-1.0-src.jar
+     jackrabbit-jcr-rmi-1.0.jar
 
-    JCA resource adapter for Jackrabbit.
+ * Deployable Jackrabbit installation with WebDAV support for JCR.
 
-* jcr-server-1.0-src.jar, jcr-webdav-1.0.jar, jcr-client-1.0.jar,
-* jcr-server-1.0.jar, jackrabbit-server.war
+     jackrabbit-jcr-server-1.0-src.jar
 
-    WebDAV network layer for the JCR API.
+     jackrabbit-jcr-webdav-1.0.jar
+     jackrabbit-jcr-client-1.0.jar
+     jackrabbit-jcr-server-1.0.jar
+     jackrabbit-server-1.0.war
 
-* jcr-rmi-1.0-src.jar and jcr-rmi-1.0.jar
+ * J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
 
-    RMI network layer for the JCR API.
+     jackrabbit-jca-1.0-src.jar
+     jackrabbit-jca-1.0.rar
 
-* jackrabbit-textfilters-1.0-src.jar and jackrabbit-textfilters-1.0.jar
+ * Text indexing filters for Jackrabbit. Includes example filters
+   for Adobe PDF and MS Excel, PowerPoint, and Word.
 
-    Collection of full text indexing filters for Jackrabbit. Includes
-    filters for example for PDF and MS Excel, PowerPoint, and Word.
+     jackrabbit-index-filters-1.0-src.jar
+     jackrabbit-index-filters-1.0.jar
 
+All components are released as a source jar file and one or more compiled
+binary files. All files contain a README.txt file with more information.
 Note that external runtime dependencies are only included for the war
 and rar archives. Other dependencies can be downloaded either manually
 or automatically using the Maven build system.
@@ -98,6 +107,13 @@ more details.
 
 Change History
 --------------
+
+Changes since 1.0-rc3:
+
+  [JCR-379] Remove the cqfs dependencies in jcr-server/webapp
+  [JCR-378] jackrabbit-server.war is missing the slf4j-log4j12 library
+  [JCR-377] Change project names to start with jackrabbit
+  [JCR-376] JCR-RMI depends on commons-logging
 
 Changes since 1.0-rc2:
 
