@@ -4,11 +4,11 @@
                  org.apache.jackrabbit.j2ee.JCRWebdavServerServlet"%><%
 %><html>
 <head>
-<title>Jackrabbit JCR-Server Contribution</title>
+<title>Jackrabbit JCR-Server</title>
 </head>
 <body style="font-family:monospace">
-<h1>JCR-Server Contribution</h1>
-<h3>JCR-Server contribution provides 2 views</h3><p/>
+<h1>JCR-Server</h1>
+<h3>JCR-Server provides 2 views</h3><p/>
 <ol>
     <li>
         <b>Filebased View</b> (SimpleWebdavServlet)<p/>
@@ -21,7 +21,7 @@
             <li>Context Path: <%= request.getContextPath() %></li>
             <li>Resource Path Prefix: <%= SimpleWebdavServlet.getPathPrefix(pageContext.getServletContext()) %></li>
             <li>Workspace Name: see /WEB-INF/repository/repository.xml (Default = 'default')</li>
-            <li>Source: /contrib/jcr-server/server/webdav/simple</li>
+            <li>Source: /jcr-server/server/webdav/simple</li>
         </ul>
         <p/>
     </li>
@@ -48,7 +48,7 @@
             <li>Context Path: <%= request.getContextPath() %></li>
             <li>Resource Path Prefix: <%= JCRWebdavServerServlet.getPathPrefix(pageContext.getServletContext()) %></li>
             <li>Workspace Name: - Not required - (available workspaces are mapped as resources)</li>
-            <li>Source: /contrib/jcr-server/server/webdav/jcr</li>
+            <li>Source: /jcr-server/server/webdav/jcr</li>
         </ul>
     </li>
 </ol>
