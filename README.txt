@@ -7,7 +7,7 @@ Requirements
 ------------
 
 This project assumes that you have already successfully compiled and 
-installed the parent project Jackrabbit and the contrib project jcr-rmi
+installed the parent project Jackrabbit and the jcr-rmi project
 into your maven repository. If this is not the case, go back to the root
 project and launch
 
@@ -15,7 +15,7 @@ project and launch
 
 which will build and copy Jackrabbit into ~/.maven/repository/org.apache.jackrabbit/jars
 
-Also go to the contrib project jcr-rmi and launch
+Also go to the jcr-rmi project and launch
 
   maven jar:install
 
