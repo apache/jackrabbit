@@ -929,10 +929,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @throws RepositoryException
      */
     private void setJcrProperty(DavProperty property) throws RepositoryException {
-        // retrieve value
-        String value = property.getValue().toString();
-        // set value; since multivalued-properties are not listed in the set
-        // of available properties, this extra validation-check is omitted.
+        // Retrieve the property value. Note, that a 'null' value is replaced
+        // by empty string, since setting a jcr property value to 'null'
+        // would be equivalent to its removal.
+        String value = "";
+        if (property.getValue() != null) {
+            value = property.getValue().toString();
+        }
         node.setProperty(getJcrName(property.getName()), value);
     }
 
