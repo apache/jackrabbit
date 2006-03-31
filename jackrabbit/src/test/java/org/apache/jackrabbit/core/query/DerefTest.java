@@ -17,6 +17,11 @@ package org.apache.jackrabbit.core.query;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.NodeIterator;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
+import javax.jcr.version.Version;
 
 /**
  * Tests the jcr:deref() function.
@@ -108,5 +113,32 @@ public class DerefTest extends AbstractQueryTest {
 
         executeXPathQuery(testPath + "/people/*/jcr:deref(@worksfor, '*')[jcr:contains(.,'ballmer')]",
                 new Node[]{microsoft});
+    }
+
+    /**
+     * Checks if jcr:deref works when dereferencing into the version storage.
+     */
+    public void testDerefToVersionNode() throws RepositoryException {
+        Node referenced = testRootNode.addNode(nodeName1);
+        referenced.addMixin(mixVersionable);
+        testRootNode.save();
+
+        Version version = referenced.checkin();
+        Node referencedVersionNode = version.getNode(jcrFrozenNode);
+        Node referencer = testRootNode.addNode(nodeName2);
+        referencer.setProperty(propertyName1, referencedVersionNode);
+        testRootNode.save();
+
+        String query = "/" + testRoot + "/*[@" + propertyName1 +
+                "]/jcr:deref(@" + propertyName1 + ",'*')";
+        QueryManager qm = superuser.getWorkspace().getQueryManager();
+        Query q = qm.createQuery(query, Query.XPATH);
+        QueryResult qr = q.execute();
+        NodeIterator ni = qr.getNodes();
+        assertEquals("Must find one result in query", 1, ni.getSize());
+        while (ni.hasNext()) {
+            Node node = (Node) ni.next();
+            assertTrue(node.getProperty("jcr:frozenUuid").getString().equals(referenced.getUUID()));
+        }
     }
 }
