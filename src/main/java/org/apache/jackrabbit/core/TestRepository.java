@@ -17,10 +17,14 @@ package org.apache.jackrabbit.core;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
+import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
+import org.apache.commons.collections.BeanMap;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
@@ -71,11 +75,19 @@ public class TestRepository {
     public static synchronized Repository getInstance() throws RepositoryException {
         try {
             if (instance == null) {
-                InputStream xml =
-                    TestRepository.class.getResourceAsStream(CONF_RESOURCE);
-                String home = System.getProperty(HOME_PROPERTY, HOME_DEFAULT);
-                RepositoryConfig config = RepositoryConfig.create(xml, home);
-                instance = new TransientRepository(config);
+                try {
+                    // Try to get the main test suite repository
+                    instance = getIntegratedInstance();
+                } catch (RepositoryException e) {
+                    throw e;
+                } catch (Exception e) {
+                    // Not running within the main test suite
+                    InputStream xml =
+                        TestRepository.class.getResourceAsStream(CONF_RESOURCE);
+                    String home = System.getProperty(HOME_PROPERTY, HOME_DEFAULT);
+                    RepositoryConfig config = RepositoryConfig.create(xml, home);
+                    instance = new TransientRepository(config);
+                }
             }
             return instance;
         } catch (ConfigurationException e) {
@@ -85,6 +97,61 @@ public class TestRepository {
             throw new RepositoryException(
                     "Error in test repository initialization", e);
         }
+    }
+
+    /**
+     * Attempts to retrieve the test repository instance used by the
+     * Jackrabbit main test suite without having a direct dependency to any
+     * of the classes in src/test/java. This method assumes that we are
+     * running within the Jackrabbit main test suite if the AbstractJCRTest
+     * class is available. The initialized RepositoryHelper instance is
+     * retrieved from the static "helper" field of the AbstractJCRTest class,
+     * and the underlying repository and configured superuser credentials are
+     * extracted from the helper instance. This information is in turn used
+     * to create a custom Repository adapter that delegates calls to the
+     * underlying repository and uses the superuser credentials for the login
+     * methods where no credentials are passed by the client.
+     *
+     * @return test repository instance
+     * @throws Exception if the test repository could not be retrieved
+     */
+    private static Repository getIntegratedInstance() throws Exception {
+        Class test =
+            Class.forName("org.apache.jackrabbit.test.AbstractJCRTest");
+        Map helper = new BeanMap(test.getField("helper").get(null));
+        final Credentials superuser =
+            (Credentials) helper.get("superuserCredentials");
+        final Repository repository =
+            (Repository) helper.get("repository");
+        return new Repository() {
+
+            public String[] getDescriptorKeys() {
+                return repository.getDescriptorKeys();
+            }
+
+            public String getDescriptor(String key) {
+                return repository.getDescriptor(key);
+            }
+
+            public Session login(Credentials credentials, String workspace)
+                    throws RepositoryException {
+                return repository.login(credentials, workspace);
+            }
+
+            public Session login(Credentials credentials)
+                    throws RepositoryException {
+                return repository.login(credentials);
+            }
+
+            public Session login(String workspace) throws RepositoryException {
+                return repository.login(superuser, workspace);
+            }
+
+            public Session login() throws RepositoryException {
+                return repository.login(superuser);
+            }
+
+        };
     }
 
     /**
