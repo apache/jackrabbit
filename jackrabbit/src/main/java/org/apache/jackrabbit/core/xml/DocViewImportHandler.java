@@ -202,20 +202,7 @@ class DocViewImportHandler extends TargetImportHandler {
                     }
                 } else if (propName.equals(QName.JCR_MIXINTYPES)) {
                     // jcr:mixinTypes
-                    if (propValues.length > 0) {
-                        mixinTypes = new QName[propValues.length];
-                        for (int j = 0; j < propValues.length; j++) {
-                            Value value = 
-                                propValues[j].getValue(PropertyType.NAME, nsContext);
-                            try {
-                                mixinTypes[j] =
-                                    QName.fromJCRName(value.getString(), nsContext);
-                            } catch (NameException ne) {
-                                throw new SAXException("illegal jcr:mixinTypes value: "
-                                        + value.getString(), ne);
-                            }
-                        }
-                    }
+                    mixinTypes = parseNames(attrValue);
                 } else if (propName.equals(QName.JCR_UUID)) {
                     // jcr:uuid
                     if (attrValue.length() > 0) {
@@ -236,6 +223,29 @@ class DocViewImportHandler extends TargetImportHandler {
         } catch (RepositoryException re) {
             throw new SAXException(re);
         }
+    }
+
+    /**
+     * Parses the given string as a list of JCR names. Any whitespace sequence
+     * is supported as a names separator instead of just a single space to
+     * be more liberal in what we accept. The current namespace context is
+     * used to convert the prefixed name strings to QNames.
+     *
+     * @param value string value
+     * @return the parsed names
+     * @throws SAXException if an invalid name was encountered
+     */
+    private QName[] parseNames(String value) throws SAXException {
+        String[] names = value.split("\\p{Space}+");
+        QName[] qnames = new QName[names.length];
+        for (int i = 0; i < names.length; i++) {
+            try {
+                qnames[i] = nsContext.getQName(names[i]);
+            } catch (NameException ne) {
+                throw new SAXException("Invalid name: " + names[i], ne);
+            }
+        }
+        return qnames;
     }
 
     /**
