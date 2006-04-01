@@ -117,13 +117,13 @@ Changes since 1.0-rc3:
   [JCR-378] jackrabbit-server.war is missing the slf4j-log4j12 library
   [JCR-377] Change project names to start with jackrabbit
   [JCR-376] JCR-RMI depends on commons-logging
+  [JCR-368] Add support for simple test cases
 
 Changes since 1.0-rc2:
 
   [JCR-375] jcr:encoding not respected in NodeIndexer
   [JCR-373] all references to incubator need to be replaced with new ...
   [JCR-370] SearchIndex class contains garbled String
-  [JCR-368] Add support for simple test cases
   [JCR-365] Web client/WebDAV fails to unescape workspace names
   [JCR-357] Move to jackrabbit.apache.org
   [JCR-356] Replace license headers with new policy text
