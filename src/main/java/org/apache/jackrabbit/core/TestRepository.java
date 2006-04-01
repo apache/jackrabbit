@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.xml.sax.InputSource;
 
 /**
  * Utility class for easy handling a test repository. This class contains
@@ -71,8 +72,8 @@ public class TestRepository {
     public static synchronized Repository getInstance() throws RepositoryException {
         try {
             if (instance == null) {
-                ClassLoader loader = TestRepository.class.getClassLoader();
-                InputStream xml = loader.getResourceAsStream(CONF_RESOURCE);
+                InputStream xml =
+                    TestRepository.class.getResourceAsStream(CONF_RESOURCE);
                 String home = System.getProperty(HOME_PROPERTY, HOME_DEFAULT);
                 RepositoryConfig config = RepositoryConfig.create(xml, home);
                 instance = new TransientRepository(config);
