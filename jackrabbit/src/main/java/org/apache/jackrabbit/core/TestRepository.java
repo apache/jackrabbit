@@ -23,7 +23,6 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.xml.sax.InputSource;
 
 /**
  * Utility class for easy handling a test repository. This class contains
