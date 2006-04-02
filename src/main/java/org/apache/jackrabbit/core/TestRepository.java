@@ -119,10 +119,10 @@ public class TestRepository {
         Class test =
             Class.forName("org.apache.jackrabbit.test.AbstractJCRTest");
         Map helper = new BeanMap(test.getField("helper").get(null));
-        final Credentials superuser =
-            (Credentials) helper.get("superuserCredentials");
         final Repository repository =
             (Repository) helper.get("repository");
+        final Credentials superuser =
+            (Credentials) helper.get("superuserCredentials");
         return new Repository() {
 
             public String[] getDescriptorKeys() {
