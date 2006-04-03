@@ -15,12 +15,11 @@
  */
 package org.apache.jackrabbit.core.fs.db;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * Database file system that uses JNDI to acquire the database connection.
@@ -67,8 +66,7 @@ public class JNDIDatabaseFileSystem extends DatabaseFileSystem {
      *
      * @return new database connection
      * @throws NamingException if the given data source location does not exist
-     * @throws Exception if a database access error occurs
-     * @see DatabaseFileManager#getConnection()
+     * @throws SQLException if a database access error occurs
      */
     protected Connection getConnection() throws NamingException, SQLException {
         InitialContext ic = new InitialContext();
