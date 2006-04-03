@@ -40,7 +40,7 @@ import java.util.List;
  * <p/>
  * The following is a fragment from a sample configuration:
  * <pre>
- *   &lt;FileSystem class="com.day.crx.core.fs.db.DB2FileSystem"&gt;
+ *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DB2FileSystem"&gt;
  *       &lt;param name="url" value="jdbc:db2:test"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
  *   &lt;/FileSystem&gt;
