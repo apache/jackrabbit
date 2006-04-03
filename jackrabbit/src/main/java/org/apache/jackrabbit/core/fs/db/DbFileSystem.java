@@ -44,7 +44,7 @@ import java.sql.SQLException;
  * <p/>
  * The following is a fragment from a sample configuration using MySQL:
  * <pre>
- *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;
+ *   &lt;FileSystem class="com.day.crx.core.fs.db.DbFileSystem"&gt;
  *       &lt;param name="driver" value="com.mysql.jdbc.Driver"/&gt;
  *       &lt;param name="url" value="jdbc:mysql:///test"/&gt;
  *       &lt;param name="schema" value="mysql"/&gt;
@@ -53,7 +53,7 @@ import java.sql.SQLException;
  * </pre>
  * The following is a fragment from a sample configuration using Daffodil One$DB Embedded:
  * <pre>
- *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;
+ *   &lt;FileSystem class="com.day.crx.core.fs.db.DbFileSystem"&gt;
  *       &lt;param name="driver" value="in.co.daffodil.db.jdbc.DaffodilDBDriver"/&gt;
  *       &lt;param name="url" value="jdbc:daffodilDB_embedded:rep;path=${rep.home}/databases;create=true"/&gt;
  *       &lt;param name="user" value="daffodil"/&gt;
@@ -64,7 +64,7 @@ import java.sql.SQLException;
  * </pre>
  * The following is a fragment from a sample configuration using MSSQL:
  * <pre>
- *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;
+ *   &lt;FileSystem class="com.day.crx.core.fs.db.DbFileSystem"&gt;
  *       &lt;param name="driver" value="com.microsoft.jdbc.sqlserver.SQLServerDriver"/&gt;
  *       &lt;param name="url" value="jdbc:microsoft:sqlserver://localhost:1433;;DatabaseName=test;SelectMethod=Cursor;"/&gt;
  *       &lt;param name="schema" value="mssql"/&gt;
@@ -75,7 +75,7 @@ import java.sql.SQLException;
  * </pre>
  * The following is a fragment from a sample configuration using PostgreSQL:
  * <pre>
- *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;
+ *   &lt;FileSystem class="com.day.crx.core.fs.db.DbFileSystem"&gt;
  *       &lt;param name="driver" value="org.postgresql.Driver"/&gt;
  *       &lt;param name="url" value="jdbc:postgresql://localhost/test"/&gt;
  *       &lt;param name="schema" value="postgresql"/&gt;
@@ -88,9 +88,24 @@ import java.sql.SQLException;
  */
 public class DbFileSystem extends DatabaseFileSystem {
 
+    /**
+     * the full qualified JDBC driver name
+     */
     protected String driver;
+
+    /**
+     * the JDBC connection URL
+     */
     protected String url;
+
+    /**
+     * the JDBC connection user
+     */
     protected String user;
+
+    /**
+     * the JDBC connection password
+     */
     protected String password;
 
     //----------------------------------------------------< setters & getters >
@@ -164,12 +179,11 @@ public class DbFileSystem extends DatabaseFileSystem {
     /**
      * Initialize the JDBC connection.
      *
-     * @throws Exception if an error occurs
+     * @throws SQLException if an error occurs
      */
     protected Connection getConnection() throws ClassNotFoundException, SQLException {
         Class.forName(driver);
-        Connection connection = DriverManager.getConnection(url, user, password);
-        return connection;
+        return DriverManager.getConnection(url, user, password);
     }
 
 }
