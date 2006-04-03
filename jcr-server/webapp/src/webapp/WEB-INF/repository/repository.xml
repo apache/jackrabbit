@@ -145,11 +145,8 @@
 	virtual file system of the workspace:
 	class: FQN of class implementing FileSystem interface
         -->
-	<FileSystem class="com.day.jackrabbit.fs.cq.CQFileSystem">
-	    <param name="path" value="${wsp.home}/wspStore.dat"/>
-	    <param name="autoRepair" value="false"/>
-	    <param name="blockSize" value="128"/>
-	    <param name="autoSync" value="false"/>
+        <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+            <param name="path" value="${wsp.home}"/>
 	</FileSystem>
 	<!--
 	persistence of the workspace:
@@ -172,12 +169,9 @@
 	Configures the filesystem to use for versioning for the respective
 	persistence manager
         -->
-	<FileSystem class="com.day.jackrabbit.fs.cq.CQFileSystem">
-	    <param name="path" value="${rep.home}/version/version.dat"/>
-	    <param name="autoRepair" value="false"/>
-	    <param name="blockSize" value="128"/>
-	    <param name="autoSync" value="false"/>
-	</FileSystem>
+        <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
+            <param name="path" value="${rep.home}/version"/>
+        </FileSystem>
 
 	<!--
 	Configures the persistence manager to be used for persisting version state.
