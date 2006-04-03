@@ -220,10 +220,13 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
             }
 
             NodeType type = manager.getNodeType(name);
-            assertEquals(
-                    "Predefined node type " + name,
-                    spec.toString(),
-                    getNodeTypeSpec(type));
+            String current = getNodeTypeSpec(type);
+            if (!System.getProperty("line.separator").equals("\n")) {
+                current = normalizeLineSeparators(current);
+            }
+            String expected = normalizeLineSeparators(spec.toString());
+
+            assertEquals("Predefined node type " + name, expected, current);
         } catch (IOException e) {
             fail(e.getMessage());
         } catch (NoSuchNodeTypeException e) {
@@ -382,6 +385,22 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         writer.println("  Multiple " + property.isMultiple());
 
         return buffer.toString();
+    }
+
+    /**
+     * Replaces platform-dependant line-separators in <code>stringValue</code>
+     * with "\n".
+     *
+     * @param stringValue string to normalize
+     * @return the normalized string
+     */
+    private String normalizeLineSeparators(String stringValue) {
+        // Replace "\r\n" (Windows format) with "\n" (Unix format)
+        stringValue = stringValue.replaceAll("\r\n", "\n");
+        // Replace "\r" (Mac format) with "\n" (Unix format)
+        stringValue = stringValue.replaceAll("\r", "\n");
+
+        return stringValue;
     }
 
     /**
