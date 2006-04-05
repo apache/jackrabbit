@@ -24,14 +24,23 @@ import java.util.Arrays;
  */
 public class QueryTreeDump implements QueryNodeVisitor {
 
-    /** Current indentation level */
+    /**
+     * Current indentation level
+     */
     private int indent;
 
-    /** Padding array filled with spaces */
-    private static final char[] PADDING = new char[255];
+    /**
+     * Padding array filled with spaces
+     */
+    private static char[] PADDING = new char[255];
+
+    /**
+     * The padding character: whitespace.
+     */
+    private static final char PADDING_CHAR = ' ';
 
     static {
-        Arrays.fill(PADDING, ' ');
+        Arrays.fill(PADDING, PADDING_CHAR);
     }
 
     /**
@@ -259,6 +268,11 @@ public class QueryTreeDump implements QueryNodeVisitor {
 
     private void traverse(QueryNode[] node, StringBuffer buffer) {
         indent += 2;
+        if (indent > PADDING.length) {
+            char[] tmp = new char[indent * 2];
+            Arrays.fill(tmp, PADDING_CHAR);
+            PADDING = tmp;
+        }
         for (int i = 0; i < node.length; i++) {
             node[i].accept(this, buffer);
         }
