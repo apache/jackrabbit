@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -99,22 +100,35 @@ public class MsPowerPointTextFilter implements TextFilter {
 		InternalValue[] values = data.getValues();
 
 		if (values.length == 1) {
-			BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
+			final BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
 
-			try {
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				MsPowerPointListener listener = new MsPowerPointListener(baos);
-				POIFSReader reader = new POIFSReader();
-				reader.registerListener(listener);
-				reader.read(blob.getStream());
-				Map result = new HashMap();
-				result.put(FieldNames.FULLTEXT, new InputStreamReader(
-						new ByteArrayInputStream(baos.toByteArray())));
-				
-				return result;
-			} catch (IOException ex) {
-				throw new RepositoryException(ex);
-			}
+            LazyReader reader = new LazyReader() {
+                protected void initializeReader() throws IOException {
+                    InputStream in;
+                    try {
+                        in = blob.getStream();
+                    } catch (RepositoryException e) {
+                        throw new IOException(e.getMessage());
+                    }
+                    try {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        MsPowerPointListener listener = new MsPowerPointListener(baos);
+                        POIFSReader reader = new POIFSReader();
+                        reader.registerListener(listener);
+                        reader.read(in);
+
+                        delegate = new InputStreamReader(
+                            new ByteArrayInputStream(baos.toByteArray()));
+                    } finally {
+                        in.close();
+                    }
+                }
+            };
+
+            Map result = new HashMap();
+            result.put(FieldNames.FULLTEXT, reader);
+
+            return result;
 		} else {
 			// multi value not supported
 			throw new RepositoryException(

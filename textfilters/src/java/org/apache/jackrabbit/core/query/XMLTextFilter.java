@@ -73,22 +73,28 @@ public class XMLTextFilter implements TextFilter {
 
         InternalValue[] values = data.getValues();
         if (values.length > 0) {
-            try {
-                try {
-                    BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
-                    parser.parse(blob.getStream());
-                    String text = parser.getContents();
-
-                    Map result = new HashMap();
-                    result.put(FieldNames.FULLTEXT, new StringReader(text));
-                    return result;
-                } catch (IOException ioe) {
-                    throw new RepositoryException(ioe);
+            final BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
+            LazyReader reader = new LazyReader() {
+                protected void initializeReader() throws IOException {
+                    InputStream in;
+                    try {
+                        in = blob.getStream();
+                    } catch (RepositoryException e) {
+                        throw new IOException(e.getMessage());
+                    }
+                    try {
+                        parser.parse(in);
+                        String text = parser.getContents();
+                        delegate = new StringReader(text);
+                    } finally {
+                        in.close();
+                    }
                 }
+            };
 
-            } catch (IllegalStateException e) {
-                throw new RepositoryException(e);
-            }
+            Map result = new HashMap();
+            result.put(FieldNames.FULLTEXT, reader);
+            return result;
         } else {
             // multi value not supported
             throw new RepositoryException("Multi-valued binary properties not supported.");
@@ -181,7 +187,7 @@ public class XMLTextFilter implements TextFilter {
                 InputSource source = new InputSource(is);
                 xmlReader.parse(source);
             } catch (SAXException se) {
-                // ignore errors
+                throw new IOException(se.getMessage());
             }
         }
 

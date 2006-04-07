@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query;
 import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -59,51 +60,61 @@ public class MsExcelTextFilter implements TextFilter {
     public Map doFilter(PropertyState data, String encoding) throws RepositoryException {
         InternalValue[] values = data.getValues();
         if (values.length > 0) {
-            BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
-                
-            try {
-                CharArrayWriter writer = new CharArrayWriter();
-    
-                POIFSFileSystem fs = new POIFSFileSystem(blob.getStream());
-                HSSFWorkbook workbook = new HSSFWorkbook(fs);
-    
-                for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                    HSSFSheet sheet = workbook.getSheetAt(i);
-    
-                    Iterator rows = sheet.rowIterator();
-                    while (rows.hasNext()) {
-                        HSSFRow row = (HSSFRow) rows.next();
-    
-                        Iterator cells = row.cellIterator();
-                        while (cells.hasNext()) {
-                            HSSFCell cell = (HSSFCell) cells.next();
-                            switch (cell.getCellType()) {
-                            case HSSFCell.CELL_TYPE_NUMERIC:
-                                String num = Double.toString(cell.getNumericCellValue()).trim();
-                                if (num.length() > 0) {
-                                    writer.write(num + " ");
+            final BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
+            LazyReader reader = new LazyReader() {
+                protected void initializeReader() throws IOException {
+                    CharArrayWriter writer = new CharArrayWriter();
+
+                    InputStream in;
+                    try {
+                        in = blob.getStream();
+                    } catch (RepositoryException e) {
+                        throw new IOException(e.getMessage());
+                    }
+
+                    try {
+                        POIFSFileSystem fs = new POIFSFileSystem(in);
+                        HSSFWorkbook workbook = new HSSFWorkbook(fs);
+
+                        for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                            HSSFSheet sheet = workbook.getSheetAt(i);
+
+                            Iterator rows = sheet.rowIterator();
+                            while (rows.hasNext()) {
+                                HSSFRow row = (HSSFRow) rows.next();
+
+                                Iterator cells = row.cellIterator();
+                                while (cells.hasNext()) {
+                                    HSSFCell cell = (HSSFCell) cells.next();
+                                    switch (cell.getCellType()) {
+                                    case HSSFCell.CELL_TYPE_NUMERIC:
+                                        String num = Double.toString(cell.getNumericCellValue()).trim();
+                                        if (num.length() > 0) {
+                                            writer.write(num + " ");
+                                        }
+                                        break;
+                                    case HSSFCell.CELL_TYPE_STRING:
+                                        String text = cell.getStringCellValue().trim();
+                                        if (text.length() > 0) {
+                                            writer.write(text + " ");
+                                        }
+                                        break;
+                                    }
                                 }
-                                break;
-                            case HSSFCell.CELL_TYPE_STRING:
-                                String text = cell.getStringCellValue().trim();
-                                if (text.length() > 0) {
-                                    writer.write(text + " ");
-                                }
-                                break;
                             }
                         }
+
+                        delegate = new CharArrayReader(writer.toCharArray());
+                    } finally {
+                        in.close();
                     }
                 }
-                
-                Map result = new HashMap();
-                result.put(FieldNames.FULLTEXT, new CharArrayReader(writer.toCharArray()));
-                return result;
-            } 
-            catch (IOException ex) {
-                throw new RepositoryException(ex);
-            }
-        } 
-        else {
+            };
+
+            Map result = new HashMap();
+            result.put(FieldNames.FULLTEXT, reader);
+            return result;
+        } else {
             // multi value not supported
             throw new RepositoryException("Multi-valued binary properties not supported.");
         }

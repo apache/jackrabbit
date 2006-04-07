@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.query;
 import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
 import java.io.IOException;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,32 +58,43 @@ public class PdfTextFilter implements TextFilter {
     public Map doFilter(PropertyState data, String encoding) throws RepositoryException {
         InternalValue[] values = data.getValues();
         if (values.length > 0) {
-            BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
-                
-            try {
-                PDFParser parser = new PDFParser(blob.getStream());
-                parser.parse();
-    
-                PDDocument document = parser.getPDDocument();
-    
-                CharArrayWriter writer = new CharArrayWriter();
-    
-                PDFTextStripper stripper = new PDFTextStripper();
-                stripper.setLineSeparator("\n");
-                stripper.writeText(document, writer);
-    
-                document.close();
-                writer.close();
-                
-                Map result = new HashMap();
-                result.put(FieldNames.FULLTEXT, new CharArrayReader(writer.toCharArray()));
-                return result;
-            } 
-            catch (IOException ex) {
-                throw new RepositoryException(ex);
-            }
-        } 
-        else {
+            final BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
+            LazyReader reader = new LazyReader() {
+                protected void initializeReader() throws IOException {
+                    PDFParser parser;
+                    InputStream in;
+                    try {
+                        in = blob.getStream();
+                    } catch (RepositoryException e) {
+                        throw new IOException(e.getMessage());
+                    }
+
+                    try {
+                        parser = new PDFParser(new BufferedInputStream(in));
+                        parser.parse();
+
+                        PDDocument document = parser.getPDDocument();
+                        try {
+                            CharArrayWriter writer = new CharArrayWriter();
+
+                            PDFTextStripper stripper = new PDFTextStripper();
+                            stripper.setLineSeparator("\n");
+                            stripper.writeText(document, writer);
+
+                            delegate = new CharArrayReader(writer.toCharArray());
+                        } finally {
+                            document.close();
+                        }
+                    } finally {
+                        in.close();
+                    }
+                }
+            };
+
+            Map result = new HashMap();
+            result.put(FieldNames.FULLTEXT, reader);
+            return result;
+        } else {
             // multi value not supported
             throw new RepositoryException("Multi-valued binary properties not supported.");
         }
