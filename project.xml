@@ -23,7 +23,7 @@
     <pomVersion>3</pomVersion>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-core</artifactId>
-    <name>Jackrabbit</name>
+    <name>Apache Jackrabbit</name>
     <currentVersion>1.0-SNAPSHOT</currentVersion>
     <organization>
         <name>The Apache Software Foundation</name>
@@ -34,13 +34,15 @@
     <package>org.apache.jackrabbit.*</package>
     <logo>/images/jackrabbitlogo.gif</logo>
     <description>
-        The Jackrabbit Project has been formed to develop an open source implementation of the Content Repository
-        for Java Technology API (JCR), being specified within the Java Community Process as
-        &lt;a href="http://www.jcp.org/en/jsr/detail?id=170"&gt;JSR-170&lt;/a&gt;. &lt;a href="http://www.day.com/"&gt;Day Software&lt;/a&gt;,
-        the JSR-170 specification lead, has licensed an initial implementation of the JCR reference implementation 
-        for use as seed code for this project.  JCR specifies an API for application developers (and application 
-        frameworks) to use for interaction with modern content repositories -- content management systems that provide 
-        content services such as versioning, transactions, indexing, workflow, etc.
+The Apache Jackrabbit Project has been formed to develop and maintain an
+open source implementation of the Content Repository for Java Technology API
+(JCR), as specified within the Java Community Process by
+&lt;a href="http://www.jcp.org/en/jsr/detail?id=170"&gt;JSR 170&lt;/a&gt; and
+&lt;a href="http://www.jcp.org/en/jsr/detail?id=283"&gt;JSR 283&lt;/a&gt;.
+JCR specifies an API for application developers (and application frameworks)
+to use for interaction with modern content repositories -- content management
+systems that provide content services such as versioning, transactions,
+indexing, etc.
     </description>
     <shortDescription>The Open Source Content Repository for Java</shortDescription>
     <url>http://jackrabbit.apache.org/</url>
@@ -98,7 +100,12 @@
 
     <versions>
         <version>
-            <name>Jackrabbit 0.9</name>
+            <name>Apache Jackrabbit 1.0</name>
+            <tag>tags/1.0</tag>
+            <id>1.0</id>
+        </version>
+        <version>
+            <name>Apache Jackrabbit 0.9</name>
             <tag>tags/0.9</tag>
             <id>0.9-incubating</id>
         </version>
@@ -121,8 +128,8 @@
             <email/>
             <organization>Day Software</organization>
             <roles>
-                <role>Mentor</role>
-                <role>Java Developer</role>
+                <role>Chair</role>
+                <role>Documentation</role>
             </roles>
             <timezone>-8</timezone>
         </developer>
