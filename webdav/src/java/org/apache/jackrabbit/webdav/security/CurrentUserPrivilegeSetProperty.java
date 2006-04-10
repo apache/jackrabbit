@@ -58,8 +58,8 @@ public class CurrentUserPrivilegeSetProperty extends AbstractDavProperty {
      * @throws DavException
      */
     public CurrentUserPrivilegeSetProperty(DavProperty xmlDavProperty) throws DavException {
-        super(xmlDavProperty.getName(), xmlDavProperty.isProtected());
-        if (!SecurityConstants.CURRENT_USER_PRIVILEGE_SET.equals(getName()) || !isProtected()) {
+        super(xmlDavProperty.getName(), true);
+        if (!SecurityConstants.CURRENT_USER_PRIVILEGE_SET.equals(getName())) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:current-user-privilege-set expected.");
         }
         privileges = new HashSet();
