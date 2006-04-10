@@ -140,6 +140,20 @@ public class Privilege implements XmlSerializable {
     }
 
     /**
+     * @return The local name of this <code>Privilege</code>.
+     */
+    public String getName() {
+        return privilege;
+    }
+
+    /**
+     * @return The namespace of this <code>Privilege</code>.
+     */
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
+    /**
      * @see XmlSerializable#toXml(Document)
      */
     public Element toXml(Document document) {
