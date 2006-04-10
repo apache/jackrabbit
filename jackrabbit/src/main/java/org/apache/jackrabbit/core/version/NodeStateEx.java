@@ -294,8 +294,6 @@ class NodeStateEx {
         }
     }
 
-
-
     /**
      * checks if the given child node exists.
      *
@@ -331,8 +329,7 @@ class NodeStateEx {
             if (entry == null) {
                 return false;
             } else {
-                ItemState state = stateMgr.getItemState(entry.getId());
-                stateMgr.destroy(state);
+                removeNode(entry.getId());
                 nodeState.removeChildNodeEntry(name, index);
                 nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 return true;
@@ -340,6 +337,37 @@ class NodeStateEx {
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
+    }
+
+    /**
+     * removes recursively the node with the given id
+     *
+     * @param id
+     * @throws ItemStateException
+     */
+    private void removeNode(NodeId id) throws ItemStateException {
+        NodeState state = (NodeState) stateMgr.getItemState(id);
+
+        // remove properties
+        Iterator iter = state.getPropertyNames().iterator();
+        while (iter.hasNext()) {
+            QName name = (QName) iter.next();
+            PropertyId propId = new PropertyId(id, name);
+            PropertyState propState = (PropertyState) stateMgr.getItemState(propId);
+            stateMgr.destroy(propState);
+        }
+        state.removeAllPropertyNames();
+
+        // remove child nodes
+        iter = state.getChildNodeEntries().iterator();
+        while (iter.hasNext()) {
+            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            removeNode(entry.getId());
+        }
+        state.removeAllChildNodeEntries();
+
+        // destroy the state itself
+        stateMgr.destroy(state);
     }
 
     /**
