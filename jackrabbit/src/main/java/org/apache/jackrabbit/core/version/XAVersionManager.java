@@ -114,7 +114,7 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public EventStateCollection createEventStateCollection()
             throws RepositoryException {
-        return vMgr.createEventStateCollection(session);
+        return vMgr.getEscFactory().createEventStateCollection(session);
     }
 
     //-------------------------------------------------------< VersionManager >
