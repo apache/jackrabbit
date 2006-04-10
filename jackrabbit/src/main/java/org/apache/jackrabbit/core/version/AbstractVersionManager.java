@@ -59,7 +59,11 @@ abstract class AbstractVersionManager implements VersionManager {
      * {@inheritDoc}
      */
     public InternalVersion getVersion(NodeId id) throws RepositoryException {
-        return (InternalVersion) getItem(id);
+        InternalVersion v = (InternalVersion) getItem(id);
+        if (v == null) {
+            log.warn("Versioning item not found: " + id);
+        }
+        return v;
     }
 
     /**
