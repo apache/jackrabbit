@@ -683,8 +683,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         }
     }
 
-    private void restoreTransientItems(Iterator iter)
-            throws RepositoryException {
+    private void restoreTransientItems(Iterator iter) {
 
         // walk through list of transient states and reapply transient changes
         while (iter.hasNext()) {
@@ -692,30 +691,49 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             ItemId id = itemState.getId();
             ItemImpl item;
 
-            if (stateMgr.isItemStateInAttic(id)) {
-                // If an item has been removed and then again created, the
-                // item is lost after persistTransientItems() and the
-                // TransientItemStateManager will bark because of a deleted
-                // state in its attic. We therefore have to forge a new item
-                // instance ourself.
-                if (itemState.isNode()) {
-                    item = itemMgr.createNodeInstance((NodeState) itemState);
+            try {
+                if (stateMgr.isItemStateInAttic(id)) {
+                    // If an item has been removed and then again created, the
+                    // item is lost after persistTransientItems() and the
+                    // TransientItemStateManager will bark because of a deleted
+                    // state in its attic. We therefore have to forge a new item
+                    // instance ourself.
+                    if (itemState.isNode()) {
+                        item = itemMgr.createNodeInstance((NodeState) itemState);
+                    } else {
+                        item = itemMgr.createPropertyInstance((PropertyState) itemState);
+                    }
+                    itemState.setStatus(ItemState.STATUS_NEW);
                 } else {
-                    item = itemMgr.createPropertyInstance((PropertyState) itemState);
+                    try {
+                        item = itemMgr.getItem(id);
+                    } catch (ItemNotFoundException infe) {
+                        // itemState probably represents a 'new' item and the
+                        // ItemImpl instance wrapping it has already been gc'ed;
+                        // we have to re-create the ItemImpl instance
+                        if (itemState.isNode()) {
+                            item = itemMgr.createNodeInstance((NodeState) itemState);
+                        } else {
+                            item = itemMgr.createPropertyInstance((PropertyState) itemState);
+                        }
+                        itemState.setStatus(ItemState.STATUS_NEW);
+                    }
                 }
-                itemState.setStatus(ItemState.STATUS_NEW);
-            } else {
-                item = itemMgr.getItem(id);
-            }
-            if (!item.isTransient()) {
-                // reapply transient changes (i.e. undo effect of item.makePersistent())
-                if (item.isNode()) {
-                    NodeImpl node = (NodeImpl) item;
-                    node.restoreTransient((NodeState) itemState);
-                } else {
-                    PropertyImpl prop = (PropertyImpl) item;
-                    prop.restoreTransient((PropertyState) itemState);
+                if (!item.isTransient()) {
+                    // reapply transient changes (i.e. undo effect of item.makePersistent())
+                    if (item.isNode()) {
+                        NodeImpl node = (NodeImpl) item;
+                        node.restoreTransient((NodeState) itemState);
+                    } else {
+                        PropertyImpl prop = (PropertyImpl) item;
+                        prop.restoreTransient((PropertyState) itemState);
+                    }
                 }
+            } catch (RepositoryException re) {
+                // something went wrong, log exception and carry on
+                String msg = itemMgr.safeGetJCRPath(id)
+                    + ": failed to restore transient state";
+                log.warn(msg, re);
             }
         }
     }
@@ -902,7 +920,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     public void stateDiscarded(ItemState discarded) {
         /**
          * the state of this item has been discarded, probably as a result
-         * of calling Node.revert() or ItemImpl.setRemoved()
+         * of calling Item.refresh(false) or ItemImpl.setRemoved()
          */
         if (isTransient()) {
             switch (state.getStatus()) {
@@ -1263,7 +1281,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
                 case ItemState.STATUS_NEW:
                     {
-                        String msg = safeGetJCRPath() + ": cannot revert a new item.";
+                        String msg = safeGetJCRPath() + ": cannot refresh a new item.";
                         log.debug(msg);
                         throw new RepositoryException(msg);
                     }
