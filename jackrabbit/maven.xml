@@ -39,7 +39,7 @@
                 <ant:include name="applications/test/repositoryStubImpl.properties"/>
                 <ant:include name="applications/test/repository.xml"/>
                 <ant:include name="applications/test/repository/namespaces/ns_reg.properties.install"/>
-                <ant:include name="applications/test/repository/nodetypes/custom_nodetypes.xml"/>
+                <ant:include name="applications/test/repository/nodetypes/custom_nodetypes.xml.install"/>
                 <ant:include name="applications/test/workspaces/test/workspace.xml"/>
                 <ant:include name="applications/test/workspaces/default/workspace.xml"/>
             </ant:fileset>
@@ -81,7 +81,7 @@
         <ant:delete includeEmptyDirs="true">
             <ant:fileset dir="applications/test/repository">
                 <ant:include name="**/*"/>
-                <ant:exclude name="**/custom_nodetypes.xml"/>
+                <ant:exclude name="**/custom_nodetypes.xml.install"/>
                 <ant:exclude name="**/ns_reg.properties.install"/>
             </ant:fileset>
         </ant:delete>
@@ -246,6 +246,8 @@
     <goal name="jackrabbit:test-init">
         <ant:copy file="applications/test/repository/namespaces/ns_reg.properties.install" 
             tofile="applications/test/repository/namespaces/ns_reg.properties"/>
+        <ant:copy file="applications/test/repository/nodetypes/custom_nodetypes.xml.install" 
+            tofile="applications/test/repository/nodetypes/custom_nodetypes.xml"/>
         <j:set var="testcase" value="org.apache.jackrabbit.init.TestAll"/>
     </goal>
 
