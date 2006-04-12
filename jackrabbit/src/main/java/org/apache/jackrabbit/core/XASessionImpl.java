@@ -37,6 +37,7 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collections;
 
 /**
  * Session extension that provides XA support.
@@ -52,7 +53,7 @@ public class XASessionImpl extends SessionImpl
     /**
      * Global transactions
      */
-    private static final Map txGlobal = new HashMap();
+    private static final Map txGlobal = Collections.synchronizedMap(new HashMap());
 
     /**
      * Default transaction timeout, in seconds.
@@ -290,7 +291,10 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        if (flags == TMSUCCESS || flags == TMFAIL || flags == TMSUSPEND) {
+        if (flags == TMSUCCESS || flags == TMFAIL) {
+            associate(null);
+            txGlobal.remove(xid);
+        } else if (flags == TMSUSPEND) {
             associate(null);
         } else {
             throw new XAException(XAException.XAER_INVAL);
