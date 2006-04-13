@@ -1,19 +1,28 @@
 -------------------------------------------------------------------
-todo webdav package
--------------------------------------------------------------------
-
-- usage of jdom....
-
--------------------------------------------------------------------
-todo webdav/version package
+todo webdav/version
 -------------------------------------------------------------------
 
 - review: compliance to deltaV
 - reflecting feature-sets
-- baseline/activity not respected yet.
+- baseline/activity: missing support in library
 
 -------------------------------------------------------------------
-todo webdav/transaction package
+todo webdav/ordering
+-------------------------------------------------------------------
+
+- respect Position header with creation of new collection members by
+  PUT, COPY, MKCOL requests
+  
+
+-------------------------------------------------------------------
+todo webdav/search
+-------------------------------------------------------------------
+
+- SearchResource should extend DavResource
+- library misses support for the basic query
+
+-------------------------------------------------------------------
+todo webdav/transaction
 -------------------------------------------------------------------
 
 - review naming of the lock scopes. 'global','local' are not correct in
@@ -24,33 +33,20 @@ todo webdav/transaction package
   upon the end of the servletes service method.
   general review necessary....
 
--------------------------------------------------------------------
-todo webdav/search package
--------------------------------------------------------------------
-
-- SearchResource should extend DavResource
-- basicquery as defined by the internet draft not respected
-  currently.
 
 -------------------------------------------------------------------
-todo spi / servlets
+todo jcr-server implementation
 -------------------------------------------------------------------
 
 general 
 
 - undo incomplete changes in case of exception
-- review GET/PUT for JCR properties
-- multistatus fuer lock, copy, move, delete, proppatch wherever required.
+- multistatus fuer lock, copy, move, delete wherever required.
 - DAV:supported-live-property-set
 - timeout: remove expired locks/subscriptions
 - improve definition methods/compliance-class
-- methods/compliance-class auf der root resoure vs *
 - OPTIONS to *-request-uri (according to RFC 2616)
 
-ordering
-
-- respect Position header with creation of new collection members by
-  PUT, COPY, MKCOL requests
 
 lock
 
@@ -77,12 +73,5 @@ observation
 
 versioning
 
-- VersionItemResource. review regarding definition of a version resource 
-  rfc3253: 'A "version resource", or simply "version", is a resource 
-  that contains a copy of a particular state (content and dead properties) of a 
-  version-controlled resource. A version is created by "checking in" a checked-out 
-  resource. The server allocates a distinct new URL for each new version, and 
-  this URL will never be used to identify any resource other than that version. 
-  The content and dead properties of a version never change.'
-
 - Additional VERSION-CONTROL Semantics with workspace not implemented.
+- BaseLine/Activity not respected yet (see jsr283)
