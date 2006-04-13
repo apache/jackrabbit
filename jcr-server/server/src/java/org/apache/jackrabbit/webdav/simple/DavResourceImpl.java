@@ -619,8 +619,10 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         if (isFilteredResource(destination)) {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
-        // TODO: support shallow and deep copy
-        if (shallow) {
+        if (shallow && isCollection()) {
+            // TODO: currently no support for shallow copy; however this is
+            // only relevant if the source resource is a collection, because
+            // otherwise it doesn't make a difference
             throw new DavException(DavServletResponse.SC_FORBIDDEN, "Unable to perform shallow copy.");
         }
         try {
