@@ -39,6 +39,16 @@
       </p>
       <subsection name="Apache Jackrabbit News">
         <dl>
+          <dt><strong>April 8, 2006: Apache Jackrabbit 1.0 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.0 is a fully
+            conforming and stable JSR-170 implementation. Developed from
+            the same source tree as the JSR-170 reference implementation,
+            the 1.0 release implements the full JCR API, including level 1,
+            level 2, and all the optional features like versioning,
+            transactions, and observation.</em>"
+            See the <a href="downloads.cgi">downloads page</a> for more details.
+          </dd>
           <dt><strong>March 15, 2006: Apache Jackrabbit graduates from the Incubator</strong></dt>
           <dd>
             The <a href="http://www.apache.org/foundation/board/"
@@ -59,7 +69,7 @@
             Jackrabbit for users who have so far been using custom snapshots.
             This release also provides a well defined baseline for the
             upcoming Jackrabbit version 1.0.</em>"
-            See the <a href="downloads.html">downloads page</a> for more details.
+            See the <a href="downloads.cgi">downloads page</a> for more details.
           </dd>
         </dl>
       </subsection>
