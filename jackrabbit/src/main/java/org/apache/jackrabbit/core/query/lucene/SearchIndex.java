@@ -85,6 +85,11 @@ public class SearchIndex extends AbstractQueryHandler {
     public static final int DEFAULT_MERGE_FACTOR = 10;
 
     /**
+     * the default value for property {@link #maxFieldLength}.
+     */
+    public static final int DEFAULT_MAX_FIELD_LENGTH = 10000;
+
+    /**
      * Default text filters.
      */
     public static final String DEFAULT_TEXT_FILTERS = TextPlainTextFilter.class.getName();
@@ -130,6 +135,11 @@ public class SearchIndex extends AbstractQueryHandler {
      * mergeFactor config parameter
      */
     private int mergeFactor = DEFAULT_MERGE_FACTOR;
+
+    /**
+     * maxFieldLength config parameter
+     */
+    private int maxFieldLength = DEFAULT_MAX_FIELD_LENGTH;
 
     /**
      * Number of documents that are buffered before they are added to the index.
@@ -716,6 +726,14 @@ public class SearchIndex extends AbstractQueryHandler {
 
     public int getCacheSize() {
         return cacheSize;
+    }
+
+    public void setMaxFieldLength(int length) {
+        maxFieldLength = length;
+    }
+
+    public int getMaxFieldLength() {
+        return maxFieldLength;
     }
 
     /**

@@ -247,6 +247,7 @@ public class MultiIndex {
                 index.setMaxMergeDocs(handler.getMaxMergeDocs());
                 index.setMergeFactor(handler.getMergeFactor());
                 index.setMinMergeDocs(handler.getMinMergeDocs());
+                index.setMaxFieldLength(handler.getMaxFieldLength());
                 index.setUseCompoundFile(handler.getUseCompoundFile());
                 indexes.add(index);
                 merger.indexAdded(index.getName(), index.getNumDocuments());
@@ -479,6 +480,7 @@ public class MultiIndex {
         index.setMaxMergeDocs(handler.getMaxMergeDocs());
         index.setMergeFactor(handler.getMergeFactor());
         index.setMinMergeDocs(handler.getMinMergeDocs());
+        index.setMaxFieldLength(handler.getMaxFieldLength());
         index.setUseCompoundFile(handler.getUseCompoundFile());
 
         // add to list of open indexes and return it
@@ -717,6 +719,7 @@ public class MultiIndex {
     private void resetVolatileIndex() throws IOException {
         volatileIndex = new VolatileIndex(handler.getTextAnalyzer());
         volatileIndex.setUseCompoundFile(handler.getUseCompoundFile());
+        volatileIndex.setMaxFieldLength(handler.getMaxFieldLength());
         volatileIndex.setBufferSize(handler.getBufferSize());
     }
 

@@ -75,6 +75,9 @@ abstract class AbstractIndex {
     /** mergeFactor config parameter */
     private int mergeFactor = SearchIndex.DEFAULT_MERGE_FACTOR;
 
+    /** maxFieldLength config parameter */
+    private int maxFieldLength = SearchIndex.DEFAULT_MAX_FIELD_LENGTH;
+
     /**
      * The document number cache if this index may use one.
      */
@@ -206,6 +209,7 @@ abstract class AbstractIndex {
             indexWriter.minMergeDocs = minMergeDocs;
             indexWriter.maxMergeDocs = maxMergeDocs;
             indexWriter.mergeFactor = mergeFactor;
+            indexWriter.maxFieldLength = maxFieldLength;
             indexWriter.setUseCompoundFile(useCompoundFile);
             indexWriter.infoStream = STREAM_LOGGER;
         }
@@ -338,6 +342,16 @@ abstract class AbstractIndex {
         this.mergeFactor = mergeFactor;
         if (indexWriter != null) {
             indexWriter.mergeFactor = mergeFactor;
+        }
+    }
+
+    /**
+     * The lucene index writer property: maxFieldLength
+     */
+    void setMaxFieldLength(int maxFieldLength) {
+        this.maxFieldLength = maxFieldLength;
+        if (indexWriter != null) {
+            indexWriter.maxFieldLength = maxFieldLength;
         }
     }
 
