@@ -291,10 +291,7 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        if (flags == TMSUCCESS || flags == TMFAIL) {
-            associate(null);
-            txGlobal.remove(xid);
-        } else if (flags == TMSUSPEND) {
+        if (flags == TMSUCCESS || flags == TMFAIL || flags == TMSUSPEND) {
             associate(null);
         } else {
             throw new XAException(XAException.XAER_INVAL);
@@ -325,6 +322,8 @@ public class XASessionImpl extends SessionImpl
             tx.prepare();
         }
         tx.commit();
+
+        txGlobal.remove(xid);
     }
 
     /**
@@ -336,6 +335,8 @@ public class XASessionImpl extends SessionImpl
             throw new XAException(XAException.XAER_NOTA);
         }
         tx.rollback();
+
+        txGlobal.remove(xid);
     }
 
     /**
