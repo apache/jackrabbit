@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
 
         //suite.addTestSuite(ConcurrencyTest.class);
         //suite.addTestSuite(ConcurrentSaveTest.class);
+        //suite.addTestSuite(LockTest.class);
         suite.addTestSuite(TransientRepositoryTest.class);
         suite.addTestSuite(XATest.class);
 
