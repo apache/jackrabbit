@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -31,6 +32,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.slf4j.Logger;
@@ -43,7 +45,8 @@ import org.slf4j.LoggerFactory;
  * when no longer used, this class can be used to avoid having to explicitly
  * shut down the repository.
  */
-public class TransientRepository implements Repository, SessionListener {
+public class TransientRepository
+        implements JackrabbitRepository, SessionListener {
 
     /**
      * The logger instance used to log the repository and session lifecycles.
@@ -382,6 +385,22 @@ public class TransientRepository implements Repository, SessionListener {
      */
     public Session login() throws RepositoryException {
         return login(null, null);
+    }
+
+    //--------------------------------------------------<JackrabbitRepository>
+
+    /**
+     * Forces all active sessions to logout. Once the last session has logged
+     * out, the underlying repository instance will automatically be shut down.
+     *
+     * @see Session#logout()
+     */
+    public synchronized void shutdown() {
+        Iterator iterator = new HashSet(sessions).iterator();
+        while (iterator.hasNext()) {
+            Session session = (Session) iterator.next();
+            session.logout();
+        }
     }
 
     //-------------------------------------------------------<SessionListener>
