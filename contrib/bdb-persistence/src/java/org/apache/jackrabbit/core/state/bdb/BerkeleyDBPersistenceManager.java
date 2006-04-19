@@ -15,6 +15,8 @@
  */
 package org.apache.jackrabbit.core.state.bdb;
 
+import javax.jcr.PropertyType;
+
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
@@ -40,6 +42,8 @@ import org.apache.jackrabbit.core.state.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.util.BLOBStore;
 import org.apache.jackrabbit.core.state.util.FileSystemBLOBStore;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
 
 import java.io.File;
 
@@ -318,6 +322,27 @@ public class BerkeleyDBPersistenceManager extends AbstractPersistenceManager {
             if (!operationStatus.equals(OperationStatus.SUCCESS)) {
                 throw new ItemStateException(operationStatus.toString());
             }
+
+            InternalValue[] values = state.getValues();
+            if (values != null) {
+                for (int i = 0; i < values.length; i++) {
+                    InternalValue val = values[i];
+                    if (val != null) {
+                        if (val.getType() == PropertyType.BINARY) {
+                            BLOBFileValue blobVal = (BLOBFileValue) val.internalValue();
+                            // delete internal resource representation of BLOB value
+                            blobVal.delete(true);
+                            // also remove from BLOBStore
+                            String blobId = blobStore.createId((PropertyId) state.getId(), i);
+                            try {
+                                blobStore.remove(blobId);
+                            } catch (Exception e) {
+                                log.warn("failed to remove from BLOBStore: " + blobId, e);
+                            }
+                        }
+                    }
+                }
+            } 
         } catch (Exception e) {
             log.error(e);
             throw new ItemStateException(e.getMessage(), e);
