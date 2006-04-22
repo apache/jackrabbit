@@ -542,6 +542,7 @@ indexing, etc.
                     <includes>
                         <include>**/*.xml</include>
                         <include>**/*.txt</include>
+                        <include>**/*.cnd</include>
                     </includes>
                 </resource>
             </resources>
