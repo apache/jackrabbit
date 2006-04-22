@@ -1,0 +1,14 @@
+<testns3 = "test-namespace3">
+<testns4 = "test-namespace4">
+
+[testns3:emptyNodeType] > nt:base 
+
+[testns4:mixinNodeType]
+  mixin
+
+[testns3:orderableNodeType] > nt:base
+  orderable
+
+[testns4:itemNodeType] > nt:base
+  - testns4:myDouble (double) ignore
+  - testns4:myBool (boolean) protected
