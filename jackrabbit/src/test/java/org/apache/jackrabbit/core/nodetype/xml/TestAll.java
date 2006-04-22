@@ -17,6 +17,9 @@ package org.apache.jackrabbit.core.nodetype.xml;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
+
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.core.TestRepository;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
@@ -25,9 +28,11 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -46,6 +51,14 @@ public class TestAll extends TestCase {
     /** Name of the include test node type definition file. */
     private static final String TEST_NODETYPES =
         "org/apache/jackrabbit/core/nodetype/xml/test_nodetypes.xml";
+
+    /** Name of the xml nodetype file for import and namespace registration. */
+    private static final String TEST_NS_XML_NODETYPES =
+        "test_ns_xml_nodetypes.xml";
+
+    /** Name of the cnd nodetype file for import and namespace registration. */
+    private static final String TEST_NS_CND_NODETYPES =
+        "test_ns_cnd_nodetypes.cnd";
 
     /** Test node types definitions. */
     private NodeTypeDef[] types;
@@ -207,6 +220,51 @@ public class TestAll extends TestCase {
                 10, def.getPropertyDefs().length);
         PropDef pdef = getProperty("itemNodeType", null);
         assertTrue("itemNodeType wildcard property", pdef.definesResidual());
+    }
+
+    /** Test for namespace registration on node type import. */
+    public void testImportXMLNodeTypes() throws Exception {
+        Session session = TestRepository.getInstance().login();
+        try {
+            session.getNamespacePrefix("test-namespace2");
+            // Ignore test case, node type and namespace already registered
+        } catch (NamespaceException e1) {
+            // Namespace testns2 not yet registered
+            JackrabbitNodeTypeManager ntm = (JackrabbitNodeTypeManager)
+                session.getWorkspace().getNodeTypeManager();
+            ntm.registerNodeTypes(
+                    TestAll.class.getResourceAsStream(TEST_NS_XML_NODETYPES),
+                    JackrabbitNodeTypeManager.TEXT_XML);
+            try {
+                session.getNamespacePrefix("test-namespace2");
+            } catch (NamespaceException e2) {
+                fail("xml test2 namespace not registered");
+            }
+        } finally {
+            session.logout();
+        }
+    }
+
+    /** Test for namespace registration on node type import. */
+    public void testImportCNDNodeTypes() throws Exception {
+        Session session = TestRepository.getInstance().login();
+        try {
+            session.getNamespacePrefix("test-namespace3");
+            // Ignore test case, node type and namespace already registered
+        } catch (NamespaceException e1) {
+            JackrabbitNodeTypeManager ntm = (JackrabbitNodeTypeManager)
+                session.getWorkspace().getNodeTypeManager();
+            ntm.registerNodeTypes(
+                    TestAll.class.getResourceAsStream(TEST_NS_CND_NODETYPES),
+                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+            try {
+                session.getNamespacePrefix("test-namespace3");
+            } catch (NamespaceException e2) {
+                fail("cnd test3 namespace not registered");
+            }
+        } finally {
+            session.logout();
+        }
     }
 
     /** Test for the empty item definition. */

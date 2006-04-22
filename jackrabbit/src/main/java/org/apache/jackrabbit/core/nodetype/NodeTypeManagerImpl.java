@@ -32,7 +32,10 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
@@ -44,10 +47,12 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -66,6 +71,13 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * The wrapped node type registry.
      */
     private final NodeTypeRegistry ntReg;
+
+    /**
+     * The persistent namespace registry where any new namespaces are
+     * automatically registered when new node type definition files are
+     * read.
+     */
+    private final NamespaceRegistry nsReg;
 
     /**
      * The root node definition.
@@ -101,10 +113,12 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * @param ntReg      node type registry
      * @param nsResolver namespace resolver
      */
-    public NodeTypeManagerImpl(NodeTypeRegistry ntReg,
-                               NamespaceResolver nsResolver) {
+    public NodeTypeManagerImpl(
+            NodeTypeRegistry ntReg, NamespaceRegistry nsReg,
+            NamespaceResolver nsResolver) {
         this.nsResolver = nsResolver;
         this.ntReg = ntReg;
+        this.nsReg = nsReg;
         this.ntReg.addListener(this);
 
         // setup caches with soft references to node type
@@ -327,18 +341,70 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     }
 
     /**
+     * Registers a single namespace bypassing registration if the namespace
+     * is already registered. A unique prefix is automatically genenerated
+     * if the given prefix is already mapped to another namespace.
+     *
+     * @param prefix The namespace prefix
+     * @param uri The namespace URI
+     * @throws RepositoryException if a repository error occurs
+     */
+    protected void registerNamespace(String prefix, String uri)
+            throws RepositoryException {
+        try {
+            // Check if the uri is already registered
+            nsReg.getPrefix(uri);
+        } catch (NamespaceException e1) {
+            // The uri is not in the registry. The prefix may be with another
+            // uri or it may not be (the ideal scenario).  In either case,
+            // attempt to register it and add a incrementing sequence number
+            // to the prefix until it no longer conflicts with any existing
+            // prefix.
+            String original = prefix;
+            for (int i = 2; true; i++) {
+                try {
+                    // Attempt to register the prefix and uri... if the prefix
+                    // is already registered an exception will be thrown due
+                    // to an attempt to remap.
+                    nsReg.registerNamespace(prefix, uri);
+                    return;
+                } catch (NamespaceException e2) {
+                    prefix = original + i;
+                }
+            }
+        }
+    }
+
+    /**
      * Registers the node types defined in the given XML stream.  This
      * is a trivial implementation that just invokes the existing
      * {@link NodeTypeReader} and {@link NodeTypeRegistry} methods and
-     * heuristically creates the returned node type array.
+     * heuristically creates the returned node type array.  It will also
+     * register any namespaces defined in the input source that have not
+     * already been registered.
      *
      * {@inheritDoc}
      */
     public NodeType[] registerNodeTypes(InputSource in)
             throws SAXException, RepositoryException {
         try {
-            NodeTypeDef[] defs = NodeTypeReader.read(in.getByteStream());
+            NodeTypeReader ntr = new NodeTypeReader(in.getByteStream());
+
+            Properties namespaces = ntr.getNamespaces();
+            if (namespaces != null) {
+                Enumeration prefixes = namespaces.propertyNames();
+                while (prefixes.hasMoreElements()) {
+                    String prefix = (String) prefixes.nextElement();
+                    registerNamespace(prefix, namespaces.getProperty(prefix));
+                }
+            }
+
+            NodeTypeDef[] defs = ntr.getNodeTypeDefs();
             return registerNodeTypes(Arrays.asList(defs));
+        } catch (IllegalNameException e) {
+            throw new RepositoryException("Illegal JCR name syntax", e);
+        } catch (UnknownPrefixException e) {
+            throw new RepositoryException("Unknown namespace prefix", e);
         } catch (InvalidNodeTypeDefException e) {
             throw new RepositoryException("Invalid node type definition", e);
         } catch (IOException e) {
@@ -348,23 +414,38 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
 
     private static final String APPLICATION_XML = "application/xml";
 
-    /** {@inheritDoc} */
+    /**
+     * Registers the node types defined in the given input stream depending
+     * on the content type specified for the stream. This will also register
+     * any namespaces identified in the input stream if they have not already
+     * been registered.
+     *
+     * {@inheritDoc}
+     */
     public NodeType[] registerNodeTypes(InputStream in, String contentType)
             throws IOException, RepositoryException {
         try {
-            if (contentType.equalsIgnoreCase(JackrabbitNodeTypeManager.TEXT_XML)
-                    || contentType.equalsIgnoreCase(APPLICATION_XML)) {
-                return registerNodeTypes(new InputSource(in));
-            } else if (contentType.equalsIgnoreCase(
-                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND)) {
-                NamespaceMapping mapping = new NamespaceMapping(nsResolver);
-                CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
-                        new InputStreamReader(in), "cnd input stream", mapping);
-                return registerNodeTypes(reader.getNodeTypeDefs());
-            } else {
-                throw new UnsupportedOperationException(
-                        "Unsupported content type: " + contentType);
-            }
+          if (contentType.equalsIgnoreCase(TEXT_XML)
+                  || contentType.equalsIgnoreCase(APPLICATION_XML)) {
+              return registerNodeTypes(new InputSource(in));
+          } else if (contentType.equalsIgnoreCase(TEXT_X_JCR_CND)) {
+              NamespaceMapping mapping = new NamespaceMapping(nsResolver);
+              CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
+                      new InputStreamReader(in), "cnd input stream", mapping);
+
+              Map nsMap = mapping.getPrefixToURIMapping();
+              Iterator iterator = nsMap.entrySet().iterator();
+              while (iterator.hasNext()) {
+                  Map.Entry entry = (Map.Entry) iterator.next();
+                  registerNamespace(
+                          (String) entry.getKey(), (String) entry.getValue());
+              }
+
+              return registerNodeTypes(reader.getNodeTypeDefs());
+          } else {
+              throw new UnsupportedRepositoryOperationException(
+                      "Unsupported content type: " + contentType);
+          }
         } catch (InvalidNodeTypeDefException e) {
             throw new RepositoryException("Invalid node type definition", e);
         } catch (SAXException e) {
