@@ -151,27 +151,11 @@ public class ImportHandler extends DefaultHandler {
     public void startPrefixMapping(String prefix, String uri)
             throws SAXException {
         localNamespaceMappings.put(prefix, uri);
-
         try {
-            // this will trigger NamespaceException if namespace is unknown
-            nsReg.getPrefix(uri);
-        } catch (NamespaceException nse) {
-            try {
-                // namespace is not yet registered ...
-                if (prefix.length() == 0) {
-                    /**
-                     * the xml document specifies a default namespace
-                     * (i.e. an empty prefix); we need to create a random
-                     * prefix as the empty prefix is reserved according
-                     * to the JCR spec.
-                     */
-                    prefix = nsReg.getUniquePrefix(uri);
-                }
-                // register new namespace
-                nsReg.registerNamespace(prefix, uri);
-            } catch (RepositoryException re) {
-                throw new SAXException(re);
-            }
+            // Register the namespace unless already registered
+            nsReg.safeRegisterNamespace(prefix, uri);
+        } catch (RepositoryException re) {
+            throw new SAXException(re);
         }
     }
 

@@ -23,6 +23,7 @@ import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
@@ -32,8 +33,6 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -77,7 +76,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * automatically registered when new node type definition files are
      * read.
      */
-    private final NamespaceRegistry nsReg;
+    private final NamespaceRegistryImpl nsReg;
 
     /**
      * The root node definition.
@@ -114,7 +113,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * @param nsResolver namespace resolver
      */
     public NodeTypeManagerImpl(
-            NodeTypeRegistry ntReg, NamespaceRegistry nsReg,
+            NodeTypeRegistry ntReg, NamespaceRegistryImpl nsReg,
             NamespaceResolver nsResolver) {
         this.nsResolver = nsResolver;
         this.ntReg = ntReg;
@@ -341,41 +340,6 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     }
 
     /**
-     * Registers a single namespace bypassing registration if the namespace
-     * is already registered. A unique prefix is automatically genenerated
-     * if the given prefix is already mapped to another namespace.
-     *
-     * @param prefix The namespace prefix
-     * @param uri The namespace URI
-     * @throws RepositoryException if a repository error occurs
-     */
-    protected void registerNamespace(String prefix, String uri)
-            throws RepositoryException {
-        try {
-            // Check if the uri is already registered
-            nsReg.getPrefix(uri);
-        } catch (NamespaceException e1) {
-            // The uri is not in the registry. The prefix may be with another
-            // uri or it may not be (the ideal scenario).  In either case,
-            // attempt to register it and add a incrementing sequence number
-            // to the prefix until it no longer conflicts with any existing
-            // prefix.
-            String original = prefix;
-            for (int i = 2; true; i++) {
-                try {
-                    // Attempt to register the prefix and uri... if the prefix
-                    // is already registered an exception will be thrown due
-                    // to an attempt to remap.
-                    nsReg.registerNamespace(prefix, uri);
-                    return;
-                } catch (NamespaceException e2) {
-                    prefix = original + i;
-                }
-            }
-        }
-    }
-
-    /**
      * Registers the node types defined in the given XML stream.  This
      * is a trivial implementation that just invokes the existing
      * {@link NodeTypeReader} and {@link NodeTypeRegistry} methods and
@@ -395,7 +359,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                 Enumeration prefixes = namespaces.propertyNames();
                 while (prefixes.hasMoreElements()) {
                     String prefix = (String) prefixes.nextElement();
-                    registerNamespace(prefix, namespaces.getProperty(prefix));
+                    nsReg.safeRegisterNamespace(
+                            prefix, namespaces.getProperty(prefix));
                 }
             }
 
@@ -437,7 +402,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
               Iterator iterator = nsMap.entrySet().iterator();
               while (iterator.hasNext()) {
                   Map.Entry entry = (Map.Entry) iterator.next();
-                  registerNamespace(
+                  nsReg.safeRegisterNamespace(
                           (String) entry.getKey(), (String) entry.getValue());
               }
 
