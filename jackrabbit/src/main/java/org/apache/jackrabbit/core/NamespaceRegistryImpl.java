@@ -207,6 +207,49 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         return "_pre" + (prefixToURI.size() + 1);
     }
 
+    /**
+     * Registers a namespace using the given prefix hint. Does nothing
+     * if the namespace is already registered. If the given prefix hint
+     * is not yet registered as a prefix, then it is used as the prefix
+     * of the registered namespace. Otherwise a unique prefix is generated
+     * based on the given hint.
+     *
+     * @param prefixHint the prefix hint
+     * @param uri the namespace URI
+     * @throws RepositoryException if an unexpected error occurs
+     * @see #registerNamespace(String, String)
+     */
+    public void safeRegisterNamespace(String prefixHint, String uri)
+            throws NamespaceException, RepositoryException {
+        try {
+            // Check if the namespace is already registered
+            getPrefix(uri);
+            // ... it is, so do nothing.
+        } catch (NamespaceException e1) {
+            // ... it is not, try to find a unique prefix.
+
+            // First, check and replace troublesome prefix hints.
+            if (prefixHint.toLowerCase().startsWith(QName.NS_XML_PREFIX)
+                    || !XMLChar.isValidNCName(prefixHint)) {
+                prefixHint = "_pre";
+            }
+
+            // Then, find an appropriate prefix based on the hint
+            String prefix = prefixHint;
+            try {
+                for (int suffix = 2; true; suffix++) {
+                    // Is this prefix already registered?
+                    getURI(prefix);
+                    // ... it is, generate a new prefix and try again.
+                    prefix = prefixHint + suffix;
+                }
+            } catch (NamespaceException e2) {
+                // ... it is not, register the namespace with this prefix.
+                registerNamespace(prefix, uri);
+            }
+        }
+    }
+
     //----------------------------------------------------< NamespaceRegistry >
     /**
      * {@inheritDoc}
