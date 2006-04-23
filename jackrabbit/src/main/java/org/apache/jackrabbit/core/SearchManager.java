@@ -210,7 +210,7 @@ public class SearchManager implements SynchronousEventListener {
      * @throws RepositoryException if the search manager cannot be initialized
      */
     public SearchManager(SearchConfig config,
-                         final NamespaceRegistry nsReg,
+                         final NamespaceRegistryImpl nsReg,
                          NodeTypeRegistry ntReg,
                          ItemStateManager itemMgr,
                          NodeId rootNodeId,
@@ -246,18 +246,8 @@ public class SearchManager implements SynchronousEventListener {
         };
 
         // register namespaces
-        try {
-            nsReg.getPrefix(NS_XS_URI);
-        } catch (NamespaceException e) {
-            // not yet known
-            nsReg.registerNamespace(NS_XS_PREFIX, NS_XS_URI);
-        }
-        try {
-            nsReg.getPrefix(NS_FN_URI);
-        } catch (RepositoryException e) {
-            // not yet known
-            nsReg.registerNamespace(NS_FN_PREFIX, NS_FN_URI);
-        }
+        nsReg.safeRegisterNamespace(NS_XS_PREFIX, NS_XS_URI);
+        nsReg.safeRegisterNamespace(NS_FN_PREFIX, NS_FN_URI);
 
         Properties params = config.getParameters();
         queryImplClassName = params.getProperty(PARAM_QUERY_IMPL, DEFAULT_QUERY_IMPL_CLASS);
