@@ -15,18 +15,19 @@
  */
 package org.apache.jackrabbit.webdav.version;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>LabelSetProperty</code>...
  */
 public class LabelSetProperty extends AbstractDavProperty {
 
-    private static Logger log = Logger.getLogger(LabelSetProperty.class);
+    private static Logger log = LoggerFactory.getLogger(LabelSetProperty.class);
 
     private final String[] value;
 

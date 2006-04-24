@@ -15,11 +15,12 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>Status</code> encapsulating the 'status' present in multistatus
@@ -27,7 +28,7 @@ import org.w3c.dom.Document;
  */
 public class Status implements DavConstants, XmlSerializable{
 
-    private static Logger log = Logger.getLogger(Status.class);
+    private static Logger log = LoggerFactory.getLogger(Status.class);
 
     private final String version;
     private final int code;

@@ -15,19 +15,20 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Property;
 import javax.jcr.Item;
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import java.util.Calendar;
-import java.util.Date;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * <code>DefaultHandler</code> implements a simple IOHandler that creates 'file'
@@ -53,7 +54,7 @@ import java.io.InputStream;
  */
 public class DefaultHandler implements IOHandler {
 
-    private static Logger log = Logger.getLogger(DefaultHandler.class);
+    private static Logger log = LoggerFactory.getLogger(DefaultHandler.class);
 
     private String collectionNodetype = JcrConstants.NT_FOLDER;
     private String defaultNodetype = JcrConstants.NT_FILE;

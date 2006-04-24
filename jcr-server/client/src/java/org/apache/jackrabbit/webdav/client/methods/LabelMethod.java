@@ -15,10 +15,11 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.version.LabelInfo;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
+import org.apache.jackrabbit.webdav.version.LabelInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -27,7 +28,7 @@ import java.io.IOException;
  */
 public class LabelMethod extends DavMethodBase {
 
-    private static Logger log = Logger.getLogger(LabelMethod.class);
+    private static Logger log = LoggerFactory.getLogger(LabelMethod.class);
 
     /**
      * Create a new <code>LabelMethod</code> with the default depth.

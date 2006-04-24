@@ -15,17 +15,18 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.DavResourceLocator;
-import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.DavLocatorFactory;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>DavLocatorFactoryImpl</code>...
  */
 public class DavLocatorFactoryImpl implements DavLocatorFactory {
 
-    private static Logger log = Logger.getLogger(DavLocatorFactoryImpl.class);
+    private static Logger log = LoggerFactory.getLogger(DavLocatorFactoryImpl.class);
 
     private final String pathPrefix;
 

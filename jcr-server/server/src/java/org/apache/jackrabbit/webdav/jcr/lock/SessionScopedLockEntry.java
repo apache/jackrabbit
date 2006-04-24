@@ -15,12 +15,13 @@
  */
 package org.apache.jackrabbit.webdav.jcr.lock;
 
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
+import org.apache.jackrabbit.webdav.lock.AbstractLockEntry;
 import org.apache.jackrabbit.webdav.lock.LockEntry;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
-import org.apache.jackrabbit.webdav.lock.AbstractLockEntry;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>SessionScopedLockEntry</code> represents the 'session-scoped' write
@@ -28,7 +29,7 @@ import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
  */
 public class SessionScopedLockEntry extends AbstractLockEntry {
 
-    private static Logger log = Logger.getLogger(SessionScopedLockEntry.class);
+    private static Logger log = LoggerFactory.getLogger(SessionScopedLockEntry.class);
 
     /**
      * @return always returns {@link Type#WRITE write}.

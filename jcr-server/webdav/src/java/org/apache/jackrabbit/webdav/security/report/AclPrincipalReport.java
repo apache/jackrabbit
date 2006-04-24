@@ -15,22 +15,22 @@
  */
 package org.apache.jackrabbit.webdav.security.report;
 
-import org.apache.jackrabbit.webdav.version.report.ReportType;
-import org.apache.jackrabbit.webdav.version.report.Report;
-import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-import org.apache.jackrabbit.webdav.security.SecurityConstants;
-import org.apache.jackrabbit.webdav.security.AclProperty;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.security.AclProperty;
+import org.apache.jackrabbit.webdav.security.SecurityConstants;
+import org.apache.jackrabbit.webdav.version.report.Report;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
 
-import java.util.Map;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The AclPrincipalReport report returns the requested property set

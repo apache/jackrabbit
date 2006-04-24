@@ -15,10 +15,11 @@
  */
 package org.apache.jackrabbit.webdav.transaction;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.lock.Type;
-import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.AbstractLockEntry;
+import org.apache.jackrabbit.webdav.lock.Scope;
+import org.apache.jackrabbit.webdav.lock.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>TxLockEntry</code> represents the lock entry objects allowed for
@@ -26,7 +27,7 @@ import org.apache.jackrabbit.webdav.lock.AbstractLockEntry;
  */
 public final class TxLockEntry extends AbstractLockEntry implements TransactionConstants {
 
-    private static Logger log = Logger.getLogger(TxLockEntry.class);
+    private static Logger log = LoggerFactory.getLogger(TxLockEntry.class);
 
     private final Scope scope;
 

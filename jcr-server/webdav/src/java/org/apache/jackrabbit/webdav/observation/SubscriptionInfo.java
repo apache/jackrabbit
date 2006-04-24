@@ -15,15 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.observation;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.Namespace;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,7 @@ import java.util.List;
  */
 public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
 
-    private static Logger log = Logger.getLogger(SubscriptionInfo.class);
+    private static Logger log = LoggerFactory.getLogger(SubscriptionInfo.class);
 
     private final EventType[] eventTypes;
     private final Filter[] filters;

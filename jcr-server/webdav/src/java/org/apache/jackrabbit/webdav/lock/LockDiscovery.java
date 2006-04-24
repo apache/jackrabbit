@@ -15,14 +15,14 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * The <code>LockDiscovery</code> class encapsulates the webdav lock discovery

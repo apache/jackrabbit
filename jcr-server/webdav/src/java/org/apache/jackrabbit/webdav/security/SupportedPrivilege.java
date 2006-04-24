@@ -15,11 +15,11 @@
  */
 package org.apache.jackrabbit.webdav.security;
 
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.Namespace;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>SupportedPrivilege</code>...

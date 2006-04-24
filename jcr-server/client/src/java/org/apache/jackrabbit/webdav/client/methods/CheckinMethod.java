@@ -15,16 +15,17 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>CheckinMethod</code>...
  */
 public class CheckinMethod extends DavMethodBase {
 
-    private static Logger log = Logger.getLogger(CheckinMethod.class);
+    private static Logger log = LoggerFactory.getLogger(CheckinMethod.class);
 
     public CheckinMethod(String uri) {
         super(uri);

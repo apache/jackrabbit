@@ -15,7 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.header;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -24,7 +25,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class CodedUrlHeader implements Header {
 
-    private static Logger log = Logger.getLogger(CodedUrlHeader.class);
+    private static Logger log = LoggerFactory.getLogger(CodedUrlHeader.class);
 
     private final String headerName;
     private final String headerValue;

@@ -15,20 +15,21 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.io.IOException;
+import java.util.List;
 
 /**
  * <code>DefaultIOManager</code>...
  */
 public class DefaultIOManager implements IOManager {
 
-    private static Logger log = Logger.getLogger(DefaultIOManager.class);
+    private static Logger log = LoggerFactory.getLogger(DefaultIOManager.class);
 
     private final List ioHandlers = new ArrayList();
 

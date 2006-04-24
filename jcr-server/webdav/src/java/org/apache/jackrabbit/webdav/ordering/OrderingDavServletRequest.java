@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.ordering;
 
-import org.apache.jackrabbit.webdav.DavServletRequest;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletRequest;
 
 /**
  * <code>OrderingDavServletRequest</code> provides extensions to the

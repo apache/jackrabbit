@@ -15,20 +15,21 @@
  */
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
 
 /**
  * <code>NodeDefinitionImpl</code>...
  */
 public final class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefinition {
 
-    private static Logger log = Logger.getLogger(NodeDefinitionImpl.class);
+    private static Logger log = LoggerFactory.getLogger(NodeDefinitionImpl.class);
 
     private final NodeType[] requiredPrimaryTypes;
     private final NodeType defaultPrimaryType;

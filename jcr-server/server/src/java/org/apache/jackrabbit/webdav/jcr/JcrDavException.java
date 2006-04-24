@@ -15,33 +15,34 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.LoginException;
 import javax.jcr.MergeException;
 import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.LoginException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.version.VersionException;
 import java.util.HashMap;
 
 /**
@@ -50,7 +51,7 @@ import java.util.HashMap;
  */
 public class JcrDavException extends DavException {
 
-    private static Logger log = Logger.getLogger(JcrDavException.class);
+    private static Logger log = LoggerFactory.getLogger(JcrDavException.class);
 
     // mapping of Jcr exceptions to error codes.
     private static HashMap codeMap = new HashMap();

@@ -35,7 +35,8 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.Property;
@@ -54,7 +55,7 @@ import java.util.Iterator;
  */
 public class DefaultItemResource extends AbstractItemResource {
 
-    private static Logger log = Logger.getLogger(DefaultItemResource.class);
+    private static Logger log = LoggerFactory.getLogger(DefaultItemResource.class);
 
     /**
      * Create a new <code>DefaultItemResource</code>.

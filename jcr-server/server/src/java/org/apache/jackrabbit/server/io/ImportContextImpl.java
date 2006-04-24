@@ -15,14 +15,15 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.io.InputContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
-import java.io.InputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.File;
+import java.io.InputStream;
 import java.util.Date;
 
 /**
@@ -30,7 +31,7 @@ import java.util.Date;
  */
 public class ImportContextImpl implements ImportContext {
 
-    private static Logger log = Logger.getLogger(ImportContextImpl.class);
+    private static Logger log = LoggerFactory.getLogger(ImportContextImpl.class);
 
     private final IOListener ioListener;
     private final Item importRoot;

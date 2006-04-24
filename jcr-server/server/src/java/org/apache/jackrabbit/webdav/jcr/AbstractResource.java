@@ -65,7 +65,8 @@ import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
@@ -85,7 +86,7 @@ import java.util.List;
 abstract class AbstractResource implements DavResource, ObservationResource,
         TransactionResource, DeltaVResource, SearchResource {
 
-    private static Logger log = Logger.getLogger(AbstractResource.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractResource.class);
 
     private final DavResourceLocator locator;
     private final JcrDavSession session;

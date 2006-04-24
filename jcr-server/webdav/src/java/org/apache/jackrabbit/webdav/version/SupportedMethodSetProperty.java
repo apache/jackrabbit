@@ -15,18 +15,19 @@
  */
 package org.apache.jackrabbit.webdav.version;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * The <code>SupportedMethodSetProperty</code>
  */
 public class SupportedMethodSetProperty extends AbstractDavProperty implements DeltaVConstants {
 
-    private static Logger log = Logger.getLogger(SupportedMethodSetProperty.class);
+    private static Logger log = LoggerFactory.getLogger(SupportedMethodSetProperty.class);
 
     private final String[] methods;
 

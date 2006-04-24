@@ -15,23 +15,24 @@
  */
 package org.apache.jackrabbit.webdav.security.report;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.report.ReportType;
-import org.apache.jackrabbit.webdav.version.report.Report;
-import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-import org.apache.jackrabbit.webdav.security.SecurityConstants;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.security.SecurityConstants;
+import org.apache.jackrabbit.webdav.version.report.Report;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * The <code>PrincipalSearchReport</code> performs a search for all principals
@@ -63,7 +64,7 @@ import java.util.Iterator;
  */
 public class PrincipalSearchReport extends AbstractSecurityReport {
 
-    private static Logger log = Logger.getLogger(PrincipalSearchReport.class);
+    private static Logger log = LoggerFactory.getLogger(PrincipalSearchReport.class);
 
     public static final String XML_APPLY_TO_PRINCIPAL_COLLECTION_SET = "apply-to-principal-collection-set";
     public static final String XML_PROPERTY_SEARCH = "property-search";

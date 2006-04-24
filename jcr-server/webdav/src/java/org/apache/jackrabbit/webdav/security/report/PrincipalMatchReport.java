@@ -15,16 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.security.report;
 
-import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.security.SecurityConstants;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-import org.apache.jackrabbit.webdav.security.SecurityConstants;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.w3c.dom.Element;
 
 /**

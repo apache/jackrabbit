@@ -15,10 +15,11 @@
  */
 package org.apache.jackrabbit.webdav.xml;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -28,7 +29,7 @@ import java.util.NoSuchElementException;
  */
 public class ElementIterator implements Iterator {
 
-    private static Logger log = Logger.getLogger(ElementIterator.class);
+    private static Logger log = LoggerFactory.getLogger(ElementIterator.class);
 
     private final Namespace namespace;
     private final String localName;

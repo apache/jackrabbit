@@ -16,14 +16,14 @@
 package org.apache.jackrabbit.webdav;
 
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * MultiStatus representing the content of a multistatus response body and

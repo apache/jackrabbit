@@ -15,9 +15,9 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.w3c.dom.Document;
 
 import javax.servlet.http.HttpServletRequest;

@@ -16,14 +16,15 @@
 package org.apache.jackrabbit.webdav.property;
 
 import org.apache.jackrabbit.webdav.xml.Namespace;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * The <code>DavPropertySet</code> class represents a set of WebDAV
@@ -31,7 +32,7 @@ import java.util.NoSuchElementException;
  */
 public class DavPropertySet extends PropContainer {
 
-    private static Logger log = Logger.getLogger(DavPropertySet.class);
+    private static Logger log = LoggerFactory.getLogger(DavPropertySet.class);
 
     /**
      * the set of property

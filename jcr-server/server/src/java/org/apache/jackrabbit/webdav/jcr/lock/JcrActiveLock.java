@@ -15,25 +15,26 @@
  */
 package org.apache.jackrabbit.webdav.jcr.lock;
 
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.lock.AbstractActiveLock;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
-import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.lock.Scope;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.webdav.lock.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.lock.Lock;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.lock.Lock;
 
 /**
  * <code>JcrActiveLock</code> wraps a {@link Lock JCR lock} object.
  */
 public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, DavConstants {
 
-    private static Logger log = Logger.getLogger(JcrActiveLock.class);
+    private static Logger log = LoggerFactory.getLogger(JcrActiveLock.class);
 
     private final Lock lock;
     private final boolean sessionScoped;

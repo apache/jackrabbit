@@ -15,19 +15,19 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.PropContainer;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.property.PropContainer;
-import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import java.util.HashMap;
 import java.util.Iterator;

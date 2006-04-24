@@ -15,15 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.ordering;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <code>Position</code> encapsulates the position in ordering information
@@ -37,7 +38,7 @@ import java.util.HashSet;
  */
 public class Position implements OrderingConstants, XmlSerializable {
 
-    private static Logger log = Logger.getLogger(Position.class);
+    private static Logger log = LoggerFactory.getLogger(Position.class);
 
     private static final Set VALID_TYPES = new HashSet();
     static {

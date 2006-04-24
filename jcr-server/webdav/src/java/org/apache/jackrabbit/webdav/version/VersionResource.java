@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.version;
 
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
 
 /**
  * <code>VersionResource</code> is a resource that contains a copy of a particular

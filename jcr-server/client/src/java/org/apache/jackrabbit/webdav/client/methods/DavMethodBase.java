@@ -15,33 +15,34 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.header.Header;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
-import org.xml.sax.SAXException;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * <code>DavMethodBase</code>...
  */
 public abstract class DavMethodBase extends EntityEnclosingMethod implements DavConstants {
 
-    private static Logger log = Logger.getLogger(DavMethodBase.class);
+    private static Logger log = LoggerFactory.getLogger(DavMethodBase.class);
     static final DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
     static {
        BUILDER_FACTORY.setNamespaceAware(true);

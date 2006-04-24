@@ -15,33 +15,34 @@
  */
 package org.apache.jackrabbit.webdav.simple;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.server.io.IOManager;
 import org.apache.jackrabbit.server.io.DefaultIOManager;
-import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.server.io.IOManager;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.net.URL;
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>ResourceConfig</code>...
  */
 public class ResourceConfig {
 
-    private static Logger log = Logger.getLogger(ResourceConfig.class);
+    private static Logger log = LoggerFactory.getLogger(ResourceConfig.class);
 
     private ItemFilter itemFilter;
     private IOManager ioManager;

@@ -15,14 +15,14 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
+import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+
 import java.util.HashMap;
 import java.util.Iterator;
-
-import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavResourceIterator;
 
 /**
  * Simple manager for webdav locks.<br>

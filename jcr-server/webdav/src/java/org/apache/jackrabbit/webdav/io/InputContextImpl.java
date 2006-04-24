@@ -16,7 +16,8 @@
 package org.apache.jackrabbit.webdav.io;
 
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
@@ -28,7 +29,7 @@ import java.util.Date;
  */
 public class InputContextImpl implements InputContext {
 
-    private static Logger log = Logger.getLogger(InputContextImpl.class);
+    private static Logger log = LoggerFactory.getLogger(InputContextImpl.class);
 
     private final HttpServletRequest request;
     private final InputStream in;

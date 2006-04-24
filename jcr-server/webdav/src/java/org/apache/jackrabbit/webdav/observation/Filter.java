@@ -15,19 +15,20 @@
  */
 package org.apache.jackrabbit.webdav.observation;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>Filter</code>...
  */
 public class Filter implements XmlSerializable {
 
-    private static Logger log = Logger.getLogger(Filter.class);
+    private static Logger log = LoggerFactory.getLogger(Filter.class);
 
     private final String filterName;
     private final Namespace filterNamespace;

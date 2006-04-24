@@ -15,14 +15,14 @@
  */
 package org.apache.jackrabbit.webdav.security.report;
 
-import org.apache.jackrabbit.webdav.version.report.Report;
-import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.version.report.Report;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 

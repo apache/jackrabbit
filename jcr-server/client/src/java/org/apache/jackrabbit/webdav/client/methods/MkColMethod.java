@@ -15,15 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>MkColMethod</code>...
  */
 public class MkColMethod extends DavMethodBase {
 
-    private static Logger log = Logger.getLogger(MkColMethod.class);
+    private static Logger log = LoggerFactory.getLogger(MkColMethod.class);
 
     public MkColMethod(String uri) {
         super(uri);

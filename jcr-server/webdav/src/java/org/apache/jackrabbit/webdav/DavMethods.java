@@ -15,7 +15,8 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
@@ -24,7 +25,7 @@ import java.util.HashMap;
  */
 public class DavMethods {
 
-    private static Logger log = Logger.getLogger(DavMethods.class);
+    private static Logger log = LoggerFactory.getLogger(DavMethods.class);
 
     /**
      * A hashmap of webdav METHODS

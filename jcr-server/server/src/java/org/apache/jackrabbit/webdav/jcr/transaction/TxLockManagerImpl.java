@@ -15,6 +15,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.transaction;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -33,12 +34,12 @@ import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.transaction.TxActiveLock;
 import org.apache.jackrabbit.webdav.transaction.TxLockManager;
-import org.apache.jackrabbit.util.Text;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Item;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -61,7 +62,7 @@ import java.util.Iterator;
    for those 'global' transactions at all...*/
 public class TxLockManagerImpl implements TxLockManager {
 
-    private static Logger log = Logger.getLogger(TxLockManagerImpl.class);
+    private static Logger log = LoggerFactory.getLogger(TxLockManagerImpl.class);
 
     private TransactionMap map = new TransactionMap();
 

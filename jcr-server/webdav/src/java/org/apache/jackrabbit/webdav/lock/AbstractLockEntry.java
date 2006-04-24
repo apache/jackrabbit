@@ -15,18 +15,19 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>AbstractLockEntry</code> provides the generic {@link org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml} method.
  */
 public abstract class AbstractLockEntry implements LockEntry, DavConstants {
 
-    private static Logger log = Logger.getLogger(AbstractLockEntry.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractLockEntry.class);
 
     /**
      * Returns the Xml representation of this <code>LockEntry</code>.

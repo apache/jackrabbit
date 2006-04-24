@@ -15,17 +15,18 @@
  */
 package org.apache.jackrabbit.webdav.header;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>LabelHeader</code>...
  */
 public class LabelHeader implements Header {
 
-    private static Logger log = Logger.getLogger(LabelHeader.class);
+    private static Logger log = LoggerFactory.getLogger(LabelHeader.class);
 
     private final String label;
 

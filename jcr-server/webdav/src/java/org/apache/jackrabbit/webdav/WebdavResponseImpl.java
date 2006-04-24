@@ -15,26 +15,27 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockDiscovery;
+import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
-import org.apache.jackrabbit.webdav.observation.EventDiscovery;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Cookie;
 import javax.servlet.ServletOutputStream;
-import javax.xml.parsers.ParserConfigurationException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.ByteArrayOutputStream;
 import java.util.Locale;
 
 /**
@@ -42,7 +43,7 @@ import java.util.Locale;
  */
 public class WebdavResponseImpl implements WebdavResponse {
 
-    private static Logger log = Logger.getLogger(WebdavResponseImpl.class);
+    private static Logger log = LoggerFactory.getLogger(WebdavResponseImpl.class);
 
     private static final DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
 

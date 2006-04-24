@@ -15,15 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>CheckoutMethod</code>...
  */
 public class CheckoutMethod extends DavMethodBase {
 
-    private static Logger log = Logger.getLogger(CheckoutMethod.class);
+    private static Logger log = LoggerFactory.getLogger(CheckoutMethod.class);
 
 
     public CheckoutMethod(String uri) {

@@ -35,7 +35,6 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
@@ -48,6 +47,7 @@ import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.SupportedLock;
 import org.apache.jackrabbit.webdav.lock.Type;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -56,7 +56,8 @@ import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.apache.jackrabbit.webdav.xml.Namespace;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.NamespaceException;
@@ -86,7 +87,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     /**
      * the default logger
      */
-    private static final Logger log = Logger.getLogger(DavResourceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(DavResourceImpl.class);
 
     private static final HashMap reservedNamespaces = new HashMap();
 

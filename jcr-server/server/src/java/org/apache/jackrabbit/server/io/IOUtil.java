@@ -15,17 +15,18 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.Date;
 
 /**
@@ -34,7 +35,7 @@ import java.util.Date;
  */
 public class IOUtil {
 
-    private static Logger log = Logger.getLogger(IOUtil.class);
+    private static Logger log = LoggerFactory.getLogger(IOUtil.class);
 
     /**
      * Constant for undefined modification/creation time

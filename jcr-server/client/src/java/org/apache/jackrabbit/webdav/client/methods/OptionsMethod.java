@@ -15,11 +15,12 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.version.OptionsInfo;
 import org.apache.jackrabbit.webdav.version.OptionsResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ import java.io.IOException;
  */
 public class OptionsMethod extends DavMethodBase {
 
-    private static Logger log = Logger.getLogger(OptionsMethod.class);
+    private static Logger log = LoggerFactory.getLogger(OptionsMethod.class);
 
     public OptionsMethod(String uri) {
 	super(uri);

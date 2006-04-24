@@ -15,14 +15,15 @@
  */
 package org.apache.jackrabbit.webdav.xml;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>Namespace</code>
  */
 public class Namespace {
 
-    private static Logger log = Logger.getLogger(Namespace.class);
+    private static Logger log = LoggerFactory.getLogger(Namespace.class);
 
     public static final Namespace EMPTY_NAMESPACE = Namespace.getNamespace("","");
     public static final Namespace XML_NAMESPACE = Namespace.getNamespace("xml", "http://www.w3.org/XML/1998/namespace");

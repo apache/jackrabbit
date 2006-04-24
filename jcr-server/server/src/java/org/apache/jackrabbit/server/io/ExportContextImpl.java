@@ -15,21 +15,22 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
-import java.util.Map;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Date;
-import java.io.File;
-import java.io.OutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.FileOutputStream;
+import java.util.Map;
 
 /**
  * <code>ExportContextImpl</code> implements an <code>ExportContext</code> that
@@ -43,7 +44,7 @@ import java.io.FileOutputStream;
  */
 public class ExportContextImpl extends AbstractExportContext {
 
-    private static Logger log = Logger.getLogger(ExportContextImpl.class);
+    private static Logger log = LoggerFactory.getLogger(ExportContextImpl.class);
 
     private final Map properties = new HashMap();
     private final OutputContext outputCtx;
@@ -187,7 +188,7 @@ public class ExportContextImpl extends AbstractExportContext {
                         FileInputStream in = new FileInputStream(outFile);
                         IOUtil.spool(in, out);
                     } catch (IOException e) {
-                        log.error(e);
+                        log.error(e.toString());
                     }
                 }
             }

@@ -18,7 +18,8 @@ package org.apache.jackrabbit.webdav.property;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -30,7 +31,7 @@ import java.util.Iterator;
  */
 public abstract class PropContainer implements XmlSerializable, DavConstants {
 
-    private static Logger log = Logger.getLogger(PropContainer.class);
+    private static Logger log = LoggerFactory.getLogger(PropContainer.class);
 
     /**
      * Tries to add the specified object to the <code>PropContainer</code> and

@@ -15,38 +15,39 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.transaction.TransactionResource;
-import org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest;
-import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
-import org.apache.jackrabbit.webdav.observation.ObservationResource;
-import org.apache.jackrabbit.webdav.version.DeltaVServletRequest;
-import org.apache.jackrabbit.webdav.version.VersionControlledResource;
-import org.apache.jackrabbit.webdav.jcr.version.VersionItemCollection;
-import org.apache.jackrabbit.webdav.jcr.version.VersionHistoryItemCollection;
-import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
-import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletRequest;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavSession;
-import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
+import org.apache.jackrabbit.webdav.jcr.version.VersionHistoryItemCollection;
+import org.apache.jackrabbit.webdav.jcr.version.VersionItemCollection;
+import org.apache.jackrabbit.webdav.observation.ObservationResource;
+import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
+import org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest;
+import org.apache.jackrabbit.webdav.transaction.TransactionResource;
+import org.apache.jackrabbit.webdav.version.DeltaVServletRequest;
+import org.apache.jackrabbit.webdav.version.VersionControlledResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 /**
  * <code>DavResourceFactoryImpl</code>...
  */
 public class DavResourceFactoryImpl implements DavResourceFactory {
 
-    private static Logger log = Logger.getLogger(DavResourceFactoryImpl.class);
+    private static Logger log = LoggerFactory.getLogger(DavResourceFactoryImpl.class);
 
     private final TxLockManagerImpl txMgr;
     private final SubscriptionManager subsMgr;

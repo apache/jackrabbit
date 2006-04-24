@@ -18,12 +18,13 @@ package org.apache.jackrabbit.webdav.lock;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.log4j.Logger;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>LockInfo</code> is a simple utility class encapsulating the information
@@ -37,7 +38,7 @@ import org.w3c.dom.Document;
  */
 public class LockInfo implements DavConstants, XmlSerializable {
 
-    private static Logger log = Logger.getLogger(LockInfo.class);
+    private static Logger log = LoggerFactory.getLogger(LockInfo.class);
 
     private Type type;
     private Scope scope;

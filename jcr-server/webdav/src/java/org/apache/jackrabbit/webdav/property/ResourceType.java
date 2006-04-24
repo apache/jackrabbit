@@ -15,17 +15,17 @@
  */
 package org.apache.jackrabbit.webdav.property;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The <code>ResourceType</code> class represents the webdav resource

@@ -21,9 +21,10 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
-import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
@@ -39,7 +40,7 @@ import java.util.HashSet;
 public class JCRWebdavServer implements DavSessionProvider {
 
     /** the default logger */
-    private static Logger log = Logger.getLogger(JCRWebdavServer.class);
+    private static Logger log = LoggerFactory.getLogger(JCRWebdavServer.class);
 
     /** the session cache */
     private final SessionCache cache = new SessionCache();
@@ -286,7 +287,7 @@ public class JCRWebdavServer implements DavSessionProvider {
                     return s.getUserID();
                 }
             } catch (DavException e) {
-                log.error(e);
+                log.error(e.toString());
             }
             // fallback
             return session.toString();

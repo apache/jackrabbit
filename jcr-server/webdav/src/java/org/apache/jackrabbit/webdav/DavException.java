@@ -15,14 +15,15 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.Properties;
 import java.io.IOException;
+import java.util.Properties;
 
 /**
  * <code>DavException</code> extends the {@link Exception} class in order
@@ -32,7 +33,7 @@ import java.io.IOException;
  */
 public class DavException extends Exception implements XmlSerializable {
 
-    private static Logger log = Logger.getLogger(DavException.class);
+    private static Logger log = LoggerFactory.getLogger(DavException.class);
     private static Properties statusPhrases = new Properties();
     static {
         try {
