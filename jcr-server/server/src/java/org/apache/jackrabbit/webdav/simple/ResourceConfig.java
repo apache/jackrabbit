@@ -15,27 +15,27 @@
  */
 package org.apache.jackrabbit.webdav.simple;
 
-import org.apache.jackrabbit.server.io.DefaultIOManager;
 import org.apache.jackrabbit.server.io.IOManager;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.server.io.DefaultIOManager;
+import org.apache.jackrabbit.server.io.IOHandler;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.net.URL;
+import java.util.List;
+import java.util.ArrayList;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <code>ResourceConfig</code>...
@@ -54,7 +54,8 @@ public class ResourceConfig {
      * The xml must match the following structure:<br>
      * <pre>
      * &lt;!ELEMENT config (iomanager, (collection | noncollection)?, filter?) &gt;
-     * &lt;!ELEMENT iomanager (class) &gt;
+     * &lt;!ELEMENT iomanager (class, iohandler*) &gt;
+     * &lt;!ELEMENT iohandler (class) &gt;
      * &lt;!ELEMENT collection (nodetypes) &gt;
      * &lt;!ELEMENT noncollection (nodetypes) &gt;
      * &lt;!ELEMENT filter (class, namespaces?, nodetypes?) &gt;
@@ -72,11 +73,9 @@ public class ResourceConfig {
      * @param configURL
      */
     public void parse(URL configURL) {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
         try {
             InputStream in = configURL.openStream();
-            DocumentBuilder builder = factory.newDocumentBuilder();
+            DocumentBuilder builder = DomUtil.BUILDER_FACTORY.newDocumentBuilder();
             Document document = builder.parse(in);
             Element config = document.getDocumentElement();
 
@@ -90,6 +89,20 @@ public class ResourceConfig {
                 Object inst = buildClassFromConfig(el);
                 if (inst != null && inst instanceof IOManager) {
                     ioManager = (IOManager)inst;
+                    // get optional 'iohandler' child elements and populate the
+                    // ioManager with the instances
+                    ElementIterator iohElements = DomUtil.getChildren(el, "iohandler", null);
+                    while (iohElements.hasNext()) {
+                        Element iohEl = iohElements.nextElement();
+                        inst = buildClassFromConfig(iohEl);
+                        if (inst != null && inst instanceof IOHandler) {
+                            this.ioManager.addIOHandler((IOHandler) inst);
+                        } else {
+                            log.error("Resource configuration: the handler is not a valid IOHandler.");
+                        }
+                    }
+                } else {
+                    log.error("Resource configuration: 'iomanager' does not define a valid IOManager.");
                 }
             } else {
                 log.error("Resource configuration: mandatory 'iomanager' element is missing.");

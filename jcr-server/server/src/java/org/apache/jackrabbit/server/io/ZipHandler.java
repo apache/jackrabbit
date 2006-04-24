@@ -52,6 +52,15 @@ public class ZipHandler extends DefaultHandler {
     private boolean intermediateSave;
 
     /**
+     * Creates a new <code>ZipHandler</code> with default nodetype definitions
+     * and without setting the IOManager.
+     *
+     * @see IOHandler#setIOManager(IOManager)
+     */
+    public ZipHandler() {
+    }
+
+    /**
      * Creates a new <code>ZipHandler</code> with default nodetype definitions:<br>
      * <ul>
      * <li>Nodetype for Collection: {@link JcrConstants#NT_UNSTRUCTURED nt:unstructured}</li>

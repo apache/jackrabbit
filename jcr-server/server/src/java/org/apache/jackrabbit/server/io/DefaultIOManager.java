@@ -15,133 +15,51 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.jackrabbit.webdav.DavResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * <code>DefaultIOManager</code>...
  */
-public class DefaultIOManager implements IOManager {
+public class DefaultIOManager extends IOManagerImpl {
 
     private static Logger log = LoggerFactory.getLogger(DefaultIOManager.class);
 
-    private final List ioHandlers = new ArrayList();
-
+    /**
+     * Creates a new <code>DefaultIOManager</code> and populates the internal
+     * list of <code>IOHandler</code>s by the defaults.
+     *
+     * @see #init()
+     */
     public DefaultIOManager() {
-        this(true);
+        init();
     }
 
-    protected DefaultIOManager(boolean doInit) {
-        if (doInit) {
+    /**
+     * Creates a new <code>DefaultIOManager</code>. The if the flag is set to
+     * false no <code>IOHandler</code>s are added to the internal list.
+     *
+     * @deprecated Use {@link IOManagerImpl} instead.
+     */
+    protected DefaultIOManager(boolean initDefaults) {
+        if (initDefaults) {
            init();
         }
     }
 
+    /**
+     * Add the predefined <code>IOHandler</code>s to this manager. This includes
+     * <ul>
+     * <li>{@link ZipHandler}</li>
+     * <li>{@link XmlHandler}</li>
+     * <li>{@link DirListingExportHandler}</li>
+     * <li>{@link DefaultHandler}.</li>
+     * </ul>
+     */
     protected void init() {
         addIOHandler(new ZipHandler(this));
         addIOHandler(new XmlHandler(this));
         addIOHandler(new DirListingExportHandler(this));
         addIOHandler(new DefaultHandler(this));
-    }
-
-    public void addIOHandler(IOHandler ioHandler) {
-        ioHandlers.add(ioHandler);
-    }
-
-    public IOHandler[] getIOHandlers() {
-        return (IOHandler[]) ioHandlers.toArray(new IOHandler[ioHandlers.size()]);
-    }
-
-    public boolean importContent(ImportContext context, boolean isCollection) throws IOException {
-        boolean success = false;
-        if (context != null) {
-            IOListener ioListener = context.getIOListener();
-            if (ioListener == null) {
-                ioListener = new DefaultIOListener(log);
-            }
-
-            Iterator it = ioHandlers.iterator();
-            while (it.hasNext() && !success) {
-                IOHandler ioh = (IOHandler)it.next();
-                if (ioh.canImport(context, isCollection)) {
-                    ioListener.onBegin(ioh, context);
-                    success = ioh.importContent(context, isCollection);
-                    ioListener.onEnd(ioh, context, success);
-                }
-            }
-            context.informCompleted(success);
-        }
-        return success;
-    }
-
-    public boolean importContent(ImportContext context, DavResource resource) throws IOException {
-        boolean success = false;
-        if (context != null && resource != null) {
-            IOListener ioListener = context.getIOListener();
-            if (ioListener == null) {
-                ioListener = new DefaultIOListener(log);
-            }
-            Iterator it = ioHandlers.iterator();
-            while (it.hasNext() && !success) {
-                IOHandler ioh = (IOHandler)it.next();
-                if (ioh.canImport(context, resource)) {
-                    ioListener.onBegin(ioh, context);
-                    success = ioh.importContent(context, resource);
-                    ioListener.onEnd(ioh, context, success);
-                }
-            }
-            context.informCompleted(success);
-        }
-        return success;
-    }
-
-    public boolean exportContent(ExportContext context, boolean isCollection) throws IOException {
-        boolean success = false;
-        if (context != null) {
-            IOListener ioListener = context.getIOListener();
-            if (ioListener == null) {
-                ioListener = new DefaultIOListener(log);
-            }
-
-            Iterator it = ioHandlers.iterator();
-            while (it.hasNext() && !success) {
-                IOHandler ioh = (IOHandler)it.next();
-                if (ioh.canExport(context, isCollection)) {
-                    ioListener.onBegin(ioh, context);
-                    success = ioh.exportContent(context, isCollection);
-                    ioListener.onEnd(ioh, context, success);
-                }
-            }
-            context.informCompleted(success);
-        }
-        return success;
-    }
-
-    public boolean exportContent(ExportContext context, DavResource resource) throws IOException {
-        boolean success = false;
-        if (context != null && resource != null) {
-            IOListener ioListener = context.getIOListener();
-            if (ioListener == null) {
-                ioListener = new DefaultIOListener(log);
-            }
-
-            Iterator it = ioHandlers.iterator();
-            while (it.hasNext() && !success) {
-                IOHandler ioh = (IOHandler)it.next();
-                if (ioh.canExport(context, resource)) {
-                    ioListener.onBegin(ioh, context);
-                    success = ioh.exportContent(context, resource);
-                    ioListener.onEnd(ioh, context, success);
-                }
-            }
-            context.informCompleted(success);
-        }
-        return success;
     }
 }
