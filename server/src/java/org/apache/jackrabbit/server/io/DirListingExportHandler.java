@@ -245,6 +245,13 @@ public class DirListingExportHandler implements IOHandler {
     }
 
     /**
+     * @see IOHandler#setIOManager(IOManager)
+     */
+    public void setIOManager(IOManager ioManager) {
+        this.ioManager = ioManager;
+    }
+    
+    /**
      * @see IOHandler#getName()
      */
     public String getName() {

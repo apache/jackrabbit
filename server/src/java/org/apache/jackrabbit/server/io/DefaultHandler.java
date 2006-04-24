@@ -63,6 +63,15 @@ public class DefaultHandler implements IOHandler {
     private IOManager ioManager;
 
     /**
+     * Creates a new <code>DefaultHandler</code> with default nodetype definitions
+     * and without setting the IOManager.
+     *
+     * @see IOHandler#setIOManager(IOManager)
+     */
+    public DefaultHandler() {
+    }
+
+    /**
      * Creates a new <code>DefaultHandler</code> with default nodetype definitions:<br>
      * <ul>
      * <li>Nodetype for Collection: {@link JcrConstants#NT_FOLDER nt:folder}</li>
@@ -98,6 +107,13 @@ public class DefaultHandler implements IOHandler {
      */
     public IOManager getIOManager() {
         return ioManager;
+    }
+
+    /**
+     * @see IOHandler#setIOManager(IOManager)
+     */
+    public void setIOManager(IOManager ioManager) {
+        this.ioManager = ioManager;
     }
 
     /**

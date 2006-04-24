@@ -55,7 +55,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -76,13 +75,7 @@ import java.util.Map;
 public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
     private static Logger log = LoggerFactory.getLogger(WebdavRequestImpl.class);
-    private static final DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
-    static {
-        BUILDER_FACTORY.setNamespaceAware(true);
-        BUILDER_FACTORY.setIgnoringComments(true);
-        BUILDER_FACTORY.setIgnoringElementContentWhitespace(true);
-        BUILDER_FACTORY.setCoalescing(true);
-    }
+
     private final HttpServletRequest httpRequest;
     private final DavLocatorFactory factory;
     private final IfHeader ifHeader;
@@ -265,7 +258,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 boolean isEmpty = -1 == bin.read();
                 bin.reset();
                 if (!isEmpty) {
-                    DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
+                    DocumentBuilder docBuilder = DomUtil.BUILDER_FACTORY.newDocumentBuilder();
                     requestDocument = docBuilder.parse(bin);
                 }
             }

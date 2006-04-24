@@ -32,6 +32,11 @@ public interface IOHandler {
     public IOManager getIOManager();
 
     /**
+     * Sets the <code>IOManager</code> that called this handler.
+     */
+    public void setIOManager(IOManager ioManager);
+
+    /**
      * Returns a human readable name for this <code>IOHandler</code>
      *
      * @return

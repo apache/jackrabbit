@@ -26,6 +26,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +36,18 @@ import java.util.List;
 public class DomUtil {
 
     private static Logger log = LoggerFactory.getLogger(DomUtil.class);
+
+    /**
+     * Constant for <code>DocumentBuilderFactory</code> which is used
+     * widely to create new <code>Document</code>s
+     */
+    public static DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
+    static {
+        BUILDER_FACTORY.setNamespaceAware(true);
+        BUILDER_FACTORY.setIgnoringComments(true);
+        BUILDER_FACTORY.setIgnoringElementContentWhitespace(true);
+        BUILDER_FACTORY.setCoalescing(true);
+    }
 
     /**
      * Returns the value of the named attribute of the current element.
@@ -389,6 +402,25 @@ public class DomUtil {
      */
     public static Element addChildElement(Element parent, String localName, Namespace namespace) {
         Element elem = createElement(parent.getOwnerDocument(), localName, namespace);
+        parent.appendChild(elem);
+        return elem;
+    }
+
+    /**
+     * Add a new child element with the given local name and namespace to the
+     * specified parent.
+     *
+     * @param parent
+     * @param localName
+     * @param namespace
+     * @return the new element that was attached to the given parent.
+     */
+    public static Element addChildElement(Node parent, String localName, Namespace namespace) {
+        Document doc = parent.getOwnerDocument();
+        if (parent instanceof Document) {
+            doc = (Document) parent;
+        }
+        Element elem = createElement(doc, localName, namespace);
         parent.appendChild(elem);
         return elem;
     }
