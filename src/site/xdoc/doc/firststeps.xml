@@ -35,10 +35,11 @@
       <subsection name="Hop 0: Getting started">
         <p>
           Before you can start using Jackrabbit, you need to have it installed
-          on your computer. You can do this either by downloading a
-          <a href="../downloads.html">binary release</a> and all the required
-          <a href="../dependencies.html">dependencies</a> or by building
-          <a href="building.html">the Jackrabbit sources</a>.
+          on your computer. You can do this either by
+          <a href="../downloads.cgi">downloading a binary release</a> and
+          all the required
+          <a href="../dependencies.html">dependencies</a> or by
+          <a href="building.html">building the Jackrabbit sources</a>.
         </p>
         <p>
           Once you have Jackrabbit available locally, you should make sure
@@ -48,22 +49,17 @@
           following libraries configured in your Java classpath:
         </p>
         <dl>
-          <dt>
-            <code>jackrabbit-1.0.jar</code> or
-            <code>jackrabbit-1.0-SNAPSHOT.jar</code>
-          </dt>
+          <dt><a href="http://www.ibiblio.org/maven/org.apache.jackrabbit/jars/jackrabbit-core-1.0.jar" class="externalLink">jackrabbit-1.0.jar</a></dt>
           <dd>
             depending on whether you use a binary release or a locally
             compiled version,
           </dd>
 
-          <dt><code>jcr-1.0.jar</code></dt>
+          <dt><a href="http://www.day.com/maven/jsr170/jars/jcr-1.0.jar" class="externalLink">jcr-1.0.jar</a></dt>
           <dd>for the JCR 1.0 API,</dd>
 
-          <dt>
-            <code>slf4j-log4j12-1.0.jar</code> and
-            <code>log4j-1.2.8.jar</code>
-          </dt>
+          <dt><a href="http://www.ibiblio.org/maven/org.slf4j/jars/slf4j-log4j12-1.0.jar" class="externalLink">slf4j-log4j12-1.0.jar</a></dt>
+          <dt><a href="http://www.ibiblio.org/maven/log4j/jars/log4j-1.2.8.jar" class="externalLink">log4j-1.2.8.jar</a></dt>
           <dd>
             for logging using
             <a href="http://www.slf4j.org/" class="externalLink"
@@ -74,13 +70,11 @@
             implementation),
           </dd>
 
-          <dt><code>commons-collections-3.1.jar</code></dt>
+          <dt><a href="http://www.ibiblio.org/maven/commons-collections/jars/commons-collections-3.1.jar" class="externalLink">commons-collections-3.1.jar</a></dt>
           <dd>for advanced data structures used by Jackrabbit,</dd>
 
-          <dt>
-            <code>xercesImpl-2.6.2.jar</code> and
-            <code>xmlParserApis-2.0.2.jar</code>
-          </dt>
+          <dt><a href="http://www.ibiblio.org/maven/xerces/jars/xercesImpl-2.6.2.jar" class="externalLink">xercesImpl-2.6.2.jar</a></dt>
+          <dt><a href="http://www.ibiblio.org/maven/xerces/jars/xmlParserAPIs-2.0.2.jar" class="externalLink">xmlParserApis-2.0.2.jar</a></dt>
           <dd>
             for advanced XML support (you should be fine with any recent
             <a href="http://xerces.apache.org/xerces2-j/"
@@ -88,17 +82,17 @@
             and the extra XML API library is only needed for JDK 1.4),
           </dd>
 
-          <dt><code>derby-10.1.1.0.jar</code></dt>
+          <dt><a href="http://www.ibiblio.org/maven/org.apache.derby/jars/derby-10.1.1.0.jar" class="externalLink">derby-10.1.1.0.jar</a></dt>
           <dd>
             or any recent
             <a href="http://db.apache.org/derby/" class="externalLink"
                >Derby</a> release for embedded database storage,
           </dd>
 
-          <dt><code>concurrent-1.3.4.jar</code></dt>
+          <dt><a href="http://www.ibiblio.org/maven/concurrent/jars/concurrent-1.3.4.jar" class="externalLink">concurrent-1.3.4.jar</a></dt>
           <dd>for advanced thread synchronization, and</dd>
 
-          <dt><code>lucene-1.4.3.jar</code></dt>
+          <dt><a href="http://www.ibiblio.org/maven/lucene/jars/lucene-1.4.3.jar" class="externalLink">lucene-1.4.3.jar</a></dt>
           <dd>for full text indexing and searching.</dd>
         </dl>
         <p>
@@ -117,9 +111,9 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
         <p>
           HINT: If you have build Jackrabbit from sources with
           <a href="http://maven.apache.org/maven-1.x/" class="externalLink"
-             >Maven 1.x</a>, then you can get all the dependencies copied
-          to <code>target/lib</code> by running <code>maven copy-deps</code>
-          in the Jackrabbit project directory.
+             >Maven 1.x</a>, you can get all the runtime dependencies (and some
+          extra libraries) copied to <code>target/lib</code> by running
+          <code>maven copy-deps</code> in the Jackrabbit project directory.
         </p>
         <p>
           HINT: You probably have an error in your classpath if you get a
@@ -154,7 +148,7 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
      * @throws Exception <em>if an error occurs</em>
      */
     <strong>public static void</strong> main(String[] args) <strong>throws</strong> Exception {
-        Repository repository = new TransientRepository();
+        Repository repository = <strong>new</strong> TransientRepository();
         Session session = repository.login();
         <strong>try</strong> {
             String user = session.getUserID();
@@ -166,8 +160,7 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
         }
     }
 
-}
-</source>
+}</source>
         <p>
           You can also download the source file as
           <a href="hops/FirstHop.java">FirstHop.java</a>. If you have your
@@ -248,7 +241,7 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
             </p>
           </dd>
 
-          <dt><code>Repository repository = new TransientRepository();</code></dt>
+          <dt><code>Repository repository = <strong>new</strong> TransientRepository();</code></dt>
           <dd>
             <p>
               The
@@ -322,7 +315,7 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
               <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Session.html#logout()"
                  class="externalLink">Session.logout()</a> method in the
               <code>finally</code> branch closes the session and since this
-              is the only session we have started, the repository is gets
+              is the only session we have started, the TransientRepository is
               automatically shut down.
             </p>
           </dd>
@@ -354,68 +347,319 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
           </dd>
         </dl>
       </subsection>
-      <subsection name="Hop 2: Adding content">
-        <p>TODO: Update to match the FirstHop style.</p>
-   <p>
-    Since an empty repository is not very useful, lets add some content to
-    it. The following example application uses the same setup code as the
-    already seen FirstHop class, but this one then goes to add a new
-    content node to the repository. The new code is highlighted.
-   </p>
-   <p><strong>SecondHop.java</strong></p>
-<source>import javax.jcr.*;
-import org.apache.jackrabbit.core.TransientRepository;
+      <subsection name="Hop 2: Working with content">
+        <p>
+          The main function of a content repository is allow applications
+          to store and retrieve content. The <em>content</em> in a JCR content
+          repository consists of structured or unstructured data modeled as
+          a hierarchy of nodes with properties that contain the actual data.
+        </p>
+        <p>
+          The following example application first stores some content to the
+          initially empty content repository, then retrieves the stored content
+          and outputs it, and finally removes the stored content.
+        </p>
+        <p><strong>SecondHop.java</strong></p>
+<source><strong>import</strong> javax.jcr.Repository;
+<strong>import</strong> javax.jcr.Session;
+<strong>import</strong> javax.jcr.SimpleCredentials;
+<strong>import</strong> javax.jcr.Node;
+<strong>import</strong> org.apache.jackrabbit.core.TransientRepository;
 
 /**
- * <i>Second Jackrabbit example application. Creates a test node with</i>
- * <i>a greeting message as a property and prints the saved content.</i>
+ * <em>Second hop example. Stores, retrieves, and removes example content.</em>
  */
-public class SecondHop {
+<strong>public class</strong> SecondHop {
 
-    /** <i>Runs the SecondHop example.</i> */
-    public static void main(String[] args) throws Exception {
-        Repository repository = new TransientRepository();
-
-        // <i>Login to the default workspace as a dummy user</i>
+    /**
+     * <em>The main entry point of the example application.</em>
+     *
+     * @param args <em>command line arguments (ignored)</em>
+     * @throws Exception <em>if an error occurs</em>
+     */
+    <strong>public static void</strong> main(String[] args) <strong>throws</strong> Exception {
+        Repository repository = <strong>new</strong> TransientRepository();
         Session session = repository.login(
-            new SimpleCredentials("username", "password".toCharArray()));
-        try {
-            // <i>Use the root node as a starting point</i>
+                <strong>new</strong> SimpleCredentials("<em>username</em>", "<em>password</em>".toCharArray()));
+        <strong>try</strong> {
             Node root = session.getRootNode();
 
-            // <i>Create a test node unless it already exists</i>
-            if (!root.hasNode("testnode")) {
-                System.out.print("Creating testnode... ");
-                // <i>Create an unstructured node called "testnode"</i>
-                Node node = root.addNode("testnode", "nt:unstructured");
-                // <i>Add a string property called "testprop"</i>
-                node.setProperty("testprop", "Hello, World!");
-                // <i>Save the changes to the repository</i>
-                session.save();
-                System.out.println("done.");
-           }
+            // <em>Store content</em>
+            Node hello = root.addNode("hello");
+            Node world = hello.addNode("world");
+            world.setProperty("message", "Hello, World!");
+            session.save();
 
-            // <i>Use the property path to get and print the added property</i>
-            Property property = root.getProperty("testnode/testprop");
-            System.out.println(property.getString());
-        } finally {
+            // <em>Retrieve content</em>
+            Node node = root.getNode("hello/world");
+            System.out.println(node.getPath());
+            System.out.println(node.getProperty("message").getString());
+
+            // <em>Remove content</em>
+            root.getNode("hello").remove();
+            session.save();
+        } <strong>finally</strong> {
             session.logout();
         }
     }
 
-}
-</source>
-   <p>
-    Compiling and running this class should produce the following output
-    when started for the first time. On subsequent runs the application
-    should only print "Hello, World!".
-   </p>
-<source>Creating testnode... done.
+}</source>
+        <p>
+          Like in the first hop, this example source is also available as
+          <a href="hops/SecondHop.java">SecondHop.java</a>. You can also
+          compile and run this class just like you did in the first hop
+          example. Running this example should produce the following output:
+        </p>
+        <source>/hello/world
 Hello, World!</source>
-  </subsection>
+        <p>
+          The basic structure of this example application is the same as
+          in the First Hop example, so let's just walk through the
+          differences:
+        </p>
+        <dl>
+          <dt><code><strong>import</strong> javax.jcr.SimpleCredentials;</code></dt>
+          <dt><code><strong>import</strong> javax.jcr.Node;</code></dt>
+          <dd>
+            <p>
+              These are two new classes we need for this example. The
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/SimpleCredentials.html"
+                 class="externalLink" title="javax.jcr.SimpleCredentials"
+                >SimpleCredentials</a> class is a simple implementation of the 
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Credentials.html"
+                 class="externalLink" title="javax.jcr.Credentials"
+                >Credentials</a> interface used for passing explicit user
+              credentials to the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Repository.html#login(javax.jcr.Credentials)"
+                 class="externalLink" title="javax.jcr.Repository.login(Credentials)"
+                >Repository.login(Credentials)</a> method.
+            </p>
+            <p>
+              The
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Node.html"
+                 class="externalLink" title="javax.jcr.Node"
+                >Node</a> interface is used to manage the content nodes in
+              a repository. There is a related interface called
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Property.html"
+                 class="externalLink" title="javax.jcr.Property"
+                >Property</a> for managing content properties, but in this
+              example we use the Property interface only indirectly.
+            </p>
+          </dd>
+
+          <dt><code><strong>new</strong> SimpleCredentials("<em>username</em>", "<em>password</em>".toCharArray())</code></dt>
+          <dd>
+            <p>
+              As discussed in the First Hop example, the default
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Repository.html#login()"
+                 class="externalLink" title="javax.jcr.Repository.login()"
+                >Repository.login()</a> method returns an anonymous read-only
+              session in the Jackrabbit default configuration. To be able to
+              store and remove content we need to create a session with
+              write access, and to do that we need to pass some credentials
+              to the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Repository.html#login(javax.jcr.Credentials)"
+                 class="externalLink" title="javax.jcr.Repository.login(javax.jcr.Credentials)"
+                >Repository.login(Credentials credentials)</a> method.
+            </p>
+            <p>
+              The default Jackrabbit login mechanism accepts any username and
+              password as valid credentials and returns a session with full
+              write access. Thus we only need to construct and use a
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/SimpleCredentials.html"
+                 class="externalLink" title="javax.jcr.SimpleCredentials"
+                >SimpleCredentials</a> instance with some dummy username and
+              password, in this case <code>"username"</code> and
+              <code>"password"</code>.
+            </p>
+            <p>
+              Quriously enough, the SimpleCredentials constructor takes the
+              username as a normal String, but the password as a character
+              array, so we need to use the
+              <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/lang/String.html#toCharArray()"
+                 class="externalLink" title="java.lang.String.toCharArray()"
+               >String.toCharArray()</a> method to satisfy the constructor.
+            </p>
+          </dd>
+
+          <dt><code>Node root = session.getRootNode();</code></dt>
+          <dd>
+            <p>
+              Each JCR session is associated with a workspace that contains
+              a single node tree. A simple way to access the root node is to
+              call the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Session.html#getRootNode()"
+                 class="externalLink" title="javax.jcr.Session.getRootNode()"
+                >Session.getRootNode()</a> method. Having a reference to the
+              root node allows us to easily store and retrieve content in the
+              current workspace.
+            </p>
+          </dd>
+
+          <dt><code>Node hello = root.addNode("hello");</code></dt>
+          <dt><code>Node world = hello.addNode("world");</code></dt>
+          <dd>
+            <p>
+              New content nodes can be added using the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Node.html#addNode(java.lang.String)"
+                 class="externalLink" title="javax.jcr.Node.addNode(String)"
+                >Node.addNode(String relPath)</a> method. The method takes the
+              name (or relative path) of the node to be added and creates the
+              named node in the transient storage associated with the current
+              session. Until the transient storage is persisted, the added node
+              is only visible within the current session and not within any
+              other session that is concurrently accessing the content
+              repository.
+            </p>
+            <p>
+              This code snippet creates two new nodes, called "hello" and
+              "world", with "hello" being a child of the root node and "world"
+              a child of the "hello" node.
+            </p>
+          </dd>
+            
+          <dt><code>world.setProperty("message", "Hello, World!");</code></dt>
+          <dd>
+            <p>
+              To add some content to the structure created using the "hello"
+              and "world" nodes, we use the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Node.html#setProperty(java.lang.String,%20java.lang.String)"
+                 class="externalLink" title="javax.jcr.Node.setProperty(String, String)"
+                >Node.setProperty(String name, String value)</a> method to
+              add a string property called "message" to the "world" node. The
+              value of the property is the string "Hello, World!".
+            </p>
+            <p>
+              Like the added nodes, also the property is first created in the
+              transient storage associated with the current session. If the
+              named property already exists, then this method will change
+              the value of that property.
+            </p>
+          </dd>
+
+          <dt><code>session.save();</code></dt>
+          <dd>
+            <p>
+              Even though the rest of our example would work just fine using
+              only the transient storage of the single session, we'd like
+              to persist the changes we've made so far. This way other sessions
+              could also access the example content we just created. If you
+              like, you could even split the example application into three
+              pieces for respectively storing, retrieving, and removing the
+              example content. Such a split would not work unless we persisted
+              the changes we make.
+            </p>
+            <p>
+              The
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Session.html#save()"
+                 class="externalLink" title="javax.jcr.Session.save()"
+                >Session.save()</a> method persists all pending changes in the
+              transient storage. The changes are written to the persistent
+              repository storage and they become visible to all sessions
+              accessing the same workspace. Without this call all changes
+              will be lost forever when the session is closed.
+            </p>
+          </dd>
+
+          <dt><code>Node node = root.getNode("hello/world");</code></dt>
+          <dd>
+            <p>
+              Since we are still using the same session, we could use the
+              existing <code>hello</code> and <code>world</code> node
+              references to access the stored content, but let's pretend
+              that we've started another session and want to retrieve the
+              content that was previously stored.
+            </p>
+            <p>
+              The
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Node.html#getNode(java.lang.String)"
+                 class="externalLink" title="javax.jcr.Node.getNode(String)"
+                >Node.getNode(String relPath)</a> method returns a reference
+              to the node at the given path relative to this node. The path
+              syntax follows common file system conventions: a forward slash
+              separates node names, a single dot represents the current node,
+              and a double dot the parent node. Thus the path "hello/world"
+              identifies the "world" child node of the "hello" child node
+              of the current node - in this case the root node. The end result
+              is that the method returns a node instance that represents the
+              same content node as the <code>world</code> instance created
+              a few lines earlier.
+            </p>
+          </dd>
+
+          <dt><code>System.out.println(node.getPath());</code></dt>
+          <dd>
+            <p>
+              Each content node and property is uniquely identified by its
+              absolute path within the workspace. The absolute path starts
+              with a forward slash and contains all the names of the
+              ancestor nodes in order before the name of the current
+              node or property.
+            </p>
+            <p>
+              The path of a node or property can be retrieved using the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Item.html#getPath()"
+                 class="externalLink" title="javax.jcr.Item.getPath()"
+                >Item.getPath()</a> method. The
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Item.html"
+                 class="externalLink" title="javax.jcr.Item"
+                >Item</a> inteface is a superinterface of Node and Property,
+              and contains all the functionality shared by nodes and properties.
+            </p>
+            <p>
+              The <code>node</code> variable references the "world" node, so
+              this statement will output the line "/hello/world".
+            </p>
+          </dd>
+
+          <dt><code>System.out.println(node.getProperty("message").getString());</code></dt>
+          <dd>
+            <p>
+              Properties can be accessed using the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Node.html#getProperty(java.lang.String)"
+                 class="externalLink" title="javax.jcr.Node.getProperty(String)"
+                >Node.getProperty(String relPath)</a> method that returns an
+              instance of the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Property.html"
+                 class="externalLink" title="javax.jcr.Property"
+                >Property</a> interface that represents the property at the
+              given path relative to the current node. In this case the
+              "message" property is the one we created a few lines earlier.
+            </p>
+            <p>
+              A JCR property can contain either a single or multiple values
+              of a given type. There are property types for storing strings,
+              numbers, dates, binary streams, node references, etc. We just
+              want the single string value, so we use the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Property.html#getString()"
+                 class="externalLink" title="javax.jcr.Property.getString()"
+                >Property.getString()</a> method. The result of this statement
+              is the line "Hello, World!" being outputted.
+            </p>
+          </dd>
+
+          <dt><code>root.getNode("hello").remove();</code></dt>
+          <dd>
+            <p>
+              Nodes and properties can be removed using the
+              <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Item.html#remove()"
+                 class="externalLink" title="javax.jcr.Item.remove()"
+                >Item.remove()</a> method. The method removes the entire
+              content subtree, so we only need to remove the topmost "hello"
+              node to get rid of all the content we added before.
+            </p>
+            <p>
+              Removals are first stored in the session-local transient
+              storage, just like added and changed content. Like before,
+              the transient changes need to be explicitly saved for the
+              content to be removed from the persistent storage.
+            </p>
+          </dd>
+        </dl>
+      </subsection>
 
   <subsection name="Hop 3: Importing content">
-        <p>TODO: Update to match the FirstHop style.</p>
+        <p>TODO: Update to match the style of previous hops.</p>
    <p>
     To add content a bit more efficiently, you may want to try
     JCR's import facilities, such as <code>Session.importXML</code>.
