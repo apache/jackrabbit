@@ -15,37 +15,38 @@
  */
 package org.apache.jackrabbit.webdav.jcr.search;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.Namespace;
-import org.apache.jackrabbit.webdav.search.SearchResource;
-import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
-import org.apache.jackrabbit.webdav.search.SearchInfo;
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
-import org.apache.jackrabbit.webdav.DavResourceLocator;
-import org.apache.jackrabbit.webdav.MultiStatus;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
+import org.apache.jackrabbit.webdav.search.SearchInfo;
+import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryResult;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.RowIterator;
-import javax.jcr.query.Row;
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.Value;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 
 /**
  * <code>SearchResourceImpl</code>...
  */
 public class SearchResourceImpl implements SearchResource {
 
-    private static Logger log = Logger.getLogger(SearchResourceImpl.class);
+    private static Logger log = LoggerFactory.getLogger(SearchResourceImpl.class);
 
     private final JcrDavSession session;
     private final DavResourceLocator locator;

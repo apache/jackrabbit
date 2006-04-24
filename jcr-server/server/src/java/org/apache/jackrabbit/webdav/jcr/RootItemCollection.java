@@ -24,7 +24,8 @@ import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
@@ -40,7 +41,7 @@ import java.util.Properties;
 //todo currently the jcr root node is the same for all workspace resources... this is wrong...
 public class RootItemCollection extends VersionControlledItemCollection {
 
-    private static Logger log = Logger.getLogger(RootItemCollection.class);
+    private static Logger log = LoggerFactory.getLogger(RootItemCollection.class);
 
     /**
      * Create a new <code>RootItemCollection</code>.

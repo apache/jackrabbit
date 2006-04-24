@@ -1,7 +1,7 @@
-<%@ page import="org.apache.jackrabbit.j2ee.SimpleWebdavServlet,
-		 javax.jcr.Repository,
+<%@ page import="org.apache.jackrabbit.j2ee.JCRWebdavServerServlet,
 		 org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
-                 org.apache.jackrabbit.j2ee.JCRWebdavServerServlet"%><%
+		 org.apache.jackrabbit.j2ee.SimpleWebdavServlet,
+                 javax.jcr.Repository"%><%
 %><html>
 <head>
 <title>Jackrabbit JCR-Server</title>

@@ -15,13 +15,13 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.xml.Namespace;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.lock.Scope;
-import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.version.DeltaVResource;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 import javax.jcr.PropertyType;
 

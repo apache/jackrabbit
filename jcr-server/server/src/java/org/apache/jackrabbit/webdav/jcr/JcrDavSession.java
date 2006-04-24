@@ -15,10 +15,11 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Session;
 
@@ -39,7 +40,7 @@ import javax.jcr.Session;
  */
 public abstract class JcrDavSession implements DavSession {
 
-    private static Logger log = Logger.getLogger(JcrDavSession.class);
+    private static Logger log = LoggerFactory.getLogger(JcrDavSession.class);
 
     /** the underlying jcr session */
     private final Session session;

@@ -17,8 +17,8 @@ package org.apache.jackrabbit.webdav.lock;
 
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>AbstractActiveLock</code>...

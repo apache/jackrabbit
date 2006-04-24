@@ -16,7 +16,8 @@
 package org.apache.jackrabbit.j2ee;
 
 import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Repository;
 import javax.naming.InitialContext;
@@ -39,7 +40,7 @@ public class RepositoryAccessServlet extends HttpServlet {
     /**
      * default logger
      */
-    private static final Logger log = Logger.getLogger(RepositoryAccessServlet.class);
+    private static final Logger log = LoggerFactory.getLogger(RepositoryAccessServlet.class);
 
     /**
      * the 'repository-name' init parameter
@@ -187,7 +188,7 @@ public class RepositoryAccessServlet extends HttpServlet {
         }
         // error
         if (repository == null) {
-            log.fatal("The repository is not available. Check config of 'RepositoryAccessServlet'.");
+            log.error("The repository is not available. Check config of 'RepositoryAccessServlet'.");
             throw new IllegalStateException("The repository is not available.");
         } else {
             ctx.setAttribute(CTX_ATTR_REPOSITORY, repository);

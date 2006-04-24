@@ -15,8 +15,9 @@
  */
 package org.apache.jackrabbit.webdav.header;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -25,7 +26,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class TimeoutHeader implements Header, DavConstants {
 
-    private static Logger log = Logger.getLogger(TimeoutHeader.class);
+    private static Logger log = LoggerFactory.getLogger(TimeoutHeader.class);
 
     private final long timeout;
 

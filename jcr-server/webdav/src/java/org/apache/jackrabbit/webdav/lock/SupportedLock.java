@@ -15,10 +15,10 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.Iterator;

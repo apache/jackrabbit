@@ -15,33 +15,34 @@
  */
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.report.Report;
-import org.apache.jackrabbit.webdav.version.report.ReportType;
-import org.apache.jackrabbit.webdav.version.report.ReportInfo;
+import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.jcr.JcrDavException;
+import org.apache.jackrabbit.webdav.jcr.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeConstants;
 import org.apache.jackrabbit.webdav.jcr.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.webdav.jcr.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.jackrabbit.util.IteratorHelper;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.version.report.Report;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import javax.jcr.Session;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.NodeType;
+import javax.jcr.Session;
 import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
-import java.util.List;
+import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>NodeTypesReport</code> allows to retrieve the definition of a single
@@ -64,7 +65,7 @@ import java.util.Iterator;
 //todo: no namespace definition with response (> jackrabbit)... and nodetype element has same name as the one used with dav-properties
 public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConstants {
 
-    private static Logger log = Logger.getLogger(NodeTypesReport.class);
+    private static Logger log = LoggerFactory.getLogger(NodeTypesReport.class);
 
     /**
      * The registered type of this report.

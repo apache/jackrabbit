@@ -15,18 +15,19 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.version.VersionResource;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.MultiStatus;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavResourceIterator;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>VersionTreeReport</code> encapsulates the DAV:version-tree report.
@@ -36,7 +37,7 @@ import org.w3c.dom.Document;
  */
 public class VersionTreeReport implements Report, DeltaVConstants {
 
-    private static Logger log = Logger.getLogger(VersionTreeReport.class);
+    private static Logger log = LoggerFactory.getLogger(VersionTreeReport.class);
 
     private ReportInfo info;
     private DavResource resource;
@@ -152,7 +153,7 @@ public class VersionTreeReport implements Report, DeltaVConstants {
                 }
             }
         } catch (DavException e) {
-            log.error(e);
+            log.error(e.toString());
         }
         if (depth > 0) {
             DavResourceIterator it = res.getMembers();

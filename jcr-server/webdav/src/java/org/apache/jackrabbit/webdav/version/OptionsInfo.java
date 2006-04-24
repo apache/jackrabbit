@@ -15,13 +15,14 @@
  */
 package org.apache.jackrabbit.webdav.version;
 
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -51,7 +52,7 @@ import java.util.Set;
  */
 public class OptionsInfo implements XmlSerializable {
 
-    private static Logger log = Logger.getLogger(OptionsInfo.class);
+    private static Logger log = LoggerFactory.getLogger(OptionsInfo.class);
 
     private final Set entriesLocalNames = new HashSet();
 

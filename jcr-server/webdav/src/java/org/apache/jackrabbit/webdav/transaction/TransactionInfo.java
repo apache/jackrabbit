@@ -15,13 +15,14 @@
  */
 package org.apache.jackrabbit.webdav.transaction;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>TransactionInfo</code> class encapsultes the information present
@@ -33,7 +34,7 @@ import org.w3c.dom.Document;
  */
 public class TransactionInfo implements TransactionConstants, XmlSerializable {
 
-    private static Logger log = Logger.getLogger(TransactionInfo.class);
+    private static Logger log = LoggerFactory.getLogger(TransactionInfo.class);
 
     private final boolean isCommit;
 

@@ -15,15 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.property;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.Document;
 
-import java.util.Iterator;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * <code>AbstractDavProperty</code> provides generic METHODS used by various
@@ -31,7 +32,7 @@ import java.util.Collection;
  */
 public abstract class AbstractDavProperty implements DavProperty {
 
-    private static Logger log = Logger.getLogger(AbstractDavProperty.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractDavProperty.class);
 
     private final DavPropertyName name;
     private final boolean isProtected;

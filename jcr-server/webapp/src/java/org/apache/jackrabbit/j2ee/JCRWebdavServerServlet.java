@@ -18,26 +18,27 @@ package org.apache.jackrabbit.j2ee;
 import org.apache.jackrabbit.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
 import org.apache.jackrabbit.server.SessionProviderImpl;
-import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.server.jcr.JCRWebdavServer;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
-import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.DavLocatorFactoryImpl;
 import org.apache.jackrabbit.webdav.jcr.DavResourceFactoryImpl;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionManagerImpl;
 import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
 import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Repository;
 import javax.jcr.Session;
-import javax.servlet.ServletException;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 /**
  * JCRWebdavServerServlet provides request/response handling for the JCRWebdavServer.
@@ -47,7 +48,7 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
     /**
      * the default logger
      */
-    private static Logger log = Logger.getLogger(JCRWebdavServerServlet.class);
+    private static Logger log = LoggerFactory.getLogger(JCRWebdavServerServlet.class);
 
     /**
      * Init parameter specifying the prefix used with the resource path.
@@ -140,7 +141,7 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
                 return false;
             }
         } catch (DavException e) {
-            log.error(e);
+            log.error(e.toString());
             return false;
         }
 

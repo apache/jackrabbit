@@ -16,9 +16,9 @@
 package org.apache.jackrabbit.webdav.transaction;
 
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.xml.Namespace;
-import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.lock.Scope;
+import org.apache.jackrabbit.webdav.lock.Type;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * <code>TransactionConstants</code> interface provide constants for request

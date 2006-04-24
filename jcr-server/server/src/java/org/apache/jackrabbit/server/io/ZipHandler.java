@@ -15,20 +15,21 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.NodeIterator;
 import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
+import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -41,7 +42,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class ZipHandler extends DefaultHandler {
 
-    private static Logger log = Logger.getLogger(ZipHandler.class);
+    private static Logger log = LoggerFactory.getLogger(ZipHandler.class);
 
     /**
      * the zip mimetype
@@ -193,7 +194,7 @@ public class ZipHandler extends DefaultHandler {
                 }
             }
         } catch (RepositoryException e) {
-            log.fatal(e.getMessage());
+            log.error(e.getMessage());
             // should never occur
         }
     }

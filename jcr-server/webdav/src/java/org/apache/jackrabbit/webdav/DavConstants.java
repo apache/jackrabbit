@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.util.HttpDateFormat;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 import java.text.DateFormat;
 

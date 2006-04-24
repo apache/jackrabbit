@@ -15,17 +15,17 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.log4j.Logger;
+import org.apache.jackrabbit.JcrConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Session;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-
-import org.apache.jackrabbit.JcrConstants;
 
 /**
  * <code>XmlHandler</code> imports xml files and exports nodes that have
@@ -39,7 +39,7 @@ import org.apache.jackrabbit.JcrConstants;
  */
 public class XmlHandler extends DefaultHandler {
 
-    private static Logger log = Logger.getLogger(XmlHandler.class);
+    private static Logger log = LoggerFactory.getLogger(XmlHandler.class);
 
     /**
      * the xml mimetype

@@ -18,7 +18,8 @@ package org.apache.jackrabbit.j2ee;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 import javax.jcr.Repository;
@@ -123,7 +124,7 @@ import java.util.Properties;
 public class RepositoryStartupServlet extends HttpServlet {
 
     /** the default logger */
-    private static final Logger log = Logger.getLogger(RepositoryStartupServlet.class);
+    private static final Logger log = LoggerFactory.getLogger(RepositoryStartupServlet.class);
 
     /** initial param name for the repository config location */
     public final static String INIT_PARAM_REPOSITORY_CONFIG = "repository-config";

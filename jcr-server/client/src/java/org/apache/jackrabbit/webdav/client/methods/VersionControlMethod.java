@@ -15,15 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>VersionControlMethod</code>...
  */
 public class VersionControlMethod extends DavMethodBase {
 
-    private static Logger log = Logger.getLogger(VersionControlMethod.class);
+    private static Logger log = LoggerFactory.getLogger(VersionControlMethod.class);
 
     public VersionControlMethod(String uri) {
         super(uri);

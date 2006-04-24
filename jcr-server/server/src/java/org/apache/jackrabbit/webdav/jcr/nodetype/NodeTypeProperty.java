@@ -19,7 +19,8 @@ import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -35,7 +36,7 @@ import java.util.Set;
  */
 public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeConstants {
 
-    private static Logger log = Logger.getLogger(NodeTypeProperty.class);
+    private static Logger log = LoggerFactory.getLogger(NodeTypeProperty.class);
 
     private final Set nodetypeNames = new HashSet();
 

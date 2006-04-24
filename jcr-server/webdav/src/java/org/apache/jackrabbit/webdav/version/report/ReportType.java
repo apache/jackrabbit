@@ -22,7 +22,8 @@ import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -33,7 +34,7 @@ import java.util.HashMap;
  */
 public class ReportType implements DeltaVConstants, XmlSerializable {
 
-    private static Logger log = Logger.getLogger(ReportType.class);
+    private static Logger log = LoggerFactory.getLogger(ReportType.class);
 
     private static final HashMap types = new HashMap();
 

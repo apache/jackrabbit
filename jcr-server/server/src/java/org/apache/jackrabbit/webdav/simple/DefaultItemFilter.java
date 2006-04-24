@@ -15,12 +15,13 @@
  */
 package org.apache.jackrabbit.webdav.simple;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,7 @@ import java.util.List;
  */
 public class DefaultItemFilter implements ItemFilter {
 
-    private static Logger log = Logger.getLogger(DefaultItemFilter.class);
+    private static Logger log = LoggerFactory.getLogger(DefaultItemFilter.class);
 
     private List prefixFilter = new ArrayList();
     private List uriFilter = new ArrayList();

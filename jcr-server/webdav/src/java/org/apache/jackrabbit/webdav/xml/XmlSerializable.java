@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.xml;
 
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>XmlSerializable</code>...

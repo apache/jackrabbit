@@ -15,17 +15,18 @@
  */
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.version.report.Report;
-import org.apache.jackrabbit.webdav.version.report.ReportType;
-import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.version.report.Report;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
+import org.apache.jackrabbit.webdav.version.report.ReportType;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
@@ -51,7 +52,7 @@ import javax.jcr.RepositoryException;
  */
 public class RegisteredNamespacesReport extends AbstractJcrReport implements ItemResourceConstants {
 
-    private static Logger log = Logger.getLogger(RegisteredNamespacesReport.class);
+    private static Logger log = LoggerFactory.getLogger(RegisteredNamespacesReport.class);
 
     /**
      * The registered type of this report.

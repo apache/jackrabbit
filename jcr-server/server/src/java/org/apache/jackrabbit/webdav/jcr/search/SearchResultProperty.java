@@ -15,22 +15,23 @@
  */
 package org.apache.jackrabbit.webdav.jcr.search;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import javax.jcr.Value;
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import java.util.List;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>SearchResultProperty</code>...
@@ -38,7 +39,7 @@ import java.util.Iterator;
 // todo: find proper solution for transporting search results...
 public class SearchResultProperty extends AbstractDavProperty implements ItemResourceConstants {
 
-    private static Logger log = Logger.getLogger(SearchResultProperty.class);
+    private static Logger log = LoggerFactory.getLogger(SearchResultProperty.class);
 
     public static final DavPropertyName SEARCH_RESULT_PROPERTY = DavPropertyName.create("search-result-property", ItemResourceConstants.NAMESPACE);
 

@@ -16,7 +16,8 @@
 package org.apache.jackrabbit.webdav.header;
 
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -80,7 +81,7 @@ public class IfHeader implements Header {
     /**
      * default logger
      */
-    private static final Logger log = Logger.getLogger(IfHeader.class);
+    private static final Logger log = LoggerFactory.getLogger(IfHeader.class);
 
     /**
      * The string representation of the header value

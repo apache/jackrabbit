@@ -23,7 +23,8 @@ import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
@@ -39,7 +40,7 @@ import javax.servlet.ServletException;
  */
 public class DavSessionProviderImpl implements DavSessionProvider {
 
-    private static Logger log = Logger.getLogger(DavSessionProviderImpl.class);
+    private static Logger log = LoggerFactory.getLogger(DavSessionProviderImpl.class);
 
     /**
      * the repository

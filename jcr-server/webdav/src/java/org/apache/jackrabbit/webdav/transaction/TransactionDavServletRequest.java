@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.transaction;
 
-import org.apache.jackrabbit.webdav.DavServletRequest;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletRequest;
 
 /**
  * <code>TransactionDavServletRequest</code> provides extensions to the

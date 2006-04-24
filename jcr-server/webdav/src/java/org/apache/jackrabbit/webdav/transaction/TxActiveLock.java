@@ -17,8 +17,8 @@ package org.apache.jackrabbit.webdav.transaction;
 
 import org.apache.jackrabbit.webdav.lock.DefaultActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
-import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.lock.Scope;
+import org.apache.jackrabbit.webdav.lock.Type;
 
 /**
  * <code>TxActiveLock</code> represents the transaction lock present on a

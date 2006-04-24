@@ -15,13 +15,14 @@
  */
 package org.apache.jackrabbit.webdav.property;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
-import java.util.HashSet;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 
 /**
@@ -30,7 +31,7 @@ import java.util.Iterator;
  */
 public class DavPropertyNameSet extends PropContainer {
 
-    private static Logger log = Logger.getLogger(DavPropertyNameSet.class);
+    private static Logger log = LoggerFactory.getLogger(DavPropertyNameSet.class);
     private final HashSet set = new HashSet();
 
     /**

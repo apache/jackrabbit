@@ -15,17 +15,18 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.header.DepthHeader;
-import org.apache.jackrabbit.webdav.header.TimeoutHeader;
-import org.apache.jackrabbit.webdav.header.IfHeader;
+import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
+import org.apache.jackrabbit.webdav.header.DepthHeader;
+import org.apache.jackrabbit.webdav.header.IfHeader;
+import org.apache.jackrabbit.webdav.header.TimeoutHeader;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
+import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
-import org.apache.jackrabbit.webdav.lock.LockInfo;
-import org.apache.jackrabbit.webdav.lock.ActiveLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -34,7 +35,7 @@ import java.io.IOException;
  */
 public class LockMethod extends DavMethodBase {
 
-    private static Logger log = Logger.getLogger(LockMethod.class);
+    private static Logger log = LoggerFactory.getLogger(LockMethod.class);
 
     /**
      * Creates a new <code>LockMethod</code>.
