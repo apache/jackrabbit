@@ -15,24 +15,25 @@
  */
 package org.apache.jackrabbit.webdav.jcr.version;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.property.HrefProperty;
-import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
-import org.apache.jackrabbit.webdav.property.ResourceType;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.jcr.DefaultItemCollection;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
-import org.apache.jackrabbit.webdav.jcr.DefaultItemCollection;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
 import org.apache.jackrabbit.webdav.version.VersionResource;
-import org.apache.jackrabbit.webdav.DavResourceLocator;
-import org.apache.jackrabbit.webdav.DavResourceFactory;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Item;
+import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ import java.util.ArrayList;
 public class VersionHistoryItemCollection extends DefaultItemCollection
         implements VersionHistoryResource {
 
-    private static Logger log = Logger.getLogger(VersionHistoryItemCollection.class);
+    private static Logger log = LoggerFactory.getLogger(VersionHistoryItemCollection.class);
 
     /**
      * Create a new <code>VersionHistoryItemCollection</code> resource.

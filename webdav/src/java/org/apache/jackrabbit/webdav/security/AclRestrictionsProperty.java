@@ -18,8 +18,8 @@ package org.apache.jackrabbit.webdav.security;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>AclRestrictionsProperty</code> as defined by RFC 3744 Section 5.6.

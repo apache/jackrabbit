@@ -15,18 +15,19 @@
  */
 package org.apache.jackrabbit.webdav.ordering;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>OrderPatch</code> represents the mandatory request body of an
@@ -44,7 +45,7 @@ import java.util.ArrayList;
  */
 public class OrderPatch implements OrderingConstants, XmlSerializable {
 
-    private static Logger log = Logger.getLogger(OrderPatch.class);
+    private static Logger log = LoggerFactory.getLogger(OrderPatch.class);
 
     private Member[] instructions;
     private String orderingType;

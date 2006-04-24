@@ -15,15 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.property;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.List;
-import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>HrefProperty</code> is an extension to the common {@link DavProperty}.
@@ -36,7 +37,7 @@ import java.util.Arrays;
  */
 public class HrefProperty extends AbstractDavProperty {
 
-    private static Logger log = Logger.getLogger(HrefProperty.class);
+    private static Logger log = LoggerFactory.getLogger(HrefProperty.class);
 
     private final String[] value;
 

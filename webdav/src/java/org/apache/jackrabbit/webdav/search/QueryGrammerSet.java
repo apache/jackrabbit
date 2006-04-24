@@ -15,16 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.search;
 
-import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.HashSet;
 
 /**
  * <code>QueryGrammerSet</code> is a {@link DavProperty} that

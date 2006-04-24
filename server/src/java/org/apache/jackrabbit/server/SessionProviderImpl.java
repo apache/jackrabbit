@@ -15,13 +15,13 @@
  */
 package org.apache.jackrabbit.server;
 
-import javax.jcr.Repository;
-import javax.jcr.Session;
-import javax.jcr.LoginException;
 import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.servlet.http.HttpServletRequest;
+import javax.jcr.Session;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * This Class implements a default session provider uses a credentials provider.

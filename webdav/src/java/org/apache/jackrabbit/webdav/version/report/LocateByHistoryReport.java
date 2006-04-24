@@ -27,7 +27,8 @@ import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -47,7 +48,7 @@ import java.util.HashSet;
  */
 public class LocateByHistoryReport implements Report, DeltaVConstants {
 
-    private static Logger log = Logger.getLogger(LocateByHistoryReport.class);
+    private static Logger log = LoggerFactory.getLogger(LocateByHistoryReport.class);
 
     private ReportInfo info;
     private HashSet vhHrefSet = new HashSet();

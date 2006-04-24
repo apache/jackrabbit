@@ -16,14 +16,14 @@
 package org.apache.jackrabbit.webdav.lock;
 
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The <code>Scope</code> class abstracts the lock scope as defined by RFC 2518.

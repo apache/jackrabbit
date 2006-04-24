@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.search;
 
-import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.MultiStatus;
 
 /**
  * <code>SearchResource</code> defines METHODS required in order to handle

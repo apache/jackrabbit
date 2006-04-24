@@ -28,7 +28,8 @@ import org.apache.jackrabbit.webdav.observation.ObservationResource;
 import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -50,7 +51,7 @@ import java.util.List;
  */
 public class SubscriptionImpl implements Subscription, ObservationConstants, EventListener {
 
-    private static Logger log = Logger.getLogger(SubscriptionImpl.class);
+    private static Logger log = LoggerFactory.getLogger(SubscriptionImpl.class);
     private static final long DEFAULT_TIMEOUT = 300000; // 5 minutes
 
     /**

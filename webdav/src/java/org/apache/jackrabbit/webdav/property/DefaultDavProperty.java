@@ -15,9 +15,10 @@
  */
 package org.apache.jackrabbit.webdav.property;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -28,7 +29,7 @@ import java.util.List;
  */
 public class DefaultDavProperty extends AbstractDavProperty {
 
-    private static Logger log = Logger.getLogger(DefaultDavProperty.class);
+    private static Logger log = LoggerFactory.getLogger(DefaultDavProperty.class);
 
     /**
      * the value of the property

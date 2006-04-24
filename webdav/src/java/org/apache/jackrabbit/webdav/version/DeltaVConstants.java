@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.version;
 
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**

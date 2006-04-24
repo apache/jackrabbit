@@ -15,16 +15,17 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayOutputStream;
@@ -35,7 +36,7 @@ import java.io.IOException;
  */
 public class PropPatchMethod extends DavMethodBase implements DavConstants {
 
-    private static Logger log = Logger.getLogger(PropPatchMethod.class);
+    private static Logger log = LoggerFactory.getLogger(PropPatchMethod.class);
 
     public PropPatchMethod(String uri, DavPropertySet setProperties,
                            DavPropertyNameSet removeProperties) throws IOException {

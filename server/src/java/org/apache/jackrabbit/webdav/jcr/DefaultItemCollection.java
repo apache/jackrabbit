@@ -47,7 +47,8 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ImportUUIDBehavior;
@@ -81,7 +82,7 @@ import java.util.Set;
 public class DefaultItemCollection extends AbstractItemResource
         implements OrderingResource {
 
-    private static Logger log = Logger.getLogger(DefaultItemCollection.class);
+    private static Logger log = LoggerFactory.getLogger(DefaultItemCollection.class);
 
     private File content;
 

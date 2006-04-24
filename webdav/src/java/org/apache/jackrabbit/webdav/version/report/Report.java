@@ -15,10 +15,10 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.version.DeltaVResource;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 /**
  * The <code>Report</code> interface defines METHODS needed in order to respond

@@ -39,7 +39,8 @@ import org.apache.jackrabbit.webdav.version.VersionableResource;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 import javax.jcr.Item;
@@ -66,7 +67,7 @@ import java.util.List;
 public class VersionControlledItemCollection extends DefaultItemCollection
         implements VersionControlledResource {
 
-    private static Logger log = Logger.getLogger(VersionControlledItemCollection.class);
+    private static Logger log = LoggerFactory.getLogger(VersionControlledItemCollection.class);
 
     /**
      * Create a new <code>VersionControlledItemCollection</code>.

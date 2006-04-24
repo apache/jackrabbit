@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.observation;
 
-import org.apache.jackrabbit.webdav.DavServletRequest;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletRequest;
 
 /**
  * <code>ObservationDavServletRequest</code> provides extensions to the

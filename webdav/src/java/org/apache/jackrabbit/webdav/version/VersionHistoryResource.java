@@ -15,9 +15,9 @@
  */
 package org.apache.jackrabbit.webdav.version;
 
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.ResourceType;
-import org.apache.jackrabbit.webdav.DavException;
 
 /**
  * <code>VersionHistoryResource</code> represents a collection that has

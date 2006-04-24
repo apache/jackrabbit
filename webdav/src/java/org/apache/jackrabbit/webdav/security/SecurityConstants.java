@@ -15,12 +15,12 @@
  */
 package org.apache.jackrabbit.webdav.security;
 
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.property.ResourceType;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * <code>SecurityConstants</code> interface lists constants defined by

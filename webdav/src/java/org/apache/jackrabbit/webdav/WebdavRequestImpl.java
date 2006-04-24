@@ -43,7 +43,8 @@ import org.apache.jackrabbit.webdav.version.UpdateInfo;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -56,7 +57,6 @@ import javax.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -75,7 +75,7 @@ import java.util.Map;
  */
 public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
-    private static Logger log = Logger.getLogger(WebdavRequestImpl.class);
+    private static Logger log = LoggerFactory.getLogger(WebdavRequestImpl.class);
     private static final DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
     static {
         BUILDER_FACTORY.setNamespaceAware(true);

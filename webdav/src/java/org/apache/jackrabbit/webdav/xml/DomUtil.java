@@ -15,8 +15,9 @@
  */
 package org.apache.jackrabbit.webdav.xml;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
@@ -33,7 +34,7 @@ import java.util.List;
  */
 public class DomUtil {
 
-    private static Logger log = Logger.getLogger(DomUtil.class);
+    private static Logger log = LoggerFactory.getLogger(DomUtil.class);
 
     /**
      * Returns the value of the named attribute of the current element.

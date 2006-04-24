@@ -15,20 +15,21 @@
  */
 package org.apache.jackrabbit.webdav.version;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <code>OptionsResponse</code> encapsulates the DAV:options-response element
@@ -51,7 +52,7 @@ import java.util.List;
  */
 public class OptionsResponse implements DeltaVConstants, XmlSerializable {
 
-    private static Logger log = Logger.getLogger(OptionsResponse.class);
+    private static Logger log = LoggerFactory.getLogger(OptionsResponse.class);
 
     private final Map entries = new HashMap();
 

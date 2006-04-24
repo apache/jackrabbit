@@ -15,18 +15,19 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.header.OverwriteHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>CopyMethod</code>...
  */
 public class CopyMethod extends DavMethodBase {
 
-    private static Logger log = Logger.getLogger(CopyMethod.class);
+    private static Logger log = LoggerFactory.getLogger(CopyMethod.class);
 
     /**
      * Create a new <code>CopyMethod</code>

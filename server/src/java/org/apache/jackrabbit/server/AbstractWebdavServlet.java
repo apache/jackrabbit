@@ -31,8 +31,6 @@ import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.WebdavRequestImpl;
 import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.WebdavResponseImpl;
-import org.apache.jackrabbit.webdav.security.AclResource;
-import org.apache.jackrabbit.webdav.security.AclProperty;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.InputContextImpl;
 import org.apache.jackrabbit.webdav.io.OutputContext;
@@ -52,6 +50,8 @@ import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.security.AclProperty;
+import org.apache.jackrabbit.webdav.security.AclResource;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
@@ -66,7 +66,8 @@ import org.apache.jackrabbit.webdav.version.VersionResource;
 import org.apache.jackrabbit.webdav.version.VersionableResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import javax.servlet.ServletException;
@@ -89,7 +90,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
     /**
      * default logger
      */
-    private static Logger log = Logger.getLogger(AbstractWebdavServlet.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractWebdavServlet.class);
 
     /**
      * Default value for the 'WWW-Authenticate' header, that is set, if request

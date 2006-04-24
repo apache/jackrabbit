@@ -15,16 +15,16 @@
  */
 package org.apache.jackrabbit.webdav.security;
 
-import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.Arrays;

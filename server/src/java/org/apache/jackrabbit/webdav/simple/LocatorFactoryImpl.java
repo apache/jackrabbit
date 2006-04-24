@@ -18,7 +18,8 @@ package org.apache.jackrabbit.webdav.simple;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ResourceFactoryImpl implements a simple DavLocatorFactory
@@ -27,7 +28,7 @@ import org.apache.log4j.Logger;
 public class LocatorFactoryImpl implements DavLocatorFactory {
 
     /** the default logger */
-    private static final Logger log = Logger.getLogger(LocatorFactoryImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(LocatorFactoryImpl.class);
 
     private final String repositoryPrefix;
 

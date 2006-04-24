@@ -15,7 +15,8 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +28,7 @@ import java.util.List;
  */
 public class DavResourceIteratorImpl implements DavResourceIterator {
 
-    private static Logger log = Logger.getLogger(DavResourceIteratorImpl.class);
+    private static Logger log = LoggerFactory.getLogger(DavResourceIteratorImpl.class);
 
     private Iterator it;
     private int size;

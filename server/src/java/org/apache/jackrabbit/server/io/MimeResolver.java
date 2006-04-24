@@ -15,10 +15,10 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import java.util.Properties;
-import java.io.IOException;
-
 import org.apache.jackrabbit.util.Text;
+
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * This Class implements a very simple mime type resolver.

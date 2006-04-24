@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.ordering;
 
-import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
 
 /**
  * <code>OrderingResource</code> extends the {@link DavResource} interface by

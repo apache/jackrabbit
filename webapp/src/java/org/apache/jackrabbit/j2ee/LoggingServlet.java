@@ -20,23 +20,22 @@ import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.ServletException;
-import javax.xml.parsers.DocumentBuilderFactory;
+import javax.servlet.http.HttpServlet;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
-import java.util.Properties;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Properties;
 
 /**
  * This Class implements a servlet that is used for initializing the log4j

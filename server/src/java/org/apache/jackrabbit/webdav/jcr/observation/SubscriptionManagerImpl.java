@@ -19,14 +19,15 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
 import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
-import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -44,7 +45,7 @@ import java.util.Set;
 // todo: make sure all expired subscriptions are removed!
 public class SubscriptionManagerImpl implements SubscriptionManager {
 
-    private static Logger log = Logger.getLogger(SubscriptionManager.class);
+    private static Logger log = LoggerFactory.getLogger(SubscriptionManager.class);
 
     /**
      * Map containing all {@link org.apache.jackrabbit.webdav.observation.Subscription subscriptions}.

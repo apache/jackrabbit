@@ -30,7 +30,8 @@ import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
 import org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
 import org.apache.jackrabbit.webdav.simple.ResourceFactoryImpl;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Repository;
 import javax.servlet.ServletContext;
@@ -46,7 +47,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
     /**
      * the default logger
      */
-    private static final Logger log = Logger.getLogger(SimpleWebdavServlet.class);
+    private static final Logger log = LoggerFactory.getLogger(SimpleWebdavServlet.class);
 
     /**
      * init param name of the repository prefix

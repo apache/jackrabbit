@@ -15,17 +15,18 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.header.OverwriteHeader;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.header.OverwriteHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>MoveMethod</code>...
  */
 public class MoveMethod extends DavMethodBase {
 
-    private static Logger log = Logger.getLogger(MoveMethod.class);
+    private static Logger log = LoggerFactory.getLogger(MoveMethod.class);
 
     public MoveMethod(String uri, String destinationUri, boolean overwrite) {
         super(uri);

@@ -15,7 +15,8 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 
@@ -25,7 +26,7 @@ import javax.jcr.Item;
  */
 public abstract class AbstractExportContext implements ExportContext {
 
-    private static Logger log = Logger.getLogger(AbstractExportContext.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractExportContext.class);
 
     private final IOListener ioListener;
     private final Item exportRoot;

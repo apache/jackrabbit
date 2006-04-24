@@ -15,19 +15,20 @@
  */
 package org.apache.jackrabbit.webdav.version;
 
-import org.apache.log4j.Logger;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>UpdateInfo</code> encapsulates the request body of an UPDATE request.
@@ -53,7 +54,7 @@ import java.util.ArrayList;
  */
 public class UpdateInfo implements DeltaVConstants, XmlSerializable {
 
-    private static Logger log = Logger.getLogger(UpdateInfo.class);
+    private static Logger log = LoggerFactory.getLogger(UpdateInfo.class);
 
     private final Element updateElement;
     private final DavPropertyNameSet propertyNameSet;

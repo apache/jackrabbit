@@ -15,8 +15,8 @@
  */
 package org.apache.jackrabbit.webdav.observation;
 
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 /**
  * <code>EventType</code>...

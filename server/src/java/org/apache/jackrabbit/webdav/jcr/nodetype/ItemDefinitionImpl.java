@@ -15,13 +15,14 @@
  */
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.OnParentVersionAction;
 
 /**
@@ -29,7 +30,7 @@ import javax.jcr.version.OnParentVersionAction;
  */
 abstract public class ItemDefinitionImpl implements ItemDefinition, NodeTypeConstants, XmlSerializable {
 
-    private static Logger log = Logger.getLogger(ItemDefinitionImpl.class);
+    private static Logger log = LoggerFactory.getLogger(ItemDefinitionImpl.class);
 
     private final String name;
     private NodeType declaringNodeType;

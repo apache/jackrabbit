@@ -16,8 +16,8 @@
 package org.apache.jackrabbit.webdav.observation;
 
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * <code>SubscriptionDiscovery</code> encapsulates the 'subscriptiondiscovery'

@@ -15,7 +15,8 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>DefaultIOListener</code> implements an <code>IOListener</code> that
@@ -23,7 +24,7 @@ import org.apache.log4j.Logger;
  */
 public class DefaultIOListener implements IOListener {
 
-    private static Logger log = Logger.getLogger(DefaultIOListener.class);
+    private static Logger log = LoggerFactory.getLogger(DefaultIOListener.class);
 
     private Logger ioLog;
 

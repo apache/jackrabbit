@@ -15,25 +15,26 @@
  */
 package org.apache.jackrabbit.webdav.jcr.property;
 
+import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.log4j.Logger;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import java.util.List;
-import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>ValuesProperty</code> extends {@link org.apache.jackrabbit.webdav.property.DavProperty} providing
@@ -42,7 +43,7 @@ import java.util.ArrayList;
  */
 public class ValuesProperty extends AbstractDavProperty implements ItemResourceConstants {
 
-    private static Logger log = Logger.getLogger(ValuesProperty.class);
+    private static Logger log = LoggerFactory.getLogger(ValuesProperty.class);
 
     private final Value[] jcrValues;
 

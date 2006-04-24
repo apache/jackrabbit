@@ -15,15 +15,15 @@
  */
 package org.apache.jackrabbit.webdav.simple;
 
-import org.apache.jackrabbit.webdav.lock.LockManager;
-import org.apache.jackrabbit.webdav.DavResourceFactory;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletRequest;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
+import org.apache.jackrabbit.webdav.lock.LockManager;
 
 /**
  * ResourceFactoryImpl implements a simple DavResourceFactory

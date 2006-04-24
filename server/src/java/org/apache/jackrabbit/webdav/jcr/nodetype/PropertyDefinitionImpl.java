@@ -15,22 +15,23 @@
  */
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
-import org.apache.log4j.Logger;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.nodetype.PropertyDefinition;
 
 /**
  * <code>PropertyDefinitionImpl</code>...
  */
 public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements PropertyDefinition {
 
-    private static Logger log = Logger.getLogger(PropertyDefinitionImpl.class);
+    private static Logger log = LoggerFactory.getLogger(PropertyDefinitionImpl.class);
 
     private final int type;
     private final String[] valueConstraints;

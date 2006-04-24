@@ -16,9 +16,9 @@
 package org.apache.jackrabbit.server;
 
 import javax.jcr.LoginException;
-import javax.jcr.Session;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
