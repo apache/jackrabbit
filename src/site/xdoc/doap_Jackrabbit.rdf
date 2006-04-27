@@ -45,4 +45,5 @@ and work on the JCR version 2.0 has begun in JSR 283.
       <asfext:id>JSR 170</asfext:id>
       <asfext:url rdf:resource="http://jcp.org/en/jsr/detail?id=170"/>
     </asfext:Standard></asfext:implements>
+  </Project>
 </rdf:RDF>
