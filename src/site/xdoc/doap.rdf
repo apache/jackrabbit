@@ -13,9 +13,7 @@
     <download-page rdf:resource="http://jackrabbit.apache.org/download.cgi"/>
     <asfext:pmc rdf:resource="http://jackrabbit.apache.org/"/>
 
-    <shortdesc xml:lang="en">
-    Apache Jackrabbit Content Repository
-    </shortdesc>
+    <shortdesc xml:lang="en">Apache Jackrabbit Content Repository</shortdesc>
 
     <description xml:lang="en">
 The Apache Jackrabbit project is an effort to build and maintain an open
@@ -35,8 +33,8 @@ and work on the JCR version 2.0 has begun in JSR 283.
    
     <release>
       <Version>
-        <name>Latest 1.0 Version</name>
-        <created>2006-04-yy</created>
+        <name>Stable Release</name>
+        <created>2006-04-08</created>
         <revision>1.0</revision>
       </Version>
     </release>
@@ -47,5 +45,4 @@ and work on the JCR version 2.0 has begun in JSR 283.
       <asfext:id>JSR 170</asfext:id>
       <asfext:url rdf:resource="http://jcp.org/en/jsr/detail?id=170"/>
     </asfext:Standard></asfext:implements>
-
 </rdf:RDF>
