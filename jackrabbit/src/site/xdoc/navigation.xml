@@ -21,14 +21,15 @@
     <item name="Home"                       href="/index.html" />
     <item name="Downloads"                  href="/downloads.cgi"/>
     <item name="Layout"                     href="/layout.html"/>
-    <item name="Frequently Asked Questions" href="/faq.html"/>
+    <item name="FAQ"                        href="/faq.html"/>
+    <item name="Wiki"                       href="http://wiki.apache.org/jackrabbit/FrontPage"/>
   </menu>
-  <menu name="Jackrabbit Documentation">
+  <menu name="Documentation">
     <item name="Getting Started"            href="/doc/index.html"/>
     <item name="Building Jackrabbit"        href="/doc/building.html" />
     <item name="First Hops"                 href="/doc/firststeps.html" />
     <item name="JCR &amp; API"              href="/doc/arch/overview/jcrlevels.html"/>
-    <item name="Jackrabbit Architecture"    href="/doc/arch/overview.html" collapse="true">
+    <item name="Architecture"               href="/doc/arch/overview.html" collapse="true">
       <item name="How Jackrabbit works"     href="/doc/arch/operate/index.html"/>
       <item name="Start-up, Initialize"     href="/doc/arch/operate/startup.html"/>
       <item name="QueryManager"             href="/doc/arch/operate/query.html"/>
@@ -39,9 +40,9 @@
       <item name="Model 2 (Shared)"         href="/doc/deploy/howto-model2.html"/>
       <item name="Model 3 (Server)"         href="/doc/deploy/howto-model3.html"/>
     </item>
-    <item name="Configuring Jackrabbit"     href="/doc/config.html" />
+    <item name="Configuring"                href="/doc/config.html" />
     <item name="Node Types"                 href="/doc/nodetype/index.html" collapse="true">
-        <item name="Node Type Notation"     href="/doc/nodetype/cnd.html" />
+        <item name="Compact Notation"       href="/doc/nodetype/cnd.html" />
     </item>
   </menu>
  </body>
