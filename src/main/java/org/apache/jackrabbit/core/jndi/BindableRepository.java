@@ -24,7 +24,6 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
@@ -40,18 +39,18 @@ import java.io.Serializable;
  * delays the instantiation of the actual Repository instance and
  * implements serialization and JNDI referenceability by keeping
  * track of the repository configuration parameters.
- * <p>
+ * <p/>
  * A BindableRepository instance contains the configuration file
  * and home directory paths of a Jackrabbit repository. The separate
  * {@link #init() init()} method is used to create a transient
  * {@link RepositoryImpl RepositoryImpl} instance to which all the
  * JCR API calls are delegated.
- * <p>
+ * <p/>
  * An instance of this class is normally always also initialized.
  * The uninitialized state is only used briefly during the static
  * {@link #create(String, String) create} method and during
  * serialization and JNDI "referenciation".
- * <p>
+ * <p/>
  * A JVM shutdown hook is used to make sure that the initialized
  * repository is properly closed when the JVM shuts down. The
  * {@link RegistryHelper#unregisterRepository(javax.naming.Context, String)}
@@ -60,13 +59,19 @@ import java.io.Serializable;
  */
 class BindableRepository implements Repository, Referenceable, Serializable {
 
-    /** The serialization UID of this class. */
+    /**
+     * The serialization UID of this class.
+     */
     static final long serialVersionUID = -2298220550793843166L;
 
-    /** The repository configuration file path. */
+    /**
+     * The repository configuration file path.
+     */
     private final String configFilePath;
 
-    /** The repository home directory path. */
+    /**
+     * The repository home directory path.
+     */
     private final String repHomeDir;
 
     /**
@@ -78,7 +83,9 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      */
     static final String REPHOMEDIR_ADDRTYPE = "repHomeDir";
 
-    /** The delegate repository instance. Created by {@link #init() init}. */
+    /**
+     * The delegate repository instance. Created by {@link #init() init}.
+     */
     private transient Repository delegatee;
 
     /**
@@ -92,7 +99,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      * information, but does not create the underlying repository instance.
      *
      * @param configFilePath repository configuration file path
-     * @param repHomeDir repository home directory path
+     * @param repHomeDir     repository home directory path
      */
     private BindableRepository(String configFilePath, String repHomeDir) {
         this.configFilePath = configFilePath;
@@ -105,7 +112,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      * configuration information.
      *
      * @param configFilePath repository configuration file path
-     * @param repHomeDir repository home directory path
+     * @param repHomeDir     repository home directory path
      * @return initialized repository instance
      * @throws RepositoryException if the repository cannot be created
      */
@@ -125,7 +132,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      */
     private void init() throws RepositoryException {
         RepositoryConfig config =
-            RepositoryConfig.create(configFilePath, repHomeDir);
+                RepositoryConfig.create(configFilePath, repHomeDir);
         delegatee = RepositoryImpl.create(config);
         hook = new Thread() {
             public void run() {
@@ -197,11 +204,9 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      * copy of this instance.
      *
      * @return the created JNDI reference
-     * @throws NamingException on JNDI errors
      */
-    public Reference getReference() throws NamingException {
-        Reference ref = new Reference(
-                BindableRepository.class.getName(),
+    public Reference getReference() {
+        Reference ref = new Reference(BindableRepository.class.getName(),
                 BindableRepositoryFactory.class.getName(),
                 null); // no classpath defined
         ref.add(new StringRefAddr(CONFIGFILEPATH_ADDRTYPE, configFilePath));
@@ -232,8 +237,8 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      * {@link #init() init} method.
      *
      * @param in the serialization stream
-     * @throws IOException if configuration information cannot be deserialized
-     *                     or if the configured repository cannot be created
+     * @throws IOException            if configuration information cannot be deserialized
+     *                                or if the configured repository cannot be created
      * @throws ClassNotFoundException on deserialization errors
      */
     private void readObject(ObjectInputStream in)
