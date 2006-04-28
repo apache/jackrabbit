@@ -65,10 +65,10 @@ public class Namespace {
 
     public static Namespace getNamespace(String prefix, String uri) {
         if (prefix == null) {
-            prefix = "";
+            prefix = EMPTY_NAMESPACE.getPrefix();
         }
         if (uri == null) {
-            uri = "";
+            uri = EMPTY_NAMESPACE.getURI();
         }
         return new Namespace(prefix, uri);
     }
