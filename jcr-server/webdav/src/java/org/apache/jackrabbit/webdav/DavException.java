@@ -150,8 +150,13 @@ public class DavException extends Exception implements XmlSerializable {
      */
     public Element toXml(Document document) {
         if (hasErrorCondition()) {
-            Element error = DomUtil.createElement(document, XML_ERROR, DavConstants.NAMESPACE);
-            error.appendChild(document.importNode(errorCondition, true));
+            Element error;
+            if (DomUtil.matches(errorCondition, XML_ERROR, DavConstants.NAMESPACE)) {
+                error = (Element) document.importNode(errorCondition, true);
+            } else {
+                error = DomUtil.createElement(document, XML_ERROR, DavConstants.NAMESPACE);
+                error.appendChild(document.importNode(errorCondition, true));
+            }           
             return error;
         } else {
             return null;
