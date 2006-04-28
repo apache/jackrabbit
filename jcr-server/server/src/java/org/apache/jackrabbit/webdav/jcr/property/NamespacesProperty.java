@@ -21,6 +21,7 @@ import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -72,8 +73,10 @@ public class NamespacesProperty extends AbstractDavProperty implements ItemResou
             if (listEntry instanceof Element) {
                 Element e = (Element)listEntry;
                 if (XML_NAMESPACE.equals(e.getLocalName())) {
-                    String prefix = DomUtil.getChildText(e, XML_PREFIX, ItemResourceConstants.NAMESPACE);
-                    String uri = DomUtil.getChildText(e, XML_URI, ItemResourceConstants.NAMESPACE);
+                    Element pElem = DomUtil.getChildElement(e, XML_PREFIX, ItemResourceConstants.NAMESPACE);
+                    String prefix = DomUtil.getText(pElem, Namespace.EMPTY_NAMESPACE.getPrefix());
+                    Element uElem = DomUtil.getChildElement(e, XML_URI, ItemResourceConstants.NAMESPACE);
+                    String uri = DomUtil.getText(uElem, Namespace.EMPTY_NAMESPACE.getURI());
                     value.setProperty(prefix, uri);
                 }
             }
