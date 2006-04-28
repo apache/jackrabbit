@@ -30,6 +30,8 @@ import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesRepor
 import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.security.CurrentUserPrivilegeSetProperty;
+import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.transaction.TxLockEntry;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
@@ -42,6 +44,9 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
+import java.security.AccessControlException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>AbstractItemResource</code> covers common functionality for the various
@@ -287,6 +292,28 @@ abstract class AbstractItemResource extends AbstractResource implements
                 properties.add(new DefaultDavProperty(JCR_ISMODIFIED, null, true));
             }
         }
+
+        // TODO complete set of properties defined by RFC 3744
+        Privilege[] allPrivs = new Privilege[] {PRIVILEGE_JCR_READ,
+                                                PRIVILEGE_JCR_ADD_NODE,
+                                                PRIVILEGE_JCR_SET_PROPERTY,
+                                                PRIVILEGE_JCR_REMOVE};
+        // Add list of privileges granted to the current user. Note, that for
+        // this property it is not required that the item already exists.
+        List currentPrivs = new ArrayList();
+        for (int i = 0; i < allPrivs.length; i++) {
+            try {
+                getRepositorySession().checkPermission(getLocator().getRepositoryPath(), allPrivs[i].getName());
+                currentPrivs.add(allPrivs[i]);
+            } catch (AccessControlException e) {
+                // ignore
+                log.debug(e.toString());
+            } catch (RepositoryException e) {
+                // ignore
+                log.debug(e.toString());
+            }
+        }
+        properties.add(new CurrentUserPrivilegeSetProperty((Privilege[])currentPrivs.toArray(new Privilege[currentPrivs.size()])));
     }
 
     /**
