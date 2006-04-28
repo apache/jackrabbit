@@ -15,16 +15,21 @@
  */
 package org.apache.jackrabbit.util;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.Session;
 import javax.jcr.Repository;
-import javax.jcr.observation.ObservationManager;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.Event;
-import javax.jcr.lock.LockException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
+
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.SessionNamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 
 /**
  * <code>Locked</code> is a utility to synchronize modifications on a lockable
@@ -36,12 +41,13 @@ import javax.jcr.lock.Lock;
  * The following example shows how this utility can be used to implement
  * a persistent counter:
  * <pre>
- * final Node counter = ...;
+ * Node counter = ...;
  * long nextValue = ((Long) new Locked() {
- *     protected Object run() throws RepositoryException {
- *         long value = counter.getProperty("value").getLong();
- *         counter.setProperty("value", ++value);
- *         counter.save();
+ *     protected Object run(Node counter) throws RepositoryException {
+ *         Property seqProp = counter.getProperty("value");
+ *         long value = seqProp.getLong();
+ *         seqProp.setValue(++value);
+ *         seqProp.save();
  *         return new Long(value);
  *     }
  * }.with(counter, false)).longValue();
@@ -50,12 +56,13 @@ import javax.jcr.lock.Lock;
  * whether the <code>run</code> method could be executed within the timeout
  * period:
  * <pre>
- * final Node counter = ...;
+ * Node counter = ...;
  * Object ret = new Locked() {
- *     protected Object run() throws RepositoryException {
- *         long value = counter.getProperty("value").getLong();
- *         counter.setProperty("value", ++value);
- *         counter.save();
+ *     protected Object run(Node counter) throws RepositoryException {
+ *         Property seqProp = counter.getProperty("value");
+ *         long value = seqProp.getLong();
+ *         seqProp.setValue(++value);
+ *         seqProp.save();
  *         return new Long(value);
  *     }
  * }.with(counter, false);
@@ -76,16 +83,6 @@ public abstract class Locked {
     public static final Object TIMED_OUT = new Object();
 
     /**
-     * The lock we hold while executing {@link #run}.
-     */
-    private Lock lock;
-
-    /**
-     * An event listener if one was registered
-     */
-    private EventListener listener;
-
-    /**
      * Executes {@link #run} while the lock on <code>lockable</code> is held.
      * This method will block until {@link #run} is executed while holding the
      * lock on node <code>lockable</code>.
@@ -94,6 +91,8 @@ public abstract class Locked {
      * @param isDeep   <code>true</code> if <code>lockable</code> will be locked
      *                 deep.
      * @return the object returned by {@link #run}.
+     * @throws IllegalArgumentException if <code>lockable</code> is not
+     *      <i>mix:lockable</i>.
      * @throws RepositoryException  if {@link #run} throws an exception.
      * @throws InterruptedException if this thread is interrupted while waiting
      *                              for the lock on node <code>lockable</code>.
@@ -114,19 +113,37 @@ public abstract class Locked {
      * @return the object returned by {@link #run} or {@link #TIMED_OUT} if the
      *         lock on <code>lockable</code> could not be aquired within the
      *         specified timeout.
-     * @throws RepositoryException  if {@link #run} throws an exception.
-     * @throws InterruptedException if this thread is interrupted while waiting
-     *                              for the lock on node <code>lockable</code>.
+     * @throws IllegalArgumentException if <code>timeout</code> is negative or
+     *                                  <code>lockable</code> is not
+     *                                  <i>mix:lockable</i>.
+     * @throws RepositoryException      if {@link #run} throws an exception.
+     * @throws UnsupportedRepositoryOperationException
+     *                                  if this repository does not support
+     *                                  locking.
+     * @throws InterruptedException     if this thread is interrupted while
+     *                                  waiting for the lock on node
+     *                                  <code>lockable</code>.
      */
     public Object with(Node lockable, boolean isDeep, long timeout)
-            throws RepositoryException, InterruptedException {
+            throws UnsupportedRepositoryOperationException, RepositoryException, InterruptedException {
         if (timeout < 0) {
             throw new IllegalArgumentException("timeout must be >= 0");
         }
+
         Session session = lockable.getSession();
+        SessionNamespaceResolver resolver = new SessionNamespaceResolver(session);
+
+        Lock lock;
+        EventListener listener = null;
         try {
-            if (tryLock(lockable, isDeep)) {
-                return runAndUnlock();
+            // check whether the lockable can be locked at all
+            if (!lockable.isNodeType(resolver.getJCRName(QName.MIX_LOCKABLE))) {
+                throw new IllegalArgumentException("Node is not lockable");
+            }
+
+            lock = tryLock(lockable, isDeep);
+            if (lock != null) {
+                return runAndUnlock(lock);
             }
 
             if (timeout == 0) {
@@ -157,10 +174,11 @@ public abstract class Locked {
             // now keep trying to aquire the lock
             // using 'this' as a monitor allows the event listener to notify
             // the current thread when the lockable node is possibly unlocked
-            for (;;) {
+            for (; ;) {
                 synchronized (this) {
-                    if (tryLock(lockable, isDeep)) {
-                        return runAndUnlock();
+                    lock = tryLock(lockable, isDeep);
+                    if (lock != null) {
+                        return runAndUnlock(lock);
                     } else {
                         // check timeout
                         if (System.currentTimeMillis() > timelimit) {
@@ -181,6 +199,8 @@ public abstract class Locked {
                     }
                 }
             }
+        } catch (NoPrefixDeclaredException e) {
+            throw new RepositoryException(e);
         } finally {
             if (listener != null) {
                 session.getWorkspace().getObservationManager().removeEventListener(listener);
@@ -190,21 +210,24 @@ public abstract class Locked {
 
     /**
      * This method is executed while holding the lock.
+     * @param node The <code>Node</code> on which the lock is placed.
      * @return an object which is then returned by {@link #with with()}.
      * @throws RepositoryException if an error occurs.
      */
-    protected abstract Object run() throws RepositoryException;
+    protected abstract Object run(Node node) throws RepositoryException;
 
     /**
      * Executes {@link #run} and unlocks the lockable node in any case, even
      * when an exception is thrown.
      *
-     * @return the object returned by {@link #run()}.
+     * @param lock The <code>Lock</code> to unlock in any case before returning.
+     *
+     * @return the object returned by {@link #run}.
      * @throws RepositoryException if an error occurs.
      */
-    private Object runAndUnlock() throws RepositoryException {
+    private Object runAndUnlock(Lock lock) throws RepositoryException {
         try {
-            return run();
+            return run(lock.getNode());
         } finally {
             lock.getNode().unlock();
         }
@@ -215,18 +238,20 @@ public abstract class Locked {
      *
      * @param lockable the lockable node
      * @param isDeep   <code>true</code> if the lock should be deep
-     * @return <code>true</code> if the lock could be aquired.
+     * @return The <code>Lock</code> or <code>null</code> if the
+     *         <code>lockable</code> cannot be locked.
+     * @throws UnsupportedRepositoryOperationException
+     *                             if this repository does not support locking.
      * @throws RepositoryException if an error occurs
      */
-    private boolean tryLock(Node lockable, boolean isDeep) throws RepositoryException {
+    private static Lock tryLock(Node lockable, boolean isDeep)
+            throws UnsupportedRepositoryOperationException, RepositoryException {
         try {
-            lock = lockable.lock(isDeep, true);
-            // if we get here we have a lock
-            return true;
+            return lockable.lock(isDeep, true);
         } catch (LockException e) {
             // locked by some other session
         }
-        return false;
+        return null;
     }
 
     /**
@@ -235,7 +260,8 @@ public abstract class Locked {
      * @param s a session of the repository.
      * @return <code>true</code> if the repository supports observation.
      */
-    private boolean isObservationSupported(Session s) {
+    private static boolean isObservationSupported(Session s) {
         return "true".equalsIgnoreCase(s.getRepository().getDescriptor(Repository.OPTION_OBSERVATION_SUPPORTED));
     }
+
 }
