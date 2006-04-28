@@ -92,7 +92,7 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
         ElementIterator it = DomUtil.getChildren(versionHistorySet, DavConstants.XML_HREF, DavConstants.NAMESPACE);
         while (it.hasNext()) {
             String href = DomUtil.getText(it.nextElement());
-            if (href != null && !"".equals(href)) {
+            if (href != null) {
                 vhHrefSet.add(href);
             }
         }
