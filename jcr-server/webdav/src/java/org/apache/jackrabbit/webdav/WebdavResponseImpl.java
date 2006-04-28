@@ -15,27 +15,28 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockDiscovery;
+import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
-import org.apache.jackrabbit.webdav.observation.EventDiscovery;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Cookie;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.ParserConfigurationException;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.ByteArrayOutputStream;
 import java.util.Locale;
 
 /**
