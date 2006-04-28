@@ -120,9 +120,12 @@ public class Position implements OrderingConstants, XmlSerializable {
      * @param document
      */
     public Element toXml(Document document) {
-        Element pos = DomUtil.createElement(document, XML_POSITION, NAMESPACE);
-        DomUtil.addChildElement(pos, type, NAMESPACE, segment);
-        return pos;
+        Element positionElement = DomUtil.createElement(document, XML_POSITION, NAMESPACE);
+        Element typeElement = DomUtil.addChildElement(positionElement, type, NAMESPACE);
+        if (segment != null) {
+            DomUtil.addChildElement(typeElement, XML_SEGMENT, NAMESPACE, segment);
+        }
+        return positionElement;
     }
 
     //-----------------------------------------------------< static methods >---
@@ -146,14 +149,15 @@ public class Position implements OrderingConstants, XmlSerializable {
             throw new IllegalArgumentException("The 'DAV:position' element required.");
         }
         ElementIterator it = DomUtil.getChildren(positionElement);
-        while (it.hasNext()) {
+        if (it.hasNext()) {
             Element el = it.nextElement();
             String type = el.getLocalName();
             // read the text of DAV:segment child element inside the type
             String segmentText = DomUtil.getChildText(el, XML_SEGMENT, NAMESPACE);
             // stop after the first iteration
-            new Position(type, segmentText);
+            return new Position(type, segmentText);
+        } else {
+            throw new IllegalArgumentException("The 'DAV:position' element required with exact one child indicating the type.");
         }
-        throw new IllegalArgumentException("The 'DAV:position' element required with exact one child indicating the type.");
     }
 }
