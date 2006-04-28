@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +37,21 @@ public class CheckinMethod extends DavMethodBase {
         return getResponseHeader(DeltaVConstants.HEADER_LOCATION).getValue();
     }
 
+    //---------------------------------------------------------< HttpMethod >---
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
         return DavMethods.METHOD_CHECKIN;
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     *
+     * @param statusCode
+     * @return true if status code is {@link DavServletResponse#SC_CREATED 201 (Created)}.
+     */
+    protected boolean isSuccess(int statusCode) {
+        return statusCode == DavServletResponse.SC_CREATED;
     }
 }

@@ -21,6 +21,7 @@ import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 
 import java.io.IOException;
 
@@ -31,19 +32,41 @@ public class ReportMethod extends DavMethodBase {
 
     private static Logger log = LoggerFactory.getLogger(ReportMethod.class);
 
+    private final boolean isDeep;
+
     public ReportMethod(String uri, ReportInfo reportInfo) throws IOException {
 	super(uri);
 	DepthHeader dh = new DepthHeader(reportInfo.getDepth());
+        isDeep = reportInfo.getDepth() > DavConstants.DEPTH_0;
+
 	setRequestHeader(dh);
 
         setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
        	setRequestBody(reportInfo);
     }
 
+    //---------------------------------------------------------< HttpMethod >---
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
 	return DavMethods.METHOD_REPORT;
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     *
+     * @param statusCode
+     * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}
+     * or {@link DavServletResponse#SC_MULTI_STATUS 207 (Multi Status)}. If the
+     * report request included a depth other than {@link DavConstants#DEPTH_0 0}
+     * a multi status response is required.
+     */
+    protected boolean isSuccess(int statusCode) {
+        if (isDeep) {
+            return statusCode == DavServletResponse.SC_MULTI_STATUS;
+        } else {
+            return statusCode == DavServletResponse.SC_OK || statusCode == DavServletResponse.SC_MULTI_STATUS;
+        }
     }
 }

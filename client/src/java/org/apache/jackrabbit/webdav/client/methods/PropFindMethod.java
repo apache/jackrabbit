@@ -17,18 +17,16 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
@@ -60,7 +58,7 @@ public class PropFindMethod extends DavMethodBase {
         setRequestHeader(dh.getHeaderName(), dh.getHeaderValue());
 
         setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
-
+        
         // build the request body
         try {
             // create the document and attach the root element
@@ -69,39 +67,44 @@ public class PropFindMethod extends DavMethodBase {
             document.appendChild(propfind);
 
             // fill the propfind element
-        switch (propfindType) {
-            case PROPFIND_ALL_PROP:
+            switch (propfindType) {
+                case PROPFIND_ALL_PROP:
                     propfind.appendChild(DomUtil.createElement(document, XML_ALLPROP, NAMESPACE));
-                break;
-            case PROPFIND_PROPERTY_NAMES:
+                    break;
+                case PROPFIND_PROPERTY_NAMES:
                     propfind.appendChild(DomUtil.createElement(document, XML_PROPNAME, NAMESPACE));
-                break;
-            default:
-                if (propNameSet == null) {
+                    break;
+                default:
+                    if (propNameSet == null) {
                         propfind.appendChild(DomUtil.createElement(document, XML_PROP, NAMESPACE));
-                } else {
+                    } else {
                         propfind.appendChild(propNameSet.toXml(document));
-                }
-                break;
-        }
+                    }
+                    break;
+            }
 
             // set the request body
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            OutputFormat format = new OutputFormat("xml", "UTF-8", true);
-            XMLSerializer serializer = new XMLSerializer(out, format);
-            serializer.setNamespaces(true);
-            serializer.asDOMSerializer().serialize(document);
-            setRequestBody(out.toString());
-
+            setRequestBody(document);
         } catch (ParserConfigurationException e) {
             throw new IOException(e.getMessage());
         }
     }
 
+    //---------------------------------------------------------< HttpMethod >---
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
         return DavMethods.METHOD_PROPFIND;
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     *
+     * @param statusCode
+     * @return true if status code is {@link DavServletResponse#SC_MULTI_STATUS 207 (Multi-Status)}.
+     */
+    protected boolean isSuccess(int statusCode) {
+        return statusCode == DavServletResponse.SC_MULTI_STATUS;
     }
 }
