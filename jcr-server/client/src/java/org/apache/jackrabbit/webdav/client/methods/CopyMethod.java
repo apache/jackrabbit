@@ -17,6 +17,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.header.OverwriteHeader;
 import org.slf4j.Logger;
@@ -55,10 +56,22 @@ public class CopyMethod extends DavMethodBase {
         }
     }
 
+    //---------------------------------------------------------< HttpMethod >---
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
         return DavMethods.METHOD_COPY;
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     *
+     * @param statusCode
+     * @return true if status code is {@link DavServletResponse#SC_CREATED 201
+     * (Created)} or {@link DavServletResponse#SC_NO_CONTENT 204 (No Content)}.
+     */
+    protected boolean isSuccess(int statusCode) {
+        return statusCode == DavServletResponse.SC_CREATED || statusCode == DavServletResponse.SC_NO_CONTENT;
     }
 }

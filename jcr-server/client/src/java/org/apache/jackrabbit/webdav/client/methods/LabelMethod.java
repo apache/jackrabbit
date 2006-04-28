@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.version.LabelInfo;
 import org.slf4j.Logger;
@@ -66,10 +67,21 @@ public class LabelMethod extends DavMethodBase {
         setRequestBody(labelInfo);
     }
 
+    //---------------------------------------------------------< HttpMethod >---
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
         return DavMethods.METHOD_LABEL;
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     *
+     * @param statusCode
+     * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
+     */
+    protected boolean isSuccess(int statusCode) {
+        return statusCode == DavServletResponse.SC_OK;
     }
 }

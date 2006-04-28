@@ -17,10 +17,12 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.header.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.httpclient.HttpMethod;
 
 /**
  * <code>UnLockMethod</code>...
@@ -35,10 +37,22 @@ public class UnLockMethod extends DavMethodBase {
         setRequestHeader(lth);
     }
 
+    //---------------------------------------------------------< HttpMethod >---
     /**
-     * @see org.apache.commons.httpclient.HttpMethod#getName()
+     * @see HttpMethod#getName()
      */
     public String getName() {
         return DavMethods.METHOD_UNLOCK;
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     * @param statusCode
+     * @return true if the given status code is
+     * {@link DavServletResponse#SC_NO_CONTENT 204 (No Content)}.
+     * @see DavMethodBase#isSuccess(int)
+     */
+    protected boolean isSuccess(int statusCode) {
+        return statusCode == DavServletResponse.SC_NO_CONTENT;
     }
 }

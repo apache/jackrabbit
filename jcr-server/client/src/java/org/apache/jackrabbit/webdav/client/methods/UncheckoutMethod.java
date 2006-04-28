@@ -15,19 +15,19 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <code>MkColMethod</code>...
+ * <code>UncheckoutMethod</code>...
  */
-public class MkColMethod extends DavMethodBase {
+public class UncheckoutMethod extends DavMethodBase {
 
-    private static Logger log = LoggerFactory.getLogger(MkColMethod.class);
+    private static Logger log = LoggerFactory.getLogger(UncheckoutMethod.class);
 
-    public MkColMethod(String uri) {
+    public UncheckoutMethod(String uri) {
         super(uri);
     }
 
@@ -36,16 +36,17 @@ public class MkColMethod extends DavMethodBase {
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
-        return DavMethods.METHOD_MKCOL;
+        return DavMethods.METHOD_UNCHECKOUT;
     }
+
 
     //------------------------------------------------------< DavMethodBase >---
     /**
      *
      * @param statusCode
-     * @return true if status code is {@link DavServletResponse#SC_CREATED 201 (Created)}.
+     * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
      */
     protected boolean isSuccess(int statusCode) {
-        return statusCode == DavServletResponse.SC_CREATED;
+        return statusCode == DavServletResponse.SC_OK;
     }
 }

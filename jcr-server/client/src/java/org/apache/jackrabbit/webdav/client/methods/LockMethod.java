@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.header.IfHeader;
 import org.apache.jackrabbit.webdav.header.TimeoutHeader;
@@ -88,13 +89,6 @@ public class LockMethod extends DavMethodBase {
         setRequestHeader(ifh);
     }
 
-    /**
-     * @see org.apache.commons.httpclient.HttpMethod#getName()
-     */
-    public String getName() {
-        return DavMethods.METHOD_LOCK;
-    }
-
     public ActiveLock getResponseAsLock() throws IOException {
         checkUsed();
         // todo -> build lockdiscovery-prop -> retrieve activelock
@@ -105,5 +99,23 @@ public class LockMethod extends DavMethodBase {
         checkUsed();
         CodedUrlHeader cuh = new CodedUrlHeader(DavConstants.HEADER_LOCK_TOKEN, getResponseHeader(DavConstants.HEADER_LOCK_TOKEN).getValue());
         return cuh.getCodedUrl();
+    }
+
+    //---------------------------------------------------------< HttpMethod >---
+    /**
+     * @see org.apache.commons.httpclient.HttpMethod#getName()
+     */
+    public String getName() {
+        return DavMethods.METHOD_LOCK;
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     *
+     * @param statusCode
+     * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
+     */
+    protected boolean isSuccess(int statusCode) {
+        return statusCode == DavServletResponse.SC_OK;
     }
 }
