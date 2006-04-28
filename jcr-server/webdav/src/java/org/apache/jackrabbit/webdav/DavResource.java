@@ -28,6 +28,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * <code>DavResource</code> provides standard WebDAV functionality as specified
@@ -180,8 +181,24 @@ public interface DavResource {
      * @throws DavException if an error occured. This may be the case if the
      * general state of the resource prevents any properties to be set or removed
      * (e.g. due to a lock).
+     * @deprecated use {@link #alterProperties(List)} instead
      */
     public MultiStatusResponse alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException;
+
+    /**
+     * Set/add and remove the specified properties from this resource.
+     *
+     * @param changeList list containing {@link DavPropertyName} objects (for
+     * properties to be removed) and {@link DavProperty} objects (for
+     * properties to be added/set).
+     * @return multistatus response listing the status resulting from
+     * setting and/or removing the specified properties, in order to allow a
+     * detailled multistatus response.
+     * @throws DavException if an error occured. This may be the case if the
+     * general state of the resource prevents any properties to be set or removed
+     * (e.g. due to a lock).
+     */
+    public MultiStatusResponse alterProperties(List changeList) throws DavException;
 
     /**
      * Retrieve the resource this resource is internal member of.
