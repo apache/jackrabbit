@@ -99,6 +99,19 @@ public class DomUtil {
     }
 
     /**
+     * Same as {@link #getText(Element)} except that 'defaultValue' is returned
+     * instead of <code>null</code>, if the element does not contain any text.
+     *
+     * @param element
+     * @param defaultValue
+     * @return
+     */
+    public static String getText(Element element, String defaultValue) {
+        String txt = getText(element);
+        return (txt == null) ? defaultValue : txt;
+    }
+
+    /**
      * Removes leading and trailing whitespace after calling {@link #getText(Element).
      *
      * @param element
@@ -569,7 +582,9 @@ public class DomUtil {
      * @see Document#createElementNS(String, String)
      */
     public static String getPrefixedName(String localName, Namespace namespace) {
-        if (namespace == null || namespace.equals(Namespace.EMPTY_NAMESPACE) || "".equals(namespace.getPrefix())) {
+        if (namespace == null
+            || Namespace.EMPTY_NAMESPACE.equals(namespace) 
+            || Namespace.EMPTY_NAMESPACE.getPrefix().equals(namespace.getPrefix())) {
             return localName;
         }
         StringBuffer buf = new StringBuffer(namespace.getPrefix());
