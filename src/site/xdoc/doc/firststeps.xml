@@ -223,7 +223,7 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
               the application code free of direct Jackrabbit dependencies, but
               since we are creating a simple standalone application we can take
               a shortcut by using the
-              <a href="../apidocs/org/apache/jackrabbit/core/TransientRepository.html"
+              <a href="../api-1/org/apache/jackrabbit/core/TransientRepository.html"
                  title="org.apache.jackrabbit.core.TransientRepository"
                  >TransientRepository</a> class from Jackrabbit core.
             </p>
@@ -245,7 +245,7 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
           <dd>
             <p>
               The
-              <a href="../apidocs/org/apache/jackrabbit/core/TransientRepository.html"
+              <a href="../api-1/org/apache/jackrabbit/core/TransientRepository.html"
                  title="org.apache.jackrabbit.core.TransientRepository"
                  >TransientRepository</a> class implements the JCR
               <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Repository.html"
@@ -253,7 +253,7 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
                  >Repository</a> interface, so you can simply assign a
               TransientRepository instance to a Repository variable.
               The
-              <a href="../apidocs/org/apache/jackrabbit/core/TransientRepository.html#TransientRepository()"
+              <a href="../api-1/org/apache/jackrabbit/core/TransientRepository.html#TransientRepository()"
                  title="TransientRepository()">default constructor</a>
               contains a utility feature that will take care of the initial
               configuration and repository construction when the first session
