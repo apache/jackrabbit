@@ -15,19 +15,19 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <code>MkColMethod</code>...
+ * <code>PutMethod</code>...
  */
-public class MkColMethod extends DavMethodBase {
+public class PutMethod extends DavMethodBase {
 
-    private static Logger log = LoggerFactory.getLogger(MkColMethod.class);
+    private static Logger log = LoggerFactory.getLogger(PutMethod.class);
 
-    public MkColMethod(String uri) {
+    public PutMethod(String uri) {
         super(uri);
     }
 
@@ -36,16 +36,17 @@ public class MkColMethod extends DavMethodBase {
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
-        return DavMethods.METHOD_MKCOL;
+        return DavMethods.METHOD_PUT;
     }
 
     //------------------------------------------------------< DavMethodBase >---
     /**
-     *
      * @param statusCode
-     * @return true if status code is {@link DavServletResponse#SC_CREATED 201 (Created)}.
+     * @return true if the status code is either {@link DavServletResponse#SC_CREATED 200 (OK)}
+     * or {@link DavServletResponse#SC_NO_CONTENT 204 (No Content)}.
+     * @see DavMethodBase#isSuccess(int)
      */
     protected boolean isSuccess(int statusCode) {
-        return statusCode == DavServletResponse.SC_CREATED;
+        return statusCode == DavServletResponse.SC_CREATED || statusCode == DavServletResponse.SC_NO_CONTENT;
     }
 }

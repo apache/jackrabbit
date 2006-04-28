@@ -16,12 +16,18 @@
 package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.HttpConnection;
+import org.apache.commons.httpclient.HttpMethodBase;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.header.Header;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.slf4j.Logger;
@@ -40,24 +46,143 @@ import java.io.InputStream;
 /**
  * <code>DavMethodBase</code>...
  */
-public abstract class DavMethodBase extends EntityEnclosingMethod implements DavConstants {
+public abstract class DavMethodBase extends EntityEnclosingMethod implements DavMethod, DavConstants {
 
     private static Logger log = LoggerFactory.getLogger(DavMethodBase.class);
-    static final DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
-    static {
-       BUILDER_FACTORY.setNamespaceAware(true);
-    }
+
+    static final DocumentBuilderFactory BUILDER_FACTORY = DomUtil.BUILDER_FACTORY;
+
+    private boolean success;
+    private MultiStatus multiStatus;
 
     public DavMethodBase(String uri) {
 	super(uri);
     }
 
+    //---------------------------------------------------------< HttpMethod >---
     /**
+     * Reset method to 'abstract' in order to force subclasses to change the
+     * name (inherited value is {@link GetMethod#getName()}).
      *
-     * @param header
+     * @return Name of the method.
+     * @see HttpMethod#getName() 
+     */
+    public abstract String getName();
+
+    //----------------------------------------------------------< DavMethod >---
+    /**
+     * @see DavMethod#addRequestHeader(Header)
+     */
+    public void addRequestHeader(Header header) {
+        addRequestHeader(header.getHeaderName(), header.getHeaderValue());
+    }
+
+    /**
+     * @see DavMethod#setRequestHeader(Header)
      */
     public void setRequestHeader(Header header) {
         setRequestHeader(header.getHeaderName(), header.getHeaderValue());
+    }
+
+    /**
+     * @see DavMethod#getResponseBodyAsMultiStatus()
+     */
+    public MultiStatus getResponseBodyAsMultiStatus() throws IOException, DavException {
+        checkUsed();
+        if (multiStatus != null) {
+            return multiStatus;
+        } else {
+            DavException dx = getResponseException();
+            if (dx != null) {
+                throw dx;
+            } else {
+                throw new DavException(getStatusCode(), getName() + " resulted with unexpected status: " + getStatusLine());
+            }
+        }
+    }
+
+    /**
+     * @see DavMethod#getResponseBodyAsDocument()
+     */
+    public Document getResponseBodyAsDocument() throws IOException {
+        InputStream in = getResponseBodyAsStream();
+        if (in == null) {
+            return null;
+        }
+        try {
+            DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
+            Document document = docBuilder.parse(in);
+            return document;
+        } catch (ParserConfigurationException e) {
+            throw new IOException(e.getMessage());
+        } catch (SAXException e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+
+    /**
+     *
+     * @return
+     * @throws IOException
+     */
+    Element getRootElement() throws IOException {
+        Document document = getResponseBodyAsDocument();
+        if (document != null) {
+            return document.getDocumentElement();
+        }
+        return null;
+    }
+
+    /**
+     * @see DavMethod#getResponseException()
+     */
+    public DavException getResponseException() throws IOException {
+	checkUsed();
+	if (success) {
+            String msg = "Cannot retrieve exception from successful response.";
+	    log.warn(msg);
+	    throw new IllegalStateException(msg);
+	}
+
+        Element responseRoot = getRootElement();
+        if (responseRoot != null) {
+            return new DavException(getStatusCode(), getStatusText(), null, responseRoot);
+        } else {           
+            // fallback: no or unparsable response body
+            return new DavException(getStatusCode(), getStatusText());
+        }
+    }
+
+    /**
+     * @see DavMethod#checkSuccess()
+     */
+    public void checkSuccess() throws DavException, IOException {
+        if (!succeeded()) {
+            throw getResponseException();
+        }
+    }
+
+    /**
+     * @see DavMethod#succeeded()
+     */
+    public boolean succeeded() {
+        checkUsed();
+        return success;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     *
+     * @param requestBody
+     * @throws IOException
+     */
+    public void setRequestBody(Document requestBody) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        OutputFormat format = new OutputFormat("xml", "UTF-8", false);
+        XMLSerializer serializer = new XMLSerializer(out, format);
+        serializer.setNamespaces(true);
+        serializer.asDOMSerializer().serialize(requestBody);
+        setRequestBody(out.toString());
     }
 
     /**
@@ -67,87 +192,89 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      */
     public void setRequestBody(XmlSerializable requestBody) throws IOException {
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
             Document doc = BUILDER_FACTORY.newDocumentBuilder().newDocument();
             doc.appendChild(requestBody.toXml(doc));
-
-            OutputFormat format = new OutputFormat("xml", "UTF-8", true);
-            XMLSerializer serializer = new XMLSerializer(out, format);
-            serializer.setNamespaces(true);
-            serializer.asDOMSerializer().serialize(doc);
-            setRequestBody(out.toString());
+            setRequestBody(doc);
         } catch (ParserConfigurationException e) {
             throw new IOException(e.getMessage());
         }
     }
 
     /**
-     * Return the response body as <code>MultiStatus</code> object.
+     *
+     * @param statusCode
+     * @return
+     */
+    abstract protected boolean isSuccess(int statusCode);
+
+    /**
+     *
+     * @param success
+     */
+    protected void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    /**
      *
      * @return
-     * @throws IOException if the response body could not be parsed
-     * @throws DavException if the status code is other than MultiStatus
      */
-    public MultiStatus getResponseBodyAsMultiStatus() throws IOException, DavException {
-	checkUsed();
+    protected boolean getSuccess() {
+        return success;
+    }
+
+    /**
+     * This method is invoked during the {@link #processResponseBody(HttpState, HttpConnection)},
+     * which in this implementation parses the response body into a <code>MultiStatus</code>
+     * object if the status code indicates 207 (MultiStatus).<br>
+     * Subclasses may want to override this method in order to apply specific
+     * validation of the multi-status.<p/>
+     * This implementation does nothing.
+     *
+     * @param multiStatus
+     * @param httpState
+     * @param httpConnection
+     * @see #processResponseBody(HttpState, HttpConnection)
+     */
+    protected void processMultiStatusBody(MultiStatus multiStatus, HttpState httpState, HttpConnection httpConnection) {
+        // does nothing
+    }
+
+    //-----------------------------------------------------< HttpMethodBase >---
+    /**
+     *
+     * @param httpState
+     * @param httpConnection
+     */
+    protected void processStatusLine(HttpState httpState, HttpConnection httpConnection) {
+        super.processStatusLine(httpState, httpConnection);
+        int code = getStatusCode();
+        // default
+        success = code < DavServletResponse.SC_BAD_REQUEST;
+        // sub classes overwrites
+        success = isSuccess(code);
+    }
+
+    /**
+     * In case of a MultiStatus response code, this method parses the response
+     * body and resets the 'success' flag depending on the multistatus content,
+     * which could indicate method failure as well.
+     *
+     * @param httpState
+     * @param httpConnection
+     * @see HttpMethodBase#processResponseBody(HttpState, HttpConnection)
+     */
+    protected final void processResponseBody(HttpState httpState, HttpConnection httpConnection) {
+        // in case of multi-status response
         if (getStatusCode() == DavServletResponse.SC_MULTI_STATUS) {
-            return MultiStatus.createFromXml(getRootElement());
-        } else {
-            throw new DavException(getStatusCode(), getName() + " resulted with unexpected status code: " + getStatusCode());
-        }
-    }
-
-    /**
-     * Parse the response body into an Xml <code>Document</code>.
-     *
-     * @return Xml document or <code>null</code> if the response stream is
-     * <code>null</code>.
-     * @throws IOException if the parsing fails.
-     */
-    public Document getResponseBodyAsDocument() throws IOException {
-        InputStream in = getResponseBodyAsStream();
-        if (in == null) {
-	    return null;
-	}
-	    try {
-            DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
-            Document document = docBuilder.parse(in);
-            return document;
-        } catch (ParserConfigurationException e) {
-            throw new IOException(e.getMessage());
-        } catch (SAXException e) {
-            throw new IOException(e.getMessage());
-	    }
-	}
-
-    /**
-     * 
-     * @return
-     * @throws IOException
-     */
-    Element getRootElement() throws IOException {
-        Document document = getResponseBodyAsDocument();
-        if (document != null) {
-            return document.getDocumentElement();
-    }
-        return null;
-    }
-
-    /**
-     *
-     * @return
-     * @throws IOException
-     */
-    public DavException getResponseException() throws IOException {
-        checkUsed();
-	if (getStatusCode() < DavServletResponse.SC_BAD_REQUEST) {
-	    log.warn("Cannot retrieve exception from successful response.");
-                return null;
+            try {
+                multiStatus = MultiStatus.createFromXml(getRootElement());
+                // sub-class processing/validation of the multiStatus
+                processMultiStatusBody(multiStatus, httpState, httpConnection);
+            } catch (IOException e) {
+                log.error("Error while parsing multistatus response: " + e);
+                success = false;
             }
-
-        // todo: build exception from response body if present.
-
-	// fallback: no or unparsable response body
-	return new DavException(getStatusCode(), getStatusText());
+        }
     }
 }

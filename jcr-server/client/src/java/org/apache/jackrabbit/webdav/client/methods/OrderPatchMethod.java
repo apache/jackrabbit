@@ -17,6 +17,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.ordering.OrderPatch;
 import org.apache.jackrabbit.webdav.ordering.OrderingConstants;
 import org.apache.jackrabbit.webdav.ordering.Position;
@@ -53,15 +54,15 @@ public class OrderPatchMethod extends DavMethodBase {
      * that reorders multiple members at once.
      *
      * @param uri
-     * @param orderingHref
+     * @param orderingType href String identifying the ordering type
      * @param memberSegment
      * @param first
      */
-    public OrderPatchMethod(String uri, String orderingHref, String memberSegment, boolean first) throws IOException {
+    public OrderPatchMethod(String uri, String orderingType, String memberSegment, boolean first) throws IOException {
         super(uri);
-        String orderType = (first) ? OrderingConstants.XML_FIRST : OrderingConstants.XML_LAST;
-        Position p = new Position(orderType);
-        OrderPatch op = new OrderPatch(orderingHref, new OrderPatch.Member(memberSegment, p));
+        String orderPosition = (first) ? OrderingConstants.XML_FIRST : OrderingConstants.XML_LAST;
+        Position p = new Position(orderPosition);
+        OrderPatch op = new OrderPatch(orderingType, new OrderPatch.Member(memberSegment, p));
         setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
         setRequestBody(op);
     }
@@ -74,24 +75,35 @@ public class OrderPatchMethod extends DavMethodBase {
      * that reorders multiple members at once.
      *
      * @param uri
-     * @param orderingHref
+     * @param orderingType href String identifying the ordering type
      * @param memberSegment
      * @param targetMemberSegmet
-     * @param above
+     * @param before
      */
-    public OrderPatchMethod(String uri, String orderingHref, String memberSegment, String targetMemberSegmet, boolean above) throws IOException {
+    public OrderPatchMethod(String uri, String orderingType, String memberSegment, String targetMemberSegmet, boolean before) throws IOException {
         super(uri);
-        String orderType = (above) ? OrderingConstants.XML_AFTER : OrderingConstants.XML_BEFORE;
-        Position p = new Position(orderType, targetMemberSegmet);
-        OrderPatch op = new OrderPatch(orderingHref, new OrderPatch.Member(memberSegment, p));
+        String orderPosition = (before) ? OrderingConstants.XML_BEFORE : OrderingConstants.XML_AFTER;
+        Position p = new Position(orderPosition, targetMemberSegmet);
+        OrderPatch op = new OrderPatch(orderingType, new OrderPatch.Member(memberSegment, p));
         setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
         setRequestBody(op);
     }
 
+    //---------------------------------------------------------< HttpMethod >---
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
         return DavMethods.METHOD_ORDERPATCH;
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     *
+     * @param statusCode
+     * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
+     */
+    protected boolean isSuccess(int statusCode) {
+        return statusCode == DavServletResponse.SC_OK;
     }
 }

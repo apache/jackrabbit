@@ -17,13 +17,19 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.version.OptionsInfo;
 import org.apache.jackrabbit.webdav.version.OptionsResponse;
+import org.apache.commons.httpclient.HttpConnection;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpMethodBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 import java.io.IOException;
+import java.util.HashSet;
 
 /**
  * <code>OptionsMethod</code>...
@@ -31,6 +37,8 @@ import java.io.IOException;
 public class OptionsMethod extends DavMethodBase {
 
     private static Logger log = LoggerFactory.getLogger(OptionsMethod.class);
+
+    private final HashSet allowedMethods = new HashSet();
 
     public OptionsMethod(String uri) {
 	super(uri);
@@ -49,13 +57,6 @@ public class OptionsMethod extends DavMethodBase {
     }
 
     /**
-     * @see org.apache.commons.httpclient.HttpMethod#getName()
-     */
-    public String getName() {
-	return DavMethods.METHOD_OPTIONS;
-    }
-
-    /**
      *
      * @return
      * @throws IOException
@@ -68,5 +69,69 @@ public class OptionsMethod extends DavMethodBase {
             or = OptionsResponse.createFromXml(rBody);
         }
         return or;
+    }
+
+    /**
+     * Checks if the specified method is a supported method by the resource
+     * identified by the original URI.
+     *
+     * @param method
+     * @return true if the given method is contained in the 'Allow' response header.
+     */
+    public boolean isAllowed(String method) {
+        checkUsed();
+        return allowedMethods.contains(method.toUpperCase());
+    }
+
+
+    /**
+     * Returns an array of String listing the allowed methods.
+     *
+     * @return all methods allowed on the resource specified by the original URI.
+     */
+    public String[] getAllowedMethods() {
+        checkUsed();
+        return (String[]) allowedMethods.toArray(new String[allowedMethods.size()]);
+    }
+
+
+    //---------------------------------------------------------< HttpMethod >---
+    /**
+     * @see org.apache.commons.httpclient.HttpMethod#getName()
+     */
+    public String getName() {
+        return DavMethods.METHOD_OPTIONS;
+    }
+
+    //-----------------------------------------------------< HttpMethodBase >---
+    /**
+     * <p>
+     * This implementation will parse the <tt>Allow</tt> header to obtain
+     * the set of methods supported by the resource identified by the Request-URI.
+     * </p>
+     *
+     * @param state the {@link HttpState state} information associated with this method
+     * @param conn the {@link HttpConnection connection} used to execute
+     *        this HTTP method
+     * @see HttpMethodBase#processResponseHeaders(HttpState, HttpConnection)
+     */
+    protected void processResponseHeaders(HttpState state, HttpConnection conn) {
+        Header allow = getResponseHeader("Allow");
+        if (allow != null) {
+            String[] methods = allow.getValue().split(",");
+            for (int i = 0; i < methods.length; i++) {
+                allowedMethods.add(methods[i].trim().toUpperCase());
+            }
+        }
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     *
+     * @param statusCode
+     * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
+     */
+    protected boolean isSuccess(int statusCode) {
+        return statusCode == DavServletResponse.SC_OK;
     }
 }

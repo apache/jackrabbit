@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,17 +45,28 @@ public class SearchMethod extends DavMethodBase {
             setRequestBody(searchInfo);
         }
     }
-    
+
     public SearchMethod(String uri, SearchInfo searchInfo) throws IOException {
         super(uri);
         setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
         setRequestBody(searchInfo);
     }
 
+    //---------------------------------------------------------< HttpMethod >---
     /**
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
         return DavMethods.METHOD_SEARCH;
+    }
+
+    //------------------------------------------------------< DavMethodBase >---
+    /**
+     *
+     * @param statusCode
+     * @return true if status code is {@link DavServletResponse#SC_MULTI_STATUS 207 (Multi-Status)}.
+     */
+    protected boolean isSuccess(int statusCode) {
+        return statusCode == DavServletResponse.SC_MULTI_STATUS;
     }
 }

@@ -15,37 +15,41 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.security.AclProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 /**
- * <code>MkColMethod</code>...
+ * <code>AclMethod</code>...
  */
-public class MkColMethod extends DavMethodBase {
+public class AclMethod extends DavMethodBase {
 
-    private static Logger log = LoggerFactory.getLogger(MkColMethod.class);
+    private static Logger log = LoggerFactory.getLogger(AclMethod.class);
 
-    public MkColMethod(String uri) {
+    public AclMethod(String uri, AclProperty aclProperty) throws IOException {
         super(uri);
+        setRequestBody(aclProperty);
     }
 
     //---------------------------------------------------------< HttpMethod >---
     /**
+     * @return DavMethods#METHOD_ACL
      * @see org.apache.commons.httpclient.HttpMethod#getName()
      */
     public String getName() {
-        return DavMethods.METHOD_MKCOL;
+        return DavMethods.METHOD_ACL;
     }
 
     //------------------------------------------------------< DavMethodBase >---
     /**
-     *
      * @param statusCode
-     * @return true if status code is {@link DavServletResponse#SC_CREATED 201 (Created)}.
+     * @return true if status code is {@link DavServletResponse#SC_OK 200 (OK)}.
      */
     protected boolean isSuccess(int statusCode) {
-        return statusCode == DavServletResponse.SC_CREATED;
+        return statusCode == DavServletResponse.SC_OK;
     }
 }
