@@ -922,25 +922,26 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     private String getJcrName(DavPropertyName propName) throws RepositoryException {
         // remove any encoding necessary for xml compliance
         String pName = ISO9075.decode(propName.getName());
-        String uri = propName.getNamespace().getURI();
-        if (uri != null && !"".equals(uri)) {
+        Namespace propNamespace = propName.getNamespace();
+        if (!Namespace.EMPTY_NAMESPACE.equals(propNamespace)) {
             Session s = getJcrSession();
             String prefix;
+            String emptyPrefix = Namespace.EMPTY_NAMESPACE.getPrefix();
             try {
                 // lookup 'prefix' in the session-ns-mappings / namespace-registry
-                prefix = s.getNamespacePrefix(uri);
+                prefix = s.getNamespacePrefix(propNamespace.getURI());
             } catch (NamespaceException e) {
                 // namespace uri has not been registered yet
                 NamespaceRegistry nsReg = s.getWorkspace().getNamespaceRegistry();
-                prefix = propName.getNamespace().getPrefix();
+                prefix = propNamespace.getPrefix();
                 // avoid trouble with default namespace
-                if (prefix == null || "".equals(prefix)) {
+                if (emptyPrefix.equals(prefix)) {
                     prefix = "_pre" + nsReg.getPrefixes().length + 1;
                 }
                 // NOTE: will fail if prefix is already in use in the namespace registry
-                nsReg.registerNamespace(prefix, uri);
+                nsReg.registerNamespace(prefix, propNamespace.getURI());
             }
-            if (prefix != null && !"".equals(prefix)) {
+            if (prefix != null && !emptyPrefix.equals(prefix)) {
                 pName = prefix + ":" + pName;
             }
         }
