@@ -254,7 +254,7 @@
         the JavaBean conventions.
       </p>
       <p>
-        See the <a href="apidocs/org/apache/jackrabbit/core/state/PersistenceManager.html">PersistenceManager javadocs</a>
+        See the <a href="api-1/org/apache/jackrabbit/core/state/PersistenceManager.html">PersistenceManager javadocs</a>
         for more details.
       </p>
       <subsection name="InMemPersistenceManager" id="InMemPersistenceManager">
@@ -291,7 +291,7 @@
           </dd>
         </dl>
         <p>
-          See the <a href="apidocs/org/apache/jackrabbit/core/state/db/InMemPersistenceManager.html">InMemPersistenceManager javadocs</a>
+          See the <a href="api-1/org/apache/jackrabbit/core/state/db/InMemPersistenceManager.html">InMemPersistenceManager javadocs</a>
           for more details.
         </p>
       </subsection>
@@ -308,7 +308,7 @@
           <code>ObjectPersistenceManager</code> class.
         </p>
         <p>
-          See the <a href="apidocs/org/apache/jackrabbit/core/state/obj/ObjectPersistenceManager.html">ObjectPersistenceManager javadocs</a>
+          See the <a href="api-1/org/apache/jackrabbit/core/state/obj/ObjectPersistenceManager.html">ObjectPersistenceManager javadocs</a>
           for more details.
         </p>
       </subsection>
@@ -327,7 +327,7 @@
           <code>XMLPersistenceManager</code> class.
         </p>
         <p>
-          See the <a href="apidocs/org/apache/jackrabbit/core/state/xml/XMLPersistenceManager.html">XMLPersistenceManager javadocs</a>
+          See the <a href="api-1/org/apache/jackrabbit/core/state/xml/XMLPersistenceManager.html">XMLPersistenceManager javadocs</a>
           for more details.
         </p>
       </subsection>
@@ -376,7 +376,7 @@
           </dd>
         </dl>
         <p>
-          See the <a href="apidocs/org/apache/jackrabbit/core/state/db/SimpleDbPersistenceManager.html">SimpleDbPersistenceManager javadocs</a>
+          See the <a href="api-1/org/apache/jackrabbit/core/state/db/SimpleDbPersistenceManager.html">SimpleDbPersistenceManager javadocs</a>
           for more details.
         </p>
       </subsection>
@@ -401,7 +401,7 @@
           to <code>false</code>.
         </p>
         <p>
-          See the <a href="apidocs/org/apache/jackrabbit/core/state/db/DerbyPersistenceManager.html">DerbyPersistenceManager javadocs</a>
+          See the <a href="api-1/org/apache/jackrabbit/core/state/db/DerbyPersistenceManager.html">DerbyPersistenceManager javadocs</a>
           for more details.
         </p>
       </subsection>
@@ -440,7 +440,7 @@
         conventions.
       </p>
       <p>
-        See the <a href="apidocs/org/apache/jackrabbit/core/fs/FileSystem.html">FileSystem javadocs</a>
+        See the <a href="api-1/org/apache/jackrabbit/core/fs/FileSystem.html">FileSystem javadocs</a>
         for more details.
       </p>
       <subsection name="LocalFileSystem" id="LocalFileSystem">
@@ -463,7 +463,7 @@
           </dd>
         </dl>
         <p>
-          See the <a href="apidocs/org/apache/jackrabbit/core/fs/local/LocalFileSystem.html">LocalFileSystem javadocs</a>
+          See the <a href="api-1/org/apache/jackrabbit/core/fs/local/LocalFileSystem.html">LocalFileSystem javadocs</a>
           for more details.
         </p>
       </subsection>
