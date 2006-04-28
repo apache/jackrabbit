@@ -20,6 +20,7 @@ import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 
@@ -138,4 +139,22 @@ public interface ItemResourceConstants {
 
     // property names used for resource representing a version hisotry
     public static final DavPropertyName JCR_VERSIONABLEUUID = DavPropertyName.create("versionableuuid", NAMESPACE);
+
+    //-----------------------------------------< JSR170 specific privileges >---
+    /**
+     * Privilege representing the JSR170 'read' action.
+     */
+    public static final Privilege PRIVILEGE_JCR_READ = Privilege.getPrivilege("read", NAMESPACE);
+    /**
+     * Privilege representing the JSR170 'add_node' action.
+     */
+    public static final Privilege PRIVILEGE_JCR_ADD_NODE = Privilege.getPrivilege("add_node", NAMESPACE);
+    /**
+     * Privilege representing the JSR170 'set_property' action.
+     */
+    public static final Privilege PRIVILEGE_JCR_SET_PROPERTY = Privilege.getPrivilege("set_property", NAMESPACE);
+    /**
+     * Privilege representing the JSR170 'remove' action.
+     */
+    public static final Privilege PRIVILEGE_JCR_REMOVE = Privilege.getPrivilege("remove", NAMESPACE);
 }
