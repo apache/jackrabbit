@@ -21,6 +21,7 @@ import org.apache.jackrabbit.util.Locked;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Node;
+import javax.jcr.Property;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -62,9 +63,9 @@ public class LockTest extends AbstractJCRTest {
                     }
                     try {
                         for (int i = 0; i < NUM_CHANGES; i++) {
-                            final Node n = (Node) s.getItem(lockable.getPath());
+                            Node n = (Node) s.getItem(lockable.getPath());
                             new Locked() {
-                                protected Object run() throws RepositoryException {
+                                protected Object run(Node n) throws RepositoryException {
                                     String nodeName = "node" + threadNumber;
                                     if (n.hasNode(nodeName)) {
                                         n.getNode(nodeName).remove();
@@ -129,12 +130,13 @@ public class LockTest extends AbstractJCRTest {
                     }
                     try {
                         for (int i = 0; i < NUM_VALUE_GETS; i++) {
-                            final Node n = (Node) s.getItem(counter.getPath());
+                            Node n = (Node) s.getItem(counter.getPath());
                             long currentValue = ((Long) new Locked() {
-                                protected Object run() throws RepositoryException {
-                                    long value = n.getProperty("value").getLong();
-                                    n.setProperty("value", ++value);
-                                    n.save();
+                                protected Object run(Node n) throws RepositoryException {
+                                    Property seqProp = n.getProperty("value");
+                                    long value = seqProp.getLong();
+                                    seqProp.setValue(++value);
+                                    seqProp.save();
                                     return new Long(value);
                                 }
                             }.with(n, false)).longValue();
@@ -194,12 +196,13 @@ public class LockTest extends AbstractJCRTest {
                     }
                     try {
                         for (int i = 0; i < NUM_VALUE_GETS; i++) {
-                            final Node n = (Node) s.getItem(counter.getPath());
+                            Node n = (Node) s.getItem(counter.getPath());
                             Object ret = new Locked() {
-                                protected Object run() throws RepositoryException {
-                                    long value = n.getProperty("value").getLong();
-                                    n.setProperty("value", ++value);
-                                    n.save();
+                                protected Object run(Node n) throws RepositoryException {
+                                    Property seqProp = n.getProperty("value");
+                                    long value = seqProp.getLong();
+                                    seqProp.setValue(++value);
+                                    seqProp.save();
                                     return new Long(value);
                                 }
                             }.with(n, false, 10 * 1000); // expect a value after ten seconds
