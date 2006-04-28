@@ -102,7 +102,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
                     * comment etc.) is ignored. NO bad-request/conflict error is
                     * thrown.
                     */
-                    if (isValueElement(propValue)) {
+                    if (isValueElement(el)) {
                         valueElements.add(el);
                     }
                 }
@@ -111,10 +111,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
             Element[] elems = (Element[])valueElements.toArray(new Element[valueElements.size()]);
             jcrValues = new Value[elems.length];
             for (int i = 0; i < elems.length; i++) {
-                String value = DomUtil.getText(elems[i]);
-                String typeStr = DomUtil.getAttribute(elems[i], ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE);
-                int type = (typeStr == null) ? defaultType : PropertyType.valueFromName(typeStr);
-                jcrValues[i] = ValueHelper.deserialize(value, type, false);
+                jcrValues[i] = getJcrValue(elems[i], defaultType);
             }
         }
     }
@@ -127,6 +124,26 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
         if (!reqName.equals(getName())) {
             throw new ValueFormatException("Attempt to retrieve mulitple values from single property '" + getName() + "'.");
         }
+    }
+
+    /**
+     *
+     * @param valueElement
+     * @param defaultType
+     * @return
+     * @throws ValueFormatException
+     * @throws RepositoryException
+     */
+    private static Value getJcrValue(Element valueElement, int defaultType) throws ValueFormatException, RepositoryException {
+        if (valueElement == null) {
+            return null;
+        }
+        // make sure the value is never 'null'
+        String value = DomUtil.getText(valueElement, "");
+        String typeStr = DomUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE);
+        int type = (typeStr == null) ? defaultType : PropertyType.valueFromName(typeStr);
+        // deserialize value ->> see #toXml where values are serialized
+        return ValueHelper.deserialize(value, type, true);
     }
 
     /**
@@ -209,7 +226,8 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
             for (int i = 0; i < jcrValues.length; i++) {
                 Value v = jcrValues[i];
                 String type = PropertyType.nameFromValue(v.getType());
-                Element xmlValue = DomUtil.createElement(document, XML_VALUE, ItemResourceConstants.NAMESPACE, v.getString());
+                String serializedValue = ValueHelper.serialize(v, true);
+                Element xmlValue = DomUtil.createElement(document, XML_VALUE, ItemResourceConstants.NAMESPACE, serializedValue);
                 DomUtil.setAttribute(xmlValue, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE, type);
                 elem.appendChild(xmlValue);
             }
