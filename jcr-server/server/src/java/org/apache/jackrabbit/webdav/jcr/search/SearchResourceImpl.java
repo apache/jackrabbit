@@ -29,6 +29,7 @@ import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.util.ISO9075;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -161,6 +162,15 @@ public class SearchResourceImpl implements SearchResource {
         MultiStatus ms = new MultiStatus();
 
         String[] columnNames = qResult.getColumnNames();
+        StringBuffer responseDescription = new StringBuffer();
+        String delim = "";
+        for (int i = 0; i < columnNames.length; i++) {
+            responseDescription.append(delim);
+            responseDescription.append(ISO9075.encode(columnNames[i]));
+            delim = " ";
+        }
+        ms.setResponseDescription(responseDescription.toString());
+
         RowIterator rowIter = qResult.getRows();
         while (rowIter.hasNext()) {
             Row row = rowIter.nextRow();

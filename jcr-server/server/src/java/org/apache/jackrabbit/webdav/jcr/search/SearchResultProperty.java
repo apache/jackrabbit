@@ -29,6 +29,7 @@ import org.w3c.dom.Element;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -42,6 +43,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
     private static Logger log = LoggerFactory.getLogger(SearchResultProperty.class);
 
     public static final DavPropertyName SEARCH_RESULT_PROPERTY = DavPropertyName.create("search-result-property", ItemResourceConstants.NAMESPACE);
+    private static final String COLUMN = "column";
 
     private final String[] columnNames;
     private final Value[] values;
@@ -68,49 +70,48 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      * required form.
      */
     public SearchResultProperty(DavProperty property) throws RepositoryException {
-        super(SEARCH_RESULT_PROPERTY, true);
-        if (!SEARCH_RESULT_PROPERTY.equals(property.getName())) {
-	    throw new IllegalArgumentException("SearchResultProperty may only be created with a property that has name="+SEARCH_RESULT_PROPERTY.getName());
+        super(property.getName(), true);
+        if (!SEARCH_RESULT_PROPERTY.equals(getName())) {
+	    throw new IllegalArgumentException("SearchResultProperty may only be created from a property named " + SEARCH_RESULT_PROPERTY.toString());
 	}
 
         List colList = new ArrayList();
         List valList = new ArrayList();
-
-        if (property.getValue() instanceof List) {
-            List l = (List) property.getValue();
-
-            String name = null;
-            String value = null;
-            int i = 0;
-            Iterator elemIt = l.iterator();
+        Object propValue = property.getValue();
+        if (propValue instanceof List) {
+            Iterator elemIt = ((List)propValue).iterator();
             while (elemIt.hasNext()) {
                 Object el = elemIt.next();
                 if (el instanceof Element) {
-                    String txt = DomUtil.getText((Element)el);
-                    if (JCR_NAME.getName().equals(((Element)el).getLocalName())) {
-                        name = txt;
-                    } else if (JCR_VALUE.getName().equals(((Element)el).getLocalName())) {
-                        value = txt;
-                    } else if (JCR_TYPE.getName().equals(((Element)el).getLocalName())) {
-                        int type = PropertyType.valueFromName(txt);
-                        if (name == null) {
-                            throw new IllegalArgumentException("SearchResultProperty requires a set of 'dcr:name','dcr:value' and 'dcr:type' xml elements.");
-                        }
-                        colList.add(name);
-                        valList.add((value == null) ? null : ValueHelper.deserialize(value, type, false));
-                        // reset...
-                        name = null;
-                        value = null;
-                        i++;
-                    }
+                    parseColumnElement((Element)el, colList, valList);
                 }
             }
+        } else if (propValue instanceof Element) {
+            parseColumnElement((Element)property.getValue(), colList, valList);
         } else {
-            new IllegalArgumentException("SearchResultProperty requires a list of 'dcr:name','dcr:value' and 'dcr:type' xml elements.");
+            new IllegalArgumentException("SearchResultProperty requires a list of 'dcr:column' xml elements.");
         }
 
         columnNames = (String[]) colList.toArray(new String[colList.size()]);
         values = (Value[]) valList.toArray(new Value[valList.size()]);
+    }
+
+    private void parseColumnElement(Element columnElement, List columnNames, List values) throws ValueFormatException, RepositoryException {
+        if (!DomUtil.matches(columnElement, COLUMN, ItemResourceConstants.NAMESPACE)) {
+            log.debug("dcr:column element expected within search result.");
+            return;
+        }
+        columnNames.add(DomUtil.getChildText(columnElement, JCR_NAME.getName(), JCR_NAME.getNamespace()));
+
+        Value jcrValue;
+        Element valueElement = DomUtil.getChildElement(columnElement, JCR_VALUE.getName(), JCR_VALUE.getNamespace());
+        if (valueElement != null) {
+            String typeStr = DomUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE);
+            jcrValue = ValueHelper.deserialize(DomUtil.getText(valueElement), PropertyType.valueFromName(typeStr), true);
+        } else {
+            jcrValue = null;
+        }
+        values.add(jcrValue);
     }
 
     /**
@@ -150,7 +151,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      * Example:
      * <pre>
      * -----------------------------------------------------------
-     *   col-name  |   bla   |   bli   |  dcr:path  |  dcr:score
+     *   col-name  |   bla   |   bli   |  jcr:path  |  jcr:score
      * -----------------------------------------------------------
      *   value     |   xxx   |   111   |  /aNode    |    1
      *   type      |    1    |    3    |     8      |    3
@@ -158,18 +159,24 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      * </pre>
      * results in:
      * <pre>
-     * &lt;dcr:name&gt;bla&lt;dcr:name/&gt;
-     * &lt;dcr:value&gt;xxx&lt;dcr:value/&gt;
-     * &lt;dcr:type&gt;String&lt;dcr:value/&gt;
-     * &lt;dcr:name&gt;bli&lt;dcr:name/&gt;
-     * &lt;dcr:value&gt;111&lt;dcr:value/&gt;
-     * &lt;dcr:type&gt;Long&lt;dcr:value/&gt;
-     * &lt;dcr:name&gt;jcr:path&lt;dcr:name/&gt;
-     * &lt;dcr:value&gt;/aNode&lt;dcr:value/&gt;
-     * &lt;dcr:type&gt;Path&lt;dcr:value/&gt;
-     * &lt;dcr:name&gt;jcr:score&lt;dcr:name/&gt;
-     * &lt;dcr:value&gt;1&lt;dcr:value/&gt;
-     * &lt;dcr:type&gt;Long&lt;dcr:value/&gt;
+     * &lt;dcr:search-result-property xmlns:dcr="http://www.day.com/jcr/webdav/1.0"&gt;
+     *    &lt;dcr:column&gt;
+     *       &lt;dcr:name&gt;bla&lt;dcr:name/&gt;
+     *       &lt;dcr:value dcr:type="String"&gt;xxx&lt;dcr:value/&gt;
+     *    &lt;/dcr:column&gt;
+     *    &lt;dcr:column&gt;
+     *       &lt;dcr:name&gt;bli&lt;dcr:name/&gt;
+     *       &lt;dcr:value dcr:type="Long"&gt;111&lt;dcr:value/&gt;
+     *    &lt;/dcr:column&gt;
+     *    &lt;dcr:column&gt;
+     *       &lt;dcr:name&gt;jcr:path&lt;dcr:name/&gt;
+     *       &lt;dcr:value dcr:type="Path"&gt;/aNode&lt;dcr:value/&gt;
+     *    &lt;/dcr:column&gt;
+     *    &lt;dcr:column&gt;
+     *       &lt;dcr:name&gt;jcr:score&lt;dcr:name/&gt;
+     *       &lt;dcr:value dcr:type="Long"&gt;1&lt;dcr:value/&gt;
+     *    &lt;/dcr:column&gt;
+     * &lt;/dcr:search-result-property&gt;
      * </pre>
      *
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(org.w3c.dom.Document)
@@ -179,27 +186,19 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
         for (int i = 0; i < columnNames.length; i++) {
             String propertyName = columnNames[i];
             Value propertyValue = values[i];
-            String valueStr = null;
+
+            Element columnEl = DomUtil.addChildElement(elem, COLUMN, ItemResourceConstants.NAMESPACE);
+            DomUtil.addChildElement(columnEl, JCR_NAME.getName(), JCR_NAME.getNamespace(), propertyName);
             if (propertyValue != null) {
                 try {
-                    valueStr = propertyValue.getString();
+                    String serializedValue = ValueHelper.serialize(propertyValue, true);
+                    Element xmlValue = DomUtil.addChildElement(columnEl, XML_VALUE, ItemResourceConstants.NAMESPACE, serializedValue);
+                    String type = PropertyType.nameFromValue(propertyValue.getType());
+                    DomUtil.setAttribute(xmlValue, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE, type);
                 } catch (RepositoryException e) {
-                    log.error(e.getMessage());
+                    log.error(e.toString());
                 }
             }
-            String type = (propertyValue == null) ? PropertyType.TYPENAME_STRING : PropertyType.nameFromValue(propertyValue.getType());
-
-            Element child = JCR_NAME.toXml(document);
-            DomUtil.setText(child, propertyName);
-            elem.appendChild(child);
-
-            child = JCR_VALUE.toXml(document);
-            DomUtil.setText(child, valueStr);
-            elem.appendChild(child);
-
-            child = JCR_TYPE.toXml(document);
-            DomUtil.setText(child, type);
-            elem.appendChild(child);
         }
         return elem;
     }
