@@ -91,7 +91,7 @@ public class JcrDavException extends DavException {
      * @see DavException#DavException(int)
      */
     public JcrDavException(Throwable cause, int errorCode) {
-        super(errorCode, cause);
+        super(errorCode, cause.getMessage(), cause, null);
         exceptionClass = cause.getClass();
         if (log.isDebugEnabled()) {
             log.debug("Handling exception with error code " + errorCode, cause);
