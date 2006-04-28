@@ -108,7 +108,7 @@ public class OrderPatch implements OrderingConstants, XmlSerializable {
         for (int i = 0; i < instructions.length; i++) {
             orderPatch.appendChild(instructions[i].toXml(document));
         }
-        return null;
+        return orderPatch;
     }
 
     //------------------------------------------------------< static method >---
