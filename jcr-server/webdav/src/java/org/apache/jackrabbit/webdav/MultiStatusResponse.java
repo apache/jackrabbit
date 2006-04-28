@@ -214,8 +214,31 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     }
 
     /**
-     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(org.w3c.dom.Document)
+     * Return an array listing all 'status' available is this response object.
+     * Note, that a the array contains a single element if this
+     * <code>MultiStatusResponse</code> defines an response consisting of
+     * href and status elements.
+     *
+     * @return
+     */
+    public Status[] getStatus() {
+        Status[] sts;
+        if (type == TYPE_PROPSTAT) {
+            sts = new Status[statusMap.size()];
+            Iterator iter = statusMap.keySet().iterator();
+            for (int i = 0; iter.hasNext(); i++) {
+                Integer statusKey = (Integer) iter.next();
+                sts[i] = new Status(statusKey.intValue());
+            }
+        } else {
+            sts = new Status[] {status};
+        }
+        return sts;
+    }
+
+    /**
      * @param document
+     * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(org.w3c.dom.Document)
      */
     public Element toXml(Document document) {
         Element response = DomUtil.createElement(document, XML_RESPONSE, NAMESPACE);
