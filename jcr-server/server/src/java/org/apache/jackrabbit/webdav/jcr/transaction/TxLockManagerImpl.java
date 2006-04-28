@@ -279,7 +279,7 @@ public class TxLockManagerImpl implements TxLockManager {
      */
     private ActiveLock getLock(String lockToken, Scope scope, DavResource resource) {
         if (!(resource instanceof TransactionResource)) {
-            log.info("");
+            log.info("TransactionResource expected");
             return null;
         }
 
