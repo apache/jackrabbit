@@ -18,16 +18,13 @@ package org.apache.jackrabbit.core.version;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
@@ -122,41 +119,8 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
 
             // attach us as listener
             item.addListener(this);
-
-            // special check for successors
-            if (item instanceof PropertyState) {
-                PropertyState prop = (PropertyState) item;
-                if (prop.getName().equals(QName.JCR_SUCCESSORS)) {
-                    try {
-                        InternalVersion v = vMgr.getVersion(prop.getParentId());
-                        if (v != null) {
-                            InternalVersion[] succs = v.getSuccessors();
-                            InternalValue[] succV = new InternalValue[succs.length];
-                            for (int i = 0; i < succs.length; i++) {
-                                succV[i] = InternalValue.create(succs[i].getId().getUUID());
-                            }
-                            prop.setValues(succV);
-                        }
-                    } catch (RepositoryException e) {
-                        log.warn("Unable to resolve jcr:successors property for " + id);
-                    }
-                }
-            }
         }
         return item;
-    }
-
-    /**
-     * called by the version manager when a dynamic property needs to be
-     * invalidated.
-     *
-     * @param id
-     */
-    synchronized void onPropertyChanged(PropertyId id) {
-        ItemState item = (ItemState) items.get(id);
-        if (item != null) {
-            item.discard();
-        }
     }
 
     /**

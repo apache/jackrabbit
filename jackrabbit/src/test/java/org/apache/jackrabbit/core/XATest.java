@@ -22,11 +22,15 @@ import javax.jcr.Node;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.observation.Event;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
 import javax.jcr.lock.Lock;
 import javax.transaction.UserTransaction;
 import javax.transaction.RollbackException;
+import java.io.PrintWriter;
+import java.io.PrintStream;
 
 /**
  * <code>XATest</code> contains the test cases for the methods
@@ -925,6 +929,195 @@ public class XATest extends AbstractJCRTest {
             // expected
         }
     }
+
+    /**
+     * Tests a couple of checkin/restore/remove operations on different
+     * workspaces and different transactions.
+     *
+     * @throws Exception
+     */
+    public void testXAVersionsThoroughly() throws Exception {
+        Session s1 = superuser;
+        Session s2 = helper.getSuperuserSession(workspaceName);
+
+        // add node and save
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        n1.addMixin(mixVersionable);
+        testRootNode.save();
+
+        if (!s2.itemExists(testRootNode.getPath())) {
+            s2.getRootNode().addNode(testRootNode.getName());
+            s2.save();
+        }
+        s2.getWorkspace().clone(s1.getWorkspace().getName(), n1.getPath(), n1.getPath(), true);
+        Node n2 = (Node) s2.getItem(n1.getPath());
+
+        //log.println("---------------------------------------");
+        String phase="init";
+
+        Version v1_1 = n1.getBaseVersion();
+        Version v2_1 = n2.getBaseVersion();
+
+        check(v1_1, phase, "jcr:rootVersion", 0);
+        check(v2_1, phase, "jcr:rootVersion", 0);
+
+        //log.println("--------checkout/checkin n1 (uncommitted)----------");
+        phase="checkin N1 uncomitted.";
+
+        UserTransaction tx = new UserTransactionImpl(s1);
+        tx.begin();
+
+        n1.checkout();
+        n1.checkin();
+
+        Version v1_2 = n1.getBaseVersion();
+
+        check(v1_1, phase, "jcr:rootVersion", 1);
+        check(v2_1, phase, "jcr:rootVersion", 0);
+        check(v1_2, phase, "1.0", 0);
+
+        //log.println("--------checkout/checkin n1 (comitted)----------");
+        phase="checkin N1 committed.";
+
+        tx.commit();
+
+        check(v1_1, phase, "jcr:rootVersion", 1);
+        check(v2_1, phase, "jcr:rootVersion", 1);
+        check(v1_2, phase, "1.0", 0);
+
+        //log.println("--------restore n2 (uncommitted) ----------");
+        phase="restore N2 uncommitted.";
+
+        tx = new UserTransactionImpl(s2);
+        tx.begin();
+
+        n2.restore("1.0", false);
+        Version v2_2 = n2.getBaseVersion();
+
+        check(v1_1, phase, "jcr:rootVersion", 1);
+        check(v2_1, phase, "jcr:rootVersion", 1);
+        check(v1_2, phase, "1.0", 0);
+        check(v2_2, phase, "1.0", 0);
+
+        //log.println("--------restore n2 (comitted) ----------");
+        phase="restore N2 committed.";
+
+        tx.commit();
+
+        check(v1_1, phase, "jcr:rootVersion", 1);
+        check(v2_1, phase, "jcr:rootVersion", 1);
+        check(v1_2, phase, "1.0", 0);
+        check(v2_2, phase, "1.0", 0);
+
+        //log.println("--------checkout/checkin n2 (uncommitted) ----------");
+        phase="checkin N2 uncommitted.";
+
+        tx = new UserTransactionImpl(s2);
+        tx.begin();
+
+        n2.checkout();
+        n2.checkin();
+
+        Version v2_3 = n2.getBaseVersion();
+
+        check(v1_1, phase, "jcr:rootVersion", 1);
+        check(v2_1, phase, "jcr:rootVersion", 1);
+        check(v1_2, phase, "1.0", 0);
+        check(v2_2, phase, "1.0", 1);
+        check(v2_3, phase, "1.1", 0);
+
+        //log.println("--------checkout/checkin n2 (committed) ----------");
+        phase="checkin N2 committed.";
+
+        tx.commit();
+
+        check(v1_1, phase, "jcr:rootVersion", 1);
+        check(v2_1, phase, "jcr:rootVersion", 1);
+        check(v1_2, phase, "1.0", 1);
+        check(v2_2, phase, "1.0", 1);
+        check(v2_3, phase, "1.1", 0);
+
+        //log.println("--------checkout/checkin n1 (uncommitted) ----------");
+        phase="checkin N1 uncommitted.";
+
+        tx = new UserTransactionImpl(s1);
+        tx.begin();
+
+        n1.checkout();
+        n1.checkin();
+
+        Version v1_3 = n1.getBaseVersion();
+
+        check(v1_1, phase, "jcr:rootVersion", 1);
+        check(v2_1, phase, "jcr:rootVersion", 1);
+        check(v1_2, phase, "1.0", 2);
+        check(v2_2, phase, "1.0", 1);
+        check(v2_3, phase, "1.1", 0);
+        check(v1_3, phase, "1.1.1", 0);
+
+        //log.println("--------checkout/checkin n1 (committed) ----------");
+        phase="checkin N1 committed.";
+
+        tx.commit();
+
+        check(v1_1, phase, "jcr:rootVersion", 1);
+        check(v2_1, phase, "jcr:rootVersion", 1);
+        check(v1_2, phase, "1.0", 2);
+        check(v2_2, phase, "1.0", 2);
+        check(v2_3, phase, "1.1", 0);
+        check(v1_3, phase, "1.1.1", 0);
+
+        //log.println("--------remove n1-1.0 (uncommitted) ----------");
+        phase="remove N1 1.0 uncommitted.";
+
+        tx = new UserTransactionImpl(s1);
+        tx.begin();
+
+        n1.getVersionHistory().removeVersion("1.0");
+
+        check(v1_1, phase, "jcr:rootVersion", 2);
+        check(v2_1, phase, "jcr:rootVersion", 1);
+        check(v1_2, phase, "1.0", -1);
+        check(v2_2, phase, "1.0", 2);
+        check(v2_3, phase, "1.1", 0);
+        check(v1_3, phase, "1.1.1", 0);
+
+        //log.println("--------remove n1-1.0  (committed) ----------");
+        phase="remove N1 1.0 committed.";
+
+        tx.commit();
+
+        check(v1_1, phase, "jcr:rootVersion", 2);
+        check(v2_1, phase, "jcr:rootVersion", 2);
+        check(v1_2, phase, "1.0", -1);
+        check(v2_2, phase, "1.0", -1);
+        check(v2_3, phase, "1.1", 0);
+        check(v1_3, phase, "1.1.1", 0);
+
+        //s1.logout();
+        s2.logout();
+
+    }
+
+    /**
+     * helper method for {@link #testXAVersionsThoroughly()}
+     */
+    private void check(Version v, String phase, String name, int numSucc) {
+        String vName;
+        int vSucc = -1;
+        try {
+            vName = v.getName();
+            //vSucc = v.getProperty("jcr:successors").getValues().length;
+            vSucc = v.getSuccessors().length;
+        } catch (RepositoryException e) {
+            // node is invalid after remove
+            vName = name;
+        }
+        assertEquals(phase + " Version Name", name, vName);
+        assertEquals(phase + " Num Successors", numSucc, vSucc);
+    }
+
+
 
     /**
      * Test new version label becomes available to other sessions on commit.
