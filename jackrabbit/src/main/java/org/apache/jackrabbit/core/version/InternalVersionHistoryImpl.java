@@ -133,11 +133,14 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             vMgr.versionCreated(v);
         }
 
-        // resolve successors and predecessors
-        Iterator iter = versionCache.values().iterator();
-        while (iter.hasNext()) {
-            InternalVersionImpl v = (InternalVersionImpl) iter.next();
-            v.resolvePredecessors();
+        // check for legacy version nodes that had 'virtual' jcr:successor property
+        if (rootVersion.getSuccessors().length==0 && versionCache.size()>1) {
+            // resolve successors and predecessors
+            Iterator iter = versionCache.values().iterator();
+            while (iter.hasNext()) {
+                InternalVersionImpl v = (InternalVersionImpl) iter.next();
+                v.legacyResolveSuccessors();
+            }
         }
 
         try {
@@ -183,8 +186,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         InternalVersionImpl v = (InternalVersionImpl) tempVersionCache.remove(child.getNodeId());
         if (v != null) {
             v.clear();
-        }
-        if (v == null) {
+        } else {
             v = new InternalVersionImpl(this, child, child.getName());
         }
         return v;
@@ -323,9 +325,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throw new ReferentialIntegrityException("Unable to remove version. At least once referenced.");
         }
 
-        // remove from persistance state
-        node.removeNode(v.getName());
-
         // unregister from labels
         QName[] labels = v.internalGetLabels();
         for (int i = 0; i < labels.length; i++) {
@@ -334,6 +333,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
         // detach from the version graph
         v.internalDetach();
+
+        // remove from persistance state
+        node.removeNode(v.getName());
 
         // and remove from history
         versionCache.remove(v.getId());
@@ -430,11 +432,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         NodeId versionId = new NodeId(UUID.randomUUID());
         NodeStateEx vNode = node.addNode(name, QName.NT_VERSION, versionId, true);
 
-        // initialize 'created' and 'predecessors'
+        // initialize 'created', 'predecessors' and 'successors'
         vNode.setPropertyValue(QName.JCR_CREATED, InternalValue.create(Calendar.getInstance()));
         vNode.setPropertyValues(QName.JCR_PREDECESSORS, PropertyType.REFERENCE, predecessors);
-
-        // initialize 'empty' successors; their values are dynamically resolved
         vNode.setPropertyValues(QName.JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 
         // checkin source node
@@ -442,11 +442,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // update version graph
         InternalVersionImpl version = new InternalVersionImpl(this, vNode, name);
-        version.resolvePredecessors();
-        vMgr.versionCreated(version);
+        version.internalAttach();
 
         // and store
         node.store();
+
+        vMgr.versionCreated(version);
 
         // update cache
         versionCache.put(version.getId(), version);

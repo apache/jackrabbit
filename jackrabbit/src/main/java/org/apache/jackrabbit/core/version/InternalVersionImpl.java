@@ -27,22 +27,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Implements a <code>InternalVersion</code>
  */
 class InternalVersionImpl extends InternalVersionItemImpl
         implements InternalVersion {
-
-    /**
-     * the list/cache of predecessors (values == InternalVersion)
-     */
-    private ArrayList predecessors = new ArrayList();
-
-    /**
-     * the list of successors (values == InternalVersion)
-     */
-    private ArrayList successors = new ArrayList();
 
     /**
      * the underlying persistance node of this version
@@ -143,22 +134,43 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion[] getSuccessors() {
-        return (InternalVersionImpl[]) successors.toArray(new InternalVersionImpl[successors.size()]);
+        InternalValue[] values = node.getPropertyValues(QName.JCR_SUCCESSORS);
+        if (values != null) {
+            InternalVersion[] versions = new InternalVersion[values.length];
+            for (int i = 0; i < values.length; i++) {
+                NodeId vId = new NodeId((UUID) values[i].internalValue());
+                versions[i] = versionHistory.getVersion(vId);
+            }
+            return versions;
+        } else {
+            return new InternalVersion[0];
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public InternalVersion[] getPredecessors() {
-        return (InternalVersionImpl[]) predecessors.toArray(new InternalVersionImpl[predecessors.size()]);
+        InternalValue[] values = node.getPropertyValues(QName.JCR_PREDECESSORS);
+        if (values != null) {
+            InternalVersion[] versions = new InternalVersion[values.length];
+            for (int i = 0; i < values.length; i++) {
+                NodeId vId = new NodeId((UUID) values[i].internalValue());
+                versions[i] = versionHistory.getVersion(vId);
+            }
+            return versions;
+        } else {
+            return new InternalVersion[0];
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean isMoreRecent(InternalVersion v) {
-        for (int i = 0; i < predecessors.size(); i++) {
-            InternalVersion pred = (InternalVersion) predecessors.get(i);
+        InternalVersion[] preds = getPredecessors();
+        for (int i = 0; i < preds.length; i++) {
+            InternalVersion pred = preds[i];
             if (pred.equals(v) || pred.isMoreRecent(v)) {
                 return true;
             }
@@ -195,51 +207,28 @@ class InternalVersionImpl extends InternalVersionItemImpl
     }
 
     /**
-     * resolves the predecessors property and indirectly adds it self to their
-     * successor list.
-     */
-    void resolvePredecessors() {
-        InternalValue[] values = node.getPropertyValues(QName.JCR_PREDECESSORS);
-        if (values != null) {
-            for (int i = 0; i < values.length; i++) {
-                NodeId vId = new NodeId((UUID) values[i].internalValue());
-                InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(vId);
-                predecessors.add(v);
-                v.addSuccessor(this);
-            }
-        }
-    }
-
-    /**
      * Clear the list of predecessors/successors and the label cache.
      */
     void clear() {
-        successors.clear();
-        predecessors.clear();
         labelCache = null;
     }
 
     /**
-     * adds a successor version to the internal cache
-     *
-     * @param successor
-     */
-    private void addSuccessor(InternalVersion successor) {
-        successors.add(successor);
-    }
-
-    /**
-     * stores the internal predecessor cache to the persistance node
+     * stores the given successors or predecessors to the persistance node
      *
      * @throws RepositoryException
      */
-    private void storePredecessors() throws RepositoryException {
-        InternalValue[] values = new InternalValue[predecessors.size()];
+    private void storeXCessors(List cessors, QName propname, boolean store)
+            throws RepositoryException {
+        InternalValue[] values = new InternalValue[cessors.size()];
         for (int i = 0; i < values.length; i++) {
             values[i] = InternalValue.create(
-                    ((InternalVersion) predecessors.get(i)).getId().getUUID());
+                    ((InternalVersion) cessors.get(i)).getId().getUUID());
         }
-        node.setPropertyValues(QName.JCR_PREDECESSORS, PropertyType.STRING, values);
+        node.setPropertyValues(propname, PropertyType.STRING, values);
+        if (store) {
+            node.store();
+        }
     }
 
     /**
@@ -249,19 +238,48 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     void internalDetach() throws RepositoryException {
         // detach this from all successors
-        InternalVersionImpl[] succ = (InternalVersionImpl[]) getSuccessors();
+        InternalVersion[] succ = getSuccessors();
         for (int i = 0; i < succ.length; i++) {
-            succ[i].internalDetachPredecessor(this);
+            ((InternalVersionImpl) succ[i]).internalDetachPredecessor(this, true);
         }
 
         // detach cached successors from preds
-        InternalVersionImpl[] preds = (InternalVersionImpl[]) getPredecessors();
+        InternalVersion[] preds = getPredecessors();
         for (int i = 0; i < preds.length; i++) {
-            preds[i].internalDetachSuccessor(this);
+            ((InternalVersionImpl) preds[i]).internalDetachSuccessor(this, true);
         }
 
         // clear properties
         clear();
+    }
+
+    /**
+     * Attaches this version as successor to all predecessors. assuming that the
+     * predecessors are already set.
+     *
+     * @throws RepositoryException
+     */
+    void internalAttach() throws RepositoryException {
+        InternalVersion[] preds = getPredecessors();
+        for (int i = 0; i < preds.length; i++) {
+            ((InternalVersionImpl) preds[i]).internalAddSuccessor(this, true);
+        }
+    }
+
+    /**
+     * Adds a version to the set of successors.
+     *
+     * @param succ
+     * @param store
+     * @throws RepositoryException
+     */
+    private void internalAddSuccessor(InternalVersionImpl succ, boolean store)
+            throws RepositoryException {
+        List l = new ArrayList(Arrays.asList(getSuccessors()));
+        if (!l.contains(succ)) {
+            l.add(succ);
+            storeXCessors(l, QName.JCR_SUCCESSORS, store);
+        }
     }
 
     /**
@@ -272,18 +290,15 @@ class InternalVersionImpl extends InternalVersionItemImpl
      *
      * @param v the successor to detach
      */
-    private void internalDetachPredecessor(InternalVersionImpl v) throws RepositoryException {
+    private void internalDetachPredecessor(InternalVersionImpl v, boolean store)
+            throws RepositoryException {
         // remove 'v' from predecessor list
-        for (int i = 0; i < predecessors.size(); i++) {
-            if (predecessors.get(i).equals(v)) {
-                predecessors.remove(i);
-                break;
-            }
-        }
+        List l = new ArrayList(Arrays.asList(getPredecessors()));
+        l.remove(v);
+
         // attach v's predecessors
-        predecessors.addAll(Arrays.asList(v.getPredecessors()));
-        storePredecessors();
-        node.store();
+        l.addAll(Arrays.asList(v.getPredecessors()));
+        storeXCessors(l, QName.JCR_PREDECESSORS, store);
     }
 
     /**
@@ -294,16 +309,15 @@ class InternalVersionImpl extends InternalVersionItemImpl
      *
      * @param v the successor to detach
      */
-    private void internalDetachSuccessor(InternalVersionImpl v) {
+    private void internalDetachSuccessor(InternalVersionImpl v, boolean store)
+            throws RepositoryException {
         // remove 'v' from successors list
-        for (int i = 0; i < successors.size(); i++) {
-            if (successors.get(i).equals(v)) {
-                successors.remove(i);
-                break;
-            }
-        }
+        List l = new ArrayList(Arrays.asList(getSuccessors()));
+        l.remove(v);
+
         // attach v's successors
-        successors.addAll(Arrays.asList(v.getSuccessors()));
+        l.addAll(Arrays.asList(v.getSuccessors()));
+        storeXCessors(l, QName.JCR_SUCCESSORS, store);
     }
 
     /**
@@ -365,5 +379,42 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     void invalidate() {
         node.getState().discard();
+    }
+
+    /**
+     * Resolves jcr:successor properties that are missing.
+     *
+     * @throws RepositoryException
+     */
+    void legacyResolveSuccessors() throws RepositoryException {
+        InternalValue[] values = node.getPropertyValues(QName.JCR_PREDECESSORS);
+        if (values != null) {
+            for (int i = 0; i < values.length; i++) {
+                NodeId vId = new NodeId((UUID) values[i].internalValue());
+                InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(vId);
+                v.internalAddSuccessor(this, false);
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof InternalVersionImpl) {
+            InternalVersionImpl v = (InternalVersionImpl) obj;
+            return v.getId().equals(getId());
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int hashCode() {
+        return getId().hashCode();
     }
 }

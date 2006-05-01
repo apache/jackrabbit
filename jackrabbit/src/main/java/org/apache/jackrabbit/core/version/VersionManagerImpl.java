@@ -267,16 +267,8 @@ public class VersionManagerImpl extends AbstractVersionManager
                 escFactory.doSourced((SessionImpl) node.getSession(), new SourcedTarget(){
             public Object run() throws RepositoryException {
                 String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
-                InternalVersion version = checkin((InternalVersionHistoryImpl)
+                return checkin((InternalVersionHistoryImpl) 
                         getVersionHistory(NodeId.valueOf(histUUID)), node);
-
-                // invalidate predecessors successor properties
-                InternalVersion[] preds = version.getPredecessors();
-                for (int i = 0; i < preds.length; i++) {
-                    PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
-                    versProvider.onPropertyChanged(propId);
-                }
-                return version;
             }
         });
 
@@ -301,18 +293,9 @@ public class VersionManagerImpl extends AbstractVersionManager
 
         escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget(){
             public Object run() throws RepositoryException {
-                AbstractVersion version = (AbstractVersion) historyImpl.getNode(name);
-                InternalVersion[] preds = version.getInternalVersion().getPredecessors();
-
                 InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
                         historyImpl.getInternalVersionHistory();
                 removeVersion(vh, name);
-
-                // invalidate predecessors successor properties
-                for (int i = 0; i < preds.length; i++) {
-                    PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
-                    versProvider.onPropertyChanged(propId);
-                }
                 return null;
             }
         });
