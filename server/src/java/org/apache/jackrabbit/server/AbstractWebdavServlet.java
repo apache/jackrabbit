@@ -448,6 +448,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         MultiStatus ms = new MultiStatus();
         MultiStatusResponse msr = resource.alterProperties(changeList);
         ms.addResponse(msr);
+        response.sendMultiStatus(ms);
     }
 
     /**
