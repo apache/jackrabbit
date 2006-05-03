@@ -304,7 +304,7 @@ public class PropertyState extends ItemState {
                             if ((consumed + len) > length) {
                                 len = (int) (length - consumed);
                             }
-                            int read = super.read(b, off, len);
+                            int read = stream.read(b, off, len);
                             consumed += read;
                             return read;
                         }
@@ -316,7 +316,7 @@ public class PropertyState extends ItemState {
                             if ((consumed + n) > length) {
                                 n = length - consumed;
                             }
-                            long skipped = super.skip(n);
+                            long skipped = stream.skip(n);
                             consumed += skipped;
                             return skipped;
                         }
