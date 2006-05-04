@@ -165,7 +165,11 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(Calendar value) throws RepositoryException {
-        setValue(getSession().getValueFactory().createValue(value));
+        if (value == null) {
+            setValue((Value) null);
+        } else {
+            setValue(getSession().getValueFactory().createValue(value));
+        }
     }
 
     /**
@@ -185,7 +189,11 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(InputStream value) throws RepositoryException {
-        setValue(getSession().getValueFactory().createValue(value));
+        if (value == null) {
+            setValue((Value) null);
+        } else {
+            setValue(getSession().getValueFactory().createValue(value));
+        }
     }
 
     /**
@@ -205,7 +213,11 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(Node value) throws RepositoryException {
-        setValue(getSession().getValueFactory().createValue(value));
+        if (value == null) {
+            setValue((Value) null);
+        } else {
+            setValue(getSession().getValueFactory().createValue(value));
+        }
     }
 
     /**
@@ -215,7 +227,11 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(String value) throws RepositoryException {
-        setValue(getSession().getValueFactory().createValue(value));
+        if (value == null) {
+            setValue((Value) null);
+        } else {
+            setValue(getSession().getValueFactory().createValue(value));
+        }
     }
 
     /**
@@ -225,17 +241,25 @@ public class ClientProperty extends ClientItem implements Property {
      * {@inheritDoc}
      */
     public void setValue(String[] strings) throws RepositoryException {
-        Value[] values = new Value[strings.length];
-        for (int i = 0; i < strings.length; i++) {
-            values[i] = getSession().getValueFactory().createValue(strings[i]);
+        if (strings == null) {
+            setValue((Value[]) null);
+        } else {
+            Value[] values = new Value[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                values[i] = getSession().getValueFactory().createValue(strings[i]);
+            }
+            setValue(values);
         }
-        setValue(values);
     }
 
     /** {@inheritDoc} */
     public void setValue(Value value) throws RepositoryException {
         try {
-            remote.setValue(SerialValueFactory.makeSerialValue(value));
+            if (value == null) {
+                remote.setValue((Value) null);
+            } else {
+                remote.setValue(SerialValueFactory.makeSerialValue(value));
+            }
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -244,7 +268,11 @@ public class ClientProperty extends ClientItem implements Property {
     /** {@inheritDoc} */
     public void setValue(Value[] values) throws RepositoryException {
         try {
-            remote.setValue(SerialValueFactory.makeSerialValueArray(values));
+            if (values == null) {
+                remote.setValue((Value[]) null);
+            } else {
+                remote.setValue(SerialValueFactory.makeSerialValueArray(values));
+            }
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
