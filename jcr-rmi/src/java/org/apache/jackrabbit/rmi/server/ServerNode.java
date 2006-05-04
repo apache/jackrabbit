@@ -253,7 +253,12 @@ public class ServerNode extends ServerItem implements RemoteNode {
     public RemoteProperty setProperty(String name, Value value, int type)
             throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemoteProperty(node.setProperty(name, value, type));
+            Property property = node.setProperty(name, value, type);
+            if (property == null) {
+                return null;
+            } else {
+                return getFactory().getRemoteProperty(property);
+            }
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
@@ -304,7 +309,11 @@ public class ServerNode extends ServerItem implements RemoteNode {
             throws RepositoryException, RemoteException {
         try {
             Property property = node.setProperty(name, values);
-            return getFactory().getRemoteProperty(property);
+            if (property == null) {
+                return null;
+            } else {
+                return getFactory().getRemoteProperty(property);
+            }
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }
