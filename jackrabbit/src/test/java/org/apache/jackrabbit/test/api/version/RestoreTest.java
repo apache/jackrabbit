@@ -277,4 +277,24 @@ public class RestoreTest extends AbstractVersionTest {
             // success
         }
     }
+
+    public void testRestorChild1() throws RepositoryException {
+        versionableNode.addNode("child1");
+        versionableNode.save();
+        Version v1 = versionableNode.checkin();
+        versionableNode.checkout();
+        Version v2 = versionableNode.checkin();
+
+        versionableNode.restore(v1, true);
+        assertTrue("Node.restore('1.2') must not remove child node.", versionableNode.hasNode("child1"));
+
+        versionableNode.restore(version, true);
+        assertFalse("Node.restore('1.0') must remove child node.", versionableNode.hasNode("child1"));
+
+        try {
+            versionableNode.restore(v2, true);
+        } catch (RepositoryException e) {
+            fail("Node.restore('1.3') must fail.");
+        }
+    }
 }
