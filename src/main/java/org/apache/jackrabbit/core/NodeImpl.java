@@ -3779,13 +3779,17 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
 
-        // first delete all non frozen version histories (i.e. all OPV=Copy)
+        // first delete some of the version histories
         NodeIterator iter = getNodes();
         while (iter.hasNext()) {
             NodeImpl n = (NodeImpl) iter.nextNode();
-            if (!freeze.hasFrozenHistory(n.internalGetUUID())) {
-                if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY) {
-                    // only remove OPV=Copy nodes
+            if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY) {
+                // only remove OPV=Copy nodes
+                n.internalRemove(true);
+            } else if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
+                // only remove, if node to be restored does not contain child
+                UUID vhUUID = new UUID(n.getProperty(QName.JCR_VERSIONHISTORY).getString());
+                if (!freeze.hasFrozenHistory(vhUUID)) {
                     n.internalRemove(true);
                 }
             }

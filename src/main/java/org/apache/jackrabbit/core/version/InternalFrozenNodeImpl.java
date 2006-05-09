@@ -70,6 +70,11 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     private PropertyState[] frozenProperties;
 
     /**
+     * the frozen child nodes
+     */
+    private InternalFreeze[] frozenNodes = null;
+
+    /**
      * the frozen uuid of the original node
      */
     private UUID frozenUUID = null;
@@ -160,21 +165,25 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public InternalFreeze[] getFrozenChildNodes() throws VersionException {
-        try {
-            // maybe add iterator?
-            List entries = node.getState().getChildNodeEntries();
-            InternalFreeze[] freezes = new InternalFreeze[entries.size()];
-            Iterator iter = entries.iterator();
-            int i = 0;
-            while (iter.hasNext()) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-                freezes[i++] = (InternalFreeze) vMgr.getItem(entry.getId());
+    public synchronized InternalFreeze[] getFrozenChildNodes()
+            throws VersionException {
+        if (frozenNodes == null) {
+            try {
+                // maybe add iterator?
+                List entries = node.getState().getChildNodeEntries();
+                frozenNodes = new InternalFreeze[entries.size()];
+                Iterator iter = entries.iterator();
+                int i = 0;
+                while (iter.hasNext()) {
+                    NodeState.ChildNodeEntry entry =
+                            (NodeState.ChildNodeEntry) iter.next();
+                    frozenNodes[i++] = (InternalFreeze) vMgr.getItem(entry.getId());
+                }
+            } catch (RepositoryException e) {
+                throw new VersionException("Unable to retrieve frozen child nodes", e);
             }
-            return freezes;
-        } catch (RepositoryException e) {
-            throw new VersionException("Unable to retrieve frozen child nodes", e);
         }
+        return frozenNodes;
     }
 
     /**
@@ -183,9 +192,13 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     public boolean hasFrozenHistory(UUID uuid) {
         try {
             NodeId id = new NodeId(uuid);
-            NodeState.ChildNodeEntry entry  = node.getState().getChildNodeEntry(id);
-            if (entry != null) {
-                return vMgr.getItem(id) instanceof InternalFrozenVersionHistory;
+            InternalFreeze[] frozen = getFrozenChildNodes();
+            for (int i=0; i<frozen.length; i++) {
+                if (frozen[i] instanceof InternalFrozenVersionHistory &&
+                    ((InternalFrozenVersionHistory) frozen[i])
+                            .getVersionHistoryId().equals(id)) {
+                    return true;
+                }
             }
         } catch (RepositoryException e) {
             // ignore
