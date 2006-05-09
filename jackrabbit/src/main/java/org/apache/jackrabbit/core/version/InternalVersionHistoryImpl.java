@@ -152,8 +152,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                     QName name = pState.getName();
                     UUID ref = (UUID) pState.getValues()[0].internalValue();
                     InternalVersionImpl v = (InternalVersionImpl) getVersion(new NodeId(ref));
-                    labelCache.put(name, v);
-                    v.internalAddLabel(name);
+                    if (v != null) {
+                        labelCache.put(name, v);
+                        v.internalAddLabel(name);
+                    } else {
+                        log.warn("Error while resolving label reference. Version missing: " + ref);
+                    }
                 }
             }
         } catch (ItemStateException e) {
