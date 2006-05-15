@@ -889,7 +889,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
                         NodeImpl node = (NodeImpl) session.getItemManager().getItem(getId());
                         node.unlock();
                     } catch (RepositoryException e) {
-                        log.warn("Unable to unlock session-scoped lock on node '"
+                        log.warn("Unable to remove session-scoped lock on node '"
                                 + lockToken + "': " + e.getMessage());
                         log.debug("Root cause: ", e);
                     }
