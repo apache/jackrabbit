@@ -68,7 +68,7 @@ public class JNDIDatabasePersistenceManager extends DatabasePersistenceManager {
      *
      * @return new database connection
      * @throws NamingException if the given data source location does not exist
-     * @throws Exception if a database access error occurs
+     * @throws SQLException if a database access error occurs
      * @see DatabasePersistenceManager#getConnection()
      */
     protected Connection getConnection() throws NamingException, SQLException {
