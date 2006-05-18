@@ -285,12 +285,11 @@ log4j.appender.stdout.layout=org.apache.log4j.SimpleLayout
               <a href="http://www.day.com/maven/jsr170/javadocs/jcr-1.0/javax/jcr/Repository.html#login()"
                  class="externalLink">Repository.login()</a> method starts
               a repository session using the default workspace and no user
-              credentials. Jackrabbit tries to use
-              <a href="http://java.sun.com/products/jaas/"
-                 class="externalLink"
-                 title="Java Authentication and Authorization Service"
-                 >JAAS</a> authentication in such cases, but defaults to the
-              anonymous user if a JAAS Subject is not found.
+              credentials. Jackrabbit tries to use the
+              <a href="http://java.sun.com/products/jaas/" class="externalLink"
+                 >Java Authentication and Authorization Service</a> (JAAS)
+              configuration in such cases, but defaults to the anonymous user
+              if a JAAS Subject is not found.
             </p>
             <p>
               Since we use the TransientRepository class as the Repository
@@ -473,9 +472,9 @@ Hello, World!</source>
               <code>"password"</code>.
             </p>
             <p>
-              Quriously enough, the SimpleCredentials constructor takes the
-              username as a normal String, but the password as a character
-              array, so we need to use the
+              The SimpleCredentials constructor follows the JAAS convention
+              of represenenting the username as a normal String, but the
+              password as a character array, so we need to use the
               <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/lang/String.html#toCharArray()"
                  class="externalLink" title="java.lang.String.toCharArray()"
                >String.toCharArray()</a> method to satisfy the constructor.
