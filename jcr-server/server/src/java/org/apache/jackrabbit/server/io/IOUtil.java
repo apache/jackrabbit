@@ -112,7 +112,7 @@ public class IOUtil {
     public static String buildContentType(String mimeType, String encoding) {
         String contentType = mimeType;
         if (contentType != null && encoding != null) {
-            contentType += "; charset=\"" + encoding + "\"";
+            contentType += "; charset=" + encoding;
         }
         return contentType;
     }
@@ -155,10 +155,6 @@ public class IOUtil {
         int semi = encoding.indexOf(";");
         if (semi != -1) {
             encoding = encoding.substring(0, semi);
-        }
-        // strip off enclosing quotes
-        if (encoding.startsWith("\"") || encoding.startsWith("'")) {
-            encoding = encoding.substring(1, encoding.length() - 1);
         }
         return encoding;
     }
