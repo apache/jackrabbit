@@ -3587,8 +3587,12 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeIterator niter = getNodes();
         while (niter.hasNext()) {
             NodeImpl n = (NodeImpl) niter.nextNode();
-            // todo: does not work properly for samename siblings
-            if (!srcNode.hasNode(n.getQName())) {
+            Path.PathElement name = n.getPrimaryPath().getNameElement();
+            int idx = name.getIndex();
+            if (idx == 0) {
+                idx = 1;
+            }
+            if (!srcNode.hasNode(name.getName(), idx)) {
                 n.internalRemove(true);
             }
         }
@@ -3599,21 +3603,29 @@ public class NodeImpl extends ItemImpl implements Node {
             NodeImpl child = (NodeImpl) niter.nextNode();
             NodeImpl dstNode = null;
             NodeId childId = child.getNodeId();
-            if (hasNode(child.getQName())) {
-                // todo: does not work properly for samename siblings
-                dstNode = getNode(child.getQName());
-            } else if (child.isNodeType(QName.MIX_REFERENCEABLE)) {
-                // if child is referenceable, check if correspondance exist in this workspace
+            Path.PathElement name = child.getPrimaryPath().getNameElement();
+            int idx = name.getIndex();
+            if (idx == 0) {
+                idx = 1;
+            }
+
+            if (child.isNodeType(QName.MIX_REFERENCEABLE)) {
+                // check if correspondance exist in
+                // this workspace
                 try {
                     dstNode = session.getNodeById(childId);
-                    if (removeExisting) {
-                        dstNode.internalRemove(false);
-                        dstNode = null;
-                    } else if (replaceExisting) {
-                        // node exists outside of this update tree, so continue there
-                    } else {
-                        throw new ItemExistsException("Unable to update node: " + dstNode.safeGetJCRPath());
+                    // check if same parent
+                    if (!dstNode.getParent().isSame(srcNode)) {
+                        if (removeExisting) {
+                            dstNode.internalRemove(false);
+                            dstNode = null;
+                        } else if (replaceExisting) {
+                            // node exists outside of this update tree, so continue there
+                        } else {
+                            throw new ItemExistsException("Unable to update node: " + dstNode.safeGetJCRPath());
+                        }
                     }
+
                 } catch (ItemNotFoundException e) {
                     // does not exist
                 }
@@ -3621,8 +3633,13 @@ public class NodeImpl extends ItemImpl implements Node {
                 // if child is not referenceable, clear uuid
                 childId = null;
             }
+            if (dstNode == null && hasNode(name.getName(), idx)) {
+                // the exact behaviour for SNS is not specified by the spec
+                // so we just try to find the corresponding one.
+                dstNode = getNode(name.getName(), idx);
+            }
             if (dstNode == null) {
-                dstNode = internalAddChildNode(child.getQName(), (NodeTypeImpl) child.getPrimaryNodeType(), childId);
+                dstNode = internalAddChildNode(name.getName(), (NodeTypeImpl) child.getPrimaryNodeType(), childId);
                 // add mixins
                 NodeType[] mixins = child.getMixinNodeTypes();
                 for (int i = 0; i < mixins.length; i++) {

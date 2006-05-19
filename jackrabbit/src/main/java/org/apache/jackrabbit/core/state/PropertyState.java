@@ -108,6 +108,30 @@ public class PropertyState extends ItemState {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    protected void pull() {
+        super.pull();
+        if (overlayedState != null && type == PropertyType.BINARY) {
+            // special treatment for blobfile values. un-temp them
+            for (int i=0; i<values.length; i++) {
+                if (values[i].internalValue() instanceof BLOBFileValue) {
+                    BLOBFileValue old = (BLOBFileValue) values[i].internalValue();
+                    BLOBFileValue val = old.copy();
+                    if (old != val) {
+                        // only override if 'copy' returned a new instance
+                        try {
+                            values[i] = InternalValue.create(val, null);
+                        } catch (RepositoryException e) {
+                            // ignore
+                        }
+                    }
+                }
+           }
+        }
+    }
+
     //-------------------------------------------------------< public methods >
     /**
      * Determines if this item state represents a node.
