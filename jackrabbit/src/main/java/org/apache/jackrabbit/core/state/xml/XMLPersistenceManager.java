@@ -321,7 +321,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                             } else {
                                 InputStream in = blobStore.get(content);
                                 try {
-                                    values.add(InternalValue.create(in));
+                                    values.add(InternalValue.create(in, false));
                                 } finally {
                                     try {
                                         in.close();
@@ -660,7 +660,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                 } else {
                                     in = blobStore.get(blobId);
                                     try {
-                                        values[i] = InternalValue.create(in);
+                                        values[i] = InternalValue.create(in, false);
                                     } finally {
                                         try {
                                             in.close();
