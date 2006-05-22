@@ -82,7 +82,9 @@ public class BLOBFileValue implements Value {
     private final File file;
 
     /**
-     * flag indicating if this instance is backed by a temporarily allocated resource/buffer
+     * flag indicating if this instance represents a <i>temporary</i> value
+     * whose dynamically allocated resources can be explicitly freed on
+     * {@link #discard()}.
      */
     private final boolean temp;
 
@@ -97,11 +99,6 @@ public class BLOBFileValue implements Value {
     private final FileSystemResource fsResource;
 
     /**
-     * underlying blob file value
-     */
-    private final BLOBFileValue blob;
-
-    /**
      * converted text
      */
     private String text = null;
@@ -111,12 +108,37 @@ public class BLOBFileValue implements Value {
      * <code>InputStream</code>. The contents of the stream is spooled
      * to a temporary file or to a byte buffer if its size is smaller than
      * {@link #MAX_BUFFER_SIZE}.
+     * <p/>
+     * The new instance represents a <i>temporary</i> value whose dynamically
+     * allocated resources will be freed explicitly on {@link #discard()}.
      *
      * @param in stream to be represented as a <code>BLOBFileValue</code> instance
      * @throws IOException if an error occurs while reading from the stream or
      *                     writing to the temporary file
      */
     public BLOBFileValue(InputStream in) throws IOException {
+        this(in, true);
+    }
+
+    /**
+     * Creates a new <code>BLOBFileValue</code> instance from an
+     * <code>InputStream</code>. The contents of the stream is spooled
+     * to a temporary file or to a byte buffer if its size is smaller than
+     * {@link #MAX_BUFFER_SIZE}.
+     * <p/>
+     * The <code>temp</code> parameter governs whether dynamically allocated
+     * resources will be freed explicitly on {@link #discard()}. Note that any
+     * dynamically allocated resources (temp file/buffer) will be freed
+     * implicitly once this instance has been gc'ed.
+     *
+     * @param in stream to be represented as a <code>BLOBFileValue</code> instance
+     * @param temp flag indicating whether this instance represents a
+     *             <i>temporary</i> value whose resources can be explicitly freed
+     *             on {@link #discard()}.
+     * @throws IOException if an error occurs while reading from the stream or
+     *                     writing to the temporary file
+     */
+    public BLOBFileValue(InputStream in, boolean temp) throws IOException {
         byte[] spoolBuffer = new byte[0x2000];
         int read;
         int len = 0;
@@ -156,9 +178,7 @@ public class BLOBFileValue implements Value {
         // init vars
         file = spoolFile;
         fsResource = null;
-        blob = null;
-        // this instance is backed by a temporarily allocated resource/buffer
-        temp = true;
+        this.temp = temp;
     }
 
     /**
@@ -172,7 +192,6 @@ public class BLOBFileValue implements Value {
         buffer = bytes;
         file = null;
         fsResource = null;
-        blob = null;
         // this instance is not backed by a temporarily allocated buffer
         temp = false;
     }
@@ -194,7 +213,6 @@ public class BLOBFileValue implements Value {
         this.file = file;
         // this instance is backed by a 'real' file; set virtual fs resource to null
         fsResource = null;
-        blob = null;
         // this instance is not backed by temporarily allocated resource/buffer
         temp = false;
     }
@@ -220,26 +238,9 @@ public class BLOBFileValue implements Value {
         this.fsResource = fsResource;
         // set 'real' file to null
         file = null;
-        blob = null;
         // this instance is not backed by temporarily allocated resource/buffer
         temp = false;
     }
-
-    /**
-     * Creates a new <code>BLOBFileValue</code> instance from a existing blob.
-     *
-     * @param blob the existing blob
-     */
-    public BLOBFileValue(BLOBFileValue blob) {
-        // this instance is backed by a blob
-        this.blob = blob;
-        // set 'real' file to null
-        file = null;
-        fsResource = null;
-        // this instance is not backed by temporarily allocated resource/buffer
-        temp = false;
-    }
-
 
     /**
      * Returns the length of this <code>BLOBFileValue</code>.
@@ -262,8 +263,6 @@ public class BLOBFileValue implements Value {
             } catch (FileSystemException fse) {
                 return -1;
             }
-        } else if (blob != null) {
-            return blob.getLength();
         } else {
             // this instance is backed by an in-memory buffer
             return buffer.length;
@@ -287,8 +286,6 @@ public class BLOBFileValue implements Value {
         if (file != null) {
             // this instance is backed by a temp file
             file.delete();
-        } else if (blob != null) {
-            blob.discard();
         } else if (buffer != null) {
             // this instance is backed by an in-memory buffer
             buffer = EMPTY_BYTE_ARRAY;
@@ -335,8 +332,6 @@ public class BLOBFileValue implements Value {
                 // ignore
                 log.warn("Error while deleting BLOBFileValue: " + fse.getMessage());
             }
-        } else if (blob != null) {
-            blob.delete(pruneEmptyParentDirs);
         } else {
             // this instance is backed by an in-memory buffer
             buffer = EMPTY_BYTE_ARRAY;
@@ -353,11 +348,6 @@ public class BLOBFileValue implements Value {
      * @throws IOException         if an error occurs while while spooling
      */
     public void spool(OutputStream out) throws RepositoryException, IOException {
-        if (blob != null) {
-            blob.spool(out);
-            return;
-        }
-
         InputStream in;
         if (file != null) {
             // this instance is backed by a 'real' file
@@ -389,7 +379,6 @@ public class BLOBFileValue implements Value {
             try {
                 in.close();
             } catch (IOException ignore) {
-                // ignore
             }
         }
     }
@@ -411,8 +400,6 @@ public class BLOBFileValue implements Value {
         } else if (fsResource != null) {
             // this instance is backed by a resource in the virtual file system
             return fsResource.toString();
-        } else if (blob != null) {
-            return blob.toString();
         } else {
             // this instance is backed by an in-memory buffer
             return buffer.toString();
@@ -430,7 +417,6 @@ public class BLOBFileValue implements Value {
             BLOBFileValue other = (BLOBFileValue) obj;
             return ((file == null ? other.file == null : file.equals(other.file))
                     && (fsResource == null ? other.fsResource == null : fsResource.equals(other.fsResource))
-                    && (blob == null ? other.blob == null : blob.equals(other.blob))
                     && Arrays.equals(buffer, other.buffer));
         }
         return false;
@@ -497,8 +483,6 @@ public class BLOBFileValue implements Value {
                 throw new RepositoryException("file backing binary value not found",
                         fnfe);
             }
-        } else if (blob != null) {
-            return blob.getStream();
         } else if (fsResource != null) {
             // this instance is backed by a resource in the virtual file system
             try {
@@ -559,15 +543,5 @@ public class BLOBFileValue implements Value {
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
         return Boolean.valueOf(getString()).booleanValue();
-    }
-
-    /**
-     * Creates a copy of this blob file value that has the 'temporary' field
-     * cleared. if the 'temp' flag is not set, <code>this</code> is returned.
-     *
-     * @return a new value based on this one.
-     */
-    public BLOBFileValue copy() {
-        return temp ? new BLOBFileValue(this) : this;
     }
 }
