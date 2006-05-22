@@ -293,7 +293,8 @@ public class PropertyImpl extends ItemImpl implements Property {
             for (int i = 0; i < oldValues.length; i++) {
                 InternalValue old = oldValues[i];
                 if (old != null && old.getType() == PropertyType.BINARY) {
-                    // discard eventual temporary data before overriding
+                    // make sure temporarily allocated data is discarded
+                    // before overwriting it
                     ((BLOBFileValue) old.internalValue()).discard();
                 }
             }
