@@ -37,6 +37,13 @@ import org.textmining.text.extraction.WordExtractor;
 public class MsWordTextFilter implements TextFilter {
 
     /**
+     * Force loading of dependent class.
+     */
+    static {
+        WordExtractor.class.getName();
+    }
+
+    /**
      * @return <code>true</code> for <code>application/vnd.ms-word</code> 
      * or <code>application/msword</code>, <code>false</code> otherwise.
      */

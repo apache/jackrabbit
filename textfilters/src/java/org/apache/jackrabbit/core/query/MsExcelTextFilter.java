@@ -43,6 +43,13 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 public class MsExcelTextFilter implements TextFilter {
 
     /**
+     * Force loading of dependent class.
+     */
+    static {
+        POIFSFileSystem.class.getName();
+    }
+
+    /**
      * @return <code>true</code> for <code>application/vnd.ms-excel</code>, <code>false</code> otherwise.
      */
     public boolean canFilter(String mimeType) {

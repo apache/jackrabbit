@@ -42,6 +42,13 @@ import org.apache.poi.util.LittleEndian;
  */
 public class MsPowerPointTextFilter implements TextFilter {
 
+    /**
+     * Force loading of dependent class.
+     */
+    static {
+        POIFSReader.class.getName();
+    }
+
 	/**
 	 * Reader
 	 */
