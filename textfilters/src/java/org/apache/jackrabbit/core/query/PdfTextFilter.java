@@ -41,6 +41,13 @@ import org.pdfbox.util.PDFTextStripper;
 public class PdfTextFilter implements TextFilter {
 
     /**
+     * Force loading of dependent class.
+     */
+    static {
+        PDFParser.class.getName();
+    }
+
+    /**
      * @return <code>true</code> for <code>application/pdf</code>, <code>false</code> otherwise.
      */
     public boolean canFilter(String mimeType) {
@@ -85,6 +92,10 @@ public class PdfTextFilter implements TextFilter {
                         } finally {
                             document.close();
                         }
+                    } catch (Exception e) {
+                        // it may happen that PDFParser throws a runtime
+                        // exception when parsing certain pdf documents
+                        throw new IOException(e.getMessage());
                     } finally {
                         in.close();
                     }
