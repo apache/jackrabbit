@@ -50,9 +50,9 @@ and anonymous access is available at
 
    http://svn.apache.org/repos/asf/jackrabbit/trunk
 
-or with viewcvs at
+or with ViewVC at
 
-   http://svn.apache.org/viewcvs/jackrabbit/trunk/
+   http://svn.apache.org/viewvc/jackrabbit/trunk/
 
 The Jackrabbit main project is located in the "jackrabbit" subdirectory
 and the "contrib" subdirectory contains various additional modules and

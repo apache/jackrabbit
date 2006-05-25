@@ -24,7 +24,7 @@ and work on the JCR version 2.0 has begun in JSR 283.
 
     <repository>
       <SVNRepository>
-        <browse rdf:resource="http://svn.apache.org/viewcvs.cgi/jackrabbit/trunk/"/>
+        <browse rdf:resource="http://svn.apache.org/viewvc/jackrabbit/trunk/"/>
         <location rdf:resource="http://svn.apache.org/repos/asf/jackrabbit/trunk/"/>
       </SVNRepository>
     </repository>
