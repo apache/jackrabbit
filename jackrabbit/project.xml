@@ -51,9 +51,9 @@ indexing, etc.
     <distributionSite>people.apache.org</distributionSite>
     <distributionDirectory>/www/www.apache.org/dist/java-repository/</distributionDirectory>
     <repository>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk</developerConnection>
-        <url>http://svn.apache.org/viewcvs/jackrabbit/trunk</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/</developerConnection>
+        <url>http://svn.apache.org/viewvc/jackrabbit/trunk/</url>
     </repository>
     <versions/>
 
