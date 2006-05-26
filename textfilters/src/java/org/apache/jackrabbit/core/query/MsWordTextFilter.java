@@ -16,6 +16,8 @@
 package org.apache.jackrabbit.core.query;
 
 import java.io.StringReader;
+import java.io.InputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,26 +53,39 @@ public class MsWordTextFilter implements TextFilter {
      * @throws RepositoryException if data is a multi-value property or it does not
      * contain valid MS Word document.
      */
-    public Map doFilter(PropertyState data, String encoding) throws RepositoryException {
+    public Map doFilter(PropertyState data, String encoding)
+            throws RepositoryException {
         InternalValue[] values = data.getValues();
         if (values.length > 0) {
-            BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
-                
-            try {
-                WordExtractor  extractor = new WordExtractor();
-                
-                // This throws raw Exception - not nice
-                String text = extractor.extractText(blob.getStream());          
-                
-                Map result = new HashMap();
-                result.put(FieldNames.FULLTEXT, new StringReader(text));
-                return result;
-            } 
-            catch (Exception ex) {
-                throw new RepositoryException(ex);
-            }
-        } 
-        else {
+            final BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
+
+            LazyReader reader = new LazyReader() {
+                protected void initializeReader() throws IOException {
+                    InputStream in;
+                    try {
+                        in = blob.getStream();
+                    } catch (RepositoryException e) {
+                        throw new IOException(e.getMessage());
+                    }
+                    try {
+                        WordExtractor extractor = new WordExtractor();
+
+                        // This throws raw Exception - not nice
+                        String text = extractor.extractText(in);
+
+                        delegate = new StringReader(text);
+                    } catch (Exception e) {
+                        throw new IOException(e.getMessage());
+                    } finally {
+                        in.close();
+                    }
+                }
+            };
+
+            Map result = new HashMap();
+            result.put(FieldNames.FULLTEXT, reader);
+            return result;
+        } else {
             // multi value not supported
             throw new RepositoryException("Multi-valued binary properties not supported.");
         }

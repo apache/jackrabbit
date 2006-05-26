@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
@@ -33,6 +34,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
+import org.xml.sax.SAXException;
 
 /**
  * Extracts texts from OpenOffice document data.
@@ -51,39 +53,48 @@ public class OpenOfficeTextFilter implements TextFilter {
 
     public Map doFilter(PropertyState data, String encoding)
             throws RepositoryException {
-        ZipInputStream zis = null;
         if (xmlReader == null) {
             initParser();
         }
 
         InternalValue[] values = data.getValues();
         if (values.length > 0) {
-            BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
+            final BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
 
-            try {
-                zis = new ZipInputStream(blob.getStream());
-                ZipEntry ze = zis.getNextEntry();
-                while (!ze.getName().equals("content.xml"))
-                    ze = zis.getNextEntry();
-                OOoContentHandler contentHandler = new OOoContentHandler();
-                xmlReader.setContentHandler(contentHandler);
-                xmlReader.parse(new InputSource(zis));
-                zis.close();
-
-                Map result = new HashMap();
-                result.put(FieldNames.FULLTEXT, new StringReader(contentHandler.getContent()));
-                return result;
-            } catch (Exception ex) {
-                throw new RepositoryException(ex);
-            } finally {
-                if (zis != null) {
+            LazyReader reader = new LazyReader() {
+                protected void initializeReader() throws IOException {
+                    InputStream in;
                     try {
-                        zis.close();
-                    } catch (IOException ioe) {
-                        ioe.printStackTrace();
+                        in = blob.getStream();
+                    } catch (RepositoryException e) {
+                        throw new IOException(e.getMessage());
+                    }
+                    try {
+                        ZipInputStream zis = new ZipInputStream(in);
+                        ZipEntry ze = zis.getNextEntry();
+                        while (!ze.getName().equals("content.xml")) {
+                            ze = zis.getNextEntry();
+                        }
+                        OOoContentHandler contentHandler = new OOoContentHandler();
+                        xmlReader.setContentHandler(contentHandler);
+                        try {
+                            xmlReader.parse(new InputSource(zis));
+                        } catch (SAXException e) {
+                            throw new IOException(e.getMessage());
+                        } finally {
+                            zis.close();
+                        }
+
+                        delegate = new StringReader(contentHandler.getContent());
+                    } finally {
+                        in.close();
                     }
                 }
-            }
+            };
+
+            Map result = new HashMap();
+            result.put(FieldNames.FULLTEXT, reader);
+            return result;
         } else {
             // multi value not supported
             throw new RepositoryException("Multi-valued binary properties not supported.");

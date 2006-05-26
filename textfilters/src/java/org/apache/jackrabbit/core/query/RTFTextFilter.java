@@ -17,6 +17,7 @@ package org.apache.jackrabbit.core.query;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,23 +63,31 @@ public class RTFTextFilter implements TextFilter {
 
         InternalValue[] values = data.getValues();
         if (values.length > 0) {
-            try {
-                BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
+            final BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
+            LazyReader reader = new LazyReader() {
+                protected void initializeReader() throws IOException {
+                    InputStream in;
+                    try {
+                        in = blob.getStream();
+                    } catch (RepositoryException e) {
+                        throw new IOException(e.getMessage());
+                    }
+                    try {
+                        doc.remove(0, doc.getLength());
+                        rek.read(in, doc, 0);
+                        String text = doc.getText(0, doc.getLength());
+                        delegate = new StringReader(text);
+                    } catch (BadLocationException e) {
+                        throw new IOException(e.getMessage());
+                    } finally {
+                        in.close();
+                    }
+                }
+            };
 
-                doc.remove(0, doc.getLength());
-                rek.read(blob.getStream(), doc, 0);
-                String text = doc.getText(0, doc.getLength());
-
-                Map result = new HashMap();
-                result.put(FieldNames.FULLTEXT, new StringReader(text));
-                return result;
-            } catch (BadLocationException ble) {
-                throw new RepositoryException(ble);
-            } catch (IOException ioe) {
-                throw new RepositoryException(ioe);
-            } catch (IllegalStateException e) {
-                throw new RepositoryException(e);
-            }
+            Map result = new HashMap();
+            result.put(FieldNames.FULLTEXT, reader);
+            return result;
         } else {
             // multi value not supported
             throw new RepositoryException("Multi-valued binary properties not supported.");
