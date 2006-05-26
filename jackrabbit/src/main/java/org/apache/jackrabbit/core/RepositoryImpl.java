@@ -545,9 +545,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     | Event.PROPERTY_CHANGED,
                     "/", true, null, null, false);
         }
-
-        // register the observation factory of that workspace
-        delegatingDispatcher.addDispatcher(wspInfo.getObservationManagerFactory());
     }
 
     /**
@@ -1539,6 +1536,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
             obsMgrFactory = new ObservationManagerFactory();
 
+            // register the observation factory of that workspace
+            delegatingDispatcher.addDispatcher(obsMgrFactory);
+
             initialized = true;
 
             log.info("workspace '" + getName() + "' initialized");
@@ -1553,6 +1553,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             }
 
             log.info("shutting down workspace '" + getName() + "'...");
+
+            // deregister the observation factory of that workspace
+            delegatingDispatcher.removeDispatcher(obsMgrFactory);
 
             // dispose observation manager factory
             obsMgrFactory.dispose();
