@@ -90,7 +90,6 @@ Known Issues
 The known issues in this release are listed below:
 
   [JCR-441] Session logout doesn't release locks acquired using addLockToken
-  [JCR-440] Error Reading Locks
   [JCR-436] InvalidQueryException thrown for a SQL query using WHERE ...
   [JCR-435] Node.update() does not work correct for SNS
   [JCR-427] thread local variable commitLog not dispose
