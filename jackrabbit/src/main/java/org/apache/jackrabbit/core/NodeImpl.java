@@ -423,22 +423,41 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ConstraintViolationException, RepositoryException {
         status.clear();
 
-        NodeState thisState = (NodeState) state;
-        if (thisState.hasPropertyName(name)) {
-            /**
-             * the following call will throw ItemNotFoundException if the
-             * current session doesn't have read access
-             */
-            return getProperty(name);
-        }
+        /*
+         * Please note, that this implementation does not win a price for beauty
+         * or speed. It's never a good idea to use exceptions for semantical
+         * control flow.
+         * However, compared to the previous version, this one is thread save
+         * and makes the test/get block atomic in respect to transactional
+         * commits. the test/set can still fail.
+         *
+         * Old Version:
 
-        // does not exist yet:
-        // find definition for the specified property and create property
-        PropertyDefinitionImpl def = getApplicablePropertyDefinition(
-                name, type, multiValued, exactTypeMatch);
-        PropertyImpl prop = createChildProperty(name, type, def);
-        status.set(CREATED);
-        return prop;
+            NodeState thisState = (NodeState) state;
+            if (thisState.hasPropertyName(name)) {
+                /**
+                 * the following call will throw ItemNotFoundException if the
+                 * current session doesn't have read access
+                 /
+                return getProperty(name);
+            }
+            [...create block...]
+
+        */
+        try {
+            PropertyId propId = new PropertyId(getNodeId(), name);
+            return (PropertyImpl) itemMgr.getItem(propId);
+        } catch (AccessDeniedException ade) {
+            throw new ItemNotFoundException(name.toString());
+        } catch (ItemNotFoundException e) {
+            // does not exist yet:
+            // find definition for the specified property and create property
+            PropertyDefinitionImpl def = getApplicablePropertyDefinition(
+                    name, type, multiValued, exactTypeMatch);
+            PropertyImpl prop = createChildProperty(name, type, def);
+            status.set(CREATED);
+            return prop;
+        }
     }
 
     protected synchronized PropertyImpl createChildProperty(QName name, int type,
@@ -3920,12 +3939,15 @@ public class NodeImpl extends ItemImpl implements Node {
 
         LockManager lockMgr = session.getLockManager();
         synchronized (lockMgr) {
-            lockMgr.unlock(this);
+            if (lockMgr.holdsLock(this)) {
+                // save first, and unlock later. this guards concurrent access
 
-            // remove properties in content
-            internalSetProperty(QName.JCR_LOCKOWNER, (InternalValue) null);
-            internalSetProperty(QName.JCR_LOCKISDEEP, (InternalValue) null);
-            save();
+                // remove properties in content
+                internalSetProperty(QName.JCR_LOCKOWNER, (InternalValue) null);
+                internalSetProperty(QName.JCR_LOCKISDEEP, (InternalValue) null);
+                save();
+            }
+            lockMgr.unlock(this);
         }
     }
 
