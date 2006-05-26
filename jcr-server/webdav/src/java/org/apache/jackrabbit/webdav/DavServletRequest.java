@@ -119,11 +119,13 @@ public interface DavServletRequest extends HttpServletRequest {
 
     /**
      * Parse the Xml request body and return a {@link org.w3c.dom.Document}.
-     * If the request body can not be parsed <code>null</code> is returned.
      *
-     * @return Document representing the Xml request body or <code>null</code>.
+     * @return Document representing the Xml request body or <code>null</code>
+     * if no request body is present.
+     * @throws DavException If the request body cannot be parsed into an Xml
+     * Document. 
      */
-    public Document getRequestDocument();
+    public Document getRequestDocument() throws DavException;
 
     /**
      * Return the type of PROPFIND request as indicated by the PROPFIND request

@@ -56,6 +56,8 @@ import javax.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -242,15 +244,15 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     }
 
     /**
-     * @return Xml document
      * @see DavServletRequest#getRequestDocument()
      */
-    public Document getRequestDocument() {
+    public Document getRequestDocument() throws DavException {
         Document requestDocument = null;
         /*
-        Don't attempt to parse the body if the contentlength header is 0
-        NOTE: a value of -1 indicates that the length is unknown, thus we have to parse the body.
-        NOTE that http1.1 request using chunked transfer coding will therefore not be detected here
+        Don't attempt to parse the body if the contentlength header is 0.
+        NOTE: a value of -1 indicates that the length is unknown, thus we have
+        to parse the body. Note that http1.1 request using chunked transfer
+        coding will therefore not be detected here.
         */
         if (httpRequest.getContentLength() == 0) {
             return requestDocument;
@@ -259,19 +261,32 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         try {
             InputStream in = httpRequest.getInputStream();
             if (in != null) {
-                DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
-                requestDocument = docBuilder.parse(in);
+                // use a buffered input stream to find out whether there actually
+                // is a request body
+                InputStream bin = new BufferedInputStream(in);
+                bin.mark(1);
+                boolean isEmpty = -1 == bin.read();
+                bin.reset();
+                if (!isEmpty) {
+                    DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
+                    requestDocument = docBuilder.parse(bin);
+                }
             }
         } catch (IOException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
             }
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         } catch (ParserConfigurationException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
             }
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (SAXException e) {
-            log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
+            }
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
         return requestDocument;
     }
@@ -313,8 +328,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     private void parsePropFindRequest() throws DavException {
         propfindProps = new DavPropertyNameSet();
         Document requestDocument = getRequestDocument();
-        // propfind httpRequest with empty body or invalid Xml >> retrieve all property
-        // TODO: invalid XML -> spec requires a 'BAD REQUEST' error code
+        // propfind httpRequest with empty body >> retrieve all property
         if (requestDocument == null) {
             return;
         }
