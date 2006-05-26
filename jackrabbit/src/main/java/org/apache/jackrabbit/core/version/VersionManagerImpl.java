@@ -15,44 +15,43 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
-import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.state.PersistenceManager;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PersistenceManager;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.MalformedPathException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import javax.jcr.Session;
 import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.version.VersionHistory;
-import javax.jcr.version.VersionException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * This Class implements a VersionManager.
@@ -111,7 +110,7 @@ public class VersionManagerImpl extends AbstractVersionManager
     /**
      * Map of returned items. this is kept for invalidating
      */
-    private ReferenceMap versionItems = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+    private final ReferenceMap versionItems = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
 
     /**
      * Creates a bew vesuion manager
@@ -206,42 +205,44 @@ public class VersionManagerImpl extends AbstractVersionManager
      * {@inheritDoc}
      */
     public boolean hasItem(NodeId id) {
-        return versionItems.containsKey(id) || stateMgr.hasItemState(id);
+        return stateMgr.hasItemState(id);
     }
 
     /**
      * {@inheritDoc}
      */
-    protected synchronized InternalVersionItem getItem(NodeId id)
+    protected InternalVersionItem getItem(NodeId id)
             throws RepositoryException {
 
+        if (id.equals(getHistoryRootId())) {
+            return null;
+        }
         try {
-            InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
-            if (item == null) {
-                if (stateMgr.hasItemState(id)) {
-                    NodeState state = (NodeState) stateMgr.getItemState(id);
-                    NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
-                    NodeId parentId = pNode.getParentId();
-                    InternalVersionItem parent =
-                            (parentId != null) ? getItem(parentId) : null;
-                    QName ntName = state.getNodeTypeName();
-                    if (ntName.equals(QName.NT_FROZENNODE)) {
-                        item = new InternalFrozenNodeImpl(this, pNode, parent);
-                    } else if (ntName.equals(QName.NT_VERSIONEDCHILD)) {
-                        item = new InternalFrozenVHImpl(this, pNode, parent);
-                    } else if (ntName.equals(QName.NT_VERSION)) {
-                        item = ((InternalVersionHistory) parent).getVersion(id);
-                    } else if (ntName.equals(QName.NT_VERSIONHISTORY)) {
-                        item = new InternalVersionHistoryImpl(this, pNode);
-                    } else {
-                        //return null;
+            synchronized (versionItems) {
+                InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
+                if (item == null) {
+                    if (stateMgr.hasItemState(id)) {
+                        NodeState state = (NodeState) stateMgr.getItemState(id);
+                        NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
+                        NodeId parentId = pNode.getParentId();
+                        InternalVersionItem parent = getItem(parentId);
+                        QName ntName = state.getNodeTypeName();
+                        if (ntName.equals(QName.NT_FROZENNODE)) {
+                            item = new InternalFrozenNodeImpl(this, pNode, parent);
+                        } else if (ntName.equals(QName.NT_VERSIONEDCHILD)) {
+                            item = new InternalFrozenVHImpl(this, pNode, parent);
+                        } else if (ntName.equals(QName.NT_VERSION)) {
+                            item = ((InternalVersionHistory) parent).getVersion(id);
+                        } else if (ntName.equals(QName.NT_VERSIONHISTORY)) {
+                            item = new InternalVersionHistoryImpl(this, pNode);
+                        } else {
+                            return null;
+                        }
                     }
-                }
-                if (item != null) {
                     versionItems.put(id, item);
                 }
+                return item;
             }
-            return item;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
@@ -356,45 +357,47 @@ public class VersionManagerImpl extends AbstractVersionManager
      * @param item item updated
      */
     private void itemUpdated(InternalVersionItem item) {
-        InternalVersionItem cached = (InternalVersionItem) versionItems.remove(item.getId());
-        if (cached != null) {
-            if (cached instanceof InternalVersionHistoryImpl) {
-                InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl) cached;
-                try {
-                    vh.reload();
-                    versionItems.put(vh.getId(), vh);
-                } catch (RepositoryException e) {
-                    log.warn("Unable to update version history: " + e.toString());
+        synchronized (versionItems) {
+            InternalVersionItem cached = (InternalVersionItem) versionItems.remove(item.getId());
+            if (cached != null) {
+                if (cached instanceof InternalVersionHistoryImpl) {
+                    InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl) cached;
+                    try {
+                        vh.reload();
+                        versionItems.put(vh.getId(), vh);
+                    } catch (RepositoryException e) {
+                        log.warn("Unable to update version history: " + e.toString());
+                    }
                 }
             }
         }
     }
 
-    public boolean setNodeReferences(NodeReferences refs) {
+    /**
+     * Sets and stored the node references from external nodes.
+     * @param references
+     * @return <code>true</code> if the references could be set.
+     */
+    public boolean setNodeReferences(NodeReferences references) {
         try {
-            InternalVersionItem item = getItem(refs.getTargetId());
-            setItemReferences(item, refs.getReferences());
+            // filter out version storage intern ones
+            NodeReferences refs = new NodeReferences(references.getId());
+            Iterator iter = references.getReferences().iterator();
+            while (iter.hasNext()) {
+                PropertyId id = (PropertyId) iter.next();
+                if (!hasItem(id.getParentId())) {
+                    refs.addReference(id);
+                }
+            }
+
+            ChangeLog log = new ChangeLog();
+            log.modified(refs);
+            pMgr.store(log);
             return true;
-        } catch (RepositoryException e) {
+        } catch (ItemStateException e) {
             log.error("Error while setting references: " + e.toString());
             return false;
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setItemReferences(InternalVersionItem item, List references) {
-        // filter out version storage intern ones
-        ArrayList refs = new ArrayList();
-        Iterator iter = references.iterator();
-        while (iter.hasNext()) {
-            PropertyId id = (PropertyId) iter.next();
-            if (!hasItem(id.getParentId())) {
-                refs.add(id);
-            }
-        }
-        internalSetItemReferences(item, refs);
     }
 
     /**
@@ -408,21 +411,6 @@ public class VersionManagerImpl extends AbstractVersionManager
             // ignore
         }
         return Collections.EMPTY_LIST;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    private void internalSetItemReferences(InternalVersionItem item, List references) {
-        try {
-            ChangeLog log = new ChangeLog();
-            NodeReferences refs = new NodeReferences(new NodeReferencesId(item.getId()));
-            refs.addAllReferences(references);
-            log.modified(refs);
-            pMgr.store(log);
-        } catch (ItemStateException e) {
-            log.error("Error while storing", e);
-        }
     }
 
     /**
