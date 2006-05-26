@@ -3796,14 +3796,17 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
 
-        // first delete all non frozen version histories (i.e. all OPV=Copy)
+        // first delete some of the version histories
         NodeIterator iter = getNodes();
         while (iter.hasNext()) {
             NodeImpl n = (NodeImpl) iter.nextNode();
-            if (!freeze.hasFrozenHistory(n.internalGetUUID())) {
-                if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY
-                        || n.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
-                    // only remove OPV=Copy or OPV=Version nodes
+            if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.COPY) {
+                // only remove OPV=Copy nodes
+                n.internalRemove(true);
+            } else if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
+                // only remove, if node to be restored does not contain child
+                UUID vhUUID = new UUID(n.getProperty(QName.JCR_VERSIONHISTORY).getString());
+                if (!freeze.hasFrozenHistory(vhUUID)) {
                     n.internalRemove(true);
                 }
             }
@@ -3843,18 +3846,18 @@ public class NodeImpl extends ItemImpl implements Node {
                 // check if representing versionable already exists somewhere
                 if (itemMgr.itemExists(nodeId)) {
                     NodeImpl n = session.getNodeById(nodeId);
-                    if (n.getParent().isSame(this)) {
-                        // so order at end
-                        // orderBefore(n.getName(), "");
-                    } else if (removeExisting) {
+                    if (removeExisting) {
                         session.move(n.getPath(), getPath() + "/" + n.getName());
+                    } else if (n.getParent().isSame(this)) {
+                        n.internalRemove(true);
                     } else {
                         // since we delete the OPV=Copy children beforehand, all
                         // found nodes must be outside of this tree
                         throw new ItemExistsException("Unable to restore node, item already exists outside of restored tree: "
                                 + n.safeGetJCRPath());
                     }
-                } else {
+                }
+                if (!itemMgr.itemExists(nodeId)) {
                     // get desired version from version selector
                     AbstractVersion v = (AbstractVersion) vsel.select(history);
                     NodeImpl node = addNode(child.getName(), v.getFrozenNode());
