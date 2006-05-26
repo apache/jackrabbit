@@ -139,7 +139,7 @@ public class QueryImpl implements ExecutableQuery {
         // check for special query
         if (ALL_NODES.equals(root)) {
             return new WorkspaceTraversalResult(session,
-                    new QName[] { QName.JCR_PATH },
+                    new QName[] { QName.JCR_PRIMARYTYPE, QName.JCR_PATH, QName.JCR_SCORE },
                     session.getNamespaceResolver());
         }
 
