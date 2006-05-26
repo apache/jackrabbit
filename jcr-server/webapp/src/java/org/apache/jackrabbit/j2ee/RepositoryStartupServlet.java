@@ -167,6 +167,19 @@ public class RepositoryStartupServlet extends HttpServlet {
     private String rmiURI;
 
     /**
+     * Keeps a strong reference to the server side RMI repository instance to
+     * prevent the RMI distributed Garbage Collector from collecting the
+     * instance making the repository unaccessible though it should still be.
+     * This field is only set to a non-<code>null</code> value, if registration
+     * of the repository to an RMI registry succeeded in the
+     * {@link #registerRMI()} method.
+     *
+     * @see #registerRMI()
+     * @see #unregisterRMI()
+     */
+    private Remote rmiRepository;
+
+    /**
      * Initializes the servlet
      * @throws ServletException
      */
@@ -471,7 +484,10 @@ public class RepositoryStartupServlet extends HttpServlet {
                 log.debug("Registering repository as " + rmiName
                     + " to registry " + reg);
                 reg.bind(rmiName, remote);
+
+                // when successfull, keep references
                 this.rmiURI = rmiURI;
+                this.rmiRepository = remote;
                 log.info("Repository bound via RMI with name: " + rmiURI);
             } else {
                 log.info("RMI registry missing, cannot bind repository via RMI");
@@ -526,6 +542,10 @@ public class RepositoryStartupServlet extends HttpServlet {
      * been registered.
      */
     private void unregisterRMI() {
+        // drop strong referenece to remote repository
+        rmiRepository = null;
+
+        // unregister repository
         if (rmiURI != null) {
             try {
                 Naming.unbind(rmiURI);
