@@ -17,6 +17,7 @@ package org.apache.jackrabbit.core.jndi;
 
 import org.apache.commons.collections.map.ReferenceMap;
 
+import javax.jcr.RepositoryException;
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.Reference;
@@ -43,6 +44,22 @@ public class BindableRepositoryFactory implements ObjectFactory {
     public BindableRepositoryFactory() {
     }
 
+    /**
+     * Creates an initialized BindableRepository instance using the given
+     * configuration information and puts it in {@link #cache}.
+     *
+     * @param configFilePath repository configuration file path
+     * @param repHomeDir     repository home directory path
+     * @return initialized repository instance
+     * @throws RepositoryException if the repository cannot be created
+     */
+    static BindableRepository createInstance(String configFilePath, String repHomeDir)
+            throws RepositoryException {
+        BindableRepository rep = BindableRepository.create(configFilePath, repHomeDir);
+        cache.put(rep.getReference(), rep);
+        return rep;
+    }
+
     //--------------------------------------------------------< ObjectFactory >
     /**
      * {@inheritDoc}
@@ -60,9 +77,7 @@ public class BindableRepositoryFactory implements ObjectFactory {
                             (String) ref.get(BindableRepository.CONFIGFILEPATH_ADDRTYPE).getContent();
                     String repHomeDir =
                             (String) ref.get(BindableRepository.REPHOMEDIR_ADDRTYPE).getContent();
-                    BindableRepository rep = BindableRepository.create(configFilePath, repHomeDir);
-                    cache.put(ref, rep);
-                    return rep;
+                    return createInstance(configFilePath, repHomeDir);
                 }
             }
         }

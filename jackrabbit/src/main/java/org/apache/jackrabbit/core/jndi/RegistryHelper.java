@@ -53,7 +53,10 @@ public class RegistryHelper {
                                           String repHomeDir,
                                           boolean overwrite)
             throws NamingException, RepositoryException {
-        Object obj = BindableRepository.create(configFilePath, repHomeDir);
+        // always create instance by using BindableRepositoryFactory
+        // which maintains an instance cache;
+        // see http://issues.apache.org/jira/browse/JCR-411 for details
+        Object obj = BindableRepositoryFactory.createInstance(configFilePath, repHomeDir);
         if (overwrite) {
             ctx.rebind(name, obj);
         } else {
