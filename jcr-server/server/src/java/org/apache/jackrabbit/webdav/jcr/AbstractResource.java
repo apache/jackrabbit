@@ -49,6 +49,8 @@ import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
@@ -71,8 +73,6 @@ import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -168,22 +168,16 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     }
 
     /**
-     * Returns <code>null</code>
+     * Spools the properties of this resource to the context. Note that subclasses
+     * are in charge of spooling the data to the output stream provided by the
+     * context.
      *
-     * @return Always returns <code>null</code>
-     */
-    InputStream getStream() {
-        return null;
-    }
-
-    /**
      * @see DavResource#spool(OutputContext)
      */
     public void spool(OutputContext outputContext) throws IOException {
         if (!initedProps) {
             initProperties();
         }
-
         // export properties
         outputContext.setModificationTime(getModificationTime());
         DavProperty etag = getProperty(DavPropertyName.GETETAG);
@@ -208,22 +202,6 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         DavProperty contentLanguage = getProperty(DavPropertyName.GETCONTENTLANGUAGE);
         if (contentLanguage != null) {
             outputContext.setContentLanguage(contentLanguage.getValue().toString());
-        }
-
-        // spool content
-        InputStream in = getStream();
-        OutputStream out = outputContext.getOutputStream();
-        if (in != null && out != null) {
-            try {
-                IOUtil.spool(in, out);
-            } finally {
-                // also close stream if not sending content
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
         }
     }
 
@@ -274,13 +252,36 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     }
 
     /**
-     * Throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
+     * Builds a single List from the properties to set and the properties to
+     * remove and delegates the list to {@link #alterProperties(List)};
      *
      * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet) 
      */
     public MultiStatusResponse alterProperties(DavPropertySet setProperties,
                                 DavPropertyNameSet removePropertyNames)
         throws DavException {
+        List changeList = new ArrayList();
+        if (removePropertyNames != null) {
+            DavPropertyNameIterator it = removePropertyNames.iterator();
+            while (it.hasNext()) {
+                changeList.add(it.next());
+            }
+        }
+        if (setProperties != null) {
+            DavPropertyIterator it = setProperties.iterator();
+            while (it.hasNext()) {
+                changeList.add(it.next());
+            }
+        }
+        return alterProperties(changeList);
+    }
+
+    /**
+     * Throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
+     *
+     * @see DavResource#alterProperties(List)
+     */
+    public MultiStatusResponse alterProperties(List changeList) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
     }
 

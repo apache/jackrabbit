@@ -55,6 +55,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.log4j.Logger;
 
@@ -385,45 +386,64 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
-     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
+     * @see DavResource#alterProperties(DavPropertySet, DavPropertyNameSet)
      */
     public MultiStatusResponse alterProperties(DavPropertySet setProperties,
                                                DavPropertyNameSet removePropertyNames)
             throws DavException {
+        List changeList = new ArrayList();
+        if (removePropertyNames != null) {
+            DavPropertyNameIterator it = removePropertyNames.iterator();
+            while (it.hasNext()) {
+                changeList.add(it.next());
+            }
+        }
+        if (setProperties != null) {
+            DavPropertyIterator it = setProperties.iterator();
+            while (it.hasNext()) {
+                changeList.add(it.next());
+            }
+        }
+
+        return alterProperties(changeList);
+    }
+
+    public MultiStatusResponse alterProperties(List changeList) throws DavException {
         if (isLocked(this)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-
         MultiStatusResponse msr = new MultiStatusResponse(getHref(), null);
         boolean success = true;
 
-        // loop over set and remove Sets and remember all properties and propertyNames
+        // loop over List and remember all properties and propertyNames
         // that have successfully been altered
         List successList = new ArrayList();
-        DavPropertyIterator setIter = setProperties.iterator();
-        while (setIter.hasNext()) {
-            DavProperty prop = setIter.nextProperty();
-            try {
-                setJcrProperty(prop);
-                successList.add(prop);
-            } catch (RepositoryException e) {
-                msr.add(prop.getName(), new JcrDavException(e).getErrorCode());
-                success = false;
-            }
-        }
-
-        Iterator remNameIter = removePropertyNames.iterator();
-        while (remNameIter.hasNext()) {
-            DavPropertyName propName = (DavPropertyName) remNameIter.next();
-            try {
-                removeJcrProperty(propName);
-                successList.add(propName);
-            } catch (RepositoryException e) {
-                msr.add(propName, new JcrDavException(e).getErrorCode());
-                success = false;
+        Iterator it = changeList.iterator();
+        while (it.hasNext()) {
+            Object propEntry = it.next();
+            if (propEntry instanceof DavPropertyName) {
+                DavPropertyName propName = (DavPropertyName)propEntry;
+                try {
+                    removeJcrProperty(propName);
+                    successList.add(propName);
+                } catch (RepositoryException e) {
+                    msr.add(propName, new JcrDavException(e).getErrorCode());
+                    success = false;
+                }
+            } else if (propEntry instanceof DavProperty) {
+                DavProperty prop = (DavProperty)propEntry;
+                try {
+                    setJcrProperty(prop);
+                    successList.add(prop);
+                } catch (RepositoryException e) {
+                    msr.add(prop.getName(), new JcrDavException(e).getErrorCode());
+                    success = false;
+                }
+            } else {
+                throw new IllegalArgumentException("unknown object in change list: " + propEntry.getClass().getName());
             }
         }
 
@@ -440,7 +460,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                complete action. in case of failure set the status to 'failed-dependency'
                in order to indicate, that altering those names/properties would
                have succeeded, if no other error occured.*/
-            Iterator it = successList.iterator();
+            it = successList.iterator();
             while (it.hasNext()) {
                 Object o = it.next();
                 int status = (success) ? DavServletResponse.SC_OK : DavServletResponse.SC_FAILED_DEPENDENCY;

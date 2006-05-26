@@ -26,9 +26,9 @@ import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.version.LabelInfo;
 import org.apache.jackrabbit.webdav.version.MergeInfo;
 import org.apache.jackrabbit.webdav.version.UpdateInfo;
@@ -56,6 +56,7 @@ import javax.jcr.observation.EventListener;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>VersionControlledItemCollection</code> represents a JCR node item and
@@ -111,14 +112,12 @@ public class VersionControlledItemCollection extends DefaultItemCollection
     }
 
     /**
-     *
-     * @param setProperties
-     * @param removePropertyNames
+     * @param changeList
      * @throws DavException
      * @see DefaultItemCollection#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
      * for additional description of non-compliant behaviour.
      */
-    public MultiStatusResponse alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException {
+    public MultiStatusResponse alterProperties(List changeList) throws DavException {
         /* first resolve merge conflict since they cannot be handled by
            setting property values in jcr (and are persisted immediately).
            NOTE: this violates RFC 2518 that requires that proppatch
@@ -126,9 +125,9 @@ public class VersionControlledItemCollection extends DefaultItemCollection
            required that no changes must be persisted if any set/remove fails.
         */
         // TODO: solve violation of RFC 2518
-        resolveMergeConflict(setProperties, removePropertyNames);
+        resolveMergeConflict(changeList);
         // alter other properties only if merge-conflicts could be handled
-        return super.alterProperties(setProperties, removePropertyNames);
+        return super.alterProperties(changeList);
     }
 
     /**
@@ -142,63 +141,74 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * not allow for a resolution of an existing merge conflict, this method
      * returns silently.
      *
-     * @param setProperties
-     * @param removePropertyNames
+     * @param changeList
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see Node#doneMerge(Version)
      * @see Node#cancelMerge(Version)
      */
-    private void resolveMergeConflict(DavPropertySet setProperties,
-                                     DavPropertyNameSet removePropertyNames)
-        throws DavException {
-
+    private void resolveMergeConflict(List changeList) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-
         try {
             Node n = (Node)item;
-            if (removePropertyNames.contains(AUTO_MERGE_SET)) {
+            DavProperty autoMergeSet = null;
+            DavProperty predecessorSet = null;
+            /* find DAV:auto-merge-set entries. If none exists no attempt is made
+               to resolve merge conflict > return silently */
+            for (int i = 0; i < changeList.size(); i++) {
+                Object propEntry = changeList.get(i);
+                // If DAV:auto-merge-set is DavPropertyName all remaining merge
+                // conflicts are resolved with 'cancel'
+                if (propEntry instanceof DavPropertyName && AUTO_MERGE_SET.equals(propEntry)) {
+                    // retrieve the current jcr:mergeFailed property values
+                    if (!n.hasProperty(JcrConstants.JCR_MERGEFAILED)) {
+                        throw new DavException(DavServletResponse.SC_CONFLICT, "Attempt to resolve non-existing merge conflicts.");
+                    }
+                    Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
+                    for (int j = 0; j < mergeFailed.length; j++) {
+                        n.cancelMerge((Version)getRepositorySession().getNodeByUUID(mergeFailed[j].getString()));
+                    }
+                    // remove this entry from the changeList
+                    changeList.remove(propEntry);
+                } else if (propEntry instanceof DavProperty) {
+                    if (AUTO_MERGE_SET.equals(((DavProperty)propEntry).getName())) {
+                        autoMergeSet = (DavProperty)propEntry;
+                    } else if (PREDECESSOR_SET.equals(((DavProperty)propEntry).getName())) {
+                        predecessorSet = (DavProperty)propEntry;
+                    }
+                }
+            }
+
+            // If DAV:auto-merge-set is a DavProperty merge conflicts need to be
+            // resolved individually according to the DAV:predecessor-set property.
+            if (autoMergeSet != null) {
                 // retrieve the current jcr:mergeFailed property values
                 if (!n.hasProperty(JcrConstants.JCR_MERGEFAILED)) {
                     throw new DavException(DavServletResponse.SC_CONFLICT, "Attempt to resolve non-existing merge conflicts.");
                 }
-                Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
 
-                // resolve all remaining merge conflicts with 'cancel'
-                for (int i = 0; i < mergeFailed.length; i++) {
-                    n.cancelMerge((Version)getRepositorySession().getNodeByUUID(mergeFailed[i].getString()));
-                }
-                // adjust removeProperty set
-                removePropertyNames.remove(AUTO_MERGE_SET);
-
-            } else if (setProperties.contains(AUTO_MERGE_SET) && setProperties.contains(PREDECESSOR_SET)){
-                // retrieve the current jcr:mergeFailed property values
-                if (!n.hasProperty(JcrConstants.JCR_MERGEFAILED)) {
-                    throw new DavException(DavServletResponse.SC_CONFLICT, "Attempt to resolve non-existing merge conflicts.");
-                }
-                Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
-
-
-                // check which mergeFailed entries have been removed from the
-                // auto-merge-set (cancelMerge) and have been moved over to the
-                // predecessor set (doneMerge)
-                List mergeset = new HrefProperty(setProperties.get(AUTO_MERGE_SET)).getHrefs();
-                List predecSet = new HrefProperty(setProperties.get(PREDECESSOR_SET)).getHrefs();
+                List mergeset = new HrefProperty(autoMergeSet).getHrefs();
+                List predecSet = (predecessorSet == null) ? new ArrayList() : new HrefProperty(predecessorSet).getHrefs();
 
                 Session session = getRepositorySession();
+                // loop over the mergeFailed values (versions) and test whether they are
+                // removed from the DAV:auto-merge-set thus indicating resolution.
+                Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
                 for (int i = 0; i < mergeFailed.length; i++) {
                     // build version-href from each entry in the jcr:mergeFailed property
+                    // in order to be able to compare to the entries in the HrefProperty.
                     Version version = (Version) session.getNodeByUUID(mergeFailed[i].getString());
                     String href = getLocatorFromItem(version).getHref(true);
 
                     // Test if that version has been removed from the merge-set.
-                    // thus indicating that the merge-conflict needs to be resolved.
+                    // thus indicating that this merge conflict needs to be resolved.
                     if (!mergeset.contains(href)) {
-                        // Test if the 'href' has been moved over to the
-                        // predecessor-set (thus 'doneMerge' is appropriate) or
-                        // if it is not present in the predecessor set and the
-                        // the conflict is resolved by 'cancelMerge'.
+                        // If the conflict value has been moved over from DAV:auto-merge-set
+                        // to the predecessor-set, resolution with 'doneMerge' is
+                        // appropriate. If the value has been removed from the
+                        // merge-set but not added to the predecessors 'cancelMerge'
+                        // must be called.
                         if (predecSet.contains(href)) {
                             n.doneMerge(version);
                         } else {
@@ -206,11 +216,14 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                         }
                     }
                 }
-                // adjust setProperty set
-                setProperties.remove(AUTO_MERGE_SET);
-                setProperties.remove(PREDECESSOR_SET);
+                // after successful resolution of merge-conflicts according to
+                // DAV:auto-merge-set and DAV:predecessor-set remove these entries
+                // from the changeList.
+                changeList.remove(autoMergeSet);
+                if (predecessorSet != null) {
+                    changeList.remove(predecessorSet);
+                }
             }
-            /* else: no (valid) attempt to resolve merge conflict > return silently */
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }

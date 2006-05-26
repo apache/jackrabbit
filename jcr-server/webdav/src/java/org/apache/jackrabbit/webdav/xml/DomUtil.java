@@ -25,6 +25,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +35,18 @@ import java.util.List;
 public class DomUtil {
 
     private static Logger log = Logger.getLogger(DomUtil.class);
+
+    /**
+     * Constant for <code>DocumentBuilderFactory</code> which is used
+     * widely to create new <code>Document</code>s
+     */
+    public static DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
+    static {
+        BUILDER_FACTORY.setNamespaceAware(true);
+        BUILDER_FACTORY.setIgnoringComments(true);
+        BUILDER_FACTORY.setIgnoringElementContentWhitespace(true);
+        BUILDER_FACTORY.setCoalescing(true);
+    }
 
     /**
      * Returns the value of the named attribute of the current element.

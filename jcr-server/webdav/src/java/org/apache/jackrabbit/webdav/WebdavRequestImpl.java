@@ -67,6 +67,8 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>WebdavRequestImpl</code>...
@@ -92,6 +94,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     private DavPropertyNameSet propfindProps;
     private DavPropertySet proppatchSet;
     private DavPropertyNameSet proppatchRemove;
+    private List proppatchList;
 
     /**
      * Creates a new <code>DavServletRequest</code> with the given parameters.
@@ -348,6 +351,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      *
      * @return the list of 'set' entries in the PROPPATCH request body
      * @see DavServletRequest#getPropPatchSetProperties()
+     * @deprecated use {@link #getPropPatchChangeList()} instead
      */
     public DavPropertySet getPropPatchSetProperties() throws DavException {
         if (proppatchSet == null) {
@@ -363,6 +367,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      *
      * @return the list of 'remove' entries in the PROPPATCH request body
      * @see DavServletRequest#getPropPatchRemoveProperties()
+     * @deprecated use {@link #getPropPatchChangeList()} instead
      */
     public DavPropertyNameSet getPropPatchRemoveProperties() throws DavException {
         if (proppatchRemove == null) {
@@ -371,6 +376,22 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         return proppatchRemove;
     }
 
+     /**
+      * Return a {@link List} of property change operations. Each entry
+      * is either of type {@link DavPropertyName}, indicating a &lt;remove&gt;
+      * operation, or of type {@link DavProperty}, indicating a &lt;set&gt;
+      * operation. Note that ordering is significant here.
+      *
+      * @return the list of change operations entries in the PROPPATCH request body
+      * @see DavServletRequest#getPropPatchChangeList()
+      */
+     public List getPropPatchChangeList() throws DavException {
+         if (proppatchList == null) {
+             parsePropPatchRequest();
+         }
+         return proppatchList;
+     }
+
     /**
      * Parse the PROPPATCH request body.
      */
@@ -378,6 +399,8 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
         proppatchSet = new DavPropertySet();
         proppatchRemove = new DavPropertyNameSet();
+        proppatchList = new ArrayList();
+
         Document requestDocument = getRequestDocument();
 
         if (requestDocument == null) {
@@ -386,31 +409,36 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
         Element root = requestDocument.getDocumentElement();
         if (!DomUtil.matches(root, XML_PROPERTYUPDATE, NAMESPACE)) {
-            // we should also check for correct namespace
-            log.warn("PropPatch-Request has no <propertyupdate> tag.");
+            log.warn("PropPatch-Request has no <DAV:propertyupdate> tag.");
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "PropPatch-Request has no <propertyupdate> tag.");
         }
 
-        ElementIterator it = DomUtil.getChildren(root, XML_SET, NAMESPACE);
+        ElementIterator it = DomUtil.getChildren(root);
         while (it.hasNext()) {
-            Element propEl = DomUtil.getChildElement(it.nextElement(), XML_PROP, NAMESPACE);
-            if (propEl != null) {
-                ElementIterator properties = DomUtil.getChildren(propEl);
-                while (properties.hasNext()) {
-                   proppatchSet.add(DefaultDavProperty.createFromXml(properties.nextElement()));
+            Element el = it.nextElement();
+            if (DomUtil.matches(el, XML_SET, NAMESPACE)) {
+                Element propEl = DomUtil.getChildElement(el, XML_PROP, NAMESPACE);
+                if (propEl != null) {
+                    ElementIterator properties = DomUtil.getChildren(propEl);
+                    while (properties.hasNext()) {
+                        DavProperty davProp = DefaultDavProperty.createFromXml(properties.nextElement());
+                        proppatchSet.add(davProp);
+                        proppatchList.add(davProp);
+                    }
                 }
-            }
-        }
-
-        // get <remove> properties
-        it = DomUtil.getChildren(root, XML_REMOVE, NAMESPACE);
-        while (it.hasNext()) {
-            Element propEl = DomUtil.getChildElement(it.nextElement(), XML_PROP, NAMESPACE);
-            if (propEl != null) {
-                ElementIterator names = DomUtil.getChildren(propEl);
-                while (names.hasNext()) {
-                    proppatchRemove.add(DavPropertyName.createFromXml(names.nextElement()));
+            } else if (DomUtil.matches(el, XML_REMOVE, NAMESPACE)) {
+                Element propEl = DomUtil.getChildElement(el, XML_PROP, NAMESPACE);
+                if (propEl != null) {
+                    ElementIterator properties = DomUtil.getChildren(propEl);
+                    while (properties.hasNext()) {
+                        DavProperty davProp = DefaultDavProperty.createFromXml(properties.nextElement());
+                        proppatchSet.add(davProp);
+                        proppatchList.add(davProp.getName());
+                    }
                 }
+            } else {
+                log.debug("Unknown element in DAV:propertyupdate: " + el.getNodeName());
+                // unknown child elements are ignored
             }
         }
     }

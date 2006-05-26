@@ -16,6 +16,7 @@
 package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
@@ -26,11 +27,14 @@ import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
 import org.apache.jackrabbit.webdav.jcr.version.report.ExportViewReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.LocateCorrespondingNodeReport;
+import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.lock.Scope;
@@ -41,13 +45,14 @@ import org.apache.jackrabbit.webdav.ordering.OrderingResource;
 import org.apache.jackrabbit.webdav.ordering.OrderingType;
 import org.apache.jackrabbit.webdav.ordering.Position;
 import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ImportUUIDBehavior;
@@ -62,18 +67,22 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.NodeType;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.List;
 
 /**
  * <code>DefaultItemCollection</code> represents a JCR node item.
@@ -82,8 +91,7 @@ public class DefaultItemCollection extends AbstractItemResource
         implements OrderingResource {
 
     private static Logger log = Logger.getLogger(DefaultItemCollection.class);
-
-    private File content;
+    private static final String TMP_PREFIX = "_tmp_";
 
     /**
      * Create a new <code>DefaultItemCollection</code>.
@@ -132,23 +140,28 @@ public class DefaultItemCollection extends AbstractItemResource
         return true;
     }
 
-
     /**
-     * Returns an {@link java.io.InputStream} to the content of this collection.
+     * If this resource represents an existing <code>Node</code> the system
+     * view is spooled as resource content.
+     *
+     * @param outputContext
+     * @throws IOException
+     * @see Session#exportSystemView(String, OutputStream, boolean, boolean)
      */
-    public InputStream getStream() {
-        if (!initedProps)  {
-            initProperties();
-        }
-        if (content != null) {
-            try {
-                return new FileInputStream(content);
-            } catch (FileNotFoundException e) {
-                // should not occur
-                log.error(e.getMessage());
+    public void spool(OutputContext outputContext) throws IOException {
+        // spool properties
+        super.spool(outputContext);
+        // spool data
+        try {
+            OutputStream out = outputContext.getOutputStream();
+            if (out != null && exists()) {
+                getRepositorySession().exportSystemView(item.getPath(), out, false, true);
             }
+        } catch (PathNotFoundException e) {
+            log.error("Error while spooling resource content: " + e.getMessage());
+        } catch (RepositoryException e) {
+            log.error("Error while spooling resource content: " + e.getMessage());
         }
-        return null;
     }
 
     /**
@@ -259,7 +272,7 @@ public class DefaultItemCollection extends AbstractItemResource
     }
 
     /**
-     * Loops over the given <code>Set</code>s and alters the properties accordingly.
+     * Loops over the given <code>List</code>s and alters the properties accordingly.
      * Changes are persisted at the end according to the rules defined with
      * the {@link #complete()} method.<p>
      * Please note: since there is only a single property ({@link #JCR_MIXINNODETYPES}
@@ -267,26 +280,26 @@ public class DefaultItemCollection extends AbstractItemResource
      * or throws an exception, even if this violates RFC 2518. Thus no property
      * specific multistatus will be created in case of an error.
      *
-     * @param setProperties
-     * @param removePropertyNames
+     * @param changeList
      * @return
      * @throws DavException
      * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
      */
-    public MultiStatusResponse alterProperties(DavPropertySet setProperties,
-                                DavPropertyNameSet removePropertyNames)
-        throws DavException {
-        DavPropertyIterator setIter = setProperties.iterator();
-        while (setIter.hasNext()) {
-            DavProperty prop = setIter.nextProperty();
-            // use the internal set method in order to prevent premature 'save'
-            internalSetProperty(prop);
-        }
-        Iterator remNameIter = removePropertyNames.iterator();
-        while (remNameIter.hasNext()) {
-            DavPropertyName propName = (DavPropertyName) remNameIter.next();
-            // use the internal set method in order to prevent premature 'save'
-            internalRemoveProperty(propName);
+    public MultiStatusResponse alterProperties(List changeList) throws DavException {
+        Iterator it = changeList.iterator();
+        while (it.hasNext()) {
+            Object propEntry = it.next();
+            if (propEntry instanceof DavPropertyName) {
+                // use the internal remove method in order to prevent premature 'save'
+                DavPropertyName propName = (DavPropertyName) propEntry;
+                internalRemoveProperty(propName);
+            } else if (propEntry instanceof DavProperty) {
+                // use the internal set method in order to prevent premature 'save'
+                DavProperty prop = (DavProperty) propEntry;
+                internalSetProperty(prop);
+            } else {
+                throw new IllegalArgumentException("unknown object in change list: " + propEntry.getClass().getName());
+            }
         }
         // TODO: missing undo of successful set/remove if subsequent operation fails
         // NOTE, that this is relevant with transactions only.
@@ -326,6 +339,7 @@ public class DefaultItemCollection extends AbstractItemResource
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
 
+        File tmpFile = null;
         try {
             Node n = (Node) item;
             InputStream in = (inputContext != null) ? inputContext.getInputStream() : null;
@@ -349,16 +363,36 @@ public class DefaultItemCollection extends AbstractItemResource
                 }
             } else {
                 if (in == null) {
-                    // PUT: not possible
+                    // PUT: not possible without request body
                     throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Cannot create a new non-collection resource without request body.");
                 } else {
-                    // TODO: find a way to create non-binary and multivalue properties
                     // PUT : create new or overwrite existing property.
-                    // NOTE: will fail for multivalue properties.
-                    n.setProperty(memberName, in);
+                    tmpFile = File.createTempFile(TMP_PREFIX + memberName, null, null);
+                    FileOutputStream out = new FileOutputStream(tmpFile);
+                    IOUtil.spool(in, out);
+                    out.close();
+                    // try to parse the request body into a 'values' property.
+                    ValuesProperty vp = buildValuesProperty(new FileInputStream(tmpFile));
+                    if (vp != null) {
+                        if (JCR_VALUE.equals(vp.getName())) {
+                            n.setProperty(memberName, vp.getJcrValue());
+                        } else {
+                            n.setProperty(memberName, vp.getJcrValues());
+                        }
+                    } else {
+                        // request body cannot be parsed into a 'values' property.
+                        // fallback: try to import as single value from stream.
+                        n.setProperty(memberName, new FileInputStream(tmpFile));
+                    }
                 }
             }
-            complete();
+            if (resource.exists() && resource instanceof AbstractItemResource) {
+                // PUT may modify value of existing jcr property. thus, this
+                // node is not modified by the 'addMember' call.
+                ((AbstractItemResource)resource).complete();
+            } else {
+                complete();
+            }
         } catch (ItemExistsException e) {
             // according to RFC 2518: MKCOL only possible on non-existing/deleted resource
             throw new JcrDavException(e, DavServletResponse.SC_METHOD_NOT_ALLOWED);
@@ -366,6 +400,10 @@ public class DefaultItemCollection extends AbstractItemResource
             throw new JcrDavException(e);
         } catch (IOException e) {
             throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, e.getMessage());
+        } finally {
+            if (tmpFile != null) {
+                tmpFile.delete();
+            }
         }
     }
 
@@ -655,12 +693,13 @@ public class DefaultItemCollection extends AbstractItemResource
         Node n = (Node)item;
         try {
             for (int i = 0; i < instructions.length; i++) {
-                String srcRelPath = Text.getName(instructions[i].getMemberHandle());
+                String srcRelPath = instructions[i].getMemberHandle();
                 Position pos = instructions[i].getPosition();
                 String destRelPath = getRelDestinationPath(pos, n.getNodes());
                 // preform the reordering
                 n.orderBefore(srcRelPath, destRelPath);
             }
+            complete();
         } catch (RepositoryException e) {
             // UnsupportedRepositoryException should not occur
             throw new JcrDavException(e);
@@ -681,34 +720,36 @@ public class DefaultItemCollection extends AbstractItemResource
     private String getRelDestinationPath(Position position, NodeIterator childNodes)
             throws RepositoryException {
 
-        String destPath = null;
+        String destRelPath = null;
         if (OrderingConstants.XML_FIRST.equals(position.getType())) {
             if (childNodes.hasNext()) {
                 Node firstChild = childNodes.nextNode();
-                destPath = firstChild.getPath();
+                // use last segment of node-path instead of name.
+                destRelPath = Text.getName(firstChild.getPath());
             }
             // no child nodes available > reordering to 'first' position fails.
-            if (destPath == null) {
+            if (destRelPath == null) {
                 throw new ItemNotFoundException("No 'first' item found for reordering.");
             }
         } else if (OrderingConstants.XML_AFTER.equals(position.getType())) {
-            String afterRelPath = Text.getName(position.getSegment());
+            String afterRelPath = position.getSegment();
             boolean found = false;
             // jcr only knows order-before > retrieve the node that follows the
             // one incidated by the 'afterRelPath'.
-            while (childNodes.hasNext() && destPath == null) {
-                String childPath = childNodes.nextNode().getPath();
+            while (childNodes.hasNext() && destRelPath == null) {
+                // compare to last segment of node-path instead of name.
+                String childRelPath = Text.getName(childNodes.nextNode().getPath());
                 if (found) {
-                    destPath = childPath;
+                    destRelPath = childRelPath;
                 } else {
-                    found = afterRelPath.equals(Text.getName(childPath));
+                    found = afterRelPath.equals(childRelPath);
                 }
             }
         } else {
-            destPath = position.getSegment();
+            // before or last. in the latter case the segmet is 'null'
+            destRelPath = position.getSegment();
         }
-
-        return (destPath != null) ? Text.getName(destPath) : destPath;
+        return destRelPath;
     }
 
     //--------------------------------------------------------------------------
@@ -757,23 +798,8 @@ public class DefaultItemCollection extends AbstractItemResource
     protected void initProperties() {
         super.initProperties();
         if (exists()) {
-            try {
-                String prefix = "_tmp_" + item.getName();
-                // create tmpFile in default system-tmp directory
-                content = File.createTempFile(prefix, null, null);
-                content.deleteOnExit();
-                FileOutputStream out = new FileOutputStream(content);
-                getRepositorySession().exportSystemView(item.getPath(), out, false, true);
-                out.close();
-                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, new Long(content.length())));
-                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, "text/xml"));
-
-            } catch (IOException e) {
-                log.error("Error while property initialization: "+e.getMessage());
-            } catch (RepositoryException e) {
-                log.error("Error while property initialization: "+e.getMessage());
-            }
-
+            // resource is serialized as system-view (xml)
+            properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, "text/xml"));
             Node n = (Node)item;
             // overwrite the default modificationtime if possible
             try {
@@ -859,5 +885,35 @@ public class DefaultItemCollection extends AbstractItemResource
             l.add(itemIterator.next());
         }
         addHrefProperty(name, (Item[]) l.toArray(new Item[l.size()]), isProtected);
+    }
+
+    /**
+     * Tries to parse the given input stream as xml document and build a
+     * {@link ValuesProperty} out of it.
+     *
+     * @param in
+     * @return values property or 'null' if the given stream cannot be parsed
+     * into an XML document or if build the property fails.
+     */
+    private ValuesProperty buildValuesProperty(InputStream in) {
+        String errorMsg = "Cannot parse stream into a 'ValuesProperty'.";
+        try {
+            Document reqBody = DomUtil.BUILDER_FACTORY.newDocumentBuilder().parse(in);
+            DavProperty defaultProp = DefaultDavProperty.createFromXml(reqBody.getDocumentElement());
+            ValuesProperty vp = new ValuesProperty(defaultProp, PropertyType.STRING);
+            return vp;
+        } catch (IOException e) {
+            log.debug(errorMsg, e);
+        } catch (ParserConfigurationException e) {
+            log.debug(errorMsg, e);
+        } catch (SAXException e) {
+            log.debug(errorMsg, e);
+        } catch (DavException e) {
+            log.debug(errorMsg, e);
+        } catch (RepositoryException e) {
+            log.debug(errorMsg, e);
+        }
+        // cannot parse request body into a 'values' property
+        return null;
     }
 }

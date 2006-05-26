@@ -46,7 +46,6 @@ import org.apache.jackrabbit.webdav.ordering.OrderingResource;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
@@ -434,25 +433,15 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                                DavResource resource)
             throws IOException, DavException {
 
-        DavPropertySet setProperties = request.getPropPatchSetProperties();
-        DavPropertyNameSet removeProperties = request.getPropPatchRemoveProperties();
-        if (setProperties.isEmpty() && removeProperties.isEmpty()) {
+        List changeList = request.getPropPatchChangeList();
+        if (changeList.isEmpty()) {
             response.sendError(DavServletResponse.SC_BAD_REQUEST);
             return;
         }
 
         MultiStatus ms = new MultiStatus();
-        try {
-            MultiStatusResponse msr = resource.alterProperties(setProperties, removeProperties);
-            ms.addResponse(msr);
-        } catch (DavException e) {
-            /* NOTE: known bug with litmus, which expects the exception (e.g. 423)
-               to the set instead of the MultiStatus Code. RFC 2518 explicitely
-               expects the errors to be included in the multistatus.
-               Remove the catch if this turns out to be an problem with clients
-               in general. */
-            ms.addResourceStatus(resource, e.getErrorCode(), DEPTH_0);
-        }
+        MultiStatusResponse msr = resource.alterProperties(changeList);
+        ms.addResponse(msr);
         response.sendMultiStatus(ms);
     }
 

@@ -15,12 +15,15 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.w3c.dom.Document;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * <code>DavServletRequest</code> extends the HttpServletRequest by Webdav
@@ -153,6 +156,7 @@ public interface DavServletRequest extends HttpServletRequest {
      * @return set of properties the client wanted to modify / create with a
      * PROPPATCH request.
      * @throws DavException In case of invalid request body
+     * @deprecated use {@link #getPropPatchChangeList()} instead
      */
     public DavPropertySet getPropPatchSetProperties() throws DavException;
 
@@ -168,8 +172,20 @@ public interface DavServletRequest extends HttpServletRequest {
      * @return set of property names the client wanted to remove with a
      * PROPPATCH request.
      * @throws DavException In case of invalid request body
+     * @deprecated use {@link #getPropPatchChangeList()} instead
      */
     public DavPropertyNameSet getPropPatchRemoveProperties() throws DavException;
+
+     /**
+      * Return a {@link List} of property change operations. Each entry
+      * is either of type {@link DavPropertyName}, indicating a &lt;remove&gt;
+      * operation, or of type {@link DavProperty}, indicating a &lt;set&gt;
+      * operation. Note that ordering is significant here.
+      * 
+      * @return {@link List} of property change operations
+      * @throws DavException In case of invalid request body
+      */
+     public List getPropPatchChangeList() throws DavException;
 
     /**
      * Return the parsed 'lockinfo' request body, the {@link DavConstants#HEADER_TIMEOUT

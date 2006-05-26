@@ -23,19 +23,24 @@ import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.property.LengthsProperty;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.server.io.IOUtil;
+import org.apache.xml.serialize.OutputFormat;
+import org.apache.xml.serialize.XMLSerializer;
 import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
 
 import javax.jcr.Item;
 import javax.jcr.Property;
@@ -43,9 +48,13 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>DefaultItemResource</code> represents JCR property item.
@@ -80,31 +89,50 @@ public class DefaultItemResource extends AbstractItemResource {
 
     /**
      * In case an underlying repository {@link Property property} exists the following
-     * logic is applyed to obtain the stream:<ul>
-     * <li>Property is not multivalue: Return the {@link javax.jcr.Value#getStream()
+     * logic is applyed to spool the property content:
+     * <ul>
+     * <li>Property is not multi valued: Return the {@link javax.jcr.Value#getStream()
      * stream representation} of the property value.</li>
-     * <li>Property is multivalue: Return stream that provides the system view of
-     * that item.</li>
+     * <li>Property is multivalue: Return the xml representation of the values.</li>
      * </ul>
      *
-     * @return
+     * @param outputContext
+     * @see DavResource#spool(OutputContext)
      */
-    InputStream getStream() {
+    public void spool(OutputContext outputContext) throws IOException {
+        // write properties
+        super.spool(outputContext);
+        // spool content
         InputStream in = null;
-        if (exists()) {
-            try {
-                // NOTE: stream cannot be obtained for multivalue properties
-                if (!isMultiple()) {
+        try {
+            OutputStream out = outputContext.getOutputStream();
+            if (out != null && exists()) {
+                if (isMultiple()) {
+                    Document doc = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
+                    doc.appendChild(getProperty(JCR_VALUES).toXml(doc));
+                    OutputFormat format = new OutputFormat("xml", "UTF-8", false);
+                    XMLSerializer serializer = new XMLSerializer(out, format);
+                    serializer.setNamespaces(true);
+                    serializer.asDOMSerializer().serialize(doc);
+                } else {
                     in = ((Property)item).getStream();
+                    if (in != null) {
+                        IOUtil.spool(in, out);
+                    }
                 }
-            } catch (ValueFormatException e) {
-                // should not occur
-                log.error("Cannot obtain stream from resource: " + e.getMessage());
-            } catch (RepositoryException e) {
-                log.error("Cannot obtain stream from resource: " + e.getMessage());
+            }
+        } catch (ParserConfigurationException e) {
+            log.error("Error while spooling multivalued resource: " + e.getMessage());
+        } catch (ValueFormatException e) {
+            // should not occur
+            log.error("Cannot obtain stream from resource: " + e.getMessage());
+        } catch (RepositoryException e) {
+            log.error("Cannot obtain stream from resource: " + e.getMessage());
+        } finally {
+            if (in != null) {
+                in.close();
             }
         }
-        return in;
     }
 
     /**
@@ -166,35 +194,31 @@ public class DefaultItemResource extends AbstractItemResource {
     }
 
     /**
-     * Loops over the given <code>Set</code>s and alters the properties accordingly.
+     * Loops over the given <code>List</code> and alters the properties accordingly.
      * Changes are persisted at the end only according to the rules defined with
      * the {@link #complete()} method.<p>
      * Please note: since there is only a single property than can be set
      * from a client (i.e. jcr:value OR jcr:values) this method either succeeds
      * or throws an exception, even if this violates RFC 2518.
      *
-     * @param setProperties
-     * @param removePropertyNames
+     * @param changeList
      * @throws DavException
-     * @see DavResource#alterProperties(DavPropertySet, DavPropertyNameSet)
+     * @see DavResource#alterProperties(List)
      */
-    public MultiStatusResponse alterProperties(DavPropertySet setProperties,
-                                DavPropertyNameSet removePropertyNames)
-        throws DavException {
-
-        // altering any properties fails if an attempt is made to remove a property
-        if (removePropertyNames != null && !removePropertyNames.isEmpty()) {
-            Iterator it = removePropertyNames.iterator();
-            while (it.hasNext()) {
+    public MultiStatusResponse alterProperties(List changeList) throws DavException {
+        Iterator it = changeList.iterator();
+        while (it.hasNext()) {
+            Object propEntry = it.next();
+            if (propEntry instanceof DavPropertyName) {
+                // altering any properties fails if an attempt is made to remove
+                // a property
                 throw new DavException(DavServletResponse.SC_FORBIDDEN);
+            } else if (propEntry instanceof DavProperty) {
+                DavProperty prop = (DavProperty) propEntry;
+                internalSetProperty(prop);
+            } else {
+                throw new IllegalArgumentException("unknown object in change list: " + propEntry.getClass().getName());
             }
-        }
-
-        // only set/add >> existance of resource is checked inside internal method
-        DavPropertyIterator setIter = setProperties.iterator();
-        while (setIter.hasNext()) {
-            DavProperty prop = setIter.nextProperty();
-            internalSetProperty(prop);
         }
         complete();
         return new MultiStatusResponse(getHref(), DavServletResponse.SC_OK);
@@ -265,8 +289,11 @@ public class DefaultItemResource extends AbstractItemResource {
                 String contentType;
                 if (!isMultiple()) {
                     contentType = (type == PropertyType.BINARY) ? "application/octet-stream" : "text/plain";
-                    properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, contentType));
-                } // else: no contenttype for multivalue properties
+                } else {
+                    contentType = "text/xml";
+                }
+                properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, contentType));
+                
 
                 // add jcr-specific resource properties
                 properties.add(new DefaultDavProperty(JCR_TYPE, PropertyType.nameFromValue(type)));
@@ -275,7 +302,11 @@ public class DefaultItemResource extends AbstractItemResource {
                     properties.add(new LengthsProperty(prop.getLengths()));
                 } else {
                     properties.add(new ValuesProperty(prop.getValue()));
-                    properties.add(new DefaultDavProperty(JCR_LENGTH, String.valueOf(prop.getLength()), true));
+                    long length = prop.getLength();
+                    properties.add(new DefaultDavProperty(JCR_LENGTH, String.valueOf(length), true));
+                    if (prop.getLength() > IOUtil.UNDEFINED_LENGTH) {
+                        properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, String.valueOf(length)));
+                    }
                 }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve resource properties: "+e.getMessage());

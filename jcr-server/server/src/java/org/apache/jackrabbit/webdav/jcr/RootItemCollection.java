@@ -22,8 +22,6 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.log4j.Logger;
 
 import javax.jcr.Item;
@@ -31,6 +29,7 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.List;
 
 /**
  * <code>RootItemCollection</code> represents the root node of the underlying
@@ -137,13 +136,23 @@ public class RootItemCollection extends VersionControlledItemCollection {
      * @see #setProperty(DavProperty)
      * @see DefaultItemCollection#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
      */
-    public MultiStatusResponse alterProperties(DavPropertySet setProperties, DavPropertyNameSet removePropertyNames) throws DavException {
+    public MultiStatusResponse alterProperties(List changeList) throws DavException {
         // TODO: respect order of the set and do not persist if super.alterProperties fails
-        if (setProperties.contains(JCR_NAMESPACES)) {
-            setProperty(setProperties.remove(JCR_NAMESPACES));
+        DavProperty namespaceProp = null;
+        Iterator it = changeList.iterator();
+        while (it.hasNext()) {
+            Object propEntry = it.next();
+            if (propEntry instanceof DavProperty && JCR_NAMESPACES.equals(((DavProperty)propEntry).getName())) {
+                namespaceProp = (DavProperty) propEntry;
+                break;
+            }
+        }
+        if (namespaceProp != null) {
+            setProperty(namespaceProp);
+            changeList.remove(namespaceProp);
         }
         // let super-class handle the rest of the properties
-        return super.alterProperties(setProperties, removePropertyNames);
+        return super.alterProperties(changeList);
     }
 
     //--------------------------------------------------------------------------
