@@ -741,6 +741,9 @@ public class SearchIndex extends AbstractQueryHandler {
                 filters.add(filter);
             } catch (Exception e) {
                 log.warn("Invalid TextFilter class: " + className, e);
+            } catch (LinkageError e) {
+                log.warn("Missing dependency for text filter: " + className);
+                log.warn(e.toString());
             }
         }
         textFilters = Collections.unmodifiableList(filters);
