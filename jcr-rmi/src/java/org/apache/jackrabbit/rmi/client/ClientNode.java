@@ -119,9 +119,14 @@ public class ClientNode extends ClientItem implements Node {
     public Property setProperty(String name, Value value)
             throws RepositoryException {
         try {
-            RemoteProperty property =
-                remote.setProperty(name, SerialValueFactory.makeSerialValue(value));
-            return getFactory().getProperty(getSession(), property);
+            if (value == null) {
+                remote.setProperty(name, (Value) null);
+                return null;
+            } else {
+                RemoteProperty property = remote.setProperty(
+                        name, SerialValueFactory.makeSerialValue(value));
+                return getFactory().getProperty(getSession(), property);
+            }
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -131,9 +136,14 @@ public class ClientNode extends ClientItem implements Node {
     public Property setProperty(String name, Value[] values)
             throws RepositoryException {
         try {
-            Value[] serials = SerialValueFactory.makeSerialValueArray(values);
-            RemoteProperty property = remote.setProperty(name, serials);
-            return getFactory().getProperty(getSession(), property);
+            if (values == null) {
+                remote.setProperty(name, (Value[]) null);
+                return null;
+            } else {
+                Value[] serials = SerialValueFactory.makeSerialValueArray(values);
+                RemoteProperty property = remote.setProperty(name, serials);
+                return getFactory().getProperty(getSession(), property);
+            }
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -142,23 +152,35 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public Property setProperty(String name, String[] strings)
             throws RepositoryException {
-        Value[] values = new Value[strings.length];
-        for (int i = 0; i < strings.length; i++) {
-            values[i] = getSession().getValueFactory().createValue(strings[i]);
+        if (strings == null) {
+            return setProperty(name, (Value[]) null);
+        } else {
+            Value[] values = new Value[strings.length];
+            for (int i = 0; i < strings.length; i++) {
+                values[i] = getSession().getValueFactory().createValue(strings[i]);
+            }
+            return setProperty(name, values);
         }
-        return setProperty(name, values);
     }
 
     /** {@inheritDoc} */
     public Property setProperty(String name, String value)
             throws RepositoryException {
-        return setProperty(name, getSession().getValueFactory().createValue(value));
+        if (value == null) {
+            return setProperty(name, (Value) null);
+        } else {
+            return setProperty(name, getSession().getValueFactory().createValue(value));
+        }
     }
 
     /** {@inheritDoc} */
     public Property setProperty(String name, InputStream value)
             throws RepositoryException {
-        return setProperty(name, getSession().getValueFactory().createValue(value));
+        if (value == null) {
+            return setProperty(name, (Value) null);
+        } else {
+            return setProperty(name, getSession().getValueFactory().createValue(value));
+        }
     }
 
     /** {@inheritDoc} */
@@ -182,13 +204,21 @@ public class ClientNode extends ClientItem implements Node {
     /** {@inheritDoc} */
     public Property setProperty(String name, Calendar value)
             throws RepositoryException {
-        return setProperty(name, getSession().getValueFactory().createValue(value));
+        if (value == null) {
+            return setProperty(name, (Value) null);
+        } else {
+            return setProperty(name, getSession().getValueFactory().createValue(value));
+        }
     }
 
     /** {@inheritDoc} */
     public Property setProperty(String name, Node value)
             throws RepositoryException {
-        return setProperty(name, getSession().getValueFactory().createValue(value));
+        if (value == null) {
+            return setProperty(name, (Value) null);
+        } else {
+            return setProperty(name, getSession().getValueFactory().createValue(value));
+        }
     }
 
     /** {@inheritDoc} */
