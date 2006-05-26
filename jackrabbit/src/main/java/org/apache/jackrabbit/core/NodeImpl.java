@@ -3804,9 +3804,12 @@ public class NodeImpl extends ItemImpl implements Node {
                 // only remove OPV=Copy nodes
                 n.internalRemove(true);
             } else if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
-                // only remove, if node to be restored does not contain child
-                UUID vhUUID = new UUID(n.getProperty(QName.JCR_VERSIONHISTORY).getString());
-                if (!freeze.hasFrozenHistory(vhUUID)) {
+                // only remove, if node to be restored does not contain child,
+                // or if restored child is not versionable
+                UUID vhUUID = n.hasProperty(QName.JCR_VERSIONHISTORY)
+                        ? new UUID(n.getProperty(QName.JCR_VERSIONHISTORY).getString())
+                        : null;
+                if (vhUUID == null || !freeze.hasFrozenHistory(vhUUID)) {
                     n.internalRemove(true);
                 }
             }
