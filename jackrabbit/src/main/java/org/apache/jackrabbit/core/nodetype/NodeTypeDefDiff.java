@@ -300,7 +300,7 @@ public class NodeTypeDefDiff {
 
         NodeDef[] cnda2 = newDef.getChildNodeDefs();
         HashMap defs2 = new HashMap();
-        for (int i = 0; i < cnda1.length; i++) {
+        for (int i = 0; i < cnda2.length; i++) {
             defs2.put(cnda2[i].getId(), cnda2[i]);
         }
 
