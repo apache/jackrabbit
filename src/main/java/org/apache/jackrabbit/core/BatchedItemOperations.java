@@ -1622,19 +1622,11 @@ public class BatchedItemOperations extends ItemValidator {
                         NodeState existingState = (NodeState) stateMgr.getItemState(id);
                         // make sure existing node is not the parent
                         // or an ancestor thereof
-                        Path p0 = hierMgr.getPath(destParentId);
-                        Path p1 = hierMgr.getPath(id);
-                        try {
-                            if (p1.equals(p0) || p1.isAncestorOf(p0)) {
-                                String msg = "cannot remove ancestor node";
-                                log.debug(msg);
-                                throw new RepositoryException(msg);
-                            }
-                        } catch (MalformedPathException mpe) {
-                            // should never get here...
-                            String msg = "internal error: failed to determine degree of relationship";
-                            log.error(msg, mpe);
-                            throw new RepositoryException(msg, mpe);
+                        if (id.equals(destParentId) 
+                                || hierMgr.isAncestor(id, destParentId)) {
+                            String msg = "cannot remove ancestor node";
+                            log.debug(msg);
+                            throw new RepositoryException(msg);
                         }
 
                         // check if existing can be removed
