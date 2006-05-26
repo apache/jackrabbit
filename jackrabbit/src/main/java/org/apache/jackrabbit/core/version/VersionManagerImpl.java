@@ -15,50 +15,50 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
-import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PersistenceManager;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.state.PersistenceManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.MalformedPathException;
 
-import javax.jcr.PropertyType;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
 import javax.jcr.Session;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionException;
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.version.VersionHistory;
-import java.util.ArrayList;
+import javax.jcr.version.VersionException;
+import javax.jcr.version.Version;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * This Class implements a VersionManager.
  */
 public class VersionManagerImpl extends AbstractVersionManager
-        implements EventStateCollectionFactory {
+        /*implements EventStateCollectionFactory*/ {
 
     /**
      * the default logger
@@ -104,24 +104,14 @@ public class VersionManagerImpl extends AbstractVersionManager
     private NodeTypeRegistry ntReg;
 
     /**
-     * the observation manager
+     * the dynamic event state collection factory
      */
-    private DelegatingObservationDispatcher obsMgr;
+    private final DynamicESCFactory escFactory;
 
     /**
      * Map of returned items. this is kept for invalidating
      */
     private ReferenceMap versionItems = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
-
-    /**
-     * Session to be used when creating observation events.
-     */
-    private transient SessionImpl eventSource;
-
-    /**
-     * workaround for potential deadlock
-     */
-    private final Object eventSourceLock = new Object();
 
     /**
      * Creates a bew vesuion manager
@@ -133,7 +123,7 @@ public class VersionManagerImpl extends AbstractVersionManager
         try {
             this.pMgr = pMgr;
             this.ntReg = ntReg;
-            this.obsMgr = obsMgr;
+            this.escFactory = new DynamicESCFactory(obsMgr);
 
             // need to store the version storage root directly into the persistence manager
             if (!pMgr.exists(rootId)) {
@@ -156,7 +146,7 @@ public class VersionManagerImpl extends AbstractVersionManager
             }
             sharedStateMgr =
                     new VersionItemStateManager(pMgr, rootId, ntReg);
-            stateMgr = new LocalItemStateManager(sharedStateMgr, this);
+            stateMgr = new LocalItemStateManager(sharedStateMgr, escFactory);
             NodeState nodeState = (NodeState) stateMgr.getItemState(rootId);
             historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, QName.JCR_VERSIONSTORAGE);
 
@@ -183,22 +173,28 @@ public class VersionManagerImpl extends AbstractVersionManager
     }
 
     /**
+     * Returns the event state collection factory.
+     * @return the event state collection factory.
+     */
+    public DynamicESCFactory getEscFactory() {
+        return escFactory;
+    }
+
+    /**
      * {@inheritDoc}
      * <p/>
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public VersionHistory createVersionHistory(Session session, NodeState node)
+    public VersionHistory createVersionHistory(Session session, final NodeState node)
             throws RepositoryException {
 
-        InternalVersionHistory history;
-        synchronized (eventSourceLock) {
-            // This needs to be synchronized since it sets the event source
-            // to be used when creating the events to be dispatched later on.
-            eventSource = (SessionImpl) session;
-
-            history = createVersionHistory(node);
-        }
+        InternalVersionHistory history = (InternalVersionHistory)
+                escFactory.doSourced((SessionImpl) session, new SourcedTarget(){
+            public Object run() throws RepositoryException {
+                return createVersionHistory(node);
+            }
+        });
 
         if (history == null) {
             throw new VersionException("History already exists for node " + node.getNodeId());
@@ -257,26 +253,26 @@ public class VersionManagerImpl extends AbstractVersionManager
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public Version checkin(NodeImpl node) throws RepositoryException {
-        InternalVersion version;
+    public Version checkin(final NodeImpl node) throws RepositoryException {
+        InternalVersion version = (InternalVersion)
+                escFactory.doSourced((SessionImpl) node.getSession(), new SourcedTarget(){
+            public Object run() throws RepositoryException {
+                String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
+                InternalVersion version = checkin((InternalVersionHistoryImpl)
+                        getVersionHistory(NodeId.valueOf(histUUID)), node);
 
-        synchronized (eventSourceLock) {
-            // This  needs to be synchronized since it sets the event source
-            // to be used when creating the events to be dispatched later on.
-            eventSource = (SessionImpl) node.getSession();
-
-            String histUUID = node.getProperty(QName.JCR_VERSIONHISTORY).getString();
-            version = checkin((InternalVersionHistoryImpl)
-                    getVersionHistory(NodeId.valueOf(histUUID)), node);
-
-            // invalidate predecessors successor properties
-            InternalVersion[] preds = version.getPredecessors();
-            for (int i = 0; i < preds.length; i++) {
-                PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
-                versProvider.onPropertyChanged(propId);
+                // invalidate predecessors successor properties
+                InternalVersion[] preds = version.getPredecessors();
+                for (int i = 0; i < preds.length; i++) {
+                    PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
+                    versProvider.onPropertyChanged(propId);
+                }
+                return version;
             }
-        }
-        return (AbstractVersion) eventSource.getNodeById(version.getId());
+        });
+
+        return (AbstractVersion)
+                ((SessionImpl) node.getSession()).getNodeById(version.getId());
     }
 
     /**
@@ -285,34 +281,32 @@ public class VersionManagerImpl extends AbstractVersionManager
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public void removeVersion(VersionHistory history, QName name)
+    public void removeVersion(VersionHistory history, final QName name)
             throws VersionException, RepositoryException {
 
-        AbstractVersionHistory historyImpl = (AbstractVersionHistory) history;
+        final AbstractVersionHistory historyImpl = (AbstractVersionHistory) history;
         if (!historyImpl.hasNode(name)) {
             throw new VersionException("Version with name " + name.toString()
                     + " does not exist in this VersionHistory");
         }
 
-        synchronized (eventSourceLock) {
-            // This needs to be synchronized since it sets the event source
-            // to be used when creating the events to be dispatched later on.
-            eventSource = (SessionImpl) history.getSession();
+        escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget(){
+            public Object run() throws RepositoryException {
+                AbstractVersion version = (AbstractVersion) historyImpl.getNode(name);
+                InternalVersion[] preds = version.getInternalVersion().getPredecessors();
 
-            // save away predecessors before removing version
-            AbstractVersion version = (AbstractVersion) historyImpl.getNode(name);
-            InternalVersion preds[] = version.getInternalVersion().getPredecessors();
+                InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
+                        historyImpl.getInternalVersionHistory();
+                removeVersion(vh, name);
 
-            InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                    historyImpl.getInternalVersionHistory();
-            removeVersion(vh, name);
-
-            // invalidate predecessors successor properties
-            for (int i = 0; i < preds.length; i++) {
-                PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
-                versProvider.onPropertyChanged(propId);
+                // invalidate predecessors successor properties
+                for (int i = 0; i < preds.length; i++) {
+                    PropertyId propId = new PropertyId(preds[i].getId(), QName.JCR_SUCCESSORS);
+                    versProvider.onPropertyChanged(propId);
+                }
+                return null;
             }
-        }
+        });
     }
 
     /**
@@ -321,26 +315,25 @@ public class VersionManagerImpl extends AbstractVersionManager
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public Version setVersionLabel(VersionHistory history,
-                                                QName version, QName label,
-                                                boolean move)
+    public Version setVersionLabel(final VersionHistory history,
+                                   final QName version, final QName label,
+                                   final boolean move)
             throws RepositoryException {
 
-        AbstractVersionHistory historyImpl = (AbstractVersionHistory) history;
-        InternalVersion v;
-        synchronized (eventSourceLock) {
-            // This  needs to be synchronized since it sets the event source
-            // to be used when creating the events to be dispatched later on.
-            eventSource = (SessionImpl) history.getSession();
+        InternalVersion v = (InternalVersion)
+                escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget(){
+            public Object run() throws RepositoryException {
+                InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
+                        ((AbstractVersionHistory) history).getInternalVersionHistory();
+                return setVersionLabel(vh, version, label, move);
+            }
+        });
 
-            InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                    historyImpl.getInternalVersionHistory();
-            v = setVersionLabel(vh, version, label, move);
-        }
         if (v == null) {
             return null;
         } else {
-            return (Version) eventSource.getNodeByUUID(v.getId().getUUID());
+            return (Version)
+                    ((SessionImpl) history.getSession()).getNodeByUUID(v.getId().getUUID());
         }
     }
 
@@ -448,34 +441,6 @@ public class VersionManagerImpl extends AbstractVersionManager
         return sharedStateMgr;
     }
 
-    //------------------------------------------< EventStateCollectionFactory >
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * This object uses one instance of a <code>LocalItemStateManager</code>
-     * to update data on behalf of many sessions. In order to maintain the
-     * association between update operation and session who actually invoked
-     * the update, an internal event source is used.
-     */
-    public synchronized EventStateCollection createEventStateCollection()
-            throws RepositoryException {
-
-        if (eventSource == null) {
-            throw new RepositoryException("Unknown event source.");
-        }
-        return createEventStateCollection(eventSource);
-    }
-
-    /**
-     * Creates an {@link EventStateCollection} using the given <code>source</code>.
-     * @param source the Session that did the changes.
-     * @return <code>EventStateCollection</code>.
-     */
-    EventStateCollection createEventStateCollection(SessionImpl source) {
-        return obsMgr.createEventStateCollection(source, VERSION_STORAGE_PATH);
-    }
-
     //--------------------------------------------------------< inner classes >
     /**
      * Spezialized SharedItemStateManager that filters out NodeReferences to
@@ -508,5 +473,76 @@ public class VersionManagerImpl extends AbstractVersionManager
             }
         }
 
+    }
+
+    public static final class DynamicESCFactory implements EventStateCollectionFactory {
+
+        /**
+         * the observation manager
+         */
+        private DelegatingObservationDispatcher obsMgr;
+
+        /**
+         * the current event source
+         */
+        private SessionImpl source;
+
+
+        /**
+         * Creates a new event state collection factory
+         * @param obsMgr
+         */
+        public DynamicESCFactory(DelegatingObservationDispatcher obsMgr) {
+            this.obsMgr = obsMgr;
+        }
+
+        /**
+         * {@inheritDoc}
+         * <p/>
+         * This object uses one instance of a <code>LocalItemStateManager</code>
+         * to update data on behalf of many sessions. In order to maintain the
+         * association between update operation and session who actually invoked
+         * the update, an internal event source is used.
+         */
+        public synchronized EventStateCollection createEventStateCollection()
+                throws RepositoryException {
+            if (source == null) {
+                throw new RepositoryException("Unknown event source.");
+            }
+            return createEventStateCollection(source);
+        }
+
+        /**
+         * {@inheritDoc}
+         * <p/>
+         * This object uses one instance of a <code>LocalItemStateManager</code>
+         * to update data on behalf of many sessions. In order to maintain the
+         * association between update operation and session who actually invoked
+         * the update, an internal event source is used.
+         */
+        public EventStateCollection createEventStateCollection(SessionImpl source) {
+            return obsMgr.createEventStateCollection(source, VERSION_STORAGE_PATH);
+        }
+
+        /**
+         * Executes the given runnable using the given event source.
+         *
+         * @param eventSource
+         * @param runnable
+         * @throws RepositoryException
+         */
+        public synchronized Object doSourced(SessionImpl eventSource, SourcedTarget runnable)
+                throws RepositoryException {
+            this.source = eventSource;
+            try {
+                return runnable.run();
+            } finally {
+                this.source = null;
+            }
+        }
+    }
+
+    private abstract class SourcedTarget {
+        public abstract Object run() throws RepositoryException;
     }
 }
