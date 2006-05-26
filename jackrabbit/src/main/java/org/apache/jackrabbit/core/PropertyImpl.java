@@ -293,10 +293,9 @@ public class PropertyImpl extends ItemImpl implements Property {
             for (int i = 0; i < oldValues.length; i++) {
                 InternalValue old = oldValues[i];
                 if (old != null && old.getType() == PropertyType.BINARY) {
-                    // BINARY value
-                    BLOBFileValue blob = (BLOBFileValue) old.internalValue();
-                    blob.discard();
-                    blob = null; // gc hint
+                    // make sure temporarily allocated data is discarded
+                    // before overwriting it
+                    ((BLOBFileValue) old.internalValue()).discard();
                 }
             }
         }

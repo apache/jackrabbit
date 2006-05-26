@@ -82,7 +82,9 @@ public class BLOBFileValue implements Value {
     private final File file;
 
     /**
-     * flag indicating if this instance is backed by a temporarily allocated resource/buffer
+     * flag indicating if this instance represents a <i>temporary</i> value
+     * whose dynamically allocated resources can be explicitly freed on
+     * {@link #discard()}.
      */
     private final boolean temp;
 
@@ -106,12 +108,37 @@ public class BLOBFileValue implements Value {
      * <code>InputStream</code>. The contents of the stream is spooled
      * to a temporary file or to a byte buffer if its size is smaller than
      * {@link #MAX_BUFFER_SIZE}.
+     * <p/>
+     * The new instance represents a <i>temporary</i> value whose dynamically
+     * allocated resources will be freed explicitly on {@link #discard()}.
      *
      * @param in stream to be represented as a <code>BLOBFileValue</code> instance
      * @throws IOException if an error occurs while reading from the stream or
      *                     writing to the temporary file
      */
     public BLOBFileValue(InputStream in) throws IOException {
+        this(in, true);
+    }
+
+    /**
+     * Creates a new <code>BLOBFileValue</code> instance from an
+     * <code>InputStream</code>. The contents of the stream is spooled
+     * to a temporary file or to a byte buffer if its size is smaller than
+     * {@link #MAX_BUFFER_SIZE}.
+     * <p/>
+     * The <code>temp</code> parameter governs whether dynamically allocated
+     * resources will be freed explicitly on {@link #discard()}. Note that any
+     * dynamically allocated resources (temp file/buffer) will be freed
+     * implicitly once this instance has been gc'ed.
+     *
+     * @param in stream to be represented as a <code>BLOBFileValue</code> instance
+     * @param temp flag indicating whether this instance represents a
+     *             <i>temporary</i> value whose resources can be explicitly freed
+     *             on {@link #discard()}.
+     * @throws IOException if an error occurs while reading from the stream or
+     *                     writing to the temporary file
+     */
+    public BLOBFileValue(InputStream in, boolean temp) throws IOException {
         byte[] spoolBuffer = new byte[0x2000];
         int read;
         int len = 0;
@@ -151,8 +178,7 @@ public class BLOBFileValue implements Value {
         // init vars
         file = spoolFile;
         fsResource = null;
-        // this instance is backed by a temporarily allocated resource/buffer
-        temp = true;
+        this.temp = temp;
     }
 
     /**

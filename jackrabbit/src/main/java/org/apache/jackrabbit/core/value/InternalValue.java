@@ -234,6 +234,16 @@ public class InternalValue {
 
     /**
      * @param value
+     * @param temp
+     * @return
+     * @throws IOException
+     */
+    public static InternalValue create(InputStream value, boolean temp) throws IOException {
+        return new InternalValue(new BLOBFileValue(value, temp));
+    }
+
+    /**
+     * @param value
      * @return
      * @throws IOException
      */
