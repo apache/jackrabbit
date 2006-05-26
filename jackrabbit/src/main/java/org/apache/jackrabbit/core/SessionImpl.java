@@ -1164,6 +1164,10 @@ public class SessionImpl implements Session, Dumpable {
             return;
         }
 
+        // discard any pending changes first as those might
+        // interfere with subsequent operations
+        itemStateMgr.disposeAllTransientItemStates();
+
         // notify listeners that session is about to be closed
         notifyLoggingOut();
 
