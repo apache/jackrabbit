@@ -37,6 +37,7 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collections;
 
 /**
  * Session extension that provides XA support.
@@ -52,7 +53,7 @@ public class XASessionImpl extends SessionImpl
     /**
      * Global transactions
      */
-    private static final Map txGlobal = new HashMap();
+    private static final Map txGlobal = Collections.synchronizedMap(new HashMap());
 
     /**
      * Default transaction timeout, in seconds.
@@ -321,6 +322,8 @@ public class XASessionImpl extends SessionImpl
             tx.prepare();
         }
         tx.commit();
+
+        txGlobal.remove(xid);
     }
 
     /**
@@ -332,6 +335,8 @@ public class XASessionImpl extends SessionImpl
             throw new XAException(XAException.XAER_NOTA);
         }
         tx.rollback();
+
+        txGlobal.remove(xid);
     }
 
     /**
