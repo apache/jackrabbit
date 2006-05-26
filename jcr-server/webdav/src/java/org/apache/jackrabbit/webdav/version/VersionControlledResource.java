@@ -79,9 +79,9 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 public interface VersionControlledResource extends VersionableResource {
 
     /**
-     * Methods defined for a checked-in version-controlled resource: CHECKOUT, UNCHECHKOUT, UPDATE, MERGE, LABEL
+     * Methods defined for a checked-in version-controlled resource: CHECKOUT, UPDATE, MERGE, LABEL
      */
-    public String methods_checkedIn = "CHECKOUT, UNCHECHKOUT, UPDATE, MERGE, LABEL";
+    public String methods_checkedIn = "CHECKOUT, UPDATE, MERGE, LABEL";
     /**
      * Methods defined for a checked-out version-controlled resource: CHECKIN, MERGE
      */
