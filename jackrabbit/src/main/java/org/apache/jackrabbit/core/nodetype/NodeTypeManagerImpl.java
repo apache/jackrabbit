@@ -21,6 +21,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.IteratorHelper;
+import org.apache.jackrabbit.util.name.NamespaceMapping;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
@@ -356,8 +357,9 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                 return registerNodeTypes(new InputSource(in));
             } else if (contentType.equalsIgnoreCase(
                     JackrabbitNodeTypeManager.TEXT_X_JCR_CND)) {
+                NamespaceMapping mapping = new NamespaceMapping(nsResolver);
                 CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
-                        new InputStreamReader(in), "cnd input stream");
+                        new InputStreamReader(in), "cnd input stream", mapping);
                 return registerNodeTypes(reader.getNodeTypeDefs());
             } else {
                 throw new UnsupportedOperationException(
