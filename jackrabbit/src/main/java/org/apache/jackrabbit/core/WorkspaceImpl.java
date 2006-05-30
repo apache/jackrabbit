@@ -19,16 +19,16 @@ package org.apache.jackrabbit.core;
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
-import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.core.version.GenericVersionSelector;
-import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.version.AbstractVersion;
+import org.apache.jackrabbit.core.version.DateVersionSelector;
+import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
@@ -612,7 +612,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
                 Version v = (Version) toRestore.get(versionHistory.getUUID());
                 if (v == null) {
                     // select latest one
-                    v = GenericVersionSelector.selectByDate(versionHistory, null);
+                    v = DateVersionSelector.selectByDate(versionHistory, null);
                 }
                 return v;
             }

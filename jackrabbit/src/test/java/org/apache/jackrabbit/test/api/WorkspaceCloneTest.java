@@ -50,6 +50,24 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
     }
 
     /**
+     * If successful, the changes are persisted immediately, there is no need to
+     * call save.
+     */
+    public void testCloneNodesTwice() throws RepositoryException {
+        // clone referenceable node below non-referenceable node
+        String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
+
+        Node folder = node1.addNode("folder");
+        folder.addMixin("mix:referenceable");
+        node1.save();
+        workspaceW2.clone(workspace.getName(), node1.getPath(), dstAbsPath, true);
+        workspaceW2.clone(workspace.getName(), node1.getPath(), dstAbsPath, true);
+
+        // there should not be any pending changes after clone
+        assertFalse(superuserW2.hasPendingChanges());
+    }
+
+    /**
      * A NoSuchWorkspaceException is thrown if srcWorkspace does not exist.
      */
     public void testCloneNodesInvalidWorkspace() throws RepositoryException {
