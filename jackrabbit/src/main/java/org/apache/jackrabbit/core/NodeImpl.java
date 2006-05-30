@@ -33,12 +33,13 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.version.GenericVersionSelector;
+import org.apache.jackrabbit.core.version.LabelVersionSelector;
 import org.apache.jackrabbit.core.version.InternalFreeze;
 import org.apache.jackrabbit.core.version.InternalFrozenNode;
 import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
 import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.version.AbstractVersion;
+import org.apache.jackrabbit.core.version.DateVersionSelector;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -83,6 +84,7 @@ import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2982,9 +2984,9 @@ public class NodeImpl extends ItemImpl implements Node {
         checkSessionHasPending();
         checkLock();
 
-        GenericVersionSelector gvs = new GenericVersionSelector();
-        gvs.setName(versionName);
-        internalRestore(getVersionHistory().getVersion(versionName), gvs, removeExisting);
+        Version v = getVersionHistory().getVersion(versionName);
+        DateVersionSelector gvs = new DateVersionSelector(v.getCreated());
+        internalRestore(v, gvs, removeExisting);
         // session.save/revert is done in internal restore
     }
 
@@ -3007,7 +3009,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException("Unable to restore version. Not same version history.");
         }
 
-        internalRestore(version, new GenericVersionSelector(version.getCreated()), removeExisting);
+        internalRestore(version, new DateVersionSelector(version.getCreated()), removeExisting);
         // session.save/revert is done in internal restore
     }
 
@@ -3054,7 +3056,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
 
             // recreate node from frozen state
-            node.internalRestore(version, new GenericVersionSelector(version.getCreated()), removeExisting);
+            node.internalRestore(version, new DateVersionSelector(version.getCreated()), removeExisting);
             // session.save/revert is done in internal restore
         }
     }
@@ -3076,7 +3078,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (v == null) {
             throw new VersionException("No version for label " + versionLabel + " found.");
         }
-        internalRestore(v, new GenericVersionSelector(versionLabel), removeExisting);
+        internalRestore(v, new LabelVersionSelector(versionLabel), removeExisting);
         // session.save/revert is done in internal restore
     }
 
@@ -3846,12 +3848,17 @@ public class NodeImpl extends ItemImpl implements Node {
                 InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;
                 VersionHistory history = (VersionHistory) session.getNodeById(f.getVersionHistoryId());
                 NodeId nodeId = NodeId.valueOf(history.getVersionableUUID());
+                String oldVersion = "jcr:dummy";
 
                 // check if representing versionable already exists somewhere
                 if (itemMgr.itemExists(nodeId)) {
                     NodeImpl n = session.getNodeById(nodeId);
                     if (removeExisting) {
-                        session.move(n.getPath(), getPath() + "/" + n.getName());
+                        String dstPath = getPath() + "/" + n.getName();
+                        if (!n.getPath().equals(dstPath)) {
+                            session.move(n.getPath(), dstPath);
+                        }
+                        oldVersion = n.getBaseVersion().getName();
                     } else if (n.getParent().isSame(this)) {
                         n.internalRemove(true);
                     } else {
@@ -3861,11 +3868,50 @@ public class NodeImpl extends ItemImpl implements Node {
                                 + n.safeGetJCRPath());
                     }
                 }
+                // get desired version from version selector
+                AbstractVersion v = (AbstractVersion) vsel.select(history);
+
+                // check existing version of item exists
+                NodeImpl node;
                 if (!itemMgr.itemExists(nodeId)) {
-                    // get desired version from version selector
-                    AbstractVersion v = (AbstractVersion) vsel.select(history);
-                    NodeImpl node = addNode(child.getName(), v.getFrozenNode());
-                    node.internalRestore(v, vsel, removeExisting);
+                    if (v == null) {
+                        // if version selector was unable to select version,
+                        // choose the initial one
+                        Version[] vs = history.getRootVersion().getSuccessors();
+                        if (vs.length == 0) {
+                            String msg = "Unable to select appropariate version for " +
+                                    child.getName() + " using " + vsel;
+                            log.error(msg);
+                            throw new VersionException(msg);
+                        }
+                        v = (AbstractVersion) vs[0];
+                    }
+                    node = addNode(child.getName(), v.getFrozenNode());
+                } else {
+                    node = session.getNodeById(nodeId);
+                    if (v == null || oldVersion == null || v.getName().equals(oldVersion)) {
+                        v = null;
+                    }
+                }
+                if (v != null) {
+                    try {
+                        node.internalRestore(v, vsel, removeExisting);
+                    } catch (RepositoryException e) {
+                        log.error("Error while restoring node: " + e.toString());
+                        log.error("  child path: " + node.safeGetJCRPath());
+                        log.error("  selected version: " + v.getName());
+                        StringBuffer avail = new StringBuffer();
+                        VersionIterator vi = history.getAllVersions();
+                        while (vi.hasNext()) {
+                            avail.append(vi.nextVersion().getName());
+                            if (vi.hasNext()) {
+                                avail.append(", ");
+                            }
+                        }
+                        log.error("  available versions: " + avail);
+                        log.error("  versionselector: " + vsel);
+                        throw e;
+                    }
                     // add this version to set
                     restored.add(v);
                 }

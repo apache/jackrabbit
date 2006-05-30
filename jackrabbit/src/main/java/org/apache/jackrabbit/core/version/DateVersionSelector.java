@@ -23,22 +23,24 @@ import javax.jcr.version.VersionIterator;
 import java.util.Calendar;
 
 /**
- * This Class implements a generic version selector that either selects a
- * version by name, label or creation date. If no version is found and the
- * 'returnLatest' flag is set to <code>true</code>, the latest version is
- * returned.
+ * This Class implements a version selector that selects a version by creation
+ * date. The selected version is the latest that is older or equal than the
+ * given date. If no version could be found <code>null</code> is returned
+ * unless the <code>returnLatest</code> flag is set to <code>true</code>, where
+ * the latest version is returned.
+ * <xmp>
+ * V1.0 - 02-Sep-2006
+ * V1.1 - 03-Sep-2006
+ * V1.2 - 05-Sep-2006
+ *
+ * new DateVersionSelector("03-Sep-2006").select() -> V1.1
+ * new DateVersionSelector("04-Sep-2006").select() -> V1.1
+ * new DateVersionSelector("01-Sep-2006").select() -> null
+ * new DateVersionSelector("01-Sep-2006", true).select() -> V1.2
+ * new DateVersionSelector(null, true).select() -> V1.2
+ * </xmp>
  */
-public class GenericVersionSelector implements VersionSelector {
-
-    /**
-     * a versionname hint
-     */
-    private String name = null;
-
-    /**
-     * a versionlabel hint
-     */
-    private String label = null;
+public class DateVersionSelector implements VersionSelector {
 
     /**
      * a version date hint
@@ -46,71 +48,31 @@ public class GenericVersionSelector implements VersionSelector {
     private Calendar date = null;
 
     /**
-     * flag indicating that it should return the latest version, if no other found
+     * flag indicating that it should return the latest version, if no other
+     * found
      */
-    private boolean returnLatest = true;
+    private boolean returnLatest = false;
 
     /**
-     * Creates a default <code>GenericVersionSelector</code> that always selects
-     * the latest version.
-     */
-    public GenericVersionSelector() {
-    }
-
-    /**
-     * Creates a <code>GenericVersionSelector</code> that will try to select a
-     * version with the given label.
-     *
-     * @param label
-     */
-    public GenericVersionSelector(String label) {
-        this.label = label;
-    }
-
-    /**
-     * Creates a <code>GenericVersionSelector</code> that will select the oldest
-     * version of all those that are more recent than the given date.
+     * Creates a <code>DateVersionSelector</code> that will select the latest
+     * version of all those that are older than the given date.
      *
      * @param date
      */
-    public GenericVersionSelector(Calendar date) {
+    public DateVersionSelector(Calendar date) {
         this.date = date;
     }
 
     /**
-     * Returns the name hint.
+     * Creates a <code>DateVersionSelector</code> that will select the latest
+     * version of all those that are older than the given date.
      *
-     * @return the name hint.
+     * @param date
+     * @param returnLatest
      */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Sets the name hint
-     *
-     * @param name
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Returns the label hint
-     *
-     * @return the label hint.
-     */
-    public String getLabel() {
-        return label;
-    }
-
-    /**
-     * Sets the label hint
-     *
-     * @param label
-     */
-    public void setLabel(String label) {
-        this.label = label;
+    public DateVersionSelector(Calendar date, boolean returnLatest) {
+        this.date = date;
+        this.returnLatest = returnLatest;
     }
 
     /**
@@ -161,49 +123,13 @@ public class GenericVersionSelector implements VersionSelector {
      */
     public Version select(VersionHistory versionHistory) throws RepositoryException {
         Version selected = null;
-        if (name != null) {
-            selected = selectByName(versionHistory, name);
-        }
-        if (selected == null && label != null) {
-            selected = selectByLabel(versionHistory, label);
-        }
-        if (selected == null && date != null) {
-            selected = selectByDate(versionHistory, date);
+        if (date != null) {
+            selected = DateVersionSelector.selectByDate(versionHistory, date);
         }
         if (selected == null && returnLatest) {
-            selected = selectByDate(versionHistory, null);
+            selected = DateVersionSelector.selectByDate(versionHistory, null);
         }
         return selected;
-    }
-
-    /**
-     * Selects a version by version name.
-     *
-     * @param history
-     * @param name
-     * @return the version with the given name or <code>null</code>
-     * @throws RepositoryException
-     */
-    public static Version selectByName(VersionHistory history, String name)
-            throws RepositoryException {
-        if (history.hasNode(name)) {
-            return history.getVersion(name);
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Selects a version by label
-     *
-     * @param history
-     * @param label
-     * @return the version with the given label or <code>null</code>
-     * @throws RepositoryException
-     */
-    public static Version selectByLabel(VersionHistory history, String label)
-            throws RepositoryException {
-        return history.getVersionByLabel(label);
     }
 
     /**
@@ -211,7 +137,8 @@ public class GenericVersionSelector implements VersionSelector {
      *
      * @param history
      * @param date
-     * @return the latest version newer than the given date date or <code>null</code>
+     * @return the latest version that is older than the given date date or
+     * <code>null</code>
      * @throws RepositoryException
      */
     public static Version selectByDate(VersionHistory history, Calendar date)
@@ -222,6 +149,10 @@ public class GenericVersionSelector implements VersionSelector {
         VersionIterator iter = history.getAllVersions();
         while (iter.hasNext()) {
             Version v = iter.nextVersion();
+            if (v.getPredecessors().length==0) {
+                // ignore root version
+                continue;
+            }
             long c = v.getCreated().getTimeInMillis();
             if (c > latestDate && c <= time) {
                 latestDate = c;
@@ -231,4 +162,18 @@ public class GenericVersionSelector implements VersionSelector {
         return latestVersion;
     }
 
+    /**
+     * returns debug information
+     * @return debug information
+     */
+    public String toString() {
+        StringBuffer ret = new StringBuffer();
+        ret.append("DateVersionSelector(");
+        ret.append("date=");
+        ret.append(date);
+        ret.append(", returnLatest=");
+        ret.append(returnLatest);
+        ret.append(")");
+        return ret.toString();
+    }
 }
