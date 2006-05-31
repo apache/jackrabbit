@@ -526,8 +526,9 @@ public class MultiIndex {
             // delete documents in index
             for (Iterator it = deleted.iterator(); it.hasNext();) {
                 Term id = (Term) it.next();
-                executeAndLog(new DeleteNode(getTransactionId(), id.text()));
+                index.removeDocument(id);
             }
+            index.commit();
 
             executeAndLog(new Commit(getTransactionId()));
         } finally {
