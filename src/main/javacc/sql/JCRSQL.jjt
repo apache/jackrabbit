@@ -433,7 +433,7 @@ void ContainsExpression() :
 {
   <CONTAINS>
   <LEFT_PAREN>
-  ( <ASTERISK> | (name = Identifier() { jjtThis.setPropertyName(name); }) ) ","
+  ( <ASTERISK> | <PERIOD> | (name = Identifier() { jjtThis.setPropertyName(name); }) ) ","
   t = <CHAR_STRING_LITERAL> { jjtThis.setQuery(t.image.substring(1, t.image.length() - 1).replaceAll("''", "'")); }
   <RIGHT_PAREN>
 }
