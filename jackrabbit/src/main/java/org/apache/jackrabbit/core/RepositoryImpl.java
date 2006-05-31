@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core;
 
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
+import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
+import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.config.FileSystemConfig;
@@ -166,13 +168,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     private final ReferenceMap activeSessions =
             new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
-    /**
-     * workspace janitor thread that is responsible for temporarily
-     * shutting down workspaces that have been idle for a specific
-     * amount of time
-     */
-    private Thread wspJanitor;
-
     // misc. statistics
     private long nodesCount = 0;
     private long propsCount = 0;
@@ -260,7 +255,10 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         int maxIdleTime = repConfig.getWorkspaceMaxIdleTime();
         if (maxIdleTime != 0) {
             // start workspace janitor thread
-            wspJanitor = new WorkspaceJanitor(maxIdleTime * 1000);
+            Thread wspJanitor = new Thread(new WorkspaceJanitor(maxIdleTime * 1000));
+            wspJanitor.setName("WorkspaceJanitor");
+            wspJanitor.setPriority(Thread.MIN_PRIORITY);
+            wspJanitor.setDaemon(true);
             wspJanitor.start();
         }
 
@@ -502,7 +500,10 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
     private void initWorkspace(WorkspaceInfo wspInfo) throws RepositoryException {
         // first initialize workspace info
-        wspInfo.initialize();
+        if (!wspInfo.initialize()) {
+            return;
+        }
+
         // get system session and Workspace instance
         SessionImpl sysSession = wspInfo.getSystemSession();
         WorkspaceImpl wsp = (WorkspaceImpl) sysSession.getWorkspace();
@@ -613,7 +614,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @see javax.jcr.Workspace#getAccessibleWorkspaceNames()
      */
     String[] getWorkspaceNames() {
-        return (String[]) wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
+        synchronized (wspInfos) {
+            return (String[]) wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
+        }
     }
 
     /**
@@ -632,21 +635,22 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         // check sanity of this instance
         sanityCheck();
 
-        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
-        if (wspInfo == null) {
-            throw new NoSuchWorkspaceException(workspaceName);
-        }
-
-        synchronized (wspInfo) {
-            if (!wspInfo.isInitialized()) {
-                try {
-                    initWorkspace(wspInfo);
-                } catch (RepositoryException e) {
-                    log.error("Unable to initialize workspace '" + workspaceName + "'", e);
-                    throw new NoSuchWorkspaceException(workspaceName);
-                }
+        WorkspaceInfo wspInfo;
+        synchronized (wspInfos) {
+            wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+            if (wspInfo == null) {
+                throw new NoSuchWorkspaceException(workspaceName);
             }
         }
+
+        try {
+            initWorkspace(wspInfo);
+        } catch (RepositoryException e) {
+            log.error("Unable to initialize workspace '" + workspaceName + "'", e);
+            throw new NoSuchWorkspaceException(workspaceName);
+        }
+        // reset idle timestamp
+        wspInfo.setIdleTimestamp(0);
         return wspInfo;
     }
 
@@ -658,17 +662,19 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      *                             already exists or if another error occurs
      * @see SessionImpl#createWorkspace(String)
      */
-    protected synchronized void createWorkspace(String workspaceName)
+    protected void createWorkspace(String workspaceName)
             throws RepositoryException {
-        if (wspInfos.containsKey(workspaceName)) {
-            throw new RepositoryException("workspace '"
-                    + workspaceName + "' already exists.");
-        }
+        synchronized (wspInfos) {
+            if (wspInfos.containsKey(workspaceName)) {
+                throw new RepositoryException("workspace '"
+                        + workspaceName + "' already exists.");
+            }
 
-        // create the workspace configuration
-        WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName);
-        WorkspaceInfo info = createWorkspaceInfo(config);
-        wspInfos.put(workspaceName, info);
+            // create the workspace configuration
+            WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName);
+            WorkspaceInfo info = createWorkspaceInfo(config);
+            wspInfos.put(workspaceName, info);
+        }
     }
 
     /**
@@ -682,18 +688,20 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      *                             exists or if another error occurs
      * @see SessionImpl#createWorkspace(String,InputSource)
      */
-    protected synchronized void createWorkspace(String workspaceName,
+    protected void createWorkspace(String workspaceName,
                                                 InputSource configTemplate)
             throws RepositoryException {
-        if (wspInfos.containsKey(workspaceName)) {
-            throw new RepositoryException("workspace '"
-                    + workspaceName + "' already exists.");
-        }
+        synchronized (wspInfos) {
+            if (wspInfos.containsKey(workspaceName)) {
+                throw new RepositoryException("workspace '"
+                        + workspaceName + "' already exists.");
+            }
 
-        // create the workspace configuration
-        WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName, configTemplate);
-        WorkspaceInfo info = createWorkspaceInfo(config);
-        wspInfos.put(workspaceName, info);
+            // create the workspace configuration
+            WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName, configTemplate);
+            WorkspaceInfo info = createWorkspaceInfo(config);
+            wspInfos.put(workspaceName, info);
+        }
     }
 
     SharedItemStateManager getWorkspaceStateManager(String workspaceName)
@@ -784,16 +792,13 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    protected final synchronized SessionImpl createSession(AuthContext loginContext,
+    protected final SessionImpl createSession(AuthContext loginContext,
                                                            String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
         WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
         SessionImpl ses = createSessionInstance(loginContext, wspInfo.getConfig());
-        ses.addListener(this);
-        activeSessions.put(ses, ses);
-        // reset idle timestamp
-        wspInfo.setIdleTimestamp(0);
+        markActive(ses);
         return ses;
     }
 
@@ -814,17 +819,27 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      *                                  workspace
      * @throws RepositoryException      if another error occurs
      */
-    protected final synchronized SessionImpl createSession(Subject subject,
+    protected final SessionImpl createSession(Subject subject,
                                                            String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
         WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
         SessionImpl ses = createSessionInstance(subject, wspInfo.getConfig());
-        ses.addListener(this);
-        activeSessions.put(ses, ses);
-        // reset idle timestamp
-        wspInfo.setIdleTimestamp(0);
+        markActive(ses);
         return ses;
+    }
+
+    /**
+     * Puts the given session to the list of active sessions and registers this
+     * repository as listener.
+     *
+     * @param session
+     */
+    protected void markActive(SessionImpl session) {
+        synchronized (activeSessions) {
+            session.addListener(this);
+            activeSessions.put(session, session);
+        }
     }
 
     //-------------------------------------------------< JackrabbitRepository >
@@ -844,10 +859,13 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         // (copy sessions to array to avoid ConcurrentModificationException;
         // manually copy entries rather than calling ReferenceMap#toArray() in
         // order to work around  http://issues.apache.org/bugzilla/show_bug.cgi?id=25551)
-        int cnt = 0;
-        SessionImpl[] sa = new SessionImpl[activeSessions.size()];
-        for (Iterator it = activeSessions.values().iterator(); it.hasNext(); cnt++) {
-            sa[cnt] = (SessionImpl) it.next();
+        SessionImpl[] sa;
+        synchronized (activeSessions) {
+            int cnt = 0;
+            sa = new SessionImpl[activeSessions.size()];
+            for (Iterator it = activeSessions.values().iterator(); it.hasNext(); cnt++) {
+                sa[cnt] = (SessionImpl) it.next();
+            }
         }
         for (int i = 0; i < sa.length; i++) {
             if (sa[i] != null) {
@@ -856,12 +874,10 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         }
 
         // shut down workspaces
-        for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
-            WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
-            synchronized (wspInfo) {
-                if (wspInfo.isInitialized()) {
-                    wspInfo.dispose();
-                }
+        synchronized (wspInfos) {
+            for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
+                WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
+                wspInfo.dispose();
             }
         }
 
@@ -892,11 +908,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
         // make sure this instance is not used anymore
         disposed = true;
-
-        if (wspJanitor != null) {
-            wspJanitor.interrupt();
-            wspJanitor = null;
-        }
+        // wakeup eventual waiters
+        notifyAll();
 
         // finally release repository lock
         releaseRepositoryLock();
@@ -924,7 +937,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * Sets the default properties of the repository.
      * <p/>
      * This method loads the <code>Properties</code> from the
-     * <code>org/apache/jackrabbit/core/repository.properties</code> resource
+     * <code>com/day/crx/core/repository.properties</code> resource
      * found in the class path and (re)sets the statistics properties, if not
      * present.
      *
@@ -1154,9 +1167,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     /**
      * {@inheritDoc}
      */
-    public synchronized void loggedOut(SessionImpl session) {
-        // remove session from active sessions
-        activeSessions.remove(session);
+    public void loggedOut(SessionImpl session) {
+        synchronized (activeSessions) {
+            // remove session from active sessions
+            activeSessions.remove(session);
+        }
     }
 
     //--------------------------------------------------------< EventListener >
@@ -1297,6 +1312,12 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         private boolean initialized;
 
         /**
+         * lock that guards the init sequence
+         */
+        private final ReadWriteLock initLock =
+                new ReentrantWriterPreferenceReadWriteLock();
+
+        /**
          * timestamp when the workspace has been determined being idle
          */
         private long idleTimestamp;
@@ -1364,8 +1385,16 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *
          * @return <code>true</code> if this workspace info is initialized.
          */
-        synchronized boolean isInitialized() {
-            return initialized;
+        boolean isInitialized() {
+            try {
+                initLock.readLock().attempt(0);
+            } catch (InterruptedException e) {
+                return false;
+            }
+            // can't use 'finally' pattern here
+            boolean ret = initialized;
+            initLock.readLock().release();
+            return ret;
         }
 
         /**
@@ -1373,8 +1402,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *
          * @return the workspace file system
          */
-        synchronized FileSystem getFileSystem() {
-            if (!initialized) {
+        FileSystem getFileSystem() {
+            if (!isInitialized()) {
                 throw new IllegalStateException("not initialized");
             }
 
@@ -1387,9 +1416,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @return the workspace persistence manager
          * @throws RepositoryException if the persistence manager could not be instantiated/initialized
          */
-        synchronized PersistenceManager getPersistenceManager()
+        PersistenceManager getPersistenceManager()
                 throws RepositoryException {
-            if (!initialized) {
+            if (!isInitialized()) {
                 throw new IllegalStateException("not initialized");
             }
 
@@ -1403,9 +1432,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @throws RepositoryException if the workspace item state provider
          *                             could not be created
          */
-        synchronized SharedItemStateManager getItemStateProvider()
+        SharedItemStateManager getItemStateProvider()
                 throws RepositoryException {
-            if (!initialized) {
+            if (!isInitialized()) {
                 throw new IllegalStateException("not initialized");
             }
 
@@ -1417,8 +1446,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *
          * @return the observation manager factory for this workspace
          */
-        synchronized ObservationManagerFactory getObservationManagerFactory() {
-            if (!initialized) {
+        ObservationManagerFactory getObservationManagerFactory() {
+            if (!isInitialized()) {
                 throw new IllegalStateException("not initialized");
             }
 
@@ -1432,27 +1461,29 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *         if no <code>SearchManager</code>
          * @throws RepositoryException if the search manager could not be created
          */
-        synchronized SearchManager getSearchManager() throws RepositoryException {
-            if (!initialized) {
+        SearchManager getSearchManager() throws RepositoryException {
+            if (!isInitialized()) {
                 throw new IllegalStateException("not initialized");
             }
 
-            if (searchMgr == null) {
-                if (config.getSearchConfig() == null) {
-                    // no search index configured
-                    return null;
+            synchronized (this) {
+                if (searchMgr == null) {
+                    if (config.getSearchConfig() == null) {
+                        // no search index configured
+                        return null;
+                    }
+                    // search manager is lazily instantiated in order to avoid
+                    // 'chicken & egg' bootstrap problems
+                    searchMgr = new SearchManager(config.getSearchConfig(),
+                            nsReg,
+                            ntReg,
+                            itemStateMgr,
+                            rootNodeId,
+                            getSystemSearchManager(getName()),
+                            SYSTEM_ROOT_NODE_ID);
                 }
-                // search manager is lazily instantiated in order to avoid
-                // 'chicken & egg' bootstrap problems
-                searchMgr = new SearchManager(config.getSearchConfig(),
-                        nsReg,
-                        ntReg,
-                        itemStateMgr,
-                        rootNodeId,
-                        getSystemSearchManager(getName()),
-                        SYSTEM_ROOT_NODE_ID);
+                return searchMgr;
             }
-            return searchMgr;
         }
 
         /**
@@ -1461,17 +1492,19 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @return the lock manager for this workspace
          * @throws RepositoryException if the lock manager could not be created
          */
-        synchronized LockManager getLockManager() throws RepositoryException {
-            if (!initialized) {
+        LockManager getLockManager() throws RepositoryException {
+            if (!isInitialized()) {
                 throw new IllegalStateException("not initialized");
             }
 
-            // lock manager is lazily instantiated in order to avoid
-            // 'chicken & egg' bootstrap problems
-            if (lockMgr == null) {
-                lockMgr = new LockManagerImpl(getSystemSession(), fs);
+            synchronized (this) {
+                // lock manager is lazily instantiated in order to avoid
+                // 'chicken & egg' bootstrap problems
+                if (lockMgr == null) {
+                    lockMgr = new LockManagerImpl(getSystemSession(), fs);
+                }
+                return lockMgr;
             }
-            return lockMgr;
         }
 
         /**
@@ -1480,17 +1513,19 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @return the system session for this workspace
          * @throws RepositoryException if the system session could not be created
          */
-        synchronized SystemSession getSystemSession() throws RepositoryException {
-            if (!initialized) {
+        SystemSession getSystemSession() throws RepositoryException {
+            if (!isInitialized()) {
                 throw new IllegalStateException("not initialized");
             }
 
-            // system session is lazily instantiated in order to avoid
-            // 'chicken & egg' bootstrap problems
-            if (systemSession == null) {
-                systemSession = SystemSession.create(RepositoryImpl.this, config);
+            synchronized (this) {
+                // system session is lazily instantiated in order to avoid
+                // 'chicken & egg' bootstrap problems
+                if (systemSession == null) {
+                    systemSession = SystemSession.create(RepositoryImpl.this, config);
+                }
+                return systemSession;
             }
-            return systemSession;
         }
 
         /**
@@ -1510,116 +1545,169 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * <li>lock manager</li>
          * <li>search manager</li>
          * </ul>
+         * @return <code>true</code> if this info was initialized.
          */
-        synchronized void initialize() throws RepositoryException {
-            if (initialized) {
-                throw new IllegalStateException("already initialized");
-            }
-
-            log.info("initializing workspace '" + getName() + "'...");
-
-            FileSystemConfig fsConfig = config.getFileSystemConfig();
-            fs = fsConfig.createFileSystem();
-
-            persistMgr = createPersistenceManager(new File(config.getHomeDir()),
-                    fs,
-                    config.getPersistenceManagerConfig(),
-                    rootNodeId,
-                    nsReg,
-                    ntReg);
-
-            // create item state manager
+        boolean initialize() throws RepositoryException {
             try {
-                itemStateMgr =
-                        new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true);
-                try {
-                    itemStateMgr.addVirtualItemStateProvider(
-                            vMgr.getVirtualItemStateProvider());
-                    itemStateMgr.addVirtualItemStateProvider(
-                            virtNTMgr.getVirtualItemStateProvider());
-                } catch (Exception e) {
-                    log.error("Unable to add vmgr: " + e.toString(), e);
-                }
-            } catch (ItemStateException ise) {
-                String msg = "failed to instantiate shared item state manager";
-                log.debug(msg);
-                throw new RepositoryException(msg, ise);
+                initLock.writeLock().acquire();
+            } catch (InterruptedException e) {
+                throw new RepositoryException("Unable to aquire write lock.", e);
             }
+            try {
+                if (initialized) {
+                    return false;
+                }
 
-            obsMgrFactory = new ObservationManagerFactory();
+                log.info("initializing workspace '" + getName() + "'...");
 
-            // register the observation factory of that workspace
-            delegatingDispatcher.addDispatcher(obsMgrFactory);
+                FileSystemConfig fsConfig = config.getFileSystemConfig();
+                fs = fsConfig.createFileSystem();
 
-            initialized = true;
+                persistMgr = createPersistenceManager(new File(config.getHomeDir()),
+                        fs,
+                        config.getPersistenceManagerConfig(),
+                        rootNodeId,
+                        nsReg,
+                        ntReg);
 
-            log.info("workspace '" + getName() + "' initialized");
+                // create item state manager
+                try {
+                    itemStateMgr =
+                            new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true);
+                    try {
+                        itemStateMgr.addVirtualItemStateProvider(
+                                vMgr.getVirtualItemStateProvider());
+                        itemStateMgr.addVirtualItemStateProvider(
+                                virtNTMgr.getVirtualItemStateProvider());
+                    } catch (Exception e) {
+                        log.error("Unable to add vmgr: " + e.toString(), e);
+                    }
+                } catch (ItemStateException ise) {
+                    String msg = "failed to instantiate shared item state manager";
+                    log.debug(msg);
+                    throw new RepositoryException(msg, ise);
+                }
+
+                obsMgrFactory = new ObservationManagerFactory();
+
+                // register the observation factory of that workspace
+                delegatingDispatcher.addDispatcher(obsMgrFactory);
+
+                idleTimestamp = 0;
+                initialized = true;
+
+                log.info("workspace '" + getName() + "' initialized");
+                return true;
+            } finally {
+                initLock.writeLock().release();
+            }
+        }
+
+        /**
+         * disposes this workspaceinfo if it has been idle for more than
+         * <code>maxIdleTime</code> milliseconds.
+         *
+         * @param maxIdleTime
+         */
+        void disposeIfIdle(long maxIdleTime) {
+            try {
+                initLock.readLock().acquire();
+            } catch (InterruptedException e) {
+                return;
+            }
+            try {
+                if (!initialized) {
+                    return;
+                }
+                long currentTS = System.currentTimeMillis();
+                if (getIdleTimestamp() == 0) {
+                    // set idle timestamp
+                    idleTimestamp = currentTS;
+                } else {
+                    if ((currentTS - getIdleTimestamp()) > maxIdleTime) {
+                        // temporarily shutdown workspace
+                        log.info("disposing workspace '" + getName() + "' that is idle for " + (currentTS - idleTimestamp));
+                        dispose();
+                    }
+                }
+            } finally {
+                initLock.readLock().release();
+            }
         }
 
         /**
          * Disposes all objects this <code>WorkspaceInfo</code> is holding.
          */
-        synchronized void dispose() {
-            if (!initialized) {
-                throw new IllegalStateException("not initialized");
-            }
-
-            log.info("shutting down workspace '" + getName() + "'...");
-
-            // deregister the observation factory of that workspace
-            delegatingDispatcher.removeDispatcher(obsMgrFactory);
-
-            // dispose observation manager factory
-            obsMgrFactory.dispose();
-            obsMgrFactory = null;
-
-            // shutdown search managers
-            if (searchMgr != null) {
-                searchMgr.close();
-                searchMgr = null;
-            }
-
-            // close system session
-            if (systemSession != null) {
-                systemSession.removeListener(RepositoryImpl.this);
-                systemSession.logout();
-                systemSession = null;
-            }
-
-            // dispose shared item state manager
-            itemStateMgr.dispose();
-            itemStateMgr = null;
-
-            // close persistence manager
+        void dispose() {
             try {
-                persistMgr.close();
-            } catch (Exception e) {
-                log.error("error while closing persistence manager of workspace "
-                        + config.getName(), e);
-            }
-            persistMgr = null;
-
-            // close lock manager
-            if (lockMgr != null) {
-                lockMgr.close();
-                lockMgr = null;
+                initLock.writeLock().acquire();
+            } catch (InterruptedException e) {
+                throw new IllegalStateException("Unable to aquire write lock.");
             }
 
-            // close workspace file system
             try {
-                fs.close();
-            } catch (FileSystemException fse) {
-                log.error("error while closing file system of workspace "
-                        + config.getName(), fse);
+                if (!initialized) {
+                    return;
+                }
+
+                log.info("shutting down workspace '" + getName() + "'...");
+
+                // deregister the observation factory of that workspace
+                delegatingDispatcher.removeDispatcher(obsMgrFactory);
+
+                // dispose observation manager factory
+                obsMgrFactory.dispose();
+                obsMgrFactory = null;
+
+                // shutdown search managers
+                if (searchMgr != null) {
+                    searchMgr.close();
+                    searchMgr = null;
+                }
+
+                // close system session
+                if (systemSession != null) {
+                    systemSession.removeListener(RepositoryImpl.this);
+                    systemSession.logout();
+                    systemSession = null;
+                }
+
+                // dispose shared item state manager
+                itemStateMgr.dispose();
+                itemStateMgr = null;
+
+                // close persistence manager
+                try {
+                    persistMgr.close();
+                } catch (Exception e) {
+                    log.error("error while closing persistence manager of workspace "
+                            + config.getName(), e);
+                }
+                persistMgr = null;
+
+                // close lock manager
+                if (lockMgr != null) {
+                    lockMgr.close();
+                    lockMgr = null;
+                }
+
+                // close workspace file system
+                try {
+                    fs.close();
+                } catch (FileSystemException fse) {
+                    log.error("error while closing file system of workspace "
+                            + config.getName(), fse);
+                }
+                fs = null;
+
+                // reset idle timestamp
+                idleTimestamp = 0;
+                initialized = false;
+
+                log.info("workspace '" + getName() + "' has been shutdown");
+            } finally {
+                initLock.writeLock().release();
             }
-            fs = null;
-
-            // reset idle timestamp
-            idleTimestamp = 0;
-
-            initialized = false;
-
-            log.info("workspace '" + getName() + "' has been shutdown");
         }
 
         /**
@@ -1652,13 +1740,14 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * The workspace janitor thread that will shutdown workspaces that have
      * been idle for a certain amount of time.
      */
-    private class WorkspaceJanitor extends Thread {
+    private class WorkspaceJanitor implements Runnable {
 
         /**
          * amount of time in mmilliseconds before an idle workspace is
          * automatically shutdown.
          */
         private long maxIdleTime;
+
         /**
          * interval in mmilliseconds between checks for idle workspaces.
          */
@@ -1672,9 +1761,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          *                    workspace is automatically shutdown.
          */
         WorkspaceJanitor(long maxIdleTime) {
-            super("WorkspaceJanitor");
-            setPriority(Thread.MIN_PRIORITY);
-            setDaemon(true);
             this.maxIdleTime = maxIdleTime;
             // compute check interval as 10% of maxIdleTime
             checkInterval = (long) (0.1 * maxIdleTime);
@@ -1693,49 +1779,41 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * </ol>
          */
         public void run() {
-            while (!disposed) {
-                try {
-                    Thread.sleep(checkInterval);
-                } catch (InterruptedException e) {
-                    /* ignore */
-                }
-
+            while (true) {
                 synchronized (RepositoryImpl.this) {
+                    try {
+                        RepositoryImpl.this.wait(checkInterval);
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
                     if (disposed) {
                         return;
                     }
-                    // get names of workspaces
-                    Set wspNames = new HashSet(wspInfos.keySet());
-                    // remove default workspace (will never be shutdown when idle)
-                    wspNames.remove(repConfig.getDefaultWorkspaceName());
+                }
+                // get names of workspaces
+                Set wspNames;
+                synchronized (wspInfos) {
+                    wspNames = new HashSet(wspInfos.keySet());
+                }
+                // remove default workspace (will never be shutdown when idle)
+                wspNames.remove(repConfig.getDefaultWorkspaceName());
+
+                synchronized (activeSessions) {
                     // remove workspaces with active sessions
                     for (Iterator it = activeSessions.values().iterator(); it.hasNext();) {
                         SessionImpl ses = (SessionImpl) it.next();
                         wspNames.remove(ses.getWorkspace().getName());
                     }
-                    // remove uninitialized workspaces
-                    for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
-                        WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
-                        if (!wspInfo.isInitialized()) {
-                            wspNames.remove(wspInfo.getName());
-                        }
-                    }
+                }
 
-                    // remaining names denote workspaces which are currently idle
-                    for (Iterator it = wspNames.iterator(); it.hasNext();) {
-                        WorkspaceInfo wspInfo = (WorkspaceInfo) wspInfos.get(it.next());
-                        long currentTS = System.currentTimeMillis();
-                        long idleTS = wspInfo.getIdleTimestamp();
-                        if (idleTS == 0) {
-                            // set idle timestamp
-                            wspInfo.setIdleTimestamp(currentTS);
-                        } else {
-                            if ((currentTS - idleTS) > maxIdleTime) {
-                                // temporarily shutdown workspace
-                                wspInfo.dispose();
-                            }
-                        }
+                // remaining names denote workspaces which currently have not
+                // active sessions
+                for (Iterator it = wspNames.iterator(); it.hasNext();) {
+                    WorkspaceInfo wspInfo;
+                    synchronized (wspInfos) {
+                        wspInfo = (WorkspaceInfo) wspInfos.get(it.next());
                     }
+                    wspInfo.disposeIfIdle(maxIdleTime);
                 }
             }
         }
