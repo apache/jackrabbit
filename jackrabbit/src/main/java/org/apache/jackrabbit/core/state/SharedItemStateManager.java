@@ -21,6 +21,7 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.version.XAVersionManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
@@ -150,6 +151,13 @@ public class SharedItemStateManager
             new VirtualItemStateProvider[0];
 
     /**
+     * special flag for then this manager is used by the version manager and
+     * transactional versioning operations. in this case, deadlocks could occurr
+     * (see issue JCR-447).
+     */
+    private boolean noLockHack = false;
+
+    /**
      * Read-/Write-Lock to synchronize access on this item state manager.
      */
     private final ReadWriteLock rwLock =
@@ -157,10 +165,13 @@ public class SharedItemStateManager
                 /**
                  * Allow reader when there is no active writer, or current
                  * thread owns the write lock (reentrant).
+                 * <p/>
+                 * the 'noLockHack' is only temporary (hopefully)
                  */
                 protected boolean allowReader() {
                     return activeWriter_ == null
-                        || activeWriter_ == Thread.currentThread();
+                        || activeWriter_ == Thread.currentThread()
+                        || noLockHack;
                 }
             };
 
@@ -185,6 +196,16 @@ public class SharedItemStateManager
         if (!hasNonVirtualItemState(rootNodeId)) {
             createRootNodeState(rootNodeId, ntReg);
         }
+    }
+
+    /**
+     * enables or disables the write-lock hack. this should only be called by
+     * the {@link XAVersionManager}.
+     *
+     * @param noLockHack
+     */
+    public void setNoLockHack(boolean noLockHack) {
+        this.noLockHack = noLockHack;
     }
 
     //-----------------------------------------------------< ItemStateManager >
