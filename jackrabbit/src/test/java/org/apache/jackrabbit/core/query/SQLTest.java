@@ -44,7 +44,7 @@ public class SQLTest extends AbstractQueryTest {
 
         testRootNode.save();
 
-        String sql = "SELECT * FROM nt:unstructured WHERE contains(*, 'fox') " +
+        String sql = "SELECT * FROM nt:unstructured WHERE contains(., 'fox') " +
                 "AND jcr:path LIKE '" + testRoot + "/%'";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
@@ -58,7 +58,7 @@ public class SQLTest extends AbstractQueryTest {
         testRootNode.save();
 
         String sql = "SELECT foo.mytext, bla.foo FROM nt:unstructured WHERE " +
-                "contains(*, 'fox') AND NOT contains(*, 'bla') " +
+                "contains(., 'fox') AND NOT contains(., 'bla') " +
                 "AND jcr:path LIKE '" + testRoot + "/%'";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
