@@ -135,14 +135,20 @@ public class TransactionContext implements Runnable {
         afterOperation();
         status = Status.STATUS_PREPARED;
 
-        Thread rollbackThread = new Thread(this, "RollbackThread");
-        rollbackThread.start();
-
         if (txe != null) {
+            // force immediate rollback on error.
+            try {
+                rollback();
+            } catch (XAException e) {
+                /* ignore */
+            }
             XAException e = new XAException(XAException.XA_RBOTHER);
             e.initCause(txe);
             throw e;
         }
+
+        // start rollback thread in case the commit is never issued
+        new Thread(this, "RollbackThread").start();
     }
 
     /**

@@ -438,6 +438,7 @@ public class XAVersionManager extends AbstractVersionManager
      * Delegate the call to our XA item state manager.
      */
     public void prepare(TransactionContext tx) throws TransactionException {
+        vMgr.getSharedStateMgr().setNoLockHack(true);
         ((XAItemStateManager) stateMgr).prepare(tx);
     }
 
@@ -449,6 +450,7 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public void commit(TransactionContext tx) throws TransactionException {
         ((XAItemStateManager) stateMgr).commit(tx);
+        vMgr.getSharedStateMgr().setNoLockHack(false);
 
         Map xaItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
         vMgr.itemsUpdated(xaItems.values());
@@ -461,6 +463,7 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public void rollback(TransactionContext tx) {
         ((XAItemStateManager) stateMgr).rollback(tx);
+        vMgr.getSharedStateMgr().setNoLockHack(false);
     }
 
     /**
