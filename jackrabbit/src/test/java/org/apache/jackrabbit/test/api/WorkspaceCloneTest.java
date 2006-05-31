@@ -57,8 +57,8 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
         // clone referenceable node below non-referenceable node
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
 
-        Node folder = node1.addNode("folder");
-        folder.addMixin("mix:referenceable");
+        Node folder = node1.addNode(nodeName3);
+        folder.addMixin(mixReferenceable);
         node1.save();
         workspaceW2.clone(workspace.getName(), node1.getPath(), dstAbsPath, true);
         workspaceW2.clone(workspace.getName(), node1.getPath(), dstAbsPath, true);
