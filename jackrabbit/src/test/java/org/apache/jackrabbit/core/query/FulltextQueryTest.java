@@ -34,7 +34,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String sql = "SELECT * FROM nt:unstructured"
                 + " WHERE jcr:path LIKE '" + testRoot + "/%"
-                + "' AND CONTAINS(*, 'fox')";
+                + "' AND CONTAINS(., 'fox')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -48,7 +48,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String sql = "SELECT * FROM nt:unstructured"
                 + " WHERE \"jcr:path\" = '" + testRoot + "/foo"
-                + "' AND CONTAINS(*, 'fox')";
+                + "' AND CONTAINS(., 'fox')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -67,7 +67,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String sql = "SELECT * FROM nt:unstructured"
                 + " WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
-                + "' AND CONTAINS(*, 'fox test')";
+                + "' AND CONTAINS(., 'fox test')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -86,7 +86,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String sql = "SELECT * FROM nt:unstructured"
                 + " WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
-                + "' AND CONTAINS(*, 'text ''fox jumps''')";
+                + "' AND CONTAINS(., 'text ''fox jumps''')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -105,7 +105,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String sql = "SELECT * FROM nt:unstructured"
                 + " WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
-                + "' AND CONTAINS(*, 'text ''fox jumps'' -other')";
+                + "' AND CONTAINS(., 'text ''fox jumps'' -other')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 1);
@@ -124,7 +124,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String sql = "SELECT * FROM nt:unstructured"
                 + " WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
-                + "' AND CONTAINS(*, '''fox jumps'' test OR other')";
+                + "' AND CONTAINS(., '''fox jumps'' test OR other')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 2);
@@ -143,7 +143,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String sql = "SELECT * FROM nt:unstructured"
                 + " WHERE \"jcr:path\" LIKE '" + testRoot + "/%"
-                + "' AND CONTAINS(*, '''fox juMps'' Test OR otheR')";
+                + "' AND CONTAINS(., '''fox juMps'' Test OR otheR')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 2);
@@ -162,7 +162,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         String sql = "SELECT * FROM nt:unstructured"
                 + " WHERE jcr:path LIKE '" + testRoot + "/%"
-                + "' AND CONTAINS(*, 'fox jumps')";
+                + "' AND CONTAINS(., 'fox jumps')";
         Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         checkResult(q.execute(), 2);
     }
@@ -282,7 +282,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
         stmt = new StringBuffer();
         stmt.append("SELECT * FROM nt:base ");
         stmt.append("WHERE jcr:path LIKE '").append(testRoot).append("/%' ");
-        stmt.append("AND CONTAINS(*, '").append(statement).append("')");
+        stmt.append("AND CONTAINS(., '").append(statement).append("')");
 
         q = superuser.getWorkspace().getQueryManager().createQuery(stmt.toString(), Query.SQL);
         checkResult(q.execute(), match ? 1 : 0);
