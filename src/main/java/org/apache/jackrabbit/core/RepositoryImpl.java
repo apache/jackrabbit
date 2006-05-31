@@ -937,7 +937,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * Sets the default properties of the repository.
      * <p/>
      * This method loads the <code>Properties</code> from the
-     * <code>com/day/crx/core/repository.properties</code> resource
+     * <code>org/apache/jackrabbit/core/repository.properties</code> resource
      * found in the class path and (re)sets the statistics properties, if not
      * present.
      *
