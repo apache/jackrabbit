@@ -151,9 +151,7 @@ public class SharedItemStateManager
             new VirtualItemStateProvider[0];
 
     /**
-     * special flag for then this manager is used by the version manager and
-     * transactional versioning operations. in this case, deadlocks could occurr
-     * (see issue JCR-447).
+     * JCR-447: deadlock might occur when this manager is still write-locked and events are dispatched.
      */
     private boolean noLockHack = false;
 
