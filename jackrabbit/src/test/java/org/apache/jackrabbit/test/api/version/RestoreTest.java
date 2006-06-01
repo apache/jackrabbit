@@ -306,7 +306,9 @@ public class RestoreTest extends AbstractVersionTest {
     public void testRestoreLabel() throws RepositoryException {
         // V1.0 of versionableNode has no child
         Node child1 = versionableNode.addNode(nodeName4);
-        child1.addMixin(mixVersionable);
+        if (!child1.isNodeType(mixVersionable)) {
+            child1.addMixin(mixVersionable);
+        }
         versionableNode.save();
         // create v1.0 of child
         Version v1Child = child1.checkin();
@@ -349,7 +351,9 @@ public class RestoreTest extends AbstractVersionTest {
     public void testRestoreName() throws RepositoryException {
         // V1.0 of versionableNode has no child
         Node child1 = versionableNode.addNode(nodeName4);
-        child1.addMixin(mixVersionable);
+        if (!child1.isNodeType(mixVersionable)) {
+            child1.addMixin(mixVersionable);
+        }
         versionableNode.save();
         // create v1.0 of child
         Version v1Child = child1.checkin();
