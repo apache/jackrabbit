@@ -449,11 +449,13 @@ public class XAVersionManager extends AbstractVersionManager
      * global repository manager to update its caches.
      */
     public void commit(TransactionContext tx) throws TransactionException {
+        vMgr.aquireWriteLock();
         ((XAItemStateManager) stateMgr).commit(tx);
         vMgr.getSharedStateMgr().setNoLockHack(false);
 
         Map xaItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
         vMgr.itemsUpdated(xaItems.values());
+        vMgr.releaseWriteLock();
     }
 
     /**
