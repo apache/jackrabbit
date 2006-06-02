@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.NodeImpl;
+import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
+import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -28,8 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.util.List;
@@ -53,6 +55,23 @@ abstract class AbstractVersionManager implements VersionManager {
      * Persistent root node of the version histories.
      */
     protected NodeStateEx historyRoot;
+
+    /**
+     * the lock on this version manager
+     */
+    private final ReadWriteLock rwLock =
+            new ReentrantWriterPreferenceReadWriteLock() {
+                /**
+                 * Allow reader when there is no active writer, or current
+                 * thread owns the write lock (reentrant).
+                 * <p/>
+                 * the 'noLockHack' is only temporary (hopefully)
+                 */
+                protected boolean allowReader() {
+                    return activeWriter_ == null
+                        || activeWriter_ == Thread.currentThread();
+                }
+            };
 
     //-------------------------------------------------------< VersionManager >
 
@@ -91,6 +110,48 @@ abstract class AbstractVersionManager implements VersionManager {
     }
 
     //-------------------------------------------------------< implementation >
+
+    /**
+     * aquires the write lock on this version manager.
+     */
+    protected void aquireWriteLock() {
+        while (true) {
+            try {
+                rwLock.writeLock().acquire();
+                return;
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+    }
+
+    /**
+     * releases the write lock on this version manager.
+     */
+    protected void releaseWriteLock() {
+        rwLock.writeLock().release();
+    }
+
+    /**
+     * aquires the read lock on this version manager.
+     */
+    protected void aquireReadLock() {
+        while (true) {
+            try {
+                rwLock.readLock().acquire();
+                return;
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+    }
+
+    /**
+     * releases the read lock on this version manager.
+     */
+    protected void releaseReadLock() {
+        rwLock.readLock().release();
+    }
 
     /**
      * {@inheritDoc}
@@ -141,9 +202,11 @@ abstract class AbstractVersionManager implements VersionManager {
     InternalVersionHistory createVersionHistory(NodeState node)
             throws RepositoryException {
 
+        aquireWriteLock();
         try {
             stateMgr.edit();
         } catch (IllegalStateException e) {
+            releaseWriteLock();
             throw new RepositoryException("Unable to start edit operation", e);
         }
 
@@ -185,6 +248,7 @@ abstract class AbstractVersionManager implements VersionManager {
                 // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
+            releaseWriteLock();
         }
     }
 
@@ -227,40 +291,46 @@ abstract class AbstractVersionManager implements VersionManager {
     protected InternalVersion checkin(InternalVersionHistoryImpl history, NodeImpl node)
             throws RepositoryException {
 
-        // 1. search a predecessor, suitable for generating the new name
-        Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
-        InternalVersion best = null;
-        for (int i = 0; i < values.length; i++) {
-            InternalVersion pred = history.getVersion(NodeId.valueOf(values[i].getString()));
-            if (best == null || pred.getSuccessors().length < best.getSuccessors().length) {
-                best = pred;
-            }
-        }
-
-        // 2. generate version name (assume no namespaces in version names)
-        String versionName = best.getName().getLocalName();
-        int pos = versionName.lastIndexOf('.');
-        if (pos > 0) {
-            versionName = versionName.substring(0, pos + 1)
-                + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
-        } else {
-            versionName = String.valueOf(best.getSuccessors().length + 1) + ".0";
-        }
-
-        // 3. check for colliding names
-        while (history.hasVersion(new QName("", versionName))) {
-            versionName += ".1";
-        }
-
+        aquireReadLock();
+        String versionName;
         try {
+            // 1. search a predecessor, suitable for generating the new name
+            Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
+            InternalVersion best = null;
+            for (int i = 0; i < values.length; i++) {
+                InternalVersion pred = history.getVersion(NodeId.valueOf(values[i].getString()));
+                if (best == null || pred.getSuccessors().length < best.getSuccessors().length) {
+                    best = pred;
+                }
+            }
+
+            // 2. generate version name (assume no namespaces in version names)
+            versionName = best.getName().getLocalName();
+            int pos = versionName.lastIndexOf('.');
+            if (pos > 0) {
+                versionName = versionName.substring(0, pos + 1)
+                    + (Integer.parseInt(versionName.substring(pos + 1)) + 1);
+            } else {
+                versionName = String.valueOf(best.getSuccessors().length + 1) + ".0";
+            }
+
+            // 3. check for colliding names
+            while (history.hasVersion(new QName("", versionName))) {
+                versionName += ".1";
+            }
+
             stateMgr.edit();
         } catch (IllegalStateException e) {
+            releaseReadLock();
             throw new RepositoryException("Unable to start edit operation.");
         }
 
         boolean succeeded = false;
 
         try {
+            aquireWriteLock();
+            releaseReadLock();
+
             InternalVersionImpl v = history.checkin(new QName("", versionName), node);
             stateMgr.update();
             succeeded = true;
@@ -273,6 +343,7 @@ abstract class AbstractVersionManager implements VersionManager {
                 // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
+            releaseWriteLock();
         }
     }
 
@@ -289,9 +360,11 @@ abstract class AbstractVersionManager implements VersionManager {
     protected void removeVersion(InternalVersionHistoryImpl history, QName name)
             throws VersionException, RepositoryException {
 
+        aquireWriteLock();
         try {
             stateMgr.edit();
         } catch (IllegalStateException e) {
+            releaseWriteLock();
             throw new VersionException("Unable to start edit operation", e);
         }
         boolean succeeded = false;
@@ -306,6 +379,7 @@ abstract class AbstractVersionManager implements VersionManager {
                 // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
+            releaseWriteLock();
         }
     }
 
@@ -323,9 +397,11 @@ abstract class AbstractVersionManager implements VersionManager {
                                               boolean move)
             throws RepositoryException {
 
+        aquireWriteLock();
         try {
             stateMgr.edit();
         } catch (IllegalStateException e) {
+            releaseWriteLock();
             throw new VersionException("Unable to start edit operation", e);
         }
         InternalVersion v = null;
@@ -341,6 +417,7 @@ abstract class AbstractVersionManager implements VersionManager {
                 // update operation failed, cancel all modifications
                 stateMgr.cancel();
             }
+            releaseWriteLock();
         }
         return v;
     }
