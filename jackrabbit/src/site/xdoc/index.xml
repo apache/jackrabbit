@@ -40,6 +40,14 @@
       </p>
       <subsection name="Apache Jackrabbit News">
         <dl>
+          <dt><strong>June 2, 2006: Apache Jackrabbit 1.0.1 released</strong></dt>
+          <dd>
+            From the release notes: "<em>Apache Jackrabbit 1.0.1 is a patch
+            release that fixes a number of issues, see the included change
+            history for details. No new features or configuration changes have
+            been introduced since the 1.0 release.</em>"
+            See the <a href="downloads.cgi">downloads page</a> for more details.
+          </dd>
           <dt><strong>April 8, 2006: Apache Jackrabbit 1.0 released</strong></dt>
           <dd>
             From the release notes: "<em>Apache Jackrabbit 1.0 is a fully
@@ -48,7 +56,6 @@
             the 1.0 release implements the full JCR API, including level 1,
             level 2, and all the optional features like versioning,
             transactions, and observation.</em>"
-            See the <a href="downloads.cgi">downloads page</a> for more details.
           </dd>
           <dt><strong>March 15, 2006: Apache Jackrabbit graduates from the Incubator</strong></dt>
           <dd>
@@ -59,20 +66,10 @@
             class="externalLink" title="Apache Incubator">incubation</a>
             process for Jackrabbit and makes it an official ASF project.
           </dd>
-          <dt><strong>February 14, 2006: Jackrabbit 0.9 released</strong></dt>
-          <dd>
-            From the
-            <a href="http://cvs.apache.org/dist/incubator/jackrabbit/0.9-incubating/RELEASE-NOTES.txt"
-               class="externalLink" title="Jackrabbit 0.9 Release Notes"
-               >release notes</a>: "<em>The version 0.9 release is
-            the first official release of the Jackrabbit project. The goal
-            of this release is to provide a tested and packaged version of
-            Jackrabbit for users who have so far been using custom snapshots.
-            This release also provides a well defined baseline for the
-            upcoming Jackrabbit version 1.0.</em>"
-            See the <a href="downloads.cgi">downloads page</a> for more details.
-          </dd>
         </dl>
+        <p>
+          See the <a href="news.html">news archive</a> for past news.
+        </p>
       </subsection>
       <subsection name="Getting Started with Apache Jackrabbit">
         <p>
