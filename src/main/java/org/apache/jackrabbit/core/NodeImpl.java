@@ -3091,6 +3091,11 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         checkVersionable();
+
+        // transactions workaround.
+        NodeId id = NodeId.valueOf(getProperty(QName.JCR_VERSIONHISTORY).getString());
+        session.getVersionManager().getVersionHistory(id);
+
         return (VersionHistory) getProperty(QName.JCR_VERSIONHISTORY).getNode();
     }
 
@@ -3103,6 +3108,11 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         checkVersionable();
+
+        // transactions workaround.
+        NodeId id = NodeId.valueOf(getProperty(QName.JCR_BASEVERSION).getString());
+        session.getVersionManager().getVersion(id);
+
         return (Version) getProperty(QName.JCR_BASEVERSION).getNode();
     }
 

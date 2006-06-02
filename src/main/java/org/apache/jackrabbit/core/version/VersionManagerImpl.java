@@ -228,33 +228,34 @@ public class VersionManagerImpl extends AbstractVersionManager
             return null;
         }
         try {
-            synchronized (versionItems) {
-                InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
-                if (item == null) {
-                    if (stateMgr.hasItemState(id)) {
-                        NodeState state = (NodeState) stateMgr.getItemState(id);
-                        NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
-                        NodeId parentId = pNode.getParentId();
-                        InternalVersionItem parent = getItem(parentId);
-                        QName ntName = state.getNodeTypeName();
-                        if (ntName.equals(QName.NT_FROZENNODE)) {
-                            item = new InternalFrozenNodeImpl(this, pNode, parent);
-                        } else if (ntName.equals(QName.NT_VERSIONEDCHILD)) {
-                            item = new InternalFrozenVHImpl(this, pNode, parent);
-                        } else if (ntName.equals(QName.NT_VERSION)) {
-                            item = ((InternalVersionHistory) parent).getVersion(id);
-                        } else if (ntName.equals(QName.NT_VERSIONHISTORY)) {
-                            item = new InternalVersionHistoryImpl(this, pNode);
-                        } else {
-                            return null;
-                        }
+            aquireReadLock();
+            InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
+            if (item == null) {
+                if (stateMgr.hasItemState(id)) {
+                    NodeState state = (NodeState) stateMgr.getItemState(id);
+                    NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
+                    NodeId parentId = pNode.getParentId();
+                    InternalVersionItem parent = getItem(parentId);
+                    QName ntName = state.getNodeTypeName();
+                    if (ntName.equals(QName.NT_FROZENNODE)) {
+                        item = new InternalFrozenNodeImpl(this, pNode, parent);
+                    } else if (ntName.equals(QName.NT_VERSIONEDCHILD)) {
+                        item = new InternalFrozenVHImpl(this, pNode, parent);
+                    } else if (ntName.equals(QName.NT_VERSION)) {
+                        item = ((InternalVersionHistory) parent).getVersion(id);
+                    } else if (ntName.equals(QName.NT_VERSIONHISTORY)) {
+                        item = new InternalVersionHistoryImpl(this, pNode);
+                    } else {
+                        return null;
                     }
-                    versionItems.put(id, item);
                 }
-                return item;
+                versionItems.put(id, item);
             }
+            return item;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
+        } finally {
+            releaseReadLock();
         }
     }
 
@@ -350,7 +351,8 @@ public class VersionManagerImpl extends AbstractVersionManager
      * @param item item updated
      */
     private void itemUpdated(InternalVersionItem item) {
-        synchronized (versionItems) {
+        try {
+            aquireReadLock();
             InternalVersionItem cached = (InternalVersionItem) versionItems.remove(item.getId());
             if (cached != null) {
                 if (cached instanceof InternalVersionHistoryImpl) {
@@ -363,6 +365,8 @@ public class VersionManagerImpl extends AbstractVersionManager
                     }
                 }
             }
+        } finally {
+            releaseReadLock();
         }
     }
 
