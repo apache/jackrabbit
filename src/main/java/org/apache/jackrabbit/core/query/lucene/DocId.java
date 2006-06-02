@@ -22,6 +22,8 @@ import org.apache.lucene.index.TermDocs;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 
 /**
  * Implements a document id which can be based on a Node uuid or a lucene
@@ -181,7 +183,7 @@ abstract class DocId {
          * If <code>null</code> then the document number has not yet been
          * calculated.
          */
-        private IndexReader reader;
+        private Reference reader;
 
         /**
          * The previously calculated document number.
@@ -202,7 +204,7 @@ abstract class DocId {
          */
         int getDocumentNumber(IndexReader reader) throws IOException {
             synchronized (this) {
-                if (reader == this.reader) {
+                if (this.reader != null && this.reader.get() == reader) {
                     return docNumber;
                 }
             }
@@ -218,7 +220,7 @@ abstract class DocId {
             }
             synchronized (this) {
                 docNumber = doc;
-                this.reader = reader;
+                this.reader = new WeakReference(reader);
             }
             return doc;
         }
