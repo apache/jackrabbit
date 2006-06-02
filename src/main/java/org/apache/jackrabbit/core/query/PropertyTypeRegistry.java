@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
@@ -103,7 +102,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
                             System.arraycopy(types, 0, tmp, 0, types.length);
                             types = tmp;
                         }
-                        types[types.length - 1] = new TypeMapping(type, ntName);
+                        types[types.length - 1] = new TypeMapping(ntName, type, propDefs[i].isMultiple());
                         typeMapping.put(name, types);
                     }
                 }
@@ -171,9 +170,13 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
         /** The QName of the node type where this type mapping originated */
         final QName ntName;
 
-        private TypeMapping(int type, QName ntName) {
+        /** True if the property type is multi-valued */
+        public final boolean isMultiValued;
+
+        private TypeMapping(QName ntName, int type, boolean isMultiValued) {
             this.type = type;
             this.ntName = ntName;
+            this.isMultiValued = isMultiValued;
         }
     }
 }
