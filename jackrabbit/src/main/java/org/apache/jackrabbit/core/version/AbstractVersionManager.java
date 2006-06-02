@@ -64,8 +64,6 @@ abstract class AbstractVersionManager implements VersionManager {
                 /**
                  * Allow reader when there is no active writer, or current
                  * thread owns the write lock (reentrant).
-                 * <p/>
-                 * the 'noLockHack' is only temporary (hopefully)
                  */
                 protected boolean allowReader() {
                     return activeWriter_ == null
