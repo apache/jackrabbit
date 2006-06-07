@@ -1387,7 +1387,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          */
         boolean isInitialized() {
             try {
-                initLock.readLock().attempt(0);
+                if (!initLock.readLock().attempt(0)) {
+                    return false;
+                }
             } catch (InterruptedException e) {
                 return false;
             }
