@@ -1206,14 +1206,13 @@ public class BatchedItemOperations extends ItemValidator {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        NodeState parent = getNodeState(parentId);
+        // remove target
+        recursiveRemoveNodeState(target);
         // remove child node entry from parent
+        NodeState parent = getNodeState(parentId);
         parent.removeChildNodeEntry(target.getNodeId());
         // store parent
         stateMgr.store(parent);
-
-        // remove target
-        recursiveRemoveNodeState(target);
     }
 
     /**
