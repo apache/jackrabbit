@@ -19,9 +19,10 @@ package org.apache.jackrabbit.core.observation;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.name.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -29,6 +30,11 @@ import java.util.List;
  * a set of underlying dispatchers.
  */
 public class DelegatingObservationDispatcher extends EventDispatcher {
+
+    /**
+     * Logger instance.
+     */
+    private static Logger log = LoggerFactory.getLogger(DelegatingObservationDispatcher.class);
 
     /**
      * the set of dispatchers
@@ -41,7 +47,9 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * @param disp
      */
     public void addDispatcher(ObservationManagerFactory disp) {
-        dispatchers.add(disp);
+        synchronized (dispatchers) {
+            dispatchers.add(disp);
+        }
     }
 
     /**
@@ -50,7 +58,9 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * @param disp
      */
     public void removeDispatcher(ObservationManagerFactory disp) {
-        dispatchers.remove(disp);
+        synchronized (dispatchers) {
+            dispatchers.remove(disp);
+        }
     }
 
     /**
@@ -97,13 +107,21 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * @param session
      */
     public void dispatch(List eventList, SessionImpl session, Path pathPrefix) {
-        Iterator iter = dispatchers.iterator();
-        while (iter.hasNext()) {
-            ObservationManagerFactory fac = (ObservationManagerFactory) iter.next();
-            EventStateCollection events = new EventStateCollection(fac, session, pathPrefix);
-            events.addAll(eventList);
-            events.prepare();
-            events.dispatch();
+        ObservationManagerFactory[] disp;
+        synchronized (dispatchers) {
+            disp = (ObservationManagerFactory[]) dispatchers.toArray(
+                    new ObservationManagerFactory[dispatchers.size()]);
+        }
+        for (int i=0; i< disp.length; i++) {
+            EventStateCollection events =
+                    new EventStateCollection(disp[i], session, pathPrefix);
+            try {
+                events.addAll(eventList);
+                events.prepare();
+                events.dispatch();
+            } catch (Exception e) {
+                log.error("Error while dispatching events.", e);
+            }
         }
     }
 }
