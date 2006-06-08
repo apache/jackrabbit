@@ -1410,7 +1410,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          */
         FileSystem getFileSystem() {
             if (!isInitialized()) {
-                throw new IllegalStateException("not initialized");
+                throw new IllegalStateException("workspace '" + getName()
+                        + "' not initialized");
             }
 
             return fs;
@@ -1420,12 +1421,14 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * Returns the workspace persistence manager.
          *
          * @return the workspace persistence manager
-         * @throws RepositoryException if the persistence manager could not be instantiated/initialized
+         * @throws RepositoryException if the persistence manager could not be
+         * instantiated/initialized
          */
         PersistenceManager getPersistenceManager()
                 throws RepositoryException {
             if (!isInitialized()) {
-                throw new IllegalStateException("not initialized");
+                throw new IllegalStateException("workspace '" + getName()
+                        + "' not initialized");
             }
 
             return persistMgr;
@@ -1441,7 +1444,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         SharedItemStateManager getItemStateProvider()
                 throws RepositoryException {
             if (!isInitialized()) {
-                throw new IllegalStateException("not initialized");
+                throw new IllegalStateException("workspace '" + getName()
+                        + "' not initialized");
             }
 
             return itemStateMgr;
@@ -1454,7 +1458,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          */
         ObservationManagerFactory getObservationManagerFactory() {
             if (!isInitialized()) {
-                throw new IllegalStateException("not initialized");
+                throw new IllegalStateException("workspace '" + getName()
+                        + "' not initialized");
             }
 
             return obsMgrFactory;
@@ -1469,7 +1474,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          */
         SearchManager getSearchManager() throws RepositoryException {
             if (!isInitialized()) {
-                throw new IllegalStateException("not initialized");
+                throw new IllegalStateException("workspace '" + getName()
+                        + "' not initialized");
             }
 
             synchronized (this) {
@@ -1500,7 +1506,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          */
         LockManager getLockManager() throws RepositoryException {
             if (!isInitialized()) {
-                throw new IllegalStateException("not initialized");
+                throw new IllegalStateException("workspace '" + getName()
+                        + "' not initialized");
             }
 
             synchronized (this) {
@@ -1521,14 +1528,16 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          */
         SystemSession getSystemSession() throws RepositoryException {
             if (!isInitialized()) {
-                throw new IllegalStateException("not initialized");
+                throw new IllegalStateException("workspace '" + getName()
+                        + "' not initialized");
             }
 
             synchronized (this) {
                 // system session is lazily instantiated in order to avoid
                 // 'chicken & egg' bootstrap problems
                 if (systemSession == null) {
-                    systemSession = SystemSession.create(RepositoryImpl.this, config);
+                    systemSession =
+                            SystemSession.create(RepositoryImpl.this, config);
                 }
                 return systemSession;
             }
