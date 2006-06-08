@@ -501,6 +501,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     private void initWorkspace(WorkspaceInfo wspInfo) throws RepositoryException {
         // first initialize workspace info
         if (!wspInfo.initialize()) {
+            // workspace has already been initialized, we're done
             return;
         }
 
@@ -649,8 +650,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             log.error("Unable to initialize workspace '" + workspaceName + "'", e);
             throw new NoSuchWorkspaceException(workspaceName);
         }
-        // reset idle timestamp
-        wspInfo.setIdleTimestamp(0);
         return wspInfo;
     }
 
@@ -689,7 +688,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @see SessionImpl#createWorkspace(String,InputSource)
      */
     protected void createWorkspace(String workspaceName,
-                                                InputSource configTemplate)
+                                   InputSource configTemplate)
             throws RepositoryException {
         synchronized (wspInfos) {
             if (wspInfos.containsKey(workspaceName)) {
@@ -793,12 +792,14 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @throws RepositoryException      if another error occurs
      */
     protected final SessionImpl createSession(AuthContext loginContext,
-                                                           String workspaceName)
+                                              String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
         WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
         SessionImpl ses = createSessionInstance(loginContext, wspInfo.getConfig());
-        markActive(ses);
+        onSessionCreated(ses);
+        // reset idle timestamp
+        wspInfo.setIdleTimestamp(0);
         return ses;
     }
 
@@ -820,22 +821,24 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * @throws RepositoryException      if another error occurs
      */
     protected final SessionImpl createSession(Subject subject,
-                                                           String workspaceName)
+                                              String workspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             RepositoryException {
         WorkspaceInfo wspInfo = getWorkspaceInfo(workspaceName);
         SessionImpl ses = createSessionInstance(subject, wspInfo.getConfig());
-        markActive(ses);
+        onSessionCreated(ses);
+        // reset idle timestamp
+        wspInfo.setIdleTimestamp(0);
         return ses;
     }
 
     /**
-     * Puts the given session to the list of active sessions and registers this
+     * Adds the given session to the list of active sessions and registers this
      * repository as listener.
      *
      * @param session
      */
-    protected void markActive(SessionImpl session) {
+    protected void onSessionCreated(SessionImpl session) {
         synchronized (activeSessions) {
             session.addListener(this);
             activeSessions.put(session, session);
@@ -908,7 +911,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
         // make sure this instance is not used anymore
         disposed = true;
-        // wakeup eventual waiters
+
+        // wake up threads waiting on this instance's monitor (e.g. workspace janitor)
         notifyAll();
 
         // finally release repository lock
@@ -1312,7 +1316,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         private boolean initialized;
 
         /**
-         * lock that guards the init sequence
+         * lock that guards the initialization of this instance
          */
         private final ReadWriteLock initLock =
                 new ReentrantWriterPreferenceReadWriteLock();
@@ -1547,7 +1551,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * <li>lock manager</li>
          * <li>search manager</li>
          * </ul>
-         * @return <code>true</code> if this info was initialized.
+         * @return <code>true</code> if this instance has been successfully
+         *         initialized, <code>false</code> if it is already initialized.
+         * @throws RepositoryException if an error occured during the initialization
          */
         boolean initialize() throws RepositoryException {
             try {
@@ -1557,6 +1563,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             }
             try {
                 if (initialized) {
+                    // already initialized, we're done
                     return false;
                 }
 
@@ -1595,7 +1602,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 // register the observation factory of that workspace
                 delegatingDispatcher.addDispatcher(obsMgrFactory);
 
-                idleTimestamp = 0;
                 initialized = true;
 
                 log.info("workspace '" + getName() + "' initialized");
@@ -1606,10 +1612,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         }
 
         /**
-         * disposes this workspaceinfo if it has been idle for more than
-         * <code>maxIdleTime</code> milliseconds.
+         * Disposes this <code>WorkspaceInfo</code> if it has been idle for more
+         * than <code>maxIdleTime</code> milliseconds.
          *
-         * @param maxIdleTime
+         * @param maxIdleTime amount of time in mmilliseconds before an idle
+         *                    workspace is automatically shutdown.
          */
         void disposeIfIdle(long maxIdleTime) {
             try {
@@ -1622,13 +1629,15 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     return;
                 }
                 long currentTS = System.currentTimeMillis();
-                if (getIdleTimestamp() == 0) {
+                if (idleTimestamp == 0) {
                     // set idle timestamp
                     idleTimestamp = currentTS;
                 } else {
-                    if ((currentTS - getIdleTimestamp()) > maxIdleTime) {
+                    if ((currentTS - idleTimestamp) > maxIdleTime) {
                         // temporarily shutdown workspace
-                        log.info("disposing workspace '" + getName() + "' that is idle for " + (currentTS - idleTimestamp));
+                        log.info("disposing workspace '" + getName()
+                                + "' which has been idle for "
+                                + (currentTS - idleTimestamp) + " ms");
                         dispose();
                     }
                 }
@@ -1649,6 +1658,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
             try {
                 if (!initialized) {
+                    // nothing to dispose of, we're already done
                     return;
                 }
 
@@ -1704,6 +1714,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
                 // reset idle timestamp
                 idleTimestamp = 0;
+
                 initialized = false;
 
                 log.info("workspace '" + getName() + "' has been shutdown");
