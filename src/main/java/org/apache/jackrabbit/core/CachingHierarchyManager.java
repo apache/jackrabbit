@@ -305,7 +305,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 if (cne == null) {
                     // Item does not exist, remove
                     child.remove();
-                    evict(child);
+                    remove(child);
                     return;
                 }
 
@@ -313,7 +313,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 if (childEntry != null && !cne.getId().equals(childEntry.getId())) {
                     // Different child item, remove
                     child.remove();
-                    evict(child);
+                    remove(child);
                 }
             }
         }
@@ -324,7 +324,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     public void stateDestroyed(ItemState destroyed) {
         destroyed.removeListener(this);
-        evict(destroyed.getId());
+        remove(destroyed.getId());
     }
 
     /**
@@ -332,7 +332,14 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     public void stateDiscarded(ItemState discarded) {
         discarded.removeListener(this);
-        evict(discarded.getId());
+        if (discarded.isTransient() && !discarded.hasOverlayedState()) {
+            // a new node has been discarded -> remove from cache
+            remove(discarded.getId());
+        } else if (provider.hasItemState(discarded.getId())) {
+            evict(discarded.getId());
+        } else {
+            remove(discarded.getId());
+        }
     }
 
     /**
@@ -491,6 +498,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             }
 
             PathMap.Element element = pathCache.put(path);
+            if (element.get() != null) {
+                if (!id.equals(((LRUEntry) element.get()).getId())) {
+                    log.warn("overwriting PathMap.Element");
+                }
+            }
             LRUEntry entry = new LRUEntry(id, element);
             element.set(entry);
             idCache.put(id, entry);
@@ -531,7 +543,68 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     }
 
     /**
+     * Remove item from cache. Removes the associated <code>LRUEntry</code>
+     * and the <code>PathMap.Element</code> with it. Indexes of same name
+     * sibling elements are shifted!
+     *
+     * @param id item id
+     */
+    private void remove(ItemId id) {
+        synchronized (cacheMonitor) {
+            LRUEntry entry = (LRUEntry) idCache.get(id);
+            if (entry != null) {
+                remove(entry, true);
+            }
+        }
+    }
+
+    /**
+     * Remove item from cache. Index of same name sibling items are shifted!
+     *
+     * @param entry               LRU entry
+     * @param removeFromPathCache whether to remove from path cache
+     */
+    private void remove(LRUEntry entry, boolean removeFromPathCache) {
+        synchronized (cacheMonitor) {
+            if (removeFromPathCache) {
+                PathMap.Element element = entry.getElement();
+                remove(element);
+                element.remove();
+            } else {
+                idCache.remove(entry.getId());
+                entry.remove();
+            }
+        }
+    }
+
+    /**
+     * Evict item from cache. Index of same name sibling items are <b>not</b>
+     * shifted!
+     *
+     * @param entry               LRU entry
+     * @param removeFromPathCache whether to remove from path cache
+     */
+    private void evict(LRUEntry entry, boolean removeFromPathCache) {
+        synchronized (cacheMonitor) {
+            if (removeFromPathCache) {
+                PathMap.Element element = entry.getElement();
+                element.traverse(new PathMap.ElementVisitor() {
+                    public void elementVisited(PathMap.Element element) {
+                        evict((LRUEntry) element.get(), false);
+                    }
+                }, false);
+                element.remove(false);
+            } else {
+                idCache.remove(entry.getId());
+                entry.remove();
+            }
+        }
+    }
+
+    /**
      * Evict item from cache. Evicts the associated <code>LRUEntry</code>
+     * and the <code>PathMap.Element</code> with it. Indexes of same name
+     * sibling elements are <b>not</b> shifted!
      *
      * @param id item id
      */
@@ -545,35 +618,17 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     }
 
     /**
-     * Evict item from cache
-     *
-     * @param entry               LRU entry
-     * @param removeFromPathCache whether to remove from path cache
-     */
-    private void evict(LRUEntry entry, boolean removeFromPathCache) {
-        synchronized (cacheMonitor) {
-            if (removeFromPathCache) {
-                PathMap.Element element = entry.getElement();
-                evict(element);
-                element.remove();
-            } else {
-                idCache.remove(entry.getId());
-                entry.remove();
-            }
-        }
-    }
-
-    /**
-     * Evict path map element from cache. This will traverse all children
-     * of this element and evict the objects associated with them
+     * Remove path map element from cache. This will traverse all children
+     * of this element and remove the objects associated with them.
+     * Index of same name sibling items are shifted!
      *
      * @param element path map element
      */
-    private void evict(PathMap.Element element) {
+    private void remove(PathMap.Element element) {
         synchronized (cacheMonitor) {
             element.traverse(new PathMap.ElementVisitor() {
                 public void elementVisited(PathMap.Element element) {
-                    evict((LRUEntry) element.get(), false);
+                    remove((LRUEntry) element.get(), false);
                 }
             }, false);
         }
@@ -626,7 +681,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (parent != null) {
                 PathMap.Element element = parent.remove(path.getNameElement());
                 if (element != null) {
-                    evict(element);
+                    remove(element);
                 }
             }
         }
