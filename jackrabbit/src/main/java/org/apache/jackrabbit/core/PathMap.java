@@ -310,10 +310,19 @@ public class PathMap {
 
         /**
          * Remove this element. Delegates the call to the parent item.
+         * Index of same name siblings will be shifted!
          */
         public void remove() {
+            remove(true);
+        }
+
+        /**
+         * Remove this element. Delegates the call to the parent item.
+         * @param shift if index of same name siblings will be shifted.
+         */
+        public void remove(boolean shift) {
             if (parent != null) {
-                parent.remove(getPathElement());
+                parent.remove(getPathElement(), shift);
             }
         }
 
