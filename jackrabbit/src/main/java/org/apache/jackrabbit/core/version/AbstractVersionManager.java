@@ -38,6 +38,9 @@ import java.util.List;
 
 /**
  * Base implementation of the {@link VersionManager} interface.
+ * <p/>
+ * All read operations must aquire the read lock before reading, all write
+ * operations must aquire the write lock.
  */
 abstract class AbstractVersionManager implements VersionManager {
 
@@ -77,6 +80,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * {@inheritDoc}
      */
     public InternalVersion getVersion(NodeId id) throws RepositoryException {
+        // lock handling via getItem()
         InternalVersion v = (InternalVersion) getItem(id);
         if (v == null) {
             log.warn("Versioning item not found: " + id);
@@ -89,7 +93,7 @@ abstract class AbstractVersionManager implements VersionManager {
      */
     public InternalVersionHistory getVersionHistory(NodeId id)
             throws RepositoryException {
-
+        // lock handling via getItem()
         return (InternalVersionHistory) getItem(id);
     }
 
@@ -97,6 +101,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * {@inheritDoc}
      */
     public boolean hasVersionHistory(NodeId id) {
+        // lock handling via hasItem()
         return hasItem(id);
     }
 
@@ -104,6 +109,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * {@inheritDoc}
      */
     public boolean hasVersion(NodeId id) {
+        // lock handling via hasItem()
         return hasItem(id);
     }
 
@@ -156,16 +162,24 @@ abstract class AbstractVersionManager implements VersionManager {
      */
     public VersionHistory getVersionHistory(Session session, NodeState node)
             throws RepositoryException {
-
-        NodeId vhId = getVersionHistoryId(node);
-        if (vhId == null) {
-            return null;
+        aquireReadLock();
+        try {
+            NodeId vhId = getVersionHistoryId(node);
+            if (vhId == null) {
+                return null;
+            }
+            return (VersionHistory) ((SessionImpl) session).getNodeById(vhId);
+        } finally {
+            releaseReadLock();
         }
-        return (VersionHistory) ((SessionImpl) session).getNodeById(vhId);
     }
 
     /**
      * Returns the item with the given persistent id. Subclass responsibility.
+     * <p/>
+     * Please note, that the overridden method must aquire the readlock before
+     * reading the state manager.
+     *
      * @param id the id of the item
      * @return version item
      * @throws RepositoryException if an error occurs
@@ -185,6 +199,10 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * Returns the item references that reference the given version item.
      * Subclass responsiblity.
+     * <p/>
+     * Please note, that the overridden method must aquire the readlock before
+     * reading the state manager.
+     *
      * @param item version item
      * @return list of item references, may be empty.
      */
@@ -259,8 +277,8 @@ abstract class AbstractVersionManager implements VersionManager {
      *         or <code>null</code> if that node doesn't have a version history.
      * @throws javax.jcr.RepositoryException if an error occurs
      */
-    NodeId getVersionHistoryId(NodeState node) throws RepositoryException {
-
+    private NodeId getVersionHistoryId(NodeState node)
+            throws RepositoryException {
         // build and traverse path
         String uuid = node.getNodeId().getUUID().toString();
         NodeStateEx n = historyRoot;

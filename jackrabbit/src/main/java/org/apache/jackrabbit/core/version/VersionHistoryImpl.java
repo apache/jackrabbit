@@ -30,11 +30,6 @@ import javax.jcr.nodetype.NodeDefinition;
 public class VersionHistoryImpl extends AbstractVersionHistory {
 
     /**
-     * the internal version history
-     */
-    private final InternalVersionHistory history;
-
-    /**
      * creates a new version history node.
      *
      * @param itemMgr
@@ -50,13 +45,6 @@ public class VersionHistoryImpl extends AbstractVersionHistory {
                               ItemLifeCycleListener[] listeners,
                               InternalVersionHistory history) {
         super(itemMgr, session, id, state, definition, listeners);
-        this.history = history;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected InternalVersionHistory getInternalVersionHistory() {
-        return history;
-    }
 }
