@@ -30,11 +30,6 @@ import javax.jcr.nodetype.NodeDefinition;
 public class VersionImpl extends AbstractVersion {
 
     /**
-     * the internal version
-     */
-    private final InternalVersion version;
-
-    /**
      * creates a new version node
      *
      * @param itemMgr
@@ -50,15 +45,6 @@ public class VersionImpl extends AbstractVersion {
                        ItemLifeCycleListener[] listeners,
                        InternalVersion version) {
         super(itemMgr, session, id, state, definition, listeners);
-        this.version = version;
     }
 
-    /**
-     * Returns the internal version
-     *
-     * @return the internal version
-     */
-    protected InternalVersion getInternalVersion() {
-        return version;
-    }
 }

@@ -29,6 +29,12 @@ import javax.jcr.NoSuchWorkspaceException;
 public class XAWorkspace extends WorkspaceImpl {
 
     /**
+     * the name of the workspace info attribute in the transaction context
+     */
+    private static final String ATTR_NAME_WORKSPACE_INFO =
+            RepositoryImpl.WorkspaceInfo.class.getName();
+
+    /**
      * Protected constructor.
      *
      * @param wspConfig The workspace configuration
@@ -50,7 +56,6 @@ public class XAWorkspace extends WorkspaceImpl {
         return new XAItemStateManager(shared, this);
     }
 
-
     /**
      * Returns an internal XAResource that is used at the beginning of the
      * resources chain in {@link XASessionImpl#init()}. This resource will lock
@@ -66,9 +71,13 @@ public class XAWorkspace extends WorkspaceImpl {
             public void beforeOperation(TransactionContext tx) {
             }
 
-            public void prepare(TransactionContext tx) throws TransactionException {
+            public void prepare(TransactionContext tx)
+                    throws TransactionException {
                 try {
-                    rep.getWorkspaceInfo(wspConfig.getName()).lockAcquire();
+                    RepositoryImpl.WorkspaceInfo wspInfo =
+                            rep.getWorkspaceInfo(wspConfig.getName());
+                    wspInfo.lockAcquire();
+                    tx.setAttribute(ATTR_NAME_WORKSPACE_INFO, wspInfo);
                 } catch (NoSuchWorkspaceException e) {
                     throw new TransactionException("Error while preparing for transaction", e);
                 }
@@ -103,19 +112,23 @@ public class XAWorkspace extends WorkspaceImpl {
             public void prepare(TransactionContext tx) {
             }
 
-            public void commit(TransactionContext tx) throws TransactionException {
-                try {
-                    rep.getWorkspaceInfo(wspConfig.getName()).lockRelease();
-                } catch (NoSuchWorkspaceException e) {
-                    throw new TransactionException("Error while commit transaction", e);
+            public void commit(TransactionContext tx) {
+                RepositoryImpl.WorkspaceInfo wspInfo =
+                        (RepositoryImpl.WorkspaceInfo)
+                                tx.getAttribute(ATTR_NAME_WORKSPACE_INFO);
+                if (wspInfo != null) {
+                    wspInfo.lockRelease();
+                    tx.removeAttribute(ATTR_NAME_WORKSPACE_INFO);
                 }
             }
 
-            public void rollback(TransactionContext tx) throws TransactionException {
-                try {
-                    rep.getWorkspaceInfo(wspConfig.getName()).lockRelease();
-                } catch (NoSuchWorkspaceException e) {
-                    throw new TransactionException("Error while rollback transaction", e);
+            public void rollback(TransactionContext tx) {
+                RepositoryImpl.WorkspaceInfo wspInfo =
+                        (RepositoryImpl.WorkspaceInfo)
+                                tx.getAttribute(ATTR_NAME_WORKSPACE_INFO);
+                if (wspInfo != null) {
+                    wspInfo.lockRelease();
+                    tx.removeAttribute(ATTR_NAME_WORKSPACE_INFO);
                 }
             }
 
@@ -125,4 +138,3 @@ public class XAWorkspace extends WorkspaceImpl {
     }
 
 }
-

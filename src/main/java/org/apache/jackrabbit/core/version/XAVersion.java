@@ -23,20 +23,12 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 
 import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.RepositoryException;
-import javax.jcr.InvalidItemStateException;
 
 /**
  * Implementation of a {@link javax.jcr.version.Version} that works in an
  * XA environment.
  */
 public class XAVersion extends AbstractVersion {
-
-    /**
-     * Internal version. Gets fetched again from the version manager if
-     * needed.
-     */
-    private InternalVersion version;
 
     /**
      * XA Version manager.
@@ -57,39 +49,7 @@ public class XAVersion extends AbstractVersion {
                      ItemLifeCycleListener[] listeners,
                      InternalVersion version) {
         super(itemMgr, session, id, state, definition, listeners);
-
-        this.version = version;
         this.vMgr = (XAVersionManager) session.getVersionManager();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected InternalVersion getInternalVersion() throws RepositoryException {
-        ensureUpToDate();
-        sanityCheck();
-        return version;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected void sanityCheck() throws RepositoryException {
-        super.sanityCheck();
-
-        if (version == null) {
-            throw new InvalidItemStateException(id + ": the item does not exist anymore");
-        }
-    }
-
-    /**
-     * Ensure the internal version is up-to-date.
-     */
-    private synchronized void ensureUpToDate() throws RepositoryException {
-        if (version != null) {
-            if (vMgr.differentXAEnv((InternalVersionImpl) version)) {
-                version = vMgr.getVersion(version.getId());
-            }
-        }
-    }
 }

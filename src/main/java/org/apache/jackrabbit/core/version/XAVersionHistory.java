@@ -22,8 +22,6 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.nodetype.NodeDefinition;
 
 /**
@@ -31,17 +29,6 @@ import javax.jcr.nodetype.NodeDefinition;
  * XA environment.
  */
 public class XAVersionHistory extends AbstractVersionHistory {
-
-    /**
-     * Internal version history. Gets fetched again from the version manager if
-     * needed.
-     */
-    private InternalVersionHistory history;
-
-    /**
-     * XA Version manager.
-     */
-    private final XAVersionManager vMgr;
 
     /**
      * Create a new instance of this class.
@@ -58,41 +45,6 @@ public class XAVersionHistory extends AbstractVersionHistory {
                             ItemLifeCycleListener[] listeners,
                             InternalVersionHistory history) {
         super(itemMgr, session, id, state, definition, listeners);
-
-        this.history = history;
-        this.vMgr = (XAVersionManager) session.getVersionManager();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected InternalVersionHistory getInternalVersionHistory()
-            throws RepositoryException {
-
-        ensureUpToDate();
-        sanityCheck();
-        return history;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected void sanityCheck() throws RepositoryException {
-        super.sanityCheck();
-
-        if (history == null) {
-            throw new InvalidItemStateException(id + ": the item does not exist anymore");
-        }
-    }
-
-    /**
-     * Ensure the internal version is up-to-date.
-     */
-    private synchronized void ensureUpToDate() throws RepositoryException {
-        if (history != null) {
-            if (vMgr.differentXAEnv(((InternalVersionHistoryImpl) history))) {
-                history = vMgr.getVersionHistory(history.getId());
-            }
-        }
-    }
 }

@@ -87,6 +87,11 @@ public class XAVersionManager extends AbstractVersionManager
     private Map xaItems;
 
     /**
+     * flag that indicates if the version manager was locked during prepare
+     */
+    private boolean vmgrLocked = false;
+
+    /**
      * Creates a new instance of this class.
      */
     public XAVersionManager(VersionManagerImpl vMgr, NodeTypeRegistry ntReg,
@@ -438,7 +443,9 @@ public class XAVersionManager extends AbstractVersionManager
      * Delegate the call to our XA item state manager.
      */
     public void prepare(TransactionContext tx) throws TransactionException {
+        vMgr.aquireWriteLock();
         vMgr.getSharedStateMgr().setNoLockHack(true);
+        vmgrLocked = true;
         ((XAItemStateManager) stateMgr).prepare(tx);
     }
 
@@ -449,13 +456,13 @@ public class XAVersionManager extends AbstractVersionManager
      * global repository manager to update its caches.
      */
     public void commit(TransactionContext tx) throws TransactionException {
-        vMgr.aquireWriteLock();
         ((XAItemStateManager) stateMgr).commit(tx);
         vMgr.getSharedStateMgr().setNoLockHack(false);
 
         Map xaItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
         vMgr.itemsUpdated(xaItems.values());
         vMgr.releaseWriteLock();
+        vmgrLocked = false;
     }
 
     /**
@@ -465,7 +472,11 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public void rollback(TransactionContext tx) {
         ((XAItemStateManager) stateMgr).rollback(tx);
-        vMgr.getSharedStateMgr().setNoLockHack(false);
+        if (vmgrLocked) {
+            vMgr.getSharedStateMgr().setNoLockHack(false);
+            vMgr.releaseWriteLock();
+            vmgrLocked = false;
+        }
     }
 
     /**
@@ -496,10 +507,13 @@ public class XAVersionManager extends AbstractVersionManager
             throws RepositoryException {
 
         NodeState state;
+        aquireReadLock();
         try {
             state = (NodeState) stateMgr.getItemState(history.getId());
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to make local copy", e);
+        } finally {
+            releaseReadLock();
         }
         NodeStateEx stateEx = new NodeStateEx(stateMgr, ntReg, state, null);
         return new InternalVersionHistoryImpl(this, stateEx);

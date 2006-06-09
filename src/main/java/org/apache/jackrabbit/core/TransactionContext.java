@@ -117,21 +117,14 @@ public class TransactionContext implements Runnable {
 
         TransactionException txe = null;
         for (int i = 0; i < resources.length; i++) {
-            InternalXAResource resource = resources[i];
-            if (txe != null) {
-                try {
-                    resource.rollback(this);
-                } catch (TransactionException e) {
-                    log.warn("Unable to rollback changes on " + resource, e);
-                }
-            } else {
-                try {
-                    resource.prepare(this);
-                } catch (TransactionException e) {
-                    txe = e;
-                }
+            try {
+                resources[i].prepare(this);
+            } catch (TransactionException e) {
+                txe = e;
+                break;
             }
         }
+
         afterOperation();
         status = Status.STATUS_PREPARED;
 

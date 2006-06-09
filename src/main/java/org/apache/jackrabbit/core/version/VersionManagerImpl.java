@@ -58,8 +58,7 @@ import java.util.List;
 /**
  * This Class implements a VersionManager.
  */
-public class VersionManagerImpl extends AbstractVersionManager
-        /*implements EventStateCollectionFactory*/ {
+public class VersionManagerImpl extends AbstractVersionManager {
 
     /**
      * the default logger
@@ -197,7 +196,6 @@ public class VersionManagerImpl extends AbstractVersionManager
      */
     public VersionHistory createVersionHistory(Session session, final NodeState node)
             throws RepositoryException {
-
         InternalVersionHistory history = (InternalVersionHistory)
                 escFactory.doSourced((SessionImpl) session, new SourcedTarget(){
             public Object run() throws RepositoryException {
@@ -215,7 +213,12 @@ public class VersionManagerImpl extends AbstractVersionManager
      * {@inheritDoc}
      */
     public boolean hasItem(NodeId id) {
-        return stateMgr.hasItemState(id);
+        aquireReadLock();
+        try {
+            return stateMgr.hasItemState(id);
+        } finally {
+            releaseReadLock();
+        }
     }
 
     /**
@@ -229,29 +232,31 @@ public class VersionManagerImpl extends AbstractVersionManager
         }
         try {
             aquireReadLock();
-            InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
-            if (item == null) {
-                if (stateMgr.hasItemState(id)) {
-                    NodeState state = (NodeState) stateMgr.getItemState(id);
-                    NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
-                    NodeId parentId = pNode.getParentId();
-                    InternalVersionItem parent = getItem(parentId);
-                    QName ntName = state.getNodeTypeName();
-                    if (ntName.equals(QName.NT_FROZENNODE)) {
-                        item = new InternalFrozenNodeImpl(this, pNode, parent);
-                    } else if (ntName.equals(QName.NT_VERSIONEDCHILD)) {
-                        item = new InternalFrozenVHImpl(this, pNode, parent);
-                    } else if (ntName.equals(QName.NT_VERSION)) {
-                        item = ((InternalVersionHistory) parent).getVersion(id);
-                    } else if (ntName.equals(QName.NT_VERSIONHISTORY)) {
-                        item = new InternalVersionHistoryImpl(this, pNode);
-                    } else {
-                        return null;
+            synchronized (versionItems) {
+                InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
+                if (item == null) {
+                    if (stateMgr.hasItemState(id)) {
+                        NodeState state = (NodeState) stateMgr.getItemState(id);
+                        NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
+                        NodeId parentId = pNode.getParentId();
+                        InternalVersionItem parent = getItem(parentId);
+                        QName ntName = state.getNodeTypeName();
+                        if (ntName.equals(QName.NT_FROZENNODE)) {
+                            item = new InternalFrozenNodeImpl(this, pNode, parent);
+                        } else if (ntName.equals(QName.NT_VERSIONEDCHILD)) {
+                            item = new InternalFrozenVHImpl(this, pNode, parent);
+                        } else if (ntName.equals(QName.NT_VERSION)) {
+                            item = ((InternalVersionHistory) parent).getVersion(id);
+                        } else if (ntName.equals(QName.NT_VERSIONHISTORY)) {
+                            item = new InternalVersionHistoryImpl(this, pNode);
+                        } else {
+                            return null;
+                        }
                     }
+                    versionItems.put(id, item);
                 }
-                versionItems.put(id, item);
+                return item;
             }
-            return item;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
@@ -334,34 +339,29 @@ public class VersionManagerImpl extends AbstractVersionManager
 
     /**
      * Invoked by some external source to indicate that some items in the
-     * versions tree were updated. Version manager should flush its own
-     * caches.
+     * versions tree were updated. Version histories are reloaded if possible.
+     * Matching items are removed from the cache.
+     *
      * @param items items updated
      */
     public void itemsUpdated(Collection items) {
-        Iterator iter = items.iterator();
-        while (iter.hasNext()) {
-            itemUpdated((InternalVersionItem) iter.next());
-        }
-    }
-
-    /**
-     * Update internal version item. Version histories are reloaded if possible.
-     * Matching items are removed from the cache.
-     * @param item item updated
-     */
-    private void itemUpdated(InternalVersionItem item) {
+        aquireReadLock();
         try {
-            aquireReadLock();
-            InternalVersionItem cached = (InternalVersionItem) versionItems.remove(item.getId());
-            if (cached != null) {
-                if (cached instanceof InternalVersionHistoryImpl) {
-                    InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl) cached;
-                    try {
-                        vh.reload();
-                        versionItems.put(vh.getId(), vh);
-                    } catch (RepositoryException e) {
-                        log.warn("Unable to update version history: " + e.toString());
+            synchronized (versionItems) {
+                Iterator iter = items.iterator();
+                while (iter.hasNext()) {
+                    InternalVersionItem item = (InternalVersionItem) iter.next();
+                    InternalVersionItem cached = (InternalVersionItem) versionItems.remove(item.getId());
+                    if (cached != null) {
+                        if (cached instanceof InternalVersionHistoryImpl) {
+                            InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl) cached;
+                            try {
+                                vh.reload();
+                                versionItems.put(vh.getId(), vh);
+                            } catch (RepositoryException e) {
+                                log.warn("Unable to update version history: " + e.toString());
+                            }
+                        }
                     }
                 }
             }
@@ -376,6 +376,7 @@ public class VersionManagerImpl extends AbstractVersionManager
      * @return <code>true</code> if the references could be set.
      */
     public boolean setNodeReferences(NodeReferences references) {
+        aquireWriteLock();
         try {
             // filter out version storage intern ones
             NodeReferences refs = new NodeReferences(references.getId());
@@ -394,6 +395,8 @@ public class VersionManagerImpl extends AbstractVersionManager
         } catch (ItemStateException e) {
             log.error("Error while setting references: " + e.toString());
             return false;
+        } finally {
+            releaseWriteLock();
         }
     }
 
@@ -401,11 +404,14 @@ public class VersionManagerImpl extends AbstractVersionManager
      * {@inheritDoc}
      */
     protected List getItemReferences(InternalVersionItem item) {
+        aquireReadLock();
         try {
             NodeReferences refs = pMgr.load(new NodeReferencesId(item.getId()));
             return refs.getReferences();
         } catch (ItemStateException e) {
             // ignore
+        } finally {
+            releaseReadLock();
         }
         return Collections.EMPTY_LIST;
     }
