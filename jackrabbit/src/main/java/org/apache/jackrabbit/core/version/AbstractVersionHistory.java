@@ -33,6 +33,7 @@ import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.NodeIterator;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.Version;
@@ -67,11 +68,19 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
 
     /**
      * Returns the internal version history. Subclass responsibility.
+     *
      * @return internal version history
      * @throws RepositoryException if the internal version history is not available
      */
-    protected abstract InternalVersionHistory getInternalVersionHistory()
-            throws RepositoryException;
+    protected InternalVersionHistory getInternalVersionHistory()
+            throws RepositoryException {
+        InternalVersionHistory history =
+                session.getVersionManager().getVersionHistory((NodeId) id);
+        if (history == null) {
+            throw new InvalidItemStateException(id + ": the item does not exist anymore");
+        }
+        return history;
+    }
 
     /**
      * @see javax.jcr.version.VersionHistory#getRootVersion()
@@ -241,14 +250,6 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
         } catch (UnknownPrefixException e) {
             throw new RepositoryException(e);
         }
-    }
-
-    /**
-     * @see javax.jcr.Node#getUUID()
-     */
-    public String getUUID()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        return getInternalVersionHistory().getId().getUUID().toString();
     }
 
     /**

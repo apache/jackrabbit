@@ -19,18 +19,18 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.ItemLifeCycleListener;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.NodeIterator;
-import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.Calendar;
@@ -65,8 +65,14 @@ public abstract class AbstractVersion extends NodeImpl implements Version {
      * @return internal version
      * @throws RepositoryException if the internal version is not available
      */
-    protected abstract InternalVersion getInternalVersion()
-            throws RepositoryException;
+    protected InternalVersion getInternalVersion() throws RepositoryException {
+        InternalVersion version =
+                session.getVersionManager().getVersion((NodeId) id);
+        if (version == null) {
+            throw new InvalidItemStateException(id + ": the item does not exist anymore");
+        }
+        return version;
+    }
 
     /**
      * {@inheritDoc}
@@ -99,13 +105,6 @@ public abstract class AbstractVersion extends NodeImpl implements Version {
             ret[i] = (Version) session.getNodeById(pred[i].getId());
         }
         return ret;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
-        return getInternalVersion().getId().getUUID().toString();
     }
 
     /**
