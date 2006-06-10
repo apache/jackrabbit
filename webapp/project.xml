@@ -21,7 +21,6 @@
     <!-- ====================================================================== -->
     <extend>${basedir}/../project.xml</extend>
     <artifactId>jackrabbit-server</artifactId>
-    <type>war</type>
     <name>JCRWebdavServer WebApplication</name>
     
     <!-- ====================================================================== -->
