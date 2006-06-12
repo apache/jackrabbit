@@ -85,7 +85,7 @@ import java.sql.SQLException;
  *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
  *   &lt;/FileSystem&gt;
  * </pre>
- * See also {@link DerbyFileSystem}, {@link DB2FileSystem}.
+ * See also {@link DerbyFileSystem}, {@link DB2FileSystem}, {@link OracleFileSystem}.
  */
 public class DbFileSystem extends DatabaseFileSystem {
 
