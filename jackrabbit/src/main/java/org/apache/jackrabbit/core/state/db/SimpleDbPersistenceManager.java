@@ -107,7 +107,7 @@ import org.apache.jackrabbit.core.state.util.Serializer;
  *       &lt;param name="externalBLOBs" value="false"/&gt;
  *   &lt;/PersistenceManager&gt;
  * </pre>
- * See also {@link DerbyPersistenceManager}.
+ * See also {@link DerbyPersistenceManager}, {@link OraclePersistenceManager}.
  */
 public class SimpleDbPersistenceManager extends DatabasePersistenceManager {
 
