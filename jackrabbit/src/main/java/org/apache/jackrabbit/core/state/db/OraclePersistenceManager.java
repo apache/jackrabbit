@@ -23,7 +23,8 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.util.Serializer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,7 +78,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(OraclePersistenceManager.class);
+    private static Logger log = LoggerFactory.getLogger(OraclePersistenceManager.class);
 
     private Class blobClass;
     private Integer DURATION_SESSION_CONSTANT;
