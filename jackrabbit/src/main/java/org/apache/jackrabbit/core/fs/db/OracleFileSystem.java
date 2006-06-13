@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.core.fs.db;
 
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>OracleFileSystem</code> is a JDBC-based <code>FileSystem</code>
@@ -53,7 +54,7 @@ public class OracleFileSystem extends DbFileSystem {
     /**
      * Logger instance
      */
-    private static Logger log = Logger.getLogger(OracleFileSystem.class);
+    private static Logger log = LoggerFactory.getLogger(OracleFileSystem.class);
 
     /**
      * Creates a new <code>OracleFileSystem</code> instance.
