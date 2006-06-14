@@ -50,8 +50,9 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
      * {@inheritDoc}
      */
     public String createId(PropertyId id, int index) {
-        // the blobId is a file system path
+        // the blobId is an absolute file system path
         StringBuffer sb = new StringBuffer();
+        sb.append(FileSystem.SEPARATOR_CHAR);
         char[] chars = id.getParentId().getUUID().toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < chars.length; i++) {
@@ -85,7 +86,7 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
      */
     public void put(String blobId, InputStream in, long size) throws Exception {
         OutputStream out = null;
-        // the blobId is a file system path
+        // the blobId is an absolute file system path
         FileSystemResource internalBlobFile = new FileSystemResource(fs, blobId);
         internalBlobFile.makeParentDirs();
         try {
@@ -106,6 +107,7 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
      * {@inheritDoc}
      */
     public boolean remove(String blobId) throws Exception {
+        // the blobId is an absolute file system path
         FileSystemResource res = new FileSystemResource(fs, blobId);
         if (!res.exists()) {
             return false;
@@ -121,6 +123,7 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
      */
     public FileSystemResource getResource(String blobId)
             throws Exception {
+        // the blobId is an absolute file system path
         return new FileSystemResource(fs, blobId);
     }
 }
