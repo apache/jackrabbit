@@ -915,24 +915,24 @@ public class SessionImpl implements Session, Dumpable {
 
         // check for name collisions
 
+        ItemImpl existing = null;
         try {
-            ItemImpl item = getItemManager().getItem(destPath);
-            if (!item.isNode()) {
+            existing = getItemManager().getItem(destPath);
+            if (!existing.isNode()) {
                 // there's already a property with that name
-                throw new ItemExistsException(item.safeGetJCRPath());
+                throw new ItemExistsException(existing.safeGetJCRPath());
             } else {
-                // there's already a node with that name
-                // check same-name sibling setting of both new and existing node
-                if (!destParentNode.getDefinition().allowsSameNameSiblings()
-                        || !((NodeImpl) item).getDefinition().allowsSameNameSiblings()) {
-                    throw new ItemExistsException(item.safeGetJCRPath());
+                // there's already a node with that name:
+                // check same-name sibling setting of existing node
+                if (!((NodeImpl) existing).getDefinition().allowsSameNameSiblings()) {
+                    throw new ItemExistsException(existing.safeGetJCRPath());
                 }
             }
         } catch (AccessDeniedException ade) {
             // FIXME by throwing ItemExistsException we're disclosing too much information
             throw new ItemExistsException(destAbsPath);
         } catch (PathNotFoundException pnfe) {
-            // no name collision
+            // no name collision since same-name siblings are allowed
         }
 
         // check constraints
@@ -947,6 +947,14 @@ public class SessionImpl implements Session, Dumpable {
             log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
+        // if there's already a node with that name also check same-name sibling
+        // setting of new node; just checking same-name sibling setting on
+        // existing node is not sufficient since same-name sibling nodes don't
+        // necessarily have identical definitions
+        if (existing != null && !newTargetDef.allowsSameNameSiblings()) {
+            throw new ItemExistsException(existing.safeGetJCRPath());
+        }
+
         // check protected flag of old & new parent
         if (destParentNode.getDefinition().isProtected()) {
             String msg = destAbsPath + ": cannot add a child node to a protected node";
