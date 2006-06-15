@@ -9,16 +9,13 @@ to http://jakarta.apache.org/commons/chain/
 
 Building
 ------------------
-In order to buid the command line tool plus all the 
-dependencies in a single runnable jar, you can run 
-the maven plugin called "javaapp". 
-See http://maven-plugins.sourceforge.net/maven-javaapp-plugin/index.html
+call "maven jar" and you'll find a zip file containing the command line interface
 
 USING
 ------------------
-
-Run the command line tool built with javaapp plugin:
-  run java -jar jcr-commands-app-[version].jar
+  unzip the file target/jcr-commands.zip and type
+  > cd bin
+  > call run 
 
 Help on commands:
   Type help and you'll get the full list of available commands.
@@ -29,8 +26,16 @@ Starting jackrabbit:
   /repository/repository.xml and the repository home 
   is under /repository.
 
-  startjackrabbit -config /repository/repository.xml -home /repository
-  login -u username -p password
+  > startjackrabbit /repository/repository.xml /repository
+  > login [username] [password]
+  
+Connecting to a remote JCR-RMI server through JNDI  
+--------------------------------------------------
+1. Edit the file bin/jndi.properties
+2. Copy client JARs to /lib. e.g. /jboss/client/jbossall-client.jar
+3. run the command line
+4. type the following command:
+> jndi [jndi address]
 
 Benchmarking JCR
 ------------------
