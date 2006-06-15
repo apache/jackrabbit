@@ -21,6 +21,28 @@
     xmlns:ant="jelly:ant"
     xmlns:maven="jelly:maven">
 
+	  <postGoal name="jar">
+		<ant:delete dir="target/installer"/>
+	  
+		<ant:copy toDir="target/installer/bin" >
+			<ant:fileset dir="src/bin" includes="**/*"/>
+		</ant:copy>
+
+		<j:forEach var="lib" items="${pom.artifacts}">
+		  <j:set var="dep" value="${lib.dependency}"/>
+		  <ant:copy todir="target/installer/lib" file="${lib.path}"/>
+		</j:forEach>	  
+
+		<ant:copy toDir="target/installer/classes" >
+			<ant:fileset dir="target/classes" includes="**/*"/>
+		</ant:copy>
+		
+		<zip destfile="target/jcr-commands.zip"
+		       basedir="target/installer"
+		  />		
+		
+	  </postGoal>
+	
     <!-- Additionally cleans the test data created -->
     <preGoal name="test">
         <attainGoal name="removerepo"/>
