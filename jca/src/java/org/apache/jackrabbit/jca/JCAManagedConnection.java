@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.XASession;
 
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionEvent;
 import javax.resource.spi.ConnectionEventListener;
@@ -143,7 +144,14 @@ public final class JCAManagedConnection
      */
     public void cleanup()
             throws ResourceException {
-        closeHandles();
+        synchronized (handles) {
+            try {
+                this.session.refresh(false);
+            } catch (RepositoryException e) {
+                throw new ResourceException("unable to cleanup connection", e);
+            }
+            this.handles.clear();
+        }
     }
 
     /**
@@ -379,12 +387,12 @@ public final class JCAManagedConnection
      */
     private void closeHandles() {
         synchronized (handles) {
-            for (Iterator i = handles.iterator(); i.hasNext();) {
-                JCASessionHandle handle = (JCASessionHandle) i.next();
-                closeHandle(handle);
+            JCASessionHandle[] handlesArray = new JCASessionHandle[handles
+                    .size()];
+            handles.toArray(handlesArray);
+            for (int i = 0; i < handlesArray.length; i++) {
+                this.closeHandle(handlesArray[i]);
             }
-
-            handles.clear();
         }
     }
 }
