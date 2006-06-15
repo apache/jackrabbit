@@ -41,6 +41,9 @@
 		<command name="connectToRmiServer"
 			className="org.apache.jackrabbit.command.ext.ConnectToRmiServer"/>
 
+		<command name="connectToJndiServer"
+			className="org.apache.jackrabbit.command.ext.ConnectToJNDIServer"/>
+			
 		<command name="copy"
 			className="org.apache.jackrabbit.command.core.Copy"/>
 
