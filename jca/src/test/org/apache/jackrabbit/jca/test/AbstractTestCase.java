@@ -70,7 +70,7 @@ public abstract class AbstractTestCase
             throws Exception {
         // Construct the managed connection factory
         this.mcf = new JCAManagedConnectionFactory();
-        this.mcf.setHomeDir("c:\\dev\\jcr");
-        this.mcf.setConfigFile("c:\\dev\\jcr\\repository.xml");
+        this.mcf.setHomeDir(JCR_HOME_DIR);
+        this.mcf.setConfigFile(JCR_CONFIG_FILE);
     }
 }
