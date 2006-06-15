@@ -173,6 +173,13 @@
       required="true"/>
   </command>
 
+  <command name="jndi" impl="connectToJndiServer">
+    <argument
+      name="url"
+      position="0"
+      required="true"/>
+  </command>
+    
   <command name="currentnode" impl="currentNode">
     <alias name="cd"/>
     <alias name="cn"/>
