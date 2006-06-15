@@ -22,21 +22,18 @@
             <version>1.0</version>
             <type>jar</type>
         </dependency>
+		
+		<dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>10.1.1.0</version>
+            <url>http://db.apache.org/derby/</url>
+        </dependency>
+		
         <dependency>
             <groupId>lucene</groupId>
             <artifactId>lucene</artifactId>
             <version>1.4.3</version>
-            <type>jar</type>
-        </dependency>
-        <!--
-      cqfs-jackrabbit and cqfs are optional runtime dependencies
-      (an alternative FileSystem implementation);
-      commons-logging is a dependency of cqfs
-    -->
-        <dependency>
-            <groupId>cqfs</groupId>
-            <artifactId>cqfs</artifactId>
-            <version>3.5.6</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -115,12 +112,6 @@
             <groupId>xerces</groupId>
             <artifactId>xmlParserAPIs</artifactId>
             <version>2.0.2</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>cqfs</groupId>
-            <artifactId>cqfs-jackrabbit</artifactId>
-            <version>3.5.6</version>
             <type>jar</type>
         </dependency>
         <dependency>
