@@ -97,7 +97,16 @@
 	    <properties>
 		<rar.bundle>false</rar.bundle>
 	    </properties>	    
-	</dependency>					      
+	</dependency>		
+    <dependency>
+        <groupId>org.apache.derby</groupId>
+        <artifactId>derby</artifactId>
+        <version>10.1.1.0</version>
+        <url>http://db.apache.org/derby/</url>
+	    <properties>
+		<rar.bundle>true</rar.bundle>
+	    </properties>	    
+	</dependency>				      
     </dependencies>	
 	  
     <build>
