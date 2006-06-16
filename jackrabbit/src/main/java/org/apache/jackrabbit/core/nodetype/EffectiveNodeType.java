@@ -73,7 +73,7 @@ public class EffectiveNodeType implements Cloneable {
      * Note that the definitions of all referenced node types must be contained
      * in <code>ntdCache</code>.
      *
-     * @param ntd      node type defintion
+     * @param ntd      node type definition
      * @param entCache cache of already-built effective node types
      * @param ntdCache cache of node type definitions, used to resolve dependencies
      * @return an effective node type representation of the given node type definition.
