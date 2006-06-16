@@ -62,6 +62,12 @@ public final class JCARepositoryManager {
 
     /**
      * Create repository.
+     *
+     * @param homeDir   The location of the repository.
+     * @param configFile The path to the repository configuration file. If the file is located on
+     *                   the classpath, the path should be prepended with
+     *                   JCARepositoryManager.CLASSPATH_CONFIG_PREFIX.
+     *
      */
     public RepositoryImpl createRepository(String homeDir, String configFile)
             throws RepositoryException {
@@ -85,6 +91,9 @@ public final class JCARepositoryManager {
 
     /**
      * Return the reference.
+     * 
+     * @param homeDir   The location of the repository.
+     * @param configFile The path to the repository configuration file.
      */
     private synchronized Reference getReference(String homeDir, String configFile) {
         Reference ref = new Reference(homeDir, configFile);
@@ -116,6 +125,9 @@ public final class JCARepositoryManager {
 
         /**
          * Configuration file.
+         * 
+         * Configuration files located on the classpath begin with
+         * JCARepositoryManager.CLASSPATH_CONFIG_PREFIX.
          */
         private String configFile;
 
@@ -221,7 +233,10 @@ public final class JCARepositoryManager {
 	/**
 	 * Try to shutdown the repository only if
 	 * {@link JCARepositoryManager#autoShutdown} is true.
-	 */
+     *
+     * @param homeDir   The location of the repository.
+     * @param configFile The path to the repository configuration file.
+      */
 	public void autoShutdownRepository(String homeDir, String configFile) {
 		if (this.isAutoShutdown()) {
 		    Reference ref = getReference(homeDir, configFile);
