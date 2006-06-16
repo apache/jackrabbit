@@ -20,13 +20,20 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 import javax.jcr.RepositoryException;
+
+import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
  * This class implements the repository manager.
  */
 public final class JCARepositoryManager {
+	
+    /** The config file prefix that signifies the file is to be loaded from the classpath. */
+    public static final String CLASSPATH_CONFIG_PREFIX = "classpath:";
 
     /**
      * Instance of manager.
@@ -38,6 +45,13 @@ public final class JCARepositoryManager {
      * References.
      */
     private final Map references;
+    
+    /**
+     * Flag indicating that the life cycle 
+     * of the resource is not managed by the
+     * application server 
+     */
+    private boolean autoShutdown = true ;
 
     /**
      * Construct the manager.
@@ -56,12 +70,18 @@ public final class JCARepositoryManager {
     }
 
     /**
-     * Shutdown the repository.
+     * Shutdown all the repositories.
      */
-    public void shutdownRepository(String homeDir, String configFile) {
-        Reference ref = getReference(homeDir, configFile);
-        ref.shutdown();
+    public void shutdown() {
+    	Collection references = this.references.values() ;
+    	Iterator iter = references.iterator() ;
+    	while (iter.hasNext()) {
+			Reference ref = (Reference) iter.next();
+			ref.shutdown();	
+		}
+        this.references.clear();
     }
+    
 
     /**
      * Return the reference.
@@ -97,17 +117,12 @@ public final class JCARepositoryManager {
         /**
          * Configuration file.
          */
-        private final String configFile;
+        private String configFile;
 
         /**
          * Repository instance.
          */
         private RepositoryImpl repository;
-
-        /**
-         * Reference count.
-         */
-        private int count;
 
         /**
          * Construct the manager.
@@ -116,7 +131,6 @@ public final class JCARepositoryManager {
             this.homeDir = homeDir;
             this.configFile = configFile;
             this.repository = null;
-            this.count = 0;
         }
 
         /**
@@ -125,11 +139,23 @@ public final class JCARepositoryManager {
         public RepositoryImpl create()
                 throws RepositoryException {
             if (repository == null) {
-                RepositoryConfig config = RepositoryConfig.create(configFile, homeDir);
+                RepositoryConfig config = null;
+
+                if (configFile.startsWith(CLASSPATH_CONFIG_PREFIX)) {
+                    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                    if (cl == null) {
+                        cl = this.getClass().getClassLoader();
+                    }
+                    
+                    InputStream configInputStream = cl.getResourceAsStream(
+                        configFile.substring(CLASSPATH_CONFIG_PREFIX.length()));
+                    config = RepositoryConfig.create(configInputStream, homeDir);
+                } else {
+                    config = RepositoryConfig.create(configFile, homeDir);
+                }
                 repository = RepositoryImpl.create(config);
             }
 
-            count++;
             return repository;
         }
 
@@ -137,14 +163,7 @@ public final class JCARepositoryManager {
          * Shutdown the repository.
          */
         public void shutdown() {
-            if (count > 0) {
-                count--;
-
-                if (count == 0) {
-                    repository.shutdown();
-                    repository = null;
-                }
-            }
+	        repository.shutdown();
         }
 
         /**
@@ -190,5 +209,24 @@ public final class JCARepositoryManager {
             }
         }
     }
+
+	public boolean isAutoShutdown() {
+		return autoShutdown;
+	}
+
+	public void setAutoShutdown(boolean autoShutdown) {
+		this.autoShutdown = autoShutdown;
+	}
+
+	/**
+	 * Try to shutdown the repository only if
+	 * {@link JCARepositoryManager#autoShutdown} is true.
+	 */
+	public void autoShutdownRepository(String homeDir, String configFile) {
+		if (this.isAutoShutdown()) {
+		    Reference ref = getReference(homeDir, configFile);
+		    ref.shutdown();
+		}
+	}
 }
 
