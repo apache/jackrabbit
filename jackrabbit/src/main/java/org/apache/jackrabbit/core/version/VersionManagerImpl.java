@@ -137,7 +137,7 @@ public class VersionManagerImpl extends AbstractVersionManager {
                 NodeState root = pMgr.createNew(rootId);
                 root.setParentId(rootParentId);
                 root.setDefinitionId(ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicableChildNodeDef(
-                        QName.JCR_VERSIONSTORAGE, QName.REP_VERSIONSTORAGE).getId());
+                        QName.JCR_VERSIONSTORAGE, QName.REP_VERSIONSTORAGE, ntReg).getId());
                 root.setNodeTypeName(QName.REP_VERSIONSTORAGE);
                 PropertyState pt = pMgr.createNew(new PropertyId(rootId, QName.JCR_PRIMARYTYPE));
                 pt.setDefinitionId(ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicablePropertyDef(

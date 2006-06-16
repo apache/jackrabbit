@@ -484,7 +484,10 @@ public class NodeTypeImpl implements NodeType {
      */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
         try {
-            ent.checkAddNodeConstraints(QName.fromJCRName(childNodeName, nsResolver), QName.fromJCRName(nodeTypeName, nsResolver));
+            ent.checkAddNodeConstraints(
+                    QName.fromJCRName(childNodeName, nsResolver),
+                    QName.fromJCRName(nodeTypeName, nsResolver),
+                    ntMgr.getNodeTypeRegistry());
             return true;
         } catch (NameException be) {
             // implementation specific exception, fall through
