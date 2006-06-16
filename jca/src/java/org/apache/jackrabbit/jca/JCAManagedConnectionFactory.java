@@ -247,13 +247,6 @@ public final class JCAManagedConnectionFactory
     }
 
     /**
-     * Shutdown the repository.
-     */
-    protected void finalize() {
-        shutdownRepository();
-    }
-
-    /**
      * Create repository.
      */
     private void createRepository()
@@ -280,11 +273,12 @@ public final class JCAManagedConnectionFactory
         }
     }
 
-    /**
-     * Shutdown the repository.
-     */
-    private void shutdownRepository() {
+	/**
+	 * Shutdown the repository.
+	 */
+	protected void finalize() {
         JCARepositoryManager mgr = JCARepositoryManager.getInstance();
-        mgr.shutdownRepository(homeDir, configFile);
-    }
+        mgr.autoShutdownRepository(homeDir, configFile);
+	}
+
 }

@@ -1,13 +1,10 @@
 <connection-factories> 
     <tx-connection-factory>
-	<jndi-name>jcr</jndi-name> 
-	<adapter-display-name>JCR Adapter</adapter-display-name>
-	<rar-name>jackrabbit-jca.rar</rar-name>
-	<connection-definition>javax.jcr.Session</connection-definition>
-	<xa-transaction/>
-	
-	<!-- Configuration properties. -->
-	<config-property name="homeDir">\dev\jcr</config-property>
-	<config-property name="configFile">\dev\jcr\repository.xml</config-property>
+		<jndi-name>jcr/local</jndi-name> 
+		<xa-transaction/>
+		<rar-name>jackrabbit-jca.rar</rar-name>
+		<connection-definition>javax.jcr.Repository</connection-definition>
+		<config-property name="homeDir" type="java.lang.String">/temp/jackrabbit</config-property>
+		<config-property name="configFile" type="java.lang.String">classpath:repository.xml</config-property>
     </tx-connection-factory>
-</connection-factories> 
+</connection-factories>
