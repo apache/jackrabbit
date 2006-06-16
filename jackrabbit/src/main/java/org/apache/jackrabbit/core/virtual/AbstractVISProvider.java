@@ -270,7 +270,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
             // hack, use nt:unstructured as parent
             NodeTypeRegistry ntReg = getNodeTypeRegistry();
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(QName.NT_UNSTRUCTURED);
-            NodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName);
+            NodeDef cnd = ent.getApplicableChildNodeDef(name, nodeTypeName, ntReg);
             ntReg.getNodeDef(cnd.getId());
             def = cnd.getId();
         }
@@ -366,7 +366,8 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      */
     protected NodeDef getApplicableChildNodeDef(NodeState parent, QName nodeName, QName nodeTypeName)
             throws RepositoryException {
-        return getEffectiveNodeType(parent).getApplicableChildNodeDef(nodeName, nodeTypeName);
+        return getEffectiveNodeType(parent).getApplicableChildNodeDef(
+                nodeName, nodeTypeName, getNodeTypeRegistry());
     }
 
     /**

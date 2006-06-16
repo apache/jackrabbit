@@ -889,8 +889,10 @@ public class NodeImpl extends ItemImpl implements Node {
     protected NodeDefinitionImpl getApplicableChildNodeDefinition(QName nodeName,
                                                                   QName nodeTypeName)
             throws ConstraintViolationException, RepositoryException {
-        NodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(nodeName, nodeTypeName);
-        return session.getNodeTypeManager().getNodeDefinition(cnd.getId());
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(
+                nodeName, nodeTypeName, ntMgr.getNodeTypeRegistry());
+        return ntMgr.getNodeDefinition(cnd.getId());
     }
 
     /**

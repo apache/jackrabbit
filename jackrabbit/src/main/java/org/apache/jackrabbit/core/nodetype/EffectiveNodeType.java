@@ -43,9 +43,6 @@ import java.util.TreeSet;
 public class EffectiveNodeType implements Cloneable {
     private static Logger log = LoggerFactory.getLogger(EffectiveNodeType.class);
 
-    // node type registry
-    private final NodeTypeRegistry ntReg;
-
     // list of explicitly aggregated {i.e. merged) node types
     private final TreeSet mergedNodeTypes;
     // list of implicitly aggregated {through inheritance) node types
@@ -61,8 +58,7 @@ public class EffectiveNodeType implements Cloneable {
     /**
      * private constructor.
      */
-    private EffectiveNodeType(NodeTypeRegistry ntReg) {
-        this.ntReg = ntReg;
+    private EffectiveNodeType() {
         mergedNodeTypes = new TreeSet();
         inheritedNodeTypes = new TreeSet();
         allNodeTypes = new TreeSet();
@@ -71,59 +67,27 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     /**
-     * Factory method: creates an effective node type representation of an
-     * existing (i.e. registered) node type.
-     *
-     * @param ntReg
-     * @param nodeTypeName
-     * @return
-     * @throws NodeTypeConflictException
-     * @throws NoSuchNodeTypeException
-     */
-    static EffectiveNodeType create(NodeTypeRegistry ntReg, QName nodeTypeName)
-            throws NodeTypeConflictException, NoSuchNodeTypeException {
-        return create(ntReg, ntReg.getNodeTypeDef(nodeTypeName));
-    }
-
-    /**
-     * Factory method: creates an effective node type representation of a
-     * node type definition. Whereas all referenced node types must exist
-     * (i.e. must be registered), the definition itself is not required to be
-     * registered.
-     *
-     * @param ntReg
-     * @param ntd
-     * @return
-     * @throws NodeTypeConflictException
-     * @throws NoSuchNodeTypeException
-     */
-    public static EffectiveNodeType create(NodeTypeRegistry ntReg, NodeTypeDef ntd)
-            throws NodeTypeConflictException, NoSuchNodeTypeException {
-        return create(ntReg, ntd, null, null);
-    }
-
-    /**
      * Package private factory method.
      * <p/>
      * Creates an effective node type representation of a node type definition.
-     * Whereas all referenced node types must exist (i.e. must be registered),
-     * the definition itself is not required to be registered.
-     * todo check javadoc/param names
-     * @param ntReg
-     * @param ntd
-     * @param anEntCache
-     * @param aRegisteredNTDefCache
-     * @return
-     * @throws NodeTypeConflictException
-     * @throws NoSuchNodeTypeException
+     * Note that the definitions of all referenced node types must be contained
+     * in <code>ntdCache</code>.
+     *
+     * @param ntd      node type defintion
+     * @param entCache cache of already-built effective node types
+     * @param ntdCache cache of node type definitions, used to resolve dependencies
+     * @return an effective node type representation of the given node type definition.
+     * @throws NodeTypeConflictException if the node type definition is invalid,
+     *                                   e.g. due to ambiguous child definitions.
+     * @throws NoSuchNodeTypeException if a node type reference (e.g. a supertype)
+     *                                 could not be resolved.
      */
-    static EffectiveNodeType create(NodeTypeRegistry ntReg,
-                                    NodeTypeDef ntd,
-                                    EffectiveNodeTypeCache anEntCache,
-                                    Map aRegisteredNTDefCache)
+    static EffectiveNodeType create(NodeTypeDef ntd,
+                                    EffectiveNodeTypeCache entCache,
+                                    Map ntdCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // create empty effective node type instance
-        EffectiveNodeType ent = new EffectiveNodeType(ntReg);
+        EffectiveNodeType ent = new EffectiveNodeType();
         QName ntName = ntd.getName();
 
         // prepare new instance
@@ -235,11 +199,7 @@ public class EffectiveNodeType implements Cloneable {
         // resolve supertypes recursively
         QName[] supertypes = ntd.getSupertypes();
         if (supertypes != null && supertypes.length > 0) {
-            if (anEntCache == null || aRegisteredNTDefCache == null) {
-                ent.internalMerge(ntReg.getEffectiveNodeType(supertypes), true);
-            } else {
-                ent.internalMerge(ntReg.getEffectiveNodeType(supertypes, anEntCache, aRegisteredNTDefCache), true);
-            }
+            ent.internalMerge(NodeTypeRegistry.getEffectiveNodeType(supertypes, entCache, ntdCache), true);
         }
 
         // we're done
@@ -252,8 +212,8 @@ public class EffectiveNodeType implements Cloneable {
      *
      * @return an 'empty' effective node type instance.
      */
-    static EffectiveNodeType create(NodeTypeRegistry ntReg) {
-        return new EffectiveNodeType(ntReg);
+    static EffectiveNodeType create() {
+        return new EffectiveNodeType();
     }
 
     public QName[] getMergedNodeTypes() {
@@ -603,6 +563,18 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     /**
+     * Determines whether this effective node type representation includes
+     * (either through inheritance or aggregation) all of the given node types.
+     *
+     * @param nodeTypeNames array of node type names
+     * @return <code>true</code> if all of the given node types are included,
+     *         otherwise <code>false</code>
+     */
+    public boolean includesNodeTypes(QName[] nodeTypeNames) {
+        return allNodeTypes.containsAll(Arrays.asList(nodeTypeNames));
+    }
+
+    /**
      * Tests if the value constraints defined in the property definition
      * <code>pd</code> are satisfied by the the specified <code>values</code>.
      * <p/>
@@ -661,7 +633,7 @@ public class EffectiveNodeType implements Cloneable {
     public void checkAddNodeConstraints(QName name)
             throws ConstraintViolationException {
         try {
-            getApplicableChildNodeDef(name, null);
+            getApplicableChildNodeDef(name, null, null);
         } catch (NoSuchNodeTypeException nsnte) {
             String msg = "internal eror: inconsistent node type";
             log.debug(msg);
@@ -672,12 +644,14 @@ public class EffectiveNodeType implements Cloneable {
     /**
      * @param name
      * @param nodeTypeName
+     * @param ntReg
      * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    public void checkAddNodeConstraints(QName name, QName nodeTypeName)
+    public void checkAddNodeConstraints(QName name, QName nodeTypeName,
+                                        NodeTypeRegistry ntReg)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        NodeDef nd = getApplicableChildNodeDef(name, nodeTypeName);
+        NodeDef nd = getApplicableChildNodeDef(name, nodeTypeName, ntReg);
         if (nd.isProtected()) {
             throw new ConstraintViolationException(name + " is protected");
         }
@@ -693,13 +667,22 @@ public class EffectiveNodeType implements Cloneable {
      *
      * @param name
      * @param nodeTypeName
+     * @param ntReg
      * @return
      * @throws NoSuchNodeTypeException
      * @throws ConstraintViolationException if no applicable child node definition
      *                                      could be found
      */
-    public NodeDef getApplicableChildNodeDef(QName name, QName nodeTypeName)
+    public NodeDef getApplicableChildNodeDef(QName name, QName nodeTypeName,
+                                             NodeTypeRegistry ntReg)
             throws NoSuchNodeTypeException, ConstraintViolationException {
+        EffectiveNodeType entTarget;
+        if (nodeTypeName != null) {
+            entTarget = ntReg.getEffectiveNodeType(nodeTypeName);
+        } else {
+            entTarget = null;
+        }
+
         // try named node definitions first
         ItemDef[] defs = getNamedItemDefs(name);
         if (defs != null) {
@@ -708,15 +691,12 @@ public class EffectiveNodeType implements Cloneable {
                 if (def.definesNode()) {
                     NodeDef nd = (NodeDef) def;
                     // node definition with that name exists
-                    if (nodeTypeName != null) {
-                        try {
-                            // check node type constraints
-                            checkRequiredPrimaryType(nodeTypeName, nd.getRequiredPrimaryTypes());
-                        } catch (ConstraintViolationException cve) {
-                            // ignore and try next
+                    if (entTarget != null && nd.getRequiredPrimaryTypes() != null) {
+                        // check 'required primary types' constraint
+                        if (!entTarget.includesNodeTypes(nd.getRequiredPrimaryTypes())) {
                             continue;
                         }
-                        // found node definition
+                        // found named node definition
                         return nd;
                     } else {
                         if (nd.getDefaultPrimaryType() == null) {
@@ -736,12 +716,9 @@ public class EffectiveNodeType implements Cloneable {
         NodeDef[] nda = getUnnamedNodeDefs();
         for (int i = 0; i < nda.length; i++) {
             NodeDef nd = nda[i];
-            if (nodeTypeName != null) {
-                try {
-                    // check node type constraint
-                    checkRequiredPrimaryType(nodeTypeName, nd.getRequiredPrimaryTypes());
-                } catch (ConstraintViolationException e) {
-                    // ignore and try next
+            if (entTarget != null && nd.getRequiredPrimaryTypes() != null) {
+                // check 'required primary types' constraint
+                if (!entTarget.includesNodeTypes(nd.getRequiredPrimaryTypes())) {
                     continue;
                 }
                 // found residual node definition
@@ -925,34 +902,6 @@ public class EffectiveNodeType implements Cloneable {
                 if (defs[i].isProtected()) {
                     throw new ConstraintViolationException("can't remove protected item");
                 }
-            }
-        }
-    }
-
-    /**
-     * @param nodeTypeName
-     * @param requiredPrimaryTypes
-     * @throws ConstraintViolationException
-     * @throws NoSuchNodeTypeException
-     */
-    public void checkRequiredPrimaryType(QName nodeTypeName,
-                                         QName[] requiredPrimaryTypes)
-            throws ConstraintViolationException, NoSuchNodeTypeException {
-        if (requiredPrimaryTypes == null) {
-            // no constraint
-            return;
-        }
-        EffectiveNodeType ent;
-        try {
-            ent = ntReg.getEffectiveNodeType(nodeTypeName);
-        } catch (RepositoryException re) {
-            String msg = "failed to check node type constraint";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg, re);
-        }
-        for (int i = 0; i < requiredPrimaryTypes.length; i++) {
-            if (!ent.includesNodeType(requiredPrimaryTypes[i])) {
-                throw new ConstraintViolationException("node type constraint not satisfied: " + requiredPrimaryTypes[i]);
             }
         }
     }
@@ -1159,7 +1108,7 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     protected Object clone() {
-        EffectiveNodeType clone = new EffectiveNodeType(ntReg);
+        EffectiveNodeType clone = new EffectiveNodeType();
 
         clone.mergedNodeTypes.addAll(mergedNodeTypes);
         clone.inheritedNodeTypes.addAll(inheritedNodeTypes);

@@ -73,7 +73,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
      */
     protected VirtualNodeState createRootNodeState() throws RepositoryException {
         VirtualNodeState root = new VirtualNodeState(this, parentId, rootNodeId, QName.REP_NODETYPES, null);
-        NodeDefId id = ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicableChildNodeDef(QName.JCR_NODETYPES, QName.REP_NODETYPES).getId();
+        NodeDefId id = ntReg.getEffectiveNodeType(QName.REP_SYSTEM).getApplicableChildNodeDef(QName.JCR_NODETYPES, QName.REP_NODETYPES, ntReg).getId();
         root.setDefinitionId(id);
         QName[] ntNames = ntReg.getRegisteredNodeTypes();
         for (int i = 0; i < ntNames.length; i++) {
