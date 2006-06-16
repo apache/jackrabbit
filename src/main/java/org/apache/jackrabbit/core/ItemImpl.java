@@ -643,7 +643,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         while (removedIter.hasNext()) {
             ItemState itemState = (ItemState) removedIter.next();
             ItemId id = itemState.getId();
-            // check WRITE permission
+            // check REMOVE permission
             if (!accessMgr.isGranted(id, AccessManager.REMOVE)) {
                 String msg = itemMgr.safeGetJCRPath(id)
                         + ": not allowed to remove item";

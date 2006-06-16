@@ -454,7 +454,8 @@ class NodeStateEx {
         }
         NodeState state = stateMgr.createNew(id, nodeTypeName, parentId);
 
-        NodeDef cnd = getEffectiveNodeType().getApplicableChildNodeDef(name, nodeTypeName);
+        NodeDef cnd =
+                getEffectiveNodeType().getApplicableChildNodeDef(name, nodeTypeName, ntReg);
         state.setDefinitionId(cnd.getId());
 
         // create Node instance wrapping new node state

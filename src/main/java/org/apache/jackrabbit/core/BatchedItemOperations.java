@@ -580,7 +580,7 @@ public class BatchedItemOperations extends ItemValidator {
             }
             // make sure there's an applicable definition for new child node
             EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-            entParent.checkAddNodeConstraints(nodeName, nodeTypeName);
+            entParent.checkAddNodeConstraints(nodeName, nodeTypeName, ntReg);
             NodeDef newNodeDef =
                     findApplicableNodeDefinition(nodeName, nodeTypeName,
                             parentState);
@@ -878,7 +878,7 @@ public class BatchedItemOperations extends ItemValidator {
                                                 NodeState parentState)
             throws RepositoryException, ConstraintViolationException {
         EffectiveNodeType entParent = getEffectiveNodeType(parentState);
-        return entParent.getApplicableChildNodeDef(name, nodeTypeName);
+        return entParent.getApplicableChildNodeDef(name, nodeTypeName, ntReg);
     }
 
     /**
