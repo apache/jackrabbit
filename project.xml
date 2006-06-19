@@ -89,6 +89,13 @@
           <include>README.txt</include>
         </includes>
       </resource>
+      <resource>
+        <targetPath>.</targetPath>
+        <directory>src/resources</directory>
+        <includes>
+          <include>*</include>
+        </includes>
+      </resource>
     </resources>
     <unitTest>
       <includes>
