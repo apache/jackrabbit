@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<server>
+	<mbean code="org.apache.jackrabbit.rmi.server.jmx.JCRServer"
+		name="Jackrabbit.services:RMIServer = JCR RMI Server">
+		<attribute name="LocalAddress">java:jcr/local</attribute>
+		<attribute name="RemoteAddress">jnp://localhost:1099/jcrServer</attribute>	
+		<!-- Optional attribute 
+		<attribute name="LocalEnvironment">
+			java.naming.factory.initial=org.jnp.interfaces.NamingContextFactory
+			java.naming.factory.url.pkgs=org.jboss.naming:org.jnp.interfaces
+			java.naming.provider.url=localhost:1099
+		</attribute>	
+		 -->
+		<!-- Optional attribute
+		<attribute name="RemoteEnvironment">
+			java.naming.factory.initial=org.jnp.interfaces.NamingContextFactory
+			java.naming.factory.url.pkgs=org.jboss.naming:org.jnp.interfaces
+			java.naming.provider.url=localhost:1099
+		</attribute>	
+		-->
+		<depends>jboss.jca:service=ManagedConnectionFactory,name=jcr/local</depends>					
+	</mbean>
+</server>
