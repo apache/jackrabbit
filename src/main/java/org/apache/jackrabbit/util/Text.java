@@ -439,6 +439,73 @@ public class Text {
     }
 
     /**
+     * Escapes all illegal JCR name characters of a string.
+     * use {@link #unescapeIllegalJcrChars(String)} for decoding.
+     * <p/>
+     * QName EBNF:<br>
+     * <xmp>
+     * simplename ::= onecharsimplename | twocharsimplename | threeormorecharname
+     * onecharsimplename ::= (* Any Unicode character except: '.', '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
+     * twocharsimplename ::= '.' onecharsimplename | onecharsimplename '.' | onecharsimplename onecharsimplename
+     * threeormorecharname ::= nonspace string nonspace
+     * string ::= char | string char
+     * char ::= nonspace | ' '
+     * nonspace ::= (* Any Unicode character except: '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
+     * </xmp>
+     *
+     * @param name the name to escape
+     * @return the escaped name
+     */
+    public static String escapeIllegalJcrChars(String name) {
+        StringBuffer buffer = new StringBuffer(name.length() * 2);
+        for (int i = 0; i < name.length(); i++) {
+            char ch = name.charAt(i);
+            if (ch == '%' || ch == '/' || ch == ':' || ch == '[' || ch == ']'
+                || ch == '*' || ch == '\'' || ch == '"' || ch == '|'
+                || (ch == '.' && name.length() < 3)
+                || (ch == ' ' && (i == 0 || i == name.length() - 1))
+                || ch == '\t' || ch == '\r' || ch == '\n') {
+                buffer.append('%');
+                buffer.append(Character.toUpperCase(Character.forDigit(ch / 16, 16)));
+                buffer.append(Character.toUpperCase(Character.forDigit(ch % 16, 16)));
+            } else {
+                buffer.append(ch);
+            }
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * Unescapes previously escaped jcr chars.
+     * <p/>
+     * Please note, that this does not exactly the same as the url related
+     * {@link #unescape(String)}, since it handles the byte-encoding
+     * differently.
+     *
+     * @param name the name to unescape
+     * @return the unescaped name
+     */
+    public static String unescapeIllegalJcrChars(String name) {
+        StringBuffer buffer = new StringBuffer(name.length());
+        int i = name.indexOf('%');
+        while (i > -1 && i + 2 < name.length()) {
+            buffer.append(name.toCharArray(), 0, i);
+            int a = Character.digit(name.charAt(i + 1), 16);
+            int b = Character.digit(name.charAt(i + 2), 16);
+            if (a > -1 && b > -1) {
+                buffer.append((char) a * 16 + b);
+                name = name.substring(i + 3);
+            } else {
+                buffer.append('%');
+                name = name.substring(i + 1);
+            }
+            i = name.indexOf('%');
+        }
+        buffer.append(name);
+        return buffer.toString();
+    }
+    
+    /**
      * Returns the name part of the path
      *
      * @param path the path
