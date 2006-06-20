@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.util;
 
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.QName;
+
 import junit.framework.TestCase;
 
 /**
@@ -25,6 +28,11 @@ public class TextTest extends TestCase {
 
     private void checkEscape(String name) {
         String escaped = Text.escapeIllegalJcrChars(name);
+        try {
+            QName.checkFormat(escaped);
+        } catch (IllegalNameException e) {
+            fail("Illegal name: " + escaped);
+        }
         assertEquals(name, Text.unescapeIllegalJcrChars(escaped));
     }
 
