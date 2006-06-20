@@ -440,7 +440,10 @@ public class Text {
 
     /**
      * Escapes all illegal JCR name characters of a string.
-     * use {@link #unescapeIllegalJcrChars(String)} for decoding.
+     * The encoding is loosely modeled after URI encoding, but only encodes
+     * the characters it absolutely needs to in order to make the resulting
+     * string a valid JCR name.
+     * Use {@link #unescapeIllegalJcrChars(String)} for decoding.
      * <p/>
      * QName EBNF:<br>
      * <xmp>
@@ -493,7 +496,7 @@ public class Text {
             int a = Character.digit(name.charAt(i + 1), 16);
             int b = Character.digit(name.charAt(i + 2), 16);
             if (a > -1 && b > -1) {
-                buffer.append((char) a * 16 + b);
+                buffer.append((char) (a * 16 + b));
                 name = name.substring(i + 3);
             } else {
                 buffer.append('%');
