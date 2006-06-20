@@ -170,7 +170,8 @@ public class ZipHandler extends DefaultHandler {
         ZipOutputStream zout = new ZipOutputStream(context.getOutputStream());
         zout.setMethod(ZipOutputStream.DEFLATED);
         try {
-            exportZipEntry(context, zout, contentNode, contentNode.getPath().length()+1);
+            int pos = contentNode.getPath().length();
+            exportZipEntry(context, zout, contentNode, pos > 1 ? pos+1 : pos);
         } finally {
             zout.finish();
         }
