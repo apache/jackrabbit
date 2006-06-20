@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("util tests");
 
         suite.addTestSuite(ISO9075Test.class);
+        suite.addTestSuite(TextTest.class);
 
         return suite;
     }
