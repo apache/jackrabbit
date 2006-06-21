@@ -520,6 +520,18 @@ public class Text {
     }
 
     /**
+     * Returns the name part of the path, delimited by the given <code>delim</code>
+     *
+     * @param path the path
+     * @param delim the delimiter
+     * @return the name part
+     */
+    public static String getName(String path, char delim) {
+        int pos = path.lastIndexOf(delim);
+        return pos >= 0 ? path.substring(pos + 1) : "";
+    }
+
+    /**
      * Returns the namespace prefix of the given <code>qname</code>. If the
      * prefix is missing, an empty string is returned. Please note, that this
      * method does not validate the name or prefix.
@@ -554,18 +566,6 @@ public class Text {
     public static String getLocalName(String qname) {
         int pos = qname.indexOf(':');
         return pos >=0 ? qname.substring(pos+1) : qname;
-    }
-
-    /**
-     * Returns the name part of the path, delimited by the given <code>delim</code>
-     *
-     * @param path the path
-     * @param delim the delimiter
-     * @return the name part
-     */
-    public static String getName(String path, char delim) {
-        int pos = path.lastIndexOf(delim);
-        return pos >= 0 ? path.substring(pos + 1) : "";
     }
 
     /**
