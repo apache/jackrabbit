@@ -543,7 +543,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             Serializer.serialize(refs, out);
 
             // store in serialized format in map for better memory efficiency
-            stateStore.put(refs.getId(), out.toByteArray());
+            refsStore.put(refs.getId(), out.toByteArray());
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
@@ -562,7 +562,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         }
 
         // remove node references
-        stateStore.remove(refs.getId());
+        refsStore.remove(refs.getId());
     }
 
     /**
