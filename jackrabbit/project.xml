@@ -571,6 +571,7 @@ indexing, etc.
                     <include>**/*.xml</include>
                     <include>**/*.properties</include>
                     <include>**/*.ddl</include>
+                    <include>**/*.cnd</include>
                     <include>META-INF/services/*</include>
                 </includes>
             </resource>
