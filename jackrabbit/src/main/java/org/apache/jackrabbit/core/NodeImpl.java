@@ -1454,6 +1454,11 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
+        // the absense of an index does not make sense here, so check
+        if (index <= 0) {
+            index = 1;
+        }
+
         NodeState thisState = (NodeState) state;
         NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(name, index);
         if (cne == null) {
@@ -1798,18 +1803,6 @@ public class NodeImpl extends ItemImpl implements Node {
             throws UnsupportedRepositoryOperationException, VersionException,
             ConstraintViolationException, ItemNotFoundException, LockException,
             RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
-        if (!getPrimaryNodeType().hasOrderableChildNodes()) {
-            throw new UnsupportedRepositoryOperationException("child node ordering not supported on node " + safeGetJCRPath());
-        }
-
-        // check arguments
-        if (srcName.equals(destName)) {
-            // there's nothing to do
-            return;
-        }
 
         Path.PathElement insertName;
         try {
@@ -1842,15 +1835,41 @@ public class NodeImpl extends ItemImpl implements Node {
         } else {
             beforeName = null;
         }
+        orderBefore(insertName, beforeName);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @param srcName
+     * @param dstName
+     */
+    public synchronized void orderBefore(Path.PathElement srcName,
+                                         Path.PathElement dstName)
+            throws UnsupportedRepositoryOperationException, VersionException,
+            ConstraintViolationException, ItemNotFoundException, LockException,
+            RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        if (!getPrimaryNodeType().hasOrderableChildNodes()) {
+            throw new UnsupportedRepositoryOperationException("child node ordering not supported on node " + safeGetJCRPath());
+        }
+
+        // check arguments
+        if (srcName.equals(dstName)) {
+            // there's nothing to do
+            return;
+        }
 
         // check existence
-        if (!hasNode(srcName)) {
+        if (!hasNode(srcName.getName(), srcName.getIndex())) {
             throw new ItemNotFoundException(safeGetJCRPath()
                     + " has no child node with name " + srcName);
         }
-        if (destName != null && !hasNode(destName)) {
+        if (dstName != null && !hasNode(dstName.getName(), dstName.getIndex())) {
             throw new ItemNotFoundException(safeGetJCRPath()
-                    + " has no child node with name " + destName);
+                    + " has no child node with name " + dstName);
         }
 
         // make sure this node is checked-out
@@ -1877,16 +1896,16 @@ public class NodeImpl extends ItemImpl implements Node {
         for (int i = 0; i < list.size(); i++) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
             if (srcInd == -1) {
-                if (entry.getName().equals(insertName.getName())
-                        && (entry.getIndex() == insertName.getIndex()
-                        || insertName.getIndex() == 0 && entry.getIndex() == 1)) {
+                if (entry.getName().equals(srcName.getName())
+                        && (entry.getIndex() == srcName.getIndex()
+                        || srcName.getIndex() == 0 && entry.getIndex() == 1)) {
                     srcInd = i;
                 }
             }
-            if (destInd == -1 && beforeName != null) {
-                if (entry.getName().equals(beforeName.getName())
-                        && (entry.getIndex() == beforeName.getIndex()
-                        || beforeName.getIndex() == 0 && entry.getIndex() == 1)) {
+            if (destInd == -1 && dstName != null) {
+                if (entry.getName().equals(dstName.getName())
+                        && (entry.getIndex() == dstName.getIndex()
+                        || dstName.getIndex() == 0 && entry.getIndex() == 1)) {
                     destInd = i;
                     if (srcInd != -1) {
                         break;
@@ -3834,6 +3853,7 @@ public class NodeImpl extends ItemImpl implements Node {
         InternalFreeze[] frozenNodes = freeze.getFrozenChildNodes();
         for (int i = 0; i < frozenNodes.length; i++) {
             InternalFreeze child = frozenNodes[i];
+            NodeImpl restoredChild = null;
             if (child instanceof InternalFrozenNode) {
                 InternalFrozenNode f = (InternalFrozenNode) child;
                 // check for existing
@@ -3853,8 +3873,8 @@ public class NodeImpl extends ItemImpl implements Node {
                         // ignore, item with uuid does not exist
                     }
                 }
-                NodeImpl n = addNode(f.getName(), f);
-                n.restoreFrozenState(f, vsel, restored, removeExisting);
+                restoredChild = addNode(f.getName(), f);
+                restoredChild.restoreFrozenState(f, vsel, restored, removeExisting);
 
             } else if (child instanceof InternalFrozenVersionHistory) {
                 InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;
@@ -3884,7 +3904,6 @@ public class NodeImpl extends ItemImpl implements Node {
                 AbstractVersion v = (AbstractVersion) vsel.select(history);
 
                 // check existing version of item exists
-                NodeImpl node;
                 if (!itemMgr.itemExists(nodeId)) {
                     if (v == null) {
                         // if version selector was unable to select version,
@@ -3898,19 +3917,19 @@ public class NodeImpl extends ItemImpl implements Node {
                         }
                         v = (AbstractVersion) vs[0];
                     }
-                    node = addNode(child.getName(), v.getFrozenNode());
+                    restoredChild = addNode(child.getName(), v.getFrozenNode());
                 } else {
-                    node = session.getNodeById(nodeId);
+                    restoredChild = session.getNodeById(nodeId);
                     if (v == null || oldVersion == null || v.getName().equals(oldVersion)) {
                         v = null;
                     }
                 }
                 if (v != null) {
                     try {
-                        node.internalRestore(v, vsel, removeExisting);
+                        restoredChild.internalRestore(v, vsel, removeExisting);
                     } catch (RepositoryException e) {
                         log.error("Error while restoring node: " + e.toString());
-                        log.error("  child path: " + node.safeGetJCRPath());
+                        log.error("  child path: " + restoredChild.safeGetJCRPath());
                         log.error("  selected version: " + v.getName());
                         StringBuffer avail = new StringBuffer();
                         VersionIterator vi = history.getAllVersions();
@@ -3927,6 +3946,11 @@ public class NodeImpl extends ItemImpl implements Node {
                     // add this version to set
                     restored.add(v);
                 }
+            }
+            // ensure proper odering (issue JCR-469)
+            if (restoredChild != null
+                    && getPrimaryNodeType().hasOrderableChildNodes()) {
+                orderBefore(restoredChild.getPrimaryPath().getNameElement(), null);
             }
         }
     }
