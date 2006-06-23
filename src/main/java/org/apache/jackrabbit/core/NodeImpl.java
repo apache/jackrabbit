@@ -1416,6 +1416,9 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         NodeState thisState = (NodeState) state;
+        if (index == 0) {
+            index = 1;
+        }
         NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(name, index);
         if (cne == null) {
             throw new ItemNotFoundException();
@@ -1454,12 +1457,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // the absense of an index does not make sense here, so check
-        if (index <= 0) {
+        NodeState thisState = (NodeState) state;
+        if (index == 0) {
             index = 1;
         }
-
-        NodeState thisState = (NodeState) state;
         NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(name, index);
         if (cne == null) {
             return false;
@@ -1708,6 +1709,139 @@ public class NodeImpl extends ItemImpl implements Node {
         return (NodeId) id;
     }
 
+    /**
+     * Same as <code>{@link Node#orderBefore(String, String)}</code> except that
+     * this method takes a <code>Path.PathElement</code> arguments instead of
+     * <code>String</code>s.
+     *
+     * @param srcName
+     * @param dstName
+     * @throws UnsupportedRepositoryOperationException
+     * @throws VersionException
+     * @throws ConstraintViolationException
+     * @throws ItemNotFoundException
+     * @throws LockException
+     * @throws RepositoryException
+     */
+    public synchronized void orderBefore(Path.PathElement srcName,
+                                         Path.PathElement dstName)
+            throws UnsupportedRepositoryOperationException, VersionException,
+            ConstraintViolationException, ItemNotFoundException, LockException,
+            RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        if (!getPrimaryNodeType().hasOrderableChildNodes()) {
+            throw new UnsupportedRepositoryOperationException(
+                    "child node ordering not supported on node "
+                    + safeGetJCRPath());
+        }
+
+        // check arguments
+        if (srcName.equals(dstName)) {
+            // there's nothing to do
+            return;
+        }
+
+        // check existence
+        if (!hasNode(srcName.getName(), srcName.getIndex())) {
+            String name;
+            try {
+                name = srcName.toJCRName(session.getNamespaceResolver());
+            } catch (NoPrefixDeclaredException npde) {
+                name = srcName.toString();
+            }
+            throw new ItemNotFoundException(safeGetJCRPath()
+                    + " has no child node with name " + name);
+        }
+        if (dstName != null && !hasNode(dstName.getName(), dstName.getIndex())) {
+            String name;
+            try {
+                name = dstName.toJCRName(session.getNamespaceResolver());
+            } catch (NoPrefixDeclaredException npde) {
+                name = dstName.toString();
+            }
+            throw new ItemNotFoundException(safeGetJCRPath()
+                    + " has no child node with name " + name);
+        }
+
+        // make sure this node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath()
+                    + ": cannot change child node ordering of a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+
+        // check protected flag
+        if (definition.isProtected()) {
+            String msg = safeGetJCRPath()
+                    + ": cannot change child node ordering of a protected node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg);
+        }
+
+        // check lock status
+        checkLock();
+
+        ArrayList list = new ArrayList(((NodeState) state).getChildNodeEntries());
+        int srcInd = -1, destInd = -1;
+        for (int i = 0; i < list.size(); i++) {
+            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
+            if (srcInd == -1) {
+                if (entry.getName().equals(srcName.getName())
+                        && (entry.getIndex() == srcName.getIndex()
+                        || srcName.getIndex() == 0 && entry.getIndex() == 1)) {
+                    srcInd = i;
+                }
+            }
+            if (destInd == -1 && dstName != null) {
+                if (entry.getName().equals(dstName.getName())
+                        && (entry.getIndex() == dstName.getIndex()
+                        || dstName.getIndex() == 0 && entry.getIndex() == 1)) {
+                    destInd = i;
+                    if (srcInd != -1) {
+                        break;
+                    }
+                }
+            } else {
+                if (srcInd != -1) {
+                    break;
+                }
+            }
+        }
+
+        // check if resulting order would be different to current order
+        if (destInd == -1) {
+            if (srcInd == list.size() - 1) {
+                // no change, we're done
+                return;
+            }
+        } else {
+            if ((destInd - srcInd) == 1) {
+                // no change, we're done
+                return;
+            }
+        }
+
+        // reorder list
+        if (destInd == -1) {
+            list.add(list.remove(srcInd));
+        } else {
+            if (srcInd < destInd) {
+                list.add(destInd, list.get(srcInd));
+                list.remove(srcInd);
+            } else {
+                list.add(destInd, list.remove(srcInd));
+            }
+        }
+
+        // modify the state of 'this', i.e. the parent node
+        NodeState thisState = (NodeState) getOrCreateTransientItemState();
+        thisState.setChildNodeEntries(list);
+    }
+
     //-----------------------------------------------------------------< Item >
     /**
      * {@inheritDoc}
@@ -1799,7 +1933,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * {@inheritDoc}
      */
-    public synchronized void orderBefore(String srcName, String destName)
+    public void orderBefore(String srcName, String destName)
             throws UnsupportedRepositoryOperationException, VersionException,
             ConstraintViolationException, ItemNotFoundException, LockException,
             RepositoryException {
@@ -1835,117 +1969,8 @@ public class NodeImpl extends ItemImpl implements Node {
         } else {
             beforeName = null;
         }
+
         orderBefore(insertName, beforeName);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @param srcName
-     * @param dstName
-     */
-    public synchronized void orderBefore(Path.PathElement srcName,
-                                         Path.PathElement dstName)
-            throws UnsupportedRepositoryOperationException, VersionException,
-            ConstraintViolationException, ItemNotFoundException, LockException,
-            RepositoryException {
-
-        // check state of this instance
-        sanityCheck();
-
-        if (!getPrimaryNodeType().hasOrderableChildNodes()) {
-            throw new UnsupportedRepositoryOperationException("child node ordering not supported on node " + safeGetJCRPath());
-        }
-
-        // check arguments
-        if (srcName.equals(dstName)) {
-            // there's nothing to do
-            return;
-        }
-
-        // check existence
-        if (!hasNode(srcName.getName(), srcName.getIndex())) {
-            throw new ItemNotFoundException(safeGetJCRPath()
-                    + " has no child node with name " + srcName);
-        }
-        if (dstName != null && !hasNode(dstName.getName(), dstName.getIndex())) {
-            throw new ItemNotFoundException(safeGetJCRPath()
-                    + " has no child node with name " + dstName);
-        }
-
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot change child node ordering of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot change child node ordering of a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // check lock status
-        checkLock();
-
-        ArrayList list = new ArrayList(((NodeState) state).getChildNodeEntries());
-        int srcInd = -1, destInd = -1;
-        for (int i = 0; i < list.size(); i++) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
-            if (srcInd == -1) {
-                if (entry.getName().equals(srcName.getName())
-                        && (entry.getIndex() == srcName.getIndex()
-                        || srcName.getIndex() == 0 && entry.getIndex() == 1)) {
-                    srcInd = i;
-                }
-            }
-            if (destInd == -1 && dstName != null) {
-                if (entry.getName().equals(dstName.getName())
-                        && (entry.getIndex() == dstName.getIndex()
-                        || dstName.getIndex() == 0 && entry.getIndex() == 1)) {
-                    destInd = i;
-                    if (srcInd != -1) {
-                        break;
-                    }
-                }
-            } else {
-                if (srcInd != -1) {
-                    break;
-                }
-            }
-        }
-
-        // check if resulting order would be different to current order
-        if (destInd == -1) {
-            if (srcInd == list.size() - 1) {
-                // no change, we're done
-                return;
-            }
-        } else {
-            if ((destInd - srcInd) == 1) {
-                // no change, we're done
-                return;
-            }
-        }
-
-        // reorder list
-        if (destInd == -1) {
-            list.add(list.remove(srcInd));
-        } else {
-            if (srcInd < destInd) {
-                list.add(destInd, list.get(srcInd));
-                list.remove(srcInd);
-            } else {
-                list.add(destInd, list.remove(srcInd));
-            }
-        }
-
-        // modify the state of 'this', i.e. the parent node
-        NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        thisState.setChildNodeEntries(list);
     }
 
     /**
@@ -2028,7 +2053,7 @@ public class NodeImpl extends ItemImpl implements Node {
             ConstraintViolationException, RepositoryException {
         /**
          * if the target property is not of type STRING then a
-         * best-effort conversion is tried
+         * best-effort conversion is attempted
          */
         // check state of this instance
         sanityCheck();
