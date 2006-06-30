@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.xml;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
