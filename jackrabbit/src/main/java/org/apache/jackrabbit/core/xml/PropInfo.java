@@ -41,16 +41,45 @@ import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Information about a property being imported. This class is used
+ * by the XML import handlers to pass the parsed property information
+ * through the {@link Importer} interface to the actual import process.
+ * <p>
+ * In addition to carrying the actual property data, instances of this
+ * class also know how to apply that data when imported either to a
+ * {@link NodeImpl} instance through a session or directly to a
+ * {@link NodeState} instance in a workspace.
+ */
 public class PropInfo {
 
+    /**
+     * Logger instance.
+     */
     private static Logger log = LoggerFactory.getLogger(PropInfo.class);
 
+    /**
+     * Name of the property being imported.
+     */
     private final QName name;
 
+    /**
+     * Type of the property being imported.
+     */
     private final int type;
 
+    /**
+     * Value(s) of the property being imported.
+     */
     private final TextValue[] values;
 
+    /**
+     * Creates a proprety information instance.
+     *
+     * @param name name of the property being imported
+     * @param type type of the property being imported
+     * @param values value(s) of the property being imported
+     */
     public PropInfo(QName name, int type, TextValue[] values) {
         this.name = name;
         this.type = type;

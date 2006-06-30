@@ -16,23 +16,22 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.util.ISO9075;
-import org.apache.jackrabbit.core.NodeId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Stack;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.util.ISO9075;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 
 /**
  * <code>DocViewImportHandler</code> processes Document View XML SAX events
