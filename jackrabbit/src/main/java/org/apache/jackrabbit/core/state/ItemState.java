@@ -450,12 +450,12 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Returns the approximate memory consuption of this state.
+     * Returns the approximate memory consumption of this state.
      *
-     * @return the approximate memory consuption of this state.
+     * @return the approximate memory consumption of this state.
      */
-    public abstract long getMemoryConsumption();
-    
+    public abstract long calculateMemoryFootprint();
+
     //----------------------------------------------------< ItemStateListener >
     /**
      * {@inheritDoc}
