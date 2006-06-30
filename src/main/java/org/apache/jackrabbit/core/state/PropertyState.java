@@ -226,6 +226,26 @@ public class PropertyState extends ItemState {
         return values;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public long getMemoryConsumption() {
+        /*
+        private PropertyId id;
+        private InternalValue[] values;
+        private int type;
+        private boolean multiValued;
+        private PropDefId defId;
+
+        we assume an average QName localname of 30 chars.
+        PropertyId = 8 + nodeId(36) * name(250) + hash(4) ~ 300;
+        NodeDefId = 8 + id(4) = 12
+        InternalValue = 8 + n * (values) ~ 8 + n*100;
+        value=approx 100 bytes.
+        */
+        return 350 + values.length * 100;
+    }
+    
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {
         // important: fields must be written in same order as they are

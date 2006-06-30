@@ -773,6 +773,33 @@ public class NodeState extends ItemState {
     }
 
     //-------------------------------------------------< misc. helper methods >
+
+    /**
+     * {@inheritDoc}
+     */
+    public long getMemoryConsumption() {
+        /*
+        private QName nodeTypeName;
+        private Set mixinTypeNames = Collections.EMPTY_SET;
+        private NodeId id;
+        private NodeId parentId;
+        private NodeDefId defId;
+        private ChildNodeEntries childNodeEntries = new ChildNodeEntries();
+        private boolean sharedChildNodeEntries = false;
+        private HashSet propertyNames = new HashSet();
+        private boolean sharedPropertyNames = false;
+
+        we assume an average QName localname of 30 chars.
+        NodeId = 8 + UUID(24) + hashcode(4) = 36
+        QName = 8 + hash(4) + string(38+2*len) + namespace(4) + localName(38+2*len) ~ 250
+        NodeDefId = 8 + id(4) = 12
+        ChildNodeEntries = 8 + n * (name(256) + index(4) + id(36) + hashentry(16)) ~ n*300
+        PropNames = 8 + n * ( name(250))
+        */
+        return 350 + mixinTypeNames.size() * 250 + childNodeEntries.size() * 300
+                + propertyNames.size() * 250;
+    }
+
     /**
      * Notify the listeners that a child node entry has been added
      */
