@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.test.api;
 
-import org.apache.xerces.util.XMLChar;
+import org.apache.jackrabbit.util.XMLChar;
 
 /**
  * Class providing some character escape methods. The escape schemata are

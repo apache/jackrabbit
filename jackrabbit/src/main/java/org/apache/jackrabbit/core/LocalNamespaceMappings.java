@@ -23,7 +23,7 @@ import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceListener;
-import org.apache.xerces.util.XMLChar;
+import org.apache.jackrabbit.util.XMLChar;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;

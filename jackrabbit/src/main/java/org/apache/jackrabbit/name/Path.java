@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.name;
 
 import org.apache.jackrabbit.util.Text;
-import org.apache.xerces.util.XMLChar;
+import org.apache.jackrabbit.util.XMLChar;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PathNotFoundException;
