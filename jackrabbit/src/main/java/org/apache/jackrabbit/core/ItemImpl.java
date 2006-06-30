@@ -597,7 +597,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                                 boolean satisfied = false;
                                 try {
                                     UUID targetUUID = (UUID) values[i].internalValue();
-                                    Node targetNode = session.getNodeByUUID(targetUUID.toString());
+                                    Node targetNode = session.getNodeByUUID(targetUUID);
                                     /**
                                      * constraints are OR-ed, i.e. at least one
                                      * has to be satisfied
