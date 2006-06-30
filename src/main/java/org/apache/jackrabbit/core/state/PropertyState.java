@@ -229,7 +229,7 @@ public class PropertyState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    public long getMemoryConsumption() {
+    public long calculateMemoryFootprint() {
         /*
         private PropertyId id;
         private InternalValue[] values;

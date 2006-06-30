@@ -777,7 +777,7 @@ public class NodeState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    public long getMemoryConsumption() {
+    public long calculateMemoryFootprint() {
         /*
         private QName nodeTypeName;
         private Set mixinTypeNames = Collections.EMPTY_SET;
