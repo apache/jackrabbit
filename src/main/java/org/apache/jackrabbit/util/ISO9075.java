@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.util;
 
-import org.apache.xerces.util.XMLChar;
 import org.apache.jackrabbit.name.QName;
 
 import java.util.regex.Matcher;

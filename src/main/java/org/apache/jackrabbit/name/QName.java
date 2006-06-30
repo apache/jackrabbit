@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.name;
 
-import org.apache.xerces.util.XMLChar;
-
 import javax.jcr.NamespaceException;
+
+import org.apache.jackrabbit.util.XMLChar;
+
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
