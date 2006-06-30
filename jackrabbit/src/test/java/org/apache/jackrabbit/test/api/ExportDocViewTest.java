@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.xerces.util.XMLChar;
+import org.apache.jackrabbit.util.XMLChar;
 
 import org.xml.sax.SAXException;
 import org.xml.sax.ContentHandler;
@@ -26,6 +26,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Attr;
 import org.w3c.dom.NamedNodeMap;
 
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.TransformerException;
@@ -139,42 +142,42 @@ public class ExportDocViewTest extends AbstractJCRTest {
     }
 
     public void testExportDocView_handler_session_skipBinary_noRecurse()
-            throws IOException, RepositoryException, SAXException {
+            throws IOException, RepositoryException, SAXException, TransformerException {
         doTestExportDocView(CONTENTHANDLER, SKIPBINARY, NORECURSE);
     }
 
     public void testExportDocView_handler_session_skipBinary_recurse()
-            throws IOException, RepositoryException, SAXException {
+            throws IOException, RepositoryException, SAXException, TransformerException {
         doTestExportDocView(CONTENTHANDLER, SKIPBINARY, RECURSE);
     }
 
     public void testExportDocView_handler_session_saveBinary_noRecurse()
-            throws IOException, RepositoryException, SAXException {
+            throws IOException, RepositoryException, SAXException, TransformerException {
         doTestExportDocView(CONTENTHANDLER, SAVEBINARY, NORECURSE);
     }
 
     public void testExportDocView_handler_session_saveBinary_recurse()
-            throws IOException, RepositoryException, SAXException {
+            throws IOException, RepositoryException, SAXException, TransformerException {
         doTestExportDocView(CONTENTHANDLER, SAVEBINARY, RECURSE);
     }
 
     public void testExportDocView_stream_session_skipBinary_recurse()
-            throws IOException, RepositoryException, SAXException {
+            throws IOException, RepositoryException, SAXException, TransformerException {
         doTestExportDocView(STREAM, SKIPBINARY, RECURSE);
     }
 
     public void testExportDocView_stream_session_skipBinary_noRecurse()
-            throws IOException, RepositoryException, SAXException {
+            throws IOException, RepositoryException, SAXException, TransformerException {
         doTestExportDocView(STREAM, SKIPBINARY, NORECURSE);
     }
 
     public void testExportDocView_stream_session_saveBinary_noRecurse()
-            throws IOException, RepositoryException, SAXException {
+            throws IOException, RepositoryException, SAXException, TransformerException {
         doTestExportDocView(STREAM, SAVEBINARY, NORECURSE);
     }
 
     public void testExportDocView_stream_session_saveBinary_recurse()
-            throws IOException, RepositoryException, SAXException {
+            throws IOException, RepositoryException, SAXException, TransformerException {
         doTestExportDocView(STREAM, SAVEBINARY, RECURSE);
     }
 
@@ -194,7 +197,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
      * @param noRecurse
      */
     public void doTestExportDocView(boolean withHandler, boolean skipBinary, boolean noRecurse)
-            throws RepositoryException, IOException, SAXException {
+            throws RepositoryException, IOException, SAXException, TransformerException {
 
         this.skipBinary = skipBinary;
         this.noRecurse = noRecurse;
@@ -202,9 +205,11 @@ public class ExportDocViewTest extends AbstractJCRTest {
         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
         try {
             if (withHandler) {
-                ContentHandler handler =
-                        new org.apache.xml.serialize.XMLSerializer(os, null).asContentHandler();
-                session.exportDocumentView(testPath, handler, skipBinary, noRecurse);
+                SAXTransformerFactory stf =
+                    (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+                TransformerHandler th = stf.newTransformerHandler();
+                th.setResult(new StreamResult(os));
+                session.exportDocumentView(testPath, th, skipBinary, noRecurse);
             } else {
                 session.exportDocumentView(testPath, os, skipBinary, noRecurse);
             }

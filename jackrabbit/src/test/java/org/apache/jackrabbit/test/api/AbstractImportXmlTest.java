@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Attr;
@@ -39,6 +37,15 @@ import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
@@ -391,10 +398,15 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
         BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
         try {
             // disable pretty printing/default line wrapping!
-            boolean indenting = false;
-            OutputFormat format = new OutputFormat("xml", "UTF-8", indenting);
-            XMLSerializer serializer = new XMLSerializer(bos, format);
-            serializer.serialize(document);
+            Transformer t = TransformerFactory.newInstance().newTransformer();
+            t.setParameter(OutputKeys.METHOD, "xml");
+            t.setParameter(OutputKeys.ENCODING, "UTF-8");
+            t.setParameter(OutputKeys.INDENT, "no");
+            Source s = new DOMSource(document);
+            Result r = new StreamResult(bos);
+            t.transform(s, r);
+        } catch (TransformerException te) {
+            throw (IOException) new IOException(te.getMessage()).initCause(te);
         } finally {
             bos.close();
         }
