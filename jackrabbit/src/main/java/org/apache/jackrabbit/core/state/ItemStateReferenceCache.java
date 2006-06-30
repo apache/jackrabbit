@@ -67,7 +67,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      * cache.
      */
     public ItemStateReferenceCache() {
-        this(new LRUItemStateCache());
+        this(new MLRUItemStateCache());
     }
 
     /**
@@ -99,7 +99,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
         cache.retrieve(id);
 
         // retrieve from primary cache
-        return (ItemState) refs.get(id);
+        return refs.get(id);
     }
 
     /**
