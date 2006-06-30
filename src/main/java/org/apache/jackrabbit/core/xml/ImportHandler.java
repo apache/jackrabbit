@@ -17,8 +17,9 @@
 package org.apache.jackrabbit.core.xml;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -26,14 +27,10 @@ import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
 
 /**
  * An <code>ImportHandler</code> instance can be used to import serialized

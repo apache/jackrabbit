@@ -16,37 +16,58 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-
-import javax.jcr.RepositoryException;
 import java.util.List;
 
+import javax.jcr.RepositoryException;
+
 /**
- * The <code>Importer</code> interface ...
+ * Content importer. The XML import handlers use this interface to submit
+ * the parsed content to the repository. The implementation of this class
+ * decides how the content is actually persisted; either through the
+ * transient space of a session, or directly into the workspace.
  */
 public interface Importer {
 
     /**
-     * @throws RepositoryException
+     * Called once at the beginning of the content import.
+     *
+     * @throws RepositoryException on a repository error
      */
     void start() throws RepositoryException;
 
     /**
-     * @param nodeInfo
-     * @param propInfos list of <code>PropInfo</code> instances
-     * @throws RepositoryException
+     * Called to start the import of a node. Information about the
+     * imported node and all it's properties are passed as arguments.
+     * Possible child nodes are imported recursively using this same
+     * method until a {@link #endNode(NodeInfo)} call is made with the
+     * same node information.
+     *
+     * @param nodeInfo information about the node being imported
+     * @param propInfos information abouth the properties being imported
+     *                  (list of {@link PropInfo} instances)
+     * @throws RepositoryException on a repository error
      */
     void startNode(NodeInfo nodeInfo, List propInfos)
             throws RepositoryException;
 
     /**
-     * @param nodeInfo
-     * @throws RepositoryException
+     * Called to end the import of a node. This method is called after
+     * a {@link #startNode(NodeInfo, List)} call with the stame node
+     * information and after all the possible child nodes have been
+     * imported with respective startNode/endNode calls.
+     * <p>
+     * Just like XML elements, the startNode/endNode calls are guaranteed
+     * to be properly nested and complete.
+     *
+     * @param nodeInfo information about the node being imported
+     * @throws RepositoryException on a repository error
      */
     void endNode(NodeInfo nodeInfo) throws RepositoryException;
 
     /**
-     * @throws RepositoryException
+     * Called once at the end of the content import.
+     *
+     * @throws RepositoryException on a repository error
      */
     void end() throws RepositoryException;
 

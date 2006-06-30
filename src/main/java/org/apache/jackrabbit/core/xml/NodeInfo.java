@@ -19,16 +19,45 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.QName;
 
+/**
+ * Information about a node being imported. This class is used
+ * by the XML import handlers to pass the parsed node information through
+ * the {@link Importer} interface to the actual import process.
+ * <p>
+ * An instance of this class is simply a container for the node name,
+ * node identifier, and the node type information. See the {@link PropInfo}
+ * class for the related carrier of property information. 
+ */
 public class NodeInfo {
 
+    /**
+     * Name of the node being imported.
+     */
     private final QName name;
 
+    /**
+     * Name of the primary type of the node being imported.
+     */
     private final QName nodeTypeName;
 
+    /**
+     * Names of the mixin types of the node being imported.
+     */
     private final QName[] mixinNames;
 
+    /**
+     * Identifier of the node being imported.
+     */
     private final NodeId id;
 
+    /**
+     * Creates a node information instance.
+     *
+     * @param name name of the node being imported
+     * @param nodeTypeName name of the primary type of the node being imported
+     * @param mixinNames names of the mixin types of the node being imported
+     * @param id identifier of the node being imported
+     */
     public NodeInfo(QName name, QName nodeTypeName, QName[] mixinNames,
                     NodeId id) {
         this.name = name;
@@ -37,18 +66,38 @@ public class NodeInfo {
         this.id = id;
     }
 
+    /**
+     * Returns the name of the node being imported.
+     *
+     * @return node name
+     */
     public QName getName() {
         return name;
     }
 
+    /**
+     * Returns the name of the primary type of the node being imported.
+     * 
+     * @return primary type name
+     */
     public QName getNodeTypeName() {
         return nodeTypeName;
     }
 
+    /**
+     * Returns the names of the mixin types of the node being imported.
+     * 
+     * @return mixin type names
+     */
     public QName[] getMixinNames() {
         return mixinNames;
     }
 
+    /**
+     * Returns the identifier of the node being imported.
+     * 
+     * @return node identifier
+     */
     public NodeId getId() {
         return id;
     }
