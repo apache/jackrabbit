@@ -45,8 +45,6 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -77,6 +75,14 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -1111,12 +1117,19 @@ public class SessionImpl implements Session, Dumpable {
     public void exportDocumentView(String absPath, OutputStream out,
                                    boolean skipBinary, boolean noRecurse)
             throws IOException, PathNotFoundException, RepositoryException {
-        boolean indenting = false;
-        OutputFormat format = new OutputFormat("xml", "UTF-8", indenting);
-        XMLSerializer serializer = new XMLSerializer(out, format);
+
+        SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+
         try {
-            exportDocumentView(absPath, serializer.asContentHandler(),
-                    skipBinary, noRecurse);
+            TransformerHandler th = stf.newTransformerHandler();
+            th.setResult(new StreamResult(out));
+            th.getTransformer().setParameter(OutputKeys.METHOD, "xml");
+            th.getTransformer().setParameter(OutputKeys.ENCODING, "UTF-8");
+            th.getTransformer().setParameter(OutputKeys.INDENT, "no");
+
+            exportDocumentView(absPath, th, skipBinary, noRecurse);
+        } catch (TransformerException te) {
+            throw new RepositoryException(te);
         } catch (SAXException se) {
             throw new RepositoryException(se);
         }
@@ -1146,12 +1159,18 @@ public class SessionImpl implements Session, Dumpable {
     public void exportSystemView(String absPath, OutputStream out,
                                  boolean skipBinary, boolean noRecurse)
             throws IOException, PathNotFoundException, RepositoryException {
-        boolean indenting = false;
-        OutputFormat format = new OutputFormat("xml", "UTF-8", indenting);
-        XMLSerializer serializer = new XMLSerializer(out, format);
+
+        SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
         try {
-            exportSystemView(absPath, serializer.asContentHandler(),
-                    skipBinary, noRecurse);
+            TransformerHandler th = stf.newTransformerHandler();
+            th.setResult(new StreamResult(out));
+            th.getTransformer().setParameter(OutputKeys.METHOD, "xml");
+            th.getTransformer().setParameter(OutputKeys.ENCODING, "UTF-8");
+            th.getTransformer().setParameter(OutputKeys.INDENT, "no");
+
+            exportSystemView(absPath, th, skipBinary, noRecurse);
+        } catch (TransformerException te) {
+            throw new RepositoryException(te);
         } catch (SAXException se) {
             throw new RepositoryException(se);
         }
