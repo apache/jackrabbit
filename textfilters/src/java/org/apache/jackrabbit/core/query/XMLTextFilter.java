@@ -44,8 +44,6 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class XMLTextFilter implements TextFilter {
 
-    private org.apache.jackrabbit.core.query.XMLTextFilter.XMLParser parser;
-
     /**
      * @return <code>true</code> for <code>text/xml</code>, <code>false</code>
      *         otherwise.
@@ -67,28 +65,37 @@ public class XMLTextFilter implements TextFilter {
      */
     public Map doFilter(PropertyState data, String encoding)
             throws RepositoryException {
-
-        if (parser == null) {
-            initParser();
-        }
-
         InternalValue[] values = data.getValues();
         if (values.length > 0) {
             final BLOBFileValue blob = (BLOBFileValue) values[0].internalValue();
             LazyReader reader = new LazyReader() {
                 protected void initializeReader() throws IOException {
-                    InputStream in;
                     try {
-                        in = blob.getStream();
-                    } catch (RepositoryException e) {
+                        StringBuffer buffer = new StringBuffer();
+                        XMLParser parser = new XMLParser(buffer);
+
+                        SAXParserFactory saxParserFactory =
+                            SAXParserFactory.newInstance();
+                        saxParserFactory.setValidating(false);
+                        SAXParser saxParser = saxParserFactory.newSAXParser();
+                        XMLReader xmlReader = saxParser.getXMLReader();
+                        xmlReader.setContentHandler(parser);
+                        xmlReader.setErrorHandler(parser);
+
+                        InputStream in = blob.getStream();
+                        try {
+                            InputSource source = new InputSource(in);
+                            xmlReader.parse(source);
+                            delegate = new StringReader(buffer.toString());
+                        } finally {
+                            in.close();
+                        }
+                    } catch (SAXException se) {
+                        throw new IOException(se.getMessage());
+                    } catch (RepositoryException se) {
+                        throw new IOException(se.getMessage());
+                    } catch (ParserConfigurationException e) {
                         throw new IOException(e.getMessage());
-                    }
-                    try {
-                        parser.parse(in);
-                        String text = parser.getContents();
-                        delegate = new StringReader(text);
-                    } finally {
-                        in.close();
                     }
                 }
             };
@@ -103,131 +110,54 @@ public class XMLTextFilter implements TextFilter {
     }
 
     /**
-     * Inits the parser engine
-     *
-     * @throws javax.jcr.RepositoryException If some error happens
+     * Private helper XML parser. It only processes text elements and
+     * attributes. Feel free to change for adding support for tags text
+     * extraction.
      */
-    private void initParser() throws javax.jcr.RepositoryException {
+    private static class XMLParser extends DefaultHandler implements ErrorHandler {
 
-        try {
-            SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
-            saxParserFactory.setValidating(false);
-            SAXParser saxParser = saxParserFactory.newSAXParser();
-            XMLReader xmlReader = saxParser.getXMLReader();
-            parser = new XMLParser(xmlReader);
-        } catch (ParserConfigurationException e) {
-            throw new javax.jcr.RepositoryException();
-        } catch (SAXException e) {
-            throw new javax.jcr.RepositoryException();
+        private final StringBuffer buffer;
+
+        public XMLParser(StringBuffer buffer) {
+            this.buffer = buffer;
         }
-    }
 
-    /**
-     * Private helper XML parser. It only processes text elements. Feel free to
-     * change for adding support for attributes or tags text extraction.
-     */
-    private class XMLParser extends DefaultHandler implements ErrorHandler {
-
-        private XMLReader xmlReader;
-        private StringBuffer buffer;
-
-        public XMLParser(XMLReader xmlReader) {
-
-            try {
-
-                this.xmlReader = xmlReader;
-                this.xmlReader.setContentHandler(this);
-                this.xmlReader.setErrorHandler(this);
-
-            } catch (Exception ex) {
-
+        public void startElement(
+                String uri, String local, String name, Attributes attributes) {
+            for (int i = 0; i < attributes.getLength(); i++) {
+                // Add spaces to separate the attribute value from other content
+                String value = " " + attributes.getValue(i) + " ";
+                characters(value.toCharArray(), 0, value.length());
             }
         }
 
-        public void startDocument() throws SAXException {
-
-            buffer = new StringBuffer();
-        }
-
-        public void startElement(String namespaceURI, String localName,
-                                 String rawName, Attributes atts)
-                throws SAXException {
-        }
-
-        public void characters(char[] ch,
-                               int start,
-                               int length) throws SAXException {
-
-
-            buffer.append(ch, start, length);
-        }
-
-        public void endElement(java.lang.String namespaceURI,
-                               java.lang.String localName,
-                               java.lang.String qName)
-                throws SAXException {
-        }
-
-
-        public void warning(SAXParseException spe) throws SAXException {
-
-
-        }
-
-        public void error(SAXParseException spe) throws SAXException {
-
-        }
-
-        public void fatalError(SAXParseException spe) throws SAXException {
-
-        }
-
-        public void parse(InputStream is) throws IOException {
-
-            try {
-                InputSource source = new InputSource(is);
-                xmlReader.parse(source);
-            } catch (SAXException se) {
-                throw new IOException(se.getMessage());
-            }
-        }
-
-        private String filterAndJoin(String text) {
-
+        public void characters(char[] ch, int start, int length) {
             boolean space = false;
-            StringBuffer buffer = new StringBuffer();
-            for (int i = 0; i < text.length(); i++) {
-                char c = text.charAt(i);
-
-                if ((c == '\n') || (c == ' ') || Character.isWhitespace(c)) {
+            for (int i = start; i < length; i++) {
+                if (Character.isLetterOrDigit(ch[i])) {
                     if (space) {
-                        continue;
-                    } else {
-                        space = true;
                         buffer.append(' ');
-                        continue;
+                        space = false;
                     }
+                    buffer.append(ch[i]);
                 } else {
-                    if (!Character.isLetter(c)) {
-                        if (!space) {
-                            space = true;
-                            buffer.append(' ');
-                            continue;
-                        }
-                        continue;
-                    }
+                    space = true;
                 }
-                space = false;
-                buffer.append(c);
             }
-            return buffer.toString();
+            if (space) {
+                buffer.append(' ');
+            }
         }
 
-        public String getContents() {
+        public void warning(SAXParseException spe) {
+        }
 
-            String text = filterAndJoin(buffer.toString());
-            return text;
+        public void error(SAXParseException spe) {
+        }
+
+        public void fatalError(SAXParseException spe) {
         }
 
     }
+
 }
