@@ -101,6 +101,7 @@ public class Lexer {
         st.wordChars('a', 'z');
         st.wordChars('A', 'Z');
         st.wordChars(':', ':');
+        st.wordChars('_', '_');
 
         st.quoteChar(SINGLE_QUOTE);
         st.quoteChar(DOUBLE_QUOTE);

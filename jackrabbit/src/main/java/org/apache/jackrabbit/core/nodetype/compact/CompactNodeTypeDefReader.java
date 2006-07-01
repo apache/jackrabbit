@@ -116,7 +116,7 @@ import java.util.List;
  *
  * quoted_string :: = "'" unquoted_string "'"
  *
- * unquoted_string ::= ...a string...
+ * unquoted_string ::= [A-Za-z0-9:_]+
  * </pre>
  */
 public class CompactNodeTypeDefReader {
@@ -257,7 +257,7 @@ public class CompactNodeTypeDefReader {
 
         nextToken();
         if (!currentTokenEquals(Lexer.END_NODE_TYPE_NAME)) {
-            lexer.fail("Missing '" + Lexer.END_NODE_TYPE_NAME + "' delimiter for end of node type name");
+            lexer.fail("Missing '" + Lexer.END_NODE_TYPE_NAME + "' delimiter for end of node type name, found " + currentToken);
         }
         nextToken();
     }

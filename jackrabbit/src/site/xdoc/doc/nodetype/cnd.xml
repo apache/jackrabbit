@@ -189,7 +189,7 @@ string ::= quoted_string | unquoted_string
 
 quoted_string :: = "'" unquoted_string "'"
 
-unquoted_string ::= /* a string */]]></source>
+unquoted_string ::= [A-Za-z0-9:_]+]]></source>
         </section>
             <section name="CND Notation in Detail">
 <source><![CDATA[cnd ::= {ns_mapping | node_type_def}]]></source>    
