@@ -154,19 +154,9 @@ public class RepositoryConfig {
     private final String home;
 
     /**
-     * Repository name for a JAAS app-entry configuration.
+     * The security config.
      */
-    private final String name;
-
-    /**
-     * Repository access manager configuration;
-     */
-    private final AccessManagerConfig amc;
-
-    /**
-     * Repository login module configuration. Optional, can be null
-     */
-    private final LoginModuleConfig lmc;
+    private final SecurityConfig sec;
 
     /**
      * Repository file system configuration.
@@ -226,9 +216,7 @@ public class RepositoryConfig {
      *
      * @param template workspace configuration template
      * @param home repository home directory
-     * @param name repository name for a JAAS app-entry configuration
-     * @param amc access manager configuration
-     * @param lmc login module configuration (can be <code>null</code>)
+     * @param sec the security configuration
      * @param fsc file system configuration
      * @param workspaceDirectory workspace root directory
      * @param workspaceConfigDirectory optional workspace configuration directory
@@ -238,17 +226,14 @@ public class RepositoryConfig {
      * @param sc search configuration for system search manager.
      * @param parser the ConfigurationParser that servers as config factory
      */
-    public RepositoryConfig(String home, String name,
-            AccessManagerConfig amc, LoginModuleConfig lmc, FileSystemConfig fsc,
+    public RepositoryConfig(String home, SecurityConfig sec, FileSystemConfig fsc,
             String workspaceDirectory, String workspaceConfigDirectory,
             String defaultWorkspace, int workspaceMaxIdleTime,
             Element template, VersioningConfig vc, SearchConfig sc,
             ConfigurationParser parser) {
         workspaces = new HashMap();
         this.home = home;
-        this.name = name;
-        this.amc = amc;
-        this.lmc = lmc;
+        this.sec = sec;
         this.fsc = fsc;
         this.workspaceDirectory = workspaceDirectory;
         this.workspaceConfigDirectory = workspaceConfigDirectory;
@@ -641,7 +626,7 @@ public class RepositoryConfig {
      * @return repository name
      */
     public String getAppName() {
-        return name;
+        return sec.getAppName();
     }
 
     /**
@@ -650,7 +635,7 @@ public class RepositoryConfig {
      * @return access manager configuration
      */
     public AccessManagerConfig getAccessManagerConfig() {
-        return amc;
+        return sec.getAccessManagerConfig();
     }
 
     /**
@@ -660,7 +645,16 @@ public class RepositoryConfig {
      *         JAAS mechanism should be used.
      */
     public LoginModuleConfig getLoginModuleConfig() {
-        return lmc;
+        return sec.getLoginModuleConfig();
+    }
+
+    /**
+     * Returns the repository security configuration.
+     *
+     * @return security configutation
+     */
+    public SecurityConfig getSecurityConfig() {
+        return sec;
     }
 
     /**
