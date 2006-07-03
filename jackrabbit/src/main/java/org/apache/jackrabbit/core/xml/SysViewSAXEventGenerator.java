@@ -86,6 +86,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     protected void entering(Node node, int level)
             throws RepositoryException, SAXException {
         AttributesImpl attrs = new AttributesImpl();
+        addNamespacePrefixes(level, attrs);
         // name attribute
         String nodeName;
         if (node.getDepth() == 0) {

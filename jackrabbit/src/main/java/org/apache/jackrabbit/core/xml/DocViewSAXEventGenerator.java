@@ -132,6 +132,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
             // attributes (properties)
             AttributesImpl attrs = new AttributesImpl();
+            addNamespacePrefixes(level, attrs);
             Iterator iter = props.iterator();
             while (iter.hasNext()) {
                 Property prop = (Property) iter.next();
@@ -168,6 +169,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
                             attrValue.toString());
                 }
             }
+
             // start element (node)
             QName qName = getQName(elemName);
             contentHandler.startElement(qName.getNamespaceURI(),
