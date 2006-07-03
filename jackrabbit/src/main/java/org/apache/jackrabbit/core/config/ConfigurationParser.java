@@ -119,7 +119,7 @@ public class ConfigurationParser {
 
     /** Name of the default search index implementation class. */
     public static final String DEFAULT_QUERY_HANDLER =
-            "org.apache.jackrabbit.core.query.lucene.SearchIndex";
+            "com.day.crx.core.query.lucene.SearchIndex";
 
     /**
      * The configuration parser variables. These name-value pairs
@@ -209,17 +209,7 @@ public class ConfigurationParser {
 
         // Security configuration and access manager implementation
         Element security = getElement(root, SECURITY_ELEMENT);
-        String appName = getAttribute(security, APP_NAME_ATTRIBUTE);
-        AccessManagerConfig amc = new AccessManagerConfig(
-                parseBeanConfig(security, ACCESS_MANAGER_ELEMENT));
-
-        // Optional login module
-        Element loginModule = getElement(security, LOGIN_MODULE_ELEMENT, false);
-
-        LoginModuleConfig lmc = null;
-        if (loginModule != null) {
-            lmc = new LoginModuleConfig(parseBeanConfig(security, LOGIN_MODULE_ELEMENT));
-        }
+        SecurityConfig securityConfig = parseSecurityConfig(security);
 
         // General workspace configuration
         Element workspaces = getElement(root, WORKSPACES_ELEMENT);
@@ -244,9 +234,69 @@ public class ConfigurationParser {
         // Optional search configuration
         SearchConfig sc = parseSearchConfig(root);
 
-        return new RepositoryConfig(home, appName, amc, lmc, fsc,
+        return new RepositoryConfig(home, securityConfig, fsc,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
                 maxIdleTime, template, vc, sc, this);
+    }
+
+    /**
+     * Parses security configuration. Security configuration
+     * uses the following format:
+     * <pre>
+     *   &lt;Security appName="..."&gt;
+     *     &lt;AccessManager ...&gt;
+     *     &lt;LoginModule ... (optional)&gt;
+     *   &lt;/Security&gt;
+     * </pre>
+     * <p/>
+     * Both the <code>AccessManager</code> and <code>LoginModule</code>
+     * elements are {@link #parseBeanConfig(Element,String) bean configuration}
+     * elements.
+     * <p/>
+     * The login module is an optional feature of repository configuration.
+     *
+     * @param security the &lt;security> element.
+     * @return the security configuration.
+     * @throws ConfigurationException
+     */
+    public SecurityConfig parseSecurityConfig(Element security)
+            throws ConfigurationException {
+        String appName = getAttribute(security, APP_NAME_ATTRIBUTE);
+        AccessManagerConfig amc = parseAccessManagerConfig(security);
+        LoginModuleConfig lmc = parseLoginModuleConfig(security);
+        return new SecurityConfig(appName, amc, lmc);
+    }
+
+    /**
+     * Parses the access manager configuration.
+     *
+     * @param security the &lt;security> element.
+     * @return the access manager configuration.
+     * @throws ConfigurationException
+     */
+    public AccessManagerConfig parseAccessManagerConfig(Element security)
+            throws ConfigurationException {
+        return new AccessManagerConfig(
+                parseBeanConfig(security, ACCESS_MANAGER_ELEMENT));
+    }
+
+    /**
+     * Parses the login module configuration.
+     *
+     * @param security the &lt;security> element.
+     * @return the login module configuration.
+     * @throws ConfigurationException
+     */
+    public LoginModuleConfig parseLoginModuleConfig(Element security)
+            throws ConfigurationException {
+        // Optional login module
+        Element loginModule = getElement(security, LOGIN_MODULE_ELEMENT, false);
+
+        if (loginModule != null) {
+            return new LoginModuleConfig(parseBeanConfig(security, LOGIN_MODULE_ELEMENT));
+        } else {
+            return null;
+        }
     }
 
     /**
