@@ -2421,6 +2421,8 @@ public class NodeImpl extends ItemImpl implements Node {
             return (Node) itemMgr.getItem(id);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(relPath);
+        } catch (ItemNotFoundException infe) {
+            throw new PathNotFoundException(relPath);
         }
     }
 
@@ -2492,6 +2494,8 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         try {
             return (Property) itemMgr.getItem(id);
+        } catch (ItemNotFoundException infe) {
+            throw new PathNotFoundException(relPath);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(relPath);
         }
