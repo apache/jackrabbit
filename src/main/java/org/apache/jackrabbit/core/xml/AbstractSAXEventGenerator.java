@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -189,6 +190,34 @@ abstract class AbstractSAXEventGenerator {
                 continue;
             }
             contentHandler.endPrefixMapping(prefix);
+        }
+    }
+
+    /**
+     * Adds explicit <code>xmlns:prefix="uri"</code> attributes to the
+     * XML top-level element. The effect is the same as setting the
+     * "<code>http://xml.org/sax/features/namespace-prefixes</code>"
+     * property on an SAX parser.
+     *
+     * @param level level of the current XML element
+     * @param attributes attributes of the current XML element
+     * @throws RepositoryException on a repository error
+     */
+    protected void addNamespacePrefixes(int level, AttributesImpl attributes)
+            throws RepositoryException {
+        if (level == 0) {
+            String[] prefixes = session.getNamespacePrefixes();
+            for (int i = 0; i < prefixes.length; i++) {
+                if (prefixes[i].length() > 0
+                        && !QName.NS_XML_PREFIX.equals(prefixes[i])) {
+                    attributes.addAttribute(
+                            QName.NS_XMLNS_URI,
+                            prefixes[i],
+                            QName.NS_XMLNS_PREFIX + ":" + prefixes[i],
+                            "CDATA",
+                            session.getNamespaceURI(prefixes[i]));
+                }
+            }
         }
     }
 
