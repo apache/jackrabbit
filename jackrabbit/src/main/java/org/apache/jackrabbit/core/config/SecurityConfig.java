@@ -17,14 +17,8 @@
 package org.apache.jackrabbit.core.config;
 
 /**
- * Search index configuration. This bean configuration class
- * is used to create configured search index objects.
- * <p>
- * In addition to generic bean configuration information, this
- * class also contains an optional file system configuration
- * used by the search index.
- *
- * @see WorkspaceConfig#getSearchConfig()
+ * Security configuration. This encapsulates the security related sub
+ * configurations {@link AccessManagerConfig} and {@link LoginModuleConfig}.
  */
 public class SecurityConfig {
 
@@ -39,7 +33,7 @@ public class SecurityConfig {
     private final AccessManagerConfig amc;
 
     /**
-     * Repository login module configuration. Optional, can be null
+     * Repository login module configuration. Optional, can be <code>null</code>
      */
     private final LoginModuleConfig lmc;
 
