@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.util.XMLChar;
+import org.apache.jackrabbit.test.XMLChar;
 
 import org.xml.sax.SAXException;
 import org.xml.sax.ContentHandler;
