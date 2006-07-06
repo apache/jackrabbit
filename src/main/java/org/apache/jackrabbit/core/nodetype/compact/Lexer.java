@@ -129,8 +129,12 @@ public class Lexer {
             int tokenType = st.nextToken();
             if (tokenType == StreamTokenizer.TT_EOF) {
                 return EOF;
-            } else if (tokenType == StreamTokenizer.TT_WORD || tokenType == SINGLE_QUOTE || tokenType == DOUBLE_QUOTE) {
+            } else if (tokenType == StreamTokenizer.TT_WORD
+                    || tokenType == SINGLE_QUOTE
+                    || tokenType == DOUBLE_QUOTE) {
                 return st.sval;
+            } else if (tokenType == StreamTokenizer.TT_NUMBER) {
+                return String.valueOf(st.nval);
             } else {
                 return new String(new char[] {(char) tokenType});
             }
