@@ -53,6 +53,7 @@ public class ValueHelper {
      * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
+     * @see #convert(Value, int)
      */
     public static Value convert(String srcValue, int targetType)
             throws ValueFormatException, IllegalArgumentException {
@@ -69,6 +70,7 @@ public class ValueHelper {
      * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
+     * @see #convert(Value, int)
      */
     public static Value[] convert(String[] srcValues, int targetType)
             throws ValueFormatException, IllegalArgumentException {
@@ -88,6 +90,7 @@ public class ValueHelper {
      * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
+     * @see #convert(Value, int)
      */
     public static Value[] convert(Value[] srcValues, int targetType)
             throws ValueFormatException, IllegalArgumentException {
@@ -117,6 +120,10 @@ public class ValueHelper {
     }
 
     /**
+     * Converts the given value to a value of the specified target type.
+     * The conversion is performed according to the rules described in
+     * "6.2.6 Property Type Conversion" in the JSR 170 specification.
+     *
      * @param srcValue
      * @param targetType
      * @return
