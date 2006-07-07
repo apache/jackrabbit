@@ -23,6 +23,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -375,10 +376,17 @@ public class NodeTypeImpl implements NodeType {
                 // no type conversion required
                 targetType = value.getType();
             }
-            // create InternalValue from Value and perform
-            // type conversion as necessary
-            InternalValue internalValue = InternalValue.create(value, targetType,
-                    nsResolver);
+            // perform type conversion as necessary and create InternalValue
+            // from (converted) Value
+            InternalValue internalValue;
+            if (targetType != value.getType()) {
+                // type conversion required
+                Value targetVal = ValueHelper.convert(value, targetType);
+                internalValue = InternalValue.create(targetVal, nsResolver);
+            } else {
+                // no type conversion required
+                internalValue = InternalValue.create(value, nsResolver);
+            }
             EffectiveNodeType.checkSetPropertyValueConstraints(
                     def, new InternalValue[]{internalValue});
             return true;
@@ -444,11 +452,17 @@ public class NodeTypeImpl implements NodeType {
             // convert values and compact array (purge null entries)
             for (int i = 0; i < values.length; i++) {
                 if (values[i] != null) {
-                    // create InternalValue from Value and perform
-                    // type conversion as necessary
-                    InternalValue internalValue =
-                            InternalValue.create(values[i], targetType,
-                                    nsResolver);
+                    // perform type conversion as necessary and create InternalValue
+                    // from (converted) Value
+                    InternalValue internalValue;
+                    if (targetType != type) {
+                        // type conversion required
+                        Value targetVal = ValueHelper.convert(values[i], targetType);
+                        internalValue = InternalValue.create(targetVal, nsResolver);
+                    } else {
+                        // no type conversion required
+                        internalValue = InternalValue.create(values[i], nsResolver);
+                    }
                     list.add(internalValue);
                 }
             }

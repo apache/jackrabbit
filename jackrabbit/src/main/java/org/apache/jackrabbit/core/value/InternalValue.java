@@ -35,7 +35,6 @@ import org.apache.jackrabbit.value.NameValue;
 import org.apache.jackrabbit.value.PathValue;
 import org.apache.jackrabbit.value.ReferenceValue;
 import org.apache.jackrabbit.value.StringValue;
-import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -140,40 +139,6 @@ public class InternalValue {
             default:
                 throw new IllegalArgumentException("illegal value");
         }
-    }
-
-    /**
-     * @param value
-     * @param targetType
-     * @param nsResolver
-     * @return
-     * @throws ValueFormatException
-     * @throws RepositoryException
-     */
-    public static InternalValue create(Value value, int targetType,
-                                       NamespaceResolver nsResolver)
-            throws ValueFormatException, RepositoryException {
-        if (value == null) {
-            throw new IllegalArgumentException("null value");
-        }
-        return create(ValueHelper.convert(value, targetType), nsResolver);
-    }
-
-    /**
-     * @param value
-     * @param targetType
-     * @param nsResolver
-     * @return
-     * @throws ValueFormatException
-     * @throws RepositoryException
-     */
-    public static InternalValue create(String value, int targetType,
-                                       NamespaceResolver nsResolver)
-            throws ValueFormatException, RepositoryException {
-        if (value == null) {
-            throw new IllegalArgumentException("null value");
-        }
-        return create(ValueHelper.convert(value, targetType), nsResolver);
     }
 
     /**
@@ -383,47 +348,42 @@ public class InternalValue {
      * @throws RepositoryException
      */
     public InternalValue createCopy() throws RepositoryException {
-        switch (type) {
-            case PropertyType.BINARY:
+        if (type == PropertyType.BINARY) {
+            // return a copy since the wrapped BLOBFileValue instance is mutable
+            try {
+                InputStream stream = ((BLOBFileValue) val).getStream();
                 try {
-                    InputStream stream = ((BLOBFileValue) val).getStream();
+                    return new InternalValue(new BLOBFileValue(stream));
+                } finally {
                     try {
-                        return new InternalValue(new BLOBFileValue(stream));
-                    } finally {
-                        try {
-                            stream.close();
-                        } catch (IOException e) {
-                            // ignore
-                        }
+                        stream.close();
+                    } catch (IOException e) {
+                        // ignore
                     }
-                } catch (IOException ioe) {
-                    throw new RepositoryException("failed to copy binary value", ioe);
                 }
-            case PropertyType.BOOLEAN:
-                return new InternalValue(((Boolean) val).booleanValue());
-            case PropertyType.DATE:
-                return new InternalValue((Calendar) val);
-            case PropertyType.DOUBLE:
-                return new InternalValue(((Double) val).doubleValue());
-            case PropertyType.LONG:
-                return new InternalValue(((Long) val).longValue());
-            case PropertyType.REFERENCE:
-                return new InternalValue((UUID) val);
-            case PropertyType.PATH:
-                return new InternalValue((Path) val);
-            case PropertyType.NAME:
-                return new InternalValue((QName) val);
-            case PropertyType.STRING:
-                return new InternalValue((String) val);
-            default:
-                throw new RepositoryException("illegal internal value type");
+            } catch (IOException ioe) {
+                throw new RepositoryException("failed to copy binary value", ioe);
+            }
+        } else {
+            // for all other types it's safe to return 'this' because the
+            // wrapped value is immutable (and therefore this instance as well)
+            return this;
         }
     }
 
     /**
-     * @param s
+     * Parses the given string as an <code>InternalValue</code> of the
+     * specified type. The string must be in the format returned by the
+     * <code>InternalValue.toString()</code> method.
+     *
+     * @param s a <code>String</code> containing the <code>InternalValue</code>
+     *          representation to be parsed.
      * @param type
-     * @return
+     * @return the <code>InternalValue</code> represented by the arguments
+     * @throws IllegalArgumentException if the specified string can not be parsed
+     *                                  as an <code>InternalValue</code> of the
+     *                                  specified type.
+     * @see #toString()
      */
     public static InternalValue valueOf(String s, int type) {
         switch (type) {
@@ -445,7 +405,8 @@ public class InternalValue {
                 return new InternalValue(s);
 
             case PropertyType.BINARY:
-                throw new IllegalArgumentException("this method does not support the type PropertyType.BINARY");
+                throw new IllegalArgumentException(
+                        "this method does not support the type PropertyType.BINARY");
             default:
                 throw new IllegalArgumentException("illegal type");
         }

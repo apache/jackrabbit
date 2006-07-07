@@ -60,7 +60,8 @@ class StringValue implements TextValue {
             
             // convert serialized value to InternalValue using
             // current namespace context of xml document
-            InternalValue ival = InternalValue.create(value, type, nsContext);
+            InternalValue ival =
+                    InternalValue.create(ValueHelper.convert(value, type), nsContext);
             // convert InternalValue to Value using this
             // session's namespace mappings
             return ival.toJCRValue(resolver);
@@ -84,7 +85,7 @@ class StringValue implements TextValue {
             } else {
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
-                return InternalValue.create(value, targetType, nsContext);
+                return InternalValue.create(ValueHelper.convert(value, targetType), nsContext);
             }
         } catch (IOException e) {
             throw new RepositoryException("Error decoding Base64 content", e);
