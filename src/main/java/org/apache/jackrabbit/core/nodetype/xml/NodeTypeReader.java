@@ -31,6 +31,7 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -255,7 +256,7 @@ public class NodeTypeReader {
             while (walker.iterateElements(Constants.DEFAULTVALUE_ELEMENT)) {
                 String value = walker.getContent();
                 try {
-                    values.add(InternalValue.create(value, type, resolver));
+                    values.add(InternalValue.create(ValueHelper.convert(value, type), resolver));
                 } catch (RepositoryException e) {
                     throw new InvalidNodeTypeDefException(
                             "Unable to create default value: " + value, e);

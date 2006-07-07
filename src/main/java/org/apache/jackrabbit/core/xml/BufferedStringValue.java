@@ -238,7 +238,7 @@ class BufferedStringValue implements TextValue {
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
                 InternalValue ival =
-                    InternalValue.create(retrieve(), targetType, nsContext);
+                    InternalValue.create(ValueHelper.convert(retrieve(), targetType), nsContext);
                 // convert InternalValue to Value using this
                 // session's namespace mappings
                 return ival.toJCRValue(resolver);
@@ -297,7 +297,7 @@ class BufferedStringValue implements TextValue {
             } else {
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
-                return InternalValue.create(retrieve(), type, nsContext);
+                return InternalValue.create(ValueHelper.convert(retrieve(), type), nsContext);
             }
         } catch (IOException e) {
             throw new RepositoryException("Error accessing property value", e);
