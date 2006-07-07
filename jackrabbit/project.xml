@@ -29,11 +29,11 @@
     <organization>
         <name>The Apache Software Foundation</name>
         <url>http://www.apache.org/</url>
-        <logo>http://www.apache.org/images/asf_logo_wide.png</logo>
+        <logo>/images/logos/asf_logo_wide.png</logo>
     </organization>
     <inceptionYear>2004</inceptionYear>
     <package>org.apache.jackrabbit.*</package>
-    <logo>/images/jackrabbitlogo.gif</logo>
+    <logo>/images/logos/jackrabbitlogo.gif</logo>
     <description>
 The Apache Jackrabbit Project has been formed to develop and maintain an
 open source implementation of the Content Repository for Java Technology API
