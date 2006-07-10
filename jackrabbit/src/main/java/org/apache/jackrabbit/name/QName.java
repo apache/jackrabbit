@@ -552,7 +552,7 @@ public final class QName implements Cloneable, Comparable, Serializable {
      * @return qualified name
      * @throws IllegalNameException if the given name is not a valid JCR name
      * @throws UnknownPrefixException if the JCR name prefix does not resolve
-     * @deprecated Use {@link NameFormat#parse(String, NamespaceResolver)} instead
+     * @deprecated Use {@link NameFormat#parse(String, NamespaceResolver)} instead.
      */
     public static QName fromJCRName(String rawName, NamespaceResolver resolver)
             throws IllegalNameException, UnknownPrefixException {
@@ -601,7 +601,8 @@ public final class QName implements Cloneable, Comparable, Serializable {
      *
      * @param jcrName the name to be checked
      * @throws IllegalNameException If <code>jcrName</code> is not a valid
-     *                              JCR-style name.
+     * JCR-style name.
+     * @deprecated Use {@link NameFormat#checkFormat(String)} instead.
      */
     public static void checkFormat(String jcrName) throws IllegalNameException {
         parse(jcrName);

@@ -53,20 +53,20 @@ public class NameFormat {
     };
 
     /**
-     * Parses the <code>jcrName</code> and returns an array of two strings:
-     * the first array element contains the prefix (or empty string),
-     * the second the local name.
+     * Parses the <code>jcrName</code> and returns a new <code>QName</code>.
      *
      * @param jcrName the name to be parsed
+     * @param resolver <code>NamespaceResolver</code> use to retrieve the
+     * namespace URI from the prefix contained in the given JCR name.
      * @return qName the new <code>QName</code>
      * @throws IllegalNameException If <code>jcrName</code> is not a valid
-     *                              JCR-style name.
+     * JCR-style name.
      */
-    public static QName parse(String jcrName, NamespaceResolver nsResolver) throws IllegalNameException, UnknownPrefixException {
+    public static QName parse(String jcrName, NamespaceResolver resolver) throws IllegalNameException, UnknownPrefixException {
         String[] parts = parse(jcrName);
         String uri;
         try {
-            uri = nsResolver.getURI(parts[0]);
+            uri = resolver.getURI(parts[0]);
         } catch (NamespaceException nse) {
             throw new UnknownPrefixException(parts[0]);
         }
@@ -162,7 +162,6 @@ public class NameFormat {
      * @param qName the qualified name to resolve.
      * @param resolver the namespace resolver.
      * @param buffer StringBuffer where the prefixed JCR name should be appended to.
-     * @return JCR the formatted path.
      * @throws NoPrefixDeclaredException if a namespace can not be resolved
      * @see #format(QName, NamespaceResolver)
      */

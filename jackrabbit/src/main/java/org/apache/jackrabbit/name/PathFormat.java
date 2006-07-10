@@ -267,5 +267,4 @@ public class PathFormat {
             buf.append(']');
         }
     }
-
 }
