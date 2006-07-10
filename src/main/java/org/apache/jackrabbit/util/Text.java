@@ -532,6 +532,19 @@ public class Text {
     }
 
     /**
+     * Same as {@link #getName(String)} but adding the possibility
+     * to pass paths that end with a trailing '/'
+     *
+     * @see #getName(String)
+     */
+    public static String getName(String path, boolean ignoreTrailingSlash) {
+        if (ignoreTrailingSlash && path.endsWith("/") && path.length() > 1) {
+            path = path.substring(0, path.length()-1);
+        }
+        return getName(path);
+    }
+
+    /**
      * Returns the namespace prefix of the given <code>qname</code>. If the
      * prefix is missing, an empty string is returned. Please note, that this
      * method does not validate the name or prefix.
@@ -634,6 +647,19 @@ public class Text {
             level--;
         }
         return (idx == 0) ? "/" : path.substring(0, idx);
+    }
+
+    /**
+     * Same as {@link #getRelativeParent(String, int)} but adding the possibility
+     * to pass paths that end with a trailing '/'
+     *
+     * @see #getRelativeParent(String, int)
+     */
+    public static String getRelativeParent(String path, int level, boolean ignoreTrailingSlash) {
+        if (ignoreTrailingSlash && path.endsWith("/") && path.length() > 1) {
+            path = path.substring(0, path.length()-1);
+        }
+        return getRelativeParent(path, level);
     }
 
     /**

@@ -17,15 +17,11 @@
 package org.apache.jackrabbit.name;
 
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.util.XMLChar;
 
-import javax.jcr.NamespaceException;
-import javax.jcr.PathNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import javax.jcr.PathNotFoundException;
 
 /**
  * The <code>Path</code> utility class provides misc. methods to resolve and
@@ -90,17 +86,17 @@ public final class Path {
     /**
      * the 'root' element. i.e. '/'
      */
-    private static final PathElement ROOT_ELEMENT = new RootElement();
+    public static final PathElement ROOT_ELEMENT = new RootElement();
 
     /**
      * the 'current' element. i.e. '.'
      */
-    private static final PathElement CURRENT_ELEMENT = new CurrentElement();
+    public static final PathElement CURRENT_ELEMENT = new CurrentElement();
 
     /**
      * the 'parent' element. i.e. '..'
      */
-    private static final PathElement PARENT_ELEMENT = new ParentElement();
+    public static final PathElement PARENT_ELEMENT = new ParentElement();
 
     /**
      * the root path
@@ -108,32 +104,19 @@ public final class Path {
     public static final Path ROOT = new Path(new PathElement[]{ROOT_ELEMENT}, true);
 
     /**
-     * Pattern used to validate and parse path elements:<p>
-     * <ul>
-     * <li>group 1 is .
-     * <li>group 2 is ..
-     * <li>group 3 is namespace prefix incl. delimiter (colon)
-     * <li>group 4 is namespace prefix excl. delimiter (colon)
-     * <li>group 5 is localName
-     * <li>group 6 is index incl. brackets
-     * <li>group 7 is index excl. brackets
-     * </ul>
+     * Constant representing an undefined index value
      */
-    private static final Pattern PATH_ELEMENT_PATTERN =
-            Pattern.compile("(\\.)|"
-            + "(\\.\\.)|"
-            + "(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
-            + "([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)"
-            + "(\\[([1-9]\\d*)\\])?");
+    public static final int INDEX_UNDEFINED = 0;
 
     /**
-     * Matcher instance as thread-local.
+     * Constant representing the default (initial) index value.
      */
-    private static final ThreadLocal PATH_ELEMENT_MATCHER = new ThreadLocal() {
-        protected Object initialValue() {
-            return PATH_ELEMENT_PATTERN.matcher("dummy");
-        }
-    };
+    public static final int INDEX_DEFAULT = 1;
+
+    /**
+     * Constant defining the depth of the root path
+     */
+    public static final int ROOT_DEPTH = 0;
 
     /**
      * the elements of this path
@@ -177,6 +160,18 @@ public final class Path {
 
     //------------------------------------------------------< factory methods >
     /**
+     * @param elements
+     * @return
+     */
+    public static Path create(PathElement[] elements) {
+        // Path constructor uses elements array as is
+        // need to copy here because Path.create() is public
+        PathElement[] tmp = new PathElement[elements.length];
+        System.arraycopy(elements, 0, tmp, 0, elements.length);
+        return new Path(tmp, true);
+    }
+
+    /**
      * Creates a new <code>Path</code> from the given <code>jcrPath</code>
      * string. If <code>normalize</code> is <code>true</code>, the returned
      * path will be normalized (or canonicalized if absolute).
@@ -186,11 +181,12 @@ public final class Path {
      * @param normalize
      * @return
      * @throws MalformedPathException
+     * @deprecated Use PathFormat#parse(String, NamespaceResolver)} instead.
      */
     public static Path create(String jcrPath, NamespaceResolver resolver,
                               boolean normalize)
             throws MalformedPathException {
-        Path path = parse(jcrPath, null, resolver);
+        Path path = PathFormat.parse(jcrPath, resolver);
         if (normalize) {
             return path.getNormalizedPath();
         } else {
@@ -209,11 +205,12 @@ public final class Path {
      * @param canonicalize
      * @return
      * @throws MalformedPathException
+     * @deprecated Use {@link PathFormat#create(Path, String, NamespaceResolver)} instead.
      */
     public static Path create(Path parent, String relJCRPath,
                               NamespaceResolver resolver, boolean canonicalize)
             throws MalformedPathException {
-        Path path = parse(relJCRPath, parent, resolver);
+        Path path = PathFormat.parse(parent, relJCRPath, resolver);
         if (canonicalize) {
             return path.getCanonicalPath();
         } else {
@@ -231,7 +228,7 @@ public final class Path {
      * @param relPath
      * @param normalize
      * @return
-     * @throws MalformedPathException
+     * @throws MalformedPathException if <code>relPath</code> is absolute
      */
     public static Path create(Path parent, Path relPath, boolean normalize)
             throws MalformedPathException {
@@ -239,7 +236,7 @@ public final class Path {
             throw new MalformedPathException("relPath is not a relative path");
         }
 
-        PathBuilder pb = new PathBuilder(parent.getElements());
+        PathBuilder pb = new PathBuilder(parent);
         pb.addAll(relPath.getElements());
 
         Path path = pb.getPath();
@@ -256,15 +253,13 @@ public final class Path {
      * the returned path will be normalized (or canonicalized, if the parent
      * path is absolute).
      *
-     * @param parent
-     * @param name
+     * @param parent the parent path
+     * @param name the name of the new path element.
      * @param normalize
-     * @return
-     * @throws MalformedPathException
+     * @return the new path.
      */
-    public static Path create(Path parent, QName name, boolean normalize)
-            throws MalformedPathException {
-        PathBuilder pb = new PathBuilder(parent.getElements());
+    public static Path create(Path parent, QName name, boolean normalize) throws MalformedPathException {
+        PathBuilder pb = new PathBuilder(parent);
         pb.addLast(name);
 
         Path path = pb.getPath();
@@ -277,21 +272,17 @@ public final class Path {
 
     /**
      * Creates a new <code>Path</code> out of the given <code>parent<code> path
-     * and the give name and index. If <code>normalize</code> is
-     * <code>true</code>, the returned path will be normalized
-     * (or canonicalized, if the parent path is absolute).
+     * and the give name and index.
      *
-     * @param parent
-     * @param name
-     * @param index
+     * @param parent the paren tpath.
+     * @param name the name of the new path element.
+     * @param index the index of the new path element.
      * @param normalize
-     * @return
-     * @throws MalformedPathException
+     * @return the new path.
      */
-    public static Path create(Path parent, QName name, int index,
-                              boolean normalize)
+    public static Path create(Path parent, QName name, int index, boolean normalize)
             throws MalformedPathException {
-        PathBuilder pb = new PathBuilder(parent.getElements());
+        PathBuilder pb = new PathBuilder(parent);
         pb.addLast(name, index);
 
         Path path = pb.getPath();
@@ -312,11 +303,11 @@ public final class Path {
      */
     public static Path create(QName name, int index)
             throws IllegalArgumentException {
-        if (index < 0) {
+        if (index < INDEX_UNDEFINED) {
             throw new IllegalArgumentException("index must not be negative: " + index);
         }
         PathElement elem;
-        if (index < 1) {
+        if (index < INDEX_DEFAULT) {
             elem = new PathElement(name);
         } else {
             elem = new PathElement(name, index);
@@ -336,132 +327,11 @@ public final class Path {
      * @param resolver
      * @return
      * @throws MalformedPathException
+     * @deprecated use {@link PathFormat#parse(Path, String, NamespaceResolver)} instead.
      */
     private static Path parse(String jcrPath, Path master, NamespaceResolver resolver)
             throws MalformedPathException {
-        // shortcut
-        if ("/".equals(jcrPath)) {
-            return ROOT;
-        }
-
-        // split path into path elements
-        String[] elems = Text.explode(jcrPath, '/', true);
-        if (elems.length == 0) {
-            throw new MalformedPathException("empty path");
-        }
-
-        ArrayList list = new ArrayList();
-        boolean isNormalized = true;
-        boolean leadingParent = true;
-        if (master != null) {
-            isNormalized = master.normalized;
-            // a master path was specified; the 'path' argument is assumed
-            // to be a relative path
-            for (int i = 0; i < master.elements.length; i++) {
-                list.add(master.elements[i]);
-                leadingParent &= master.elements[i].denotesParent();
-            }
-        }
-
-        for (int i = 0; i < elems.length; i++) {
-            // validate & parse path element
-            String prefix;
-            String localName;
-            int index;
-
-            String elem = elems[i];
-            if (i == 0 && elem.length() == 0) {
-                // path is absolute, i.e. the first element is the root element
-                if (!list.isEmpty()) {
-                    throw new MalformedPathException("'" + jcrPath + "' is not a relative path");
-                }
-                list.add(ROOT_ELEMENT);
-                leadingParent = false;
-                continue;
-            }
-            if (elem.length() == 0 && i == elems.length - 1) {
-                // ignore trailing '/'
-                break;
-            }
-            Matcher matcher = (Matcher) PATH_ELEMENT_MATCHER.get();
-            matcher.reset(elem);
-            if (matcher.matches()) {
-                if (resolver == null) {
-                    // check only
-                    continue;
-                }
-
-                if (matcher.group(1) != null) {
-                    // group 1 is .
-                    list.add(CURRENT_ELEMENT);
-                    leadingParent = false;
-                    isNormalized = false;
-                } else if (matcher.group(2) != null) {
-                    // group 2 is ..
-                    list.add(PARENT_ELEMENT);
-                    isNormalized &= leadingParent;
-                } else {
-                    // element is a name
-
-                    // check for prefix (group 3)
-                    if (matcher.group(3) != null) {
-                        // prefix specified
-                        // group 4 is namespace prefix excl. delimiter (colon)
-                        prefix = matcher.group(4);
-                        // check if the prefix is a valid XML prefix
-                        if (!XMLChar.isValidNCName(prefix)) {
-                            // illegal syntax for prefix
-                            throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '"
-                                    + elem + "' specifies an illegal namespace prefix");
-                        }
-                    } else {
-                        // no prefix specified
-                        prefix = "";
-                    }
-
-                    // group 5 is localName
-                    localName = matcher.group(5);
-
-                    // check for index (group 6)
-                    if (matcher.group(6) != null) {
-                        // index specified
-                        // group 7 is index excl. brackets
-                        index = Integer.parseInt(matcher.group(7));
-                    } else {
-                        // no index specified
-                        index = 0;
-                    }
-
-                    String nsURI;
-                    try {
-                        nsURI = resolver.getURI(prefix);
-                    } catch (NamespaceException nse) {
-                        // unknown prefix
-                        throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '"
-                                + elem + "' specifies an unmapped namespace prefix");
-                    }
-
-                    PathElement element;
-                    if (index == 0) {
-                        element = new PathElement(nsURI, localName);
-                    } else {
-                        element = new PathElement(nsURI, localName, index);
-                    }
-                    list.add(element);
-                    leadingParent = false;
-                }
-            } else {
-                // illegal syntax for path element
-                throw new MalformedPathException("'" + jcrPath + "' is not a valid path: '"
-                        + elem + "' is not a legal path element");
-            }
-        }
-        if (resolver != null) {
-            return new Path((PathElement[]) list.toArray(new PathElement[list.size()]),
-                    isNormalized);
-        } else {
-            return null;
-        }
+        return PathFormat.parse(master, jcrPath, resolver);
     }
 
     //------------------------------------------------------< utility methods >
@@ -472,9 +342,10 @@ public final class Path {
      * @param jcrPath the path to be checked
      * @throws MalformedPathException If <code>jcrPath</code> is not a valid
      *                                JCR-style path.
+     * @deprecated Use {@link PathFormat#checkFormat(String)} instead.
      */
     public static void checkFormat(String jcrPath) throws MalformedPathException {
-        parse(jcrPath, null, null);
+        PathFormat.checkFormat(jcrPath);
     }
 
     //-------------------------------------------------------< public methods >
@@ -622,28 +493,28 @@ public final class Path {
 
         // determine length of common path fragment
         int lengthCommon = 0;
-        for (int i = 0; i < p0.elements.length && i < p1.elements.length; i++) {
-            if (!p0.elements[i].equals(p1.elements[i])) {
+        for (int i = 0; i < p0.getElements().length && i < p1.getElements().length; i++) {
+            if (!p0.getElement(i).equals(p1.getElement(i))) {
                 break;
             }
             lengthCommon++;
         }
 
         PathBuilder pb = new PathBuilder();
-        if (lengthCommon < p0.elements.length) {
+        if (lengthCommon < p0.getElements().length) {
             /**
              * the common path fragment is an ancestor of this path;
              * this has to be accounted for by prepending '..' elements
              * to the relative path
              */
-            int tmp = p0.elements.length - lengthCommon;
+            int tmp = p0.getElements().length - lengthCommon;
             while (tmp-- > 0) {
                 pb.addFirst(PARENT_ELEMENT);
             }
         }
         // add remainder of other path
-        for (int i = lengthCommon; i < p1.elements.length; i++) {
-            pb.addLast(p1.elements[i]);
+        for (int i = lengthCommon; i < p1.getElements().length; i++) {
+            pb.addLast(p1.getElement(i));
         }
         // we're done
         return pb.getPath();
@@ -739,7 +610,7 @@ public final class Path {
      * @see #getAncestorCount()
      */
     public int getDepth() {
-        int depth = 0;
+        int depth = ROOT_DEPTH;
         for (int i = 0; i < elements.length; i++) {
             if (elements[i].denotesParent()) {
                 depth--;
@@ -780,8 +651,8 @@ public final class Path {
         if (p0.getDepth() >= p1.getDepth()) {
             return false;
         }
-        for (int i = 0; i < p0.elements.length; i++) {
-            if (!p0.elements[i].equals(p1.elements[i])) {
+        for (int i = 0; i < p0.getElements().length; i++) {
+            if (!p0.getElement(i).equals(p1.getElement(i))) {
                 return false;
             }
         }
@@ -825,31 +696,31 @@ public final class Path {
     }
 
     /**
+     * Returns the <code>i</code><sup>th</sup> element of this path.
+     *
+     * @param i element index.
+     * @return the <code>i</code><sup>th</sup> element of this path.
+     * @throws ArrayIndexOutOfBoundsException if this path does not have an
+     * element at index <code>i</code>.
+     */
+    public PathElement getElement(int i) {
+        return elements[i];
+    }
+
+    /**
      * Returns a string representation of this <code>Path</code> in the
      * JCR path format.
      *
      * @param resolver namespace resolver
      * @return JCR path
      * @throws NoPrefixDeclaredException if a namespace can not be resolved
+     * @deprecated Use {@link PathFormat#format(Path, NamespaceResolver} instead.
      */
-    public String toJCRPath(NamespaceResolver resolver)
-            throws NoPrefixDeclaredException {
-        if (denotesRoot()) {
-            // shortcut
-            return "/";
-        }
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < elements.length; i++) {
-            if (i > 0) {
-                sb.append('/');
-            }
-            PathElement element = elements[i];
-            // name
-            element.toJCRName(resolver, sb);
-        }
-        return sb.toString();
+    public String toJCRPath(NamespaceResolver resolver) throws NoPrefixDeclaredException {
+        return PathFormat.format(this, resolver);
     }
 
+    //---------------------------------------------------------------< Object >
     /**
      * Returns the internal string representation of this <code>Path</code>.
      * <p/>
@@ -944,7 +815,7 @@ public final class Path {
         }
         if (obj instanceof Path) {
             Path other = (Path) obj;
-            return Arrays.equals(elements, other.elements);
+            return Arrays.equals(elements, other.getElements());
         }
         return false;
     }
@@ -992,6 +863,17 @@ public final class Path {
         public PathBuilder(PathElement[] elements) {
             this();
             addAll(elements);
+        }
+
+        /**
+         * Creates a new PathBuilder and initialized it with elements of the
+         * given path.
+         *
+         * @param parent
+         */
+        public PathBuilder(Path parent) {
+            this();
+            addAll(parent.getElements());
         }
 
         /**
@@ -1106,36 +988,49 @@ public final class Path {
         static final String LITERAL = "*";
 
         private RootElement() {
-            super(QName.NS_DEFAULT_URI, "");
+            super(QName.ROOT);
         }
 
-        // PathElement override
+        /**
+         * Returns true.
+         * @return true
+         * @see PathElement#denotesRoot()
+         */
         public boolean denotesRoot() {
             return true;
         }
 
-        // PathElement override
+        /**
+         * Returns false.
+         * @return false
+         * @see PathElement#denotesCurrent()
+         */
         public boolean denotesCurrent() {
             return false;
         }
 
-        // PathElement override
+        /**
+         * Returns false.
+         * @return false
+         * @see PathElement#denotesParent()
+         */
         public boolean denotesParent() {
             return false;
         }
 
-        // PathElement override
+        /**
+         * Returns false.
+         * @return false
+         * @see PathElement#denotesName()
+         */
         public boolean denotesName() {
             return false;
         }
 
-        // PathElement override
-        public String toJCRName(NamespaceResolver resolver)
-                throws NoPrefixDeclaredException {
-            return "";
-        }
-
-        // Object override
+        /**
+         * @return {@link #LITERAL}
+         * @see Object#toString()
+         */
         public String toString() {
             return LITERAL;
         }
@@ -1148,72 +1043,120 @@ public final class Path {
             super(QName.NS_DEFAULT_URI, LITERAL);
         }
 
-        // PathElement override
+        /**
+         * Returns false.
+         * @return false
+         * @see PathElement#denotesRoot()
+         */
         public boolean denotesRoot() {
             return false;
         }
 
-        // PathElement override
+        /**
+         * Returns true.
+         * @return true
+         */
         public boolean denotesCurrent() {
             return true;
         }
 
-        // PathElement override
+        /**
+         * Returns false.
+         * @return false
+         * @see PathElement#denotesParent()
+         */
         public boolean denotesParent() {
             return false;
         }
 
-        // PathElement override
+        /**
+         * Returns false.
+         * @return false
+         * @see PathElement#denotesName()
+         */
         public boolean denotesName() {
             return false;
         }
 
-        // PathElement override
+        /**
+         * Returns the JCR name of this path element.
+         *
+         * @param resolver
+         * @return {@link #LITERAL}
+         */
         public String toJCRName(NamespaceResolver resolver)
                 throws NoPrefixDeclaredException {
             return LITERAL;
         }
 
-        // Object override
+
+        /**
+         * @return {@link #LITERAL}
+         * @see Object#toString()
+         */
         public String toString() {
             return LITERAL;
         }
     }
 
-    public static final class ParentElement extends PathElement {
+    private static final class ParentElement extends PathElement {
         static final String LITERAL = "..";
 
         private ParentElement() {
             super(QName.NS_DEFAULT_URI, LITERAL);
         }
 
-        // PathElement override
+        /**
+         * Returns false.
+         * @return false
+         * @see PathElement#denotesRoot()
+         */
         public boolean denotesRoot() {
             return false;
         }
 
-        // PathElement override
+        /**
+         * Returns false.
+         * @return false
+         * @see PathElement#denotesCurrent()
+         */
         public boolean denotesCurrent() {
             return false;
         }
 
-        // PathElement override
+        /**
+         * Returns true.
+         * @return true
+         * @see PathElement#denotesParent()
+         */
         public boolean denotesParent() {
             return true;
         }
 
-        // PathElement override
+        /**
+         * Returns false.
+         * @return false
+         * @see PathElement#denotesName()
+         */
         public boolean denotesName() {
             return false;
         }
 
-        // PathElement override
+        /**
+         * Returns the JCR name of this path element.
+         *
+         * @param resolver
+         * @return {@link #LITERAL}
+         */
         public String toJCRName(NamespaceResolver resolver)
                 throws NoPrefixDeclaredException {
             return LITERAL;
         }
 
-        // Object override
+        /**
+         * @return {@link #LITERAL}
+         * @see Object#toString()
+         */
         public String toString() {
             return LITERAL;
         }
@@ -1273,7 +1216,7 @@ public final class Path {
                 throw new IllegalArgumentException("name must not be null");
             }
             this.name = name;
-            this.index = 0;
+            this.index = INDEX_UNDEFINED;
         }
 
         /**
@@ -1287,7 +1230,7 @@ public final class Path {
             if (name == null) {
                 throw new IllegalArgumentException("name must not be null");
             }
-            if (index < 1) {
+            if (index < INDEX_DEFAULT) {
                 throw new IllegalArgumentException("index is 1-based");
             }
             this.index = index;
@@ -1311,6 +1254,18 @@ public final class Path {
          */
         public int getIndex() {
             return index;
+        }
+
+        /**
+         * Returns the normalized index of this path element, i.e. the index
+         * is always equals or greater that {@link #INDEX_DEFAULT}.
+         */
+        public int getNormalizedIndex() {
+            if (index == INDEX_UNDEFINED) {
+                return INDEX_DEFAULT;
+            } else {
+                return index;
+            }
         }
 
         /**
@@ -1389,7 +1344,7 @@ public final class Path {
         public void toJCRName(NamespaceResolver resolver, StringBuffer buf)
                 throws NoPrefixDeclaredException {
             // name
-            name.toJCRName(resolver, buf);
+            NameFormat.format(name, resolver, buf);
             // index
             int index = getIndex();
             /**
@@ -1411,6 +1366,7 @@ public final class Path {
          * method to get the prefixed string representation of the path element.
          *
          * @return string representation of the path element
+         * @see Object#toString()
          */
         public String toString() {
             StringBuffer sb = new StringBuffer();
@@ -1418,7 +1374,7 @@ public final class Path {
             sb.append(name.toString());
             // index
             int index = getIndex();
-            if (index > 0) {
+            if (index > INDEX_UNDEFINED) {
                 sb.append('[');
                 sb.append(index);
                 sb.append(']');

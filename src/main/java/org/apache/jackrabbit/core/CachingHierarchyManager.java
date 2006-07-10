@@ -26,6 +26,7 @@ import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.util.PathMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

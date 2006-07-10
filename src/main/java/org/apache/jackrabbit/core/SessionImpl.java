@@ -1244,7 +1244,7 @@ public class SessionImpl implements Session, Dumpable {
     public ValueFactory getValueFactory()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         if (valueFactory == null) {
-            valueFactory = new ValueFactoryImpl();
+            valueFactory = ValueFactoryImpl.getInstance();
         }
         return valueFactory;
     }

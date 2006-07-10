@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.value;
 
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -51,7 +51,7 @@ public class PathValue extends BaseValue {
     public static PathValue valueOf(String s) throws ValueFormatException {
         if (s != null) {
             try {
-                Path.checkFormat(s);
+                PathFormat.checkFormat(s);
             } catch (MalformedPathException mpe) {
                 throw new ValueFormatException(mpe.getMessage());
             }

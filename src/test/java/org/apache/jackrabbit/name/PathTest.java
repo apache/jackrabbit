@@ -19,6 +19,8 @@ package org.apache.jackrabbit.name;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Iterator;
 
 import org.apache.jackrabbit.util.Text;
 
@@ -273,6 +275,110 @@ public class PathTest extends TestCase {
         return normalize ? builder.getPath().getNormalizedPath() : builder.getPath();
     }
 
+   public void testNormalizedPaths() throws Exception {
+        List paths = new ArrayList();
+
+        // normalized paths
+        paths.add(PathFormat.parse("/", resolver));
+        paths.add(PathFormat.parse("/foo", resolver));
+        paths.add(PathFormat.parse("/foo/bar", resolver));
+        paths.add(PathFormat.parse("foo/bar", resolver));
+        paths.add(PathFormat.parse("foo", resolver));
+        paths.add(PathFormat.parse("../../foo/bar", resolver));
+        paths.add(PathFormat.parse("..", resolver));
+
+        for (Iterator it = paths.iterator(); it.hasNext(); ) {
+            Path path = (Path) it.next();
+            assertTrue("path is not normalized: " + PathFormat.format(path, resolver), path.isNormalized());
+        }
+
+        paths.clear();
+
+        // not normalized paths
+        paths.add(PathFormat.parse("/foo/..", resolver));
+        paths.add(PathFormat.parse("/foo/.", resolver));
+        paths.add(PathFormat.parse("/foo/../bar", resolver));
+        paths.add(PathFormat.parse("/foo/./bar", resolver));
+        paths.add(PathFormat.parse("./foo", resolver));
+        paths.add(PathFormat.parse(".", resolver));
+        paths.add(PathFormat.parse("foo/..", resolver));
+        paths.add(PathFormat.parse("../foo/..", resolver));
+        paths.add(PathFormat.parse("../foo/.", resolver));
+
+        for (Iterator it = paths.iterator(); it.hasNext(); ) {
+            Path path = (Path) it.next();
+            assertFalse("path is normalized: " + PathFormat.format(path, resolver), path.isNormalized());
+        }
+    }
+
+    public void testAbsolutePaths() throws Exception {
+        List paths = new ArrayList();
+
+        // absolute paths
+        paths.add(PathFormat.parse("/", resolver));
+        paths.add(PathFormat.parse("/foo", resolver));
+        paths.add(PathFormat.parse("/foo/bar", resolver));
+        paths.add(PathFormat.parse("/foo/../bar", resolver));
+        paths.add(PathFormat.parse("/foo/..", resolver));
+        paths.add(PathFormat.parse("/foo/./bar", resolver));
+        paths.add(PathFormat.parse("/foo/.././bar/./foo", resolver));
+
+        for (Iterator it = paths.iterator(); it.hasNext(); ) {
+            Path path = (Path) it.next();
+            assertTrue("path is not absolute: " + PathFormat.format(path, resolver), path.isAbsolute());
+        }
+
+        paths.clear();
+
+        // not absoulute paths
+        paths.add(PathFormat.parse("foo/..", resolver));
+        paths.add(PathFormat.parse("foo/.", resolver));
+        paths.add(PathFormat.parse("foo/../bar", resolver));
+        paths.add(PathFormat.parse("foo/./bar", resolver));
+        paths.add(PathFormat.parse("./foo", resolver));
+        paths.add(PathFormat.parse(".", resolver));
+        paths.add(PathFormat.parse("foo/..", resolver));
+        paths.add(PathFormat.parse("../foo/..", resolver));
+        paths.add(PathFormat.parse("../foo/.", resolver));
+
+        for (Iterator it = paths.iterator(); it.hasNext(); ) {
+            Path path = (Path) it.next();
+            assertFalse("path is absolute: " + PathFormat.format(path, resolver), path.isAbsolute());
+        }
+    }
+
+    public void testCanonicalPaths() throws Exception {
+        List paths = new ArrayList();
+
+        // canonical paths
+        paths.add(PathFormat.parse("/", resolver));
+        paths.add(PathFormat.parse("/foo", resolver));
+        paths.add(PathFormat.parse("/foo/bar", resolver));
+
+        for (Iterator it = paths.iterator(); it.hasNext(); ) {
+            Path path = (Path) it.next();
+            assertTrue("path is not canonical: " + PathFormat.format(path, resolver), path.isCanonical());
+        }
+
+        paths.clear();
+
+        // not canonical paths
+        paths.add(PathFormat.parse("/foo/..", resolver));
+        paths.add(PathFormat.parse("/foo/.", resolver));
+        paths.add(PathFormat.parse("/foo/../bar", resolver));
+        paths.add(PathFormat.parse("/foo/./bar", resolver));
+        paths.add(PathFormat.parse("./foo", resolver));
+        paths.add(PathFormat.parse(".", resolver));
+        paths.add(PathFormat.parse("/foo/..", resolver));
+        paths.add(PathFormat.parse("/../foo/..", resolver));
+        paths.add(PathFormat.parse("/../foo/.", resolver));
+
+        for (Iterator it = paths.iterator(); it.hasNext(); ) {
+            Path path = (Path) it.next();
+            assertFalse("path is canonical: " + PathFormat.format(path, resolver), path.isCanonical());
+        }
+    }
+    
     private static class Test {
 
         private final String path;

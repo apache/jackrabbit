@@ -296,4 +296,17 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
             uriToPrefix.put(uri, uniquePrefix);
         }
     }
+
+    /**
+     * @inheritDoc
+     * This method gets called when an existing namespace is removed
+     * in the global NamespaceRegistry. Overridden in order to check
+     * for/resolve collision of new global prefix with existing local prefix.
+     */
+    public void namespaceRemoved(String uri) {
+        if (uriToPrefix.containsKey(uri)) {
+            String prefix = (String)uriToPrefix.remove(uri);
+            prefixToURI.remove(prefix);
+        }
+    }
 }

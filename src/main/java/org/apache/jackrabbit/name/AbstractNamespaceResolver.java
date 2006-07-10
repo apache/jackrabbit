@@ -40,16 +40,30 @@ public abstract class AbstractNamespaceResolver implements NamespaceResolver {
     /**
      * @inheritDoc
      */
-    public QName getQName(String name)
+    public QName getQName(String jcrName)
             throws IllegalNameException, UnknownPrefixException {
-        return QName.fromJCRName(name, this);
+        return NameFormat.parse(jcrName, this);
     }
 
     /**
      * @inheritDoc
      */
-    public String getJCRName(QName name) throws NoPrefixDeclaredException {
-        return name.toJCRName(this);
+    public String getJCRName(QName qName) throws NoPrefixDeclaredException {
+        return NameFormat.format(qName, this);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public Path getQPath(String jcrPath) throws MalformedPathException {
+        return PathFormat.parse(jcrPath, this);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public String getJCRPath(Path qPath) throws NoPrefixDeclaredException {
+        return PathFormat.format(qPath, this);
     }
 
     /**
@@ -162,6 +176,32 @@ public abstract class AbstractNamespaceResolver implements NamespaceResolver {
         }
         for (int i = 0; i < currentListeners.length; i++) {
             currentListeners[i].namespaceRemapped(oldPrefix, newPrefix, uri);
+        }
+    }
+
+    /**
+     * Notifies the listeners that the namespace with the given <code>uri</code>
+     * has been removed from the mapping.
+     *
+     * @param uri the namespace uri.
+     * @see NamespaceListener#namespaceRemoved(String)
+     */
+    protected void notifyNamespaceRemoved(String uri) {
+        if (listeners == null) {
+            throw new UnsupportedOperationException("notifyNamespaceRemapped");
+        }
+        // removal is infrequent compared to listener registration
+        // -> use copy-on-read
+        NamespaceListener[] currentListeners;
+        synchronized (listeners) {
+            int i = 0;
+            currentListeners = new NamespaceListener[listeners.size()];
+            for (Iterator it = listeners.iterator(); it.hasNext();) {
+                currentListeners[i++] = (NamespaceListener) it.next();
+            }
+        }
+        for (int i = 0; i < currentListeners.length; i++) {
+            currentListeners[i].namespaceRemoved(uri);
         }
     }
 }
