@@ -58,8 +58,7 @@ public class NameFormat {
      * the second the local name.
      *
      * @param jcrName the name to be parsed
-     * @return An array holding two strings: the first array element contains
-     *         the prefix (or empty string), the second the local name.
+     * @return qName the new <code>QName</code>
      * @throws IllegalNameException If <code>jcrName</code> is not a valid
      *                              JCR-style name.
      */
@@ -81,7 +80,8 @@ public class NameFormat {
      * the second the local name.
      *
      * @param jcrName the name to be parsed
-     * @return qName
+     * @return An array holding two strings: the first array element contains
+     * the prefix (or empty string), the second the local name.
      * @throws IllegalNameException If <code>jcrName</code> is not a valid
      *                              JCR-style name.
      */
