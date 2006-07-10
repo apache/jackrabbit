@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.Serializable;
 import java.util.ArrayList;

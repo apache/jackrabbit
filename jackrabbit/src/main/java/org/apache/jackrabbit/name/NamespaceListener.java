@@ -39,4 +39,12 @@ public interface NamespaceListener {
      * @param uri    the namespace uri.
      */
     public void namespaceAdded(String prefix, String uri);
+
+    /**
+     * Notifies the listeners that the namespace with the given uri has been
+     * unregistered.
+     *
+     * @param uri    the namespace uri.
+     */
+    public void namespaceRemoved(String uri);
 }

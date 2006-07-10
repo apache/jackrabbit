@@ -21,7 +21,7 @@ import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PathMap;
+import org.apache.jackrabbit.util.PathMap;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -852,7 +852,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
     /**
      * Contains information about a lock and gets placed inside the child
-     * information of a {@link org.apache.jackrabbit.core.PathMap}.
+     * information of a {@link org.apache.jackrabbit.util.PathMap}.
      */
     class LockInfo extends AbstractLockInfo implements SessionListener {
 
