@@ -161,7 +161,7 @@ public final class Path {
     //------------------------------------------------------< factory methods >
     /**
      * @param elements
-     * @return
+     * @return the new <code>Path</code>
      */
     public static Path create(PathElement[] elements) {
         // Path constructor uses elements array as is
@@ -205,7 +205,7 @@ public final class Path {
      * @param canonicalize
      * @return
      * @throws MalformedPathException
-     * @deprecated Use {@link PathFormat#create(Path, String, NamespaceResolver)} instead.
+     * @deprecated Use {@link PathFormat#parse(Path, String, NamespaceResolver)} instead.
      */
     public static Path create(Path parent, String relJCRPath,
                               NamespaceResolver resolver, boolean canonicalize)
@@ -327,7 +327,7 @@ public final class Path {
      * @param resolver
      * @return
      * @throws MalformedPathException
-     * @deprecated use {@link PathFormat#parse(Path, String, NamespaceResolver)} instead.
+     * @deprecated Use {@link PathFormat#parse(Path, String, NamespaceResolver)} instead.
      */
     private static Path parse(String jcrPath, Path master, NamespaceResolver resolver)
             throws MalformedPathException {
@@ -714,7 +714,7 @@ public final class Path {
      * @param resolver namespace resolver
      * @return JCR path
      * @throws NoPrefixDeclaredException if a namespace can not be resolved
-     * @deprecated Use {@link PathFormat#format(Path, NamespaceResolver} instead.
+     * @deprecated Use {@link PathFormat#format(Path, NamespaceResolver)} instead.
      */
     public String toJCRPath(NamespaceResolver resolver) throws NoPrefixDeclaredException {
         return PathFormat.format(this, resolver);
@@ -1258,7 +1258,7 @@ public final class Path {
 
         /**
          * Returns the normalized index of this path element, i.e. the index
-         * is always equals or greater that {@link #INDEX_DEFAULT}.
+         * is always equals or greater that {@link Path#INDEX_DEFAULT}.
          */
         public int getNormalizedIndex() {
             if (index == INDEX_UNDEFINED) {
