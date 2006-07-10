@@ -21,20 +21,32 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
+import javax.jcr.PropertyType;
 import java.io.InputStream;
 import java.util.Calendar;
 
 /**
- * This class implements the  <code>ValueFactory</code> interface.
+ * This class implements the <code>ValueFactory</code> interface.
  *
  * @see javax.jcr.Session#getValueFactory()
  */
 public class ValueFactoryImpl implements ValueFactory {
 
+    private static final ValueFactory valueFactory = new ValueFactoryImpl();
+
     /**
      * Constructs a <code>ValueFactory</code> object.
      */
-    public ValueFactoryImpl() {
+    private ValueFactoryImpl() {
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     *
+     * @return
+     */
+    public static ValueFactory getInstance() {
+        return valueFactory;
     }
 
     //---------------------------------------------------------< ValueFactory >
@@ -92,6 +104,38 @@ public class ValueFactoryImpl implements ValueFactory {
      */
     public Value createValue(String value, int type)
             throws ValueFormatException {
-        return ValueHelper.convert(value, type);
+        Value val;
+        switch (type) {
+            case PropertyType.STRING:
+                val = new StringValue(value);
+                break;
+            case PropertyType.BOOLEAN:
+                val = BooleanValue.valueOf(value);
+                break;
+            case PropertyType.DOUBLE:
+                val = DoubleValue.valueOf(value);
+                break;
+            case PropertyType.LONG:
+                val = LongValue.valueOf(value);
+                break;
+            case PropertyType.DATE:
+                val = DateValue.valueOf(value);
+                break;
+            case PropertyType.NAME:
+                val = NameValue.valueOf(value);
+                break;
+            case PropertyType.PATH:
+                val = PathValue.valueOf(value);
+                break;
+            case PropertyType.REFERENCE:
+                val = ReferenceValue.valueOf(value);
+                break;
+            case PropertyType.BINARY:
+                val = new BinaryValue(value);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid type constant: " + type);
+        }
+        return val;
     }
 }

@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.value;
 
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -50,7 +50,7 @@ public class NameValue extends BaseValue {
     public static NameValue valueOf(String s) throws ValueFormatException {
         if (s != null) {
             try {
-                QName.checkFormat(s);
+                NameFormat.checkFormat(s);
             } catch (IllegalNameException ine) {
                 throw new ValueFormatException(ine.getMessage());
             }

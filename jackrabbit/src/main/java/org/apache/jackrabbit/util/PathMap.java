@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core;
+package org.apache.jackrabbit.util;
 
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
@@ -186,7 +186,7 @@ public class PathMap {
          */
         public void insert(Path.PathElement nameIndex) {
             // convert 1-based index value to 0-base value
-            int index = getOneBasedIndex(nameIndex) - 1;
+            int index = getZeroBasedIndex(nameIndex);
             if (children != null) {
                 ArrayList list = (ArrayList) children.get(nameIndex.getName());
                 if (list != null && list.size() > index) {
@@ -209,7 +209,7 @@ public class PathMap {
          */
         private Element getChild(Path.PathElement nameIndex) {
             // convert 1-based index value to 0-base value
-            int index = getOneBasedIndex(nameIndex) - 1;
+            int index = getZeroBasedIndex(nameIndex);
             Element element = null;
 
             if (children != null) {
@@ -228,7 +228,7 @@ public class PathMap {
          */
         public void put(Path.PathElement nameIndex, Element element) {
             // convert 1-based index value to 0-base value
-            int index = getOneBasedIndex(nameIndex) - 1;
+            int index = getZeroBasedIndex(nameIndex);
             if (children == null) {
                 children = new HashMap();
             }
@@ -280,7 +280,7 @@ public class PathMap {
          */
         private Element remove(Path.PathElement nameIndex, boolean shift) {
             // convert 1-based index value to 0-base value
-            int index = getOneBasedIndex(nameIndex) - 1;
+            int index = getZeroBasedIndex(nameIndex);
             if (children == null) {
                 return null;
             }
@@ -379,13 +379,14 @@ public class PathMap {
 
         /**
          * Return the 1-based index of this element.
-         * Same as {@link #getIndex()} except that an index value of 0
-         * is automatically converted to 1.
+         * Same as {@link #getIndex()} except that an {@link Path#INDEX_UNDEFINED
+         * undefined index} value is automatically converted to the
+         * {@link Path#INDEX_DEFAULT default index} value.
          * @return 1-based index
          */
         public int getNormalizedIndex() {
-            if (index == 0) {
-                return 1;
+            if (index == Path.INDEX_UNDEFINED) {
+                return Path.INDEX_DEFAULT;
             } else {
                 return index;
             }
@@ -425,7 +426,7 @@ public class PathMap {
                 return;
             }
             parent.getPath(builder);
-            if (index == 0 || index == 1) {
+            if (index == Path.INDEX_UNDEFINED || index == Path.INDEX_DEFAULT) {
                 builder.addLast(name);
             } else {
                 builder.addLast(name, index);
@@ -463,15 +464,10 @@ public class PathMap {
         }
 
         /**
-         * Return 1-based index of a path element.
+         * Return 0-based index of a path element.
          */
-        private static int getOneBasedIndex(Path.PathElement nameIndex) {
-            int index = nameIndex.getIndex();
-            if (index == 0) {
-                return 1;
-            } else {
-                return index;
-            }
+        private static int getZeroBasedIndex(Path.PathElement nameIndex) {
+            return nameIndex.getNormalizedIndex() - 1;
         }
 
         /**
@@ -508,7 +504,8 @@ public class PathMap {
             if (parent != null) {
                 return parent.getDepth() + 1;
             }
-            return 0;
+            // Root
+            return Path.ROOT_DEPTH;
         }
 
         /**

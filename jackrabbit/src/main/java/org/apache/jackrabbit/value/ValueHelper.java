@@ -24,6 +24,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.ValueFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.Reader;
@@ -48,38 +49,109 @@ public class ValueHelper {
     }
 
     /**
+     * Same as {@link #convert(String, int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
      * @param srcValue
      * @param targetType
      * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
-     * @see #convert(Value, int)
+     * @deprecated Use {@link #convert(String, int, ValueFactory)} instead.
+     * @see #convert(Value, int, ValueFactory)
      */
     public static Value convert(String srcValue, int targetType)
             throws ValueFormatException, IllegalArgumentException {
+        return convert(srcValue, targetType, ValueFactoryImpl.getInstance());
+    }
+
+    /**
+     * @param srcValue
+     * @param targetType
+     * @param factory
+     * @return
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     * @see #convert(Value, int, ValueFactory)
+     */
+    public static Value convert(String srcValue, int targetType, ValueFactory factory)
+        throws ValueFormatException, IllegalArgumentException {
         if (srcValue == null) {
             return null;
         } else {
-            return convert(new StringValue(srcValue), targetType);
+            return factory.createValue(srcValue, targetType);
         }
     }
 
     /**
+     * Same as {@link #convert(InputStream, int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
+     * @param srcValue
+     * @param targetType
+     * @return
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     * @deprecated Use {@link #convert(InputStream, int, ValueFactory)} instead.
+     */
+    public static Value convert(InputStream srcValue, int targetType)
+            throws ValueFormatException, IllegalArgumentException {
+        return convert(srcValue, targetType, ValueFactoryImpl.getInstance());
+    }
+
+    /**
+     * @param srcValue
+     * @param targetType
+     * @param factory
+     * @return
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     */
+    public static Value convert(InputStream srcValue, int targetType, ValueFactory factory)
+        throws ValueFormatException, IllegalArgumentException {
+        if (srcValue == null) {
+            return null;
+        } else {
+            return convert(factory.createValue(srcValue), targetType, factory);
+        }
+    }
+
+    /**
+     * Same as {@link #convert(String[], int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
      * @param srcValues
      * @param targetType
      * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
-     * @see #convert(Value, int)
+     * @deprecated Use {@link #convert(String[], int, ValueFactory)} instead.
+     * @see #convert(Value, int, ValueFactory)
      */
     public static Value[] convert(String[] srcValues, int targetType)
+            throws ValueFormatException, IllegalArgumentException {
+        return convert(srcValues, targetType, ValueFactoryImpl.getInstance());
+    }
+
+    /**
+     * Same as {@link #convert(String[], int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
+     * @param srcValues
+     * @param targetType
+     * @return
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     * @see #convert(Value, int, ValueFactory)
+     */
+    public static Value[] convert(String[] srcValues, int targetType, ValueFactory factory)
             throws ValueFormatException, IllegalArgumentException {
         if (srcValues == null) {
             return null;
         }
         Value[] newValues = new Value[srcValues.length];
         for (int i = 0; i < srcValues.length; i++) {
-            newValues[i] = convert(srcValues[i], targetType);
+            newValues[i] = convert(srcValues[i], targetType, factory);
         }
         return newValues;
     }
@@ -90,9 +162,49 @@ public class ValueHelper {
      * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
-     * @see #convert(Value, int)
+     * @see #convert(Value, int, ValueFactory)
+     */
+    public static Value[] convert(InputStream[] srcValues, int targetType,
+                                  ValueFactory factory)
+            throws ValueFormatException, IllegalArgumentException {
+        if (srcValues == null) {
+            return null;
+        }
+        Value[] newValues = new Value[srcValues.length];
+        for (int i = 0; i < srcValues.length; i++) {
+            newValues[i] = convert(srcValues[i], targetType, factory);
+        }
+        return newValues;
+    }
+
+    /**
+     * Same as {@link #convert(Value[], int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+     *
+     * @param srcValues
+     * @param targetType
+     * @return
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     * @deprecated Use {@link #convert(Value[], int, ValueFactory)} instead.
+     * @see #convert(Value, int, ValueFactory)
      */
     public static Value[] convert(Value[] srcValues, int targetType)
+        throws ValueFormatException, IllegalArgumentException {
+        return convert(srcValues, targetType, ValueFactoryImpl.getInstance());
+    }
+
+    /**
+     * @param srcValues
+     * @param targetType
+     * @param factory
+     * @return
+     * @throws ValueFormatException
+     * @throws IllegalArgumentException
+     * @see #convert(Value, int, ValueFactory)
+     */
+    public static Value[] convert(Value[] srcValues, int targetType,
+                                  ValueFactory factory)
             throws ValueFormatException, IllegalArgumentException {
         if (srcValues == null) {
             return null;
@@ -114,9 +226,28 @@ public class ValueHelper {
                 throw new ValueFormatException(msg);
             }
 
-            newValues[i] = convert(srcValues[i], targetType);
+            newValues[i] = convert(srcValues[i], targetType, factory);
         }
         return newValues;
+    }
+
+    /**
+     * Same as {@link #convert(Value, int, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
+
+     * @param srcValue
+     * @param targetType
+     * @return
+     * @throws ValueFormatException
+     * @throws IllegalStateException
+     * @throws IllegalArgumentException
+     * @deprecated Use {@link #convert(Value, int, ValueFactory)} instead.
+     * @see #convert(Value, int, ValueFactory)
+     */
+    public static Value convert(Value srcValue, int targetType)
+        throws ValueFormatException, IllegalStateException,
+        IllegalArgumentException {
+        return convert(srcValue, targetType, ValueFactoryImpl.getInstance());
     }
 
     /**
@@ -126,12 +257,13 @@ public class ValueHelper {
      *
      * @param srcValue
      * @param targetType
+     * @param factory
      * @return
      * @throws ValueFormatException
      * @throws IllegalStateException
      * @throws IllegalArgumentException
      */
-    public static Value convert(Value srcValue, int targetType)
+    public static Value convert(Value srcValue, int targetType, ValueFactory factory)
             throws ValueFormatException, IllegalStateException,
             IllegalArgumentException {
         if (srcValue == null) {
@@ -150,7 +282,7 @@ public class ValueHelper {
             case PropertyType.STRING:
                 // convert to STRING
                 try {
-                    val = new StringValue(srcValue.getString());
+                    val = factory.createValue(srcValue.getString());
                 } catch (RepositoryException re) {
                     throw new ValueFormatException("conversion failed: "
                             + PropertyType.nameFromValue(srcType) + " to "
@@ -161,7 +293,7 @@ public class ValueHelper {
             case PropertyType.BINARY:
                 // convert to BINARY
                 try {
-                    val = new BinaryValue(srcValue.getStream());
+                    val = factory.createValue(srcValue.getStream());
                 } catch (RepositoryException re) {
                     throw new ValueFormatException("conversion failed: "
                             + PropertyType.nameFromValue(srcType) + " to "
@@ -172,7 +304,7 @@ public class ValueHelper {
             case PropertyType.BOOLEAN:
                 // convert to BOOLEAN
                 try {
-                    val = new BooleanValue(srcValue.getBoolean());
+                    val = factory.createValue(srcValue.getBoolean());
                 } catch (RepositoryException re) {
                     throw new ValueFormatException("conversion failed: "
                             + PropertyType.nameFromValue(srcType) + " to "
@@ -183,7 +315,7 @@ public class ValueHelper {
             case PropertyType.DATE:
                 // convert to DATE
                 try {
-                    val = new DateValue(srcValue.getDate());
+                    val = factory.createValue(srcValue.getDate());
                 } catch (RepositoryException re) {
                     throw new ValueFormatException("conversion failed: "
                             + PropertyType.nameFromValue(srcType) + " to "
@@ -194,7 +326,7 @@ public class ValueHelper {
             case PropertyType.DOUBLE:
                 // convert to DOUBLE
                 try {
-                    val = new DoubleValue(srcValue.getDouble());
+                    val = factory.createValue(srcValue.getDouble());
                 } catch (RepositoryException re) {
                     throw new ValueFormatException("conversion failed: "
                             + PropertyType.nameFromValue(srcType) + " to "
@@ -205,7 +337,7 @@ public class ValueHelper {
             case PropertyType.LONG:
                 // convert to LONG
                 try {
-                    val = new LongValue(srcValue.getLong());
+                    val = factory.createValue(srcValue.getLong());
                 } catch (RepositoryException re) {
                     throw new ValueFormatException("conversion failed: "
                             + PropertyType.nameFromValue(srcType) + " to "
@@ -234,7 +366,7 @@ public class ValueHelper {
                             throw new ValueFormatException("failed to convert source value to PATH value",
                                     re);
                         }
-                        val = PathValue.valueOf(path);
+                        val = factory.createValue(path, targetType);
                         break;
 
                     case PropertyType.BOOLEAN:
@@ -272,7 +404,7 @@ public class ValueHelper {
                             throw new ValueFormatException("failed to convert source value to NAME value",
                                     re);
                         }
-                        val = NameValue.valueOf(name);
+                        val = factory.createValue(name, targetType);
                         break;
 
                     case PropertyType.BOOLEAN:
@@ -306,10 +438,9 @@ public class ValueHelper {
                             uuid = srcValue.getString();
                         } catch (RepositoryException re) {
                             // should never happen
-                            throw new ValueFormatException("failed to convert source value to REFERENCE value",
-                                    re);
+                            throw new ValueFormatException("failed to convert source value to REFERENCE value", re);
                         }
-                        val = ReferenceValue.valueOf(uuid);
+                        val = factory.createValue(uuid, targetType);
                         break;
 
                     case PropertyType.BOOLEAN:
@@ -335,11 +466,26 @@ public class ValueHelper {
     }
 
     /**
+     * Same as {@link #copy(Value, ValueFactory)} using <code>ValueFactoryImpl</code>.
+     *
      * @param srcValue
      * @return
      * @throws IllegalStateException
+     * @deprecated Use {@link #copy(Value, ValueFactory)} instead.
      */
     public static Value copy(Value srcValue) throws IllegalStateException {
+        return copy(srcValue, ValueFactoryImpl.getInstance());
+    }
+
+    /**
+     *
+     * @param srcValue
+     * @param factory
+     * @return
+     * @throws IllegalStateException
+     */
+    public static Value copy(Value srcValue, ValueFactory factory)
+        throws IllegalStateException {
         if (srcValue == null) {
             return null;
         }
@@ -348,39 +494,33 @@ public class ValueHelper {
         try {
             switch (srcValue.getType()) {
                 case PropertyType.BINARY:
-                    newVal = new BinaryValue(srcValue.getStream());
+                    newVal = factory.createValue(srcValue.getStream());
                     break;
 
                 case PropertyType.BOOLEAN:
-                    newVal = new BooleanValue(srcValue.getBoolean());
+                    newVal = factory.createValue(srcValue.getBoolean());
                     break;
 
                 case PropertyType.DATE:
-                    newVal = new DateValue(srcValue.getDate());
+                    newVal = factory.createValue(srcValue.getDate());
                     break;
 
                 case PropertyType.DOUBLE:
-                    newVal = new DoubleValue(srcValue.getDouble());
+                    newVal = factory.createValue(srcValue.getDouble());
                     break;
 
                 case PropertyType.LONG:
-                    newVal = new LongValue(srcValue.getLong());
+                    newVal = factory.createValue(srcValue.getLong());
                     break;
 
                 case PropertyType.PATH:
-                    newVal = PathValue.valueOf(srcValue.getString());
-                    break;
-
                 case PropertyType.NAME:
-                    newVal = NameValue.valueOf(srcValue.getString());
-                    break;
-
                 case PropertyType.REFERENCE:
-                    newVal = ReferenceValue.valueOf(srcValue.getString());
+                    newVal = factory.createValue(srcValue.getString(), srcValue.getType());
                     break;
 
                 case PropertyType.STRING:
-                    newVal = new StringValue(srcValue.getString());
+                    newVal = factory.createValue(srcValue.getString());
                     break;
             }
         } catch (RepositoryException re) {
@@ -390,18 +530,32 @@ public class ValueHelper {
     }
 
     /**
+     * Same as {@link #copy(Value[], ValueFactory)} using <code>ValueFactoryImpl</code>.
+     *
      * @param srcValues
      * @return
      * @throws IllegalStateException
+     * @deprecated Use {@link #copy(Value[], ValueFactory)} instead.
      */
     public static Value[] copy(Value[] srcValues) throws IllegalStateException {
+        return copy(srcValues, ValueFactoryImpl.getInstance());
+    }
+
+    /**
+     * @param srcValues
+     * @param factory
+     * @return
+     * @throws IllegalStateException
+     */
+    public static Value[] copy(Value[] srcValues, ValueFactory factory)
+        throws IllegalStateException {
         if (srcValues == null) {
             return null;
         }
 
         Value[] newValues = new Value[srcValues.length];
         for (int i = 0; i < srcValues.length; i++) {
-            newValues[i] = copy(srcValues[i]);
+            newValues[i] = copy(srcValues[i], factory);
         }
         return newValues;
     }
@@ -477,6 +631,8 @@ public class ValueHelper {
 
     /**
      * Deserializes the given string to a <code>Value</code> of the given type.
+     * Same as {@link #deserialize(String, int, boolean, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
      *
      * @param value        string to be deserialized
      * @param type         type of value
@@ -488,9 +644,32 @@ public class ValueHelper {
      *                              format
      * @throws RepositoryException  if an error occured during the
      *                              deserialization.
+     * @deprecated Use {@link #deserialize(String, int, boolean, ValueFactory)}
+     * instead.
      */
     public static Value deserialize(String value, int type,
                                     boolean decodeBlanks)
+            throws ValueFormatException, RepositoryException {
+        return deserialize(value, type, decodeBlanks, ValueFactoryImpl.getInstance());
+    }
+
+    /**
+     * Deserializes the given string to a <code>Value</code> of the given type.
+     *
+     * @param value        string to be deserialized
+     * @param type         type of value
+     * @param decodeBlanks if <code>true</code> <code>"_x0020_"</code>
+     *                     character sequences will be decoded to single space
+     *                     characters each.
+     * @param factory      ValueFactory used to build the <code>Value</code> object.
+     * @return the deserialized <code>Value</code>
+     * @throws ValueFormatException if the string data is not of the required
+     *                              format
+     * @throws RepositoryException  if an error occured during the
+     *                              deserialization.
+     */
+    public static Value deserialize(String value, int type, boolean decodeBlanks,
+                                    ValueFactory factory)
             throws ValueFormatException, RepositoryException {
         if (type == PropertyType.BINARY) {
             // base64 encoded binary value;
@@ -505,19 +684,24 @@ public class ValueHelper {
                 throw new RepositoryException("failed to decode binary value",
                         ioe);
             }
+            // NOTE: for performance reasons the BinaryValue is created directly
+            // from the byte-array. This is inconsistent with the other calls,
+            // that delegate the value creation to the ValueFactory.
             return new BinaryValue(baos.toByteArray());
         } else {
             if (decodeBlanks) {
                 // decode encoded blanks in value
                 value = Text.replace(value, "_x0020_", " ");
             }
-            return convert(value, type);
+            return convert(value, type, factory);
         }
     }
 
     /**
      * Deserializes the string data read from the given reader to a
-     * <code>Value</code> of the given type.
+     * <code>Value</code> of the given type. Same as
+     * {@link #deserialize(Reader, int, boolean, ValueFactory)} using
+     * <code>ValueFactoryImpl</code>.
      *
      * @param reader       reader for the string data to be deserialized
      * @param type         type of value
@@ -531,9 +715,35 @@ public class ValueHelper {
      *                              format
      * @throws RepositoryException  if an error occured during the
      *                              deserialization.
+     * @deprecated Use {@link #deserialize(Reader, int, boolean, ValueFactory)}
+     * instead.
      */
     public static Value deserialize(Reader reader, int type,
                                     boolean decodeBlanks)
+            throws IOException, ValueFormatException, RepositoryException {
+        return deserialize(reader, type, decodeBlanks, ValueFactoryImpl.getInstance());
+    }
+
+    /**
+     * Deserializes the string data read from the given reader to a
+     * <code>Value</code> of the given type.
+     *
+     * @param reader       reader for the string data to be deserialized
+     * @param type         type of value
+     * @param decodeBlanks if <code>true</code> <code>"_x0020_"</code>
+     *                     character sequences will be decoded to single space
+     *                     characters each.
+     * @param factory      ValueFactory used to build the <code>Value</code> object.
+     * @return the deserialized <code>Value</code>
+     * @throws IOException          if an i/o error occured during the
+     *                              serialization
+     * @throws ValueFormatException if the string data is not of the required
+     *                              format
+     * @throws RepositoryException  if an error occured during the
+     *                              deserialization.
+     */
+    public static Value deserialize(Reader reader, int type,
+                                    boolean decodeBlanks, ValueFactory factory)
             throws IOException, ValueFormatException, RepositoryException {
         if (type == PropertyType.BINARY) {
             // base64 encoded binary value;
@@ -553,8 +763,8 @@ public class ValueHelper {
             // create an InputStream that keeps a hard reference to the temp file
             // in order to prevent its automatic deletion once the associated
             // File object is reclaimed by the garbage collector;
-            // pass InputStream wrapper to BinaryValue constructor
-            return new BinaryValue(new FilterInputStream(new FileInputStream(tmpFile)) {
+            // pass InputStream wrapper to ValueFactory, that creates a BinaryValue.
+            return factory.createValue(new FilterInputStream(new FileInputStream(tmpFile)) {
 
                 public void close() throws IOException {
                     in.close();
@@ -581,7 +791,7 @@ public class ValueHelper {
                 // decode encoded blanks in value
                 value = Text.replace(value, "_x0020_", " ");
             }
-            return convert(value, type);
+            return convert(value, type, factory);
         }
     }
 }

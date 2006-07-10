@@ -27,6 +27,9 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.PathFormat;
 
 /**
  * Hierarchically scoped namespace resolver. Each NamespaceContext instance
@@ -126,6 +129,14 @@ class NamespaceContext implements NamespaceResolver {
     /** {@inheritDoc} */
     public String getJCRName(QName name) throws NoPrefixDeclaredException {
         return name.toJCRName(this);
+    }
+
+    public Path getQPath(String jcrPath) throws MalformedPathException {
+        return PathFormat.parse(jcrPath, this);
+    }
+
+    public String getJCRPath(Path qPath) throws NoPrefixDeclaredException {
+        return PathFormat.format(qPath, this);
     }
 
     /** {@inheritDoc} */

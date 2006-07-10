@@ -23,6 +23,9 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceListener;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.commons.collections.map.LRUMap;
 
 import javax.jcr.NamespaceException;
@@ -106,6 +109,24 @@ class CachingNamespaceResolver
     }
 
     /**
+     * @inheritDoc
+     * As currently paths are not cached, the call is delegated to
+     * {@link PathFormat#parse(String, NamespaceResolver)}.
+     */
+    public Path getQPath(String jcrPath) throws MalformedPathException {
+        return PathFormat.parse(jcrPath, this);
+    }
+
+    /**
+     * @inheritDoc
+     * As currently paths are not cached, the call is delegated to
+     * {@link PathFormat#format(Path, NamespaceResolver)}.
+     */
+    public String getJCRPath(Path qPath) throws NoPrefixDeclaredException {
+        return PathFormat.format(qPath, this);
+    }
+
+    /**
      * Disposes this <code>CachingNamespaceResolver</code>.
      */
     public void dispose() {
@@ -126,6 +147,15 @@ class CachingNamespaceResolver
      * Invalidates all cached mappings.
      */
     public void namespaceRemapped(String oldPrefix, String newPrefix, String uri) {
+        qnameToJCRName.clear();
+        jcrNameToQName.clear();
+    }
+
+    /**
+     * @inheritDoc
+     * Invalidates all cached mappings.
+     */
+    public void namespaceRemoved(String uri) {
         qnameToJCRName.clear();
         jcrNameToQName.clear();
     }

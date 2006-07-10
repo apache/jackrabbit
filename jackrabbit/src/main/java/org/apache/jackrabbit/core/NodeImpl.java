@@ -1635,7 +1635,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED
                     && type != PropertyType.UNDEFINED) {
-                prop.setValue(ValueHelper.convert(values, type));
+                prop.setValue(ValueHelper.convert(values, type, session.getValueFactory()));
             } else {
                 prop.setValue(values);
             }
@@ -1998,7 +1998,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED
                     && type != PropertyType.UNDEFINED) {
-                prop.setValue(ValueHelper.convert(values, type));
+                prop.setValue(ValueHelper.convert(values, type, session.getValueFactory()));
             } else {
                 prop.setValue(values);
             }
@@ -2030,7 +2030,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED
                     && type != PropertyType.UNDEFINED) {
-                prop.setValue(ValueHelper.convert(values, type));
+                prop.setValue(ValueHelper.convert(values, type, session.getValueFactory()));
             } else {
                 prop.setValue(values);
             }
@@ -2094,7 +2094,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED
                     && type != PropertyType.UNDEFINED) {
-                prop.setValue(ValueHelper.convert(values, type));
+                prop.setValue(ValueHelper.convert(values, type, session.getValueFactory()));
             } else {
                 prop.setValue(values);
             }
@@ -2154,7 +2154,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED
                     && type != PropertyType.UNDEFINED) {
-                prop.setValue(ValueHelper.convert(value, type));
+                prop.setValue(ValueHelper.convert(value, type, session.getValueFactory()));
             } else {
                 prop.setValue(value);
             }
@@ -2186,7 +2186,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED
                     && type != PropertyType.UNDEFINED) {
-                prop.setValue(ValueHelper.convert(value, type));
+                prop.setValue(ValueHelper.convert(value, type, session.getValueFactory()));
             } else {
                 prop.setValue(value);
             }
@@ -2223,7 +2223,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED
                     && type != PropertyType.UNDEFINED) {
-                prop.setValue(ValueHelper.convert(value, type));
+                prop.setValue(ValueHelper.convert(value, type, session.getValueFactory()));
             } else {
                 prop.setValue(value);
             }
