@@ -13,7 +13,7 @@ h1,h2,h3,h4,h5,h6,pre,code
     font-size:1em;
     }
 
-ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,body,html,p,blockquote,fieldset,input,table,thead,tbody,tfoot,caption,th,tr,td,a,textarea,#breadcrumbs,dd,dt
+ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,body,html,p,blockquote,fieldset,input,table,thead,tbody,tfoot,caption,th,tr,td,a,textarea,#breadcrumbs
     {
     margin:0;
     padding:0;
