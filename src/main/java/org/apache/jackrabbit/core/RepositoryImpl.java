@@ -50,6 +50,7 @@ import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -571,7 +572,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED
                             | Event.NODE_REMOVED | Event.PROPERTY_ADDED
                             | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
-                            "/" + QName.JCR_SYSTEM.toJCRName(defSysSession.getNamespaceResolver()),
+                            "/" + NameFormat.format(QName.JCR_SYSTEM, defSysSession.getNamespaceResolver()),
                             true, null, null, false);
                 } else {
                     systemSearchMgr = null;
@@ -1851,12 +1852,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * Some operations are needed to initiate the RepositoryBackup object properly before performing
      * the backup or restore operation.
      *
-     * @param BackupConfig conf: BackupConfig object containing all the parameters.
+     * @param conf BackupConfig object containing all the parameters.
      * @return RepositoryBackup configured
      * @throws RepositoryException
      * @throws AccessDeniedException
-     * @throws IoException
-     * @author: Nicolas Toper <ntoper@gmail.com>
+     * @throws IOException
      */
     public RepositoryBackup getBackupRepository(BackupConfig conf, BackupIOHandler h) throws RepositoryException, IOException, AccessDeniedException {
         conf.setRepo(this);
@@ -1866,7 +1866,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     /**
      * For restore operations since the
      * @return RepositoryBackup to configure
-     * @param BackupIOHandler is a pointer to the file to restore
+     * @param source is a pointer to the file to restore
      * @throws RepositoryException
      * @throws IOException
      * @throws AccessDeniedException

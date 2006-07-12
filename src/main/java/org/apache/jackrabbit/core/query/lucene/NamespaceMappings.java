@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
+import org.apache.jackrabbit.name.NameFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,9 +144,9 @@ public class NamespaceMappings extends AbstractNamespaceResolver {
      */
     public String translatePropertyName(String name, NamespaceResolver resolver)
             throws IllegalNameException, UnknownPrefixException {
-        QName qName = QName.fromJCRName(name, resolver);
+        QName qName = NameFormat.parse(name, resolver);
         try {
-            return qName.toJCRName(this);
+            return NameFormat.format(qName, this);
         } catch (NoPrefixDeclaredException e) {
             // should never happen actually, because we create yet unknown
             // uri mappings on the fly.

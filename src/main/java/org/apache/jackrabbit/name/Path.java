@@ -18,10 +18,10 @@ package org.apache.jackrabbit.name;
 
 import org.apache.jackrabbit.util.Text;
 
+import javax.jcr.PathNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import javax.jcr.PathNotFoundException;
 
 /**
  * The <code>Path</code> utility class provides misc. methods to resolve and
@@ -315,25 +315,6 @@ public final class Path {
         return new Path(new PathElement[]{elem}, !elem.equals(CURRENT_ELEMENT));
     }
 
-    //-------------------------------------------------------< implementation >
-    /**
-     * Parses the give string an d returns an array of path elements. if
-     * <code>master</code> is not <code>null</code>, it is prepended to the
-     * returned list. If <code>resolver</code> is <code>null</code>, this
-     * method only checks the format of the string and returns <code>null</code>.
-     *
-     * @param jcrPath
-     * @param master
-     * @param resolver
-     * @return
-     * @throws MalformedPathException
-     * @deprecated Use {@link PathFormat#parse(Path, String, NamespaceResolver)} instead.
-     */
-    private static Path parse(String jcrPath, Path master, NamespaceResolver resolver)
-            throws MalformedPathException {
-        return PathFormat.parse(master, jcrPath, resolver);
-    }
-
     //------------------------------------------------------< utility methods >
     /**
      * Checks if <code>jcrPath</code> is a valid JCR-style absolute or relative
@@ -555,9 +536,7 @@ public final class Path {
             throw new PathNotFoundException("no such ancestor path of degree " + degree);
         }
         PathElement[] elements = new PathElement[length];
-        for (int i = 0; i < length; i++) {
-            elements[i] = this.elements[i];
-        }
+        System.arraycopy(this.elements, 0, elements, 0, length);
         return new Path(elements, normalized);
     }
 
@@ -1084,8 +1063,7 @@ public final class Path {
          * @param resolver
          * @return {@link #LITERAL}
          */
-        public String toJCRName(NamespaceResolver resolver)
-                throws NoPrefixDeclaredException {
+        public String toJCRName(NamespaceResolver resolver) {
             return LITERAL;
         }
 
@@ -1148,8 +1126,7 @@ public final class Path {
          * @param resolver
          * @return {@link #LITERAL}
          */
-        public String toJCRName(NamespaceResolver resolver)
-                throws NoPrefixDeclaredException {
+        public String toJCRName(NamespaceResolver resolver) {
             return LITERAL;
         }
 

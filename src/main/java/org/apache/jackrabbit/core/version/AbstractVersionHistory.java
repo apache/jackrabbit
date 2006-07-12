@@ -26,6 +26,7 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NameFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +105,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
     public Version getVersion(String versionName)
             throws VersionException, RepositoryException {
         try {
-            QName name = QName.fromJCRName(versionName, session.getNamespaceResolver());
+            QName name = NameFormat.parse(versionName, session.getNamespaceResolver());
             InternalVersion v = getInternalVersionHistory().getVersion(name);
             if (v == null) {
                 throw new VersionException("No version with name '" + versionName + "' exists in this version history.");
@@ -122,7 +123,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
      */
     public Version getVersionByLabel(String label) throws RepositoryException {
         try {
-            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
+            QName qLabel = NameFormat.parse(label, session.getNamespaceResolver());
             InternalVersion v = getInternalVersionHistory().getVersionByLabel(qLabel);
             if (v == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
@@ -142,8 +143,8 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
             throws VersionException, RepositoryException {
         try {
             session.getVersionManager().setVersionLabel(this,
-                    QName.fromJCRName(versionName, session.getNamespaceResolver()),
-                    QName.fromJCRName(label, session.getNamespaceResolver()),
+                    NameFormat.parse(versionName, session.getNamespaceResolver()),
+                    NameFormat.parse(label, session.getNamespaceResolver()),
                     move);
         } catch (IllegalNameException e) {
             throw new VersionException(e);
@@ -159,7 +160,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
         try {
             Version existing = session.getVersionManager().setVersionLabel(this,
                     null,
-                    QName.fromJCRName(label, session.getNamespaceResolver()),
+                    NameFormat.parse(label, session.getNamespaceResolver()),
                     true);
             if (existing == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
@@ -180,7 +181,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
             QName[] labels = getInternalVersionHistory().getVersionLabels();
             String[] ret = new String[labels.length];
             for (int i = 0; i < labels.length; i++) {
-                ret[i] = labels[i].toJCRName(session.getNamespaceResolver());
+                ret[i] = NameFormat.format(labels[i], session.getNamespaceResolver());
             }
             return ret;
         } catch (NoPrefixDeclaredException e) {
@@ -198,7 +199,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
             QName[] labels = ((AbstractVersion) version).getInternalVersion().getLabels();
             String[] ret = new String[labels.length];
             for (int i = 0; i < labels.length; i++) {
-                ret[i] = labels[i].toJCRName(session.getNamespaceResolver());
+                ret[i] = NameFormat.format(labels[i], session.getNamespaceResolver());
             }
             return ret;
         } catch (NoPrefixDeclaredException e) {
@@ -211,7 +212,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
      */
     public boolean hasVersionLabel(String label) throws RepositoryException {
         try {
-            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
+            QName qLabel = NameFormat.parse(label, session.getNamespaceResolver());
             return getInternalVersionHistory().getVersionByLabel(qLabel) != null;
         } catch (IllegalNameException e) {
             throw new IllegalArgumentException("Unable to resolve label: " + e);
@@ -227,7 +228,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
             throws VersionException, RepositoryException {
         checkOwnVersion(version);
         try {
-            QName qLabel = QName.fromJCRName(label, session.getNamespaceResolver());
+            QName qLabel = NameFormat.parse(label, session.getNamespaceResolver());
             return ((AbstractVersion) version).getInternalVersion().hasLabel(qLabel);
         } catch (IllegalNameException e) {
             throw new VersionException(e);
@@ -244,7 +245,7 @@ public abstract class AbstractVersionHistory extends NodeImpl implements Version
             RepositoryException {
         try {
             session.getVersionManager().removeVersion(this,
-                    QName.fromJCRName(versionName, session.getNamespaceResolver()));
+                    NameFormat.parse(versionName, session.getNamespaceResolver()));
         } catch (IllegalNameException e) {
             throw new RepositoryException(e);
         } catch (UnknownPrefixException e) {

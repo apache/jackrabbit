@@ -42,6 +42,7 @@ import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,9 +77,7 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
 import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Result;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
@@ -591,7 +590,7 @@ public class SessionImpl implements Session, Dumpable {
 
         Path targetPath;
         try {
-            targetPath = Path.create(absPath, getNamespaceResolver(), true);
+            targetPath = PathFormat.parse(absPath, getNamespaceResolver()).getNormalizedPath();
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + absPath;
             log.debug(msg, mpe);
@@ -764,7 +763,7 @@ public class SessionImpl implements Session, Dumpable {
         sanityCheck();
 
         try {
-            Path p = Path.create(absPath, getNamespaceResolver(), true);
+            Path p = PathFormat.parse(absPath, getNamespaceResolver()).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + absPath);
             }
@@ -786,7 +785,7 @@ public class SessionImpl implements Session, Dumpable {
         sanityCheck();
 
         try {
-            Path p = Path.create(absPath, getNamespaceResolver(), true);
+            Path p = PathFormat.parse(absPath, getNamespaceResolver()).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + absPath);
             }
@@ -855,7 +854,7 @@ public class SessionImpl implements Session, Dumpable {
         NodeImpl targetNode;
         NodeImpl srcParentNode;
         try {
-            srcPath = Path.create(srcAbsPath, getNamespaceResolver(), true);
+            srcPath = PathFormat.parse(srcAbsPath, getNamespaceResolver()).getNormalizedPath();
             if (!srcPath.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + srcAbsPath);
             }
@@ -880,7 +879,7 @@ public class SessionImpl implements Session, Dumpable {
         Path destParentPath;
         NodeImpl destParentNode;
         try {
-            destPath = Path.create(destAbsPath, getNamespaceResolver(), true);
+            destPath = PathFormat.parse(destAbsPath, getNamespaceResolver()).getNormalizedPath();
             if (!destPath.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + destAbsPath);
             }
@@ -1018,7 +1017,7 @@ public class SessionImpl implements Session, Dumpable {
 
         Item item;
         try {
-            Path p = Path.create(parentAbsPath, getNamespaceResolver(), true);
+            Path p = PathFormat.parse(parentAbsPath, getNamespaceResolver()).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException("not an absolute path: " + parentAbsPath);
             }

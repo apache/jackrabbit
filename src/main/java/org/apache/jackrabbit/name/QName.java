@@ -605,7 +605,7 @@ public final class QName implements Cloneable, Comparable, Serializable {
      * @deprecated Use {@link NameFormat#checkFormat(String)} instead.
      */
     public static void checkFormat(String jcrName) throws IllegalNameException {
-        parse(jcrName);
+        NameFormat.checkFormat(jcrName);
     }
 
     /**

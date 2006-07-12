@@ -33,6 +33,7 @@ import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -724,7 +725,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
 
             try {
                 he = new HierarchyEvent(event.getChildId(),
-                        Path.create(event.getPath(), nsResolver, true),
+                        PathFormat.parse(event.getPath(), nsResolver).getNormalizedPath(),
                         event.getType());
             } catch (MalformedPathException e) {
                 log.info("Unable to get event's path: " + e.getMessage());

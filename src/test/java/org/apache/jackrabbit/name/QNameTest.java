@@ -82,7 +82,7 @@ public class QNameTest extends TestCase {
             long t1 = System.currentTimeMillis();
             for (int j=0; j<NUM_TESTS; j++) {
                 try {
-                    QName n = QName.fromJCRName(t.jcrName, resolver);
+                    QName n = NameFormat.parse(t.jcrName, resolver);
                     if (!t.isValid()) {
                         fail("Should throw IllegalNameException: " + t.jcrName);
                     }
@@ -109,7 +109,7 @@ public class QNameTest extends TestCase {
                 // check just creation
                 boolean isValid = true;
                 try {
-                    QName.checkFormat(t.jcrName);
+                    NameFormat.checkFormat(t.jcrName);
                 } catch (IllegalNameException e) {
                     isValid = false;
                 }

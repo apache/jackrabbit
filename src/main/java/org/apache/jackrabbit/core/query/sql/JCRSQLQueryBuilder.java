@@ -33,6 +33,7 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.ISO8601;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -584,7 +585,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 QName qName = null;
                 if (name != null) {
                     try {
-                        qName = QName.fromJCRName(name, resolver);
+                        qName = NameFormat.parse(name, resolver);
                     } catch (IllegalNameException e) {
                         throw new IllegalArgumentException("Illegal name: " + name);
                     } catch (UnknownPrefixException e) {

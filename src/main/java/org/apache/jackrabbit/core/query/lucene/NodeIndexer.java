@@ -27,6 +27,8 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
@@ -136,7 +138,7 @@ public class NodeIndexer {
                 doc.add(new Field(FieldNames.PARENT, node.getParentId().toString(), true, true, false));
                 NodeState parent = (NodeState) stateProvider.getItemState(node.getParentId());
                 NodeState.ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
-                String name = child.getName().toJCRName(mappings);
+                String name = NameFormat.format(child.getName(), mappings);
                 doc.add(new Field(FieldNames.LABEL, name, false, true, false));
             }
         } catch (NoSuchItemStateException e) {
@@ -193,7 +195,7 @@ public class NodeIndexer {
      */
     private void addMVPName(Document doc, QName name) {
         try {
-            String propName = name.toJCRName(mappings);
+            String propName = NameFormat.format(name, mappings);
             doc.add(new Field(FieldNames.MVP, propName, false, true, false));
         } catch (NoPrefixDeclaredException e) {
             // will never happen, prefixes are created dynamically
@@ -210,7 +212,7 @@ public class NodeIndexer {
     private void addValue(Document doc, InternalValue value, QName name) {
         String fieldName = name.getLocalName();
         try {
-            fieldName = name.toJCRName(mappings);
+            fieldName = NameFormat.format(name, mappings);
         } catch (NoPrefixDeclaredException e) {
             // will never happen
         }
@@ -410,7 +412,7 @@ public class NodeIndexer {
         Path path = (Path) internalValue;
         String pathString = path.toString();
         try {
-            pathString = path.toJCRPath(mappings);
+            pathString = PathFormat.format(path, mappings);
         } catch (NoPrefixDeclaredException e) {
             // will never happen
         }

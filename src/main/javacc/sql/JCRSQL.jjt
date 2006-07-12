@@ -44,6 +44,7 @@ package org.apache.jackrabbit.core.query.sql;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.core.query.QueryConstants;
 
@@ -503,7 +504,7 @@ QName Identifier() :
     t = <REGULAR_IDENTIFIER>
       {
         try {
-          jjtThis.setName(QName.fromJCRName(t.image, resolver));
+          jjtThis.setName(NameFormat.parse(t.image, resolver));
         } catch (IllegalNameException e) {
           throw new ParseException(e.getMessage());
         } catch (UnknownPrefixException e) {
@@ -514,7 +515,7 @@ QName Identifier() :
     t = <DELIMITED_IDENTIFIER>
       {
         try {
-          jjtThis.setName(QName.fromJCRName(t.image.substring(1, t.image.length()-1), resolver));
+          jjtThis.setName(NameFormat.parse(t.image.substring(1, t.image.length()-1), resolver));
         } catch (IllegalNameException e) {
           throw new ParseException(e.getMessage());
         } catch (UnknownPrefixException e) {
@@ -541,7 +542,7 @@ QName Identifier() :
       )
       {
         try {
-          jjtThis.setName(QName.fromJCRName(t.image, resolver));
+          jjtThis.setName(NameFormat.parse(t.image, resolver));
         } catch (IllegalNameException e) {
           throw new ParseException(e.getMessage());
         } catch (UnknownPrefixException e) {
