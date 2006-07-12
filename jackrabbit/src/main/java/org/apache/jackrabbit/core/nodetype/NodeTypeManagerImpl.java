@@ -21,6 +21,7 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
@@ -133,7 +134,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     }
 
     /**
-     * @return
+     * @return the root node definition
      */
     public NodeDefinitionImpl getRootNodeDefinition() {
         return rootNodeDef;
@@ -141,7 +142,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
 
     /**
      * @param id
-     * @return
+     * @return the node definition
      */
     public NodeDefinitionImpl getNodeDefinition(NodeDefId id) {
         synchronized (ndCache) {
@@ -159,7 +160,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
 
     /**
      * @param id
-     * @return
+     * @return the property definition
      */
     public PropertyDefinitionImpl getPropertyDefinition(PropDefId id) {
         synchronized (pdCache) {
@@ -194,7 +195,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     }
 
     /**
-     * @return
+     * @return the node type registry
      */
     public NodeTypeRegistry getNodeTypeRegistry() {
         return ntReg;
@@ -309,7 +310,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     public NodeType getNodeType(String nodeTypeName)
             throws NoSuchNodeTypeException {
         try {
-            return getNodeType(QName.fromJCRName(nodeTypeName, nsResolver));
+            return getNodeType(NameFormat.parse(nodeTypeName, nsResolver));
         } catch (UnknownPrefixException upe) {
             throw new NoSuchNodeTypeException(nodeTypeName, upe);
         } catch (IllegalNameException ine) {

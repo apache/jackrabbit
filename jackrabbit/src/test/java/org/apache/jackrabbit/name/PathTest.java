@@ -17,12 +17,11 @@
 package org.apache.jackrabbit.name;
 
 import junit.framework.TestCase;
+import org.apache.jackrabbit.util.Text;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
-
-import org.apache.jackrabbit.util.Text;
+import java.util.List;
 
 /**
  * This Class implements a test case for the 'Path' class.
@@ -113,20 +112,20 @@ public class PathTest extends TestCase {
                 try {
                     if (t.normalizedPath==null) {
                         // check just creation
-                        Path p = Path.create(t.path, resolver, false);
+                        Path p = PathFormat.parse(t.path, resolver);
                         if (!t.isValid()) {
                             fail("Should throw MalformedPathException: " + t.path);
                         }
-                        assertEquals("\"" + t.path + "\".create(false)", t.path,  p.toJCRPath(resolver));
+                        assertEquals("\"" + t.path + "\".create(false)", t.path,  PathFormat.format(p, resolver));
                         assertEquals("\"" + t.path + "\".isNormalized()", t.isNormalized(), p.isNormalized());
                         assertEquals("\"" + t.path + "\".isAbsolute()", t.isAbsolute(), p.isAbsolute());
                     } else {
                         // check with normalization
-                        Path p = Path.create(t.path, resolver, true);
+                        Path p = PathFormat.parse(t.path, resolver).getNormalizedPath();
                         if (!t.isValid()) {
                             fail("Should throw MalformedPathException: " + t.path);
                         }
-                        assertEquals("\"" + t.path + "\".create(true)", t.normalizedPath, p.toJCRPath(resolver));
+                        assertEquals("\"" + t.path + "\".create(true)", t.normalizedPath, PathFormat.format(p, resolver));
                         assertEquals("\"" + t.path + "\".isAbsolute()", t.isAbsolute(), p.isAbsolute());
                     }
                 } catch (MalformedPathException e) {
@@ -151,7 +150,7 @@ public class PathTest extends TestCase {
                     // check just creation
                     boolean isValid = true;
                     try {
-                        Path.checkFormat(t.path);
+                        PathFormat.checkFormat(t.path);
                     } catch (MalformedPathException e) {
                         isValid = false;
                     }
@@ -172,13 +171,13 @@ public class PathTest extends TestCase {
                 if (t.normalizedPath==null) {
                     // check just creation
                     Path p = build(t.path, resolver, false);
-                    assertEquals("\"" + t.path + "\".create(false)", t.path,  p.toJCRPath(resolver));
+                    assertEquals("\"" + t.path + "\".create(false)", t.path,  PathFormat.format(p, resolver));
                     assertEquals("\"" + t.path + "\".isNormalized()", t.isNormalized(), p.isNormalized());
                     assertEquals("\"" + t.path + "\".isAbsolute()", t.isAbsolute(), p.isAbsolute());
                 } else {
                     // check with normalization
                     Path p = build(t.path, resolver, true);
-                    assertEquals("\"" + t.path + "\".create(true)", t.normalizedPath, p.toJCRPath(resolver));
+                    assertEquals("\"" + t.path + "\".create(true)", t.normalizedPath, PathFormat.format(p, resolver));
                     assertEquals("\"" + t.path + "\".isAbsolute()", t.isAbsolute(), p.isAbsolute());
                 }
             }
@@ -192,13 +191,13 @@ public class PathTest extends TestCase {
                 if (t.normalizedPath==null) {
                     // check just creation
                     Path p = buildReverse(t.path, resolver, false);
-                    assertEquals("\"" + t.path + "\".create(false)", t.path,  p.toJCRPath(resolver));
+                    assertEquals("\"" + t.path + "\".create(false)", t.path,  PathFormat.format(p, resolver));
                     assertEquals("\"" + t.path + "\".isNormalized()", t.isNormalized(), p.isNormalized());
                     assertEquals("\"" + t.path + "\".isAbsolute()", t.isAbsolute(), p.isAbsolute());
                 } else {
                     // check with normalization
                     Path p = buildReverse(t.path, resolver, true);
-                    assertEquals("\"" + t.path + "\".create(true)", t.normalizedPath, p.toJCRPath(resolver));
+                    assertEquals("\"" + t.path + "\".create(true)", t.normalizedPath, PathFormat.format(p, resolver));
                     assertEquals("\"" + t.path + "\".isAbsolute()", t.isAbsolute(), p.isAbsolute());
                 }
             }
@@ -229,7 +228,7 @@ public class PathTest extends TestCase {
             } else if ("..".equals(elems[i])) {
                 name = new QName("", "..");
             } else {
-                name = QName.fromJCRName(elem, resolver);
+                name = NameFormat.parse(elem, resolver);
             }
             if (index < 0) {
                 builder.addLast(name);
@@ -261,7 +260,7 @@ public class PathTest extends TestCase {
             } else if ("..".equals(elems[i])) {
                 name = new QName("", "..");
             } else {
-                name = QName.fromJCRName(elem, resolver);
+                name = NameFormat.parse(elem, resolver);
             }
             if (index < 0) {
                 builder.addFirst(name);
@@ -424,7 +423,7 @@ public class PathTest extends TestCase {
         public String toString() {
             StringBuffer b = new StringBuffer(path);
             if (normalizedPath!=null) {
-                b.append(" -> " + normalizedPath);
+                b.append(" -> ").append(normalizedPath);
             }
             if (isAbsolute()) {
                 b.append(",ABS");

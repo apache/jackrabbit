@@ -35,6 +35,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
@@ -1374,7 +1375,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         sanityCheck();
 
         try {
-            return getPrimaryPath().toJCRPath(session.getNamespaceResolver());
+            return PathFormat.format(getPrimaryPath(), session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace";

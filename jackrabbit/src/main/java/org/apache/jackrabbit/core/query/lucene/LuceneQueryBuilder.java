@@ -42,6 +42,8 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.XMLChar;
 import org.slf4j.Logger;
@@ -236,8 +238,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         String field = "";
         String value = "";
         try {
-            field = node.getPropertyName().toJCRName(nsMappings);
-            value = node.getValue().toJCRName(nsMappings);
+            field = NameFormat.format(node.getPropertyName(), nsMappings);
+            value = NameFormat.format(node.getValue(), nsMappings);
         } catch (NoPrefixDeclaredException e) {
             // will never happen, prefixes are created when unknown
         }
@@ -248,23 +250,23 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         List terms = new ArrayList();
         try {
-            String mixinTypesField = QName.JCR_MIXINTYPES.toJCRName(nsMappings);
-            String primaryTypeField = QName.JCR_PRIMARYTYPE.toJCRName(nsMappings);
+            String mixinTypesField = NameFormat.format(QName.JCR_MIXINTYPES, nsMappings);
+            String primaryTypeField = NameFormat.format(QName.JCR_PRIMARYTYPE, nsMappings);
 
             NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
-            NodeType base = ntMgr.getNodeType(node.getValue().toJCRName(session.getNamespaceResolver()));
+            NodeType base = ntMgr.getNodeType(NameFormat.format(node.getValue(), session.getNamespaceResolver()));
 
             if (base.isMixin()) {
                 // search for nodes where jcr:mixinTypes is set to this mixin
                 Term t = new Term(FieldNames.PROPERTIES,
                         FieldNames.createNamedValue(mixinTypesField,
-                                node.getValue().toJCRName(nsMappings)));
+                                NameFormat.format(node.getValue(), nsMappings)));
                 terms.add(t);
             } else {
                 // search for nodes where jcr:primaryType is set to this type
                 Term t = new Term(FieldNames.PROPERTIES,
                         FieldNames.createNamedValue(primaryTypeField,
-                                node.getValue().toJCRName(nsMappings)));
+                                NameFormat.format(node.getValue(), nsMappings)));
                 terms.add(t);
             }
 
@@ -386,7 +388,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // will never match anything!
                     String name = "";
                     try {
-                        name = nameTest.toJCRName(nsMappings);
+                        name = NameFormat.format(nameTest, nsMappings);
                     } catch (NoPrefixDeclaredException e) {
                         exceptions.add(e);
                     }
@@ -448,7 +450,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         TermQuery nameTest = null;
         if (node.getNameTest() != null) {
             try {
-                String internalName = node.getNameTest().toJCRName(nsMappings);
+                String internalName = NameFormat.format(node.getNameTest(), nsMappings);
                 nameTest = new TermQuery(new Term(FieldNames.LABEL, internalName));
             } catch (NoPrefixDeclaredException e) {
                 // should never happen
@@ -477,7 +479,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // todo this will traverse the whole index, optimize!
                     Query subQuery = null;
                     try {
-                        subQuery = new MatchAllQuery(QName.JCR_PRIMARYTYPE.toJCRName(nsMappings));
+                        subQuery = new MatchAllQuery(NameFormat.format(QName.JCR_PRIMARYTYPE, nsMappings));
                     } catch (NoPrefixDeclaredException e) {
                         // will never happen, prefixes are created when unknown
                     }
@@ -511,10 +513,10 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         }
 
         try {
-            String refProperty = node.getRefProperty().toJCRName(nsMappings);
+            String refProperty = NameFormat.format(node.getRefProperty(), nsMappings);
             String nameTest = null;
             if (node.getNameTest() != null) {
-                nameTest = node.getNameTest().toJCRName(nsMappings);
+                nameTest = NameFormat.format(node.getNameTest(), nsMappings);
             }
 
             if (node.getIncludeDescendants()) {
@@ -585,7 +587,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         String field = "";
         try {
-            field = node.getProperty().toJCRName(nsMappings);
+            field = NameFormat.format(node.getProperty(), nsMappings);
         } catch (NoPrefixDeclaredException e) {
             // should never happen
             exceptions.add(e);
@@ -774,8 +776,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 case PropertyType.PATH:
                     // try to translate path
                     try {
-                        Path p = Path.create(literal, session.getNamespaceResolver(), false);
-                        values.add(p.toJCRPath(nsMappings));
+                        Path p = PathFormat.parse(literal, session.getNamespaceResolver());
+                        values.add(PathFormat.format(p, nsMappings));
                         log.debug("Coerced " + literal + " into PATH.");
                     } catch (MalformedPathException e) {
                         log.warn("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
@@ -827,7 +829,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             if (literal.indexOf('/') > -1) {
                 // might be a path
                 try {
-                    values.add(Path.create(literal, session.getNamespaceResolver(), false).toJCRPath(nsMappings));
+                    values.add(PathFormat.format(
+                            PathFormat.parse(literal, session.getNamespaceResolver()),
+                            nsMappings));
                     log.debug("Coerced " + literal + " into PATH.");
                 } catch (Exception e) {
                     // not a path

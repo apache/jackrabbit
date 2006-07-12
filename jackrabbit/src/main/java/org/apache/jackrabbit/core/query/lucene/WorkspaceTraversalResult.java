@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.NameFormat;
 
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
@@ -77,7 +78,7 @@ public class WorkspaceTraversalResult implements QueryResult {
         try {
             String[] propNames = new String[properties.length];
             for (int i = 0; i < properties.length; i++) {
-                propNames[i] = properties[i].toJCRName(resolver);
+                propNames[i] = NameFormat.format(properties[i], resolver);
             }
             return propNames;
         } catch (NoPrefixDeclaredException npde) {

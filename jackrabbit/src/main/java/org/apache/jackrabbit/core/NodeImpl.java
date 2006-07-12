@@ -48,6 +48,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.uuid.UUID;
@@ -175,7 +176,8 @@ public class NodeImpl extends ItemImpl implements Node {
             /**
              * build and resolve absolute path
              */
-            Path p = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
+            Path p = PathFormat.parse(getPrimaryPath(), relPath,
+                    session.getNamespaceResolver()).getCanonicalPath();
             try {
                 ItemId id = session.getHierarchyManager().resolvePath(p);
                 if (!id.denotesNode()) {
@@ -213,7 +215,7 @@ public class NodeImpl extends ItemImpl implements Node {
              * first check if relPath is just a name (in which case we don't
              * have to build & resolve absolute path)
              */
-            Path p = Path.create(relPath, session.getNamespaceResolver(), false);
+            Path p = PathFormat.parse(relPath, session.getNamespaceResolver());
             if (p.getLength() == 1) {
                 Path.PathElement pe = p.getNameElement();
                 if (pe.denotesName()) {
@@ -697,8 +699,8 @@ public class NodeImpl extends ItemImpl implements Node {
         Path parentPath;
         try {
             nodePath =
-                    Path.create(getPrimaryPath(), relPath,
-                            session.getNamespaceResolver(), true);
+                    PathFormat.parse(getPrimaryPath(), relPath,
+                            session.getNamespaceResolver()).getCanonicalPath();
             if (nodePath.getNameElement().getIndex() != 0) {
                 String msg = "illegal subscript specified: " + nodePath;
                 log.debug(msg);
@@ -1940,7 +1942,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         Path.PathElement insertName;
         try {
-            Path p = Path.create(srcName, session.getNamespaceResolver(), false);
+            Path p = PathFormat.parse(srcName, session.getNamespaceResolver());
             // p must be a relative path of length==depth==1 (to eliminate e.g. "..")
             if (p.isAbsolute() || p.getLength() != 1 || p.getDepth() != 1) {
                 throw new RepositoryException("invalid name: " + srcName);
@@ -1955,7 +1957,7 @@ public class NodeImpl extends ItemImpl implements Node {
         Path.PathElement beforeName;
         if (destName != null) {
             try {
-                Path p = Path.create(destName, session.getNamespaceResolver(), false);
+                Path p = PathFormat.parse(destName, session.getNamespaceResolver());
                 // p must be a relative path of length==depth==1 (to eliminate e.g. "..")
                 if (p.isAbsolute() || p.getLength() != 1 || p.getDepth() != 1) {
                     throw new RepositoryException("invalid name: " + destName);
@@ -2854,7 +2856,7 @@ public class NodeImpl extends ItemImpl implements Node {
             try {
                 Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
                 // use prefix mappings of srcSession
-                relPath = p.toJCRPath(srcSession.getNamespaceResolver());
+                relPath = PathFormat.format(p, srcSession.getNamespaceResolver());
             } catch (NameException be) {
                 // should never get here...
                 String msg = "internal error: failed to determine relative path";
@@ -3087,9 +3089,10 @@ public class NodeImpl extends ItemImpl implements Node {
                 node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
                 if (removeExisting) {
                     try {
-                        Path dstPath = Path.create(getPrimaryPath(), relPath, session.getNamespaceResolver(), true);
+                        Path dstPath = PathFormat.parse(getPrimaryPath(),
+                                relPath, session.getNamespaceResolver()).getCanonicalPath();
                         // move to respective location
-                        session.move(node.getPath(), dstPath.toJCRPath(session.getNamespaceResolver()));
+                        session.move(node.getPath(), PathFormat.format(dstPath, session.getNamespaceResolver()));
                         // need to refetch ?
                         node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
                     } catch (MalformedPathException e) {
@@ -3251,7 +3254,7 @@ public class NodeImpl extends ItemImpl implements Node {
             try {
                 Path p = m1.getPrimaryPath().computeRelativePath(getPrimaryPath());
                 // use prefix mappings of srcSession
-                relPath = p.toJCRPath(srcSession.getNamespaceResolver());
+                relPath = PathFormat.format(p, srcSession.getNamespaceResolver());
             } catch (NameException be) {
                 // should never get here...
                 String msg = "internal error: failed to determine relative path";

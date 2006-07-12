@@ -24,6 +24,8 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.BinaryValue;
@@ -121,7 +123,7 @@ public class InternalValue {
                 return new InternalValue(new UUID(value.getString()));
             case PropertyType.NAME:
                 try {
-                    return new InternalValue(QName.fromJCRName(value.getString(), nsResolver));
+                    return new InternalValue(NameFormat.parse(value.getString(), nsResolver));
                 } catch (IllegalNameException ine) {
                     throw new ValueFormatException(ine.getMessage());
                 } catch (UnknownPrefixException upe) {
@@ -129,7 +131,7 @@ public class InternalValue {
                 }
             case PropertyType.PATH:
                 try {
-                    return new InternalValue(Path.create(value.getString(), nsResolver, false));
+                    return new InternalValue(PathFormat.parse(value.getString(), nsResolver));
                 } catch (MalformedPathException mpe) {
                     throw new ValueFormatException(mpe.getMessage());
                 }
@@ -143,7 +145,7 @@ public class InternalValue {
 
     /**
      * @param value
-     * @return
+     * @return the created value
      */
     public static InternalValue create(String value) {
         return new InternalValue(value);
@@ -151,7 +153,7 @@ public class InternalValue {
 
     /**
      * @param value
-     * @return
+     * @return the created value
      */
     public static InternalValue create(long value) {
         return new InternalValue(value);
@@ -159,7 +161,7 @@ public class InternalValue {
 
     /**
      * @param value
-     * @return
+     * @return the created value
      */
     public static InternalValue create(double value) {
         return new InternalValue(value);
@@ -167,7 +169,7 @@ public class InternalValue {
 
     /**
      * @param value
-     * @return
+     * @return the created value
      */
     public static InternalValue create(Calendar value) {
         return new InternalValue(value);
@@ -175,7 +177,7 @@ public class InternalValue {
 
     /**
      * @param value
-     * @return
+     * @return the created value
      */
     public static InternalValue create(boolean value) {
         return new InternalValue(value);
@@ -183,7 +185,7 @@ public class InternalValue {
 
     /**
      * @param value
-     * @return
+     * @return the created value
      */
     public static InternalValue create(byte[] value) {
         return new InternalValue(new BLOBFileValue(value));
@@ -229,7 +231,7 @@ public class InternalValue {
 
     /**
      * @param value
-     * @return
+     * @return the created value
      */
     public static InternalValue create(QName value) {
         return new InternalValue(value);
@@ -237,7 +239,7 @@ public class InternalValue {
 
     /**
      * @param values
-     * @return
+     * @return the created value
      */
     public static InternalValue[] create(QName[] values) {
         InternalValue[] ret = new InternalValue[values.length];
@@ -249,7 +251,7 @@ public class InternalValue {
 
     /**
      * @param values
-     * @return
+     * @return the created value
      */
     public static InternalValue[] create(String[] values) {
         InternalValue[] ret = new InternalValue[values.length];
@@ -261,7 +263,7 @@ public class InternalValue {
 
     /**
      * @param values
-     * @return
+     * @return the created value
      */
     public static InternalValue[] create(Calendar[] values) {
         InternalValue[] ret = new InternalValue[values.length];
@@ -273,7 +275,7 @@ public class InternalValue {
 
     /**
      * @param value
-     * @return
+     * @return the created value
      */
     public static InternalValue create(Path value) {
         return new InternalValue(value);
@@ -281,7 +283,7 @@ public class InternalValue {
 
     /**
      * @param value
-     * @return
+     * @return the created value
      */
     public static InternalValue create(UUID value) {
         return new InternalValue(value);
@@ -307,17 +309,17 @@ public class InternalValue {
             case PropertyType.LONG:
                 return new LongValue((Long) val);
             case PropertyType.REFERENCE:
-                return ReferenceValue.valueOf(((UUID) val).toString());
+                return ReferenceValue.valueOf(val.toString());
             case PropertyType.PATH:
                 try {
-                    return PathValue.valueOf(((Path) val).toJCRPath(nsResolver));
+                    return PathValue.valueOf(PathFormat.format((Path) val, nsResolver));
                 } catch (NoPrefixDeclaredException npde) {
                     // should never get here...
                     throw new RepositoryException("internal error: encountered unregistered namespace", npde);
                 }
             case PropertyType.NAME:
                 try {
-                    return NameValue.valueOf(((QName) val).toJCRName(nsResolver));
+                    return NameValue.valueOf(NameFormat.format((QName) val, nsResolver));
                 } catch (NoPrefixDeclaredException npde) {
                     // should never get here...
                     throw new RepositoryException("internal error: encountered unregistered namespace", npde);
@@ -330,14 +332,14 @@ public class InternalValue {
     }
 
     /**
-     * @return
+     * @return the internal object
      */
     public Object internalValue() {
         return val;
     }
 
     /**
-     * @return
+     * @return the type
      */
     public int getType() {
         return type;
@@ -474,7 +476,7 @@ public class InternalValue {
     }
 
     private InternalValue(boolean value) {
-        val = new Boolean(value);
+        val = Boolean.valueOf(value);
         type = PropertyType.BOOLEAN;
     }
 

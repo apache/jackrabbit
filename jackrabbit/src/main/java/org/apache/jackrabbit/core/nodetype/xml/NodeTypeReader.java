@@ -31,6 +31,7 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
 
@@ -139,7 +140,7 @@ public class NodeTypeReader {
             UnknownPrefixException {
         NodeTypeDef type = new NodeTypeDef();
 
-        type.setName(QName.fromJCRName(
+        type.setName(NameFormat.parse(
                 walker.getAttribute(Constants.NAME_ATTRIBUTE), resolver));
         type.setMixin(Boolean.valueOf(
                 walker.getAttribute(Constants.ISMIXIN_ATTRIBUTE))
@@ -151,7 +152,7 @@ public class NodeTypeReader {
             walker.getAttribute(Constants.PRIMARYITEMNAME_ATTRIBUTE);
         if (primaryItemName != null && primaryItemName.length() > 0) {
             type.setPrimaryItemName(
-                    QName.fromJCRName(primaryItemName, resolver));
+                    NameFormat.parse(primaryItemName, resolver));
         }
 
         // supertype declarations
@@ -159,7 +160,7 @@ public class NodeTypeReader {
             Vector supertypes = new Vector();
             while (walker.iterateElements(Constants.SUPERTYPE_ELEMENT)) {
                 supertypes.add(
-                        QName.fromJCRName(walker.getContent(), resolver));
+                        NameFormat.parse(walker.getContent(), resolver));
             }
             type.setSupertypes((QName[])
                     supertypes.toArray(new QName[supertypes.size()]));
@@ -207,7 +208,7 @@ public class NodeTypeReader {
         if (name.equals("*")) {
             def.setName(ItemDef.ANY_NAME);
         } else {
-            def.setName(QName.fromJCRName(name, resolver));
+            def.setName(NameFormat.parse(name, resolver));
         }
 
         // simple attributes
@@ -288,7 +289,7 @@ public class NodeTypeReader {
         if (name.equals("*")) {
             def.setName(ItemDef.ANY_NAME);
         } else {
-            def.setName(QName.fromJCRName(name, resolver));
+            def.setName(NameFormat.parse(name, resolver));
         }
 
         // simple attributes
@@ -311,14 +312,14 @@ public class NodeTypeReader {
         String type =
             walker.getAttribute(Constants.DEFAULTPRIMARYTYPE_ATTRIBUTE);
         if (type != null && type.length() > 0) {
-            def.setDefaultPrimaryType(QName.fromJCRName(type, resolver));
+            def.setDefaultPrimaryType(NameFormat.parse(type, resolver));
         }
 
         // required primary types
         if (walker.enterElement(Constants.REQUIREDPRIMARYTYPES_ELEMENT)) {
             Vector types = new Vector();
             while (walker.iterateElements(Constants.REQUIREDPRIMARYTYPE_ELEMENT)) {
-                types.add(QName.fromJCRName(walker.getContent(), resolver));
+                types.add(NameFormat.parse(walker.getContent(), resolver));
             }
             def.setRequiredPrimaryTypes(
                     (QName[]) types.toArray(new QName[types.size()]));

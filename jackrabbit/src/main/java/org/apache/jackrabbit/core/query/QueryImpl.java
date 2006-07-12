@@ -23,6 +23,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.PathFormat;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -108,11 +110,11 @@ public class QueryImpl extends AbstractQueryImpl {
         this.handler = handler;
 
         try {
-            if (!node.isNodeType(QName.NT_QUERY.toJCRName(session.getNamespaceResolver()))) {
+            if (!node.isNodeType(NameFormat.format(QName.NT_QUERY, session.getNamespaceResolver()))) {
                 throw new InvalidQueryException("node is not of type nt:query");
             }
-            statement = node.getProperty(QName.JCR_STATEMENT.toJCRName(session.getNamespaceResolver())).getString();
-            language = node.getProperty(QName.JCR_LANGUAGE.toJCRName(session.getNamespaceResolver())).getString();
+            statement = node.getProperty(NameFormat.format(QName.JCR_STATEMENT, session.getNamespaceResolver())).getString();
+            language = node.getProperty(NameFormat.format(QName.JCR_LANGUAGE, session.getNamespaceResolver())).getString();
             query = handler.createExecutableQuery(session, itemMgr, statement, language);
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);
@@ -174,17 +176,17 @@ public class QueryImpl extends AbstractQueryImpl {
         checkInitialized();
         try {
             NamespaceResolver resolver = session.getNamespaceResolver();
-            Path p = Path.create(absPath, resolver, true);
+            Path p = PathFormat.parse(absPath, resolver).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException(absPath + " is not an absolute path");
             }
 
-            String relPath = p.toJCRPath(resolver).substring(1);
+            String relPath = PathFormat.format(p, resolver).substring(1);
             Node queryNode = session.getRootNode().addNode(relPath,
-                    QName.NT_QUERY.toJCRName(resolver));
+                    NameFormat.format(QName.NT_QUERY, resolver));
             // set properties
-            queryNode.setProperty(QName.JCR_LANGUAGE.toJCRName(resolver), language);
-            queryNode.setProperty(QName.JCR_STATEMENT.toJCRName(resolver), statement);
+            queryNode.setProperty(NameFormat.format(QName.JCR_LANGUAGE, resolver), language);
+            queryNode.setProperty(NameFormat.format(QName.JCR_STATEMENT, resolver), statement);
             node = queryNode;
             return node;
         } catch (MalformedPathException e) {
