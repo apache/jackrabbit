@@ -31,6 +31,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -485,7 +486,9 @@ public class CompactNodeTypeDefReader {
             nextToken();
             InternalValue value = null;
             try {
-                value = InternalValue.create(ValueHelper.convert(currentToken, pdi.getRequiredType()), nsMapping);
+                value = InternalValue.create(ValueHelper.convert(
+                        currentToken, pdi.getRequiredType(),
+                        ValueFactoryImpl.getInstance()), nsMapping);
             } catch (ValueFormatException e) {
                 lexer.fail("'" + currentToken + "' is not a valid string representation of a value of type " + pdi.getRequiredType());
             } catch (RepositoryException e) {
