@@ -18,6 +18,8 @@ package org.apache.jackrabbit.webdav.observation;
 
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.header.TimeoutHeader;
+import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.Namespace;
@@ -98,11 +100,16 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
     }
 
     /**
-     * Create a new <code>SubscriptionInfo</code>
-     *
+     * Create a new <code>SubscriptionInfo</code> from the given Xml element
+     * and from additional information that is transported within the request
+     * header:
+     * <ul>
+     * <li>{@link TimeoutHeader timeout},</li>
+     * <li>{@link DepthHeader isDeep}</li>
+     * </ul>
      * @param reqInfo Xml element present in the request body.
-     * @param timeout as defined by the {@link org.apache.jackrabbit.webdav.DavConstants#HEADER_TIMEOUT timeout header}.
-     * @param isDeep as defined by the {@link org.apache.jackrabbit.webdav.DavConstants#HEADER_DEPTH depth header}.
+     * @param timeout as defined in the {@link org.apache.jackrabbit.webdav.DavConstants#HEADER_TIMEOUT timeout header}.
+     * @param isDeep as defined in the {@link org.apache.jackrabbit.webdav.DavConstants#HEADER_DEPTH depth header}.
      * @throws IllegalArgumentException if the reqInfo element does not contain the mandatory elements.
      */
     public SubscriptionInfo(Element reqInfo, long timeout, boolean isDeep) throws DavException {
@@ -110,25 +117,17 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
             log.warn("Element with name 'subscriptioninfo' expected");
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
-        List typeList = new ArrayList();
         Element el = DomUtil.getChildElement(reqInfo, XML_EVENTTYPE, NAMESPACE);
         if (el != null) {
-            ElementIterator it = DomUtil.getChildren(el);
-            while (it.hasNext()) {
-                Element typeElem = it.nextElement();
-                EventType et = new SimpleEventType(typeElem.getLocalName(), DomUtil.getNamespace(typeElem));
-                typeList.add(et);
+            eventTypes = DefaultEventType.createFromXml(el);
+            if (eventTypes.length == 0) {
+                log.warn("'subscriptioninfo' must at least indicate a single, valid event type.");
+                throw new DavException(DavServletResponse.SC_BAD_REQUEST);
             }
         } else {
             log.warn("'subscriptioninfo' must contain an 'eventtype' child element.");
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
         }
-
-        if (typeList.isEmpty()) {
-            log.warn("'subscriptioninfo' must at least indicate a single event type.");
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
-        }
-        eventTypes = (EventType[]) typeList.toArray(new EventType[typeList.size()]);
 
         List filters = new ArrayList();
         el = DomUtil.getChildElement(reqInfo, XML_FILTER, NAMESPACE);
@@ -239,33 +238,5 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
             DomUtil.addChildElement(subscrInfo, XML_NOLOCAL, NAMESPACE);
         }
         return subscrInfo;
-    }
-
-    //--------------------------------------------------------< inner class >---
-    /**
-     * Simple EventType implementation that only consists of a qualified event
-     * name.
-     */
-    private class SimpleEventType implements EventType {
-
-        private String localName;
-        private Namespace namespace;
-
-        SimpleEventType(String localName, Namespace namespace) {
-            this.localName = localName;
-            this.namespace = namespace;
-        }
-
-        public Element toXml(Document document) {
-            return DomUtil.createElement(document, localName, namespace);
-        }
-
-        public String getName() {
-            return localName;
-        }
-
-        public Namespace getNamespace() {
-            return namespace;
-        }
     }
 }

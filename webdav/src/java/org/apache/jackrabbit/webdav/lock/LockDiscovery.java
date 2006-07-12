@@ -18,6 +18,9 @@ package org.apache.jackrabbit.webdav.lock;
 
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.header.TimeoutHeader;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -104,4 +107,116 @@ public class LockDiscovery extends AbstractDavProperty {
 	return lockdiscovery;
     }
 
+    //---------------------------------------------------< factory from xml >---
+    /**
+     * Builds a new <code>LockDiscovery</code> object from the given xml element.
+     *
+     * @param lockDiscoveryElement
+     * @return
+     * @throws IllegalArgumentException if the given xml element is not a
+     * DAV:lockdiscovery element.
+     */
+    public static LockDiscovery createFromXml(Element lockDiscoveryElement) {
+        if (!DomUtil.matches(lockDiscoveryElement, PROPERTY_LOCKDISCOVERY, NAMESPACE)) {
+            throw new IllegalArgumentException("DAV:lockdiscovery element expected.");
+        }
+
+        List activeLocks = new ArrayList();
+        ElementIterator it = DomUtil.getChildren(lockDiscoveryElement, XML_ACTIVELOCK, NAMESPACE);
+        while (it.hasNext()) {
+            Element al = it.nextElement();
+            activeLocks.add(new ALockImpl(al));
+        }
+
+        return new LockDiscovery((ActiveLock[]) activeLocks.toArray(new ActiveLock[activeLocks.size()]));
+    }
+
+    //------< inner class >-----------------------------------------------------
+    /**
+     * Simple implementation of <code>ActiveLock</code> interface, that retrieves
+     * the values from the DAV:activelock XML element.<br>
+     * Note, that all set-methods as well as {@link #isExpired()} are not
+     * implemented.
+     */
+    private static class ALockImpl implements ActiveLock {
+
+        private final Element alElement;
+
+        private ALockImpl(Element alElement) {
+            if (!DomUtil.matches(alElement, XML_ACTIVELOCK, NAMESPACE)) {
+                throw new IllegalArgumentException("DAV:activelock element expected.");
+            }
+            this.alElement = alElement;
+        }
+
+        public boolean isLockedByToken(String lockToken) {
+            String lt = getToken();
+            if (lt == null) {
+                return false;
+            } else {
+                return lt.equals(lockToken);
+            }
+        }
+
+        public boolean isExpired() {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+
+        public String getToken() {
+            Element ltEl = DomUtil.getChildElement(alElement, XML_LOCKTOKEN, NAMESPACE);
+            if (ltEl != null) {
+                return DomUtil.getChildText(alElement, XML_HREF, NAMESPACE);
+            }
+            return null;
+        }
+
+        public String getOwner() {
+            String owner = null;
+            Element ow = DomUtil.getChildElement(alElement, XML_OWNER, NAMESPACE);
+            if (ow != null) {
+                if (DomUtil.hasChildElement(ow, XML_HREF, NAMESPACE)) {
+                    owner = DomUtil.getChildTextTrim(ow, XML_HREF, NAMESPACE);
+                } else {
+                    owner = DomUtil.getTextTrim(ow);
+                }
+            }
+            return owner;
+        }
+
+        public void setOwner(String owner) {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+
+        public long getTimeout() {
+            // get timeout string. if no DAV:timeout element is present,
+            // 't' will be 'null' and the undefined timeout will be returned.
+            String t = DomUtil.getChildTextTrim(alElement, XML_TIMEOUT, NAMESPACE);
+            return TimeoutHeader.parse(t, UNDEFINED_TIMEOUT);
+        }
+
+        public void setTimeout(long timeout) {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+
+        public boolean isDeep() {
+            String depth = DomUtil.getChildTextTrim(alElement, XML_DEPTH, NAMESPACE);
+            return DEPTH_INFINITY_S.equalsIgnoreCase(depth);
+        }
+
+        public void setIsDeep(boolean isDeep) {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+
+        public Type getType() {
+            return Type.createFromXml(DomUtil.getChildElement(alElement, XML_LOCKTYPE, NAMESPACE));
+        }
+
+        public Scope getScope() {
+            return Scope.createFromXml(DomUtil.getChildElement(alElement, XML_LOCKSCOPE, NAMESPACE));
+        }
+
+        public Element toXml(Document document) {
+            return (Element) document.importNode(alElement, true);
+        }
+    }
 }

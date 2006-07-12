@@ -29,6 +29,8 @@ import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -54,14 +56,16 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
     private final SubscriptionMap subscriptions = new SubscriptionMap();
 
     /**
-     * Retrieve the {@link org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery} object for the given
-     * resource. Note, that the discovery object will be empty if there are
-     * no subscriptions present.
+     * Retrieve the {@link org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery}
+     * object for the given resource. Note, that the discovery object will be empty
+     * if there are no subscriptions present.<br>
+     * Note that all subscriptions present on the given resource are returned.
+     * However, the subscription id will not be visible in order to avoid abuse
+     * by clients not having registered the subscription originally.
      *
      * @param resource
      */
     public SubscriptionDiscovery getSubscriptionDiscovery(ObservationResource resource) {
-        // todo: is it correct to return subscriptions made by another session?
         Subscription[] subsForResource = subscriptions.getByPath(resource.getLocator());
         return new SubscriptionDiscovery(subsForResource);
     }
@@ -80,20 +84,23 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                                   ObservationResource resource)
             throws DavException {
 
-        SubscriptionImpl subscription;
+        Subscription subscription;
         if (subscriptionId == null) {
             // new subscription
-            subscription = new SubscriptionImpl(info, resource);
-            registerSubscription(subscription, resource);
+            SubscriptionImpl newSubs = new SubscriptionImpl(info, resource);
+            registerSubscription(newSubs, resource);
 
             // ajust references to this subscription
-            subscriptions.put(subscription.getSubscriptionId(), subscription);
-            resource.getSession().addReference(subscription.getSubscriptionId());
+            subscriptions.put(newSubs.getSubscriptionId(), newSubs);
+            resource.getSession().addReference(newSubs.getSubscriptionId());
+            subscription = newSubs;
         } else {
             // refresh/modify existing one
-            subscription = validate(subscriptionId, resource);
-            subscription.setInfo(info);
-            registerSubscription(subscription, resource);
+            SubscriptionImpl existing = validate(subscriptionId, resource);
+            existing.setInfo(info);
+            registerSubscription(existing, resource);
+
+            subscription = new WrappedSubscription(existing);
         }
         return subscription;
     }
@@ -112,7 +119,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
             Session session = getRepositorySession(resource);
             ObservationManager oMgr = session.getWorkspace().getObservationManager();
             String itemPath = subscription.getLocator().getRepositoryPath();
-            oMgr.addEventListener(subscription, subscription.getEventTypes(),
+            oMgr.addEventListener(subscription, subscription.getJcrEventTypes(),
                     itemPath, subscription.isDeep(),
                     subscription.getUuidFilters(),
                     subscription.getNodetypeNameFilters(),
@@ -220,6 +227,31 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
         return JcrDavSession.getRepositorySession(resource.getSession());
     }
 
+    //----------------------------------------------< private inner classes >---
+    /**
+     * Private inner class wrapping around an <code>Subscription</code> as
+     * present in the internal map. This allows to hide the subscription Id
+     * from other sessions, that did create the subscription.
+     */
+    private class WrappedSubscription implements Subscription {
+
+        private final Subscription delegatee;
+
+        private WrappedSubscription(Subscription subsc) {
+            this.delegatee = subsc;
+        }
+
+        public String getSubscriptionId() {
+            // always return null, since the subscription id must not be exposed
+            // but to the client, that created the subscription.
+            return null;
+        }
+
+        public Element toXml(Document document) {
+            return delegatee.toXml(document);
+        }
+    }
+
     /**
      * Private inner class <code>SubscriptionMap</code> that allows for quick
      * access by resource path as well as by subscription id.
@@ -264,7 +296,8 @@ public class SubscriptionManagerImpl implements SubscriptionManager {
                 Subscription[] subsForResource = new Subscription[idSet.size()];
                 int i = 0;
                 while (idIterator.hasNext()) {
-                    subsForResource[i] = (Subscription) subscriptions.get(idIterator.next());
+                    SubscriptionImpl s = (SubscriptionImpl) subscriptions.get(idIterator.next());
+                    subsForResource[i] = new WrappedSubscription(s);
                 }
                 return subsForResource;
             } else {
