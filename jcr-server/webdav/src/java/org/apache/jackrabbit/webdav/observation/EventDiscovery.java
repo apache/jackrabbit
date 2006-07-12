@@ -37,7 +37,7 @@ public class EventDiscovery implements ObservationConstants, XmlSerializable {
 
     private static Logger log = LoggerFactory.getLogger(EventDiscovery.class);
 
-    private List bundles = new ArrayList();
+    private final List bundles = new ArrayList();
 
     /**
      * Add the Xml representation of an single 'eventBundle' listing the
@@ -54,6 +54,27 @@ public class EventDiscovery implements ObservationConstants, XmlSerializable {
     }
 
     /**
+     * Returns an iterator over the {@link EventBundle event bundles} currently
+     * present on this discovery.
+     *
+     * @return iterator over event bundles present.
+     */
+    public Iterator getEventBundles() {
+        return bundles.iterator();
+    }
+
+    /**
+     * Returns true, if this event discovery does not report any events (thus
+     * {@link #getEventBundles()} would return an empty iterator.
+     *
+     * @return true if {@link #getEventBundles()} would return an empty iterator,
+     * false otherwise.
+     */
+    public boolean isEmpty() {
+        return bundles.isEmpty();
+    }
+
+    /**
      * Returns the Xml representation of this <code>EventDiscovery</code> as
      * being present in the POLL response body.
      *
@@ -63,12 +84,11 @@ public class EventDiscovery implements ObservationConstants, XmlSerializable {
      */
     public Element toXml(Document document) {
         Element ed = DomUtil.createElement(document, XML_EVENTDISCOVERY, NAMESPACE);
-        Iterator it = bundles.iterator();
+        Iterator it = getEventBundles();
         while (it.hasNext()) {
             EventBundle bundle = (EventBundle)it.next();
             ed.appendChild(bundle.toXml(document));
         }
         return ed;
     }
-
 }

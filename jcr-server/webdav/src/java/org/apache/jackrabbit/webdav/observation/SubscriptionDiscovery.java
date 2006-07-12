@@ -17,8 +17,15 @@
 package org.apache.jackrabbit.webdav.observation;
 
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.jackrabbit.webdav.DavConstants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>SubscriptionDiscovery</code> encapsulates the 'subscriptiondiscovery'
@@ -79,4 +86,38 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
         return elem;
     }
 
+    //-----------------------------------------------------< static Factory >---
+    public static SubscriptionDiscovery createFromXml(Element sDiscoveryElement) {
+        if (!DomUtil.matches(sDiscoveryElement, ObservationConstants.SUBSCRIPTIONDISCOVERY.getName(), ObservationConstants.SUBSCRIPTIONDISCOVERY.getNamespace())) {
+            throw new IllegalArgumentException("'subscriptiondiscovery' element expected.");
+        }
+
+        List subscriptions = new ArrayList();
+        ElementIterator it = DomUtil.getChildren(sDiscoveryElement, ObservationConstants.XML_SUBSCRIPTION, ObservationConstants.NAMESPACE);
+        while (it.hasNext()) {
+            final Element sb = it.nextElement();
+            // anonymous inner class: Subscription interface
+            Subscription s = new Subscription() {
+                /**
+                 * @see Subscription#getSubscriptionId()
+                 */
+                public String getSubscriptionId() {
+                    Element ltEl = DomUtil.getChildElement(sb, ObservationConstants.XML_SUBSCRIPTIONID, ObservationConstants.NAMESPACE);
+                    if (ltEl != null) {
+                        return DomUtil.getChildText(sb, DavConstants.XML_HREF, DavConstants.NAMESPACE);
+                    }
+                    return null;
+                }
+                /**
+                 * @see XmlSerializable#toXml(Document)
+                 */
+                public Element toXml(Document document) {
+                    return (Element) document.importNode(sb, true);
+                }
+            };
+            subscriptions.add(s);
+        }
+
+        return new SubscriptionDiscovery((Subscription[]) subscriptions.toArray(new Subscription[subscriptions.size()]));
+    }
 }

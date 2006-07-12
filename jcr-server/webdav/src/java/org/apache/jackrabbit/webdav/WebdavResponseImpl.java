@@ -21,9 +21,12 @@ import org.apache.jackrabbit.webdav.lock.LockDiscovery;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
+import org.apache.jackrabbit.webdav.header.Header;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.slf4j.Logger;
@@ -111,8 +114,10 @@ public class WebdavResponseImpl implements WebdavResponse {
      * @see DavServletResponse#sendLockResponse(org.apache.jackrabbit.webdav.lock.ActiveLock)
      */
     public void sendLockResponse(ActiveLock lock) throws IOException {
-        httpResponse.setHeader(DavConstants.HEADER_LOCK_TOKEN, "<" + lock.getToken() + ">");
-	DavPropertySet propSet = new DavPropertySet();
+        CodedUrlHeader ltHeader = new CodedUrlHeader(DavConstants.HEADER_LOCK_TOKEN, lock.getToken());
+        httpResponse.setHeader(ltHeader.getHeaderName(), ltHeader.getHeaderValue());
+
+        DavPropertySet propSet = new DavPropertySet();
         propSet.add(new LockDiscovery(lock));
         sendXmlResponse(propSet, SC_OK);
     }
@@ -172,7 +177,12 @@ public class WebdavResponseImpl implements WebdavResponse {
      * @see org.apache.jackrabbit.webdav.observation.ObservationDavServletResponse#sendSubscriptionResponse(org.apache.jackrabbit.webdav.observation.Subscription)
      */
     public void sendSubscriptionResponse(Subscription subscription) throws IOException {
-	DavPropertySet propSet = new DavPropertySet();
+        String id = subscription.getSubscriptionId();
+        if (id != null) {
+            Header h = new CodedUrlHeader(ObservationConstants.HEADER_SUBSCRIPTIONID, id);
+            httpResponse.setHeader(h.getHeaderName(), h.getHeaderValue());
+        }
+        DavPropertySet propSet = new DavPropertySet();
         propSet.add(new SubscriptionDiscovery(subscription));
         sendXmlResponse(propSet, SC_OK);
     }
