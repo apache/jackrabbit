@@ -160,18 +160,6 @@ public final class Path {
 
     //------------------------------------------------------< factory methods >
     /**
-     * @param elements
-     * @return the new <code>Path</code>
-     */
-    public static Path create(PathElement[] elements) {
-        // Path constructor uses elements array as is
-        // need to copy here because Path.create() is public
-        PathElement[] tmp = new PathElement[elements.length];
-        System.arraycopy(elements, 0, tmp, 0, elements.length);
-        return new Path(tmp, true);
-    }
-
-    /**
      * Creates a new <code>Path</code> from the given <code>jcrPath</code>
      * string. If <code>normalize</code> is <code>true</code>, the returned
      * path will be normalized (or canonicalized if absolute).
