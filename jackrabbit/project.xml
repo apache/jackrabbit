@@ -396,6 +396,14 @@ indexing, etc.
             </roles>
             <timezone>+1</timezone>
         </contributor>
+        <contributor>
+            <name>Paul Bloch</name>
+            <email>openartist@gmail.com</email>
+            <roles>
+                <role>Graphics Designer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
     </contributors>
 
     <!-- ====================================================================== -->
