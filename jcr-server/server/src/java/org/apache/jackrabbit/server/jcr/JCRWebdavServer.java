@@ -218,8 +218,9 @@ public class JCRWebdavServer implements DavSessionProvider {
                     sessionMap.remove(session);
                     try {
                         Session repSession = DavSessionImpl.getRepositorySession(session);
+                        String usr = getUserID(session) ;
                         sessionProvider.releaseSession(repSession);
-                        log.info("Login: User '" + getUserID(session) + "' logged out");
+                        log.info("Login: User '" + usr + "' logged out");
                     } catch (DavException e) {
                         // should not occure, since we original built a DavSessionImpl
                         // that wraps a repository session.
