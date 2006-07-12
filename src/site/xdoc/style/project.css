@@ -11,7 +11,7 @@ ul,ol,dd,dt
 dd
     {
     padding: 0px;
-    margin-left: 16px;
+    margin-left: 0px;
     }
 
 h1,h2,h3,h4,h5,h6,pre,code
@@ -111,10 +111,6 @@ img
     border:none;
     }
 
-a
-    {
-    text-decoration: none;
-    }
 
 a:link
     {
@@ -391,11 +387,22 @@ subsection
     padding: 0px;
     }
 
+
 #bodyColumn code
     {
-    color: #4A4A33;
-    background: #EBEBEB;
-    border: 1px solid #EBEBEB;
+    color: #000000;
+    background: #E0E0E0;
+    border: 1px solid #E0E0E0;
     border-left: 4px;
     border-right: 4px;
+    }
+
+#bodyColumn a
+    {
+    text-decoration: underline;
+    }
+
+#bodyColumn a:hover
+    {
+    text-decoration: none;
     }
