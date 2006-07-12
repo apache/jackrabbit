@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.BooleanValue;
 import org.apache.jackrabbit.value.DateValue;
@@ -190,7 +191,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             case PropertyType.PATH:
                 Path path = (Path) value.internalValue();
                 try {
-                    return path.toJCRPath(session.getNamespaceResolver()).length();
+                    return PathFormat.format(path, session.getNamespaceResolver()).length();
                 } catch (NoPrefixDeclaredException npde) {
                     // should never happen...
                     String msg = safeGetJCRPath()

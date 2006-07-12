@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,7 +116,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
             return ANY_NAME;
         } else {
             try {
-                return itemDef.getName().toJCRName(nsResolver);
+                return NameFormat.format(itemDef.getName(), nsResolver);
             } catch (NoPrefixDeclaredException npde) {
                 // should never get here
                 log.error("encountered unregistered namespace in property name",

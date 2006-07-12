@@ -26,6 +26,7 @@ import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.commons.collections.map.LRUMap;
 
 import javax.jcr.NamespaceException;
@@ -89,7 +90,7 @@ class CachingNamespaceResolver
             throws IllegalNameException, UnknownPrefixException {
         QName qName = (QName) jcrNameToQName.get(name);
         if (qName == null) {
-            qName = QName.fromJCRName(name, this);
+            qName = NameFormat.parse(name, this);
             jcrNameToQName.put(name, qName);
         }
         return qName;
@@ -102,7 +103,7 @@ class CachingNamespaceResolver
             throws NoPrefixDeclaredException {
         String jcrName = (String) qnameToJCRName.get(name);
         if (jcrName == null) {
-            jcrName = name.toJCRName(this);
+            jcrName = NameFormat.format(name, this);
             qnameToJCRName.put(name, jcrName);
         }
         return jcrName;

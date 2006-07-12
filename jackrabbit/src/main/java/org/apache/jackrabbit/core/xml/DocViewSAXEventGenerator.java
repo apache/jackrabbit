@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.xml;
 
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
 
     private QName getQName(String rawName) throws RepositoryException {
         try {
-            return QName.fromJCRName(rawName, nsResolver);
+            return NameFormat.parse(rawName, nsResolver);
         } catch (NameException e) {
             // should never get here...
             String msg = "internal error: failed to resolve namespace mappings";

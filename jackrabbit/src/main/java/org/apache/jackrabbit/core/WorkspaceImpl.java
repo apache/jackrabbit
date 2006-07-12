@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -253,7 +254,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path srcPath;
         try {
-            srcPath = Path.create(srcAbsPath, session.getNamespaceResolver(), true);
+            srcPath = PathFormat.parse(srcAbsPath, session.getNamespaceResolver()).getNormalizedPath();
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + srcAbsPath;
             log.debug(msg);
@@ -265,7 +266,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path destPath;
         try {
-            destPath = Path.create(destAbsPath, session.getNamespaceResolver(), true);
+            destPath = PathFormat.parse(destAbsPath, session.getNamespaceResolver()).getNormalizedPath();
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
@@ -480,7 +481,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path srcPath;
         try {
-            srcPath = Path.create(srcAbsPath, session.getNamespaceResolver(), true);
+            srcPath = PathFormat.parse(srcAbsPath, session.getNamespaceResolver()).getNormalizedPath();
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + srcAbsPath;
             log.debug(msg);
@@ -492,7 +493,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path destPath;
         try {
-            destPath = Path.create(destAbsPath, session.getNamespaceResolver(), true);
+            destPath = PathFormat.parse(destAbsPath, session.getNamespaceResolver()).getNormalizedPath();
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + destAbsPath;
             log.debug(msg);
@@ -692,7 +693,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
 
         Path parentPath;
         try {
-            parentPath = Path.create(parentAbsPath, session.getNamespaceResolver(), true);
+            parentPath = PathFormat.parse(parentAbsPath, session.getNamespaceResolver()).getNormalizedPath();
         } catch (MalformedPathException mpe) {
             String msg = "invalid path: " + parentAbsPath;
             log.debug(msg);

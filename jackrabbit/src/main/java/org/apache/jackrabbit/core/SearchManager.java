@@ -34,11 +34,11 @@ import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
@@ -364,7 +364,7 @@ public class SearchManager implements SynchronousEventListener {
         String exclude = "";
         if (excludePath != null) {
             try {
-                exclude = excludePath.toJCRPath(nsResolver);
+                exclude = PathFormat.format(excludePath, nsResolver);
             } catch (NoPrefixDeclaredException e) {
                 log.error("Error filtering events.", e);
             }

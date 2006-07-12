@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.UnknownPrefixException;
+
+import javax.jcr.NamespaceException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import javax.jcr.NamespaceException;
-
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.PathFormat;
 
 /**
  * Hierarchically scoped namespace resolver. Each NamespaceContext instance
@@ -128,7 +128,7 @@ class NamespaceContext implements NamespaceResolver {
 
     /** {@inheritDoc} */
     public String getJCRName(QName name) throws NoPrefixDeclaredException {
-        return name.toJCRName(this);
+        return NameFormat.format(name, this);
     }
 
     public Path getQPath(String jcrPath) throws MalformedPathException {
@@ -142,7 +142,7 @@ class NamespaceContext implements NamespaceResolver {
     /** {@inheritDoc} */
     public QName getQName(String name)
             throws IllegalNameException, UnknownPrefixException {
-        return QName.fromJCRName(name, this);
+        return NameFormat.parse(name, this);
     }
 
 }

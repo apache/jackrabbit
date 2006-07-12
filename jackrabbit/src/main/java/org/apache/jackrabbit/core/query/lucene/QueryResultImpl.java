@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,7 +102,7 @@ public class QueryResultImpl implements QueryResult {
         try {
             String[] propNames = new String[selectProps.length];
             for (int i = 0; i < selectProps.length; i++) {
-                propNames[i] = selectProps[i].toJCRName(resolver);
+                propNames[i] = NameFormat.format(selectProps[i], resolver);
             }
             return propNames;
         } catch (NoPrefixDeclaredException npde) {

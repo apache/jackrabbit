@@ -29,6 +29,7 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.name.NamespaceMapping;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
@@ -635,7 +636,7 @@ public class CompactNodeTypeDefReader {
      */
     private QName toQName(String stringName) throws ParseException {
         try {
-            return QName.fromJCRName(stringName, nsMapping);
+            return NameFormat.parse(stringName, nsMapping);
         } catch (IllegalNameException e) {
             lexer.fail("Error while parsing '" + stringName + "'", e);
             return null;

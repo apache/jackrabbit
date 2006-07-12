@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +91,7 @@ public final class EventImpl implements Event {
             } else {
                 p = Path.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), false);
             }
-            return p.toJCRPath(session.getNamespaceResolver());
+            return PathFormat.format(p, session.getNamespaceResolver());
         } catch (MalformedPathException e) {
             String msg = "internal error: malformed path for event";
             log.debug(msg);

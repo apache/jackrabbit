@@ -246,19 +246,19 @@ class BufferedStringValue implements TextValue {
             } else if (targetType == PropertyType.BINARY) {
                 if (length() < 0x10000) {
                     // < 65kb: deserialize BINARY type using String
-                    return ValueHelper.deserialize(retrieve(), targetType, false);
+                    return ValueHelper.deserialize(retrieve(), targetType, false, ValueFactoryImpl.getInstance());
                 } else {
                     // >= 65kb: deserialize BINARY type using Reader
                     Reader reader = reader();
                     try {
-                        return ValueHelper.deserialize(reader, targetType, false);
+                        return ValueHelper.deserialize(reader, targetType, false, ValueFactoryImpl.getInstance());
                     } finally {
                         reader.close();
                     }
                 }
             } else {
                 // all other types
-                return ValueHelper.deserialize(retrieve(), targetType, true);
+                return ValueHelper.deserialize(retrieve(), targetType, true, ValueFactoryImpl.getInstance());
             }
         } catch (IOException e) {
             String msg = "failed to retrieve serialized value";

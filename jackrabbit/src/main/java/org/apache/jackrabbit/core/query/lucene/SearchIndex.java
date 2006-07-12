@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
@@ -435,7 +436,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 sortFields.add(new SortField(null, SortField.SCORE, orderSpecs[i]));
             } else {
                 try {
-                    prop = orderProps[i].toJCRName(getNamespaceMappings());
+                    prop = NameFormat.format(orderProps[i], getNamespaceMappings());
                 } catch (NoPrefixDeclaredException e) {
                     // will never happen
                 }

@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.value.LongValue;
 import org.apache.jackrabbit.value.PathValue;
 import org.apache.jackrabbit.value.StringValue;
@@ -251,7 +252,7 @@ class RowIteratorImpl implements RowIterator {
                 propertySet = tmp;
             }
             try {
-                QName prop = QName.fromJCRName(propertyName, resolver);
+                QName prop = NameFormat.parse(propertyName, resolver);
                 if (!propertySet.contains(prop)) {
                     throw new ItemNotFoundException(propertyName);
                 }

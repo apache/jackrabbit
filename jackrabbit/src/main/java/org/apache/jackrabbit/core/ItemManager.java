@@ -28,15 +28,16 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.core.version.AbstractVersion;
+import org.apache.jackrabbit.core.version.AbstractVersionHistory;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.core.version.AbstractVersion;
-import org.apache.jackrabbit.core.version.AbstractVersionHistory;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -612,7 +613,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
      */
     String safeGetJCRPath(Path path) {
         try {
-            return path.toJCRPath(session.getNamespaceResolver());
+            return PathFormat.format(path, session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             log.error("failed to convert " + path.toString() + " to JCR path.");
             // return string representation of internal path as a fallback

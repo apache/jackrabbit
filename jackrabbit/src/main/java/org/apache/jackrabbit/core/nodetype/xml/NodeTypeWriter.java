@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -116,7 +117,7 @@ public final class NodeTypeWriter {
 
         // simple attributes
         builder.setAttribute(
-                Constants.NAME_ATTRIBUTE, def.getName().toJCRName(resolver));
+                Constants.NAME_ATTRIBUTE, NameFormat.format(def.getName(), resolver));
         builder.setAttribute(
                 Constants.ISMIXIN_ATTRIBUTE, def.isMixin());
         builder.setAttribute(
@@ -128,7 +129,7 @@ public final class NodeTypeWriter {
         if (item != null) {
             builder.setAttribute(
                     Constants.PRIMARYITEMNAME_ATTRIBUTE,
-                    item.toJCRName(resolver));
+                    NameFormat.format(item, resolver));
         } else {
             builder.setAttribute(Constants.PRIMARYITEMNAME_ATTRIBUTE, "");
         }
@@ -140,7 +141,7 @@ public final class NodeTypeWriter {
             for (int i = 0; i < supertypes.length; i++) {
                 builder.addContentElement(
                         Constants.SUPERTYPE_ELEMENT,
-                        supertypes[i].toJCRName(resolver));
+                        NameFormat.format(supertypes[i], resolver));
             }
             builder.endElement();
         }
@@ -175,7 +176,7 @@ public final class NodeTypeWriter {
 
         // simple attributes
         builder.setAttribute(
-                Constants.NAME_ATTRIBUTE, def.getName().toJCRName(resolver));
+                Constants.NAME_ATTRIBUTE, NameFormat.format(def.getName(), resolver));
         builder.setAttribute(
                 Constants.AUTOCREATED_ATTRIBUTE, def.isAutoCreated());
         builder.setAttribute(
@@ -231,7 +232,7 @@ public final class NodeTypeWriter {
 
         // simple attributes
         builder.setAttribute(
-                Constants.NAME_ATTRIBUTE, def.getName().toJCRName(resolver));
+                Constants.NAME_ATTRIBUTE, NameFormat.format(def.getName(), resolver));
         builder.setAttribute(
                 Constants.AUTOCREATED_ATTRIBUTE, def.isAutoCreated());
         builder.setAttribute(
@@ -249,7 +250,7 @@ public final class NodeTypeWriter {
         if (type != null) {
             builder.setAttribute(
                     Constants.DEFAULTPRIMARYTYPE_ATTRIBUTE,
-                    type.toJCRName(resolver));
+                    NameFormat.format(type, resolver));
         } else {
             builder.setAttribute(Constants.DEFAULTPRIMARYTYPE_ATTRIBUTE, "");
         }
@@ -260,7 +261,7 @@ public final class NodeTypeWriter {
         for (int i = 0; i < requiredTypes.length; i++) {
             builder.addContentElement(
                     Constants.REQUIREDPRIMARYTYPE_ELEMENT,
-                    requiredTypes[i].toJCRName(resolver));
+                    NameFormat.format(requiredTypes[i], resolver));
         }
         builder.endElement();
 
