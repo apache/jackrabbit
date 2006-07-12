@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.util.Base64;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.util.Base64;
-import org.apache.jackrabbit.value.ValueHelper;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * <code>StringValue</code> represents an immutable serialized value.
@@ -61,15 +61,16 @@ class StringValue implements TextValue {
             // convert serialized value to InternalValue using
             // current namespace context of xml document
             InternalValue ival =
-                    InternalValue.create(ValueHelper.convert(value, type), nsContext);
+                    InternalValue.create(ValueHelper.convert(
+                            value, type, ValueFactoryImpl.getInstance()), nsContext);
             // convert InternalValue to Value using this
             // session's namespace mappings
             return ival.toJCRValue(resolver);
         } else if (type == PropertyType.BINARY) {
-            return ValueHelper.deserialize(value, type, false);
+            return ValueHelper.deserialize(value, type, false, ValueFactoryImpl.getInstance());
         } else {
             // all other types
-            return ValueHelper.deserialize(value, type, true);
+            return ValueHelper.deserialize(value, type, true, ValueFactoryImpl.getInstance());
         }
     }
 
@@ -85,7 +86,8 @@ class StringValue implements TextValue {
             } else {
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
-                return InternalValue.create(ValueHelper.convert(value, targetType), nsContext);
+                return InternalValue.create(ValueHelper.convert(
+                        value, targetType, ValueFactoryImpl.getInstance()), nsContext);
             }
         } catch (IOException e) {
             throw new RepositoryException("Error decoding Base64 content", e);

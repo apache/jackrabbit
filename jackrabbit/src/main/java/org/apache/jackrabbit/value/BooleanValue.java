@@ -48,7 +48,7 @@ public class BooleanValue extends BaseValue {
      */
     public BooleanValue(boolean bool) {
         super(TYPE);
-        this.bool = new Boolean(bool);
+        this.bool = Boolean.valueOf(bool);
     }
 
     /**

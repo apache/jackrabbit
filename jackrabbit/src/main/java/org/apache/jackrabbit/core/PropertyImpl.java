@@ -30,6 +30,7 @@ import org.apache.jackrabbit.value.DateValue;
 import org.apache.jackrabbit.value.DoubleValue;
 import org.apache.jackrabbit.value.LongValue;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -350,7 +351,8 @@ public class PropertyImpl extends ItemImpl implements Property {
             // type conversion required
             Value targetValue = ValueHelper.convert(
                     InternalValue.create(name).toJCRValue(session.getNamespaceResolver()),
-                    reqType);
+                    reqType,
+                    ValueFactoryImpl.getInstance());
             internalValue = InternalValue.create(targetValue, session.getNamespaceResolver());
         } else {
             // no type conversion required
@@ -400,7 +402,8 @@ public class PropertyImpl extends ItemImpl implements Property {
                         // type conversion required
                         Value targetValue = ValueHelper.convert(
                                 InternalValue.create(name).toJCRValue(session.getNamespaceResolver()),
-                                reqType);
+                                reqType,
+                                ValueFactoryImpl.getInstance());
                         internalValue = InternalValue.create(targetValue, session.getNamespaceResolver());
                     } else {
                         // no type conversion required
@@ -689,7 +692,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue value;
         if (reqType != PropertyType.DATE) {
             // type conversion required
-            Value targetVal = ValueHelper.convert(new DateValue(date), reqType);
+            Value targetVal = ValueHelper.convert(
+                    new DateValue(date), reqType,
+                    ValueFactoryImpl.getInstance());
             value = InternalValue.create(targetVal, session.getNamespaceResolver());
         } else {
             // no type conversion required
@@ -721,7 +726,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue value;
         if (reqType != PropertyType.DOUBLE) {
             // type conversion required
-            Value targetVal = ValueHelper.convert(new DoubleValue(number), reqType);
+            Value targetVal = ValueHelper.convert(
+                    new DoubleValue(number), reqType,
+                    ValueFactoryImpl.getInstance());
             value = InternalValue.create(targetVal, session.getNamespaceResolver());
         } else {
             // no type conversion required
@@ -759,7 +766,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         try {
             if (reqType != PropertyType.BINARY) {
                 // type conversion required
-                Value targetVal = ValueHelper.convert(new BLOBFileValue(stream), reqType);
+                Value targetVal = ValueHelper.convert(
+                        new BLOBFileValue(stream), reqType,
+                        ValueFactoryImpl.getInstance());
                 value = InternalValue.create(targetVal, session.getNamespaceResolver());
             } else {
                 // no type conversion required
@@ -801,7 +810,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue internalValue;
         if (reqType != PropertyType.STRING) {
             // type conversion required
-            Value targetValue = ValueHelper.convert(string, reqType);
+            Value targetValue = ValueHelper.convert(
+                    string, reqType,
+                    ValueFactoryImpl.getInstance());
             internalValue = InternalValue.create(targetValue, session.getNamespaceResolver());
         } else {
             // no type conversion required
@@ -839,7 +850,9 @@ public class PropertyImpl extends ItemImpl implements Property {
                 if (string != null) {
                     if (reqType != PropertyType.STRING) {
                         // type conversion required
-                        Value targetValue = ValueHelper.convert(string, reqType);
+                        Value targetValue = ValueHelper.convert(
+                                string, reqType,
+                                ValueFactoryImpl.getInstance());
                         internalValue = InternalValue.create(targetValue, session.getNamespaceResolver());
                     } else {
                         // no type conversion required
@@ -875,7 +888,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue value;
         if (reqType != PropertyType.BOOLEAN) {
             // type conversion required
-            Value targetVal = ValueHelper.convert(new BooleanValue(b), reqType);
+            Value targetVal = ValueHelper.convert(
+                    new BooleanValue(b), reqType,
+                    ValueFactoryImpl.getInstance());
             value = InternalValue.create(targetVal, session.getNamespaceResolver());
         } else {
             // no type conversion required
@@ -949,7 +964,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue value;
         if (reqType != PropertyType.LONG) {
             // type conversion required
-            Value targetVal = ValueHelper.convert(new LongValue(number), reqType);
+            Value targetVal = ValueHelper.convert(
+                    new LongValue(number), reqType,
+                    ValueFactoryImpl.getInstance());
             value = InternalValue.create(targetVal, session.getNamespaceResolver());
         } else {
             // no type conversion required
@@ -990,7 +1007,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue internalValue;
         if (reqType != value.getType()) {
             // type conversion required
-            Value targetVal = ValueHelper.convert(value, reqType);
+            Value targetVal = ValueHelper.convert(
+                    value, reqType,
+                    ValueFactoryImpl.getInstance());
             internalValue = InternalValue.create(targetVal, session.getNamespaceResolver());
         } else {
             // no type conversion required
@@ -1048,7 +1067,9 @@ public class PropertyImpl extends ItemImpl implements Property {
                     }
                     if (reqType != value.getType()) {
                         // type conversion required
-                        Value targetVal = ValueHelper.convert(value, reqType);
+                        Value targetVal = ValueHelper.convert(
+                                value, reqType,
+                                ValueFactoryImpl.getInstance());
                         internalValue = InternalValue.create(targetVal, session.getNamespaceResolver());
                     } else {
                         // no type conversion required
