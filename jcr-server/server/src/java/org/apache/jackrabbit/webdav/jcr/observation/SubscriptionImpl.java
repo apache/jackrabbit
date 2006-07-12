@@ -28,6 +28,7 @@ import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
 import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
+import org.apache.jackrabbit.webdav.observation.DefaultEventType;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +105,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
         locator = resource.getLocator();
     }
 
+    //-------------------------------------------------------< Subscription >---
     /**
      * Returns the id of this subscription.
      *
@@ -113,6 +115,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
         return subscriptionId;
     }
 
+    //----------------------------------------------------< XmlSerializable >---
     /**
      * Return the Xml representation of this <code>Subscription</code> as required
      * for the {@link org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery}
@@ -130,8 +133,10 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
         subscr.appendChild(DomUtil.depthToXml(info.isDeep(), document));
         subscr.appendChild(DomUtil.timeoutToXml(info.getTimeOut(), document));
 
-        Element id = DomUtil.addChildElement(subscr, XML_SUBSCRIPTIONID, NAMESPACE);
-        id.appendChild(DomUtil.hrefToXml(subscriptionId, document));
+        if (getSubscriptionId() != null) {
+            Element id = DomUtil.addChildElement(subscr, XML_SUBSCRIPTIONID, NAMESPACE);
+            id.appendChild(DomUtil.hrefToXml(getSubscriptionId(), document));
+        }
         return subscr;
     }
 
@@ -155,11 +160,11 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * @return JCR compliant integer representation of the event types defined
      * for this {@link SubscriptionInfo}.
      */
-    int getEventTypes() throws DavException {
+    int getJcrEventTypes() throws DavException {
         EventType[] eventTypes = info.getEventTypes();
         int events = 0;
         for (int i = 0; i < eventTypes.length; i++) {
-            events |= getEventType(eventTypes[i].getName());
+            events |= getJcrEventType(eventTypes[i]);
         }
         return events;
     }
@@ -223,7 +228,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * resource.
      */
     boolean isSubscribedToResource(ObservationResource resource) {
-        return locator.equals(resource.getLocator());
+        return locator.getResourcePath().equals(resource.getResourcePath());
     }
 
     /**
@@ -274,47 +279,71 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
 
     //--------------------------------------------------------------------------
     /**
-     * Static utility method in order to convert the types defined by
-     * {@link javax.jcr.observation.Event} into their Xml representation.
+     * Static utility method to convert the type defined by a
+     * {@link javax.jcr.observation.Event JCR event} into an <code>EventType</code>
+     * object.
      *
-     * @param eventType The jcr event type
-     * @return Xml representation of the event type.
+     * @param jcrEventType
+     * @return <code>EventType</code> representation of the given JCR event type.
+     * @throws IllegalArgumentException if the given int does not represent a
+     * valid type constants as defined by {@link Event}.<br>
+     * Valid values are
+     * <ul>
+     * <li>{@link Event#NODE_ADDED}</li>
+     * <li>{@link Event#NODE_REMOVED}</li>
+     * <li>{@link Event#PROPERTY_ADDED}</li>
+     * <li>{@link Event#PROPERTY_REMOVED}</li>
+     * <li>{@link Event#PROPERTY_CHANGED}</li>
+     * </ul>
      */
-    private static String getEventName(int eventType) {
-        String eventName;
-        switch (eventType) {
+    public static EventType getEventType(int jcrEventType) {
+        String localName;
+        switch (jcrEventType) {
             case Event.NODE_ADDED:
-                eventName = EVENT_NODEADDED;
+                localName = EVENT_NODEADDED;
                 break;
             case Event.NODE_REMOVED:
-                eventName = EVENT_NODEREMOVED;
+                localName = EVENT_NODEREMOVED;
                 break;
             case Event.PROPERTY_ADDED:
-                eventName = EVENT_PROPERTYADDED;
+                localName = EVENT_PROPERTYADDED;
                 break;
             case Event.PROPERTY_CHANGED:
-                eventName = EVENT_PROPERTYCHANGED;
+                localName = EVENT_PROPERTYCHANGED;
                 break;
-            default:
-                //Event.PROPERTY_REMOVED:
-                eventName = EVENT_PROPERTYREMOVED;
+            case Event.PROPERTY_REMOVED:
+                localName = EVENT_PROPERTYREMOVED;
                 break;
+            default: // no default
+                throw new IllegalArgumentException("Invalid JCR event type: " + jcrEventType);
         }
-        return eventName;
+        return DefaultEventType.create(localName, NAMESPACE);
     }
 
     /**
-     * Static utility method to convert an event type name as present in the
-     * Xml request body into the corresponding constant defined by
+     * Static utility method to convert an <code>EventType</code> as present in
+     * the Xml body into the corresponding JCR event constant defined by
      * {@link javax.jcr.observation.Event}.
      *
-     * @param eventName
-     * @return event type as defined by {@link javax.jcr.observation.Event}.
-     * @throws DavException if the given element cannot be translated
-     * to any of the events defined by {@link javax.jcr.observation.Event}.
+     * @param eventType
+     * @return Any of the event types defined by {@link Event}.<br>
+     * Possible values are
+     * <ul>
+     * <li>{@link Event#NODE_ADDED}</li>
+     * <li>{@link Event#NODE_REMOVED}</li>
+     * <li>{@link Event#PROPERTY_ADDED}</li>
+     * <li>{@link Event#PROPERTY_REMOVED}</li>
+     * <li>{@link Event#PROPERTY_CHANGED}</li>
+     * </ul>
+     * @throws DavException if the given event type does not define a valid
+     * JCR event type, such as returned by {@link #getEventType(int)}.
      */
-    private static int getEventType(String eventName) throws DavException {
+    public static int getJcrEventType(EventType eventType) throws DavException {
+        if (eventType == null || !NAMESPACE.equals(eventType.getNamespace())) {
+            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Invalid JCR event type: "+ eventType + ": Namespace mismatch.");
+        }
         int eType;
+        String eventName = eventType.getName();
         if (EVENT_NODEADDED.equals(eventName)) {
             eType = Event.NODE_ADDED;
         } else if (EVENT_NODEREMOVED.equals(eventName)) {
@@ -364,12 +393,11 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 eventElem.appendChild(DomUtil.hrefToXml(eHref, document));
                 // eventtype
                 Element eType = DomUtil.addChildElement(eventElem, XML_EVENTTYPE, NAMESPACE);
-                DomUtil.addChildElement(eType, getEventName(event.getType()), NAMESPACE);
+                eType.appendChild(getEventType(event.getType()).toXml(document));
                 // user id
                 DomUtil.addChildElement(eventElem, XML_EVENTUSERID, NAMESPACE, event.getUserID());
             }
             return bundle;
         }
-
     }
 }

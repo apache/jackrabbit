@@ -65,8 +65,8 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
     public static final int UPDATE_BY_WORKSPACE = 2;
 
     private Element updateElement;
-    private DavPropertyNameSet propertyNameSet = new DavPropertyNameSet();
 
+    private DavPropertyNameSet propertyNameSet = new DavPropertyNameSet();
     private String[] source;
     private int type;
 
@@ -192,24 +192,45 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
         if (updateElement != null) {
             elem = (Element)document.importNode(updateElement, true);
         } else {
-            elem = DomUtil.createElement(document, XML_UPDATE, NAMESPACE);
-            switch (type) {
-                case UPDATE_BY_VERSION:
-                    Element vE = DomUtil.addChildElement(elem, XML_VERSION, NAMESPACE);
-                    for (int i = 0; i < source.length; i++) {
-                        vE.appendChild(DomUtil.hrefToXml(source[i], document));
-                    }
-                    break;
-                case UPDATE_BY_LABEL:
-                    DomUtil.addChildElement(elem, XML_LABEL_NAME, NAMESPACE, source[0]);
-                    break;
-                case UPDATE_BY_WORKSPACE:
-                    DomUtil.addChildElement(elem, XML_WORKSPACE, NAMESPACE, source[0]);
-                // no default.
-            }
+            elem = createUpdateElement(source, type, document);
         }
         if (!propertyNameSet.isEmpty()) {
             elem.appendChild(propertyNameSet.toXml(document));
+        }
+        return elem;
+    }
+
+    /**
+     * Factory method to create the basic structure of an <code>UpdateInfo</code>
+     * object.
+     *
+     * @param updateSource
+     * @param updateType
+     * @param factory
+     * @return
+     */
+    public static Element createUpdateElement(String[] updateSource, int updateType, Document factory) {
+        if (updateSource == null || updateSource.length == 0) {
+            throw new IllegalArgumentException("Update source must specific at least a single resource used to run the update.");
+        }
+
+        Element elem = DomUtil.createElement(factory, XML_UPDATE, NAMESPACE);
+        switch (updateType) {
+            case UPDATE_BY_VERSION:
+                Element vE = DomUtil.addChildElement(elem, XML_VERSION, NAMESPACE);
+                for (int i = 0; i < updateSource.length; i++) {
+                    vE.appendChild(DomUtil.hrefToXml(updateSource[i], factory));
+                }
+                break;
+            case UPDATE_BY_LABEL:
+                DomUtil.addChildElement(elem, XML_LABEL_NAME, NAMESPACE, updateSource[0]);
+                break;
+            case UPDATE_BY_WORKSPACE:
+                DomUtil.addChildElement(elem, XML_WORKSPACE, NAMESPACE, updateSource[0]);
+                break;
+            // no default.
+            default:
+                throw new IllegalArgumentException("Invalid update type: " + updateType);
         }
         return elem;
     }

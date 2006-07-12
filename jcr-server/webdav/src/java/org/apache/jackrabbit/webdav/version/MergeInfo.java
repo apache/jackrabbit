@@ -154,4 +154,29 @@ public class MergeInfo implements DeltaVConstants, XmlSerializable {
         return elem;
     }
 
+
+    /**
+     * Factory method to create a minimal DAV:merge element to create a new
+     * <code>MergeInfo</code> object.
+     *
+     * @param mergeSource
+     * @param isNoAutoMerge
+     * @param isNoCheckout
+     * @param factory
+     * @return
+     */
+    public static Element createMergeElement(String[] mergeSource, boolean isNoAutoMerge, boolean isNoCheckout, Document factory) {
+        Element mergeElem = DomUtil.createElement(factory, XML_MERGE, NAMESPACE);
+        Element source = DomUtil.addChildElement(mergeElem, DavConstants.XML_SOURCE, DavConstants.NAMESPACE);
+        for (int i = 0; i < mergeSource.length; i++) {
+            DomUtil.addChildElement(source, DavConstants.XML_HREF, DavConstants.NAMESPACE, mergeSource[i]);
+        }
+        if (isNoAutoMerge) {
+            DomUtil.addChildElement(mergeElem, XML_N0_AUTO_MERGE, NAMESPACE);
+        }
+        if (isNoCheckout) {
+            DomUtil.addChildElement(mergeElem, XML_N0_CHECKOUT, NAMESPACE);
+        }
+        return mergeElem;
+    }
 }

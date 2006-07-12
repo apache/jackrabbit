@@ -51,6 +51,7 @@ public class MergeMethod extends DavMethodBase {
      * @return true if status code is {@link DavServletResponse#SC_MULTI_STATUS 207 (Multi-Status)}.
      */
     protected boolean isSuccess(int statusCode) {
+        // TODO: is this correct?
         return statusCode == DavServletResponse.SC_MULTI_STATUS;
     }
 }

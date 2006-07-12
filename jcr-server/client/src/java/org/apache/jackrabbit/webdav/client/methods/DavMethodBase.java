@@ -250,9 +250,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
     protected void processStatusLine(HttpState httpState, HttpConnection httpConnection) {
         super.processStatusLine(httpState, httpConnection);
         int code = getStatusCode();
-        // default
-        success = code < DavServletResponse.SC_BAD_REQUEST;
-        // sub classes overwrites
+        // sub classes define if status code indicates success.
         success = isSuccess(code);
     }
 
@@ -265,7 +263,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      * @param httpConnection
      * @see HttpMethodBase#processResponseBody(HttpState, HttpConnection)
      */
-    protected final void processResponseBody(HttpState httpState, HttpConnection httpConnection) {
+    protected void processResponseBody(HttpState httpState, HttpConnection httpConnection) {
         // in case of multi-status response
         if (getStatusCode() == DavServletResponse.SC_MULTI_STATUS) {
             try {
