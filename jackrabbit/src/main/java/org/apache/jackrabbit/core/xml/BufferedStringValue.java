@@ -16,6 +16,19 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.util.Base64;
+import org.apache.jackrabbit.util.TransientFileFactory;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,19 +38,6 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.util.Base64;
-import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>BufferedStringValue</code> represents an appendable
@@ -238,7 +238,8 @@ class BufferedStringValue implements TextValue {
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
                 InternalValue ival =
-                    InternalValue.create(ValueHelper.convert(retrieve(), targetType), nsContext);
+                    InternalValue.create(ValueHelper.convert(
+                            retrieve(), targetType, ValueFactoryImpl.getInstance()), nsContext);
                 // convert InternalValue to Value using this
                 // session's namespace mappings
                 return ival.toJCRValue(resolver);
@@ -297,7 +298,8 @@ class BufferedStringValue implements TextValue {
             } else {
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
-                return InternalValue.create(ValueHelper.convert(retrieve(), type), nsContext);
+                return InternalValue.create(ValueHelper.convert(
+                        retrieve(), type, ValueFactoryImpl.getInstance()), nsContext);
             }
         } catch (IOException e) {
             throw new RepositoryException("Error accessing property value", e);

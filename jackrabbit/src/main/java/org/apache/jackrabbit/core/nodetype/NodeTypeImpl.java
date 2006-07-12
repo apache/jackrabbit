@@ -24,6 +24,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -381,7 +382,9 @@ public class NodeTypeImpl implements NodeType {
             InternalValue internalValue;
             if (targetType != value.getType()) {
                 // type conversion required
-                Value targetVal = ValueHelper.convert(value, targetType);
+                Value targetVal = ValueHelper.convert(
+                        value, targetType,
+                        ValueFactoryImpl.getInstance());
                 internalValue = InternalValue.create(targetVal, nsResolver);
             } else {
                 // no type conversion required
@@ -457,7 +460,9 @@ public class NodeTypeImpl implements NodeType {
                     InternalValue internalValue;
                     if (targetType != type) {
                         // type conversion required
-                        Value targetVal = ValueHelper.convert(values[i], targetType);
+                        Value targetVal = ValueHelper.convert(
+                                values[i], targetType,
+                                ValueFactoryImpl.getInstance());
                         internalValue = InternalValue.create(targetVal, nsResolver);
                     } else {
                         // no type conversion required
