@@ -8,6 +8,12 @@ ul,ol,dd,dt
     list-style:none
     }
 
+dd
+    {
+    padding: 0px;
+    margin-left: 16px;
+    }
+
 h1,h2,h3,h4,h5,h6,pre,code
     {
     font-size:1em;
@@ -376,7 +382,7 @@ subsection
     padding: 12px;
     margin: 20px 0 20px 0;
     border: 0px solid #999;
-    background: #F0F0F0;
+    background: #E0E0E0;
     }
 
 .source pre
