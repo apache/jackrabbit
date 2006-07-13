@@ -400,7 +400,15 @@ indexing, etc.
             <name>Paul Bloch</name>
             <email>openartist@gmail.com</email>
             <roles>
-                <role>Graphics Designer</role>
+                <role>Apache &amp;amp; Built By Logo design</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
+        <contributor>
+            <name>Michael Eppelheimer</name>
+            <organization>Day Software</organization>
+            <roles>
+                <role>Graphic Designer</role>
             </roles>
             <timezone>+1</timezone>
         </contributor>
