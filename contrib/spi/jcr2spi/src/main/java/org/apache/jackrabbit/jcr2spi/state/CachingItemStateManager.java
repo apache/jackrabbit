@@ -56,7 +56,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
     public CachingItemStateManager(ItemStateManager ism) {
         this.ism = ism;
         this.uuid2PathElement = new HashMap(); // TODO: must use weak references
-        path2State = new PathMap();      // TODO: must use weak references
+        path2State = new PathMap();            // TODO: must use weak references
     }
 
     //---------------------------------------------------< ItemStateManager >---
@@ -242,7 +242,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
                     PathMap.Element parentElement = getPathElement(state.getParentId());
                     // create path element if necessary
                     if (elem == null) {
-                        // TODO put element (Marcel, here goes your extra method)
+                        // TODO TO-BE-FIXED: put element (marcel, here goes your extra method)
                         // i removed it, since its not present in JR commons (anchela)
                     }
                     elem.set(state);
@@ -255,14 +255,14 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
         // at this point we are guaranteed to have an element
         // now resolve relative path part of id if there is one
         if (relPath != null) {
-            // TODO map element (Marcel, here goes your extra method)
+            // TODO TO-BE-FIXED: map element (Marcel, here goes your extra method)
             // i removed it, since its not present in JR commons (anchela)
             PathMap.Element tmp = null;
             if (tmp == null) {
                 // not yet cached, load from ism
                 ItemState state = ism.getItemState(id);
                 // put to cache
-                // TODO put element (Marcel, here goes your extra method)
+                // TODO TO-BE-FIXED: put element (Marcel, here goes your extra method)
                 // i removed it, since its not present in JR commons (anchela)
                 tmp = null;
                 tmp.set(state);
@@ -293,7 +293,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
 
         // resolve relative path
         if (id.getRelativePath() != null) {
-            // TODO map element (Marcel, here goes your extra method)
+            // TODO TO-BE-FIXED: map element (Marcel, here goes your extra method)
             // i removed it, since its not present in JR commons (anchela)
             elem = null;
         }
