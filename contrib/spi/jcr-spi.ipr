@@ -178,7 +178,7 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/api/jackrabbit-spi.iml" filepath="$PROJECT_DIR$/api/jackrabbit-spi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/spi/jackrabbit-spi.iml" filepath="$PROJECT_DIR$/spi/jackrabbit-spi.iml" />
       <module fileurl="file://$PROJECT_DIR$/commons/jackrabbit-spi-commons.iml" filepath="$PROJECT_DIR$/commons/jackrabbit-spi-commons.iml" />
       <module fileurl="file://$PROJECT_DIR$/jcr2spi/jackrabbit-spi-jcr2spi.iml" filepath="$PROJECT_DIR$/jcr2spi/jackrabbit-spi-jcr2spi.iml" />
       <module fileurl="file://$PROJECT_DIR$/spi2dav/jackrabbit-spi-spi2dav.iml" filepath="$PROJECT_DIR$/spi2dav/jackrabbit-spi-spi2dav.iml" />

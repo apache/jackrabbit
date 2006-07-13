@@ -14,14 +14,27 @@ NOTE: This list only contains major open issues.
    > ReregisterNodeTypes
    > UnregisterNodeType
    > Subscribe/Unsubscribe und Event retrieval
+   
+   
+2) RepositoryService  (improve)
+
+   param consistency
+   while in the very first draft ids, values and names were represented
+   by String and Stream only, we currently have a inconsistent mixture
+   of separate interfaces/classes for ids and names, while values are
+   still represented by String/Stream only mentioning in the comments
+   that values are meant to be in a qualified form in case of property
+   type Name and Path.
+   Second it seems inconsistent that an interface is defined for ItemId,
+   while the QName class from jackrabbit commons is used (see also FAQ).
 
 
-2) RepositoryService, Batch (improve)
+3) RepositoryService, Batch (improve)
 
    > check consistency of throw clauses.
 
 
-3) Usage of SPI ids instead of JR-ids in jcr2spi  (missing)
+4) Usage of SPI ids instead of JR-ids in jcr2spi  (missing)
 
    a) using SPI NodeIds which don't have a mandatory UUID, requires fundamental
    rework of the transient space (modified after jackrabbit code).

@@ -43,7 +43,7 @@ public class ReferenceChangeTracker {
      */
     private final HashMap uuidMap = new HashMap();
     /**
-     * list of processed reference properties that might need correcting
+     * list of processed reference properties that might need correction
      */
     private final ArrayList references = new ArrayList();
 
