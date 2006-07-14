@@ -114,7 +114,7 @@
 //------------------------------------------------------------------------------
 
 [nt:hierarchyNode]
-  - jcr:created (date) mandatory autocreated protected initialize
+  - jcr:created (date) autocreated protected initialize
 
 [nt:folder] > nt:hierarchyNode
   + * (nt:hierarchyNode) version

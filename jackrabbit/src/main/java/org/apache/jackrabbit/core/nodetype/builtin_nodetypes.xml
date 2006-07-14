@@ -93,7 +93,7 @@ commented out by default.
         <supertypes>
             <supertype>nt:base</supertype>
         </supertypes>
-        <propertyDefinition name="jcr:created" requiredType="Date" autoCreated="true" mandatory="true" onParentVersion="INITIALIZE" protected="true" multiple="false"/>
+        <propertyDefinition name="jcr:created" requiredType="Date" autoCreated="true" mandatory="false" onParentVersion="INITIALIZE" protected="true" multiple="false"/>
     </nodeType>
     <nodeType name="nt:file" isMixin="false" hasOrderableChildNodes="false" primaryItemName="jcr:content">
         <supertypes>
