@@ -116,7 +116,7 @@ public class SaveTest extends AbstractJCRTest {
      */
     public void testVersionException() throws RepositoryException, NotExecutableException {
         // check if repository supports versioning
-        if (superuser.getRepository().getDescriptor(Repository.OPTION_VERSIONING_SUPPORTED) == null) {
+        if (!isSupported(Repository.OPTION_VERSIONING_SUPPORTED)) {
             throw new NotExecutableException();
         }
 
@@ -173,7 +173,7 @@ public class SaveTest extends AbstractJCRTest {
      */
     public void testLockException() throws RepositoryException, NotExecutableException {
         // check if repository supports locking
-        if (superuser.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             throw new NotExecutableException();
         }
         // create a node that is lockable

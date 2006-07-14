@@ -120,7 +120,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
      */
     private void docOrderTest(Statement stmt, String path)
             throws RepositoryException, NotExecutableException {
-        if (!hasDescriptor(Repository.QUERY_XPATH_DOC_ORDER)) {
+        if (!isSupported(Repository.QUERY_XPATH_DOC_ORDER)) {
             throw new NotExecutableException("Repository does not support document order on result set.");
         }
 

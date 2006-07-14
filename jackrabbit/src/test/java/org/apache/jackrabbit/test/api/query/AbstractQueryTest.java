@@ -285,15 +285,6 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
             assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
         }
     }
-    /**
-     * Test if the requested Descriptor is registred at repository
-     *
-     * @param descriptor to be searched.
-     * @return true if descriptor is contained in the repository
-     */
-    protected boolean hasDescriptor(String descriptor) {
-        return superuser.getRepository().getDescriptor(descriptor) != null;
-    }
 
     /**
      * Returns the nodes in <code>it</code> as an array of Nodes.
