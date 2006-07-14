@@ -39,13 +39,21 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
     private static final Set requiredDescriptorKeys = new HashSet();
 
     static {
-        requiredDescriptorKeys.add(Repository.SPEC_VERSION_DESC);
         requiredDescriptorKeys.add(Repository.LEVEL_1_SUPPORTED);
-        requiredDescriptorKeys.add(Repository.SPEC_NAME_DESC);
+        requiredDescriptorKeys.add(Repository.LEVEL_2_SUPPORTED);
+        requiredDescriptorKeys.add(Repository.OPTION_LOCKING_SUPPORTED);
+        requiredDescriptorKeys.add(Repository.OPTION_OBSERVATION_SUPPORTED);
+        requiredDescriptorKeys.add(Repository.OPTION_QUERY_SQL_SUPPORTED);
+        requiredDescriptorKeys.add(Repository.OPTION_TRANSACTIONS_SUPPORTED);
+        requiredDescriptorKeys.add(Repository.OPTION_VERSIONING_SUPPORTED);
+        requiredDescriptorKeys.add(Repository.QUERY_XPATH_DOC_ORDER);
+        requiredDescriptorKeys.add(Repository.QUERY_XPATH_POS_INDEX);
+        requiredDescriptorKeys.add(Repository.REP_NAME_DESC);
         requiredDescriptorKeys.add(Repository.REP_VENDOR_DESC);
         requiredDescriptorKeys.add(Repository.REP_VENDOR_URL_DESC);
         requiredDescriptorKeys.add(Repository.REP_VERSION_DESC);
-        requiredDescriptorKeys.add(Repository.REP_NAME_DESC);
+        requiredDescriptorKeys.add(Repository.SPEC_NAME_DESC);
+        requiredDescriptorKeys.add(Repository.SPEC_VERSION_DESC);
     }
 
     /** The session for the tests */

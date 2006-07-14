@@ -46,7 +46,7 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
 
         Session session = testRootNode.getSession();
 
-        if (session.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             throw new NotExecutableException("Locking is not supported.");
         }
 
@@ -96,7 +96,7 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
 
         Session session = testRootNode.getSession();
 
-        if (session.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             throw new NotExecutableException("Versioning is not supported.");
         }
 

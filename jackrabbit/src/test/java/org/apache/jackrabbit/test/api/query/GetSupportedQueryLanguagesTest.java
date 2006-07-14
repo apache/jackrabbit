@@ -69,7 +69,7 @@ public class GetSupportedQueryLanguagesTest extends AbstractQueryTest {
                 langs.contains(Query.XPATH));
 
         // if repository descriptor for sql is present also sql must be returned
-        if (session.getRepository().getDescriptor(Repository.OPTION_QUERY_SQL_SUPPORTED) != null) {
+        if (isSupported(Repository.OPTION_QUERY_SQL_SUPPORTED)) {
             assertTrue("SQL not returned with QueryManager.getSupportedQueryLanguages()",
                     langs.contains(Query.SQL));
         }

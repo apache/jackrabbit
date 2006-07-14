@@ -199,7 +199,7 @@ public class SerializationTest extends AbstractJCRTest {
             throws RepositoryException, IOException, SAXException {
         Repository repository = session.getRepository();
         exportRepository(SKIPBINARY, RECURSE);
-        if (repository.getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) != null) {
+        if (isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             //A LockException is thrown if a lock prevents the addition of the subtree.
             Node lNode = testRootNode.addNode(nodeName1);
             lNode.addMixin(mixLockable);

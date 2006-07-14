@@ -101,7 +101,7 @@ public class TextNodeTest extends AbstractQueryTest {
      */
     public void testTextNodeTestWithPosition()
             throws RepositoryException, NotExecutableException {
-        if (superuser.getRepository().getDescriptor(Repository.QUERY_XPATH_POS_INDEX) == null) {
+        if (!isSupported(Repository.QUERY_XPATH_POS_INDEX)) {
             throw new NotExecutableException("Repository does not support position index");
         }
         Node text1 = testRootNode.addNode(jcrXMLText);

@@ -233,7 +233,7 @@ public class LockTest extends AbstractJCRTest {
 
         Session session = testRootNode.getSession();
 
-        if (session.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             throw new NotExecutableException("Versioning is not supported.");
         }
 
@@ -549,7 +549,7 @@ public class LockTest extends AbstractJCRTest {
      * Tests if a locked, checked-in node can be unlocked
      */
     public void testCheckedInUnlock() throws Exception {
-        if (superuser.getRepository().getDescriptor(Repository.OPTION_VERSIONING_SUPPORTED) == null) {
+        if (!isSupported(Repository.OPTION_VERSIONING_SUPPORTED)) {
             throw new NotExecutableException("Repository does not support versioning.");
         }
 

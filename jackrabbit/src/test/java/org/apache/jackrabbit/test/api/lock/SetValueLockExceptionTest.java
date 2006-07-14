@@ -85,7 +85,7 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
     public void setUp() throws Exception {
         super.setUp();
         Repository repo = helper.getRepository();
-        if (repo.getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             throw new NotExecutableException("SetValueLockExceptionTest "
                     + "not executable: Locking not supported");
         }

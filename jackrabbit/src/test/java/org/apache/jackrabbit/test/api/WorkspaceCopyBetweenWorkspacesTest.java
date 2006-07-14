@@ -155,7 +155,7 @@ public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBet
      * A LockException is thrown if a lock prevents the copy.
      */
     public void testCopyNodesLocked() throws RepositoryException, NotExecutableException {
-        if (superuser.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED) == null) {
+        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             throw new NotExecutableException("Repository does not support locking.");
         }
         // we assume repository supports locking
