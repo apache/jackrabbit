@@ -40,11 +40,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        if (superuser.getRepository().getDescriptor(Repository.OPTION_QUERY_SQL_SUPPORTED) == null) {
-            checkSQL = false;
-        } else {
-            checkSQL = true;
-        }
+        checkSQL = isSupported(Repository.OPTION_QUERY_SQL_SUPPORTED);
         nodeNames = new String[]{nodeName1, nodeName2, nodeName3, nodeName4};
     }
 

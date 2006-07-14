@@ -70,7 +70,7 @@ public class XATest extends AbstractJCRTest {
      */
     protected void runTest() throws Throwable {
         Repository rep = helper.getRepository();
-        if (rep.getDescriptor(Repository.OPTION_TRANSACTIONS_SUPPORTED) != null) {
+        if (isSupported(Repository.OPTION_TRANSACTIONS_SUPPORTED)) {
             super.runTest();
         }
     }

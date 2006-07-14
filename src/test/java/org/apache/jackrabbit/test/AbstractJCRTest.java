@@ -310,7 +310,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         ntQuery = superuser.getNamespacePrefix(NS_NT_URI) + ":query";
 
         // setup custom namespaces
-        if (helper.getRepository().getDescriptor(Repository.LEVEL_2_SUPPORTED) != null) {
+        if (isSupported(Repository.LEVEL_2_SUPPORTED)) {
             NamespaceRegistry nsReg = superuser.getWorkspace().getNamespaceRegistry();
             String namespaces = getProperty(RepositoryStub.PROP_NAMESPACES);
             if (namespaces != null) {
@@ -513,4 +513,17 @@ public abstract class AbstractJCRTest extends JUnitTest {
         return tmp.toString();
     }
 
+    /**
+     * Returns <code>true</code> if this repository support a certain optional
+     * feature; otherwise <code>false</code> is returned. If there is no
+     * such <code>descriptorKey</code> present in the repository, this method
+     * also returns false.
+     *
+     * @param descriptorKey the descriptor key.
+     * @return <code>true</code> if the option is supported.
+     * @throws RepositoryException if an error occurs.
+     */
+    protected boolean isSupported(String descriptorKey) throws RepositoryException {
+        return "true".equals(helper.getRepository().getDescriptor(descriptorKey));
+    }
 }
