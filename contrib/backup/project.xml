@@ -67,8 +67,8 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>src/java</sourceDirectory>
-    <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
     <resources>
       <resource>
         <targetPath>META-INF</targetPath>
