@@ -21,9 +21,6 @@ import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitRepository;
-import org.apache.jackrabbit.backup.BackupIOHandler;
-import org.apache.jackrabbit.backup.BackupConfig;
-import org.apache.jackrabbit.backup.RepositoryBackup;
 import org.apache.jackrabbit.core.config.FileSystemConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
@@ -1843,38 +1840,6 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 }
             }
         }
-    }
-
-    /**
-     *
-     * This method returns a RepositoryBackup object configured to save this repository.
-     *
-     * Some operations are needed to initiate the RepositoryBackup object properly before performing
-     * the backup or restore operation.
-     *
-     * @param conf BackupConfig object containing all the parameters.
-     * @return RepositoryBackup configured
-     * @throws RepositoryException
-     * @throws AccessDeniedException
-     * @throws IOException
-     */
-    public RepositoryBackup getBackupRepository(BackupConfig conf, BackupIOHandler h) throws RepositoryException, IOException, AccessDeniedException {
-        conf.setRepo(this);
-        return (RepositoryBackup) conf.getBackup();
-    }
-
-    /**
-     * For restore operations since the
-     * @return RepositoryBackup to configure
-     * @param source is a pointer to the file to restore
-     * @throws RepositoryException
-     * @throws IOException
-     * @throws AccessDeniedException
-     */
-    public RepositoryBackup getBackupRepository(BackupIOHandler source) throws RepositoryException, IOException, AccessDeniedException {
-        BackupConfig conf = new BackupConfig();
-        conf.setRepo(this);
-        return (RepositoryBackup) conf.getBackup();
     }
 
 }
