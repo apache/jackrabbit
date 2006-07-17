@@ -15,7 +15,7 @@ A: please note the the SPI contribution is still in an early stage and work
 
 
 Q: Is there a working plan for the SPI? 
-A: No. we work in this as time permits.
+A: No. we work on this as time permits.
 
 
 Q: Is there any schedule for the SPI project?
@@ -70,7 +70,7 @@ A: originally we planned to use jackrabbit/core for the jcr2spi implementation.
    of the crucial interfaces in the core. Therefore we decided to copy over
    the code and modify it according to the needs of the SPI.
    we tried to keep track of modifications by adding a lot of //DIFF comments,
-   indication areas, where the original jackrabbit code has been modified.
+   indicating areas, where the original jackrabbit code has been modified.
 
 
 Some questions arising from issues still being discussed:
