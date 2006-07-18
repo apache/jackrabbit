@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-
 import java.io.File;
 
 /**
