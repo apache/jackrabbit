@@ -134,8 +134,9 @@ public class RepositoryConfig {
             throws ConfigurationException {
         Properties variables = new Properties();
         variables.setProperty(
-                ConfigurationParser.REPOSITORY_HOME_VARIABLE, home);
-        ConfigurationParser parser = new ConfigurationParser(variables);
+                RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE, home);
+        RepositoryConfigurationParser parser =
+            new RepositoryConfigurationParser(variables);
 
         RepositoryConfig config = parser.parseRepositoryConfig(xml);
         config.init();
@@ -171,7 +172,7 @@ public class RepositoryConfig {
     /**
      * the default parser
      */
-    private final ConfigurationParser parser;
+    private final RepositoryConfigurationParser parser;
 
     /**
      * Workspace physical root directory. This directory contains a subdirectory
@@ -224,13 +225,13 @@ public class RepositoryConfig {
      * @param defaultWorkspace name of the default workspace
      * @param vc versioning configuration
      * @param sc search configuration for system search manager.
-     * @param parser the ConfigurationParser that servers as config factory
+     * @param parser configuration parser
      */
     public RepositoryConfig(String home, SecurityConfig sec, FileSystemConfig fsc,
             String workspaceDirectory, String workspaceConfigDirectory,
             String defaultWorkspace, int workspaceMaxIdleTime,
             Element template, VersioningConfig vc, SearchConfig sc,
-            ConfigurationParser parser) {
+            RepositoryConfigurationParser parser) {
         workspaces = new HashMap();
         this.home = home;
         this.sec = sec;
@@ -347,9 +348,10 @@ public class RepositoryConfig {
 
             Properties variables = new Properties();
             variables.setProperty(
-                    ConfigurationParser.WORKSPACE_HOME_VARIABLE,
+                    RepositoryConfigurationParser.WORKSPACE_HOME_VARIABLE,
                     directory.getPath());
-            ConfigurationParser localParser = parser.createSubParser(variables);
+            RepositoryConfigurationParser localParser =
+                parser.createSubParser(variables);
             return localParser.parseWorkspaceConfig(xml);
         } catch (FileNotFoundException e) {
             return null;
@@ -395,9 +397,10 @@ public class RepositoryConfig {
             }
             Properties variables = new Properties();
             variables.setProperty(
-                    ConfigurationParser.WORKSPACE_HOME_VARIABLE,
+                    RepositoryConfigurationParser.WORKSPACE_HOME_VARIABLE,
                     homeDir.getPath());
-            ConfigurationParser localParser = parser.createSubParser(variables);
+            RepositoryConfigurationParser localParser =
+                parser.createSubParser(variables);
             return localParser.parseWorkspaceConfig(xml);
         } catch (FileSystemException e) {
             throw new ConfigurationException("Failed to load workspace configuration", e);
