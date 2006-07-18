@@ -724,4 +724,5 @@ public class RepositoryConfig {
     public SearchConfig getSearchConfig() {
         return sc;
     }
+
 }
