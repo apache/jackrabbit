@@ -136,7 +136,7 @@ public final class NodeTypeWriter {
 
         // supertype declarations
         QName[] supertypes = def.getSupertypes();
-        if (supertypes != null && supertypes.length > 0) {
+        if (supertypes.length > 0) {
             builder.startElement(Constants.SUPERTYPES_ELEMENT);
             for (int i = 0; i < supertypes.length; i++) {
                 builder.addContentElement(

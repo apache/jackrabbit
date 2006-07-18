@@ -1026,7 +1026,7 @@ public class NodeTypeRegistry implements Dumpable {
 
                 NodeTypeDef ntd = (NodeTypeDef) ntDefCache.get(nt);
                 QName[] sta = ntd.getSupertypes();
-                if (sta != null && sta.length > 0) {
+                if (sta.length > 0) {
                     // check recursively
                     inheritanceChain.push(nt);
                     checkForCircularInheritance(sta, inheritanceChain, ntDefCache);
@@ -1307,7 +1307,7 @@ public class NodeTypeRegistry implements Dumpable {
 
         // validate supertypes
         QName[] supertypes = ntd.getSupertypes();
-        if (supertypes != null && supertypes.length > 0) {
+        if (supertypes.length > 0) {
             for (int i = 0; i < supertypes.length; i++) {
                 checkNamespace(supertypes[i], nsReg);
                 /**
@@ -1348,7 +1348,7 @@ public class NodeTypeRegistry implements Dumpable {
          * build effective (i.e. merged and resolved) node type from supertypes
          * and check for conflicts
          */
-        if (supertypes != null && supertypes.length > 0) {
+        if (supertypes.length > 0) {
             try {
                 EffectiveNodeType est = getEffectiveNodeType(supertypes, entCache, ntdCache);
                 // make sure that all primary types except nt:base extend from nt:base
@@ -1367,14 +1367,6 @@ public class NodeTypeRegistry implements Dumpable {
                 String msg = "[" + name + "] failed to validate supertypes";
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg, nsnte);
-            }
-        } else {
-            // no supertypes specified: has to be either a mixin type or nt:base
-            if (!ntd.isMixin() && !QName.NT_BASE.equals(ntd.getName())) {
-                String msg = "[" + name
-                        + "] all primary node types except nt:base itself must be (directly or indirectly) derived from nt:base";
-                log.debug(msg);
-                throw new InvalidNodeTypeDefException(msg);
             }
         }
 

@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * A <code>NodeTypeDef</code> holds the definition of a node type.
@@ -31,7 +33,13 @@ import java.util.Iterator;
 public class NodeTypeDef implements Cloneable {
 
     private QName name;
-    private HashSet supertypes;
+
+    /**
+     * Ordered array of supertype names. Empty if no supertypes have been
+     * specified. Never <code>null</code>.
+     */
+    private QName[] supertypes;
+
     private boolean mixin;
     private boolean orderableChildNodes;
     private QName primaryItemName;
@@ -48,7 +56,7 @@ public class NodeTypeDef implements Cloneable {
         primaryItemName = null;
         nodeDefs = new HashSet();
         propDefs = new HashSet();
-        supertypes = new HashSet();
+        supertypes = QName.EMPTY_ARRAY;
         mixin = false;
         orderableChildNodes = false;
     }
@@ -69,7 +77,7 @@ public class NodeTypeDef implements Cloneable {
         if (dependencies == null) {
             dependencies = new HashSet();
             // supertypes
-            dependencies.addAll(supertypes);
+            dependencies.addAll(Arrays.asList(supertypes));
             // child node definitions
             for (Iterator iter = nodeDefs.iterator(); iter.hasNext();) {
                 NodeDef nd = (NodeDef) iter.next();
@@ -127,8 +135,17 @@ public class NodeTypeDef implements Cloneable {
      */
     public void setSupertypes(QName[] names) {
         resetDependencies();
-        supertypes.clear();
-        supertypes.addAll(Arrays.asList(names));
+        // Optimize common cases (zero or one supertypes)
+        if (names.length == 0) {
+            supertypes = QName.EMPTY_ARRAY;
+        } else if (names.length == 1) {
+            supertypes = new QName[] { names[0] };
+        } else {
+            // Sort and remove duplicates
+            SortedSet types = new TreeSet();
+            types.addAll(Arrays.asList(names));
+            supertypes = (QName[]) types.toArray(new QName[types.size()]);
+        }
     }
 
     /**
@@ -192,17 +209,22 @@ public class NodeTypeDef implements Cloneable {
     }
 
     /**
-     * Returns an array containing the names of the supertypes or
-     * <code>null</code> if not set.
+     * Returns an array containing the names of the supertypes. If no
+     * supertypes have been specified, then an empty array is returned
+     * for mixin types and the <code>nt:base</code> primary type and
+     * an array containing just <code>nt:base<code> for other primary types.
+     * <p>
+     * The returned array must not be modified by the application.
      *
-     * @return an array listing the names of the supertypes or
-     *         <code>null</code> if not set.
+     * @return a sorted array of supertype names
      */
     public QName[] getSupertypes() {
-        if (supertypes.isEmpty()) {
-            return QName.EMPTY_ARRAY;
+        if (supertypes.length > 0
+                || isMixin() || QName.NT_BASE.equals(getName())) {
+            return supertypes;
+        } else {
+            return new QName[] { QName.NT_BASE };
         }
-        return (QName[]) supertypes.toArray(new QName[supertypes.size()]);
     }
 
     /**
@@ -266,7 +288,7 @@ public class NodeTypeDef implements Cloneable {
         NodeTypeDef clone = new NodeTypeDef();
         clone.name = name;
         clone.primaryItemName = primaryItemName;
-        clone.supertypes = (HashSet) supertypes.clone();
+        clone.supertypes = supertypes; // immutable, thus ok to share
         clone.mixin = mixin;
         clone.orderableChildNodes = orderableChildNodes;
         clone.nodeDefs = (HashSet) nodeDefs.clone();
@@ -282,7 +304,7 @@ public class NodeTypeDef implements Cloneable {
             NodeTypeDef other = (NodeTypeDef) obj;
             return (name == null ? other.name == null : name.equals(other.name))
                     && (primaryItemName == null ? other.primaryItemName == null : primaryItemName.equals(other.primaryItemName))
-                    && supertypes.equals(other.supertypes)
+                    && Arrays.equals(getSupertypes(), other.getSupertypes())
                     && mixin == other.mixin
                     && orderableChildNodes == other.orderableChildNodes
                     && propDefs.equals(other.propDefs)
