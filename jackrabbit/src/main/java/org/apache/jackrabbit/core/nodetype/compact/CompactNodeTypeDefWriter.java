@@ -170,14 +170,12 @@ public class CompactNodeTypeDefWriter {
      */
     private void writeSupertypes(NodeTypeDef ntd) throws IOException {
         QName[] sta = ntd.getSupertypes();
-        if (sta != null) {
-            String delim = " > ";
-            for (int i = 0; i < sta.length; i++) {
-                if (!sta[i].equals(QName.NT_BASE)) {
-                    out.write(delim);
-                    out.write(resolve(sta[i]));
-                    delim = ", ";
-                }
+        String delim = " > ";
+        for (int i = 0; i < sta.length; i++) {
+            if (!sta[i].equals(QName.NT_BASE)) {
+                out.write(delim);
+                out.write(resolve(sta[i]));
+                delim = ", ";
             }
         }
     }

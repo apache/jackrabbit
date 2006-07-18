@@ -204,11 +204,6 @@ public class CompactNodeTypeDefReader {
             doNodeTypeName(ntd);
             doSuperTypes(ntd);
             doOptions(ntd);
-            // add nt:base to supertypes if not mixin and does not define
-            // any supertype yet.
-            if (!ntd.isMixin() && ntd.getSupertypes().length == 0) {
-                ntd.setSupertypes(new QName[]{QName.NT_BASE});
-            }
             doItemDefs(ntd);
             nodeTypeDefs.add(ntd);
         }
