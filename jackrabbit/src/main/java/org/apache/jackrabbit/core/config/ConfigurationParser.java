@@ -28,85 +28,21 @@ import org.apache.jackrabbit.util.Text;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
 /**
- * Configuration parser. This class is used to parse the repository and
- * workspace configuration files. Each configuration parser instance
+ * Configuration parser base class. This class provides the basic
+ * functionality for parsing Jackrabbit configuration files. Subclasses
+ * extend this functionality with knowledge of the exact structure of the
+ * different configuration files. Each configuration parser instance
  * contains a set of parser variables that are used for variable replacement
  * in the configuration file.
- * <p>
- * The following code sample outlines the usage of this class:
- * <pre>
- *     Properties variables = ...; // parser variables
- *     ConfigurationParser parser = new ConfigurationParser(variables);
- *     RepositoryConfig rc = parser.parseRepositoryConfig(...);
- *     WorkspaceConfig wc = parser.parseWorkspaceConfig(...);
- * </pre>
- * <p>
- * Note that the configuration objects returned by this parser are not
- * initialized. The caller needs to initialize the configuration objects
- * before using them.
  */
 public class ConfigurationParser {
 
-    /** Name of the repository home directory parser variable. */
-    public static final String REPOSITORY_HOME_VARIABLE = "rep.home";
-
-    /** Name of the workspace home directory parser variable. */
-    public static final String WORKSPACE_HOME_VARIABLE = "wsp.home";
-
-    /** Name of the repository name parser variable. */
-    public static final String WORKSPACE_NAME_VARIABLE = "wsp.name";
-
-    /** Name of the security configuration element. */
-    public static final String SECURITY_ELEMENT = "Security";
-
-    /** Name of the access manager configuration element. */
-    public static final String ACCESS_MANAGER_ELEMENT = "AccessManager";
-
-    /** Name of the login module configuration element. */
-    public static final String LOGIN_MODULE_ELEMENT = "LoginModule";
-
-    /** Name of the general workspace configuration element. */
-    public static final String WORKSPACES_ELEMENT = "Workspaces";
-
-    /** Name of the workspace configuration element. */
-    public static final String WORKSPACE_ELEMENT = "Workspace";
-
-    /** Name of the versioning configuration element. */
-    public static final String VERSIONING_ELEMENT = "Versioning";
-
-    /** Name of the file system configuration element. */
-    public static final String FILE_SYSTEM_ELEMENT = "FileSystem";
-
-    /** Name of the persistence manager configuration element. */
-    public static final String PERSISTENCE_MANAGER_ELEMENT =
-        "PersistenceManager";
-
-    /** Name of the search index configuration element. */
-    public static final String SEARCH_INDEX_ELEMENT = "SearchIndex";
-
     /** Name of the bean parameter configuration element. */
     public static final String PARAM_ELEMENT = "param";
-
-    /** Name of the application name configuration attribute. */
-    public static final String APP_NAME_ATTRIBUTE = "appName";
-
-    /** Name of the root path configuration attribute. */
-    public static final String ROOT_PATH_ATTRIBUTE = "rootPath";
-
-    /** Name of the config root path configuration attribute. */
-    public static final String CONFIG_ROOT_PATH_ATTRIBUTE = "configRootPath";
-
-    /** Name of the maximum idle time configuration attribute. */
-    public static final String MAX_IDLE_TIME_ATTRIBUTE = "maxIdleTime";
-
-    /** Name of the default workspace configuration attribute. */
-    public static final String DEFAULT_WORKSPACE_ATTRIBUTE =
-        "defaultWorkspace";
 
     /** Name of the bean implementation class configuration attribute. */
     public static final String CLASS_ATTRIBUTE = "class";
@@ -116,10 +52,6 @@ public class ConfigurationParser {
 
     /** Name of the bean parameter value configuration attribute. */
     public static final String VALUE_ATTRIBUTE = "value";
-
-    /** Name of the default search index implementation class. */
-    public static final String DEFAULT_QUERY_HANDLER =
-            "org.apache.jackrabbit.core.query.lucene.SearchIndex";
 
     /**
      * The configuration parser variables. These name-value pairs
@@ -145,338 +77,6 @@ public class ConfigurationParser {
      */
     public Properties getVariables() {
         return variables;
-    }
-
-    /**
-     * Parses repository configuration. Repository configuration uses the
-     * following format:
-     * <pre>
-     *   &lt;Repository&gt;
-     *     &lt;FileSystem ...&gt;
-     *     &lt;Security appName="..."&gt;
-     *       &lt;AccessManager ...&gt;
-     *       &lt;LoginModule ... (optional)&gt;
-     *     &lt;/Security&gt;
-     *     &lt;Workspaces rootPath="..." defaultWorkspace="..."/&gt;
-     *     &lt;Workspace ...&gt;
-     *     &lt;Versioning ...&gt;
-     *   &lt;/Repository&gt;
-     * </pre>
-     * <p>
-     * The <code>FileSystem</code> element is a
-     * {@link #parseBeanConfig(Element,String) bean configuration} element,
-     * that specifies the file system implementation for storing global
-     * repository information. The <code>Security</code> element contains
-     * an <code>AccessManager</code> bean configuration element and the
-     * JAAS name of the repository application. The <code>Workspaces</code>
-     * element contains general workspace parameters, and the
-     * <code>Workspace</code> element is a template for the individual
-     * workspace configuration files. The <code>Versioning</code> element
-     * contains
-     * {@link #parseVersioningConfig(Element) versioning configuration} for
-     * the repository.
-     * <p>
-     * In addition to the configured information, the returned repository
-     * configuration object also contains the repository home directory path
-     * that is given as the ${rep.home} parser variable. Note that the
-     * variable <em>must</em> be available for the configuration document to
-     * be correctly parsed.
-     * <p>
-     * {@link #replaceVariables(String) Variable replacement} is performed
-     * on the security application name attribute, the general workspace
-     * configuration attributes, and on the file system, access manager,
-     * and versioning configuration information.
-     * <p>
-     * Note that the returned repository configuration object has not been
-     * initialized.
-     *
-     * @param xml repository configuration document
-     * @return repository configuration
-     * @throws ConfigurationException if the configuration is broken
-     * @see #parseBeanConfig(Element, String)
-     * @see #parseVersioningConfig(Element)
-     */
-    public RepositoryConfig parseRepositoryConfig(InputSource xml)
-            throws ConfigurationException {
-        Element root = parseXML(xml);
-
-        // Repository home directory
-        String home = variables.getProperty(REPOSITORY_HOME_VARIABLE);
-
-        // File system implementation
-        FileSystemConfig fsc =
-            new FileSystemConfig(parseBeanConfig(root, FILE_SYSTEM_ELEMENT));
-
-        // Security configuration and access manager implementation
-        Element security = getElement(root, SECURITY_ELEMENT);
-        SecurityConfig securityConfig = parseSecurityConfig(security);
-
-        // General workspace configuration
-        Element workspaces = getElement(root, WORKSPACES_ELEMENT);
-        String workspaceDirectory = replaceVariables(
-                getAttribute(workspaces, ROOT_PATH_ATTRIBUTE));
-
-        String workspaceConfigDirectory =
-                getAttribute(workspaces, CONFIG_ROOT_PATH_ATTRIBUTE, null);
-
-        String defaultWorkspace = replaceVariables(
-                getAttribute(workspaces, DEFAULT_WORKSPACE_ATTRIBUTE));
-
-        int maxIdleTime = Integer.parseInt(
-                getAttribute(workspaces, MAX_IDLE_TIME_ATTRIBUTE, "0"));
-
-        // Workspace configuration template
-        Element template = getElement(root, WORKSPACE_ELEMENT);
-
-        // Versioning configuration
-        VersioningConfig vc = parseVersioningConfig(root);
-
-        // Optional search configuration
-        SearchConfig sc = parseSearchConfig(root);
-
-        return new RepositoryConfig(home, securityConfig, fsc,
-                workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
-                maxIdleTime, template, vc, sc, this);
-    }
-
-    /**
-     * Parses security configuration. Security configuration
-     * uses the following format:
-     * <pre>
-     *   &lt;Security appName="..."&gt;
-     *     &lt;AccessManager ...&gt;
-     *     &lt;LoginModule ... (optional)&gt;
-     *   &lt;/Security&gt;
-     * </pre>
-     * <p/>
-     * Both the <code>AccessManager</code> and <code>LoginModule</code>
-     * elements are {@link #parseBeanConfig(Element,String) bean configuration}
-     * elements.
-     * <p/>
-     * The login module is an optional feature of repository configuration.
-     *
-     * @param security the &lt;security> element.
-     * @return the security configuration.
-     * @throws ConfigurationException
-     */
-    public SecurityConfig parseSecurityConfig(Element security)
-            throws ConfigurationException {
-        String appName = getAttribute(security, APP_NAME_ATTRIBUTE);
-        AccessManagerConfig amc = parseAccessManagerConfig(security);
-        LoginModuleConfig lmc = parseLoginModuleConfig(security);
-        return new SecurityConfig(appName, amc, lmc);
-    }
-
-    /**
-     * Parses the access manager configuration.
-     *
-     * @param security the &lt;security> element.
-     * @return the access manager configuration.
-     * @throws ConfigurationException
-     */
-    public AccessManagerConfig parseAccessManagerConfig(Element security)
-            throws ConfigurationException {
-        return new AccessManagerConfig(
-                parseBeanConfig(security, ACCESS_MANAGER_ELEMENT));
-    }
-
-    /**
-     * Parses the login module configuration.
-     *
-     * @param security the &lt;security> element.
-     * @return the login module configuration.
-     * @throws ConfigurationException
-     */
-    public LoginModuleConfig parseLoginModuleConfig(Element security)
-            throws ConfigurationException {
-        // Optional login module
-        Element loginModule = getElement(security, LOGIN_MODULE_ELEMENT, false);
-
-        if (loginModule != null) {
-            return new LoginModuleConfig(parseBeanConfig(security, LOGIN_MODULE_ELEMENT));
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Parses workspace configuration. Workspace configuration uses the
-     * following format:
-     * <pre>
-     *   &lt;Workspace name="..."&gt;
-     *     &lt;FileSystem ...&gt;
-     *     &lt;PersistenceManager ...&gt;
-     *     &lt;SearchIndex ...&gt;
-     *   &lt;/Workspace&gt;
-     * </pre>
-     * <p>
-     * All the child elements (<code>FileSystem</code>,
-     * <code>PersistenceManager</code>, and <code>SearchIndex</code>) are
-     * {@link #parseBeanConfig(Element,String) bean configuration} elements.
-     * In addition to bean configuration, the
-     * {@link #parseSearchConfig(Element) search element} also contains
-     * configuration for the search file system.
-     * <p>
-     * In addition to the configured information, the returned workspace
-     * configuration object also contains the workspace home directory path
-     * that is given as the ${wsp.home} parser variable. Note that the
-     * variable <em>must</em> be available for the configuration document to
-     * be correctly parsed.
-     * <p>
-     * Variable replacement is performed on the optional workspace name
-     * attribute. If the name is not given, then the name of the workspace
-     * home directory is used as the workspace name. Once the name has been
-     * determined, it will be added as the ${wsp.name} variable in a temporary
-     * configuration parser that is used to parse the contained configuration
-     * elements.
-     * <p>
-     * The search index configuration element is optional. If it is not given,
-     * then the workspace will not have search capabilities.
-     * <p>
-     * Note that the returned workspace configuration object has not been
-     * initialized.
-     *
-     * @param xml workspace configuration document
-     * @return workspace configuration
-     * @throws ConfigurationException if the configuration is broken
-     * @see #parseBeanConfig(Element, String)
-     * @see #parseSearchConfig(Element)
-     */
-    public WorkspaceConfig parseWorkspaceConfig(InputSource xml)
-            throws ConfigurationException {
-        Element root = parseXML(xml);
-
-        // Workspace home directory
-        String home = variables.getProperty(WORKSPACE_HOME_VARIABLE);
-
-        // Workspace name
-        String name =
-            getAttribute(root, NAME_ATTRIBUTE, new File(home).getName());
-
-        // Create a temporary parser that contains the ${wsp.name} variable
-        Properties tmpVariables = (Properties) variables.clone();
-        tmpVariables.put(WORKSPACE_NAME_VARIABLE, name);
-        ConfigurationParser tmpParser = createSubParser(tmpVariables);
-
-        // File system implementation
-        FileSystemConfig fsc = new FileSystemConfig(
-                tmpParser.parseBeanConfig(root, FILE_SYSTEM_ELEMENT));
-
-        // Persistence manager implementation
-        PersistenceManagerConfig pmc = tmpParser.parsePersistenceManagerConfig(root);
-
-        // Search implementation (optional)
-        SearchConfig sc = tmpParser.parseSearchConfig(root);
-
-        return new WorkspaceConfig(home, name, fsc, pmc, sc);
-    }
-
-    /**
-     * Parses search index configuration. Search index configuration
-     * uses the following format:
-     * <pre>
-     *   &lt;SearchIndex class="..."&gt;
-     *     &lt;param name="..." value="..."&gt;
-     *     ...
-     *     &lt;FileSystem ...&gt;
-     *   &lt;/Search&gt;
-     * </pre>
-     * <p/>
-     * Both the <code>SearchIndex</code> and <code>FileSystem</code>
-     * elements are {@link #parseBeanConfig(Element,String) bean configuration}
-     * elements. If the search implementation class is not given, then
-     * a default implementation is used.
-     * <p/>
-     * The search index is an optional feature of workspace configuration.
-     * If the search configuration element is not found, then this method
-     * returns <code>null</code>.
-     * <p/>
-     * The FileSystem element in a search index configuration is optional.
-     * However some implementations may require a FileSystem.
-     *
-     * @param parent parent of the <code>SearchIndex</code> element
-     * @return search configuration, or <code>null</code>
-     * @throws ConfigurationException if the configuration is broken
-     */
-    protected SearchConfig parseSearchConfig(Element parent)
-            throws ConfigurationException {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE
-                    && SEARCH_INDEX_ELEMENT.equals(child.getNodeName())) {
-                Element element = (Element) child;
-
-                // Search implementation class
-                String className = getAttribute(
-                        element, CLASS_ATTRIBUTE, DEFAULT_QUERY_HANDLER);
-
-                // Search parameters
-                Properties parameters = parseParameters(element);
-
-                // Optional file system implementation
-                FileSystemConfig fsc = null;
-                if (getElement(element, FILE_SYSTEM_ELEMENT, false) != null) {
-                    fsc = new FileSystemConfig(
-                            parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
-                }
-
-                return new SearchConfig(className, parameters, fsc);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Parses versioning configuration. Versioning configuration uses the
-     * following format:
-     * <pre>
-     *   &lt;Versioning rootPath="..."&gt;
-     *     &lt;FileSystem ...&gt;
-     *     &lt;PersistenceManager ...&gt;
-     *   &lt;/Versioning&gt;
-     * </pre>
-     * <p>
-     * Both the <code>FileSystem</code> and <code>PersistenceManager</code>
-     * elements are {@link #parseBeanConfig(Element,String) bean configuration}
-     * elements. In addition to the bean parameter values,
-     * {@link #replaceVariables(String) variable replacement} is performed
-     * also on the versioning root path attribute.
-     *
-     * @param parent parent of the <code>Versioning</code> element
-     * @return versioning configuration
-     * @throws ConfigurationException if the configuration is broken
-     */
-    protected VersioningConfig parseVersioningConfig(Element parent)
-            throws ConfigurationException {
-        Element element = getElement(parent, VERSIONING_ELEMENT);
-
-        // Versioning home directory
-        String home =
-            replaceVariables(getAttribute(element, ROOT_PATH_ATTRIBUTE));
-
-        // File system implementation
-        FileSystemConfig fsc = new FileSystemConfig(
-                parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
-
-        // Persistence manager implementation
-        PersistenceManagerConfig pmc = parsePersistenceManagerConfig(element);
-
-        return new VersioningConfig(home, fsc, pmc);
-    }
-
-    /**
-     * Parses the PersistenceManager config.
-     *
-     * @param parent
-     * @return
-     * @throws ConfigurationException
-     */
-    protected PersistenceManagerConfig parsePersistenceManagerConfig(Element parent)
-            throws ConfigurationException {
-
-        return new PersistenceManagerConfig(
-                parseBeanConfig(parent, PERSISTENCE_MANAGER_ELEMENT));
     }
 
     /**
@@ -613,7 +213,8 @@ public class ConfigurationParser {
      * @throws ConfigurationException
      * @throws ConfigurationException if the child element is not found
      */
-    protected Element getElement(Element parent, String name) throws ConfigurationException {
+    protected Element getElement(Element parent, String name)
+            throws ConfigurationException {
         return getElement(parent, name, true);
     }
 
@@ -685,17 +286,4 @@ public class ConfigurationParser {
         }
     }
 
-    /**
-     * Creates a new instance of a configuration parser but with overlayed
-     * variables.
-     *
-     * @param variables the variables overlay
-     * @return a new configuration parser instance
-     */
-    protected ConfigurationParser createSubParser(Properties variables) {
-        // overlay the properties
-        Properties props = new Properties(this.variables);
-        props.putAll(variables);
-        return new ConfigurationParser(props);
-    }
 }
