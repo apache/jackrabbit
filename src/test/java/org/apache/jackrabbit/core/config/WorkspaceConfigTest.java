@@ -28,12 +28,12 @@ import org.xml.sax.InputSource;
  */
 public class WorkspaceConfigTest extends TestCase {
 
-    private ConfigurationParser parser;
+    private RepositoryConfigurationParser parser;
 
     protected void setUp() {
         Properties variables = new Properties();
         variables.setProperty("wsp.home", "target");
-        parser = new ConfigurationParser(variables);
+        parser = new RepositoryConfigurationParser(variables);
     }
 
     /**
