@@ -752,7 +752,12 @@ public class SessionImpl implements Session, Dumpable {
      * {@inheritDoc}
      */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
-        return getNodeByUUID(UUID.fromString(uuid));
+        try {
+            return getNodeByUUID(UUID.fromString(uuid));
+        } catch (IllegalArgumentException e) {
+            // Assuming the exception is from UUID.fromString()
+            throw new RepositoryException("Invalid UUID: " + uuid, e);
+        }
     }
 
     /**
