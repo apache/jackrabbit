@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.backup;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -41,7 +40,7 @@ public class LaunchBackup {
 	RepositoryImpl repo;
     BackupConfig conf;
     RepositoryConfig repoConf;
-    RepositoryBackup backup;
+    ManagerBackup backup;
   
     
 
@@ -67,9 +66,13 @@ public class LaunchBackup {
      * @throws RepositoryException 
      * @throws IOException 
      * @throws IOException 
+     * @throws IllegalAccessException 
+     * @throws InstantiationException 
+     * @throws ClassNotFoundException 
+     * @throws SizeException 
      *
      */
-    public static void main(String[] args) throws RepositoryException, AccessDeniedException, IOException {
+    public static void main(String[] args) throws RepositoryException, AccessDeniedException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException {
        // I have to declare all var here so they are not resetted out of the for.
     	String zipFile = null;
         String confFile = null;
@@ -93,21 +96,15 @@ public class LaunchBackup {
             	h = new ZipFileBackupIOHandler(zipFile);
             }
             
-
-            if (args[i].equals("--size") && !(h != null)){
-            	
-            	Integer max = (new Integer(args[i+ 1]));
-                h.setMaxFileSize(max.intValue());        	
-            }
             
-            if (args[i].equals("--size") && !(h != null)){
+            if (args[i].equals("--size") && (h != null)){
             	
             	Integer max = (new Integer(args[i+ 1]));
                 h.setMaxFileSize(max.intValue());        	
             }
             
 
-            if (args[i].equals("--conf") && !(h != null)){
+            if (args[i].equals("--conf")){
             	
             	confFile = args[i + 1];
             	
@@ -127,16 +124,18 @@ public class LaunchBackup {
             } 
         }
 		   		
-    	LaunchBackup launch = new LaunchBackup(repoConfFile, home, confFile);
+    	LaunchBackup launch = null;
 		
     	//We need to shutdown properly the repository whatever happens
 		try {	
 	    	//Launch backup
 	    	if (isBackup) {
-					launch.backup(h);    		   		
+                launch = new LaunchBackup(repoConfFile, home, confFile); 
+                launch.backup(h);
 	    	}  	
 	    	//Launch restore
 	    	else if (isRestore) {
+	    	        launch = new LaunchBackup();
 	    			launch.restore(h);
 	    	}
 	    	//Launch nothing (if nothing specified
@@ -146,7 +145,8 @@ public class LaunchBackup {
 		}
 		finally
 		{
-			launch.shutdown();
+			if (launch !=null)
+			    launch.shutdown();
 		}
     }
 
@@ -166,27 +166,43 @@ public class LaunchBackup {
      *
      * @param String filename: name of the configuration file
      * @throws RepositoryException 
-     * @throws FileNotFoundException 
+     * @throws IllegalAccessException 
+     * @throws InstantiationException 
+     * @throws ClassNotFoundException 
+     * @throws SizeException 
+     * @throws IOException 
      */
-    public LaunchBackup(String repoConfFile, String home, String backupConfFile) throws RepositoryException, FileNotFoundException {
+    public LaunchBackup(String repoConfFile, String home, String backupConfFile) throws RepositoryException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException, IOException {
     	//Launch first the repository
 		this.repoConf = RepositoryConfig.create(repoConfFile, home);
 		this.repo = RepositoryImpl.create(this.repoConf);
 
 		//Create the backupConfig object
+       
 		FileReader fr = new FileReader(backupConfFile);
 		InputSource xml = new InputSource(fr);
-		this.conf = BackupConfig.create(xml, home);
-		this.backup =  RepositoryBackup.create(this.conf);
+		this.conf = BackupConfig.create(xml);
+		this.backup =  ManagerBackup.create(this.repo, this.conf);
     }
+    
+    /**
+     * Used for restore operations only
+     *
+     */
+
+    public LaunchBackup() {
+        // TODO Auto-generated constructor stub
+    }
+
+
 
     /**
     * Backup a repository
     *
-    * @param BackupIOHandler h a reference wher to backup
+    * @param BackupIOHandler h a reference where to backup
     */
     public void backup(BackupIOHandler h) throws AccessDeniedException, RepositoryException, IOException {
-        this.backup.backup(h);
+         this.backup.backup(h);
     }
 
     /**
@@ -195,7 +211,7 @@ public class LaunchBackup {
      * @param BackupIOHandler h a reference to the backup to restore
      */
     public void restore(BackupIOHandler h) {
-    	this.backup.restore(h);
+        this.backup.restore(h);
     }
     
     private void shutdown() {

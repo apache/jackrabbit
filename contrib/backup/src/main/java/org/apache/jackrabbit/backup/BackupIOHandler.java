@@ -16,11 +16,17 @@
  */
 package org.apache.jackrabbit.backup;
 
-public interface BackupIOHandler {
+import java.io.FileNotFoundException;
 
-	void setMaxFileSize(int i);
-	int getMaxFileSize();
+public interface BackupIOHandler {
+    
+     int getMaxFileSize();
+     void setMaxFileSize(int i);
 	//Add reference to the file
 	// How to precise if in or out... Maybe not needed?
+    void close();
+    void initBackup() throws FileNotFoundException;
+    void initRestore();
+    void init();
 
 }
