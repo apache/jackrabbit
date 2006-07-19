@@ -316,6 +316,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             if (!session.equals(info.getLockHolder())) {
                 throw new LockException("Node not locked by session: " + node.safeGetJCRPath());
             }
+            session.removeLockToken(info.getLockToken(session), false);
 
             element.set(null);
             info.setLive(false);
