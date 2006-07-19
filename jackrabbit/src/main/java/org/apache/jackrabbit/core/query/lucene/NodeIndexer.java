@@ -302,10 +302,8 @@ public class NodeIndexer {
                     doc.add(Field.Text(field, r));
                 }
             }
-        } catch (ItemStateException e) {
-            log.warn("Exception while indexing binary property: " + e.toString());
-            log.debug("Dump: ", e);
-        } catch (RepositoryException e) {
+        } catch (Exception e) {
+            // TODO: How to recover from a transient indexing failure?
             log.warn("Exception while indexing binary property: " + e.toString());
             log.debug("Dump: ", e);
         }
