@@ -308,16 +308,14 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
         // check sanity of session
         session.sanityCheck();
 
-        // check privileges
-        if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
-            // clear cache
-            evictItem(id);
-            throw new AccessDeniedException("cannot read item " + id);
-        }
-
         // check cache
         ItemImpl item = retrieveItem(id);
         if (item == null) {
+            // not yet in cache, need to create instance:
+            // check privileges
+            if (!session.getAccessManager().isGranted(id, AccessManager.READ)) {
+                throw new AccessDeniedException("cannot read item " + id);
+            }
             // create instance of item
             item = createItemInstance(id);
         }
