@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.backup;
 
-
 import org.apache.jackrabbit.core.RepositoryImpl;
 
 /**
@@ -25,30 +24,33 @@ import org.apache.jackrabbit.core.RepositoryImpl;
  */
 public class RepositoryBackup extends Backup {
 
+    /**
+     * @param repo
+     * @param conf
+     */
     public RepositoryBackup(RepositoryImpl repo, BackupConfig conf) {
         super(repo, conf);
         // TODO Auto-generated constructor stub
     }
 
-//  @Override
-    public void backup(BackupIOHandler out, BackupConfig conf) {
-        // TODO Auto-generated method stub
+    /**
+     * 
+     */
+    public RepositoryBackup() {
+        super();
+        // TODO Auto-generated constructor stub
     }
-    
-//  @Override
-    public void restore(BackupIOHandler in) {
+
+
+
+    public void backup(BackupIOHandler h) {
         // TODO Auto-generated method stub
         
     }
-    
-    public static RepositoryBackup create(BackupConfig conf2) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	public void backup(BackupIOHandler out) {
-		// TODO Auto-generated method stub
-		
-	}
+    public void restore(BackupIOHandler h) {
+        // TODO Auto-generated method stub
+        
+    }
 
 }

@@ -16,12 +16,32 @@
  */
 package org.apache.jackrabbit.backup;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+
+/**
+ * Question: ZipFile
+ * 
+ * @author ntoper
+ *
+ */
 public class ZipFileBackupIOHandler implements BackupIOHandler {
 
     int maxFileSize;
+    File zip;
+    FileInputStream fin;
+    FileChannel fc;
+    private ByteBuffer buffer;
+	private FileOutputStream fout;
+
 	
 	public ZipFileBackupIOHandler(String zipFile) {
-		// TODO Auto-generated constructor stub
+		this.zip = new File(zipFile);
+        this.buffer = ByteBuffer.allocateDirect(2048);        
 	}
 
 	public void setMaxFileSize(int i) {
@@ -31,5 +51,50 @@ public class ZipFileBackupIOHandler implements BackupIOHandler {
     public int getMaxFileSize() {
         return this.maxFileSize;
     }
+
+    public void close() {
+        // TODO Auto-generated method stub
+        
+    }
+    
+    public void init() {
+       //Useful?
+        this.buffer.clear();
+    }
+
+    public void initBackup() throws FileNotFoundException {
+        this.fout = new FileOutputStream(this.zip);
+        this.fc = this.fin.getChannel();      
+    }
+    
+    public void initRestore() {
+        try {
+			this.fin = new FileInputStream(this.zip);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        this.fc = this.fin.getChannel();
+        
+    }
+
+
+    
+    
+    /**
+     * Create a directory per resources
+     *   Backup the resource and zip it
+     * @param string
+     * @param content
+     */
+    /*  private void writeFile(String string, String content) {
+             File conf = new File();
+                FileWriter fw = new FileWriter(cheminAbstraitSortie);
+                BufferedWriter tamponEcriture = new BufferedWriter(fluxEcritureTexte);
+                tamponEcriture.write(xml);
+                tamponEcriture.flush();
+                tamponEcriture.close();
+        
+            }  */
 
 }

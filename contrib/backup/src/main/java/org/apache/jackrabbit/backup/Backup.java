@@ -22,13 +22,12 @@ import org.apache.jackrabbit.core.RepositoryImpl;
  * This class is the abstract class of all resources to backup. If you need to add a new backuped resource
  * extend Backup and implement both the save and restore methods.
  *
- * The constructor is called when instantiating the specific backup resource class through RepositoryBackup.
+ * The constructor is called when instantiating the specific backup resource class through ManagerBackup.
  */
 public abstract class Backup {
 
     RepositoryImpl repo;
     BackupConfig conf;
-    String name;
 
     /**
      *
@@ -40,17 +39,25 @@ public abstract class Backup {
         this.repo = repo;
         this.conf = conf;
     }
-
-    public void setRepo(RepositoryImpl repo) {
-        this.repo = repo;
+    
+    public Backup() {
     }
 
     public RepositoryImpl getRepo() {
         return this.repo;
     }
-
-    public abstract void backup(BackupIOHandler out);
-    public abstract void restore(BackupIOHandler in);
+      
+    /*
+     * Each ResourceBackup is responsible to handle backup of their content + configuration
+     * 
+     * For each resource
+     *   Test maxFileSize
+     * Zip the whole workingFolder
+     * check the checksum
+     * Send it to out      
+     */
+    public abstract void backup(BackupIOHandler h);
+    public abstract void restore(BackupIOHandler h);
 
 	
 
