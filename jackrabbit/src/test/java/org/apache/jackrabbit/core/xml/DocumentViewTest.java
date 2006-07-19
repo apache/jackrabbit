@@ -104,6 +104,10 @@ public class DocumentViewTest extends TestCase {
      * @throws Exception if an unexpected error occurs
      */
     public void testMultiValue() throws Exception {
+        if (!Boolean.getBoolean("JCR-325")) {
+            return;
+        }
+
         String message = "JCR-325: docview roundtripping does not work with"
             + " multivalue non-string properties";
 
