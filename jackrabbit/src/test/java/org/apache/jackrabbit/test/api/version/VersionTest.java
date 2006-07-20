@@ -708,4 +708,13 @@ public class VersionTest extends AbstractVersionTest {
         } catch (ConstraintViolationException success) {
         }
     }
+
+    /**
+     * Tests if the jcr:frozenUuid property has the correct type
+     * @throws Exception
+     */
+    public void testFrozenUUID() throws Exception {
+        Property p = version.getNode(jcrFrozenNode).getProperty(jcrFrozenUuid);
+        assertEquals("jcr:fronzenUuid should be of type string", PropertyType.TYPENAME_STRING, PropertyType.nameFromValue(p.getType()));
+    }
 }

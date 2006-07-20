@@ -97,6 +97,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String jcrFrozenNode;
 
     /**
+     * JCR Name jcr:frozenUuid using the namespace resolver of the current session.
+     */
+    protected String jcrFrozenUuid;
+
+    /**
      * JCR Name jcr:rootVersion using the namespace resolver of the current session.
      */
     protected String jcrRootVersion;
@@ -292,6 +297,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         jcrCreated = superuser.getNamespacePrefix(NS_JCR_URI) + ":created";
         jcrVersionHistory = superuser.getNamespacePrefix(NS_JCR_URI) + ":versionHistory";
         jcrFrozenNode = superuser.getNamespacePrefix(NS_JCR_URI) + ":frozenNode";
+        jcrFrozenUuid = superuser.getNamespacePrefix(NS_JCR_URI) + ":frozenUuid";
         jcrRootVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":rootVersion";
         jcrBaseVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":baseVersion";
         jcrUUID = superuser.getNamespacePrefix(NS_JCR_URI) + ":uuid";

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api.version;
 
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.core.UserTransactionImpl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -26,6 +27,7 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.transaction.UserTransaction;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,6 +86,20 @@ public class RemoveVersionTest extends AbstractVersionTest {
             versionableNode2.remove();
         } finally {
             super.tearDown();
+        }
+    }
+
+    /**
+     * Test removed version gets invalid
+     */
+    public void testRemovedInvalid() throws Exception {
+        versionableNode.getVersionHistory().removeVersion(version.getName());
+        // assert: version has become invalid
+        try {
+            version.getPredecessors();
+            fail("Removed version still operational.");
+        } catch (RepositoryException e) {
+            // expected
         }
     }
 
