@@ -866,8 +866,9 @@ public class XATest extends AbstractJCRTest {
         n.checkin();
 
         // assert: base versions must differ
-        assertNotSame("Base versions must differ",
-                n.getBaseVersion().getName(), nOther.getBaseVersion().getName());
+        if (n.getBaseVersion().getName().equals(nOther.getBaseVersion().getName())) {
+            fail("Base versions must differ");
+        }
 
         // assert: version must not be visible to other session
         try {
@@ -881,7 +882,7 @@ public class XATest extends AbstractJCRTest {
         utx.commit();
 
         // assert: base versions must be equal
-        assertSame("Base versions must be equal",
+        assertEquals("Base versions must be equal",
                 n.getBaseVersion().getName(), nOther.getBaseVersion().getName());
     }
 
