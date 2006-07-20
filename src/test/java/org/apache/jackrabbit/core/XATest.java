@@ -24,6 +24,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.NodeIterator;
 import javax.jcr.observation.Event;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
@@ -32,6 +33,7 @@ import javax.transaction.UserTransaction;
 import javax.transaction.RollbackException;
 import java.io.PrintWriter;
 import java.io.PrintStream;
+import java.util.StringTokenizer;
 
 /**
  * <code>XATest</code> contains the test cases for the methods
@@ -51,6 +53,31 @@ public class XATest extends AbstractJCRTest {
         super.setUp();
 
         otherSuperuser = helper.getSuperuserSession();
+
+        // clean testroot on second workspace
+        Session s2 = helper.getSuperuserSession(workspaceName);
+        Node root = s2.getRootNode();
+        if (root.hasNode(testPath)) {
+            // clean test root
+            Node testRootNode = root.getNode(testPath);
+            for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
+                children.nextNode().remove();
+            }
+        } else {
+            // create nodes to testPath
+            StringTokenizer names = new StringTokenizer(testPath, "/");
+            Node currentNode = root;
+            while (names.hasMoreTokens()) {
+                String name = names.nextToken();
+                if (currentNode.hasNode(name)) {
+                    currentNode = currentNode.getNode(name);
+                } else {
+                    currentNode = currentNode.addNode(name, testNodeType);
+                }
+            }
+        }
+        root.save();
+
     }
 
     /**
