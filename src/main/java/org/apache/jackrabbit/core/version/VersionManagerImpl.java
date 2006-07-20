@@ -282,7 +282,7 @@ public class VersionManagerImpl extends AbstractVersionManager {
             }
         });
 
-        return (AbstractVersion)
+        return (VersionImpl)
                 ((SessionImpl) node.getSession()).getNodeById(version.getId());
     }
 
@@ -295,7 +295,7 @@ public class VersionManagerImpl extends AbstractVersionManager {
     public void removeVersion(VersionHistory history, final QName name)
             throws VersionException, RepositoryException {
 
-        final AbstractVersionHistory historyImpl = (AbstractVersionHistory) history;
+        final VersionHistoryImpl historyImpl = (VersionHistoryImpl) history;
         if (!historyImpl.hasNode(name)) {
             throw new VersionException("Version with name " + name.toString()
                     + " does not exist in this VersionHistory");
@@ -326,7 +326,7 @@ public class VersionManagerImpl extends AbstractVersionManager {
                 escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget(){
             public Object run() throws RepositoryException {
                 InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                        ((AbstractVersionHistory) history).getInternalVersionHistory();
+                        ((VersionHistoryImpl) history).getInternalVersionHistory();
                 return setVersionLabel(vh, version, label, move);
             }
         });
