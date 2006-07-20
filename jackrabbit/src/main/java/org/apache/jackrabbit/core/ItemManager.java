@@ -29,10 +29,6 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.version.AbstractVersion;
-import org.apache.jackrabbit.core.version.AbstractVersionHistory;
-import org.apache.jackrabbit.core.version.InternalVersion;
-import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
@@ -533,12 +529,11 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
      * @return version instance
      * @throws RepositoryException if an error occurs
      */
-    protected AbstractVersion createVersionInstance(
+    protected VersionImpl createVersionInstance(
             NodeId id, NodeState state, NodeDefinition def,
             ItemLifeCycleListener[] listeners) throws RepositoryException {
 
-        InternalVersion version = session.getVersionManager().getVersion(id);
-        return new VersionImpl(this, session, id, state, def, listeners, version);
+        return new VersionImpl(this, session, id, state, def, listeners);
     }
 
     /**
@@ -550,13 +545,11 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
      * @return version instance
      * @throws RepositoryException if an error occurs
      */
-    protected AbstractVersionHistory createVersionHistoryInstance(
+    protected VersionHistoryImpl createVersionHistoryInstance(
             NodeId id, NodeState state, NodeDefinition def,
             ItemLifeCycleListener[] listeners) throws RepositoryException {
 
-        InternalVersionHistory history =
-                session.getVersionManager().getVersionHistory(id);
-        return new VersionHistoryImpl(this, session, id, state, def, listeners, history);
+        return new VersionHistoryImpl(this, session, id, state, def, listeners);
     }
 
     //---------------------------------------------------< item cache methods >

@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.version.AbstractVersion;
+import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.DateVersionSelector;
 import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.xml.ImportHandler;
@@ -597,7 +597,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
         // add all versions to map of versions to restore
         final HashMap toRestore = new HashMap();
         for (int i = 0; i < versions.length; i++) {
-            AbstractVersion v = (AbstractVersion) versions[i];
+            VersionImpl v = (VersionImpl) versions[i];
             VersionHistory vh = v.getContainingHistory();
             // check for collision
             if (toRestore.containsKey(vh.getUUID())) {
@@ -633,7 +633,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
                 Version[] restored = null;
                 Iterator iter = toRestore.values().iterator();
                 while (iter.hasNext()) {
-                    AbstractVersion v = (AbstractVersion) iter.next();
+                    VersionImpl v = (VersionImpl) iter.next();
                     try {
                         NodeImpl node = (NodeImpl) session.getNodeByUUID(v.getFrozenNode().getFrozenUUID());
                         restored = node.internalRestore(v, vsel, removeExisting);

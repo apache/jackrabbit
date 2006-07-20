@@ -167,7 +167,7 @@ public class XAVersionManager extends AbstractVersionManager
 
         if (isInXA()) {
             InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                    ((AbstractVersionHistory) history).getInternalVersionHistory();
+                    ((VersionHistoryImpl) history).getInternalVersionHistory();
             removeVersion(vh, versionName);
             return;
         }
@@ -183,7 +183,7 @@ public class XAVersionManager extends AbstractVersionManager
 
         if (isInXA()) {
             InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                    ((AbstractVersionHistory) history).getInternalVersionHistory();
+                    ((VersionHistoryImpl) history).getInternalVersionHistory();
             InternalVersion v = setVersionLabel(vh, version, label, move);
             if (v == null) {
                 return null;

@@ -38,8 +38,8 @@ import org.apache.jackrabbit.core.version.InternalFreeze;
 import org.apache.jackrabbit.core.version.InternalFrozenNode;
 import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
 import org.apache.jackrabbit.core.version.VersionSelector;
-import org.apache.jackrabbit.core.version.AbstractVersion;
 import org.apache.jackrabbit.core.version.DateVersionSelector;
+import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -3085,7 +3085,7 @@ public class NodeImpl extends ItemImpl implements Node {
             NodeImpl node;
             try {
                 // check if versionable node exists
-                InternalFrozenNode fn = ((AbstractVersion) version).getFrozenNode();
+                InternalFrozenNode fn = ((VersionImpl) version).getFrozenNode();
                 node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
                 if (removeExisting) {
                     try {
@@ -3105,7 +3105,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             } catch (ItemNotFoundException e) {
                 // not found, create new one
-                node = addNode(relPath, ((AbstractVersion) version).getFrozenNode());
+                node = addNode(relPath, ((VersionImpl) version).getFrozenNode());
             }
 
             // recreate node from frozen state
@@ -3302,8 +3302,8 @@ public class NodeImpl extends ItemImpl implements Node {
             return null;
         }
         // test versions
-        AbstractVersion v = (AbstractVersion) getBaseVersion();
-        AbstractVersion vp = (AbstractVersion) srcNode.getBaseVersion();
+        VersionImpl v = (VersionImpl) getBaseVersion();
+        VersionImpl vp = (VersionImpl) srcNode.getBaseVersion();
         if (vp.isMoreRecent(v) && !isCheckedOut()) {
             // I f V' is a successor (to any degree) of V, then the merge result for
             // N is update. This case can be thought of as the case where N' is
@@ -3732,7 +3732,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws UnsupportedRepositoryOperationException, RepositoryException {
 
         try {
-            internalRestore((AbstractVersion) version, vsel, removeExisting);
+            internalRestore((VersionImpl) version, vsel, removeExisting);
         } catch (RepositoryException e) {
             // revert session
             try {
@@ -3755,7 +3755,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param removeExisting
      * @throws RepositoryException
      */
-    protected Version[] internalRestore(AbstractVersion version, VersionSelector vsel,
+    protected Version[] internalRestore(VersionImpl version, VersionSelector vsel,
                                         boolean removeExisting)
             throws RepositoryException {
 
@@ -3933,7 +3933,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     }
                 }
                 // get desired version from version selector
-                AbstractVersion v = (AbstractVersion) vsel.select(history);
+                VersionImpl v = (VersionImpl) vsel.select(history);
 
                 // check existing version of item exists
                 if (!itemMgr.itemExists(nodeId)) {
@@ -3947,7 +3947,7 @@ public class NodeImpl extends ItemImpl implements Node {
                             log.error(msg);
                             throw new VersionException(msg);
                         }
-                        v = (AbstractVersion) vs[0];
+                        v = (VersionImpl) vs[0];
                     }
                     restoredChild = addNode(child.getName(), v.getFrozenNode());
                 } else {
