@@ -25,6 +25,7 @@ import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
@@ -191,4 +192,45 @@ public class RemoveVersionTest extends AbstractVersionTest {
         catch (ReferentialIntegrityException e) {
             // success
         }
-    }}
+    }
+
+    /**
+     * Checks if all versions but the base and root one can be removed.
+     */
+    public void testRemoveAllBut2() throws RepositoryException {
+        String baseVersion = versionableNode.getBaseVersion().getName();
+        VersionHistory vh = versionableNode.getVersionHistory();
+        VersionIterator vi = vh.getAllVersions();
+        while (vi.hasNext()) {
+            Version currenVersion = vi.nextVersion();
+            String versionName = currenVersion.getName();
+            if (!versionName.equals("jcr:rootVersion") && !versionName.equals(baseVersion)) {
+                vh.removeVersion(versionName);
+            }
+        }
+    }
+
+    /**
+     * Checks if all versions by the base and root one can be removed.
+     */
+    public void testRemoveRootVersion() throws RepositoryException {
+        try {
+            versionableNode.getVersionHistory().getRootVersion().remove();
+            fail("Removal of root version should throw an exception.");
+        } catch (RepositoryException e) {
+            // ignore
+        }
+    }
+
+    /**
+     * Checks if all versions by the base and root one can be removed.
+     */
+    public void testRemoveBaseVersion() throws RepositoryException {
+        try {
+            versionableNode.getBaseVersion().remove();
+            fail("Removal of base version should throw an exception.");
+        } catch (RepositoryException e) {
+            // ignore
+        }
+    }
+}
