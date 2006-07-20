@@ -252,6 +252,8 @@ public class VersionManagerImpl extends AbstractVersionManager {
                         } else {
                             return null;
                         }
+                    } else {
+                        return null;
                     }
                     versionItems.put(id, item);
                 }
@@ -368,6 +370,16 @@ public class VersionManagerImpl extends AbstractVersionManager {
         } finally {
             releaseReadLock();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void itemDiscarded(InternalVersionItem item) {
+        // evict removed item from cache
+        aquireReadLock();
+        versionItems.remove(item.getId());
+        releaseReadLock();
     }
 
     /**

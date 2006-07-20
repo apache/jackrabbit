@@ -72,6 +72,6 @@ public interface InternalFrozenNode extends InternalFreeze {
      * @return <code>true</code> if this node has the history;
      *         <code>false</code> otherwise.
      */
-    boolean hasFrozenHistory(UUID uud);
+    boolean hasFrozenHistory(UUID uuid);
 
 }

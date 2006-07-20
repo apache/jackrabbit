@@ -33,8 +33,8 @@ abstract class InternalFreezeImpl extends InternalVersionItemImpl
      * @param vMgr
      * @param parent
      */
-    protected InternalFreezeImpl(AbstractVersionManager vMgr, InternalVersionItem parent) {
-        super(vMgr);
+    protected InternalFreezeImpl(AbstractVersionManager vMgr, NodeStateEx node, InternalVersionItem parent) {
+        super(vMgr, node);
         this.parent = parent;
     }
 

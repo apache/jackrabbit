@@ -451,4 +451,13 @@ abstract class AbstractVersionManager implements VersionManager {
      */
     protected void versionDestroyed(InternalVersion version) {
     }
+
+    /**
+     * Invoked by the internal version item itself, when it's underlying
+     * persistence state was discarded.
+     *
+     * @param item
+     */
+    protected void itemDiscarded(InternalVersionItem item) {
+    }
 }
