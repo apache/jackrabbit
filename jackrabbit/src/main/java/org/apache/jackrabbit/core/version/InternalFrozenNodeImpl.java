@@ -61,11 +61,6 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     private static final int MODE_COPY_RECURSIVE = 3;
 
     /**
-     * the underlying persistance node
-     */
-    private NodeStateEx node;
-
-    /**
      * the list of frozen properties
      */
     private PropertyState[] frozenProperties;
@@ -99,8 +94,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     public InternalFrozenNodeImpl(AbstractVersionManager vMgr, NodeStateEx node,
                                   InternalVersionItem parent)
             throws RepositoryException {
-        super(vMgr, parent);
-        this.node = node;
+        super(vMgr, node, parent);
 
         // init the frozen properties
         PropertyState[] props;
