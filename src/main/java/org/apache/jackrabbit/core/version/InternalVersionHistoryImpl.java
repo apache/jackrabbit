@@ -74,11 +74,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     private HashMap tempVersionCache = new HashMap();
 
     /**
-     * The nodes state of this version history
-     */
-    private NodeStateEx node;
-
-    /**
      * the node that holds the label nodes
      */
     private NodeStateEx labelNode;
@@ -98,8 +93,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      */
     public InternalVersionHistoryImpl(AbstractVersionManager vMgr, NodeStateEx node)
             throws RepositoryException {
-        super(vMgr);
-        this.node = node;
+        super(vMgr, node);
         init();
     }
 

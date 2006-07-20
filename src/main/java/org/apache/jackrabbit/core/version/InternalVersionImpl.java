@@ -37,11 +37,6 @@ class InternalVersionImpl extends InternalVersionItemImpl
         implements InternalVersion {
 
     /**
-     * the underlying persistance node of this version
-     */
-    private NodeStateEx node;
-
-    /**
      * the date when this version was created
      */
     private Calendar created;
@@ -74,9 +69,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param node
      */
     public InternalVersionImpl(InternalVersionHistoryImpl vh, NodeStateEx node, QName name) {
-        super(vh.getVersionManager());
+        super(vh.getVersionManager(), node);
         this.versionHistory = vh;
-        this.node = node;
         this.name = name;
 
         // init internal values

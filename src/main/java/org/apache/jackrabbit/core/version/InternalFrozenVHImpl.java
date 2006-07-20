@@ -30,19 +30,13 @@ class InternalFrozenVHImpl extends InternalFreezeImpl
         implements InternalFrozenVersionHistory {
 
     /**
-     * the underlying persistence node
-     */
-    private NodeStateEx node;
-
-    /**
      * Creates a new frozen version history.
      *
      * @param node
      */
     public InternalFrozenVHImpl(AbstractVersionManager vMgr, NodeStateEx node,
                                 InternalVersionItem parent) {
-        super(vMgr, parent);
-        this.node = node;
+        super(vMgr, node, parent);
     }
 
 
