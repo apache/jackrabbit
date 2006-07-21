@@ -534,11 +534,23 @@ public final class QName implements Cloneable, Comparable, Serializable {
         if (localName == null) {
             throw new IllegalArgumentException("invalid localName specified");
         }
-        // internalize both namespaceURI and localName to improve performance
-        // of QName comparisons
+        // internalize only namespaceURI to improve performance of QName
+        // comparisons. Please note that we do not internalize the localname
+        // since this could blow perm space for big repositories.
         this.namespaceURI = namespaceURI.intern();
-        this.localName = localName.intern();
+        this.localName = localName;
         hash = 0;
+    }
+
+    /**
+     * Returns a new instance of this class with the same namespace URI and
+     * local name as has been deserialized.
+     * <p>
+     * If just sing plain serialization, the strings are just created but not
+     * internalized.
+     */
+    private Object readResolve() {
+        return new QName(namespaceURI, localName);
     }
 
     //------------------------------------------------------< factory methods >
@@ -712,10 +724,10 @@ public final class QName implements Cloneable, Comparable, Serializable {
         }
         if (obj instanceof QName) {
             QName other = (QName) obj;
-            // localName & namespaceURI are internalized,
-            // we only have to compare their references
-            return localName == other.localName
-                    && namespaceURI == other.namespaceURI;
+            // namespaceURI is internalized, we only have to compare their
+            // references
+            return namespaceURI == other.namespaceURI
+                    && localName.equals(other.localName);
         }
         return false;
     }
@@ -763,9 +775,16 @@ public final class QName implements Cloneable, Comparable, Serializable {
      * @throws ClassCastException if the given object is not a qualified name
      * @see Comparable#compareTo(Object)
      */
-    public int compareTo(Object o) throws ClassCastException {
+    public int compareTo(Object o) {
+        if (this == o) {
+            return 0;
+        }
         QName other = (QName) o;
-        int result = namespaceURI.compareTo(other.namespaceURI);
-        return (result != 0) ? result : localName.compareTo(other.localName);
+        // == comparison ok, because of .intern() strings
+        if (namespaceURI == other.namespaceURI) {
+            return localName.compareTo(other.localName);
+        } else {
+            return namespaceURI.compareTo(other.namespaceURI);
+        }
     }
 }
