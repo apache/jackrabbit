@@ -157,43 +157,6 @@ public final class Path {
     }
 
     //------------------------------------------------------< factory methods >
-
-    /**
-     * Creates a new <code>Path</code> from the given path elements.
-     *
-     * @param elements the path elements that will form the path
-     * @return a new <code>Path</code>
-     */
-    public static Path create(PathElement[] elements) {
-        PathElement[] tmp = new PathElement[elements.length];
-        boolean isNormalized = true;
-        boolean leadingParent = true;
-        for (int i = 0; i < elements.length; i++) {
-            PathElement elem = tmp[i] = elements[i];
-            if (elem.denotesCurrent() || elem.denotesParent()) {
-                leadingParent &= elem.denotesParent();
-                isNormalized &= !elem.denotesCurrent() && (leadingParent || !elem.denotesParent());
-            }
-        }
-        return new Path(tmp, isNormalized);
-    }
-
-    /**
-     * Creates a new <code>Path</code> from the given path elements but does
-     * not check if the path is normalized or not.
-     * <p/>
-     * Please note that this method should only be called, if the normalized
-     * state is known. Further is the element array not duplicated. Basically
-     * this method should only be called from {@link PathFormat}.
-     *
-     * @param elements     the path elements that will form the path
-     * @param isNormalized flag
-     * @return a new <code>Path</code>
-     */
-    protected static Path create(PathElement[] elements, boolean isNormalized) {
-        return new Path(elements, isNormalized);
-    }
-
     /**
      * Creates a new <code>Path</code> from the given <code>jcrPath</code>
      * string. If <code>normalize</code> is <code>true</code>, the returned
@@ -209,9 +172,12 @@ public final class Path {
     public static Path create(String jcrPath, NamespaceResolver resolver,
                               boolean normalize)
             throws MalformedPathException {
-        return normalize
-                ? PathFormat.parse(null, jcrPath, resolver).getNormalizedPath()
-                : PathFormat.parse(null, jcrPath, resolver);
+        Path path = PathFormat.parse(jcrPath, resolver);
+        if (normalize) {
+            return path.getNormalizedPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -230,9 +196,12 @@ public final class Path {
     public static Path create(Path parent, String relJCRPath,
                               NamespaceResolver resolver, boolean canonicalize)
             throws MalformedPathException {
-        return canonicalize
-                ? PathFormat.parse(parent, relJCRPath, resolver).getCanonicalPath()
-                : PathFormat.parse(parent, relJCRPath, resolver);
+        Path path = PathFormat.parse(parent, relJCRPath, resolver);
+        if (canonicalize) {
+            return path.getCanonicalPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -252,11 +221,16 @@ public final class Path {
         if (relPath.isAbsolute()) {
             throw new MalformedPathException("relPath is not a relative path");
         }
+
         PathBuilder pb = new PathBuilder(parent);
         pb.addAll(relPath.getElements());
-        return normalize
-                ? pb.getPath().getNormalizedPath()
-                : pb.getPath();
+
+        Path path = pb.getPath();
+        if (normalize) {
+            return path.getNormalizedPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -265,17 +239,21 @@ public final class Path {
      * the returned path will be normalized (or canonicalized, if the parent
      * path is absolute).
      *
-     * @param parent    the parent path
-     * @param name      the name of the new path element.
+     * @param parent the parent path
+     * @param name the name of the new path element.
      * @param normalize
      * @return the new path.
      */
     public static Path create(Path parent, QName name, boolean normalize) throws MalformedPathException {
         PathBuilder pb = new PathBuilder(parent);
         pb.addLast(name);
-        return normalize
-                ? pb.getPath().getNormalizedPath()
-                : pb.getPath();
+
+        Path path = pb.getPath();
+        if (normalize) {
+            return path.getNormalizedPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -292,9 +270,13 @@ public final class Path {
             throws MalformedPathException {
         PathBuilder pb = new PathBuilder(parent);
         pb.addLast(name, index);
-        return normalize
-                ? pb.getPath().getNormalizedPath()
-                : pb.getPath();
+
+        Path path = pb.getPath();
+        if (normalize) {
+            return path.getNormalizedPath();
+        } else {
+            return path;
+        }
     }
 
     /**
@@ -307,31 +289,19 @@ public final class Path {
      */
     public static Path create(QName name, int index)
             throws IllegalArgumentException {
-        PathElement elem = createPathElement(name, index);
-        return new Path(new PathElement[]{elem}, !elem.denotesCurrent());
-    }
-
-    /**
-     * Create a PathElement from the given QName and index.
-     *
-     * @param qName
-     * @param index
-     * @return new path element
-     * @throws IllegalArgumentException if the index is less than {@link Path#INDEX_UNDEFINED}.
-     */
-    public static PathElement createPathElement(QName qName, int index) {
         if (index < Path.INDEX_UNDEFINED) {
             throw new IllegalArgumentException("index must not be negative: " + index);
         }
+        PathElement elem;
         if (index < Path.INDEX_DEFAULT) {
-            return PathElement.create(qName);
+            elem = PathElement.create(name);
         } else {
-            return PathElement.create(qName, index);
+            elem = PathElement.create(name, index);
         }
+        return new Path(new PathElement[]{elem}, !elem.denotesCurrent());
     }
 
     //------------------------------------------------------< utility methods >
-
     /**
      * Checks if <code>jcrPath</code> is a valid JCR-style absolute or relative
      * path.
@@ -346,7 +316,6 @@ public final class Path {
     }
 
     //-------------------------------------------------------< public methods >
-
     /**
      * Tests whether this path represents the root path, i.e. "/".
      *
@@ -484,8 +453,7 @@ public final class Path {
 
         // determine length of common path fragment
         int lengthCommon = 0;
-        for (int i = 0; i < p0.getElements().length && i < p1.getElements().length; i++)
-        {
+        for (int i = 0; i < p0.getElements().length && i < p1.getElements().length; i++) {
             if (!p0.getElement(i).equals(p1.getElement(i))) {
                 break;
             }
@@ -531,9 +499,7 @@ public final class Path {
      *
      * @param degree the relative degree of the requested ancestor.
      * @return the ancestor path of the specified degree.
-     * @throws PathNotFoundException
-     *                                  if there is no ancestor of the specified
-     *                                  degree
+     * @throws PathNotFoundException if there is no ancestor of the specified degree
      * @throws IllegalArgumentException if <code>degree</code> is negative
      */
     public Path getAncestor(int degree)
@@ -712,7 +678,6 @@ public final class Path {
     }
 
     //---------------------------------------------------------------< Object >
-
     /**
      * Returns the internal string representation of this <code>Path</code>.
      * <p/>
@@ -823,7 +788,6 @@ public final class Path {
     }
 
     //--------------------------------------------------------< inner classes >
-
     /**
      * Internal helper class used to build a path from pre-parsed path elements.
      * <p/>
