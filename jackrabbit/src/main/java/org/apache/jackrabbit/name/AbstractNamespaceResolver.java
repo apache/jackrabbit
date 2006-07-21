@@ -38,35 +38,6 @@ public abstract class AbstractNamespaceResolver implements NamespaceResolver {
     private final Set listeners;
 
     /**
-     * @inheritDoc
-     */
-    public QName getQName(String jcrName)
-            throws IllegalNameException, UnknownPrefixException {
-        return NameFormat.parse(jcrName, this);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public String getJCRName(QName qName) throws NoPrefixDeclaredException {
-        return NameFormat.format(qName, this);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public Path getQPath(String jcrPath) throws MalformedPathException {
-        return PathFormat.parse(jcrPath, this);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public String getJCRPath(Path qPath) throws NoPrefixDeclaredException {
-        return PathFormat.format(qPath, this);
-    }
-
-    /**
      * Creates a <code>AbstractNamespaceResolver</code> without listener
      * support.
      */
@@ -87,6 +58,25 @@ public abstract class AbstractNamespaceResolver implements NamespaceResolver {
         } else {
             listeners = null;
         }
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * @deprecated use {@link NameFormat#parse(String, NamespaceResolver)} instead.
+     */
+    public QName getQName(String jcrName)
+            throws IllegalNameException, UnknownPrefixException {
+        return NameFormat.parse(jcrName, this);
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * @deprecated use {@link NameFormat#format(QName, NamespaceResolver)} instead.
+     */
+    public String getJCRName(QName qName) throws NoPrefixDeclaredException {
+        return NameFormat.format(qName, this);
     }
 
     //--------------------------------------------< NamespaceListener support >

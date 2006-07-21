@@ -16,6 +16,11 @@
  */
 package org.apache.jackrabbit.util;
 
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.SessionNamespaceResolver;
+
 import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
@@ -27,10 +32,6 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
-
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.SessionNamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 
 /**
  * <code>Locked</code> is a utility to synchronize modifications on a lockable
@@ -138,7 +139,7 @@ public abstract class Locked {
         EventListener listener = null;
         try {
             // check whether the lockable can be locked at all
-            if (!lockable.isNodeType(resolver.getJCRName(QName.MIX_LOCKABLE))) {
+            if (!lockable.isNodeType(NameFormat.format(QName.MIX_LOCKABLE, resolver))) {
                 throw new IllegalArgumentException("Node is not lockable");
             }
 

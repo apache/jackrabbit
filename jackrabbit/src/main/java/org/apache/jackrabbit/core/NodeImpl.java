@@ -49,6 +49,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.uuid.UUID;
@@ -163,7 +164,7 @@ public class NodeImpl extends ItemImpl implements Node {
              * have to build & resolve absolute path)
              */
             if (relPath.indexOf('/') == -1) {
-                QName propName = session.getNamespaceResolver().getQName(relPath);
+                QName propName = NameFormat.parse(relPath, session.getNamespaceResolver());
                 // check if property entry exists
                 NodeState thisState = (NodeState) state;
                 if (thisState.hasPropertyName(propName)) {
@@ -401,7 +402,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ConstraintViolationException, RepositoryException {
         QName qName;
         try {
-            qName = session.getNamespaceResolver().getQName(name);
+            qName = NameFormat.parse(name, session.getNamespaceResolver());
         } catch (IllegalNameException ine) {
             throw new RepositoryException("invalid property name: " + name, ine);
         } catch (UnknownPrefixException upe) {
@@ -578,7 +579,7 @@ public class NodeImpl extends ItemImpl implements Node {
     protected void removeChildProperty(String propName) throws RepositoryException {
         QName qName;
         try {
-            qName = session.getNamespaceResolver().getQName(propName);
+            qName = NameFormat.parse(propName, session.getNamespaceResolver());
         } catch (IllegalNameException ine) {
             throw new RepositoryException("invalid property name: "
                     + propName, ine);
@@ -1866,7 +1867,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         QName name = session.getHierarchyManager().getName(id);
         try {
-            return session.getNamespaceResolver().getJCRName(name);
+            return NameFormat.format(name, session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace "
@@ -2556,7 +2557,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
         QName ntName;
         try {
-            ntName = session.getNamespaceResolver().getQName(nodeTypeName);
+            ntName = NameFormat.parse(nodeTypeName, session.getNamespaceResolver());
         } catch (IllegalNameException ine) {
             throw new RepositoryException("invalid node type name: " + nodeTypeName, ine);
         } catch (UnknownPrefixException upe) {
@@ -2603,7 +2604,7 @@ public class NodeImpl extends ItemImpl implements Node {
             ConstraintViolationException, LockException, RepositoryException {
         QName ntName;
         try {
-            ntName = session.getNamespaceResolver().getQName(mixinName);
+            ntName = NameFormat.parse(mixinName, session.getNamespaceResolver());
         } catch (IllegalNameException ine) {
             throw new RepositoryException("invalid mixin type name: " + mixinName, ine);
         } catch (UnknownPrefixException upe) {
@@ -2621,7 +2622,7 @@ public class NodeImpl extends ItemImpl implements Node {
             ConstraintViolationException, LockException, RepositoryException {
         QName ntName;
         try {
-            ntName = session.getNamespaceResolver().getQName(mixinName);
+            ntName = NameFormat.parse(mixinName, session.getNamespaceResolver());
         } catch (IllegalNameException ine) {
             throw new RepositoryException("invalid mixin type name: " + mixinName, ine);
         } catch (UnknownPrefixException upe) {
@@ -2656,7 +2657,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         QName ntName;
         try {
-            ntName = session.getNamespaceResolver().getQName(mixinName);
+            ntName = NameFormat.parse(mixinName, session.getNamespaceResolver());
         } catch (IllegalNameException ine) {
             throw new RepositoryException("invalid mixin type name: "
                     + mixinName, ine);

@@ -239,7 +239,7 @@ class DocViewImportHandler extends TargetImportHandler {
         QName[] qnames = new QName[names.length];
         for (int i = 0; i < names.length; i++) {
             try {
-                qnames[i] = nsContext.getQName(names[i]);
+                qnames[i] = NameFormat.parse(names[i], nsContext);
             } catch (NameException ne) {
                 throw new SAXException("Invalid name: " + names[i], ne);
             }

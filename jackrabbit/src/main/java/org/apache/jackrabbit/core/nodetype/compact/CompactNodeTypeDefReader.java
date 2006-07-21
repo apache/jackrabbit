@@ -435,7 +435,7 @@ public class CompactNodeTypeDefReader {
                 if (ntd.getPrimaryItemName() != null) {
                     String name = null;
                     try {
-                        name = nsMapping.getJCRName(ntd.getName());
+                        name = NameFormat.format(ntd.getName(), nsMapping);
                     } catch (NoPrefixDeclaredException e) {
                         // Should never happen, checked earlier
                     }
@@ -589,7 +589,7 @@ public class CompactNodeTypeDefReader {
                 if (ntd.getPrimaryItemName() != null) {
                     String name = null;
                     try {
-                        name = nsMapping.getJCRName(ntd.getName());
+                        name = NameFormat.format(ntd.getName(), nsMapping);
                     } catch (NoPrefixDeclaredException e) {
                         // Should never happen, checked earlier
                     }
