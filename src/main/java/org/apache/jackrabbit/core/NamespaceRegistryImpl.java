@@ -381,7 +381,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         return prefix;
     }
 
-    //------------------------------------------------------------< QNameCache >
+    //------------------------------------------------------------< NameCache >
     /**
      * {@inheritDoc}
      */
