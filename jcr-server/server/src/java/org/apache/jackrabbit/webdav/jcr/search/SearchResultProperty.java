@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.webdav.jcr.search;
 
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -108,7 +109,8 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
         Element valueElement = DomUtil.getChildElement(columnElement, JCR_VALUE.getName(), JCR_VALUE.getNamespace());
         if (valueElement != null) {
             String typeStr = DomUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE);
-            jcrValue = ValueHelper.deserialize(DomUtil.getText(valueElement), PropertyType.valueFromName(typeStr), true);
+            jcrValue = ValueHelper.deserialize(DomUtil.getText(valueElement),
+                    PropertyType.valueFromName(typeStr), true, ValueFactoryImpl.getInstance());
         } else {
             jcrValue = null;
         }

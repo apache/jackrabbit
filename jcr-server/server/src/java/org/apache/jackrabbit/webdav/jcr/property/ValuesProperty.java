@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.property;
 
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -144,7 +145,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
         String typeStr = DomUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE);
         int type = (typeStr == null) ? defaultType : PropertyType.valueFromName(typeStr);
         // deserialize value ->> see #toXml where values are serialized
-        return ValueHelper.deserialize(value, type, true);
+        return ValueHelper.deserialize(value, type, true, ValueFactoryImpl.getInstance());
     }
 
     /**
@@ -158,7 +159,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
         checkPropertyName(JCR_VALUES);
         Value[] vs = new Value[jcrValues.length];
         for (int i = 0; i < jcrValues.length; i++) {
-            vs[i] = ValueHelper.convert(jcrValues[i], propertyType);
+            vs[i] = ValueHelper.convert(jcrValues[i], propertyType, ValueFactoryImpl.getInstance());
         }
         return jcrValues;
     }
@@ -166,7 +167,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
     /**
      * Returns the internal property value as jcr <code>Value</code> array
      * 
-     * @return
+     * @return the internal property value as jcr <code>Value</code> array
      */
     public Value[] getJcrValues() throws ValueFormatException {
         checkPropertyName(JCR_VALUES);
@@ -181,7 +182,9 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      */
     public Value getJcrValue(int propertyType) throws ValueFormatException {
         checkPropertyName(JCR_VALUE);
-        return (jcrValues.length == 0) ? null : ValueHelper.convert(jcrValues[0], propertyType);
+        return (jcrValues.length == 0)
+                ? null
+                : ValueHelper.convert(jcrValues[0], propertyType, ValueFactoryImpl.getInstance());
     }
 
     /**
@@ -219,7 +222,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
     /**
      *
      * @param document
-     * @return
+     * @return the xml element
      */
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
