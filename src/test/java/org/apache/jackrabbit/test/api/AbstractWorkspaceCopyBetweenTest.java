@@ -76,17 +76,7 @@ abstract class AbstractWorkspaceCopyBetweenTest extends AbstractWorkspaceCopyTes
             try {
                 if (!isReadOnly) {
                     // do a 'rollback'
-                    superuserW2.refresh(false);
-                    Node rootW2 = superuserW2.getRootNode();
-                    if (rootW2.hasNode(testPath)) {
-                        // clean test root
-                        testRootNodeW2 = rootW2.getNode(testPath);
-                        for (NodeIterator children = testRootNodeW2.getNodes(); children.hasNext();) {
-                            Node n = children.nextNode();
-                            n.remove();
-                        }
-                        superuserW2.save();
-                    }
+                    cleanUpTestRoot(superuserW2);
                 }
             } finally {
                 superuserW2.logout();
