@@ -104,7 +104,7 @@ class CachingNamespaceResolver
         base.removeListener(this);
     }
 
-    //------------------------------------------------------------< QNameCache >
+    //------------------------------------------------------------< NameCache >
 
     /**
      * @inheritDoc
