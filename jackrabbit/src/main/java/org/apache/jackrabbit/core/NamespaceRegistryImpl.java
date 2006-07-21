@@ -18,11 +18,9 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameCache;
 import org.apache.jackrabbit.util.XMLChar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +41,7 @@ import java.util.Properties;
  * A <code>NamespaceRegistryImpl</code> ...
  */
 public class NamespaceRegistryImpl extends AbstractNamespaceResolver
-        implements NamespaceRegistry {
+        implements NamespaceRegistry, NameCache {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
@@ -383,18 +381,27 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         return prefix;
     }
 
+    //------------------------------------------------------------< QNameCache >
     /**
      * {@inheritDoc}
      */
-    public QName getQName(String name)
-            throws IllegalNameException, UnknownPrefixException {
-        return resolver.getQName(name);
+    public QName retrieveName(String jcrName) {
+        // just delegate to internal cache
+        return resolver.retrieveName(jcrName);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getJCRName(QName name) throws NoPrefixDeclaredException {
-        return resolver.getJCRName(name);
+    public String retrieveName(QName name) {
+        // just delegate to internal cache
+        return resolver.retrieveName(name);
+    }
+
+    public void cacheName(String jcrName, QName name) {
+        // just delegate to internal cache
+        resolver.cacheName(jcrName, name);
+    }
+
+    public void evictAllNames() {
+        // just delegate to internal cache
+        resolver.evictAllNames();
     }
 }

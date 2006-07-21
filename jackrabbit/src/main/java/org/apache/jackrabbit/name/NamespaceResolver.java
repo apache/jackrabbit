@@ -53,6 +53,8 @@ public interface NamespaceResolver {
      * @return the QName instance for the raw name.
      * @throws IllegalNameException   if the given name is not a valid JCR name
      * @throws UnknownPrefixException if the JCR name prefix does not resolve
+     *
+     * @deprecated use {@link NameFormat#parse(String, NamespaceResolver)} instead.
      */
     public QName getQName(String jcrName)
             throws IllegalNameException, UnknownPrefixException;
@@ -63,23 +65,9 @@ public interface NamespaceResolver {
      * @param qName a qualified name
      * @return the raw JCR name
      * @throws NoPrefixDeclaredException if the namespace can not be resolved
+     *
+     * @deprecated use {@link NameFormat#format(QName, NamespaceResolver)} instead.
      */
     public String getJCRName(QName qName) throws NoPrefixDeclaredException;
 
-    /**
-     * Parses the given prefixed JCR Path into a qualified path.
-     *
-     * @param jcrPath the raw path, with potentially prefixed path elements.
-     * @return the Path instance for the raw path.
-     */
-    public Path getQPath(String jcrPath) throws MalformedPathException;
-
-    /**
-     * Returns the qualified path in the prefixed JCR path format.
-     *
-     * @param qPath a qualified path
-     * @return the corresponding JCR path, eventually containing prefixed elements.
-     * @throws NoPrefixDeclaredException if a namespace can not be resolved
-     */
-    public String getJCRPath(Path qPath) throws NoPrefixDeclaredException;
 }

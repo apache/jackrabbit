@@ -16,20 +16,17 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceListener;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.util.XMLChar;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Arrays;
 
 /**
  * Manager for local session namespace mappings. This class is
@@ -159,31 +156,7 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
         nsReg.removeListener(this);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public QName getQName(String name)
-            throws IllegalNameException, UnknownPrefixException {
-        if (prefixToURI.isEmpty()) {
-            // shortcut
-            return nsReg.getQName(name);
-        }
-        try {
-            // first try registry, this might result in a wrong QName because
-            // of locally overlayed mappings
-            QName candidate = nsReg.getQName(name);
-            // make sure global prefix is not hidden because of
-            // locally remapped uri
-            if (!uriToPrefix.containsKey(candidate.getNamespaceURI())) {
-                return candidate;
-            }
-        } catch (UnknownPrefixException e) {
-            // try using local mappings
-        }
-        return super.getQName(name);
-    }
-
-    //----------------------------------------------------< NamespaceResolver >
+    //-----------------------------------------------------< NamespaceResolver >
     /**
      * {@inheritDoc}
      */
@@ -230,25 +203,7 @@ class LocalNamespaceMappings extends AbstractNamespaceResolver
         return nsReg.getPrefix(uri);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getJCRName(QName name)
-            throws NoPrefixDeclaredException {
-        if (uriToPrefix.isEmpty()) {
-            // shortcut
-            return nsReg.getJCRName(name);
-        }
-        if (uriToPrefix.containsKey(name.getNamespaceURI())) {
-            // locally remappped
-            return super.getJCRName(name);
-        } else {
-            // use global mapping
-            return nsReg.getJCRName(name);
-        }
-    }
-
-    //----------------------------------------------------< NamespaceListener >
+    //-----------------------------------------------------< NamespaceListener >
     /**
      * @inheritDoc
      * This method gets called when a new namespace is registered in

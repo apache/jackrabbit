@@ -250,10 +250,11 @@ public class PathFormat {
      * @throws NoPrefixDeclaredException if the namespace of the path element
      *                                   name can not be resolved
      */
-    private static void format(Path.PathElement element, NamespaceResolver resolver, StringBuffer buf)
+    private static void format(Path.PathElement element,
+                               NamespaceResolver resolver, StringBuffer buf)
             throws NoPrefixDeclaredException {
         // name
-        buf.append(resolver.getJCRName(element.getName()));
+        NameFormat.format(element.getName(), resolver, buf);
         // index
         int index = element.getIndex();
         /**

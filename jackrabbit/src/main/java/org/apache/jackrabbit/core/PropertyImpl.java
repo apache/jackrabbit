@@ -25,6 +25,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.BooleanValue;
 import org.apache.jackrabbit.value.DateValue;
@@ -179,7 +180,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             case PropertyType.NAME:
                 QName name = (QName) value.internalValue();
                 try {
-                    return session.getNamespaceResolver().getJCRName(name).length();
+                    return NameFormat.format(name, session.getNamespaceResolver()).length();
                 } catch (NoPrefixDeclaredException npde) {
                     // should never happen...
                     String msg = safeGetJCRPath()
@@ -1162,7 +1163,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         QName name = ((PropertyId) id).getName();
         try {
-            return session.getNamespaceResolver().getJCRName(name);
+            return NameFormat.format(name, session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace " + name.getNamespaceURI();
