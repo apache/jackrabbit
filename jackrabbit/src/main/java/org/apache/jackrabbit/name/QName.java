@@ -620,22 +620,6 @@ public final class QName implements Cloneable, Comparable, Serializable {
         NameFormat.checkFormat(jcrName);
     }
 
-    /**
-     * Parses the <code>jcrName</code> and returns an array of two strings:
-     * the first array element contains the prefix (or empty string),
-     * the second the local name.
-     *
-     * @param jcrName the name to be parsed
-     * @return An array holding two strings: the first array element contains
-     *         the prefix (or empty string), the second the local name.
-     * @throws IllegalNameException If <code>jcrName</code> is not a valid
-     *                              JCR-style name.
-     * @deprecated Use {@link NameFormat#parse(String)} instead.
-     */
-    public static String[] parse(String jcrName) throws IllegalNameException {
-        return NameFormat.parse(jcrName);
-    }
-
     //-------------------------------------------------------< public methods >
     /**
      * Returns the local part of the qualified name.
