@@ -90,6 +90,7 @@ public class PathTest extends TestCase {
 
         // not normalized paths
         list.add(new Test("/a/../b", "/b", VAL));
+        list.add(new Test("./../.", "..", VAL));
         list.add(new Test("/a/./b", "/a/b", VAL));
         list.add(new Test("/a/b/../..", "/", VAL));
         list.add(new Test("/a/b/c/../d/..././f", "/a/b/d/.../f", VAL));
