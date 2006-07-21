@@ -23,15 +23,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * <code>NameFormat</code> formats a {@link QName} using a
- * {@link NamespaceResolver}.
+ * <code>NameFormat</code> provides methods for formatting and parsing names.
  */
 public class NameFormat {
 
     /**
-     * The reqular expression pattern used to validate and parse
+     * The reqular expression pattern used to validate and doParse
      * qualified names.
-     * <p>
+     * <p/>
      * The pattern contains the following groups:
      * <ul>
      * <li>group 1 is namespace prefix incl. delimiter (colon)
@@ -39,8 +38,7 @@ public class NameFormat {
      * <li>group 3 is localName
      * </ul>
      */
-    private static final Pattern NAME_PATTERN = Pattern.compile(
-            "(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
+    private static final Pattern NAME_PATTERN = Pattern.compile("(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
             + "([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)");
 
     /**
@@ -53,16 +51,19 @@ public class NameFormat {
     };
 
     /**
-     * Parses the <code>jcrName</code> and returns a new <code>QName</code>. If
-     * the passed <code>resolver</code> also an instance of {@link NameCache}
-     * then the parsing is first read from the cache.
+     * Converts the <code>jcrName</code> to its corresponding <code>QName</code>.
+     * If the <code>resolver</code> passed is also an instance of
+     * {@link NameCache} then this method first attempts to find the
+     * corresponding <code>QName</code> in the cache. If it cannot be found then
+     * the <code>jcrName</code> is parsed and the corresponding
+     * <code>QName</code> constructed.
      *
-     * @param jcrName the name to be parsed
-     * @param resolver <code>NamespaceResolver</code> use to retrieve the
-     * namespace URI from the prefix contained in the given JCR name.
-     * @return qName the new <code>QName</code>
+     * @param jcrName  the JCR-style name to be parsed
+     * @param resolver <code>NamespaceResolver</code> used for resolving
+     *                 prefixes into namespace URIs
+     * @return the resulting <code>QName</code>
      * @throws IllegalNameException If <code>jcrName</code> is not a valid
-     * JCR-style name.
+     *                              JCR-style name.
      */
     public static QName parse(String jcrName, NamespaceResolver resolver)
             throws IllegalNameException, UnknownPrefixException {
@@ -70,62 +71,184 @@ public class NameFormat {
         if (resolver instanceof NameCache) {
             QName name = ((NameCache) resolver).retrieveName(jcrName);
             if (name == null) {
-                name = parseNoCache(jcrName, resolver);
+                name = parseIgnoreCache(jcrName, resolver);
                 ((NameCache) resolver).cacheName(jcrName, name);
             }
             return name;
         } else {
-            return parseNoCache(jcrName, resolver);
+            return parseIgnoreCache(jcrName, resolver);
         }
     }
 
     /**
-     * Parses an array of <code>jcrName</code> and returns the respective
-     * array of <code>QName</code>. If the passed <code>resolver</code> also an
-     * instance of {@link NameCache} then the parsing is first read from the cache.
+     * Converts each JCR-style name in the passed array to its corresponding
+     * <code>QName</code> and returns the resulting <code>QName</code> array.
+     * If the <code>resolver</code> passed is also an instance of
+     * {@link NameCache} then this method first attempts to find the
+     * corresponding <code>QName</code> in the cache. If it cannot be found then
+     * the <code>jcrName</code> is parsed and the corresponding
+     * <code>QName</code> constructed.
      *
-     * @param jcrNames the array of names to be parsed
-     * @param resolver <code>NamespaceResolver</code> use to retrieve the
-     * namespace URI from the prefix contained in the given JCR name.
-     * @return the new array of <code>QName</code>
-     * @throws IllegalNameException If <code>jcrName</code> is not a valid
-     * JCR-style name.
+     * @param jcrNames the array of JCR-style names to be parsed
+     * @param resolver <code>NamespaceResolver</code> used for resolving
+     *                 prefixes into namespace URIs
+     * @return the resulting <code>QName</code> array
+     * @throws IllegalNameException If any of the passed names is not a valid
+     *                              JCR-style name.
      */
     public static QName[] parse(String jcrNames[], NamespaceResolver resolver)
             throws IllegalNameException, UnknownPrefixException {
 
         QName[] ret = new QName[jcrNames.length];
         if (resolver instanceof NameCache) {
-            for (int i=0; i<ret.length; i++) {
+            for (int i = 0; i < ret.length; i++) {
                 QName name = ((NameCache) resolver).retrieveName(jcrNames[i]);
                 if (name == null) {
-                    name = parseNoCache(jcrNames[i], resolver);
+                    name = parseIgnoreCache(jcrNames[i], resolver);
                     ((NameCache) resolver).cacheName(jcrNames[i], name);
                 }
                 ret[i] = name;
             }
         } else {
-            for (int i=0; i<ret.length; i++) {
-                ret[i] = parseNoCache(jcrNames[i], resolver);
+            for (int i = 0; i < ret.length; i++) {
+                ret[i] = parseIgnoreCache(jcrNames[i], resolver);
             }
         }
         return ret;
     }
 
     /**
-     * Parses the <code>jcrName</code> and returns a new <code>QName</code>,
-     * but does not respect possible caches.
+     * Checks if <code>jcrName</code> is a valid JCR-style name.
      *
-     * @param jcrName the name to be parsed
-     * @param resolver <code>NamespaceResolver</code> use to retrieve the
-     * namespace URI from the prefix contained in the given JCR name.
-     * @return qName the new <code>QName</code>
+     * @param jcrName the name to be checked
      * @throws IllegalNameException If <code>jcrName</code> is not a valid
-     * JCR-style name.
+     *                              JCR-style name.
      */
-    private static QName parseNoCache(String jcrName, NamespaceResolver resolver)
+    public static void checkFormat(String jcrName) throws IllegalNameException {
+        doParse(jcrName);
+    }
+
+    /**
+     * Formats the given <code>QName</code> to produce a string representation,
+     * i.e. JCR-style name. If the <code>resolver</code> passed is also an
+     * instance of {@link NameCache} then this method first attempts to find the
+     * corresponding JCR-style name in the cache. If it cannot be found then
+     * a new string representation is constructed.
+     *
+     * @param qName    the <code>QName</code> to format
+     * @param resolver <code>NamespaceResolver</code> used for resolving
+     *                 namespace URIs into prefixes
+     * @return the string representation (JCR-style name) of the given
+     *         <code>QName</code>
+     * @throws NoPrefixDeclaredException if a namespace can not be resolved
+     * @see #format(QName, NamespaceResolver, StringBuffer)
+     */
+    public static String format(QName qName, NamespaceResolver resolver)
+            throws NoPrefixDeclaredException {
+
+        if (resolver instanceof NameCache) {
+            String jcrName = ((NameCache) resolver).retrieveName(qName);
+            if (jcrName == null) {
+                StringBuffer buf = new StringBuffer();
+                formatIgnoreCache(qName, resolver, buf);
+                jcrName = buf.toString();
+                ((NameCache) resolver).cacheName(jcrName, qName);
+            }
+            return jcrName;
+
+        } else {
+            StringBuffer buf = new StringBuffer();
+            formatIgnoreCache(qName, resolver, buf);
+            return buf.toString();
+        }
+    }
+
+    /**
+     * Same as {@link #format(QName, NamespaceResolver)} except that this
+     * method takes an array of <code>QName</code>s and returns an array of
+     * corresponding string representations.
+     *
+     * @param qNames   the array <code>QName</code>s to format
+     * @param resolver <code>NamespaceResolver</code> used for resolving
+     *                 namespace URIs into prefixes
+     * @return the array of corresponding string representations
+     * @throws NoPrefixDeclaredException if a namespace can not be resolved
+     * @see #format(QName, NamespaceResolver)
+     */
+    public static String[] format(QName[] qNames, NamespaceResolver resolver)
+            throws NoPrefixDeclaredException {
+        String[] ret = new String[qNames.length];
+        if (resolver instanceof NameCache) {
+            for (int i = 0; i < ret.length; i++) {
+                String jcrName = ((NameCache) resolver).retrieveName(qNames[i]);
+                if (jcrName == null) {
+                    StringBuffer buf = new StringBuffer();
+                    formatIgnoreCache(qNames[i], resolver, buf);
+                    jcrName = buf.toString();
+                    ((NameCache) resolver).cacheName(jcrName, qNames[i]);
+                }
+                ret[i] = jcrName;
+            }
+        } else {
+            for (int i = 0; i < ret.length; i++) {
+                StringBuffer buf = new StringBuffer();
+                formatIgnoreCache(qNames[i], resolver, buf);
+                ret[i] = buf.toString();
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * Same as {@link #format(QName, NamespaceResolver)} except that this
+     * method appends the JCR-style name to the given <code>buffer</code> rather
+     * than returning it directly.
+     *
+     * @param qName    the <code>QName</code> to format
+     * @param resolver <code>NamespaceResolver</code> used for resolving
+     *                 namespace URIs into prefixes
+     * @param buffer   StringBuffer where the string representation should be
+     *                 appended to
+     * @throws NoPrefixDeclaredException if a namespace can not be resolved
+     */
+    public static void format(QName qName, NamespaceResolver resolver,
+                              StringBuffer buffer)
+            throws NoPrefixDeclaredException {
+
+        if (resolver instanceof NameCache) {
+            String jcrName = ((NameCache) resolver).retrieveName(qName);
+            if (jcrName == null) {
+                int l = buffer.length();
+                formatIgnoreCache(qName, resolver, buffer);
+                ((NameCache) resolver).cacheName(buffer.substring(l), qName);
+            } else {
+                buffer.append(jcrName);
+            }
+        } else {
+            formatIgnoreCache(qName, resolver, buffer);
+        }
+    }
+
+    //-------------------------------------------------------< implementation >
+    /**
+     * Converts the <code>jcrName</code> to its corresponding <code>QName</code>.
+     * <p/>
+     * Note that unlike {@link #parse(String, NamespaceResolver)} this method
+     * always constructs a new <code>QName</code>, ignoring potential caching
+     * capabilities of the passed <code>resolver</code>.
+     *
+     * @param jcrName  the JCR-style name to be parsed
+     * @param resolver <code>NamespaceResolver</code> used for resolving
+     *                 prefixes into namespace URIs
+     * @return the resulting <code>QName</code>
+     * @throws IllegalNameException If <code>jcrName</code> is not a valid
+     *                              JCR-style name.
+     * @see #parse(String, NamespaceResolver)
+     */
+    private static QName parseIgnoreCache(String jcrName,
+                                          NamespaceResolver resolver)
             throws IllegalNameException, UnknownPrefixException {
-        String[] parts = parse(jcrName);
+        String[] parts = doParse(jcrName);
         String uri;
         try {
             uri = resolver.getURI(parts[0]);
@@ -142,11 +265,11 @@ public class NameFormat {
      *
      * @param jcrName the name to be parsed
      * @return An array holding two strings: the first array element contains
-     * the prefix (or empty string), the second the local name.
+     *         the prefix (or empty string), the second the local name.
      * @throws IllegalNameException If <code>jcrName</code> is not a valid
      *                              JCR-style name.
      */
-    public static String[] parse(String jcrName) throws IllegalNameException {
+    private static String[] doParse(String jcrName) throws IllegalNameException {
         if (jcrName == null || jcrName.length() == 0) {
             throw new IllegalNameException("empty name");
         }
@@ -171,7 +294,7 @@ public class NameFormat {
                 if (!XMLChar.isValidNCName(prefix)) {
                     // illegal syntax for prefix
                     throw new IllegalNameException("'" + jcrName
-                        + "' is not a valid name: illegal prefix");
+                            + "' is not a valid name: illegal prefix");
                 }
             } else {
                 // no prefix specified
@@ -185,127 +308,28 @@ public class NameFormat {
             throw new IllegalNameException("'" + jcrName + "' is not a valid name");
         }
 
-        return new String[] {prefix, localName};
-
-    }
-    /**
-     * Checks if <code>jcrName</code> is a valid JCR-style name.
-     *
-     * @param jcrName the name to be checked
-     * @throws IllegalNameException If <code>jcrName</code> is not a valid
-     * JCR-style name.
-     */
-    public static void checkFormat(String jcrName) throws IllegalNameException {
-        parse(jcrName);
+        return new String[]{prefix, localName};
     }
 
     /**
-     * Returns a string representation of the qualified <code>name</code> in the
-     * JCR name format. If the passed <code>resolver</code> also an instance of
-     * {@link NameCache} then the formatting is first read from the cache.
+     * Formats the given <code>QName</code> to produce a string representation,
+     * i.e. JCR-style name.
+     * <p/>
+     * Note that unlike {@link #format(QName, NamespaceResolver)} this method
+     * always constructs a new <code>String</code>, ignoring potential caching
+     * capabilities of the passed <code>resolver</code>.
      *
-     * @param qName the qualified name to resolve.
-     * @param resolver the namespace resolver.
-     * @return JCR the formatted path.
-     * @throws NoPrefixDeclaredException if a namespace can not be resolved
-     * @see #format(QName, NamespaceResolver, StringBuffer)
-     */
-    public static String format(QName qName, NamespaceResolver resolver)
-            throws NoPrefixDeclaredException {
-
-        if (resolver instanceof NameCache) {
-            String jcrName = ((NameCache) resolver).retrieveName(qName);
-            if (jcrName == null) {
-                StringBuffer buf = new StringBuffer();
-                formatNoCache(qName, resolver, buf);
-                jcrName = buf.toString();
-                ((NameCache) resolver).cacheName(jcrName, qName);
-            }
-            return jcrName;
-
-        } else {
-            StringBuffer buf = new StringBuffer();
-            formatNoCache(qName, resolver, buf);
-            return buf.toString();
-        }
-    }
-
-    /**
-     * Optimized convenience method that returns an array of string
-     * representations of the given qualified <code>name</code> in the JCR name
-     * format. If the passed <code>resolver</code> also an instance of
-     * {@link NameCache} then the formatting is first read from the cache.
-     *
-     * @param qNames the array of qualified name to resolve.
-     * @param resolver the namespace resolver.
-     * @return the array of jcr names
-     * @throws NoPrefixDeclaredException if a namespace can not be resolved
-     * @see #format(QName, NamespaceResolver, StringBuffer)
-     */
-    public static String[] format(QName[] qNames, NamespaceResolver resolver)
-            throws NoPrefixDeclaredException {
-        String[] ret = new String[qNames.length];
-        if (resolver instanceof NameCache) {
-            for (int i=0; i<ret.length; i++) {
-                String jcrName = ((NameCache) resolver).retrieveName(qNames[i]);
-                if (jcrName == null) {
-                    StringBuffer buf = new StringBuffer();
-                    formatNoCache(qNames[i], resolver, buf);
-                    jcrName = buf.toString();
-                    ((NameCache) resolver).cacheName(jcrName, qNames[i]);
-                }
-                ret[i] = jcrName;
-            }
-        } else {
-            for (int i=0; i<ret.length; i++) {
-                StringBuffer buf = new StringBuffer();
-                formatNoCache(qNames[i], resolver, buf);
-                ret[i] = buf.toString();
-            }
-        }
-        return ret;
-    }
-
-    /**
-     * Returns a string representation of the qualified <code>name</code> in the
-     * JCR name format. If the passed <code>resolver</code> also an instance of
-     * {@link NameCache} then the formatting is first read from the cache.
-     *
-     * @param qName the qualified name to resolve.
-     * @param resolver the namespace resolver.
-     * @param buffer StringBuffer where the prefixed JCR name should be appended to.
+     * @param qName    the <code>QName</code> to format
+     * @param resolver <code>NamespaceResolver</code> used for resolving
+     *                 namespace URIs into prefixes
+     * @param buffer   StringBuffer where the prefixed JCR name should be
+     *                 appended to
      * @throws NoPrefixDeclaredException if a namespace can not be resolved
      * @see #format(QName, NamespaceResolver)
      */
-    public static void format(QName qName, NamespaceResolver resolver, StringBuffer buffer)
-            throws NoPrefixDeclaredException {
-
-        if (resolver instanceof NameCache) {
-            String jcrName = ((NameCache) resolver).retrieveName(qName);
-            if (jcrName == null) {
-                int l = buffer.length();
-                formatNoCache(qName, resolver, buffer);
-                ((NameCache) resolver).cacheName(buffer.substring(l), qName);
-            } else {
-                buffer.append(jcrName);
-            }
-        } else {
-            formatNoCache(qName, resolver, buffer);
-        }
-    }
-
-    /**
-     * Returns a string representation of the qualified <code>name</code> in the
-     * JCR name format, but does not respect possible caches.
-     *
-     * @param qName the qualified name to resolve.
-     * @param resolver the namespace resolver.
-     * @param buffer StringBuffer where the prefixed JCR name should be appended to.
-     * @throws NoPrefixDeclaredException if a namespace can not be resolved
-     *
-     * @see #format(QName, NamespaceResolver)
-     */
-    private static void formatNoCache(QName qName, NamespaceResolver resolver, StringBuffer buffer)
+    private static void formatIgnoreCache(QName qName,
+                                          NamespaceResolver resolver,
+                                          StringBuffer buffer)
             throws NoPrefixDeclaredException {
         // prefix
         String prefix;
@@ -313,7 +337,7 @@ public class NameFormat {
             prefix = resolver.getPrefix(qName.getNamespaceURI());
         } catch (NamespaceException nse) {
             throw new NoPrefixDeclaredException("no prefix declared for URI: "
-                + qName.getNamespaceURI());
+                    + qName.getNamespaceURI());
         }
         if (prefix.length() == 0) {
             // default prefix (empty string)
