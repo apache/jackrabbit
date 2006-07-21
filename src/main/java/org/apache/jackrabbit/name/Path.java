@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.util.Text;
-
 import javax.jcr.PathNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +41,7 @@ import java.util.LinkedList;
  * <p/>
  * <code>isCanonical()</code>:<br>
  * A path is canonical if its absolute and normalized.
- *
+ * <p/>
  * <h2>String representations</h2>
  * <p/>
  * The JCR path format is specified by JSR 170 as follows:
@@ -159,6 +157,43 @@ public final class Path {
     }
 
     //------------------------------------------------------< factory methods >
+
+    /**
+     * Creates a new <code>Path</code> from the given path elements.
+     *
+     * @param elements the path elements that will form the path
+     * @return a new <code>Path</code>
+     */
+    public static Path create(PathElement[] elements) {
+        PathElement[] tmp = new PathElement[elements.length];
+        boolean isNormalized = true;
+        boolean leadingParent = true;
+        for (int i = 0; i < elements.length; i++) {
+            PathElement elem = tmp[i] = elements[i];
+            if (elem.denotesCurrent() || elem.denotesParent()) {
+                leadingParent &= elem.denotesParent();
+                isNormalized &= !elem.denotesCurrent() && (leadingParent || !elem.denotesParent());
+            }
+        }
+        return new Path(tmp, isNormalized);
+    }
+
+    /**
+     * Creates a new <code>Path</code> from the given path elements but does
+     * not check if the path is normalized or not.
+     * <p/>
+     * Please note that this method should only be called, if the normalized
+     * state is known. Further is the element array not duplicated. Basically
+     * this method should only be called from {@link PathFormat}.
+     *
+     * @param elements     the path elements that will form the path
+     * @param isNormalized flag
+     * @return a new <code>Path</code>
+     */
+    protected static Path create(PathElement[] elements, boolean isNormalized) {
+        return new Path(elements, isNormalized);
+    }
+
     /**
      * Creates a new <code>Path</code> from the given <code>jcrPath</code>
      * string. If <code>normalize</code> is <code>true</code>, the returned
@@ -174,12 +209,9 @@ public final class Path {
     public static Path create(String jcrPath, NamespaceResolver resolver,
                               boolean normalize)
             throws MalformedPathException {
-        Path path = PathFormat.parse(jcrPath, resolver);
-        if (normalize) {
-            return path.getNormalizedPath();
-        } else {
-            return path;
-        }
+        return normalize
+                ? PathFormat.parse(null, jcrPath, resolver).getNormalizedPath()
+                : PathFormat.parse(null, jcrPath, resolver);
     }
 
     /**
@@ -198,12 +230,9 @@ public final class Path {
     public static Path create(Path parent, String relJCRPath,
                               NamespaceResolver resolver, boolean canonicalize)
             throws MalformedPathException {
-        Path path = PathFormat.parse(parent, relJCRPath, resolver);
-        if (canonicalize) {
-            return path.getCanonicalPath();
-        } else {
-            return path;
-        }
+        return canonicalize
+                ? PathFormat.parse(parent, relJCRPath, resolver).getCanonicalPath()
+                : PathFormat.parse(parent, relJCRPath, resolver);
     }
 
     /**
@@ -223,16 +252,11 @@ public final class Path {
         if (relPath.isAbsolute()) {
             throw new MalformedPathException("relPath is not a relative path");
         }
-
         PathBuilder pb = new PathBuilder(parent);
         pb.addAll(relPath.getElements());
-
-        Path path = pb.getPath();
-        if (normalize) {
-            return path.getNormalizedPath();
-        } else {
-            return path;
-        }
+        return normalize
+                ? pb.getPath().getNormalizedPath()
+                : pb.getPath();
     }
 
     /**
@@ -241,30 +265,26 @@ public final class Path {
      * the returned path will be normalized (or canonicalized, if the parent
      * path is absolute).
      *
-     * @param parent the parent path
-     * @param name the name of the new path element.
+     * @param parent    the parent path
+     * @param name      the name of the new path element.
      * @param normalize
      * @return the new path.
      */
     public static Path create(Path parent, QName name, boolean normalize) throws MalformedPathException {
         PathBuilder pb = new PathBuilder(parent);
         pb.addLast(name);
-
-        Path path = pb.getPath();
-        if (normalize) {
-            return path.getNormalizedPath();
-        } else {
-            return path;
-        }
+        return normalize
+                ? pb.getPath().getNormalizedPath()
+                : pb.getPath();
     }
 
     /**
      * Creates a new <code>Path</code> out of the given <code>parent<code> path
      * and the give name and index.
      *
-     * @param parent the paren tpath.
-     * @param name the name of the new path element.
-     * @param index the index of the new path element.
+     * @param parent    the paren tpath.
+     * @param name      the name of the new path element.
+     * @param index     the index of the new path element.
      * @param normalize
      * @return the new path.
      */
@@ -272,13 +292,9 @@ public final class Path {
             throws MalformedPathException {
         PathBuilder pb = new PathBuilder(parent);
         pb.addLast(name, index);
-
-        Path path = pb.getPath();
-        if (normalize) {
-            return path.getNormalizedPath();
-        } else {
-            return path;
-        }
+        return normalize
+                ? pb.getPath().getNormalizedPath()
+                : pb.getPath();
     }
 
     /**
@@ -291,19 +307,31 @@ public final class Path {
      */
     public static Path create(QName name, int index)
             throws IllegalArgumentException {
-        if (index < INDEX_UNDEFINED) {
+        PathElement elem = createPathElement(name, index);
+        return new Path(new PathElement[]{elem}, !elem.denotesCurrent());
+    }
+
+    /**
+     * Create a PathElement from the given QName and index.
+     *
+     * @param qName
+     * @param index
+     * @return new path element
+     * @throws IllegalArgumentException if the index is less than {@link Path#INDEX_UNDEFINED}.
+     */
+    public static PathElement createPathElement(QName qName, int index) {
+        if (index < Path.INDEX_UNDEFINED) {
             throw new IllegalArgumentException("index must not be negative: " + index);
         }
-        PathElement elem;
-        if (index < INDEX_DEFAULT) {
-            elem = new PathElement(name);
+        if (index < Path.INDEX_DEFAULT) {
+            return PathElement.create(qName);
         } else {
-            elem = new PathElement(name, index);
+            return PathElement.create(qName, index);
         }
-        return new Path(new PathElement[]{elem}, !elem.equals(CURRENT_ELEMENT));
     }
 
     //------------------------------------------------------< utility methods >
+
     /**
      * Checks if <code>jcrPath</code> is a valid JCR-style absolute or relative
      * path.
@@ -318,6 +346,7 @@ public final class Path {
     }
 
     //-------------------------------------------------------< public methods >
+
     /**
      * Tests whether this path represents the root path, i.e. "/".
      *
@@ -382,26 +411,19 @@ public final class Path {
             return this;
         }
         LinkedList queue = new LinkedList();
-        PathElement last = null;
+        PathElement last = PARENT_ELEMENT;
         for (int i = 0; i < elements.length; i++) {
             PathElement elem = elements[i];
-            if (elem.denotesCurrent()) {
-                continue;
-            } else if (elem.denotesParent() && last != null && !last.denotesParent()) {
+            if (elem.denotesParent() && !last.denotesParent()) {
                 if (last.denotesRoot()) {
                     // the first element is the root element;
                     // ".." would refer to the parent of root
                     throw new MalformedPathException("Path can not be canonicalized: unresolvable '..' element");
                 }
                 queue.removeLast();
-                if (queue.isEmpty()) {
-                    last = null;
-                } else {
-                    last = (PathElement) queue.getLast();
-                }
-            } else {
-                last = elem;
-                queue.add(elem);
+                last = queue.isEmpty() ? PARENT_ELEMENT : (PathElement) queue.getLast();
+            } else if (!elem.denotesCurrent()) {
+                queue.add(last = elem);
             }
         }
         if (queue.isEmpty()) {
@@ -462,7 +484,8 @@ public final class Path {
 
         // determine length of common path fragment
         int lengthCommon = 0;
-        for (int i = 0; i < p0.getElements().length && i < p1.getElements().length; i++) {
+        for (int i = 0; i < p0.getElements().length && i < p1.getElements().length; i++)
+        {
             if (!p0.getElement(i).equals(p1.getElement(i))) {
                 break;
             }
@@ -508,7 +531,8 @@ public final class Path {
      *
      * @param degree the relative degree of the requested ancestor.
      * @return the ancestor path of the specified degree.
-     * @throws javax.jcr.PathNotFoundException    if there is no ancestor of the specified
+     * @throws PathNotFoundException
+     *                                  if there is no ancestor of the specified
      *                                  degree
      * @throws IllegalArgumentException if <code>degree</code> is negative
      */
@@ -668,7 +692,7 @@ public final class Path {
      * @param i element index.
      * @return the <code>i</code><sup>th</sup> element of this path.
      * @throws ArrayIndexOutOfBoundsException if this path does not have an
-     * element at index <code>i</code>.
+     *                                        element at index <code>i</code>.
      */
     public PathElement getElement(int i) {
         return elements[i];
@@ -688,6 +712,7 @@ public final class Path {
     }
 
     //---------------------------------------------------------------< Object >
+
     /**
      * Returns the internal string representation of this <code>Path</code>.
      * <p/>
@@ -737,12 +762,22 @@ public final class Path {
         // split into path elements
 
         // @todo find safe path separator char that does not conflict with chars in serialized QName
-        String[] elements = Text.explode(s, '\t', true);
+        final char delim = '\t';
+        int lastPos = 0;
+        int pos = s.indexOf(delim);
         ArrayList list = new ArrayList();
         boolean isNormalized = true;
         boolean leadingParent = true;
-        for (int i = 0; i < elements.length; i++) {
-            PathElement elem = PathElement.fromString(elements[i]);
+        while (lastPos >= 0) {
+            PathElement elem;
+            if (pos >= 0) {
+                elem = PathElement.fromString(s.substring(lastPos, pos));
+                lastPos = pos + 1;
+                pos = s.indexOf(delim, lastPos);
+            } else {
+                elem = PathElement.fromString(s.substring(lastPos));
+                lastPos = -1;
+            }
             list.add(elem);
             leadingParent &= elem.denotesParent();
             isNormalized &= !elem.denotesCurrent() && (leadingParent || !elem.denotesParent());
@@ -788,6 +823,7 @@ public final class Path {
     }
 
     //--------------------------------------------------------< inner classes >
+
     /**
      * Internal helper class used to build a path from pre-parsed path elements.
      * <p/>
@@ -883,7 +919,7 @@ public final class Path {
          * @param name
          */
         public void addFirst(QName name) {
-            addFirst(new PathElement(name));
+            addFirst(PathElement.create(name));
         }
 
         /**
@@ -893,7 +929,7 @@ public final class Path {
          * @param index
          */
         public void addFirst(QName name, int index) {
-            addFirst(new PathElement(name, index));
+            addFirst(PathElement.create(name, index));
         }
 
         /**
@@ -913,7 +949,7 @@ public final class Path {
          * @param name
          */
         public void addLast(QName name) {
-            addLast(new PathElement(name));
+            addLast(PathElement.create(name));
         }
 
         /**
@@ -923,7 +959,7 @@ public final class Path {
          * @param index
          */
         public void addLast(QName name, int index) {
-            addLast(new PathElement(name, index));
+            addLast(PathElement.create(name, index));
         }
 
         /**
@@ -943,198 +979,27 @@ public final class Path {
             return new Path(elements, isNormalized);
         }
 
-        public Object clone() {
+        /**
+         * {@inheritDoc}
+         */
+        public Object clone() throws CloneNotSupportedException {
+            super.clone();
             PathBuilder clone = new PathBuilder();
             clone.queue.addAll(queue);
             return clone;
         }
     }
 
-    public static final class RootElement extends PathElement {
-        // use a literal that is an illegal name character to avoid collisions
-        static final String LITERAL = "*";
-
-        private RootElement() {
-            super(QName.ROOT);
-        }
-
-        /**
-         * Returns true.
-         * @return true
-         * @see PathElement#denotesRoot()
-         */
-        public boolean denotesRoot() {
-            return true;
-        }
-
-        /**
-         * Returns false.
-         * @return false
-         * @see PathElement#denotesCurrent()
-         */
-        public boolean denotesCurrent() {
-            return false;
-        }
-
-        /**
-         * Returns false.
-         * @return false
-         * @see PathElement#denotesParent()
-         */
-        public boolean denotesParent() {
-            return false;
-        }
-
-        /**
-         * Returns false.
-         * @return false
-         * @see PathElement#denotesName()
-         */
-        public boolean denotesName() {
-            return false;
-        }
-
-        /**
-         * @return {@link #LITERAL}
-         * @see Object#toString()
-         */
-        public String toString() {
-            return LITERAL;
-        }
-    }
-
-    public static final class CurrentElement extends PathElement {
-        static final String LITERAL = ".";
-
-        private CurrentElement() {
-            super(QName.NS_DEFAULT_URI, LITERAL);
-        }
-
-        /**
-         * Returns false.
-         * @return false
-         * @see PathElement#denotesRoot()
-         */
-        public boolean denotesRoot() {
-            return false;
-        }
-
-        /**
-         * Returns true.
-         * @return true
-         */
-        public boolean denotesCurrent() {
-            return true;
-        }
-
-        /**
-         * Returns false.
-         * @return false
-         * @see PathElement#denotesParent()
-         */
-        public boolean denotesParent() {
-            return false;
-        }
-
-        /**
-         * Returns false.
-         * @return false
-         * @see PathElement#denotesName()
-         */
-        public boolean denotesName() {
-            return false;
-        }
-
-        /**
-         * Returns the JCR name of this path element.
-         *
-         * @param resolver
-         * @return {@link #LITERAL}
-         */
-        public String toJCRName(NamespaceResolver resolver) {
-            return LITERAL;
-        }
-
-
-        /**
-         * @return {@link #LITERAL}
-         * @see Object#toString()
-         */
-        public String toString() {
-            return LITERAL;
-        }
-    }
-
-    private static final class ParentElement extends PathElement {
-        static final String LITERAL = "..";
-
-        private ParentElement() {
-            super(QName.NS_DEFAULT_URI, LITERAL);
-        }
-
-        /**
-         * Returns false.
-         * @return false
-         * @see PathElement#denotesRoot()
-         */
-        public boolean denotesRoot() {
-            return false;
-        }
-
-        /**
-         * Returns false.
-         * @return false
-         * @see PathElement#denotesCurrent()
-         */
-        public boolean denotesCurrent() {
-            return false;
-        }
-
-        /**
-         * Returns true.
-         * @return true
-         * @see PathElement#denotesParent()
-         */
-        public boolean denotesParent() {
-            return true;
-        }
-
-        /**
-         * Returns false.
-         * @return false
-         * @see PathElement#denotesName()
-         */
-        public boolean denotesName() {
-            return false;
-        }
-
-        /**
-         * Returns the JCR name of this path element.
-         *
-         * @param resolver
-         * @return {@link #LITERAL}
-         */
-        public String toJCRName(NamespaceResolver resolver) {
-            return LITERAL;
-        }
-
-        /**
-         * @return {@link #LITERAL}
-         * @see Object#toString()
-         */
-        public String toString() {
-            return LITERAL;
-        }
-    }
+    //---------------------------------------------------------< Path Elements >
 
     /**
      * Object representation of a single JCR path element. A PathElement
      * object contains the qualified name and optional index of a single
      * JCR path element.
      * <p/>
-     * Once created, a PathElement object is immutable.
+     * Once created, a NameElement object is immutable.
      */
-    public static class PathElement {
+    public abstract static class PathElement {
 
         /**
          * Qualified name of the path element.
@@ -1147,59 +1012,72 @@ public final class Path {
          */
         private final int index;
 
-        /**
-         * Creates a path element with the given qualified name.
-         * The created path element does not contain an explicit index.
-         *
-         * @param namespaceURI namespace URI
-         * @param localName    local name
-         */
-        private PathElement(String namespaceURI, String localName) {
-            this(new QName(namespaceURI, localName));
-        }
-
-        /**
-         * Creates a path element with the given qualified name and index.
-         *
-         * @param namespaceURI namespace URI
-         * @param localName    local name
-         * @param index        index
-         */
-        private PathElement(String namespaceURI, String localName, int index) {
-            this(new QName(namespaceURI, localName), index);
-        }
-
-        /**
-         * Creates a path element with the given qualified name.
-         * The created path element does not contain an explicit index.
-         *
-         * @param name qualified name
-         * @throws IllegalArgumentException if the name is <code>null</code>
-         */
-        private PathElement(QName name) throws IllegalArgumentException {
-            if (name == null) {
-                throw new IllegalArgumentException("name must not be null");
-            }
-            this.name = name;
-            this.index = INDEX_UNDEFINED;
-        }
 
         /**
          * Creates a path element with the given qualified name and index.
          *
          * @param name  qualified name
          * @param index index
-         * @throws IllegalArgumentException if the name is <code>null</code>
          */
-        private PathElement(QName name, int index) throws IllegalArgumentException {
-            if (name == null) {
-                throw new IllegalArgumentException("name must not be null");
-            }
-            if (index < INDEX_DEFAULT) {
-                throw new IllegalArgumentException("index is 1-based");
-            }
+        private PathElement(QName name, int index) {
             this.index = index;
             this.name = name;
+        }
+
+        /**
+         * Creates a new path element with the given qualified name and index.
+         * If the name is equals to the name of a special element, like the
+         * {@link PARENT_ELEMENT},{@link CURRENT_ELEMENT} or the
+         * {@link ROOT_ELEMENT}, then it's instance is returned.
+         * <p/>
+         * the private constructor must never be called but from these 2 methods.
+         *
+         * @param name the name of the element
+         * @return a path element
+         * @throws IllegalArgumentException if the name is <code>null</code>
+         */
+        public static PathElement create(QName name) {
+            if (name == null) {
+                throw new IllegalArgumentException("name must not be null");
+            } else if (name.equals(PARENT_ELEMENT.getName())) {
+                return PARENT_ELEMENT;
+            } else if (name.equals(CURRENT_ELEMENT.getName())) {
+                return CURRENT_ELEMENT;
+            } else if (name.equals(ROOT_ELEMENT.getName())) {
+                return ROOT_ELEMENT;
+            } else {
+                return new NameElement(name, INDEX_UNDEFINED);
+            }
+        }
+
+        /**
+         * Creates a new path element with the given qualified name and index.
+         * If the name is equals to the name of a special element, like the
+         * {@link PARENT_ELEMENT},{@link CURRENT_ELEMENT} or the
+         * {@link ROOT_ELEMENT}, then it's instance is returned.
+         * <p/>
+         * the private constructor must never be called but from these 2 methods.
+         *
+         * @param name  the name of the element
+         * @param index the 1-based index.
+         * @return a path element
+         * @throws IllegalArgumentException if the name is <code>null</code> or
+         *                                  if the given index is less than 1.
+         */
+        public static PathElement create(QName name, int index) {
+            if (index < INDEX_DEFAULT) {
+                throw new IllegalArgumentException("index is 1-based.");
+            } else if (name == null) {
+                throw new IllegalArgumentException("name must not be null");
+            } else if (name.equals(PARENT_ELEMENT.getName())) {
+                return PARENT_ELEMENT;
+            } else if (name.equals(CURRENT_ELEMENT.getName())) {
+                return CURRENT_ELEMENT;
+            } else if (name.equals(ROOT_ELEMENT.getName())) {
+                return ROOT_ELEMENT;
+            } else {
+                return new NameElement(name, index);
+            }
         }
 
         /**
@@ -1231,50 +1109,6 @@ public final class Path {
             } else {
                 return index;
             }
-        }
-
-        /**
-         * Returns <code>true</code> if this element denotes the <i>root</i> element,
-         * otherwise returns <code>false</code>.
-         *
-         * @return <code>true</code> if this element denotes the <i>root</i>
-         *         element; otherwise <code>false</code>
-         */
-        public boolean denotesRoot() {
-            return equals(ROOT_ELEMENT);
-        }
-
-        /**
-         * Returns <code>true</code> if this element denotes the <i>parent</i>
-         * ('..') element, otherwise returns <code>false</code>.
-         *
-         * @return <code>true</code> if this element denotes the <i>parent</i>
-         *         element; otherwise <code>false</code>
-         */
-        public boolean denotesParent() {
-            return equals(PARENT_ELEMENT);
-        }
-
-        /**
-         * Returns <code>true</code> if this element denotes the <i>current</i>
-         * ('.') element, otherwise returns <code>false</code>.
-         *
-         * @return <code>true</code> if this element denotes the <i>current</i>
-         *         element; otherwise <code>false</code>
-         */
-        public boolean denotesCurrent() {
-            return equals(CURRENT_ELEMENT);
-        }
-
-        /**
-         * Returns <code>true</code> if this element represents a regular name
-         * (i.e. neither root, '.' nor '..'), otherwise returns <code>false</code>.
-         *
-         * @return <code>true</code> if this element represents a regular name;
-         *         otherwise <code>false</code>
-         */
-        public boolean denotesName() {
-            return !denotesRoot() && !denotesParent() && !denotesCurrent();
         }
 
         /**
@@ -1371,7 +1205,7 @@ public final class Path {
             int pos = s.indexOf('[');
             if (pos == -1) {
                 QName name = QName.valueOf(s);
-                return new PathElement(name.getNamespaceURI(), name.getLocalName());
+                return new NameElement(name, INDEX_UNDEFINED);
             }
             QName name = QName.valueOf(s.substring(0, pos));
             int pos1 = s.indexOf(']');
@@ -1383,7 +1217,7 @@ public final class Path {
                 if (index < 1) {
                     throw new IllegalArgumentException("invalid PathElement literal: " + s + " (index is 1-based)");
                 }
-                return new PathElement(name.getNamespaceURI(), name.getLocalName(), index);
+                return new NameElement(name, index);
             } catch (Throwable t) {
                 throw new IllegalArgumentException("invalid PathElement literal: " + s + " (" + t.getMessage() + ")");
             }
@@ -1420,6 +1254,311 @@ public final class Path {
                         // @todo treat index==0 as index==1?
                         && index == other.index;
             }
+            return false;
+        }
+
+        /**
+         * Returns <code>true</code> if this element denotes the <i>root</i> element,
+         * otherwise returns <code>false</code>.
+         *
+         * @return <code>true</code> if this element denotes the <i>root</i>
+         *         element; otherwise <code>false</code>
+         */
+        abstract public boolean denotesRoot();
+
+        /**
+         * Returns <code>true</code> if this element denotes the <i>parent</i>
+         * ('..') element, otherwise returns <code>false</code>.
+         *
+         * @return <code>true</code> if this element denotes the <i>parent</i>
+         *         element; otherwise <code>false</code>
+         */
+        abstract public boolean denotesParent();
+
+        /**
+         * Returns <code>true</code> if this element denotes the <i>current</i>
+         * ('.') element, otherwise returns <code>false</code>.
+         *
+         * @return <code>true</code> if this element denotes the <i>current</i>
+         *         element; otherwise <code>false</code>
+         */
+        abstract public boolean denotesCurrent();
+
+        /**
+         * Returns <code>true</code> if this element represents a regular name
+         * (i.e. neither root, '.' nor '..'), otherwise returns <code>false</code>.
+         *
+         * @return <code>true</code> if this element represents a regular name;
+         *         otherwise <code>false</code>
+         */
+        abstract public boolean denotesName();
+
+    }
+
+    public static final class RootElement extends PathElement {
+        // use a literal that is an illegal name character to avoid collisions
+        static final String LITERAL = "*";
+
+        private RootElement() {
+            super(QName.ROOT, Path.INDEX_UNDEFINED);
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesName()
+         */
+        public boolean denotesName() {
+            return false;
+        }
+
+        /**
+         * Returns true.
+         *
+         * @return true
+         * @see PathElement#denotesRoot()
+         */
+        public boolean denotesRoot() {
+            return true;
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesParent()
+         */
+        public boolean denotesParent() {
+            return false;
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesCurrent()
+         */
+        public boolean denotesCurrent() {
+            return false;
+        }
+
+        /**
+         * Returns the JCR name of this path element.
+         *
+         * @param resolver
+         * @return ""
+         */
+        public String toJCRName(NamespaceResolver resolver) {
+            return "";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void toJCRName(NamespaceResolver resolver, StringBuffer buf) {
+            // append empty string, i.e. nothing.
+        }
+
+        /**
+         * @return {@link #LITERAL}
+         * @see Object#toString()
+         */
+        public String toString() {
+            return LITERAL;
+        }
+    }
+
+
+    public static final class CurrentElement extends PathElement {
+        static final String LITERAL = ".";
+
+        private CurrentElement() {
+            super(new QName(QName.NS_DEFAULT_URI, LITERAL), Path.INDEX_UNDEFINED);
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesName()
+         */
+        public boolean denotesName() {
+            return false;
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesRoot()
+         */
+        public boolean denotesRoot() {
+            return false;
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesParent()
+         */
+        public boolean denotesParent() {
+            return false;
+        }
+
+        /**
+         * Returns true.
+         *
+         * @return true
+         * @see PathElement#denotesCurrent()
+         */
+        public boolean denotesCurrent() {
+            return true;
+        }
+
+        /**
+         * Returns the JCR name of this path element.
+         *
+         * @param resolver
+         * @return {@link #LITERAL}
+         */
+        public String toJCRName(NamespaceResolver resolver) {
+            return LITERAL;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void toJCRName(NamespaceResolver resolver, StringBuffer buf) {
+            buf.append(LITERAL);
+        }
+
+        /**
+         * @return {@link #LITERAL}
+         * @see Object#toString()
+         */
+        public String toString() {
+            return LITERAL;
+        }
+    }
+
+    public static final class ParentElement extends PathElement {
+        static final String LITERAL = "..";
+
+        private ParentElement() {
+            super(new QName(QName.NS_DEFAULT_URI, LITERAL), Path.INDEX_UNDEFINED);
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesName()
+         */
+        public boolean denotesName() {
+            return false;
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesRoot()
+         */
+        public boolean denotesRoot() {
+            return false;
+        }
+
+        /**
+         * Returns true.
+         *
+         * @return true
+         * @see PathElement#denotesParent()
+         */
+        public boolean denotesParent() {
+            return true;
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesCurrent()
+         */
+        public boolean denotesCurrent() {
+            return false;
+        }
+
+        /**
+         * Returns the JCR name of this path element.
+         *
+         * @param resolver
+         * @return {@link #LITERAL}
+         */
+        public String toJCRName(NamespaceResolver resolver) {
+            return LITERAL;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void toJCRName(NamespaceResolver resolver, StringBuffer buf) {
+            buf.append(LITERAL);
+        }
+
+        /**
+         * @return {@link #LITERAL}
+         * @see Object#toString()
+         */
+        public String toString() {
+            return LITERAL;
+        }
+    }
+
+    public static final class NameElement extends PathElement {
+
+        private NameElement(QName name, int index) {
+            super(name, index);
+        }
+
+        /**
+         * Returns true.
+         *
+         * @return true
+         * @see PathElement#denotesName()
+         */
+        public boolean denotesName() {
+            return true;
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesRoot()
+         */
+        public boolean denotesRoot() {
+            return false;
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesParent()
+         */
+        public boolean denotesParent() {
+            return false;
+        }
+
+        /**
+         * Returns false.
+         *
+         * @return false
+         * @see PathElement#denotesCurrent()
+         */
+        public boolean denotesCurrent() {
             return false;
         }
     }
