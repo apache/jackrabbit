@@ -22,7 +22,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.Session;
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.ItemNotFoundException;
@@ -31,7 +30,6 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.lock.LockException;
-import java.util.StringTokenizer;
 
 /**
  * <code>NodeTest</code> contains all test cases for the
@@ -56,22 +54,6 @@ public class NodeTest extends AbstractJCRTest {
 
         // login to second workspace
         superuserW2 = helper.getSuperuserSession(workspaceName);
-        // create the test root node
-        Node root = superuserW2.getRootNode();
-        if (root.hasNode(testPath)) {
-            // clean test root
-            Node testNode = root.getNode(testPath);
-            for (NodeIterator children = testNode.getNodes(); children.hasNext();) {
-                children.nextNode().remove();
-            }
-        } else {
-            StringTokenizer names = new StringTokenizer(testPath, "/");
-            Node currentNode = superuserW2.getRootNode();
-            while (names.hasMoreTokens()) {
-                currentNode = currentNode.addNode(names.nextToken(), testNodeType);
-            }
-        }
-        superuserW2.save();
     }
 
     /**
@@ -79,13 +61,7 @@ public class NodeTest extends AbstractJCRTest {
      */
     public void tearDown() throws Exception {
         try {
-            // delete all children of test root node
-            Node rootNodeW2 = (Node) superuserW2.getItem(testRootNode.getPath());
-            for (NodeIterator children = rootNodeW2.getNodes(); children.hasNext();) {
-                children.nextNode().remove();
-            }
-            // save changes
-            superuserW2.save();
+            cleanUpTestRoot(superuserW2);
             // log out
             superuserW2.logout();
         } catch (RepositoryException e) {

@@ -18,12 +18,12 @@ package org.apache.jackrabbit.value;
 
 import java.io.ByteArrayInputStream;
 
-import junit.framework.TestCase;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * Test cases for binary values.
  */
-public class BinaryValueTest extends TestCase {
+public class BinaryValueTest extends AbstractJCRTest {
 
     private static final byte[] DATA = "abc".getBytes();
 
@@ -31,17 +31,15 @@ public class BinaryValueTest extends TestCase {
         assertFalse(new BinaryValue(DATA).equals(null));
         assertFalse(new BinaryValue(DATA).equals(new Object()));
 
-        if (Boolean.getBoolean("JCR-320")) {
-            assertTrue(new BinaryValue(DATA).equals(new BinaryValue(DATA)));
-            assertTrue(new BinaryValue(DATA).equals(
-                    new BinaryValue(new ByteArrayInputStream(DATA))));
-            assertTrue(new BinaryValue(new ByteArrayInputStream(DATA)).equals(
-                    new BinaryValue(DATA)));
-            assertTrue(new BinaryValue(DATA).equals(
-                    new BinaryValue(new String(DATA))));
-            assertTrue(new BinaryValue(new String(DATA)).equals(
-                    new BinaryValue(DATA)));
-        }
+        assertTrue(new BinaryValue(DATA).equals(new BinaryValue(DATA)));
+        assertTrue(new BinaryValue(DATA).equals(
+                new BinaryValue(new ByteArrayInputStream(DATA))));
+        assertTrue(new BinaryValue(new ByteArrayInputStream(DATA)).equals(
+                new BinaryValue(DATA)));
+        assertTrue(new BinaryValue(DATA).equals(
+                new BinaryValue(new String(DATA))));
+        assertTrue(new BinaryValue(new String(DATA)).equals(
+                new BinaryValue(DATA)));
     }
 
 }
