@@ -17,13 +17,12 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.lock.XALockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
-import org.apache.jackrabbit.core.state.XAItemStateManager;
+import org.apache.jackrabbit.core.lock.XALockManager;
+import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.XAItemStateManager;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.version.XAVersionManager;
@@ -36,9 +35,9 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Collections;
 
 /**
  * Session extension that provides XA support.
@@ -160,15 +159,6 @@ public class XASessionImpl extends SessionImpl
 
         VersionManagerImpl vMgr = (VersionManagerImpl) rep.getVersionManager();
         return new XAVersionManager(vMgr, rep.getNodeTypeRegistry(), this);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected ItemManager createItemManager(SessionItemStateManager itemStateMgr,
-                                            HierarchyManager hierMgr) {
-        return new XAItemManager(itemStateMgr, hierMgr, this,
-                ntMgr.getRootNodeDefinition(), rep.getRootNodeId());
     }
 
     /**
