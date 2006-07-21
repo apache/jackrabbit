@@ -269,7 +269,8 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         NodeStateEx node = parent.addNode(name, QName.NT_FROZENNODE, null, true);
 
         // initialize the internal properties
-        node.setPropertyValue(QName.JCR_FROZENUUID, InternalValue.create(src.internalGetUUID()));
+        node.setPropertyValue(QName.JCR_FROZENUUID,
+                InternalValue.create(src.internalGetUUID().toString()));
         node.setPropertyValue(QName.JCR_FROZENPRIMARYTYPE,
                 InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
         if (src.hasProperty(QName.JCR_MIXINTYPES)) {
