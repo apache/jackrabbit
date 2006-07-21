@@ -345,28 +345,14 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 testRootNode = superuser.getRootNode().getNode(testPath);
             }
         } else {
-            Node root = superuser.getRootNode();
-            if (root.hasNode(testPath)) {
-                // clean test root
-                testRootNode = root.getNode(testPath);
-                for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
-                    children.nextNode().remove();
-                }
-            } else {
-                // create nodes to testPath
-                StringTokenizer names = new StringTokenizer(testPath, "/");
-                Node currentNode = root;
-                while (names.hasMoreTokens()) {
-                    String name = names.nextToken();
-                    if (currentNode.hasNode(name)) {
-                        currentNode = currentNode.getNode(name);
-                    } else {
-                        currentNode = currentNode.addNode(name, testNodeType);
-                    }
-                }
-                testRootNode = currentNode;
+            testRootNode = cleanUpTestRoot(superuser);
+            // also clean second workspace
+            Session s = helper.getSuperuserSession(workspaceName);
+            try {
+                cleanUpTestRoot(s);
+            } finally {
+                s.logout();
             }
-            root.save();
         }
     }
 
@@ -374,17 +360,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         if (superuser != null) {
             try {
                 if (!isReadOnly) {
-                    // do a 'rollback'
-                    superuser.refresh(false);
-                    Node root = superuser.getRootNode();
-                    if (root.hasNode(testPath)) {
-                        // clean test root
-                        testRootNode = root.getNode(testPath);
-                        for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
-                            children.nextNode().remove();
-                        }
-                        root.save();
-                    }
+                    cleanUpTestRoot(superuser);
                 }
             } catch (Exception e) {
                 log.println("Exception in tearDown: " + e.toString());
@@ -531,5 +507,43 @@ public abstract class AbstractJCRTest extends JUnitTest {
      */
     protected boolean isSupported(String descriptorKey) throws RepositoryException {
         return "true".equals(helper.getRepository().getDescriptor(descriptorKey));
+    }
+
+    /**
+     * Reverts any pending changes made by <code>s</code> and deletes any nodes
+     * under {@link #testRoot}. If there is no node at {@link #testRoot} then
+     * the necessary nodes are created.
+     *
+     * @param s the session to clean up.
+     * @return the {@link javax.jcr.Node} that represents the test root.
+     * @throws RepositoryException if an error occurs.
+     */
+    protected Node cleanUpTestRoot(Session s) throws RepositoryException {
+        // do a 'rollback'
+        s.refresh(false);
+        Node root = s.getRootNode();
+        Node testRootNode;
+        if (root.hasNode(testPath)) {
+            // clean test root
+            testRootNode = root.getNode(testPath);
+            for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
+                children.nextNode().remove();
+            }
+        } else {
+            // create nodes to testPath
+            StringTokenizer names = new StringTokenizer(testPath, "/");
+            Node currentNode = root;
+            while (names.hasMoreTokens()) {
+                String name = names.nextToken();
+                if (currentNode.hasNode(name)) {
+                    currentNode = currentNode.getNode(name);
+                } else {
+                    currentNode = currentNode.addNode(name, testNodeType);
+                }
+            }
+            testRootNode = currentNode;
+        }
+        s.save();
+        return testRootNode;
     }
 }

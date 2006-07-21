@@ -23,16 +23,12 @@ import javax.jcr.Node;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
-import javax.jcr.SimpleCredentials;
 import javax.jcr.NodeIterator;
-import javax.jcr.observation.Event;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
 import javax.jcr.lock.Lock;
 import javax.transaction.UserTransaction;
 import javax.transaction.RollbackException;
-import java.io.PrintWriter;
-import java.io.PrintStream;
 import java.util.StringTokenizer;
 
 /**
@@ -96,7 +92,6 @@ public class XATest extends AbstractJCRTest {
      * Make sure that tested repository supports transactions
      */
     protected void runTest() throws Throwable {
-        Repository rep = helper.getRepository();
         if (isSupported(Repository.OPTION_TRANSACTIONS_SUPPORTED)) {
             super.runTest();
         }

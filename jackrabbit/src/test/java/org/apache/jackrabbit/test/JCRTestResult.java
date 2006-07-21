@@ -20,8 +20,12 @@ import junit.framework.TestResult;
 import junit.framework.Test;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestListener;
+import junit.framework.TestCase;
 
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 /**
  * Extends the standard JUnit TestResult class. This class ignores test errors
@@ -36,6 +40,12 @@ public class JCRTestResult extends TestResult {
     private final LogPrintWriter log;
 
     /**
+     * Set of Strings that identify the test methods that currently fails but
+     * are recognized as known issues. Those will not be reported as errors.
+     */
+    private final Set knownIssues = new HashSet();
+
+    /**
      * Creates a new JCRTestResult that delegates to <code>orig</code>.
      * @param orig the original TestResult this result wraps.
      * @param log the logger
@@ -43,27 +53,46 @@ public class JCRTestResult extends TestResult {
     public JCRTestResult(TestResult orig, LogPrintWriter log) {
         this.orig = orig;
         this.log = log;
+        String propValue = System.getProperty("known.issues");
+        if (propValue != null) {
+            StringTokenizer tok = new StringTokenizer(propValue);
+            while (tok.hasMoreTokens()) {
+                knownIssues.add(tok.nextToken());
+            }
+        }
     }
 
     /**
      * Only add an error if <code>throwable</code> is not of type
-     * {@link NotExecutableException}.
+     * {@link NotExecutableException} and the test case is not a known issue.
      * @param test the test.
      * @param throwable the exception thrown by the test.
      */
     public synchronized void addError(Test test, Throwable throwable) {
         if (throwable instanceof NotExecutableException) {
             log.println("Test case: " + test.toString() + " not executable: " + throwable.getMessage());
+        } else if (isKnownIssue(test)) {
+            log.println("Known issue: " + test + ": " + throwable.getMessage());
         } else {
             orig.addError(test, throwable);
         }
     }
 
-    //-----------------------< default overwrites >-----------------------------
-
-    public synchronized void addFailure(Test test, AssertionFailedError assertionFailedError) {
-        orig.addFailure(test, assertionFailedError);
+    /**
+     * Only adds a failure if <code>test</code> is not a known issue.
+     * @param test the test case that failed.
+     * @param assertionFailedError the assertion error.
+     */
+    public synchronized void addFailure(Test test,
+                                        AssertionFailedError assertionFailedError) {
+        if (isKnownIssue(test)) {
+            log.println("Known issue: " + test + ": " + assertionFailedError.getMessage());
+        } else {
+            orig.addFailure(test, assertionFailedError);
+        }
     }
+
+    //-----------------------< default overwrites >-----------------------------
 
     public synchronized void addListener(TestListener testListener) {
         orig.addListener(testListener);
@@ -111,5 +140,21 @@ public class JCRTestResult extends TestResult {
 
     public synchronized boolean wasSuccessful() {
         return orig.wasSuccessful();
+    }
+
+    //------------------------------< internal >--------------------------------
+
+    /**
+     * Returns <code>true</code> if <code>test</code> is a known issue;
+     * <code>false</code> otherwise.
+     * @param test the test case to check.
+     * @return <code>true</code> if <code>test</code> is a known issue.
+     */
+    private boolean isKnownIssue(Test test) {
+        String testName = "-";
+        if (test instanceof TestCase) {
+            testName = test.getClass().getName() + "#" + ((TestCase) test).getName();
+        }
+        return knownIssues.contains(testName);
     }
 }

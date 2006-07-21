@@ -30,8 +30,13 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.core.TestRepository;
+import org.apache.jackrabbit.test.JCRTestResult;
+import org.apache.jackrabbit.test.LogPrintWriter;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import junit.framework.TestCase;
+import junit.framework.TestResult;
 
 /**
  * Jackrabbit-specific test cases for the document view XML format.
@@ -41,8 +46,21 @@ import junit.framework.TestCase;
  */
 public class DocumentViewTest extends TestCase {
 
+    /** Logger instance for this class. */
+    private static final Logger log = LoggerFactory.getLogger(DocumentViewTest.class);
+
     /** Test session. */
     private Session session;
+
+    /**
+     * Use a {@link org.apache.jackrabbit.test.JCRTestResult} to suppress test
+     * case failures of known issues.
+     *
+     * @param testResult the test result.
+     */
+    public void run(TestResult testResult) {
+        super.run(new JCRTestResult(testResult, new LogPrintWriter(log)));
+    }
 
     /**
      * Sets up the test fixture.
@@ -50,6 +68,7 @@ public class DocumentViewTest extends TestCase {
      * @throws Exception if an unexpected error occurs
      */
     protected void setUp() throws Exception {
+        super.setUp();
         session = TestRepository.getInstance().login();
         JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
             session.getWorkspace().getNodeTypeManager();
@@ -72,6 +91,7 @@ public class DocumentViewTest extends TestCase {
         // TODO: Unregister the MultiValueTestType node type once Jackrabbit
         // supports node type removal.
         session.logout();
+        super.tearDown();
     }
 
     /**
@@ -104,10 +124,6 @@ public class DocumentViewTest extends TestCase {
      * @throws Exception if an unexpected error occurs
      */
     public void testMultiValue() throws Exception {
-        if (!Boolean.getBoolean("JCR-325")) {
-            return;
-        }
-
         String message = "JCR-325: docview roundtripping does not work with"
             + " multivalue non-string properties";
 
