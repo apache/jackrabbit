@@ -442,7 +442,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     //---------------------------------------------< private implementation >---
     /**
      *
-     * @return
+     * @return true if the definition indicates that this Property is multivalued.
      */
     private boolean isMultiple() {
 	return definition.isMultiple();
@@ -451,7 +451,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     /**
      *
      * @param defaultType
-     * @return
+     * @return the required type for this property.
      */
     private int getRequiredType(int defaultType) {
         // check type according to definition of this property
@@ -528,7 +528,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     // DIFF JACKRABBIT: protected void internalSetValue(QValue[] values, int type)
     /**
      *
-     * @param internalValues
+     * @param qValues
      * @param valueType
      * @throws ConstraintViolationException
      * @throws RepositoryException
