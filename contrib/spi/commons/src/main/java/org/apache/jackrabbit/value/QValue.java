@@ -198,7 +198,7 @@ public class QValue {
                     }
                     byte[] data = out.toByteArray();
                     String text = new String(data, DEFAULT_ENCODING);
-                    return create(new String(data, DEFAULT_ENCODING), type);
+                    return create(text, type);
 
                 } catch (UnsupportedEncodingException e) {
                     throw new RepositoryException(DEFAULT_ENCODING + " not supported on this platform", e);

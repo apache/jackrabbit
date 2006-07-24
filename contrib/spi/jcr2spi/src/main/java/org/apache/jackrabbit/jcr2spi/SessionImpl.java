@@ -39,6 +39,7 @@ import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
@@ -758,7 +759,7 @@ public class SessionImpl implements Session, ManagerProvider {
      */
     Path getQPath(String absPath) throws RepositoryException {
         try {
-            Path p = getNamespaceResolver().getQPath(absPath);
+            Path p = PathFormat.parse(absPath, getNamespaceResolver());
             if (!p.isAbsolute()) {
                 throw new RepositoryException("Not an absolute path: " + absPath);
             }

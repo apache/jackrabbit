@@ -31,6 +31,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -110,7 +111,7 @@ public abstract class ItemImpl implements Item, TransientItemStateListener {
         checkStatus();
         try {
             // DIFF JR: use nsResolver
-            return session.getNamespaceResolver().getJCRPath(getQPath());
+            return PathFormat.format(getQPath(), session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "Internal error: encountered unregistered namespace";

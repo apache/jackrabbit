@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi.name;
 
-import org.apache.xerces.util.XMLChar;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.util.XMLChar;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.NamespaceException;

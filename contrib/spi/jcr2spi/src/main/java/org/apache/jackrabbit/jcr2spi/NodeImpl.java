@@ -28,6 +28,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
@@ -913,7 +914,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 } else {
                     Path p = referenceableNode.getQPath().computeRelativePath(getQPath());
                     // use prefix mappings of srcSession
-                    String relPath = srcSession.getNamespaceResolver().getJCRPath(p);
+                    String relPath = PathFormat.format(p, session.getNamespaceResolver());
                     if (!correspNode.hasNode(relPath)) {
                         throw new ItemNotFoundException("No corresponding path found in workspace " + workspaceName + "(" + safeGetJCRPath() + ")");
                     } else {
@@ -1455,7 +1456,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private Path getReorderPath(String relativePath) throws RepositoryException {
         try {
-            Path p = session.getNamespaceResolver().getQPath(relativePath);
+            Path p = PathFormat.parse(relativePath, session.getNamespaceResolver());
             if (p.isAbsolute() || p.getLength() != 1 || p.getDepth() != 1) {
                 throw new RepositoryException("Invalid relative path: " + relativePath);
             }
@@ -1475,7 +1476,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private Path getQPath(String relativePath) throws RepositoryException {
         try {
-            Path p = session.getNamespaceResolver().getQPath(relativePath);
+            Path p = PathFormat.parse(relativePath, session.getNamespaceResolver());
             return Path.create(getQPath(), p, true);
         } catch (MalformedPathException e) {
             String msg = "Invalid relative path: " + relativePath;

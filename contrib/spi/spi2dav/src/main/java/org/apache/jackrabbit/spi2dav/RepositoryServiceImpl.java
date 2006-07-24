@@ -97,6 +97,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.BaseException;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.RepositoryService;
@@ -275,7 +276,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
         Path relativePath = itemId.getRelativePath();
         if (relativePath != null) {
             try {
-                String jcrPath = getJCRPath(relativePath);
+                String jcrPath = PathFormat.format(relativePath, this);
                 uri += Text.escapePath(jcrPath);
             } catch (NoPrefixDeclaredException e) {
                 throw new RepositoryException(e);
@@ -1495,7 +1496,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
             jcrPath = uri;
         }
         try {
-            return getQPath(jcrPath);
+            return PathFormat.parse(jcrPath, this);
         } catch (MalformedPathException e) {
             throw new RepositoryException();
         }
