@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.webdav.jcr.search;
 
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -32,6 +31,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.ValueFactory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -67,11 +67,13 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      * Wrap the specified <code>DavProperty</code> in a new <code>SearchResultProperty</code>.
      *
      * @param property
+     * @param valueFactory factory used to deserialize the xml value to a JCR value.
      * @throws RepositoryException if an error occurs while build the property value
      * @throws IllegalArgumentException if the specified property does have the
      * required form.
+     * @see #getValues()
      */
-    public SearchResultProperty(DavProperty property) throws RepositoryException {
+    public SearchResultProperty(DavProperty property, ValueFactory valueFactory) throws RepositoryException {
         super(property.getName(), true);
         if (!SEARCH_RESULT_PROPERTY.equals(getName())) {
 	    throw new IllegalArgumentException("SearchResultProperty may only be created from a property named " + SEARCH_RESULT_PROPERTY.toString());
@@ -85,11 +87,11 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
             while (elemIt.hasNext()) {
                 Object el = elemIt.next();
                 if (el instanceof Element) {
-                    parseColumnElement((Element)el, colList, valList);
+                    parseColumnElement((Element)el, colList, valList, valueFactory);
                 }
             }
         } else if (propValue instanceof Element) {
-            parseColumnElement((Element)property.getValue(), colList, valList);
+            parseColumnElement((Element)property.getValue(), colList, valList, valueFactory);
         } else {
             new IllegalArgumentException("SearchResultProperty requires a list of 'dcr:column' xml elements.");
         }
@@ -98,7 +100,9 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
         values = (Value[]) valList.toArray(new Value[valList.size()]);
     }
 
-    private void parseColumnElement(Element columnElement, List columnNames, List values) throws ValueFormatException, RepositoryException {
+    private void parseColumnElement(Element columnElement, List columnNames,
+                                    List values, ValueFactory valueFactory)
+        throws ValueFormatException, RepositoryException {
         if (!DomUtil.matches(columnElement, COLUMN, ItemResourceConstants.NAMESPACE)) {
             log.debug("dcr:column element expected within search result.");
             return;
@@ -110,7 +114,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
         if (valueElement != null) {
             String typeStr = DomUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE);
             jcrValue = ValueHelper.deserialize(DomUtil.getText(valueElement),
-                    PropertyType.valueFromName(typeStr), true, ValueFactoryImpl.getInstance());
+                    PropertyType.valueFromName(typeStr), true, valueFactory);
         } else {
             jcrValue = null;
         }

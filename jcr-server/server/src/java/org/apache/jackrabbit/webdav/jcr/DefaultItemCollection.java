@@ -902,7 +902,7 @@ public class DefaultItemCollection extends AbstractItemResource
         try {
             Document reqBody = DomUtil.BUILDER_FACTORY.newDocumentBuilder().parse(in);
             DavProperty defaultProp = DefaultDavProperty.createFromXml(reqBody.getDocumentElement());
-            ValuesProperty vp = new ValuesProperty(defaultProp, PropertyType.STRING);
+            ValuesProperty vp = new ValuesProperty(defaultProp, PropertyType.STRING, getRepositorySession().getValueFactory());
             return vp;
         } catch (IOException e) {
             log.debug(errorMsg, e);
