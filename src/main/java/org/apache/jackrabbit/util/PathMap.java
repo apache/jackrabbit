@@ -561,6 +561,33 @@ public class PathMap {
             }
             return result.iterator();
         }
+
+        /**
+         * Map a relPath starting at <code>this</code> Element. If
+         * <code>exact</code> is <code>false</code>, returns the last available
+         * item along the relPath that is stored in the map.
+         *
+         * @param relPath relPath to map
+         * @param exact   flag indicating whether an exact match is required
+         * @return descendant, maybe <code>null</code> if <code>exact</code> is
+         *         <code>true</code>
+         */
+        public Element getDescendant(Path relPath, boolean exact) {
+            Path.PathElement[] elements = relPath.getElements();
+            Element current = this;
+
+            for (int i = 0; i < elements.length; i++) {
+                Element next = current.getChild(elements[i]);
+                if (next == null) {
+                    if (exact) {
+                        return null;
+                    }
+                    break;
+                }
+                current = next;
+            }
+            return current;
+        }
     }
 
     /**
