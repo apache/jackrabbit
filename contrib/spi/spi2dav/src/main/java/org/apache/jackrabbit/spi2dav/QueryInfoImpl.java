@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
+import javax.jcr.ValueFactory;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.AbstractCollection;
@@ -60,9 +61,13 @@ public class QueryInfoImpl implements QueryInfo {
 
     private final QName[] columnNames;
     private final NamespaceResolver nsResolver;
+    private final ValueFactory valueFactory;
 
-    public QueryInfoImpl(MultiStatus ms, SessionInfo sessionInfo, URIResolver uriResolver, NamespaceResolver nsResolver) throws RepositoryException {
+    public QueryInfoImpl(MultiStatus ms, SessionInfo sessionInfo, URIResolver uriResolver,
+                         NamespaceResolver nsResolver, ValueFactory valueFactory)
+        throws RepositoryException {
         this.nsResolver = nsResolver;
+        this.valueFactory = valueFactory;
 
         String responseDescription = ms.getResponseDescription();
         if (responseDescription != null) {
@@ -87,7 +92,7 @@ public class QueryInfoImpl implements QueryInfo {
             DavPropertySet okSet = response.getProperties(DavServletResponse.SC_OK);
 
             DavProperty davProp = okSet.get(SearchResultProperty.SEARCH_RESULT_PROPERTY);
-            SearchResultProperty resultProp = new SearchResultProperty(davProp);
+            SearchResultProperty resultProp = new SearchResultProperty(davProp, valueFactory);
 
             NodeId nodeId = uriResolver.getNodeId(href, sessionInfo);
             this.results.put(nodeId, resultProp);
