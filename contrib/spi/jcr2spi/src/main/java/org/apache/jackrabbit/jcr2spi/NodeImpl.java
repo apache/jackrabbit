@@ -187,7 +187,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsWritable();
         // 1. build qualified path and retrieve parent node
         Path nodePath = getQPath(relPath);
-        if (nodePath.getNameElement().getIndex() != org.apache.jackrabbit.name.Path.INDEX_UNDEFINED) {
+        if (nodePath.getNameElement().getIndex() != Path.INDEX_UNDEFINED) {
             String msg = "Illegal subscript specified: " + relPath;
             log.debug(msg);
             throw new RepositoryException(msg);
@@ -536,7 +536,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (parentId == null) {
             // the root node cannot have same-name siblings; always return the
             // default index
-            return org.apache.jackrabbit.name.Path.INDEX_DEFAULT;
+            return Path.INDEX_DEFAULT;
         }
         try {
             NodeState parent = (NodeState) itemStateMgr.getItemState(parentId);
@@ -891,14 +891,14 @@ public class NodeImpl extends ItemImpl implements Node {
 
             // search nearest ancestor that is referenceable
             NodeImpl referenceableNode = this;
-            while (referenceableNode.getDepth() != org.apache.jackrabbit.name.Path.ROOT_DEPTH && !referenceableNode.isNodeType(QName.MIX_REFERENCEABLE)) {
+            while (referenceableNode.getDepth() != Path.ROOT_DEPTH && !referenceableNode.isNodeType(QName.MIX_REFERENCEABLE)) {
                 referenceableNode = (NodeImpl) referenceableNode.getParent();
             }
 
             // if root is common ancestor, corresponding path is same as ours
             // otherwise access referenceable ancestor and calcuate correspond. path.
             String correspondingPath;
-            if (referenceableNode.getDepth() == org.apache.jackrabbit.name.Path.ROOT_DEPTH) {
+            if (referenceableNode.getDepth() == Path.ROOT_DEPTH) {
                 if (!srcSession.getItemManager().itemExists(getQPath())) {
                     throw new ItemNotFoundException("No corresponding path found in workspace " + workspaceName + "(" + safeGetJCRPath() + ")");
                 } else {
@@ -1358,7 +1358,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param qName
      * @param type
      * @param def
-     * @param ivs
+     * @param qvs
      * @return
      * @throws PathNotFoundException
      * @throws ConstraintViolationException
@@ -1432,8 +1432,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     *
-     * @return
+     * @return <code>NodeState</code> of this <code>Node</code>
      */
     private NodeState getNodeState() {
         return (NodeState) getItemState();
@@ -1522,7 +1521,9 @@ public class NodeImpl extends ItemImpl implements Node {
         } catch (PathNotFoundException e) {
             // item does not exist -> ignore and return null
         } catch (MalformedPathException e) {
-            e.printStackTrace();
+            String msg = "Invalid relative path: " + relPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
         }
         return targetId;
     }
