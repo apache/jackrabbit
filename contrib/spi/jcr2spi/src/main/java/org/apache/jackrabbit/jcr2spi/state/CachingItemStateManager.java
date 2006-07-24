@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.util.PathMap;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.EventIterator;
@@ -56,7 +57,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
     public CachingItemStateManager(ItemStateManager ism) {
         this.ism = ism;
         this.uuid2PathElement = new HashMap(); // TODO: must use weak references
-        path2State = new PathMap();            // TODO: must use weak references
+        path2State = new PathMap();      // TODO: must use weak references
     }
 
     //---------------------------------------------------< ItemStateManager >---
@@ -242,8 +243,15 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
                     PathMap.Element parentElement = getPathElement(state.getParentId());
                     // create path element if necessary
                     if (elem == null) {
-                        // TODO TO-BE-FIXED: put element (marcel, here goes your extra method)
-                        // i removed it, since its not present in JR commons (anchela)
+                        Path.PathElement[] elements = new Path.PathElement[]{
+                            getNameElement((NodeState) parentElement.get(), state)};
+                        Path p = null;
+                        try {
+                            p = new Path.PathBuilder(elements).getPath();
+                        } catch (MalformedPathException e) {
+                            // elements is never empty
+                        }
+                        elem = parentElement.getDescendant(p, false);
                     }
                     elem.set(state);
                     // now put current state to cache
@@ -255,16 +263,14 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
         // at this point we are guaranteed to have an element
         // now resolve relative path part of id if there is one
         if (relPath != null) {
-            // TODO TO-BE-FIXED: map element (Marcel, here goes your extra method)
-            // i removed it, since its not present in JR commons (anchela)
-            PathMap.Element tmp = null;
-            if (tmp == null) {
+            PathMap.Element tmp = elem.getDescendant(relPath, true);
+            if (tmp == null || tmp.get() == null) {
                 // not yet cached, load from ism
                 ItemState state = ism.getItemState(id);
                 // put to cache
-                // TODO TO-BE-FIXED: put element (Marcel, here goes your extra method)
-                // i removed it, since its not present in JR commons (anchela)
-                tmp = null;
+                if (tmp == null) {
+                    tmp = elem.getDescendant(relPath, false);
+                }
                 tmp.set(state);
             }
             elem = tmp;
@@ -281,7 +287,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
      *         present in the cache.
      */
     private PathMap.Element lookup(ItemId id) {
-        PathMap.Element elem = null;
+        PathMap.Element elem;
         // resolve UUID
         if (id.getUUID() != null) {
             elem = (PathMap.Element) uuid2PathElement.get(id.getUUID());
@@ -289,13 +295,14 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
                 // not cached
                 return null;
             }
+        } else {
+            // start from root
+            elem = path2State.map(Path.ROOT, false);
         }
 
         // resolve relative path
         if (id.getRelativePath() != null) {
-            // TODO TO-BE-FIXED: map element (Marcel, here goes your extra method)
-            // i removed it, since its not present in JR commons (anchela)
-            elem = null;
+            elem = elem.getDescendant(id.getRelativePath(), true);
         }
 
         return elem;
