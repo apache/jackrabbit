@@ -561,7 +561,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     private Iterator getDescendantTransientItemStatesInAttic(NodeId parentId) {
         // DIFF JACKRABBIT: if (!transientStateMgr.hasAnyItemStatesInAttic()) {
-        if (transientStateMgr.getEntriesInAtticCount() == 0) {
+        if (!transientStateMgr.hasEntriesInAttic()) {
             return Collections.EMPTY_LIST.iterator();
         }
 

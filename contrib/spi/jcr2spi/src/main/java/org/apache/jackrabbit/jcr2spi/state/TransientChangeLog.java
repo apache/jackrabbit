@@ -100,8 +100,8 @@ public class TransientChangeLog extends ChangeLog implements TransientItemStateM
     /**
      * @inheritDoc
      */
-    public int getEntriesInAtticCount() {
-        return deletedStates.size();
+    public boolean hasEntriesInAttic() {
+        return deletedStates.size() > 0;
     }
 
     /**

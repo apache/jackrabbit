@@ -33,9 +33,9 @@ interface TransientItemStateManager extends ItemStateManager {
     public int getEntriesCount();
 
     /**
-     * @return the number of entries in attic
+     * @return <code>true</code> if there are any entries in attic.
      */
-    public int getEntriesInAtticCount();
+    public boolean hasEntriesInAttic();
 
     /**
      * @return an iterator over all entries
