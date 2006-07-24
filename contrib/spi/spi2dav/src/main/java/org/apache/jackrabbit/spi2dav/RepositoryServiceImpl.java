@@ -664,7 +664,8 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
                 throw new ItemNotFoundException("Unable to retrieve the property with id " + propertyId);
             }
 
-            PropertyInfo pInfo = new PropertyInfoImpl(responses[0], getURIResolver(), getNamespaceResolver(), sessionInfo);
+            PropertyInfo pInfo = new PropertyInfoImpl(responses[0],
+                getURIResolver(), getNamespaceResolver(), sessionInfo, valueFactory);
             return pInfo;
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -1229,7 +1230,8 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
             method.checkSuccess();
 
             MultiStatus ms = method.getResponseBodyAsMultiStatus();
-            return new QueryInfoImpl(ms, sessionInfo, getURIResolver(), getNamespaceResolver());
+            return new QueryInfoImpl(ms, sessionInfo, getURIResolver(),
+                getNamespaceResolver(), valueFactory);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {

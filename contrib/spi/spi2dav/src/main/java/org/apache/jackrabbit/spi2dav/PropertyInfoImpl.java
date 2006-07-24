@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -50,7 +51,10 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
     private boolean isMultiValued;
     private Object[] values;
 
-    public PropertyInfoImpl(MultiStatusResponse response, URIResolver uriResolver, NamespaceResolver nsResolver, SessionInfo sessionInfo) throws RepositoryException, DavException {
+    public PropertyInfoImpl(MultiStatusResponse response, URIResolver uriResolver,
+                            NamespaceResolver nsResolver, SessionInfo sessionInfo,
+                            ValueFactory valueFactory)
+        throws RepositoryException, DavException {
         super(response, uriResolver, sessionInfo);
 
         id = uriResolver.getPropertyId(getParentId(), response);
@@ -61,8 +65,8 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
 
         if (propSet.contains(ItemResourceConstants.JCR_VALUE)) {
             // TODO: jcr-server sends jcr values not qualified
-            ValuesProperty vp = new ValuesProperty(propSet.get(ItemResourceConstants.JCR_VALUE), type);
-            Value jcrValue = vp.getJcrValue(type);
+            ValuesProperty vp = new ValuesProperty(propSet.get(ItemResourceConstants.JCR_VALUE), type, valueFactory);
+            Value jcrValue = vp.getJcrValue(type, valueFactory);
             if (type == PropertyType.BINARY) {
                 values = (jcrValue == null) ?  new InputStream[0] : new InputStream[] {jcrValue.getStream()};
             } else {
@@ -71,8 +75,8 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
             }
         } else {
             isMultiValued = true;
-            ValuesProperty vp = new ValuesProperty(propSet.get(ItemResourceConstants.JCR_VALUES), type);
-            Value[] jcrValues = vp.getJcrValues(type);
+            ValuesProperty vp = new ValuesProperty(propSet.get(ItemResourceConstants.JCR_VALUES), type, valueFactory);
+            Value[] jcrValues = vp.getJcrValues(type, valueFactory);
             if (type == PropertyType.BINARY) {
                 values = new InputStream[jcrValues.length];
                 for (int i = 0; i < jcrValues.length; i++) {
