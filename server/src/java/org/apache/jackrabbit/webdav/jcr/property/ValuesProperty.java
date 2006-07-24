@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.jcr.property;
 
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -34,6 +33,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.ValueFactory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -79,8 +79,12 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      * @param defaultType default type of the values to be deserialized. If however
      * the {@link #XML_VALUE 'value'} elements provide a {@link #ATTR_VALUE_TYPE 'type'}
      * attribute, the default value is ignored.
+     * @param valueFactory Factory used to retrieve JCR values from the value
+     * of the given <code>DavProperty</code>.
      */
-    public ValuesProperty(DavProperty property, int defaultType) throws RepositoryException, DavException {
+    public ValuesProperty(DavProperty property, int defaultType,
+                          ValueFactory valueFactory)
+        throws RepositoryException, DavException {
         super(property.getName(), false);
 
         if (!(JCR_VALUES.equals(property.getName()) || JCR_VALUE.equals(getName()))) {
@@ -113,7 +117,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
             Element[] elems = (Element[])valueElements.toArray(new Element[valueElements.size()]);
             jcrValues = new Value[elems.length];
             for (int i = 0; i < elems.length; i++) {
-                jcrValues[i] = getJcrValue(elems[i], defaultType);
+                jcrValues[i] = getJcrValue(elems[i], defaultType, valueFactory);
             }
         }
     }
@@ -136,7 +140,9 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      * @throws ValueFormatException
      * @throws RepositoryException
      */
-    private static Value getJcrValue(Element valueElement, int defaultType) throws ValueFormatException, RepositoryException {
+    private static Value getJcrValue(Element valueElement, int defaultType,
+                                     ValueFactory valueFactory)
+        throws ValueFormatException, RepositoryException {
         if (valueElement == null) {
             return null;
         }
@@ -145,7 +151,7 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
         String typeStr = DomUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE);
         int type = (typeStr == null) ? defaultType : PropertyType.valueFromName(typeStr);
         // deserialize value ->> see #toXml where values are serialized
-        return ValueHelper.deserialize(value, type, true, ValueFactoryImpl.getInstance());
+        return ValueHelper.deserialize(value, type, true, valueFactory);
     }
 
     /**
@@ -155,11 +161,11 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      * @throws ValueFormatException if convertion of the internal jcr values to
      * the specified value type fails.
      */
-    public Value[] getJcrValues(int propertyType) throws ValueFormatException {
+    public Value[] getJcrValues(int propertyType, ValueFactory valueFactory) throws ValueFormatException {
         checkPropertyName(JCR_VALUES);
         Value[] vs = new Value[jcrValues.length];
         for (int i = 0; i < jcrValues.length; i++) {
-            vs[i] = ValueHelper.convert(jcrValues[i], propertyType, ValueFactoryImpl.getInstance());
+            vs[i] = ValueHelper.convert(jcrValues[i], propertyType, valueFactory);
         }
         return jcrValues;
     }
@@ -180,11 +186,11 @@ public class ValuesProperty extends AbstractDavProperty implements ItemResourceC
      * @return
      * @throws ValueFormatException
      */
-    public Value getJcrValue(int propertyType) throws ValueFormatException {
+    public Value getJcrValue(int propertyType, ValueFactory valueFactory) throws ValueFormatException {
         checkPropertyName(JCR_VALUE);
         return (jcrValues.length == 0)
                 ? null
-                : ValueHelper.convert(jcrValues[0], propertyType, ValueFactoryImpl.getInstance());
+                : ValueHelper.convert(jcrValues[0], propertyType, valueFactory);
     }
 
     /**

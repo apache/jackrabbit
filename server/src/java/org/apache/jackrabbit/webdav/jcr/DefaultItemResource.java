@@ -50,6 +50,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.ValueFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.InputStream;
 import java.io.IOException;
@@ -166,9 +167,10 @@ public class DefaultItemResource extends AbstractItemResource {
         try {
             Property prop = (Property) item;
             int defaultType = prop.getType();
-            ValuesProperty vp = new ValuesProperty(property, defaultType);
+            ValueFactory vfact = getRepositorySession().getValueFactory();
+            ValuesProperty vp = new ValuesProperty(property, defaultType, vfact);
             if (property.getName().equals(JCR_VALUE)) {
-                prop.setValue(vp.getJcrValue(vp.getValueType()));
+                prop.setValue(vp.getJcrValue(vp.getValueType(), vfact));
             } else if (property.getName().equals(JCR_VALUES)) {
                 prop.setValue(vp.getJcrValues());
             } else {
