@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
@@ -241,7 +242,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManag
         // flush all affected cache entries
         ntCache.remove(ntName);
         try {
-            String name = nsResolver.getJCRName(ntName);
+            String name = NameFormat.format(ntName, nsResolver);
             synchronized (pdCache) {
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
@@ -278,7 +279,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManag
         // flush all affected cache entries
         ntCache.remove(ntName);
         try {
-            String name = nsResolver.getJCRName(ntName);
+            String name = NameFormat.format(ntName, nsResolver);
             synchronized (pdCache) {
                 Iterator iter = pdCache.values().iterator();
                 while (iter.hasNext()) {
@@ -357,7 +358,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManag
     public NodeType getNodeType(String nodeTypeName)
             throws NoSuchNodeTypeException {
         try {
-            QName qName = nsResolver.getQName(nodeTypeName);
+            QName qName = NameFormat.parse(nodeTypeName, nsResolver);
             return getNodeType(qName);
         } catch (UnknownPrefixException upe) {
             throw new NoSuchNodeTypeException(nodeTypeName, upe);

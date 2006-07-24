@@ -29,6 +29,7 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
@@ -125,7 +126,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkStatus();
         QName name = session.getHierarchyManager().getQName(getId());
         try {
-            return session.getNamespaceResolver().getJCRName(name);
+            return NameFormat.format(name, session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "internal error: encountered unregistered namespace " + name.getNamespaceURI();
@@ -1383,7 +1384,7 @@ public class NodeImpl extends ItemImpl implements Node {
     private QName getQName(String jcrName) throws RepositoryException {
         QName qName;
         try {
-            qName = session.getNamespaceResolver().getQName(jcrName);
+            qName = NameFormat.parse(jcrName, session.getNamespaceResolver());
         } catch (IllegalNameException ine) {
             throw new RepositoryException("invalid name: " + jcrName, ine);
         } catch (UnknownPrefixException upe) {
@@ -1449,7 +1450,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * 
+     *
      * @param relativePath
      * @return
      * @throws RepositoryException
@@ -1548,7 +1549,7 @@ public class NodeImpl extends ItemImpl implements Node {
              * have to build & resolve absolute path)
              */
             if (relPath.indexOf('/') == -1) {
-                QName propName = session.getNamespaceResolver().getQName(relPath);
+                QName propName = NameFormat.parse(relPath, session.getNamespaceResolver());
                 // check if property entry exists
                 if (getNodeState().hasPropertyName(propName)) {
                     return getNodeState().getPropertyId(propName);

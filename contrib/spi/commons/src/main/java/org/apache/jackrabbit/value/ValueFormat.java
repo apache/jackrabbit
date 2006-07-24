@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.NameFormat;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
@@ -80,7 +81,7 @@ public class ValueFormat {
                 break;
             case PropertyType.NAME:
                 try {
-                    QName qName = nsResolver.getQName(jcrValue);
+                    QName qName = NameFormat.parse(jcrValue, nsResolver);
                     qValue = QValue.create(qName);
                 } catch (NameException e) {
                     throw new RepositoryException(e);
@@ -132,7 +133,7 @@ public class ValueFormat {
             case PropertyType.NAME:
                 try {
                     QName qName = QName.valueOf(qualifiedValue.getString());
-                    jcrValue = factory.createValue(nsResolver.getJCRName(qName), propertyType);
+                    jcrValue = factory.createValue(NameFormat.format(qName, nsResolver), propertyType);
                 } catch (NoPrefixDeclaredException npde) {
                     // should never get here...
                     throw new RepositoryException("internal error: encountered unregistered namespace", npde);

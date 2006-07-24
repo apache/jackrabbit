@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.value.LongValue;
 import org.apache.jackrabbit.value.PathValue;
 import org.apache.jackrabbit.value.StringValue;
@@ -58,7 +59,7 @@ class RowIteratorImpl implements RowIterator {
     /**
      * The <code>NamespaceResolver</code> of the user <code>Session</code>.
      */
-    private final NamespaceResolver resolver;
+    private final NamespaceResolver nsResolver;
 
     /**
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
@@ -73,7 +74,7 @@ class RowIteratorImpl implements RowIterator {
     RowIteratorImpl(ScoreNodeIterator nodes, QName[] properties, NamespaceResolver resolver) {
         this.nodes = nodes;
         this.properties = properties;
-        this.resolver = resolver;
+        this.nsResolver = resolver;
     }
 
     /**
@@ -205,7 +206,7 @@ class RowIteratorImpl implements RowIterator {
                 for (int i = 0; i < properties.length; i++) {
                     String propName;
                     try {
-                        propName = resolver.getJCRName(properties[i]);
+                        propName = NameFormat.format(properties[i], nsResolver);
                     } catch (NoPrefixDeclaredException e) {
                         throw new RepositoryException(e.getMessage(), e);
                     }
@@ -260,7 +261,7 @@ class RowIteratorImpl implements RowIterator {
                 propertySet = tmp;
             }
             try {
-                QName prop = resolver.getQName(propertyName);
+                QName prop = NameFormat.parse(propertyName, nsResolver);
                 if (!propertySet.contains(prop)) {
                     throw new ItemNotFoundException(propertyName);
                 }

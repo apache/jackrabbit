@@ -25,6 +25,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -143,11 +144,11 @@ public class QueryImpl implements Query {
         this.wspManager = wspManager;
 
         try {
-            if (!node.isNodeType(resolver.getJCRName(QName.NT_QUERY))) {
+            if (!node.isNodeType(NameFormat.format(QName.NT_QUERY, resolver))) {
                 throw new InvalidQueryException("node is not of type nt:query");
             }
-            statement = node.getProperty(resolver.getJCRName(QName.JCR_STATEMENT)).getString();
-            language = node.getProperty(resolver.getJCRName(QName.JCR_LANGUAGE)).getString();
+            statement = node.getProperty(NameFormat.format(QName.JCR_STATEMENT, resolver)).getString();
+            language = node.getProperty(NameFormat.format(QName.JCR_LANGUAGE, resolver)).getString();
             // DIFF JR: todo validate statement
             //query = handler.createExecutableQuery(session, itemMgr, statement, language);
         } catch (NoPrefixDeclaredException e) {
@@ -219,11 +220,11 @@ public class QueryImpl implements Query {
                 throw new PathNotFoundException(jcrParent);
             }
             String relPath = PathFormat.format(p, resolver).substring(1);
-            String ntName = resolver.getJCRName(QName.NT_QUERY);
+            String ntName = NameFormat.format(QName.NT_QUERY, resolver);
             Node queryNode = session.getRootNode().addNode(relPath, ntName);
             // set properties
-            queryNode.setProperty(resolver.getJCRName(QName.JCR_LANGUAGE), language);
-            queryNode.setProperty(resolver.getJCRName(QName.JCR_STATEMENT), statement);
+            queryNode.setProperty(NameFormat.format(QName.JCR_LANGUAGE, resolver), language);
+            queryNode.setProperty(NameFormat.format(QName.JCR_STATEMENT, resolver), statement);
             node = queryNode;
             return node;
         } catch (MalformedPathException e) {

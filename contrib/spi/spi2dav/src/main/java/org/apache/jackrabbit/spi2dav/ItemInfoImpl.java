@@ -24,6 +24,7 @@ import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -51,7 +52,7 @@ abstract class ItemInfoImpl implements ItemInfo {
             // TODO: jcrName is transported from jackrabbit-webdav impl
             String jcrName = nameProp.getValue().toString();
             try {
-                name = uriResolver.getQName(jcrName);
+                name = NameFormat.parse(jcrName, uriResolver);
             } catch (NameException e) {
                 throw new RepositoryException("Unable to build ItemInfo object, invalid name found: " + jcrName);
             }

@@ -20,6 +20,7 @@ import org.w3c.dom.Element;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -98,7 +99,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
         try {
             // TODO: webdav server sends jcr names -> nsResolver required. improve this.
             if (DomUtil.hasChildElement(itemDefElement, DECLARINGNODETYPE_ATTRIBUTE, null)) {
-                QName dnt = nsResolver.getQName(itemDefElement.getAttribute(DECLARINGNODETYPE_ATTRIBUTE));
+                QName dnt = NameFormat.parse(itemDefElement.getAttribute(DECLARINGNODETYPE_ATTRIBUTE), nsResolver);
                 if (declaringNodeType != null && !declaringNodeType.equals(dnt)) {
                     throw new RepositoryException("Declaring nodetype mismatch: In element = '" + dnt + "', Declaring nodetype = '" + declaringNodeType + "'");
                 }
@@ -110,7 +111,7 @@ public abstract class QItemDefinitionImpl implements QItemDefinition, NodeTypeCo
             if (itemDefElement.hasAttribute(NAME_ATTRIBUTE)) {
                 String nAttr = itemDefElement.getAttribute(NAME_ATTRIBUTE);
                 if (nAttr.length() > 0) {
-                    name = (isAnyName(nAttr)) ? ANY_NAME : nsResolver.getQName(nAttr);
+                    name = (isAnyName(nAttr)) ? ANY_NAME : NameFormat.parse(nAttr, nsResolver);
                 } else {
                     name = QName.ROOT;
                 }

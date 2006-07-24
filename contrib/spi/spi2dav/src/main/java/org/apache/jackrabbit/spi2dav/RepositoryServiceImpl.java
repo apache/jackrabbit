@@ -98,6 +98,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.BaseException;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.RepositoryService;
@@ -295,7 +296,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
     private String getItemUri(NodeId parentId, QName childName, SessionInfo sessionInfo) throws RepositoryException {
         String parentUri = getItemUri(parentId, sessionInfo);
         try {
-            return parentUri + getJCRName(childName);
+            return parentUri + NameFormat.format(childName, getNamespaceResolver());
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e);
         }
@@ -1150,7 +1151,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
         LabelMethod method = null;
         try {
             String uri = getItemUri(versionId, sessionInfo);
-            method = new LabelMethod(uri, getJCRName(label), (moveLabel) ? LabelInfo.TYPE_SET : LabelInfo.TYPE_ADD);
+            method = new LabelMethod(uri, NameFormat.format(label, getNamespaceResolver()), (moveLabel) ? LabelInfo.TYPE_SET : LabelInfo.TYPE_ADD);
             initMethod(method, sessionInfo, true);
 
             getClient(sessionInfo).executeMethod(method);
@@ -1178,7 +1179,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
         LabelMethod method = null;
         try {
             String uri = getItemUri(versionId, sessionInfo);
-            method = new LabelMethod(uri, getJCRName(label), LabelInfo.TYPE_REMOVE);
+            method = new LabelMethod(uri, NameFormat.format(label, getNamespaceResolver()), LabelInfo.TYPE_REMOVE);
             initMethod(method, sessionInfo, true);
 
             getClient(sessionInfo).executeMethod(method);
@@ -1267,7 +1268,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
         }
         for (int i = 0; i < nodeTypeIds.length; i++) {
             try {
-                String ntName = getJCRName(nodeTypeIds[i]);
+                String ntName = NameFormat.format(nodeTypeIds[i], getNamespaceResolver());
                 filters.add(new Filter(ObservationConstants.XML_NODETYPE_NAME, ObservationConstants.NAMESPACE, ntName));
             } catch (NoPrefixDeclaredException e) {
                 throw new RepositoryException(e);
@@ -1527,7 +1528,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
                     index = Integer.parseInt(indexProp.getValue().toString());
                 }
                 try {
-                    QName qName = getQName(jcrName);
+                    QName qName = NameFormat.parse(jcrName, getNamespaceResolver());
                     nodeId = idFactory.createNodeId(parentId, Path.create(qName, index));
                 } catch (NameException e) {
                     throw new RepositoryException(e);
@@ -1574,7 +1575,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
     public PropertyId getPropertyId(NodeId parentId, MultiStatusResponse response) throws RepositoryException {
         try {
             DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
-            QName name = getQName(propSet.get(ItemResourceConstants.JCR_NAME).getValue().toString());
+            QName name = NameFormat.parse(propSet.get(ItemResourceConstants.JCR_NAME).getValue().toString(), getNamespaceResolver());
             PropertyId propertyId = idFactory.createPropertyId(parentId, name);
             return propertyId;
         } catch (BaseException e) {
@@ -1595,7 +1596,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
         NodeId parentId = getNodeId(parentUri, sessionInfo);
         // build property id
         try {
-            PropertyId propertyId = idFactory.createPropertyId(parentId, getQName(propName));
+            PropertyId propertyId = idFactory.createPropertyId(parentId, NameFormat.parse(propName, getNamespaceResolver()));
             return propertyId;
         } catch (NameException e) {
             throw new RepositoryException(e);
@@ -1734,13 +1735,13 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
 
                     if (nodetypeName != null) {
                         Element propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
-                        DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, getJCRName(QName.JCR_PRIMARYTYPE));
+                        DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, NameFormat.format(QName.JCR_PRIMARYTYPE, getNamespaceResolver()));
                         DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.NAME));
-                        DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, getJCRName(nodetypeName));
+                        DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, NameFormat.format(nodetypeName, getNamespaceResolver()));
                     }
                     if (uuid != null) {
                         Element propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
-                        DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, getJCRName(QName.JCR_UUID));
+                        DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, NameFormat.format(QName.JCR_UUID, getNamespaceResolver()));
                         DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.STRING));
                         DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, uuid);
                     }
@@ -1991,7 +1992,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
                 } else {
                     String[] ntNames = new String[mixinNodeTypeIds.length];
                     for (int i = 0; i < mixinNodeTypeIds.length; i++) {
-                        ntNames[i] = getJCRName(mixinNodeTypeIds[i]);
+                        ntNames[i] = NameFormat.format(mixinNodeTypeIds[i], getNamespaceResolver());
                     }
                     setProperties = new DavPropertySet();
                     setProperties.add(new NodeTypeProperty(ItemResourceConstants.JCR_MIXINNODETYPES, ntNames, false));
