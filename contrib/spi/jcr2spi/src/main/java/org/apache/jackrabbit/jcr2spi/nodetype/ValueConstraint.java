@@ -25,6 +25,7 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.value.DateValue;
 import org.apache.jackrabbit.value.QValue;
@@ -652,7 +653,7 @@ class PathConstraint extends ValueConstraint {
             definition = definition.substring(0, definition.length() - 1);
         }
         try {
-            path = nsResolver.getQPath(definition);
+            path = PathFormat.parse(definition, nsResolver);
         } catch (MalformedPathException mpe) {
             String msg = "Invalid path expression specified as value constraint: " + definition;
             log.debug(msg);
@@ -662,7 +663,7 @@ class PathConstraint extends ValueConstraint {
 
     public String getDefinition(NamespaceResolver nsResolver) {
         try {
-            String p = nsResolver.getJCRPath(path);
+            String p = PathFormat.format(path, nsResolver);
             if (!deep) {
                 return p;
             } else if (path.denotesRoot()) {

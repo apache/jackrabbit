@@ -22,6 +22,9 @@ import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -29,13 +32,11 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.QueryResult;
 import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
 
 /**
@@ -206,17 +207,18 @@ public class QueryImpl implements Query {
 
         checkInitialized();
         try {
-            Path p = resolver.getQPath(absPath).getNormalizedPath();
+            Path p = PathFormat.parse(absPath, resolver).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException(absPath + " is not an absolute path");
             }
             if (session.itemExists(absPath)) {
                 throw new ItemExistsException(absPath);
             }
-            if (!session.itemExists(resolver.getJCRPath(p.getAncestor(1)))) {
-                throw new PathNotFoundException(resolver.getJCRPath(p.getAncestor(1)));
+            String jcrParent = PathFormat.format(p.getAncestor(1), resolver);
+            if (!session.itemExists(jcrParent)) {
+                throw new PathNotFoundException(jcrParent);
             }
-            String relPath = resolver.getJCRPath(p).substring(1);
+            String relPath = PathFormat.format(p, resolver).substring(1);
             String ntName = resolver.getJCRName(QName.NT_QUERY);
             Node queryNode = session.getRootNode().addNode(relPath, ntName);
             // set properties

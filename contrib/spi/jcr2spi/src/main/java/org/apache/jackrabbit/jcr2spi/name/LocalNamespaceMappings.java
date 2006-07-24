@@ -24,7 +24,7 @@ import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceListener;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
-import org.apache.xerces.util.XMLChar;
+import org.apache.jackrabbit.util.XMLChar;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;

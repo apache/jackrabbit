@@ -30,6 +30,7 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -288,7 +289,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             return ((ItemImpl)item).getId();
         } else {
             try {
-                return getItemId(nsResolver.getQPath(item.getPath()));
+                return getItemId(PathFormat.parse(item.getPath(), nsResolver));
             } catch (MalformedPathException e) {
                 // should not occur.
                 throw new RepositoryException(e);
@@ -465,7 +466,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     public String safeGetJCRPath(Path qPath) {
         try {
-            return nsResolver.getJCRPath(qPath);
+            return PathFormat.format(qPath, nsResolver);
         } catch (NoPrefixDeclaredException npde) {
             log.error("failed to convert " + qPath + " to JCR path.");
             // return string representation of internal path as a fallback

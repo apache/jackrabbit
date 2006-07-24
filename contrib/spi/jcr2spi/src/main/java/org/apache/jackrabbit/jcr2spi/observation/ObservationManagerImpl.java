@@ -17,29 +17,29 @@
 package org.apache.jackrabbit.jcr2spi.observation;
 
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.EventIterator;
+import org.apache.jackrabbit.util.IteratorHelper;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.observation.ObservationManager;
+import javax.jcr.RepositoryException;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
-import javax.jcr.RepositoryException;
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.spi.EventIterator;
-
-import java.util.HashMap;
-import java.util.Map;
+import javax.jcr.observation.ObservationManager;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Map;
 
 /**
  * <code>ObservationManagerImpl</code>...
@@ -94,7 +94,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
                                  boolean noLocal) throws RepositoryException {
         Path path;
         try {
-            path = nsResolver.getQPath(absPath).getCanonicalPath();
+            path = PathFormat.parse(absPath, nsResolver).getCanonicalPath();
         } catch (MalformedPathException e) {
             throw new RepositoryException("Malformed path: " + absPath);
         }
