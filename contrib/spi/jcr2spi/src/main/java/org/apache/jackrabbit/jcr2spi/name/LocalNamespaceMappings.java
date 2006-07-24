@@ -17,9 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.name;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.UnknownPrefixException;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceListener;
 import org.apache.jackrabbit.name.QName;
@@ -206,48 +203,6 @@ public class LocalNamespaceMappings extends AbstractNamespaceResolver
 
         // check global mappings
         return nsReg.getPrefix(uri);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public QName getQName(String name)
-            throws IllegalNameException, UnknownPrefixException {
-        if (prefixToURI.isEmpty()) {
-            // shortcut
-            return nsReg.getQName(name);
-        }
-        try {
-            // first try registry, this might result in a wrong QName because
-            // of locally overlayed mappings
-            QName candidate = nsReg.getQName(name);
-            // make sure global prefix is not hidden because of
-            // locally remapped uri
-            if (!uriToPrefix.containsKey(candidate.getNamespaceURI())) {
-                return candidate;
-            }
-        } catch (UnknownPrefixException e) {
-            // try using local mappings
-        }
-        return super.getQName(name);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getJCRName(QName name)
-            throws NoPrefixDeclaredException {
-        if (uriToPrefix.isEmpty()) {
-            // shortcut
-            return nsReg.getJCRName(name);
-        }
-        if (uriToPrefix.containsKey(name.getNamespaceURI())) {
-            // locally remappped
-            return super.getJCRName(name);
-        } else {
-            // use global mapping
-            return nsReg.getJCRName(name);
-        }
     }
 
     //--------------------------------------------------< NamespaceListener >---

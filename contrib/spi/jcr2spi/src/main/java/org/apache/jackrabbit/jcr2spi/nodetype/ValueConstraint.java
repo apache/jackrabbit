@@ -751,7 +751,7 @@ class NameConstraint extends ValueConstraint {
         // constraint format: JCR name in prefix form
         try {
             NameFormat.checkFormat(definition);
-            name = nsResolver.getQName(definition);
+            name = NameFormat.parse(definition, nsResolver);
         } catch (IllegalNameException ine) {
             String msg = "invalid name specified as value constraint: "
                     + definition;
@@ -767,7 +767,7 @@ class NameConstraint extends ValueConstraint {
 
     public String getDefinition(NamespaceResolver nsResolver) {
         try {
-            return nsResolver.getJCRName(name);
+            return NameFormat.format(name, nsResolver);
         } catch (NoPrefixDeclaredException npde) {
             // should never get here, return raw definition as fallback
             return qualifiedDefinition;
@@ -823,7 +823,7 @@ class ReferenceConstraint extends ValueConstraint {
 
         // format: node type name
         try {
-            ntName = nsResolver.getQName(definition);
+            ntName = NameFormat.parse(definition, nsResolver);
         } catch (IllegalNameException ine) {
             String msg = "invalid node type name specified as value constraint: "
                     + definition;
@@ -839,7 +839,7 @@ class ReferenceConstraint extends ValueConstraint {
 
     public String getDefinition(NamespaceResolver nsResolver) {
         try {
-            return nsResolver.getJCRName(ntName);
+            return NameFormat.format(ntName, nsResolver);
         } catch (NoPrefixDeclaredException npde) {
             // should never get here, return raw definition as fallback
             return qualifiedDefinition;

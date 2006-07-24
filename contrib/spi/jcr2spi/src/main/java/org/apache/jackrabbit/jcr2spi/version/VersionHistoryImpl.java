@@ -34,6 +34,7 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.PropertyId;
 
 import javax.jcr.version.VersionHistory;
@@ -234,7 +235,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
         for (int i = 0; i < qLabels.length; i++) {
             try {
-                labels[i] = session.getNamespaceResolver().getJCRName(qLabels[i]);
+                labels[i] = NameFormat.format(qLabels[i], session.getNamespaceResolver());
             } catch (NoPrefixDeclaredException e) {
                 // unexpected error. should not occur.
                 throw new RepositoryException(e);
@@ -261,7 +262,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             NodeId vId = getVersionIdByLabel(qLabels[i]);
             if (vUUID.equals(vId.getUUID())) {
                 try {
-                    vlabels.add(session.getNamespaceResolver().getJCRName(qLabels[i]));
+                    vlabels.add(NameFormat.format(qLabels[i], session.getNamespaceResolver()));
                 } catch (NoPrefixDeclaredException e) {
                     // should never occur
                     throw new RepositoryException("Unexpected error while accessing version label", e);
@@ -330,7 +331,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     private NodeId getVersionId(String versionName) throws VersionException, RepositoryException {
         try {
-            QName vQName = session.getNamespaceResolver().getQName(versionName);
+            QName vQName = NameFormat.parse(versionName, session.getNamespaceResolver());
             NodeState.ChildNodeEntry vEntry = vhState.getChildNodeEntry(vQName, Path.INDEX_DEFAULT);
             if (vEntry == null) {
                 throw new VersionException("Version '" + versionName + "' does not exist in this version history.");
@@ -380,7 +381,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     private QName getQLabel(String label) throws RepositoryException {
         try {
-            return session.getNamespaceResolver().getQName(label);
+            return NameFormat.parse(label, session.getNamespaceResolver());
         } catch (NameException e) {
             String error = "Invalid version label: " + e.getMessage();
             log.error(error);

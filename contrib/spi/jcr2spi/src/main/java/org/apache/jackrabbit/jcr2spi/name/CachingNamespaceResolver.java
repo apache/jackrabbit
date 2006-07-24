@@ -22,11 +22,9 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceListener;
 import org.apache.jackrabbit.name.AbstractNamespaceResolver;
-import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.NameCache;
 import org.apache.commons.collections.map.LRUMap;
 
 import javax.jcr.NamespaceException;
@@ -38,7 +36,7 @@ import java.util.Map;
  * and vice versa. The cache is invalidated when a namespace uri to prefix
  * mapping is changed.
  */
-class CachingNamespaceResolver implements NamespaceResolver, NamespaceListener {
+class CachingNamespaceResolver implements NamespaceResolver, NamespaceListener, NameCache {
 
     /**
      * The base namespace resolver.
@@ -70,21 +68,30 @@ class CachingNamespaceResolver implements NamespaceResolver, NamespaceListener {
     }
 
     /**
-     * @inheritDoc
+     * Disposes this <code>CachingNamespaceResolver</code>.
+     */
+    public void dispose() {
+        base.removeListener(this);
+    }
+
+    //--------------------------------------------------< NamespaceResolver >---
+    /**
+     * @see NamespaceResolver#getURI(String)
      */
     public String getURI(String prefix) throws NamespaceException {
         return base.getURI(prefix);
     }
 
     /**
-     * @inheritDoc
+     * @see NamespaceResolver#getPrefix(String)
      */
     public String getPrefix(String uri) throws NamespaceException {
         return base.getPrefix(uri);
     }
 
     /**
-     * @inheritDoc
+     * @see NamespaceResolver#getQName(String)
+     * @deprecated
      */
     public synchronized QName getQName(String jcrName)
             throws IllegalNameException, UnknownPrefixException {
@@ -97,7 +104,8 @@ class CachingNamespaceResolver implements NamespaceResolver, NamespaceListener {
     }
 
     /**
-     * @inheritDoc
+     * @see NamespaceResolver#getJCRName(QName)
+     * @deprecated
      */
     public synchronized String getJCRName(QName qName)
             throws NoPrefixDeclaredException {
@@ -108,31 +116,6 @@ class CachingNamespaceResolver implements NamespaceResolver, NamespaceListener {
             qnameToJCRName.put(qName, jcrName);
         }
         return jcrName;
-    }
-
-    /**
-     * @inheritDoc
-     * As currently paths are not cached, the call is delegated to
-     * {@link PathFormat#parse(String, NamespaceResolver)}.
-     */
-    public Path getQPath(String jcrPath) throws MalformedPathException {
-        return PathFormat.parse(jcrPath, this);
-    }
-
-    /**
-     * @inheritDoc
-     * As currently paths are not cached, the call is delegated to
-     * {@link PathFormat#format(Path, NamespaceResolver)}.
-     */
-    public String getJCRPath(Path qPath) throws NoPrefixDeclaredException {
-        return PathFormat.format(qPath, this);
-    }
-
-    /**
-     * Disposes this <code>CachingNamespaceResolver</code>.
-     */
-    public void dispose() {
-        base.removeListener(this);
     }
 
     //----------------------------------------------------< NamespaceListener >
@@ -158,6 +141,37 @@ class CachingNamespaceResolver implements NamespaceResolver, NamespaceListener {
      * Invalidates all cached mappings.
      */
     public void namespaceRemoved(String uri) {
+        qnameToJCRName.clear();
+        jcrNameToQName.clear();
+    }
+
+    //----------------------------------------------------------< NameCache >---
+    /**
+     * @inheritDoc
+     */
+    public synchronized QName retrieveName(String jcrName) {
+        return (QName) jcrNameToQName.get(jcrName);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public synchronized String retrieveName(QName name) {
+        return (String) qnameToJCRName.get(name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public synchronized void cacheName(String jcrName, QName name) {
+        qnameToJCRName.put(name, jcrName);
+        jcrNameToQName.put(jcrName, name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public synchronized void evictAllNames() {
         qnameToJCRName.clear();
         jcrNameToQName.clear();
     }

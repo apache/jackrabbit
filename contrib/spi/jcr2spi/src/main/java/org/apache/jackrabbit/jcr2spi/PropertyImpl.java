@@ -21,6 +21,7 @@ import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.value.ValueFormat;
@@ -73,7 +74,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         PropertyId propId = getPropertyId();
         QName name = propId.getQName();
         try {
-            return session.getNamespaceResolver().getJCRName(name);
+            return NameFormat.format(name, session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
             String msg = "Internal error: encountered unregistered namespace " + name.getNamespaceURI();

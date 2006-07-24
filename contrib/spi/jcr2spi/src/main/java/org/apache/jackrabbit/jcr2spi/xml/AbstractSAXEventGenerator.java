@@ -20,6 +20,7 @@ import org.apache.jackrabbit.name.SessionNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.slf4j.LoggerFactory;
@@ -121,12 +122,12 @@ abstract class AbstractSAXEventGenerator {
         // resolve the names of some wellknown properties
         // allowing for session-local prefix mappings
         try {
-            jcrPrimaryType = nsResolver.getJCRName(QName.JCR_PRIMARYTYPE);
-            jcrMixinTypes = nsResolver.getJCRName(QName.JCR_MIXINTYPES);
-            jcrUUID = nsResolver.getJCRName(QName.JCR_UUID);
-            jcrRoot = nsResolver.getJCRName(QName.JCR_ROOT);
-            jcrXMLText = nsResolver.getJCRName(QName.JCR_XMLTEXT);
-            jcrXMLCharacters = nsResolver.getJCRName(QName.JCR_XMLCHARACTERS);
+            jcrPrimaryType = NameFormat.format(QName.JCR_PRIMARYTYPE, nsResolver);
+            jcrMixinTypes = NameFormat.format(QName.JCR_MIXINTYPES, nsResolver);
+            jcrUUID = NameFormat.format(QName.JCR_UUID, nsResolver);
+            jcrRoot = NameFormat.format(QName.JCR_ROOT, nsResolver);
+            jcrXMLText = NameFormat.format(QName.JCR_XMLTEXT, nsResolver);
+            jcrXMLCharacters = NameFormat.format(QName.JCR_XMLCHARACTERS, nsResolver);
         } catch (NameException e) {
             // should never get here...
             String msg = "internal error: failed to resolve namespace mappings";

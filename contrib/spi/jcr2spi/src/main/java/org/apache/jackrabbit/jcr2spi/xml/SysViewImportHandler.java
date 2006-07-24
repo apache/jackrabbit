@@ -20,6 +20,7 @@ import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -133,7 +134,7 @@ class SysViewImportHandler extends TargetImportHandler {
             // push new ImportState instance onto the stack
             ImportState state = new ImportState();
             try {
-                state.nodeName = nsContext.getQName(name);
+                state.nodeName = NameFormat.parse(name, nsContext);
             } catch (IllegalNameException ine) {
                 throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, ine));
             } catch (UnknownPrefixException upe) {
@@ -153,7 +154,7 @@ class SysViewImportHandler extends TargetImportHandler {
                         "missing mandatory sv:name attribute of element sv:property"));
             }
             try {
-                currentPropName = nsContext.getQName(name);
+                currentPropName = NameFormat.parse(name, nsContext);
             } catch (IllegalNameException ine) {
                 throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, ine));
             } catch (UnknownPrefixException upe) {
@@ -241,7 +242,7 @@ class SysViewImportHandler extends TargetImportHandler {
                 String s = null;
                 try {
                     s = val.retrieve();
-                    state.nodeTypeName = nsContext.getQName(s);
+                    state.nodeTypeName = NameFormat.parse(s, nsContext);
                 } catch (IOException ioe) {
                     throw new SAXException("error while retrieving value", ioe);
                 } catch (IllegalNameException ine) {
@@ -259,7 +260,7 @@ class SysViewImportHandler extends TargetImportHandler {
                     String s = null;
                     try {
                         s = val.retrieve();
-                        QName mixin = nsContext.getQName(s);
+                        QName mixin = NameFormat.parse(s, nsContext);
                         state.mixinNames.add(mixin);
                     } catch (IOException ioe) {
                         throw new SAXException("error while retrieving value", ioe);

@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -95,7 +96,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
             return ANY_NAME;
         } else {
             try {
-                return nsResolver.getJCRName(itemDef.getQName());
+                return NameFormat.format(itemDef.getQName(), nsResolver);
             } catch (NoPrefixDeclaredException npde) {
                 // should never get here
                 log.error("encountered unregistered namespace in property name",

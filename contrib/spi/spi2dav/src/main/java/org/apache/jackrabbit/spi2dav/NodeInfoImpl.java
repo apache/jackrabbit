@@ -26,6 +26,7 @@ import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
@@ -66,7 +67,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                 Iterator it = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_PRIMARYNODETYPE)).getNodeTypeNames().iterator();
                 if (it.hasNext()) {
                     String jcrName = it.next().toString();
-                    primaryNodeTypeName = uriResolver.getQName(jcrName);
+                    primaryNodeTypeName = NameFormat.parse(jcrName, uriResolver);
                 } else {
                     throw new RepositoryException("Missing primary nodetype for node " + id + ".");
                 }
@@ -80,7 +81,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                 int i = 0;
                 while(it.hasNext()) {
                     String jcrName = it.next().toString();
-                    mixinNodeTypeNames[i] = uriResolver.getQName(jcrName);
+                    mixinNodeTypeNames[i] = NameFormat.parse(jcrName, uriResolver);
                     i++;
                 }
             }

@@ -21,6 +21,7 @@ import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -53,21 +54,21 @@ public class QueryResultImpl implements QueryResult {
     /**
      * The namespace resolver of the session executing the query
      */
-    private final NamespaceResolver resolver;
+    private final NamespaceResolver nsResolver;
 
     /**
      * Creates a new query result.
      *
      * @param itemMgr     the item manager of the session executing the query.
      * @param queryInfo   the spi query result.
-     * @param resolver    the namespace resolver of the session executing the query.
+     * @param resolver    the namespace nsResolver of the session executing the query.
      */
     public QueryResultImpl(ItemManager itemMgr,
                            QueryInfo queryInfo,
                            NamespaceResolver resolver) {
         this.itemMgr = itemMgr;
         this.queryInfo = queryInfo;
-        this.resolver = resolver;
+        this.nsResolver = resolver;
     }
 
     /**
@@ -79,7 +80,7 @@ public class QueryResultImpl implements QueryResult {
             QName[] names = queryInfo.getColumnNames();
             String[] propNames = new String[names.length];
             for (int i = 0; i < names.length; i++) {
-                propNames[i] = resolver.getJCRName(names[i]);
+                propNames[i] = NameFormat.format(names[i], nsResolver);
             }
             return propNames;
         } catch (NoPrefixDeclaredException npde) {
@@ -101,7 +102,7 @@ public class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public RowIterator getRows() throws RepositoryException {
-        return new RowIteratorImpl(getNodeIterator(), queryInfo.getColumnNames(), resolver);
+        return new RowIteratorImpl(getNodeIterator(), queryInfo.getColumnNames(), nsResolver);
     }
 
     /**
@@ -109,6 +110,6 @@ public class QueryResultImpl implements QueryResult {
      * @return a node iterator over the result nodes.
      */
     private ScoreNodeIterator getNodeIterator() throws RepositoryException {
-        return new NodeIteratorImpl(itemMgr, resolver, queryInfo);
+        return new NodeIteratorImpl(itemMgr, nsResolver, queryInfo);
     }
 }

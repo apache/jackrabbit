@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
@@ -277,7 +278,7 @@ public class NodeTypeImpl implements NodeType {
      */
     public String getName() {
         try {
-            return nsResolver.getJCRName(ntd.getQName());
+            return NameFormat.format(ntd.getQName(), nsResolver);
         } catch (NoPrefixDeclaredException npde) {
             // should never get here
             log.error("encountered unregistered namespace in node type name", npde);
@@ -292,7 +293,7 @@ public class NodeTypeImpl implements NodeType {
         try {
             QName piName = ntd.getPrimaryItemName();
             if (piName != null) {
-                return nsResolver.getJCRName(piName);
+                return NameFormat.format(piName, nsResolver);
             } else {
                 return null;
             }
@@ -316,7 +317,7 @@ public class NodeTypeImpl implements NodeType {
     public boolean isNodeType(String nodeTypeName) {
         QName ntName;
         try {
-            ntName = nsResolver.getQName(nodeTypeName);
+            ntName = NameFormat.parse(nodeTypeName, nsResolver);
         } catch (IllegalNameException ine) {
             log.warn("invalid node type name: " + nodeTypeName, ine);
             return false;
@@ -415,7 +416,7 @@ public class NodeTypeImpl implements NodeType {
             return canRemoveItem(propertyName);
         }
         try {
-            QName name = nsResolver.getQName(propertyName);
+            QName name = NameFormat.parse(propertyName, nsResolver);
             QPropertyDefinition def;
             try {
                 // try to get definition that matches the given value type
@@ -462,7 +463,7 @@ public class NodeTypeImpl implements NodeType {
             return canRemoveItem(propertyName);
         }
         try {
-            QName name = nsResolver.getQName(propertyName);
+            QName name = NameFormat.parse(propertyName, nsResolver);
             // determine type of values
             int type = PropertyType.UNDEFINED;
             for (int i = 0; i < values.length; i++) {
@@ -530,7 +531,7 @@ public class NodeTypeImpl implements NodeType {
      */
     public boolean canAddChildNode(String childNodeName) {
         try {
-            ent.checkAddNodeConstraints(nsResolver.getQName(childNodeName));
+            ent.checkAddNodeConstraints(NameFormat.parse(childNodeName, nsResolver));
             return true;
         } catch (NameException be) {
             // implementation specific exception, fall through
@@ -545,7 +546,7 @@ public class NodeTypeImpl implements NodeType {
      */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
         try {
-            ent.checkAddNodeConstraints(nsResolver.getQName(childNodeName), nsResolver.getQName(nodeTypeName));
+            ent.checkAddNodeConstraints(NameFormat.parse(childNodeName, nsResolver), NameFormat.parse(nodeTypeName, nsResolver));
             return true;
         } catch (NameException be) {
             // implementation specific exception, fall through
@@ -560,7 +561,7 @@ public class NodeTypeImpl implements NodeType {
      */
     public boolean canRemoveItem(String itemName) {
         try {
-            ent.checkRemoveItemConstraints(nsResolver.getQName(itemName));
+            ent.checkRemoveItemConstraints(NameFormat.parse(itemName, nsResolver));
             return true;
         } catch (NameException be) {
             // implementation specific exception, fall through

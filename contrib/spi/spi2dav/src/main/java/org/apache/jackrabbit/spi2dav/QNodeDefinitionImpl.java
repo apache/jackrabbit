@@ -21,6 +21,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 
@@ -67,7 +68,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
         try {
 
             if (ndefElement.hasAttribute(DEFAULTPRIMARYTYPE_ATTRIBUTE)) {
-                defaultPrimaryType = nsResolver.getQName(ndefElement.getAttribute(DEFAULTPRIMARYTYPE_ATTRIBUTE));
+                defaultPrimaryType = NameFormat.parse(ndefElement.getAttribute(DEFAULTPRIMARYTYPE_ATTRIBUTE), nsResolver);
             } else {
                 defaultPrimaryType = null;
             }
@@ -77,7 +78,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
                 List qNames = new ArrayList();
                 ElementIterator it = DomUtil.getChildren(reqPrimaryTypes, REQUIREDPRIMARYTYPE_ELEMENT, null);
                 while (it.hasNext()) {
-                    qNames.add(nsResolver.getQName(DomUtil.getTextTrim(it.nextElement())));
+                    qNames.add(NameFormat.parse(DomUtil.getTextTrim(it.nextElement()), nsResolver));
                 }
                 requiredPrimaryTypes = (QName[]) qNames.toArray(new QName[qNames.size()]);
             } else {

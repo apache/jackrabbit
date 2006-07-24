@@ -24,6 +24,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.slf4j.LoggerFactory;
@@ -63,13 +64,13 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
         // NOTE: the server should send the namespace-mappings as addition ns-defininitions
         try {
         if (ntdElement.hasAttribute(NAME_ATTRIBUTE)) {
-            name = nsResolver.getQName(ntdElement.getAttribute(NAME_ATTRIBUTE));
+            name = NameFormat.parse(ntdElement.getAttribute(NAME_ATTRIBUTE), nsResolver);
         } else {
             name = null;
         }
 
         if (ntdElement.hasAttribute(PRIMARYITEMNAME_ATTRIBUTE)) {
-            primaryItemName = nsResolver.getQName(ntdElement.getAttribute(PRIMARYITEMNAME_ATTRIBUTE));
+            primaryItemName = NameFormat.parse(ntdElement.getAttribute(PRIMARYITEMNAME_ATTRIBUTE), nsResolver);
         } else {
             primaryItemName = null;
         }
@@ -79,7 +80,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
             ElementIterator stIter = DomUtil.getChildren(child, SUPERTYPE_ELEMENT, null);
             List qNames = new ArrayList();
             while (stIter.hasNext()) {
-                QName st = nsResolver.getQName(DomUtil.getTextTrim(stIter.nextElement()));
+                QName st = NameFormat.parse(DomUtil.getTextTrim(stIter.nextElement()), nsResolver);
                 qNames.add(st);
             }
             supertypes = (QName[]) qNames.toArray(new QName[qNames.size()]);
