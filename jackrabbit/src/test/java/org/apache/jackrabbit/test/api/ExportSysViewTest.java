@@ -23,7 +23,6 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.InputSource;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.jcr.Workspace;
 import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -46,27 +45,22 @@ import java.io.FileNotFoundException;
  */
 public class ExportSysViewTest extends AbstractJCRTest {
 
-    private Workspace workspace;
     private File file;
 
-    private final boolean WORKSPACE = true, SESSION = false;
     private final boolean SKIPBINARY = true, SAVEBINARY = false;
     private final boolean NORECURSE = true, RECURSE = false;
 
     private Session session;
     private String testPath;
-    private Node testNode;
 
 
     protected void setUp() throws Exception {
         isReadOnly = true;
         session = helper.getReadOnlySession();
-        workspace = session.getWorkspace();
         file = File.createTempFile("SysViewExportTest", ".xml");
 
         super.setUp();
         this.testPath = testRoot;
-        this.testNode = (Node) session.getItem(testPath);
     }
 
     protected void tearDown() throws Exception {
@@ -77,90 +71,44 @@ public class ExportSysViewTest extends AbstractJCRTest {
         super.tearDown();
     }
 
-    /*
-    // tests with content handler
-    public void testExportSysView_handler_workspace_skipBinary_noRecurse()
-            throws IOException, RepositoryException, SAXException, IOException {
-        doTestWithHandler(WORKSPACE, SKIPBINARY, NORECURSE);
-    }
-
-    public void testExportSysView_handler_workspace_skipBinary_recurse()
-            throws IOException, RepositoryException, SAXException, IOException {
-        doTestWithHandler(WORKSPACE, SKIPBINARY, RECURSE);
-    }
-
-    public void testExportSysView_handler_workspace_saveBinary_noRecurse()
-            throws IOException, RepositoryException, SAXException, IOException {
-        doTestWithHandler(WORKSPACE, SAVEBINARY, NORECURSE);
-    }
-
-    public void testExportSysView_handler_workspace_saveBinary_recurse()
-            throws IOException, RepositoryException, SAXException, IOException {
-        doTestWithHandler(WORKSPACE, SAVEBINARY, RECURSE);
-    }
-  */
-
     public void testExportSysView_handler_session_skipBinary_noRecurse()
             throws IOException, RepositoryException, SAXException, IOException {
-        doTestWithHandler(SESSION, SKIPBINARY, NORECURSE);
+        doTestWithHandler(SKIPBINARY, NORECURSE);
     }
 
     public void testExportSysView_handler_session_skipBinary_recurse()
             throws IOException, RepositoryException, SAXException, IOException {
-        doTestWithHandler(SESSION, SKIPBINARY, RECURSE);
+        doTestWithHandler(SKIPBINARY, RECURSE);
     }
 
     public void testExportSysView_handler_session_saveBinary_noRecurse()
             throws IOException, RepositoryException, SAXException, IOException {
-        doTestWithHandler(SESSION, SAVEBINARY, NORECURSE);
+        doTestWithHandler(SAVEBINARY, NORECURSE);
     }
 
     public void testExportSysView_handler_session_saveBinary_recurse()
             throws IOException, RepositoryException, SAXException, IOException {
-        doTestWithHandler(SESSION, SAVEBINARY, RECURSE);
+        doTestWithHandler(SAVEBINARY, RECURSE);
     }
-
-    /*
-       // tests with output stream
-       public void testExportSysView_stream_workspace_skipBinary_noRecurse()
-               throws IOException, RepositoryException, SAXException {
-           doTestWithStream(WORKSPACE, SKIPBINARY, NORECURSE);
-       }
-
-       public void testExportSysView_stream_workspace_skipBinary_recurse()
-               throws IOException, RepositoryException, SAXException {
-           doTestWithStream(WORKSPACE, SKIPBINARY, RECURSE);
-       }
-
-       public void testExportSysView_stream_workspace_saveBinary_noRecurse()
-               throws IOException, RepositoryException, SAXException {
-           doTestWithStream(WORKSPACE, SAVEBINARY, NORECURSE);
-       }
-
-       public void testExportSysView_stream_workspace_saveBinary_recurse()
-               throws IOException, RepositoryException, SAXException {
-           doTestWithStream(WORKSPACE, SAVEBINARY, RECURSE);
-       }
-      */
 
     public void testExportSysView_stream_session_skipBinary_recurse()
             throws IOException, RepositoryException, SAXException {
-        doTestWithStream(SESSION, SKIPBINARY, RECURSE);
+        doTestWithStream(SKIPBINARY, RECURSE);
     }
 
     public void testExportSysView_stream_session_skipBinary_noRecurse()
             throws IOException, RepositoryException, SAXException {
-        doTestWithStream(SESSION, SKIPBINARY, NORECURSE);
+        doTestWithStream(SKIPBINARY, NORECURSE);
     }
 
     public void testExportSysView_stream_session_saveBinary_noRecurse()
             throws IOException, RepositoryException, SAXException {
-        doTestWithStream(SESSION, SAVEBINARY, NORECURSE);
+        doTestWithStream(SAVEBINARY, NORECURSE);
     }
 
     public void testExportSysView_stream_session_saveBinary_recurse()
             throws IOException, RepositoryException, SAXException {
-        doTestWithStream(SESSION, SAVEBINARY, RECURSE);
+        doTestWithStream(SAVEBINARY, RECURSE);
     }
 
     /**
@@ -168,22 +116,11 @@ public class ExportSysViewTest extends AbstractJCRTest {
      * @throws SAXException
      * @throws IOException
      */
-    public void doTestWithHandler(boolean workspace, boolean skipBinary, boolean noRecurse)
+    public void doTestWithHandler(boolean skipBinary, boolean noRecurse)
             throws RepositoryException, SAXException, IOException {
 
-        ContentHandler contentHandler;
-        try {
-
-            contentHandler = new SysViewContentHandler(testPath, session, skipBinary, noRecurse);
-
-            if (workspace) {
-                //workspace.exportSysView(testPath, contentHandler, skipBinary, noRecurse);
-            } else {
-                session.exportSystemView(testPath, contentHandler, skipBinary, noRecurse);
-            }
-        } catch (RepositoryException re) {
-            fail("Could not initialize the contenthandler due to: " + re.toString());
-        }
+        ContentHandler contentHandler = new SysViewContentHandler(testPath, session, skipBinary, noRecurse);
+        session.exportSystemView(testPath, contentHandler, skipBinary, noRecurse);
     }
 
     /**
@@ -191,19 +128,14 @@ public class ExportSysViewTest extends AbstractJCRTest {
      * @throws SAXException
      * @throws IOException
      */
-    public void doTestWithStream(boolean workSpace,
-                                 boolean skipBinary, boolean noRecurse)
+    public void doTestWithStream(boolean skipBinary, boolean noRecurse)
             throws RepositoryException, SAXException, IOException {
 
         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
 
-        Session thisSession = session;
-        if (workSpace) {
-            thisSession = workspace.getSession();
-        }
         try {
-            thisSession.exportSystemView(testPath, os, false, false);
-            SysViewParser parser = new SysViewParser(testPath, thisSession, SAVEBINARY, RECURSE);
+            session.exportSystemView(testPath, os, false, false);
+            SysViewParser parser = new SysViewParser(testPath, session, SAVEBINARY, RECURSE);
             parser.parse(file);
         } catch (RepositoryException re) {
             fail("Could not initialize the contenthandler due to: " + re.toString());
@@ -231,7 +163,7 @@ public class ExportSysViewTest extends AbstractJCRTest {
                 throws SAXException, RepositoryException {
             this.nodePath = nodePath;
             this.handler = new SysViewContentHandler(nodePath, session, skipBinary, noRecurse);
-            parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
+            parser = XMLReaderFactory.createXMLReader();
             parser.setContentHandler(this.handler);
         }
 

@@ -29,7 +29,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyType;
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Property;
 import javax.jcr.Value;
@@ -42,6 +41,8 @@ import java.util.HashMap;
 import java.util.Stack;
 import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -335,26 +336,30 @@ class SysViewContentHandler extends DefaultHandler {
     }
 
     public void endDocument() throws SAXException {
-        // check the prefixes exported
+        // check exported namespaces
         try {
-            NamespaceRegistry nsr = session.getWorkspace().getNamespaceRegistry();
-            String[] registeredPrefixes = nsr.getPrefixes();
-            // check against the found prefixes
-/*
-            // invalid test: only the referenced namespaces need to be declared;
-            // apart from that, the 'xml' namespace, although registered,
-            // is never declared in the system view xml as this would be illegal
-            checkCondition("Size of included prefixes is not the size of " +
-                    "registered prefixes", registeredPrefixes.length == prefixes.size()) ;
-*/
-            for (int i=0; i<registeredPrefixes.length;i++) {
-                String prefix = registeredPrefixes[1];
-                String uri = nsr.getURI(prefix);
-                checkCondition("Registered prefix "+prefix + " not included",
-                    prefixes.containsKey(prefix) && prefixes.get(prefix).equals(uri) );
+            Map sessionNamespaces = new HashMap();
+            String[] sessionPrefixes = session.getNamespacePrefixes();
+            for (int i = 0; i < sessionPrefixes.length; i++) {
+                sessionNamespaces.put(sessionPrefixes[i], session.getNamespaceURI(sessionPrefixes[i]));
+            }
+
+            // check prefixes against namespace mapping in session
+            for (Iterator it = prefixes.keySet().iterator(); it.hasNext(); ) {
+                String prefix = (String) it.next();
+                if ("xml".equals(prefix)) {
+                    Assert.fail("Prefix mapping for 'xml' must not be exported.");
+                }
+
+                String uri = (String) prefixes.get(prefix);
+                checkCondition("Exported uri " + uri + " is not a registered namespace.",
+                        sessionNamespaces.containsValue(uri));
+                checkCondition("Exported prefix " + prefix + " does not match " +
+                        "current namespacce mapping in Session",
+                        sessionNamespaces.containsKey(prefix));
             }
         } catch (RepositoryException re) {
-            //
+            throw new SAXException(re);
         }
     }
 
