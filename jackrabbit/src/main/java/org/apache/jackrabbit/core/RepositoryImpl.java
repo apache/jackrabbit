@@ -305,7 +305,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
 
         if (lock.exists()) {
             log.warn("Existing lock file at " + lock.getAbsolutePath()
-                    + " deteteced. Repository was not shut down properly.");
+                    + " detected. Repository was not shut down properly.");
         } else {
             try {
                 lock.createNewFile();
