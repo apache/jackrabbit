@@ -100,4 +100,12 @@ public interface ItemStateCache {
      * @return a collection view of the values contained in this cache.
      */
     Collection values();
+
+    /**
+     * Informs the cache that the item was modified and the cache might need to
+     * recalc the items caching weight.
+     *
+     * @param id the id of the item that was modified.
+     */
+    void update(ItemId id);
 }
