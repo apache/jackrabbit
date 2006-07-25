@@ -140,6 +140,14 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
     /**
      * {@inheritDoc}
      */
+    public void update(ItemId id) {
+        // delegate
+        cache.update(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public boolean isEmpty() {
         // check primary cache
         return refs.isEmpty();

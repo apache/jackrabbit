@@ -103,6 +103,13 @@ public class LRUItemStateCache implements ItemStateCache {
     /**
      * {@inheritDoc}
      */
+    public void update(ItemId id) {
+        // do nothing
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public boolean isEmpty() {
         return cache.isEmpty();
     }

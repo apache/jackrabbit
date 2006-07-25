@@ -39,13 +39,16 @@ public class MLRUItemStateCache implements ItemStateCache {
     private static Logger log = LoggerFactory.getLogger(LRUItemStateCache.class);
 
     /** default maximum memory to use */
-    public static final int DEFAULT_MAX_MEM = 8 * 1024 * 1024;
+    public static final int DEFAULT_MAX_MEM = 4 * 1024 * 1024;
 
     /** the amount of memory the entries use */
     private long totalMem;
 
     /** the maximum of memory the cache may use */
     private final long maxMem;
+
+    /** the number of writes */
+    private long numWrites = 0;
 
     /**
      * A cache for <code>ItemState</code> instances
@@ -99,6 +102,20 @@ public class MLRUItemStateCache implements ItemStateCache {
     /**
      * {@inheritDoc}
      */
+    public void update(ItemId id) {
+        synchronized (cache) {
+            Entry entry = (Entry) cache.get(id);
+            if (entry != null) {
+                totalMem -= entry.size;
+                entry.recalc();
+                totalMem += entry.size;
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void cache(ItemState state) {
         synchronized (cache) {
             ItemId id = state.getId();
@@ -114,7 +131,7 @@ public class MLRUItemStateCache implements ItemStateCache {
                 id = (ItemId) cache.firstKey();
                 evict(id);
             }
-            if (log.isDebugEnabled()) {
+            if (numWrites++%10000 == 0 && log.isDebugEnabled()) {
                 log.info(this + " size=" + cache.size() + ", " + totalMem + "/" + maxMem);
             }
         }
@@ -191,11 +208,15 @@ public class MLRUItemStateCache implements ItemStateCache {
 
         private final ItemState state;
 
-        private final long size;
+        private long size;
 
         public Entry(ItemState state) {
             this.state = state;
             this.size = 64 + state.calculateMemoryFootprint();
+        }
+
+        public void recalc() {
+            size = 64 + state.calculateMemoryFootprint();
         }
     }
 }
