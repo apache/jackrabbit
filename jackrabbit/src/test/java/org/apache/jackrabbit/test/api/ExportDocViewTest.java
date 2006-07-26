@@ -301,7 +301,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
             throws RepositoryException, IOException {
 
         NodeIterator nodeIter = node.getNodes();
-        if (getSize(nodeIter) == 0) {
+        if (getSize(node.getNodes()) == 0) {
             assertTrue("Exported node " + node.getPath() + " has child elements " +
                     "although it has no child nodes ", 0 == countChildElems(elem));
         } else {
@@ -623,7 +623,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
         long exported = countChildElems(elem);
         // child tree is exported too
         if (!noRecurse) {
-            size = getSize(iter);
+            size = getSize(node.getNodes());
             while (iter.hasNext()) {
                 Node n = iter.nextNode();
                 String name = n.getName();
@@ -654,7 +654,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
             throws RepositoryException {
 
         PropertyIterator iter = node.getProperties();
-        long size = getSize(iter);
+        long size = getSize(node.getProperties());
         long exported = new AttributeSeparator(elem).getNonNsAttrs().size();
         while (iter.hasNext()) {
             Property prop = iter.nextProperty();
@@ -966,27 +966,28 @@ public class ExportDocViewTest extends AbstractJCRTest {
         Value[] vals = prop.getValues();
         // order of multi values is preserved.
         // multival with empty array is exported as empty string
-        String exportedVal = "";
+        StringBuffer exportedVal = new StringBuffer();
 
+        String space = "";
         if (isBinary) {
             for (int i = 0; i < vals.length; i++) {
+                exportedVal.append(space);
                 InputStream in = vals[i].getStream();
                 try {
-                    exportedVal += encodeBase64(in);
+                    exportedVal.append(encodeBase64(in));
                 } finally {
                     in.close();
                 }
-                exportedVal += " ";
+                space = " ";
             }
         } else {
             for (int i = 0; i < vals.length; i++) {
-                exportedVal += escapeValues(vals[i].getString());
-                exportedVal += " ";
+                exportedVal.append(space);
+                exportedVal.append(escapeValues(vals[i].getString()));
+                space = " ";
             }
         }
-        // remove the last space again
-        exportedVal = exportedVal.substring(0, exportedVal.length() - 1);
-        return exportedVal;
+        return exportedVal.toString();
     }
 
     /**
