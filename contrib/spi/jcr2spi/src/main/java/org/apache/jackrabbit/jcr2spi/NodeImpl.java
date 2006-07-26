@@ -1274,8 +1274,15 @@ public class NodeImpl extends ItemImpl implements Node {
         Operation an = AddNode.create(getNodeState(), nodeName, nodeTypeName, null);
         itemStateMgr.execute(an);
 
-        // TODO: find better solution...
-        NodeId childId = AddNode.getLastCreated(getNodeState(), nodeName);
+        // retrieve id of state that has been created during execution of AddNode        
+        NodeId childId;
+        List cne = getNodeState().getChildNodeEntries(nodeName);
+        if (definition.allowsSameNameSiblings()) {
+            // TODO: find proper solution. problem with same-name-siblings
+            childId = ((NodeState.ChildNodeEntry)cne.get(cne.size()-1)).getId();
+        } else {
+            childId = ((NodeState.ChildNodeEntry)cne.get(0)).getId();
+        }
         // finally retrieve the new node
         return (Node) itemMgr.getItem(childId);
     }

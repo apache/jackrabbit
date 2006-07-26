@@ -30,7 +30,6 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
-import java.util.List;
 
 /**
  * <code>AddNode</code>...
@@ -85,13 +84,5 @@ public class AddNode extends AbstractOperation {
                                    QName nodeTypeName, NodeId id) {
         AddNode an = new AddNode(parentState.getNodeId(), nodeName, nodeTypeName, id);
         return an;
-    }
-
-    public static NodeId getLastCreated(NodeState parentState, QName nodeName) {
-        // TODO: check if this really retrieves the child state that was created before
-        // problem: we don't know the id of the nodestate in advance -> retrieval of new state not possible.
-        List cne = parentState.getChildNodeEntries(nodeName);
-        NodeId childId = ((NodeState.ChildNodeEntry)cne.get(cne.size()-1)).getId();
-        return childId;
     }
 }

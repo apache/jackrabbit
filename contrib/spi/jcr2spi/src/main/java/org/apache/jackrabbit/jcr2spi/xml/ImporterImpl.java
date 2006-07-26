@@ -398,8 +398,7 @@ public class ImporterImpl implements Importer, SessionListener {
      * @throws RepositoryException
      */
     private NodeState importNode(NodeInfo nodeInfo, NodeState parent) throws ConstraintViolationException, ItemNotFoundException, RepositoryException {
-        QName nodeName = nodeInfo.getName();
-        if (parent.hasPropertyName(nodeName)) {
+        if (parent.hasPropertyName(nodeInfo.getName())) {
             /**
              * a property with the same name already exists; if this property
              * has been imported as well (e.g. through document view import
@@ -408,12 +407,12 @@ public class ImporterImpl implements Importer, SessionListener {
              *
              * see http://issues.apache.org/jira/browse/JCR-61
              */
-            PropertyState conflicting = validator.getPropertyState(parent.getNodeId(), nodeName);
+            PropertyState conflicting = validator.getPropertyState(parent.getNodeId(), nodeInfo.getName());
             if (conflicting.getStatus() == ItemState.STATUS_NEW) {
                 // assume this property has been imported as well;
                 // rename conflicting property
                 // @todo use better reversible escaping scheme to create unique name
-                QName newName = new QName(nodeName.getNamespaceURI(), nodeName.getLocalName() + "_");
+                QName newName = new QName(nodeInfo.getName().getNamespaceURI(), nodeInfo.getName().getLocalName() + "_");
                 if (parent.hasPropertyName(newName)) {
                     newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
                 }
@@ -449,11 +448,19 @@ public class ImporterImpl implements Importer, SessionListener {
         } else {
             Operation an = AddNode.create(parent, nodeInfo.getName(), nodeInfo.getNodeTypeName(), nodeInfo.getId());
             stateMgr.execute(an);
-            NodeId nId = AddNode.getLastCreated(parent, nodeInfo.getName());
-            NodeState nodeState = validator.getNodeState(nId);
+            // retrieve id of state that has been created during execution of AddNode
+            NodeId childId;
+            List cne = parent.getChildNodeEntries(nodeInfo.getName());
+            if (def.allowsSameNameSiblings()) {
+                // TODO: find proper solution. problem with same-name-siblings
+                childId = ((NodeState.ChildNodeEntry)cne.get(cne.size()-1)).getId();
+            } else {
+                childId = ((NodeState.ChildNodeEntry)cne.get(0)).getId();
+            }
+            NodeState nodeState = validator.getNodeState(childId);
             
             // and set mixin types
-            PropertyId mixinPId = idFactory.createPropertyId(nId, QName.JCR_MIXINTYPES);
+            PropertyId mixinPId = idFactory.createPropertyId(childId, QName.JCR_MIXINTYPES);
             Operation sm = SetMixin.create(mixinPId, nodeInfo.getMixinNames());
             stateMgr.execute(sm);
             return nodeState;
