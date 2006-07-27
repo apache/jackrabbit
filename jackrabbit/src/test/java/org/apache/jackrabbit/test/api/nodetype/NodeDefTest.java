@@ -50,11 +50,6 @@ public class NodeDefTest extends AbstractJCRTest {
     private NodeTypeManager manager;
 
     /**
-     * The root node of the default workspace
-     */
-    private Node rootNode;
-
-    /**
      * If <code>true</code> indicates that the test found a mandatory node
      */
     private boolean foundMandatoryNode = false;
@@ -68,7 +63,8 @@ public class NodeDefTest extends AbstractJCRTest {
 
         session = helper.getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
-        rootNode = session.getRootNode();
+        // re-fetch testRootNode with read-only session
+        testRootNode = (Node) session.getItem(testRoot);
     }
 
     /**
@@ -150,7 +146,7 @@ public class NodeDefTest extends AbstractJCRTest {
      * org.apache.jackrabbit.test.NotExecutableException} is thrown.
      */
     public void testIsMandatory() throws RepositoryException, NotExecutableException {
-        traverse(rootNode);
+        traverse(testRootNode);
         if (!foundMandatoryNode) {
             throw new NotExecutableException("Workspace does not contain any node with a mandatory child node definition");
         }
@@ -204,8 +200,7 @@ public class NodeDefTest extends AbstractJCRTest {
                     for (int j = 0; j < requiredTypes.length; j++) {
                         NodeType requiredType = requiredTypes[j];
 
-                        boolean isSubType = false;
-                        isSubType = compareWithRequiredType(requiredType,
+                        boolean isSubType = compareWithRequiredType(requiredType,
                                 defaultType);
 
                         assertTrue("The NodeType returned by " +
