@@ -322,7 +322,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
     private static Path.PathElement getNameElement(NodeState parent, ItemState state)
             throws ItemStateException {
         if (state.isNode()) {
-            NodeState.ChildNodeEntry entry = parent.getChildNodeEntry((NodeId) state.getId());
+            ChildNodeEntry entry = parent.getChildNodeEntry((NodeId) state.getId());
             if (entry == null) {
                 throw new ItemStateException("No child node entry " +
                         state.getId() + " found in " + parent.getId());

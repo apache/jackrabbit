@@ -26,6 +26,7 @@ import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -194,7 +195,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManag
                     // special case for root state
                     def = ntReg.getRootNodeDef();
                 } else {
-                    NodeState.ChildNodeEntry cne = parentState.getChildNodeEntry(nodeState.getNodeId());
+                    ChildNodeEntry cne = parentState.getChildNodeEntry(nodeState.getNodeId());
                     def = ntReg.getEffectiveNodeType(parentState.getNodeTypeNames()).getApplicableNodeDefinition(cne.getName(), nodeState.getNodeTypeName());
                 }
             } catch (NodeTypeConflictException e) {

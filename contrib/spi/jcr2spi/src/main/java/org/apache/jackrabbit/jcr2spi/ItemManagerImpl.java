@@ -22,6 +22,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.version.VersionHistoryImpl;
 import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
@@ -274,7 +275,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
     //--------------------------------------------------------< ItemManager >---
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public void dispose() {
         itemCache.clear();
@@ -395,7 +396,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         Iterator iter = nodeState.getChildNodeEntries().iterator();
 
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             NodeId id = entry.getId();
             // check read access
             if (session.getAccessManager().canRead(id)) {
@@ -424,7 +425,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         Iterator iter = nodeState.getChildNodeEntries().iterator();
 
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             NodeId id = entry.getId();
             // check read access
             if (session.getAccessManager().canRead(id)) {

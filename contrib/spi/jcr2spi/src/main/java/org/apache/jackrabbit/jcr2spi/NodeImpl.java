@@ -34,6 +34,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
+import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
@@ -542,7 +543,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         try {
             NodeState parent = (NodeState) itemStateMgr.getItemState(parentId);
-            NodeState.ChildNodeEntry parentEntry = parent.getChildNodeEntry(getNodeId());
+            ChildNodeEntry parentEntry = parent.getChildNodeEntry(getNodeId());
             return parentEntry.getIndex();
         } catch (ItemStateException ise) {
             // should never get here...
@@ -1279,9 +1280,9 @@ public class NodeImpl extends ItemImpl implements Node {
         List cne = getNodeState().getChildNodeEntries(nodeName);
         if (definition.allowsSameNameSiblings()) {
             // TODO: find proper solution. problem with same-name-siblings
-            childId = ((NodeState.ChildNodeEntry)cne.get(cne.size()-1)).getId();
+            childId = ((ChildNodeEntry)cne.get(cne.size()-1)).getId();
         } else {
-            childId = ((NodeState.ChildNodeEntry)cne.get(0)).getId();
+            childId = ((ChildNodeEntry)cne.get(0)).getId();
         }
         // finally retrieve the new node
         return (Node) itemMgr.getItem(childId);
@@ -1516,7 +1517,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 if (pe.denotesName()) {
                     // check if node entry exists
                     int index = pe.getNormalizedIndex();
-                    NodeState.ChildNodeEntry cne = getNodeState().getChildNodeEntry(pe.getName(), index);
+                    ChildNodeEntry cne = getNodeState().getChildNodeEntry(pe.getName(), index);
                     if (cne != null) {
                         targetId = cne.getId();
                     } // else: there's no child node with that name

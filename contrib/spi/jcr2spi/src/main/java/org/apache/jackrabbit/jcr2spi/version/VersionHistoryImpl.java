@@ -29,6 +29,7 @@ import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
@@ -73,7 +74,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         // retrieve nodestate of the jcr:versionLabels node
         vhState = state;
         if (vhState.hasChildNodeEntry(QName.JCR_VERSIONLABELS)) {
-            NodeState.ChildNodeEntry lnEntry = vhState.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
+            ChildNodeEntry lnEntry = vhState.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
             try {
                 labelNodeState = (NodeState) itemStateMgr.getItemState(lnEntry.getId());
             } catch (ItemStateException e) {
@@ -118,7 +119,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
         // all child-nodes except from jcr:versionLabels point to Versions.
         while (childIter.hasNext()) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) childIter.next();
+            ChildNodeEntry entry = (ChildNodeEntry) childIter.next();
             if (!QName.JCR_VERSIONLABELS.equals(entry.getName())) {
                 versionIds.add(entry.getId());
             }
@@ -332,7 +333,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     private NodeId getVersionId(String versionName) throws VersionException, RepositoryException {
         try {
             QName vQName = NameFormat.parse(versionName, session.getNamespaceResolver());
-            NodeState.ChildNodeEntry vEntry = vhState.getChildNodeEntry(vQName, Path.INDEX_DEFAULT);
+            ChildNodeEntry vEntry = vhState.getChildNodeEntry(vQName, Path.INDEX_DEFAULT);
             if (vEntry == null) {
                 throw new VersionException("Version '" + versionName + "' does not exist in this version history.");
             } else {

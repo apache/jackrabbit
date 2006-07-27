@@ -21,6 +21,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.name.QName;
@@ -97,13 +98,13 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      * <p/>
      * Also allows for removed/renamed child node entries.
      */
-    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+    protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          QName name,
                                                          int index) {
         // check removed child node entries first
         Iterator iter = parent.getRemovedChildNodeEntries().iterator();
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             if (entry.getName().equals(name) && entry.getIndex() == index) {
                 return entry;
             }
@@ -118,13 +119,13 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      * <p/>
      * Also allows for removed child node entries.
      */
-    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+    protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          NodeId id) {
         // check removed child node entries first
         Iterator iter = parent.getRemovedChildNodeEntries().iterator();
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry entry =
-                    (NodeState.ChildNodeEntry) iter.next();
+            ChildNodeEntry entry =
+                    (ChildNodeEntry) iter.next();
             if (entry.getId().equals(id)) {
                 return entry;
             }

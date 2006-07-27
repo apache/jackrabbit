@@ -22,6 +22,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.NodeStateListener;
+import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -286,7 +287,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             Iterator iter = element.getChildren();
             while (iter.hasNext()) {
                 PathMap.Element child = (PathMap.Element) iter.next();
-                NodeState.ChildNodeEntry cne = modified.getChildNodeEntry(
+                ChildNodeEntry cne = modified.getChildNodeEntry(
                         child.getName(), child.getNormalizedIndex());
                 if (cne == null) {
                     // Item does not exist, remove
@@ -384,8 +385,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
         Iterator iter = entries.iterator();
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry now = (NodeState.ChildNodeEntry) iter.next();
-            NodeState.ChildNodeEntry old =
+            ChildNodeEntry now = (ChildNodeEntry) iter.next();
+            ChildNodeEntry old =
                     ((NodeState) state.getOverlayedState()).getChildNodeEntry(now.getId());
 
             if (old == null) {
