@@ -267,8 +267,13 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
      * Tests failure of Property.getValues() method for a single value
      * property.
      */
-    public void testGetValues() throws RepositoryException {
+    public void testGetValues() throws RepositoryException, NotExecutableException {
         Property singleProp = PropertyUtil.searchProp(session, testRootNode, PropertyType.STRING);
+
+        if (singleProp == null) {
+            throw new NotExecutableException("No single valued String property found.");
+        }
+
         try {
             singleProp.getValues();
             fail("Property.getValues() called on a single property " +
@@ -287,13 +292,13 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
 
         Property prop = PropertyUtil.searchMultivalProp(testRootNode, PropertyType.STRING);
         if (prop == null) {
-            throw new NotExecutableException("No testable propery found.");
+            throw new NotExecutableException("No testable property found.");
         }
 
         // acquire the values of the property and change the zeroth value
         Value[] values = prop.getValues();
         if (values.length == 0) {
-            throw new NotExecutableException("No testable propery found.");
+            throw new NotExecutableException("No testable property found.");
         }
         values[0] = null;
 
