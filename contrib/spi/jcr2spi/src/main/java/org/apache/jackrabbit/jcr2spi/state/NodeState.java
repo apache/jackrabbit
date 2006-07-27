@@ -802,6 +802,21 @@ public class NodeState extends ItemState {
         super.removeListener(listener);
     }
 
+    /**
+     * TODO: find a better way to provide the index of a child node entry
+     * Returns the index of the given <code>ChildNodeEntry</code> and with
+     * <code>name</code>.
+     *
+     * @param name the name of the child node.
+     * @param cne  the <code>ChildNodeEntry</code> instance.
+     * @return the index of the child node entry or <code>0</code> if it is not
+     *         found in this <code>NodeState</code>.
+     */
+    int getChildNodeIndex(QName name, ChildNodeEntry cne) {
+        List sns = childNodeEntries.get(name);
+        return sns.indexOf(cne) + 1;
+    }
+
     //-------------------------------------------------< misc. helper methods >
     /**
      * Notify the listeners that a child node entry has been added
