@@ -28,7 +28,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
@@ -254,17 +253,27 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      */
     private static String getNodeTypeSpec(NodeType type)
             throws RepositoryException {
+        String typeName = type.getName();
         StringWriter buffer = new StringWriter();
 
         PrintWriter writer = new PrintWriter(buffer);
         writer.println("NodeTypeName");
-        writer.println("  " + type.getName());
+        writer.println("  " + typeName);
         writer.println("Supertypes");
         NodeType[] supertypes = type.getDeclaredSupertypes();
         if (supertypes.length > 0) {
             Arrays.sort(supertypes, NODE_TYPE_COMPARATOR);
             for (int i = 0; i < supertypes.length; i++) {
-                writer.println("  " + supertypes[i].getName());
+                String name = supertypes[i].getName();
+                if (name.startsWith("nt:") ||
+                        (name.equals("mix:referenceable") &&
+                            (typeName.equals("mix:versionable") ||
+                                typeName.equals("nt:resource") ||
+                                typeName.equals("nt:versionHistory") ||
+                                typeName.equals("nt:version") ||
+                                typeName.equals("nt:frozenNode")))) {
+                    writer.println("  " + supertypes[i].getName());
+                }
             }
         } else {
             writer.println("  []");
