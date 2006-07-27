@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.NodeId;
  * <p/>
  * <code>ChildNodeEntry</code> instances are immutable.
  */
-public final class ChildNodeEntryImpl implements ChildNodeEntry {
+final class ChildNodeEntryImpl implements ChildNodeEntry {
 
     private int hash = 0;
 
@@ -34,7 +34,7 @@ public final class ChildNodeEntryImpl implements ChildNodeEntry {
     private final int index; // 1-based index for same-name siblings
     private final NodeId id;
 
-    public ChildNodeEntryImpl(QName name, NodeId id, int index) {
+    ChildNodeEntryImpl(QName name, NodeId id, int index) {
         if (name == null) {
             throw new IllegalArgumentException("name can not be null");
         }
