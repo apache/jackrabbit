@@ -866,13 +866,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 // removed child node entries
                 Iterator cneIt = nodeState.getRemovedChildNodeEntries().iterator();
                 while (cneIt.hasNext()) {
-                    NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) cneIt.next();
+                    ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
                     dependentIDs.add(cne.getId());
                 }
                 // added child node entries
                 cneIt = nodeState.getAddedChildNodeEntries().iterator();
                 while (cneIt.hasNext()) {
-                    NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) cneIt.next();
+                    ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
                     dependentIDs.add(cne.getId());
                 }
 
@@ -975,7 +975,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // perform the move (modifying states)
         // TODO: TO-BE-FIXED. Move with SPI id       
         boolean renameOnly = srcParent.getNodeId().equals(destParent.getNodeId());
-        NodeState.ChildNodeEntry cne = srcParent.getChildNodeEntry(srcState.getNodeId());
+        ChildNodeEntry cne = srcParent.getChildNodeEntry(srcState.getNodeId());
         QName srcName = cne.getName();
         int srcIndex = cne.getIndex();
         if (renameOnly) {
@@ -1100,7 +1100,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             // use temp array to avoid ConcurrentModificationException
             Iterator childNodes = new ArrayList(nState.getChildNodeEntries()).iterator();
             while (childNodes.hasNext()) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) childNodes.next();
+                ChildNodeEntry entry = (ChildNodeEntry) childNodes.next();
                 NodeState childState = validator.getNodeState(entry.getId());
                 // check if node has been defined by mixin type (or one of its supertypes)
                 QName declNtName = childState.getDefinition().getDeclaringNodeType();
@@ -1140,7 +1140,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         ArrayList list = new ArrayList(parent.getChildNodeEntries());
         int srcInd = -1, destInd = -1;
         for (int i = 0; i < list.size(); i++) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
+            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
             if (srcInd == -1) {
                 if (entry.getId().equals(srcId)) {
                     srcInd = i;
@@ -1423,7 +1423,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             Iterator tmpIter = new ArrayList(targetState.getChildNodeEntries()).iterator();
             // remove from tail to avoid problems with same-name siblings
             while (tmpIter.hasNext()) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmpIter.next();
+                ChildNodeEntry entry = (ChildNodeEntry) tmpIter.next();
                 try {
                     NodeState child = validator.getNodeState(entry.getId());
                     // remove child node

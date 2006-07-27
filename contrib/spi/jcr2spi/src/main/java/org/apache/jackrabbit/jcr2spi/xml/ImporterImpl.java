@@ -21,6 +21,7 @@ import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
+import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
@@ -173,7 +174,7 @@ public class ImporterImpl implements Importer, SessionListener {
            NodeState nodeState = null;
            if (parent.hasChildNodeEntry(nodeInfo.getName())) {
                // a node with that name already exists...
-               NodeState.ChildNodeEntry entry = parent.getChildNodeEntry(nodeInfo.getName(), 1);
+               ChildNodeEntry entry = parent.getChildNodeEntry(nodeInfo.getName(), 1);
                NodeState existing = validator.getNodeState(entry.getId());
                QNodeDefinition def = existing.getDefinition();
                if (!def.allowsSameNameSiblings()) {
@@ -453,9 +454,9 @@ public class ImporterImpl implements Importer, SessionListener {
             List cne = parent.getChildNodeEntries(nodeInfo.getName());
             if (def.allowsSameNameSiblings()) {
                 // TODO: find proper solution. problem with same-name-siblings
-                childId = ((NodeState.ChildNodeEntry)cne.get(cne.size()-1)).getId();
+                childId = ((ChildNodeEntry)cne.get(cne.size()-1)).getId();
             } else {
-                childId = ((NodeState.ChildNodeEntry)cne.get(0)).getId();
+                childId = ((ChildNodeEntry)cne.get(0)).getId();
             }
             NodeState nodeState = validator.getNodeState(childId);
             

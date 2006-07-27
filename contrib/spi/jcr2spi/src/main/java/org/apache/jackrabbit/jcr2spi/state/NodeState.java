@@ -932,7 +932,7 @@ public class NodeState extends ItemState {
             }
             index++;
 
-            ChildNodeEntry entry = new ChildNodeEntry(nodeName, id, index);
+            ChildNodeEntry entry = new ChildNodeEntryImpl(nodeName, id, index);
             if (siblings != null) {
                 siblings.add(entry);
             } else {
@@ -987,7 +987,7 @@ public class NodeState extends ItemState {
             // update indices of subsequent same-name siblings
             for (int i = index - 1; i < siblings.size(); i++) {
                 ChildNodeEntry oldEntry = (ChildNodeEntry) siblings.get(i);
-                ChildNodeEntry newEntry = new ChildNodeEntry(nodeName, oldEntry.getId(), oldEntry.getIndex() - 1);
+                ChildNodeEntry newEntry = new ChildNodeEntryImpl(nodeName, oldEntry.getId(), oldEntry.getIndex() - 1);
                 // overwrite old entry with updated entry in siblings list
                 siblings.set(i, newEntry);
                 // overwrite old entry with updated entry in ordered entries map
@@ -1318,77 +1318,4 @@ public class NodeState extends ItemState {
         }
     }
 
-    /**
-     * <code>ChildNodeEntry</code> specifies the name, index (in the case of
-     * same-name siblings) and the UUID of a child node entry.
-     * <p/>
-     * <code>ChildNodeEntry</code> instances are immutable.
-     */
-    public static final class ChildNodeEntry {
-
-        private int hash = 0;
-
-        private final QName name;
-        private final int index; // 1-based index for same-name siblings
-        private final NodeId id;
-
-        private ChildNodeEntry(QName name, NodeId id, int index) {
-            if (name == null) {
-                throw new IllegalArgumentException("name can not be null");
-            }
-            this.name = name;
-
-            if (id == null) {
-                throw new IllegalArgumentException("id can not be null");
-            }
-            this.id = id;
-
-            if (index < Path.INDEX_DEFAULT) {
-                throw new IllegalArgumentException("index is 1-based");
-            }
-            this.index = index;
-        }
-
-        public NodeId getId() {
-            return id;
-        }
-
-        public QName getName() {
-            return name;
-        }
-
-        public int getIndex() {
-            return index;
-        }
-
-        //---------------------------------------< java.lang.Object overrides >
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof ChildNodeEntry) {
-                ChildNodeEntry other = (ChildNodeEntry) obj;
-                return (name.equals(other.name) && id.equals(other.id)
-                        && index == other.index);
-            }
-            return false;
-        }
-
-        public String toString() {
-            return name.toString() + "[" + index + "] -> " + id;
-        }
-
-        public int hashCode() {
-            // ChildNodeEntry is immutable, we can store the computed hash code value
-            int h = hash;
-            if (h == 0) {
-                h = 17;
-                h = 37 * h + name.hashCode();
-                h = 37 * h + id.hashCode();
-                h = 37 * h + index;
-                hash = h;
-            }
-            return h;
-        }
-    }
 }

@@ -762,7 +762,7 @@ public class ItemStateValidator {
 
         } else if (parentState.hasChildNodeEntry(nodeName)) {
             // retrieve the existing node state that ev. conflicts with the new one.
-            NodeState.ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName, 1);
+            ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName, 1);
             NodeState conflictingState = getNodeState(entry.getId());
 
             QNodeDefinition conflictDef = conflictingState.getDefinition();
