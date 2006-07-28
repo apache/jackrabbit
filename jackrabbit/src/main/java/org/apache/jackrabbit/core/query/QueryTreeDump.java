@@ -189,16 +189,24 @@ public class QueryTreeDump implements QueryNodeVisitor {
             buffer.append("= ");
         } else if (node.getOperation() == QueryConstants.OPERATION_EQ_VALUE) {
             buffer.append("eq");
+        } else if (node.getOperation() == QueryConstants.OPERATION_GE_GENERAL) {
+            buffer.append(">=");
         } else if (node.getOperation() == QueryConstants.OPERATION_GE_VALUE) {
             buffer.append("ge");
+        } else if (node.getOperation() == QueryConstants.OPERATION_GT_GENERAL) {
+            buffer.append("> ");
         } else if (node.getOperation() == QueryConstants.OPERATION_GT_VALUE) {
             buffer.append("gt");
         } else if (node.getOperation() == QueryConstants.OPERATION_IN) {
             buffer.append("IN");
+        } else if (node.getOperation() == QueryConstants.OPERATION_LE_GENERAL) {
+            buffer.append("<=");
         } else if (node.getOperation() == QueryConstants.OPERATION_LE_VALUE) {
             buffer.append("le");
         } else if (node.getOperation() == QueryConstants.OPERATION_LIKE) {
             buffer.append("LIKE");
+        } else if (node.getOperation() == QueryConstants.OPERATION_LT_GENERAL) {
+            buffer.append("< ");
         } else if (node.getOperation() == QueryConstants.OPERATION_LT_VALUE) {
             buffer.append("lt");
         } else if (node.getOperation() == QueryConstants.OPERATION_NE_GENERAL) {
@@ -209,6 +217,8 @@ public class QueryTreeDump implements QueryNodeVisitor {
             buffer.append("NOT NULL");
         } else if (node.getOperation() == QueryConstants.OPERATION_NULL) {
             buffer.append("IS NULL");
+        } else {
+            buffer.append("!!UNKNOWN OPERATION!!");
         }
         buffer.append(" Prop=" + node.getProperty());
         if (node.getValueType() == QueryConstants.TYPE_DATE) {

@@ -308,11 +308,20 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             } else if (node.getOperation() == OPERATION_EQ_GENERAL) {
                 sb.append(propName).append(" = ");
                 appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_GE_GENERAL) {
+                sb.append(propName).append(" >= ");
+                appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GE_VALUE) {
                 sb.append(propName).append(" ge ");
                 appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_GT_GENERAL) {
+                sb.append(propName).append(" > ");
+                appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GT_VALUE) {
                 sb.append(propName).append(" gt ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_LE_GENERAL) {
+                sb.append(propName).append(" <= ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LE_VALUE) {
                 sb.append(propName).append(" le ");
@@ -322,14 +331,17 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 sb.append("(").append(propName).append(", ");
                 appendValue(node, sb);
                 sb.append(")");
+            } else if (node.getOperation() == OPERATION_LT_GENERAL) {
+                sb.append(propName).append(" < ");
+                appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LT_VALUE) {
                 sb.append(propName).append(" lt ");
                 appendValue(node, sb);
-            } else if (node.getOperation() == OPERATION_NE_VALUE) {
-                sb.append(propName).append(" ne ");
-                appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NE_GENERAL) {
                 sb.append(propName).append(" != ");
+                appendValue(node, sb);
+            } else if (node.getOperation() == OPERATION_NE_VALUE) {
+                sb.append(propName).append(" ne ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NULL) {
                 sb.append(NameFormat.format(XPathQueryBuilder.FN_NOT, resolver));
