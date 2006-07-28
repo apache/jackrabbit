@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.backup;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;;
 
 public interface BackupIOHandler {
     
-     int getMaxFileSize();
-     void setMaxFileSize(int i);
-	//Add reference to the file
-	// How to precise if in or out... Maybe not needed?
-    void close();
-    void initBackup() throws FileNotFoundException;
-    void initRestore();
-    void init();
-
+    //Add reference to the file
+    // How to precise if in or out... Maybe not needed?
+    void close() throws IOException;
+    void initBackup() throws FileNotFoundException, IOException;
+    void initRestore() throws FileNotFoundException;
+    void write(String name, File f) throws IOException;
+    void write(String name, ByteArrayOutputStream fos) throws IOException;
 }

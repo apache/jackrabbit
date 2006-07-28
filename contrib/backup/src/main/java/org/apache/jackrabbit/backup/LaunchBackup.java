@@ -16,15 +16,14 @@
  */
 package org.apache.jackrabbit.backup;
 
-import java.io.FileReader;
 import java.io.IOException;
 
 import javax.jcr.AccessDeniedException;
+import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.xml.sax.InputSource;
 
 /**
  * LaunchBackup is a command line tool and a demo tool for the backup tool. To
@@ -36,19 +35,19 @@ import org.xml.sax.InputSource;
  */
 public class LaunchBackup {
 
-	static BackupIOHandler h; 
-	RepositoryImpl repo;
+    static BackupIOHandler h; 
+    RepositoryImpl repo;
     BackupConfig conf;
     RepositoryConfig repoConf;
-    ManagerBackup backup;
+    BackupManager backup;
   
     
 
     /**
      * The command line tool.
      *
-     * LaunchBackup --zip myzip.zip --size 2 --conf backup.xml backup repository.xml repository/
-     * LaunchBackup --zip ./myzip.zip --size 2 --conf backup.xml restore repository.xml repository/
+     * LaunchBackup --zip myzip.zip --size 2 --conf backup.xml --login nico --password mlypass backup repository.xml repository/
+     * LaunchBackup --zip ./myzip.zip --size 2 --conf backup.xml --login nico --password  restore repository.xml repository/
      *
      * --zip: where is the zip file (only implemented way to backup for now)
      * --size in Go
@@ -69,90 +68,100 @@ public class LaunchBackup {
      * @throws IllegalAccessException 
      * @throws InstantiationException 
      * @throws ClassNotFoundException 
-     * @throws SizeException 
      *
      */
-    public static void main(String[] args) throws RepositoryException, AccessDeniedException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException {
+    public static void main(String[] args) throws RepositoryException, AccessDeniedException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
        // I have to declare all var here so they are not resetted out of the for.
-    	String zipFile = null;
+        String zipFile = null;
         String confFile = null;
         String home = null;
         String repoConfFile = null;
+        String login = null;
+        String password = null;
 
         //2 booleans in case the user specified nothing
         boolean isBackup = false;
         boolean isRestore = false;
         
         //Parse the command line.
-    	for (int i = 0; i < args.length; i++) {
-    		
+        for (int i = 0; i < args.length; i++) {
+            
             if ( args[i].equals("--help")  || args.length == 0) {
                 usage();
             }
             
             if (args[i].equals("--zip")){
-            	zipFile = args[i + 1];
-            	//We put it here because later we might offer other possibilities than only zip
-            	h = new ZipFileBackupIOHandler(zipFile);
+                zipFile = args[i + 1];
+                //We put it here because later we might offer other possibilities than only zip
+                LaunchBackup.h = new ZipFileBackupIOHandler(zipFile);
             }
             
-            
-            if (args[i].equals("--size") && (h != null)){
-            	
-            	Integer max = (new Integer(args[i+ 1]));
-                h.setMaxFileSize(max.intValue());        	
-            }
-            
-
             if (args[i].equals("--conf")){
-            	
-            	confFile = args[i + 1];
-            	
+                
+                confFile = args[i + 1];
+                
             }
             
-			if (args[i].equals("backup") && isRestore == false ){
-            	isBackup = true;
-            	repoConfFile = args[i + 1];
-            	home = args[i + 2];
-            	
+            if (args[i].equals("--login")){
+                
+                login = args[i + 1];
+                
+            }
+            
+            if (args[i].equals("--password")){
+                
+                password = args[i + 1];
+                
+            }
+            
+            if (args[i].equals("backup") && isRestore == false ){
+                isBackup = true;
+                repoConfFile = args[i + 1];
+                home = args[i + 2];
+                
             }
             
             if (args[i].equals("restore") && isBackup == false ){
-            	isRestore = true;
-            	repoConfFile = args[i + 1];
-            	home = args[i + 2];
+                isRestore = true;
+                repoConfFile = args[i + 1];
+                home = args[i + 2];
             } 
         }
-		   		
-    	LaunchBackup launch = null;
-		
-    	//We need to shutdown properly the repository whatever happens
-		try {	
-	    	//Launch backup
-	    	if (isBackup) {
-                launch = new LaunchBackup(repoConfFile, home, confFile); 
+        
+        //Check if login and password are provided otherwise weird thing will happen
+        if (login == null || password == null) {
+            throw new LoginException();
+        }
+                   
+        LaunchBackup launch = null;
+        
+        //We need to shutdown properly the repository whatever happens
+        try {    
+            //Launch backup
+            if (isBackup) {
+                launch = new LaunchBackup(repoConfFile, home, confFile, login, password); 
                 launch.backup(h);
-	    	}  	
-	    	//Launch restore
-	    	else if (isRestore) {
-	    	        launch = new LaunchBackup();
-	    			launch.restore(h);
-	    	}
-	    	//Launch nothing (if nothing specified
-	    	else {
-	    		usage();
-	    	}
-		}
-		finally
-		{
-			if (launch !=null)
-			    launch.shutdown();
-		}
+            }      
+            //Launch restore
+            else if (isRestore) {
+                    launch = new LaunchBackup();
+                    launch.restore(h);
+            }
+            //Launch nothing (if nothing specified
+            else {
+                usage();
+            }
+        }
+        finally
+        {
+            if (launch !=null)
+                launch.shutdown();
+        }
     }
 
  
 
-	/**
+    /**
      * Auxiliary method for main
      *
      */
@@ -169,20 +178,17 @@ public class LaunchBackup {
      * @throws IllegalAccessException 
      * @throws InstantiationException 
      * @throws ClassNotFoundException 
-     * @throws SizeException 
      * @throws IOException 
      */
-    public LaunchBackup(String repoConfFile, String home, String backupConfFile) throws RepositoryException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException, IOException {
-    	//Launch first the repository
-		this.repoConf = RepositoryConfig.create(repoConfFile, home);
-		this.repo = RepositoryImpl.create(this.repoConf);
+    public LaunchBackup(String repoConfFile, String home, String backupConfFile, String login, String password) throws RepositoryException, ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
+        //Launch first the repository
+        this.repoConf = RepositoryConfig.create(repoConfFile, home);
+        this.repo = RepositoryImpl.create(this.repoConf);
 
-		//Create the backupConfig object
-       
-		FileReader fr = new FileReader(backupConfFile);
-		InputSource xml = new InputSource(fr);
-		this.conf = BackupConfig.create(xml);
-		this.backup =  ManagerBackup.create(this.repo, this.conf);
+        //Create the backupConfig object
+        this.conf = BackupConfig.create(backupConfFile, repoConfFile, login, password);
+        this.backup =  BackupManager.create(this.repo, this.conf);
+        
     }
     
     /**
@@ -215,7 +221,7 @@ public class LaunchBackup {
     }
     
     private void shutdown() {
-		this.repo.shutdown();		
-	}
+        this.repo.shutdown();        
+    }
     
 }

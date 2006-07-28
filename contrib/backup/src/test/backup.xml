@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<Backup>
+<WorkingFolder path="tmp" />
+<!-- For now only ObjectPersistenceManager and XMLPersistenceManager -->
+<PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager" />
+
+  <Resources>
+    <Resource savingClass="org.apache.jackrabbit.backup.BackupConfigurationBackup" />
+    <Resource savingClass="org.apache.jackrabbit.backup.RepositoryBackup" />
+    <Resource savingClass="org.apache.jackrabbit.backup.NodeTypeBackup" />
+    <Resource savingClass="org.apache.jackrabbit.backup.NamespaceBackup" />
+    <Resource savingClass="org.apache.jackrabbit.backup.AllWorkspacesBackup" />
+    <Resource savingClass="org.apache.jackrabbit.backup.NodeVersionHistoriesBackup" />
+   </Resources>
+</Backup>
