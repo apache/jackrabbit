@@ -56,7 +56,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * QName for 'fn:not'
      */
-    static final QName FN_NOT = new QName(SearchManager.NS_FN_URI, "not");
+    static final QName FN_NOT = new QName("http://www.w3.org/2004/10/xpath-functions", "not");
 
     /**
      * QName for 'not' as defined in XPath 1.0 (no prefix)
@@ -106,7 +106,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * QName for xs:dateTime
      */
-    static final QName XS_DATETIME = new QName(SearchManager.NS_XS_URI, "dateTime");
+    static final QName XS_DATETIME = new QName("http://www.w3.org/2001/XMLSchema", "dateTime");
 
     /**
      * QName for jcr:like
