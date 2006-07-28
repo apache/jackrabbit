@@ -30,10 +30,11 @@ abstract class ChildNodeReference extends ChildItemReference implements ChildNod
      *
      * @param parent the <code>NodeState</code> that owns this child node
      *               reference.
-     * @param name      the name of the child item.
+     * @param name   the name of the child item.
+     * @param isf    the item state factory to create the item state.
      */
-    public ChildNodeReference(NodeState parent, QName name) {
-        super(parent, name);
+    public ChildNodeReference(NodeState parent, QName name, ItemStateFactory isf) {
+        super(parent, name, isf);
     }
 
     /**
@@ -54,10 +55,10 @@ abstract class ChildNodeReference extends ChildItemReference implements ChildNod
 
     /**
      * @inheritDoc
-     * @see ChildNodeEntry#getNodeState(ItemStateFactory, ItemStateManager)
+     * @see ChildNodeEntry#getNodeState()
      */
-    public NodeState getNodeState(ItemStateFactory isf, ItemStateManager ism)
+    public NodeState getNodeState()
             throws NoSuchItemStateException, ItemStateException {
-        return (NodeState) resolve(isf, ism);
+        return (NodeState) resolve(isf);
     }
 }

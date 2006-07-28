@@ -33,24 +33,26 @@ public class PropertyReference extends ChildItemReference {
     /**
      * Creates a new <code>PropertyReference</code>.
      *
-     * @param parent the parent <code>NodeState</code> where the property
-     *               belongs to.
-     * @param name   the name of the property.
+     * @param parent    the parent <code>NodeState</code> where the property
+     *                  belongs to.
+     * @param name      the name of the property.
+     * @param isf       the item state factory to create the node state.
+     * @param idFactory the id factory to create new ids.
      */
-    public PropertyReference(NodeState parent, QName name, IdFactory idFactory) {
-        super(parent, name);
+    public PropertyReference(NodeState parent, QName name, ItemStateFactory isf, IdFactory idFactory) {
+        super(parent, name, isf);
         this.idFactory = idFactory;
     }
 
     /**
      * @inheritDoc
-     * @see ChildItemReference#doResolve(ItemStateFactory, ItemStateManager)
+     * @see ChildItemReference#doResolve()
      * <p/>
      * Returns a <code>PropertyState</code>.
      */
-    protected ItemState doResolve(ItemStateFactory isf, ItemStateManager ism)
+    protected ItemState doResolve()
             throws NoSuchItemStateException, ItemStateException {
         PropertyId id = idFactory.createPropertyId(parent.getNodeId(), name);
-        return isf.createPropertyState(id, ism);
+        return isf.createPropertyState(id, getParent());
     }
 }

@@ -42,12 +42,26 @@ public interface ItemStateFactory {
             throws NoSuchItemStateException, ItemStateException;
 
     /**
+     * Creates the child <code>NodeState</code> with the given
+     * <code>nodeId</code>.
+     *
+     * @param nodeId the id of the <code>NodeState</code> to create.
+     * @param parent the parent of the <code>NodeState</code> to create.
+     * @return the created <code>NodeState</code>.
+     * @throws NoSuchItemStateException if there is no such <code>NodeState</code>.
+     * @throws ItemStateException       if an error occurs while retrieving the
+     *                                  <code>NodeState</code>.
+     */
+    public NodeState createNodeState(NodeId nodeId, NodeState parent)
+            throws NoSuchItemStateException, ItemStateException;
+
+    /**
      * Creates the <code>PropertyState</code> with the given
      * <code>propertyId</code>.
      *
      * @param propertyId the id of the <code>PropertyState</code> to create.
      * @param ism        the item state manager to retrievev the parent of the
-     *                   <code>NodeState</code> to create.
+     *                   <code>PropertyState</code> to create.
      * @return the created <code>PropertyState</code>.
      * @throws NoSuchItemStateException if there is no such <code>PropertyState</code>.
      * @throws ItemStateException       if an error occurs while retrieving the
@@ -55,5 +69,20 @@ public interface ItemStateFactory {
      */
     public PropertyState createPropertyState(PropertyId propertyId,
                                              ItemStateManager ism)
+            throws NoSuchItemStateException, ItemStateException;
+
+    /**
+     * Creates the <code>PropertyState</code> with the given
+     * <code>propertyId</code>.
+     *
+     * @param propertyId the id of the <code>PropertyState</code> to create.
+     * @param parent the parent of the <code>PropertyState</code> to create.
+     * @return the created <code>PropertyState</code>.
+     * @throws NoSuchItemStateException if there is no such <code>PropertyState</code>.
+     * @throws ItemStateException       if an error occurs while retrieving the
+     *                                  <code>PropertyState</code>.
+     */
+    public PropertyState createPropertyState(PropertyId propertyId,
+                                             NodeState parent)
             throws NoSuchItemStateException, ItemStateException;
 }

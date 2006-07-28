@@ -44,16 +44,23 @@ abstract class ChildItemReference {
     protected final QName name;
 
     /**
+     * The item state factory to create the the item state.
+     */
+    protected final ItemStateFactory isf;
+
+    /**
      * Creates a new <code>ChildItemReference</code> with the given parent
      * <code>NodeState</code>.
      *
      * @param parent the <code>NodeState</code> that owns this child node
      *               reference.
-     * @param name      the name of the child item.
+     * @param name   the name of the child item.
+     * @param isf    the item state factory to create the item state.
      */
-    public ChildItemReference(NodeState parent, QName name) {
+    public ChildItemReference(NodeState parent, QName name, ItemStateFactory isf) {
         this.parent = parent;
         this.name = name;
+        this.isf = isf;
     }
 
     /**
@@ -61,14 +68,12 @@ abstract class ChildItemReference {
      * <code>ItemState</code> of this reference.
      *
      * @param isf the item state factory responsible for creating node states.
-     * @param ism the item state manager to access already created / known
-     *            <code>ItemState</code>s.
      * @return the <code>ItemState</code> where this reference points to.
      * @throws NoSuchItemStateException if the referenced <code>ItemState</code>
      *                                  does not exist.
      * @throws ItemStateException       if an error occurs.
      */
-    public ItemState resolve(ItemStateFactory isf, ItemStateManager ism)
+    public ItemState resolve(ItemStateFactory isf)
             throws NoSuchItemStateException, ItemStateException {
         // check if cached
         if (target != null) {
@@ -78,7 +83,7 @@ abstract class ChildItemReference {
             }
         }
         // not cached. retrieve and keep weak reference to state
-        ItemState state = doResolve(isf, ism);
+        ItemState state = doResolve();
         target = new WeakReference(state);
         return state;
     }
@@ -97,15 +102,11 @@ abstract class ChildItemReference {
      * Resolves this <code>ChildItemReference</code> and returns the target
      * <code>ItemState</code> of this reference.
      *
-     * @param isf the item state factory responsible for creating node states.
-     * @param ism the item state manager to access already created / known
-     *            <code>ItemState</code>s.
      * @return the <code>ItemState</code> where this reference points to.
      * @throws NoSuchItemStateException if the referenced <code>ItemState</code>
      *                                  does not exist.
      * @throws ItemStateException       if an error occurs.
      */
-    protected abstract ItemState doResolve(ItemStateFactory isf,
-                                           ItemStateManager ism)
+    protected abstract ItemState doResolve()
             throws NoSuchItemStateException, ItemStateException;
 }
