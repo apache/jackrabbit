@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
@@ -422,6 +423,18 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasNodeType(String name) throws RepositoryException {
+        try {
+            QName qname = NameFormat.parse(name, nsResolver);
+            return getNodeTypeRegistry().isRegistered(qname);
+        } catch (NameException e) {
+           throw new RepositoryException();
+        }      
+    }
+
     //-------------------------------------------------------------< Dumpable >
     /**
      * {@inheritDoc}
@@ -430,5 +443,5 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         ps.println("NodeTypeManager (" + this + ")");
         ps.println();
         ntReg.dump(ps);
-    }
+    }  
 }

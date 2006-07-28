@@ -72,4 +72,14 @@ public interface JackrabbitNodeTypeManager extends NodeTypeManager {
     NodeType[] registerNodeTypes(InputStream in, String contentType)
         throws IOException, RepositoryException;
 
+    /**
+     * Checks if a node type with the given name is registered. 
+     *
+     * @param name node type name
+     * @return <code>true</code> if the named node type is registered
+     *         <code>false</code> otherwise
+     * @throws RepositoryException if an error occurs
+     */
+    boolean hasNodeType(String name) throws RepositoryException;
+
 }
