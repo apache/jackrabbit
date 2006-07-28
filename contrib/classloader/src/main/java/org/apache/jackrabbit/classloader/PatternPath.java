@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.classloader;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -28,15 +27,10 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.ObservationManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
-import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>PatternPath</code> implements a list of repository item path
@@ -80,7 +74,8 @@ import org.apache.jackrabbit.util.Text;
 /* package */ class PatternPath {
 
     /** default logger */
-    private static final Log log = LogFactory.getLog(PatternPath.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(PatternPath.class);
 
     /** The session to access the repository */
     private final Session session;

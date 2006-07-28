@@ -30,9 +30,9 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.net.URLFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ClassPathEntry</code> class encapsulates entries in the class path
@@ -45,11 +45,13 @@ import org.apache.jackrabbit.net.URLFactory;
  * This class is not intended to be subclassed or instantiated by clients.
  *
  * @author Felix Meschberger
+ * @version $Rev:$, $Date$
  */
 abstract class ClassPathEntry {
 
     /** default logging */
-    private static final Log log = LogFactory.getLog(ClassPathEntry.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(ClassPathEntry.class);
 
     /** The session assigned to this class path entry */
     protected final Session session;
@@ -246,8 +248,10 @@ abstract class ClassPathEntry {
      * resource to find and that (2) it is a relative name, that is it should
      * not have a leading slash.
      * <p>
-     * An example of a class to find would be : <code>com/day/test/Tester.class</code>
-     * which is converted from the generally used value <code>com.day.test.Tester</code>
+     * An example of a class to find would be :
+     * <code>org/apache/jackrabbit/test/Tester.class</code>
+     * which is converted from the generally used value
+     * <code>org.apache.jackrabbit.test.Tester</code>
      * by the caller.
      *
      * @param name The name of the resource to find.

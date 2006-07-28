@@ -47,25 +47,23 @@ import javax.naming.NamingException;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory;
-
-import com.sun.corba.se.ActivationIDL.Repository;
-import com.sun.org.omg.CORBA.ExcDescriptionSeqHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ClassLoaderTestBase</code> TODO
  *
  * @author fmeschbe
+ * @version $Rev:$, $Date$
  */
 public class ClassLoaderTestBase extends TestCase {
 
     /** Logger for test cases */
-    protected static final Log log =
-        LogFactory.getLog("org.apache.jackrabbit.classloader.test");
+    protected static final Logger log =
+        LoggerFactory.getLogger("org.apache.jackrabbit.classloader.test");
 
     protected static final String WORKSPACE = "default";
     protected static final String USER = "admin";

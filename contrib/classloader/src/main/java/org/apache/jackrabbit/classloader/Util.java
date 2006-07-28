@@ -24,11 +24,10 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.ValueFormatException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>Util</code> provides helper methods for the repository classloader
@@ -42,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 public class Util {
 
     /** default logging */
-    private static final Log log = LogFactory.getLog(Util.class);
+    private static final Logger log = LoggerFactory.getLogger(Util.class);
 
     /** Private constructor to not instantiate */
     private Util() {}

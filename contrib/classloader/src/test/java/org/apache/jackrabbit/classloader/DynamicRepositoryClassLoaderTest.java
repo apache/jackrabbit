@@ -17,13 +17,8 @@
 package org.apache.jackrabbit.classloader;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-
-import org.apache.log4j.Logger;
-
-import sun.tools.jar.resources.jar_fr;
 
 /**
  * The <code>DynamicRepositoryClassLoaderTest</code> class
