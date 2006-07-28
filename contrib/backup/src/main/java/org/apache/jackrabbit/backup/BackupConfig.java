@@ -18,10 +18,10 @@ package org.apache.jackrabbit.backup;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Properties;
+
 
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
@@ -33,80 +33,21 @@ import org.xml.sax.InputSource;
  * create configured backup objects.
  * <p>
  * It will send different backup object, according to the expected type
- * (ManagerBackup or WorkspaceBackup for instance).
+ * (BackupManager or WorkspaceBackup for instance).
  *
  */
 public class BackupConfig {
     
+    //TODO Useful?
     private PersistenceManagerConfig pmc;
+    //Tused to backup a workspace first in a file
     private File workFolder;
     private Collection allResources;
-    private String xml;
+    private File file;
+    private File repoConfFile;
+    private String login;
+    private String password;
     
-    /**
-     * Convenience method that wraps the configuration file name into an
-     * {@link InputSource} and invokes the
-     * {@link #create(InputSource, String)} method.
-     *
-     * @param file repository configuration file name
-     * @param home repository home directory
-     * @return backup configuration
-     * @throws ConfigurationException on configuration errors
-     * @throws IllegalAccessException 
-     * @throws InstantiationException 
-     * @throws ClassNotFoundException 
-     * @throws SizeException 
-     * @throws IOException 
-     * @see #create(InputSource, String)
-     */
-    public static BackupConfig create(String file)
-            throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException, IOException {
-        URI uri = new File(file).toURI();
-        return create(new InputSource(uri.toString()));
-    }
-
-    /**
-     * Convenience method that wraps the configuration URI into an
-     * {@link InputSource} and invokes the
-     * {@link #create(InputSource, String)} method.
-     *
-     * @param uri repository configuration URI
-     * @param home repository home directory
-     * @return backup configuration
-     * @throws ConfigurationException on configuration errors
-     * @throws IllegalAccessException 
-     * @throws InstantiationException 
-     * @throws ClassNotFoundException 
-     * @throws SizeException 
-     * @throws IOException 
-     * @see #create(InputSource, String)
-     */
-    public static BackupConfig create(URI uri)
-            throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException, IOException {
-        return create(new InputSource(uri.toString()));
-    }
-
-    /**
-     * Convenience method that wraps the configuration input stream into an
-     * {@link InputSource} and invokes the
-     * {@link #create(InputSource, String)} method.
-     *
-     * @param input repository configuration input stream
-     * @param home repository home directory
-     * @return backup configuration
-     * @throws ConfigurationException on configuration errors
-     * @throws IllegalAccessException 
-     * @throws InstantiationException 
-     * @throws ClassNotFoundException 
-     * @throws SizeException 
-     * @throws IOException 
-     * @see #create(InputSource, String)
-     */
-    public static BackupConfig create(InputStream input, String home)
-            throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException, IOException {
-        return create(new InputSource(input));
-    }
-
     /**
      * Parses the given repository configuration document and returns the
      * parsed and initialized repository configuration. The given repository
@@ -116,6 +57,7 @@ public class BackupConfig {
      * method also initializes the configuration (creates the configured
      * directories, etc.). The {@link RepositoryConfigurationParser} class should be
      * used directly to just parse the configuration.
+     * @param repoConfFile 
      *
      * @param xml repository configuration document
      * @param home repository home directory
@@ -124,14 +66,17 @@ public class BackupConfig {
      * @throws IllegalAccessException 
      * @throws InstantiationException 
      * @throws ClassNotFoundException 
-     * @throws SizeException 
      * @throws IOException 
      */
-    public static BackupConfig create(InputSource xml)
-            throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException, IOException {
+    public static BackupConfig create(String myFile, String repoConfFile, String login, String password)
+            throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
+        
+        URI uri = new File(myFile).toURI();
+        InputSource is = new InputSource(uri.toString());
+
         BackupConfigurationParser parser = new BackupConfigurationParser(new Properties());
 
-        BackupConfig config = parser.parseBackupConfig(xml);
+        BackupConfig config = parser.parseBackupConfig(is, myFile, repoConfFile, login, password);
         
         return config;
     }
@@ -139,7 +84,7 @@ public class BackupConfig {
  
 
     //TODO see if path is really useful?
-    public BackupConfig(PersistenceManagerConfig pmc, File path, Collection allResources) throws IOException {
+    public BackupConfig(PersistenceManagerConfig pmc, File path, Collection allResources, String myFile, String repoConfFile, String login, String password) throws IOException {
         
         //Logic application: not in the parser: this code has to be here
         if (!(path.isDirectory() && path.canWrite())) {
@@ -149,6 +94,10 @@ public class BackupConfig {
         this.pmc = pmc;
         this.workFolder = path;
         this.allResources = allResources;
+        this.file = new File(myFile);
+        this.repoConfFile = new File(repoConfFile);
+        this.password = password;
+        this.login = login;
     }
 
     public Collection getAllResources() {
@@ -163,17 +112,28 @@ public class BackupConfig {
         return pmc;
     }
 
-    /*
-     * Useful?
-     */
-    public Backup getBackup() {
-        // TODO Auto-generated method stub
-        return null;
+    public File getFile() {
+        return this.file;       
     }
 
-    public String getXml() {
-        return xml;
+
+
+    public File getRepoConfFile() {
+        return repoConfFile;
     }
+
+
+
+    public String getPassword() {
+        return this.password;
+    }
+
+
+
+    public String getLogin() {
+        return this.login;
+    }
+
 
 
 }

@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.backup;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -28,6 +27,7 @@ import java.util.Vector;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.ConfigurationParser;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
+import org.apache.jackrabbit.core.config.RepositoryConfigurationParser;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -52,49 +52,27 @@ public class BackupConfigurationParser extends ConfigurationParser {
         super(variables);
     }
     
-    
-    /*
-     * A static method to get the XML conf file and return it as a String. 
-     * It is static since it doesn't have to be used with this configuration XML file.
-     * 
-     * TODO: where is the best place for this method?
-     * 
-     * @param the InputSource 
-     */
-    public static String toXmlString(InputSource xml) throws IOException {
-        
-        String line;
-        StringBuffer content = new StringBuffer();
-        BufferedReader readBuffer = new BufferedReader(xml.getCharacterStream());
-        
-        while((line = readBuffer.readLine()) != null){
-            content.append(line);
-            content.append("\r\n");
-        }
-        readBuffer.close();
-        return content.toString();
-    } 
-    
-   
+ 
     /**
      * Parses backup? configuration. Backup configuration uses the
      * following format:
      * <p>
      * TODO comment. See wiki for format
      * @param xml repository configuration document
+     * @param myFile 
+     * @param repoConfFile 
      * @return repository configuration
      * @throws ConfigurationException if the configuration is broken
      * @throws IllegalAccessException 
      * @throws InstantiationException 
      * @throws ClassNotFoundException 
-     * @throws SizeException 
      * @throws IOException 
      * @see #parseBeanConfig(Element, String)
      * @see #parseVersioningConfig(Element)
      */
-    public BackupConfig parseBackupConfig(InputSource xml)
-            throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException, IOException {
-     
+    public BackupConfig parseBackupConfig(InputSource xml, String myFile, String repoConfFile, String login, String password)
+            throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
+     //TODO refactor dependency between this method and BackupConfig
         Element root = parseXML(xml);
     
         //Working Folder
@@ -108,7 +86,7 @@ public class BackupConfigurationParser extends ConfigurationParser {
         Element resources = this.getElement(root, RESOURCES);
         Collection allResources = this.parseResourcesConfig(resources);     
           
-        return new BackupConfig(pmc, path, allResources);
+        return new BackupConfig(pmc, path, allResources, myFile, repoConfFile, login, password);
     }
     
 
@@ -145,16 +123,16 @@ public class BackupConfigurationParser extends ConfigurationParser {
     
     
     /*
-     * For now only support of all workspace backup. I think it is actually simpler to manage on the end-user side.
+     * For now only support of all workspace backup. I think it is actually simpler to manage on the end-user side. Be careful the objects aren't usable yet
      * 
      * Pre-condition: there are resource tags in the conf file (otherwise there is a problem in the backup)
      */
-    private Collection parseResourcesConfig( Element root) throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException, SizeException {
+    private Collection parseResourcesConfig(Element root) throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException  {
 
         /*
          * For each resource
          *      get class and instantiate 
-         *      addResource to ManagerBackup
+         *      addResource to BackupManager
          */
         Vector objects = new Vector();
         Vector resources = (Vector) this.getElements(root, RESOURCE);
@@ -166,11 +144,22 @@ public class BackupConfigurationParser extends ConfigurationParser {
             Element resource = (Element) it.next();
             String savingClass = resource.getAttribute(SAVING_CLASS);   
             Class c = Class.forName(savingClass);
-            objects.addElement( (Backup) c.newInstance());
-            
-            
+            objects.addElement( (Backup) c.newInstance());        
         }
         return objects;
          
+    }
+    
+    /**
+     * Parses the PersistenceManager config.
+     *
+     * @param parent parent of the <code>PersistenceManager</code> element
+     * @return persistence manager configuration
+     * @throws ConfigurationException if the configuration is broken
+     */
+    protected PersistenceManagerConfig parsePersistenceManagerConfig(
+            Element parent) throws ConfigurationException {
+        return new PersistenceManagerConfig(
+                parseBeanConfig(parent, RepositoryConfigurationParser.PERSISTENCE_MANAGER_ELEMENT));
     }
 }

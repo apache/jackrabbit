@@ -16,31 +16,53 @@
  */
 package org.apache.jackrabbit.backup;
 
+import java.io.IOException;
+
+import javax.jcr.LoginException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+
 import org.apache.jackrabbit.core.RepositoryImpl;
 
 /**
  * This class is the abstract class of all resources to backup. If you need to add a new backuped resource
  * extend Backup and implement both the save and restore methods.
  *
- * The constructor is called when instantiating the specific backup resource class through ManagerBackup.
+ * The constructor is called when instantiating the specific backup resource class through BackupManager.
  */
 public abstract class Backup {
 
     RepositoryImpl repo;
     BackupConfig conf;
+    Session session;
 
     /**
      *
      * @param repo The repository to backup
      * @param conf The specific BackupConfig object (usually a subset of backup.xml)
      * @param name Name of the resource to backup. Unique. Useful?
+     * @throws RepositoryException 
+     * @throws LoginException 
      */
-    public Backup(RepositoryImpl repo, BackupConfig conf) {
+    //TODO Useful?
+    public Backup(RepositoryImpl repo, BackupConfig conf) throws LoginException, RepositoryException {
         this.repo = repo;
         this.conf = conf;
+        this.session = this.repo.login(
+                new SimpleCredentials(this.conf.getLogin(), this.conf.getPassword().toCharArray()));
+        
     }
     
     public Backup() {
+        
+    }
+    
+    public void init(RepositoryImpl repo, BackupConfig conf) throws LoginException, RepositoryException {
+        this.repo = repo;
+        this.conf = conf;
+        this.session = this.repo.login(
+                new SimpleCredentials(this.conf.getLogin(), this.conf.getPassword().toCharArray()));
     }
 
     public RepositoryImpl getRepo() {
@@ -48,7 +70,12 @@ public abstract class Backup {
     }
       
     /*
-     * Each ResourceBackup is responsible to handle backup of their content + configuration
+     * Each ResourceBackup is responsible to handle the backup.
+     * 
+     * We use file when we cannot assume anything on the size of the data or we know it's big. When
+     * we know the data is small we store it in RAM.
+     * 
+     *  
      * 
      * For each resource
      *   Test maxFileSize
@@ -56,9 +83,14 @@ public abstract class Backup {
      * check the checksum
      * Send it to out      
      */
-    public abstract void backup(BackupIOHandler h);
+    public abstract void backup(BackupIOHandler h) throws RepositoryException, IOException;
     public abstract void restore(BackupIOHandler h);
 
-	
+    public Session getSession() {
+        return this.session;
+    }
+
+    //TODO call sesssion.logout or useless?
+    
 
 }
