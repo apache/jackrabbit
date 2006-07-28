@@ -51,4 +51,13 @@ abstract class ChildNodeReference extends ChildItemReference implements ChildNod
     public QName getName() {
         return name;
     }
+
+    /**
+     * @inheritDoc
+     * @see ChildNodeEntry#getNodeState(ItemStateFactory, ItemStateManager)
+     */
+    public NodeState getNodeState(ItemStateFactory isf, ItemStateManager ism)
+            throws NoSuchItemStateException, ItemStateException {
+        return (NodeState) resolve(isf, ism);
+    }
 }

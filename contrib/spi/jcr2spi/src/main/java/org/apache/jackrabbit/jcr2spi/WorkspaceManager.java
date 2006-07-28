@@ -31,6 +31,7 @@ import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.CachingItemStateManager;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -112,7 +113,8 @@ import java.io.IOException;
 /**
  * <code>WorkspaceManager</code>...
  */
-public class WorkspaceManager implements UpdatableItemStateManager, NamespaceStorage, NodeTypeStorage, AccessManager {
+public class WorkspaceManager implements UpdatableItemStateManager,
+        ItemStateFactory, NamespaceStorage, NodeTypeStorage, AccessManager {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceManager.class);
 
@@ -145,7 +147,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         this.service = service;
         this.sessionInfo = sessionInfo;
 
-        cache = new CachingItemStateManager(new WorkspaceItemStateManager());
+        cache = new CachingItemStateManager(this, service.getIdFactory());
         addEventListener(cache);
 
         nsRegistry = createNamespaceRegistry();
@@ -447,51 +449,25 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         service.unregisterNodeTypes(sessionInfo, nodeTypeNames);
     }
 
-    //--------------------------------------------------------------------------
+    //---------------------------------------------------< ItemStateFactory >---
 
     /**
-     * Called when local or external events occured. This method is called after
-     * changes have been applied to the repository.
+     * Creates the node with information retrieved from the
+     * <code>RepositoryService</code>.
      *
-     * @param changeLog
-     * @param events the events.
-     * @param isLocal <code>true</code> if changes were local.
+     * @inheritDoc
+     * @see ItemStateFactory#createNodeState(NodeId, ItemStateManager)
      */
-    private void onEventReceived(ChangeLog changeLog, EventIterator events, boolean isLocal) {
-        if (changeLog != null) {
-            // use current change log for notification
-            changeLog.persisted();
-        }
-
-        // notify listener
-        // need to copy events into a list because we notify multiple listeners
-        List eventList = new ArrayList();
-        while (events.hasNext()) {
-            Event e = events.nextEvent();
-            eventList.add(e);
-        }
-
-        InternalEventListener[] lstnrs = (InternalEventListener[]) listeners.toArray(new InternalEventListener[listeners.size()]);
-        for (int i = 0; i < lstnrs.length; i++) {
-           lstnrs[i].onEvent(new EventIteratorImpl(eventList), isLocal);
-        }
-    }
-
-    /**
-     * Build a new <code>NodeState</code> from the information retrieved
-     * from the <code>RepositoryService</code>.
-     *
-     * @param id node id
-     * @return node state
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
-     */
-    private NodeState getNodeState(NodeId id)
+    public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
             throws NoSuchItemStateException, ItemStateException {
         try {
-            NodeInfo info = service.getNodeInfo(sessionInfo, id);
+            NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
             QName ntName = info.getNodetype();
             NodeId parentId = (info.getParentId() != null) ? info.getParentId() : null;
+
+            // get parent
+            NodeState parent = (parentId != null) ? (NodeState) ism.getItemState(parentId) : null;
+            // TODO pass parent in constructor of NodeState
 
             // build the node state
             // NOTE: unable to retrieve definitionId -> needs to be retrieved
@@ -499,14 +475,15 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             NodeState state = new NodeState(info.getId(), ntName, parentId, ItemState.STATUS_EXISTING, false, getIdFactory());
             // set mixin nodetypes
             state.setMixinTypeNames(info.getMixins());
-            // references to child items
 
+            // references to child items
             for (IdIterator it = info.getNodeIds(); it.hasNext(); ) {
-                NodeInfo childInfo = service.getNodeInfo(sessionInfo, (org.apache.jackrabbit.spi.NodeId)it.nextId());
+                NodeInfo childInfo = service.getNodeInfo(sessionInfo, (NodeId) it.nextId());
                 NodeId childId = childInfo.getId();
                 state.addChildNodeEntry(childInfo.getQName(), childId);
             }
 
+            // references to properties
             for (IdIterator it = info.getPropertyIds(); it.hasNext(); ) {
                 PropertyId pId = (PropertyId) it.nextId();
                 state.addPropertyName(pId.getQName());
@@ -525,18 +502,21 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     /**
-     * Build a new <code>PropertyState</code> from the information retrieved
-     * from the <code>RepositoryService</code>.
+     * Creates the property with information retrieved from the
+     * <code>RepositoryService</code>.
      *
-     * @param id property id
-     * @return property state
-     * @throws NoSuchItemStateException
-     * @throws ItemStateException
+     * @inheritDoc
+     * @see ItemStateFactory#createPropertyState(PropertyId, ItemStateManager)
      */
-    private PropertyState getPropertyState(PropertyId id)
+    public PropertyState createPropertyState(PropertyId propertyId,
+                                             ItemStateManager ism)
             throws NoSuchItemStateException, ItemStateException {
         try {
-            PropertyInfo info = service.getPropertyInfo(sessionInfo, id);
+            PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
+
+            // get parent
+            NodeState parent = (NodeState) ism.getItemState(info.getParentId());
+            // TODO: pass parent in constructor of PropertyState
 
             // build the PropertyState
             // NOTE: unable to retrieve definitionId -> needs to be retrieved
@@ -571,6 +551,36 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             throw new ItemStateException(e.getMessage(), e);
         } catch (IOException e) {
             throw new ItemStateException(e.getMessage(), e);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+
+    /**
+     * Called when local or external events occured. This method is called after
+     * changes have been applied to the repository.
+     *
+     * @param changeLog
+     * @param events the events.
+     * @param isLocal <code>true</code> if changes were local.
+     */
+    private void onEventReceived(ChangeLog changeLog, EventIterator events, boolean isLocal) {
+        if (changeLog != null) {
+            // use current change log for notification
+            changeLog.persisted();
+        }
+
+        // notify listener
+        // need to copy events into a list because we notify multiple listeners
+        List eventList = new ArrayList();
+        while (events.hasNext()) {
+            Event e = events.nextEvent();
+            eventList.add(e);
+        }
+
+        InternalEventListener[] lstnrs = (InternalEventListener[]) listeners.toArray(new InternalEventListener[listeners.size()]);
+        for (int i = 0; i < lstnrs.length; i++) {
+           lstnrs[i].onEvent(new EventIteratorImpl(eventList), isLocal);
         }
     }
 
@@ -761,7 +771,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 NodeId nId = operation.getNodeId();
                 NodeId vId = operation.getVersionId();
 
-                PropertyState mergeFailedState = getPropertyState(getIdFactory().createPropertyId(nId, QName.JCR_MERGEFAILED));
+                PropertyState mergeFailedState = (PropertyState) cache.getItemState(
+                        getIdFactory().createPropertyId(nId, QName.JCR_MERGEFAILED));
+
                 QValue[] vs = mergeFailedState.getValues();
 
                 NodeId[] mergeFailedIds = new NodeId[vs.length - 1];
@@ -775,7 +787,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                     // part of 'jcr:mergefailed' any more
                 }
 
-                PropertyState predecessorState = getPropertyState(getIdFactory().createPropertyId(nId, QName.JCR_PREDECESSORS));
+                PropertyState predecessorState = (PropertyState) cache.getItemState(
+                        getIdFactory().createPropertyId(nId, QName.JCR_PREDECESSORS));
+
                 vs = predecessorState.getValues();
 
                 boolean resolveDone = operation.resolveDone();
@@ -904,56 +918,4 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
     }
 
-    public class WorkspaceItemStateManager implements ItemStateManager {
-
-        public ItemState getItemState(ItemId id) throws NoSuchItemStateException, ItemStateException {
-            ItemState state;
-            if (id.denotesNode()) {
-                state = getNodeState((NodeId) id);
-            } else {
-                state = getPropertyState((PropertyId) id);
-            }
-            return state;
-        }
-
-        public boolean hasItemState(ItemId id) {
-            try {
-                return service.exists(sessionInfo, id);
-            } catch (RepositoryException e) {
-                log.error(e.getMessage());
-                return false;
-            }
-        }
-
-        public NodeReferences getNodeReferences(NodeId id)
-                throws NoSuchItemStateException, ItemStateException {
-            try {
-                NodeReferencesImpl nrefs = new NodeReferencesImpl(id);
-                NodeInfo info = service.getNodeInfo(sessionInfo, id);
-                PropertyId[] refs = info.getReferences();
-                for (int i = 0; i < refs.length; i++) {
-                    PropertyInfo pInfo = service.getPropertyInfo(sessionInfo, refs[i]);
-                    nrefs.addReference(pInfo.getId());
-                }
-                return nrefs;
-            } catch (PathNotFoundException e) {
-                log.error(e.getMessage());
-                throw new NoSuchItemStateException(e.getMessage(), e);
-            } catch (RepositoryException e) {
-                throw new ItemStateException(e.getMessage(), e);
-            }
-        }
-
-        public boolean hasNodeReferences(NodeId id) {
-            try {
-                NodeInfo info = service.getNodeInfo(sessionInfo, id);
-                return info.getReferences().length > 0;
-            } catch (PathNotFoundException e) {
-                log.error(e.getMessage());
-            } catch (RepositoryException e) {
-                log.error(e.getMessage());
-            }
-            return false;
-        }
-    }
 }

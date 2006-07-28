@@ -47,13 +47,13 @@ public class PathElementReference extends ChildNodeReference implements ChildNod
 
     /**
      * @inheritDoc
-     * @see ChildItemReference#doResolve(ItemStateFactory)
+     * @see ChildItemReference#doResolve(ItemStateFactory, ItemStateManager)
      * <p/>
      * Returns a <code>NodeState</code>.
      */
-    protected ItemState doResolve(ItemStateFactory isf)
+    protected ItemState doResolve(ItemStateFactory isf, ItemStateManager ism)
             throws NoSuchItemStateException, ItemStateException {
-        return isf.createNodeState(parent, Path.create(getName(), getIndex()).getNameElement());
+        return isf.createNodeState(getId(), ism);
     }
 
     /**
