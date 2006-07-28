@@ -38,22 +38,24 @@ public class PathElementReference extends ChildNodeReference implements ChildNod
      * @param parent    the <code>ItemState</code> that owns this child item
      *                  reference.
      * @param name      the name of the child node.
+     * @param isf       the item state factory to create the node state.
      * @param idFactory the <code>IdFactory</code> to create new ItemIds
      */
-    public PathElementReference(NodeState parent, QName name, IdFactory idFactory) {
-        super(parent, name);
+    public PathElementReference(NodeState parent, QName name,
+                                ItemStateFactory isf, IdFactory idFactory) {
+        super(parent, name, isf);
         this.idFactory = idFactory;
     }
 
     /**
      * @inheritDoc
-     * @see ChildItemReference#doResolve(ItemStateFactory, ItemStateManager)
+     * @see ChildItemReference#doResolve()
      * <p/>
      * Returns a <code>NodeState</code>.
      */
-    protected ItemState doResolve(ItemStateFactory isf, ItemStateManager ism)
+    protected ItemState doResolve()
             throws NoSuchItemStateException, ItemStateException {
-        return isf.createNodeState(getId(), ism);
+        return isf.createNodeState(getId(), getParent());
     }
 
     /**

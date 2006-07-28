@@ -41,16 +41,12 @@ public interface ChildNodeEntry {
     public int getIndex();
 
     /**
-     * TODO: move parameters isf and ism to constructor of implementations of this interface
-     * @param isf the item state factory to create the node state.
-     * @param ism the item state manager to access already created / known
-     *            <code>ItemState</code>s.
      * @return the referenced <code>NodeState</code>.
      * @throws NoSuchItemStateException if the <code>NodeState</code> does not
      *                                  exist anymore.
      * @throws ItemStateException       if an error occurs while retrieving the
      *                                  <code>NodeState</code>.
      */
-    public NodeState getNodeState(ItemStateFactory isf, ItemStateManager ism)
+    public NodeState getNodeState()
             throws NoSuchItemStateException, ItemStateException;
 }

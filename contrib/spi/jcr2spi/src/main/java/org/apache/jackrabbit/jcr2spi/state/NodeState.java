@@ -85,12 +85,13 @@ public class NodeState extends ItemState {
     private boolean sharedChildNodeEntries = false;
 
     /**
-     * set of property names (QName objects)
+     * Map of properties. Key = {@link QName} of property. Value = {@link
+     * PropertyReference}.
      */
-    private HashSet propertyNames = new HashSet();
+    private HashMap properties = new HashMap();
 
     /**
-     * Set to <code>true</code> if {@link #propertyNames} is shared between
+     * Set to <code>true</code> if {@link #properties} is shared between
      * different <code>NodeState</code> instances.
      */
     private boolean sharedPropertyNames = false;
@@ -105,6 +106,33 @@ public class NodeState extends ItemState {
     private final IdFactory idFactory;
 
     /**
+     * The <code>ItemStateFactory</code> which is used to create new
+     * <code>ItemState</code> instances.
+     */
+    private final ItemStateFactory isf;
+
+    /**
+     * Constructs a new node state that is not connected.
+     *
+     * @param id            id of this NodeState
+     * @param parent        the parent of this NodeState
+     * @param nodeTypeName  node type of this node
+     * @param initialStatus the initial status of the node state object
+     * @param isTransient   flag indicating whether this state is transient or
+     *                      not.
+     * @param isf           the item state factory responsible for creating node
+     *                      states.
+     */
+    public NodeState(NodeId id, NodeState parent, QName nodeTypeName,
+                     int initialStatus, boolean isTransient, ItemStateFactory isf) {
+        super(initialStatus, isTransient);
+        this.id = id;
+        this.idFactory = parent.idFactory;
+        this.nodeTypeName = nodeTypeName;
+        this.isf = isf;
+    }
+
+    /**
      * Constructs a new <code>NodeState</code> that is initially connected to
      * an overlayed state.
      *
@@ -117,6 +145,8 @@ public class NodeState extends ItemState {
         super(overlayedState, initialStatus, isTransient);
         pull();
         idFactory = overlayedState.idFactory;
+        // TODO: remove this constructor
+        this.isf = null;
     }
 
     /**
@@ -135,6 +165,8 @@ public class NodeState extends ItemState {
         this.parentId = parentId;
         this.nodeTypeName = nodeTypeName;
         this.idFactory = idFactory;
+        // TODO: remove this constructor
+        this.isf = null;
     }
 
     /**
@@ -148,7 +180,7 @@ public class NodeState extends ItemState {
             nodeTypeName = nodeState.nodeTypeName;
             mixinTypeNames = nodeState.mixinTypeNames;
             def = nodeState.getDefinition();
-            propertyNames = nodeState.propertyNames;
+            properties = nodeState.properties;
             sharedPropertyNames = true;
             nodeState.sharedPropertyNames = true;
             childNodeEntries = nodeState.childNodeEntries;
@@ -322,7 +354,7 @@ public class NodeState extends ItemState {
      *         <code>QName</code>.
      */
     public synchronized boolean hasPropertyName(QName propName) {
-        return propertyNames.contains(propName);
+        return properties.containsKey(propName);
     }
 
     /**
@@ -517,7 +549,7 @@ public class NodeState extends ItemState {
      * @see #removePropertyName
      */
     public synchronized Set getPropertyNames() {
-        return Collections.unmodifiableSet(propertyNames);
+        return Collections.unmodifiableSet(properties.keySet());
     }
 
     /**
@@ -527,10 +559,10 @@ public class NodeState extends ItemState {
      */
     public synchronized void addPropertyName(QName propName) {
         if (sharedPropertyNames) {
-            propertyNames = (HashSet) propertyNames.clone();
+            properties = (HashMap) properties.clone();
             sharedPropertyNames = false;
         }
-        propertyNames.add(propName);
+        properties.put(propName, new PropertyReference(this, propName, isf, idFactory));
     }
 
     /**
@@ -542,10 +574,10 @@ public class NodeState extends ItemState {
      */
     public synchronized boolean removePropertyName(QName propName) {
         if (sharedPropertyNames) {
-            propertyNames = (HashSet) propertyNames.clone();
+            properties = (HashMap) properties.clone();
             sharedPropertyNames = false;
         }
-        return propertyNames.remove(propName);
+        return properties.remove(propName) != null;
     }
 
     /**
@@ -553,10 +585,10 @@ public class NodeState extends ItemState {
      */
     public synchronized void removeAllPropertyNames() {
         if (sharedPropertyNames) {
-            propertyNames = new HashSet();
+            properties = new HashMap();
             sharedPropertyNames = false;
         } else {
-            propertyNames.clear();
+            properties.clear();
         }
     }
 
@@ -565,18 +597,9 @@ public class NodeState extends ItemState {
      * properties of this node.
      */
     public synchronized void setPropertyNames(Set propNames) {
-        if (propNames instanceof HashSet) {
-            HashSet names = (HashSet) propNames;
-            propertyNames = (HashSet) names.clone();
-            sharedPropertyNames = false;
-        } else {
-            if (sharedPropertyNames) {
-                propertyNames = new HashSet();
-                sharedPropertyNames = false;
-            } else {
-                propertyNames.clear();
-            }
-            propertyNames.addAll(propNames);
+        removeAllPropertyNames();
+        for (Iterator it = propNames.iterator(); it.hasNext(); ) {
+            addPropertyName((QName) it.next());
         }
     }
 
@@ -590,7 +613,48 @@ public class NodeState extends ItemState {
         this.nodeTypeName = nodeTypeName;
     }
 
+    /**
+     * Returns the property state with the given name.
+     *
+     * @param propertyName the name of the property state to return.
+     * @throws NoSuchItemStateException if there is no property state with the
+     *                                  given name.
+     * @throws ItemStateException       if an error occurs while retrieving the
+     *                                  property state.
+     */
+    public synchronized PropertyState getPropertyState(QName propertyName)
+            throws NoSuchItemStateException, ItemStateException {
+        PropertyReference propRef = (PropertyReference) properties.get(propertyName);
+        if (propRef == null) {
+            throw new NoSuchItemStateException(idFactory.createPropertyId(getNodeId(), propertyName).toString());
+        }
+        return (PropertyState) propRef.resolve(isf);
+    }
+
+    /**
+     * Returns the node state with the given relative path.
+     *
+     * @param relPath the relative path (actually PathElement) of the child node
+     *                state.
+     * @return the child node state
+     * @throws NoSuchItemStateException if there is no node state with the given
+     *                                  <code>relPath</code>.
+     * @throws ItemStateException       if an error occurs while retrieving the
+     *                                  node state.
+     */
+    public synchronized NodeState getNodeState(Path.PathElement relPath)
+            throws NoSuchItemStateException, ItemStateException {
+        ChildNodeEntry cne = childNodeEntries.get(relPath.getName(), relPath.getNormalizedIndex());
+        if (cne == null) {
+            Path p = Path.create(relPath.getName(), relPath.getIndex());
+            NodeId id = idFactory.createNodeId(getNodeId(), p);
+            throw new NoSuchItemStateException(id.toString());
+        }
+        return cne.getNodeState();
+    }
+
     //---------------------------------------------------------< diff methods >
+
     /**
      * Returns a set of <code>QName</code>s denoting those properties that
      * do not exist in the overlayed node state but have been added to
@@ -601,12 +665,12 @@ public class NodeState extends ItemState {
      */
     public synchronized Set getAddedPropertyNames() {
         if (!hasOverlayedState()) {
-            return Collections.unmodifiableSet(propertyNames);
+            return Collections.unmodifiableSet(properties.keySet());
         }
 
         NodeState other = (NodeState) getOverlayedState();
-        HashSet set = new HashSet(propertyNames);
-        set.removeAll(other.propertyNames);
+        HashSet set = new HashSet(properties.keySet());
+        set.removeAll(other.properties.keySet());
         return set;
     }
 
@@ -639,8 +703,8 @@ public class NodeState extends ItemState {
         }
 
         NodeState other = (NodeState) getOverlayedState();
-        HashSet set = new HashSet(other.propertyNames);
-        set.removeAll(propertyNames);
+        HashSet set = new HashSet(other.properties.keySet());
+        set.removeAll(properties.keySet());
         return set;
     }
 
@@ -1125,9 +1189,9 @@ public class NodeState extends ItemState {
          */
         private ChildNodeEntry createChildNodeEntry(QName nodeName, NodeId id) {
             if (id.getRelativePath() != null) {
-                return new PathElementReference(NodeState.this, nodeName, NodeState.this.idFactory);
+                return new PathElementReference(NodeState.this, nodeName, NodeState.this.isf, NodeState.this.idFactory);
             } else {
-                return new UUIDReference(NodeState.this, id, nodeName);
+                return new UUIDReference(NodeState.this, id, NodeState.this.isf, nodeName);
             }
         }
 

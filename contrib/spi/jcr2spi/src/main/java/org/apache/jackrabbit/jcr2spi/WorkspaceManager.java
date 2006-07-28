@@ -462,17 +462,57 @@ public class WorkspaceManager implements UpdatableItemStateManager,
             throws NoSuchItemStateException, ItemStateException {
         try {
             NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
-            QName ntName = info.getNodetype();
-            NodeId parentId = (info.getParentId() != null) ? info.getParentId() : null;
 
             // get parent
+            NodeId parentId = (info.getParentId() != null) ? info.getParentId() : null;
             NodeState parent = (parentId != null) ? (NodeState) ism.getItemState(parentId) : null;
+
+            return createNodeState(info, parent);
+        } catch (PathNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (RepositoryException e) {
+            throw new ItemStateException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Creates the node with information retrieved from the
+     * <code>RepositoryService</code>.
+     *
+     * @inheritDoc
+     * @see ItemStateFactory#createNodeState(NodeId, NodeState)
+     */
+    public NodeState createNodeState(NodeId nodeId, NodeState parent)
+            throws NoSuchItemStateException, ItemStateException {
+        try {
+            NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
+            return createNodeState(info, parent);
+        } catch (PathNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (RepositoryException e) {
+            throw new ItemStateException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Creates the node with information retrieved from <code>info</code>.
+     *
+     * @param info   the <code>NodeInfo</code> to use to create the
+     *               <code>NodeState</code>.
+     * @param parent the parent <code>NodeState</code>.
+     * @return the new <code>NodeState</code>.
+     */
+    private NodeState createNodeState(NodeInfo info, NodeState parent)
+            throws NoSuchItemStateException, ItemStateException {
+        try {
+            QName ntName = info.getNodetype();
+
             // TODO pass parent in constructor of NodeState
 
             // build the node state
             // NOTE: unable to retrieve definitionId -> needs to be retrieved
             // by the itemManager upon Node creation.
-            NodeState state = new NodeState(info.getId(), ntName, parentId, ItemState.STATUS_EXISTING, false, getIdFactory());
+            NodeState state = new NodeState(info.getId(), ntName, parent.getNodeId(), ItemState.STATUS_EXISTING, false, getIdFactory());
             // set mixin nodetypes
             state.setMixinTypeNames(info.getMixins());
 
@@ -513,9 +553,49 @@ public class WorkspaceManager implements UpdatableItemStateManager,
             throws NoSuchItemStateException, ItemStateException {
         try {
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
-
-            // get parent
             NodeState parent = (NodeState) ism.getItemState(info.getParentId());
+            return createPropertyState(info, parent);
+        } catch (PathNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (RepositoryException e) {
+            throw new ItemStateException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Creates the property with information retrieved from the
+     * <code>RepositoryService</code>.
+     *
+     * @inheritDoc
+     * @see ItemStateFactory#createPropertyState(PropertyId, NodeState)
+     */
+    public PropertyState createPropertyState(PropertyId propertyId,
+                                             NodeState parent)
+            throws NoSuchItemStateException, ItemStateException {
+        try {
+            PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
+            return createPropertyState(info, parent);
+        } catch (PathNotFoundException e) {
+            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (RepositoryException e) {
+            throw new ItemStateException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Creates the property with information retrieved from <code>info</code>.
+     *
+     * @param info   the <code>PropertyInfo</code> to use to create the
+     *               <code>PropertyState</code>.
+     * @param parent the parent <code>NodeState</code>.
+     * @return the new <code>PropertyState</code>.
+     * @throws ItemStateException if an error occurs while retrieving the
+     *                            <code>PropertyState</code>.
+     */
+    private PropertyState createPropertyState(PropertyInfo info,
+                                              NodeState parent)
+            throws ItemStateException {
+        try {
             // TODO: pass parent in constructor of PropertyState
 
             // build the PropertyState
@@ -545,10 +625,6 @@ public class WorkspaceManager implements UpdatableItemStateManager,
             // TODO check if needed
             // state.addListener(this);
             return state;
-        } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
         } catch (IOException e) {
             throw new ItemStateException(e.getMessage(), e);
         }
