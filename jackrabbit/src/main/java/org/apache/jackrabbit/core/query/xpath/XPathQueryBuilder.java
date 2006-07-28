@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.xpath;
 
-import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
