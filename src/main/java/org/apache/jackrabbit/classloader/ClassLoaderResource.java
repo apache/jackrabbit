@@ -26,9 +26,9 @@ import java.util.jar.Manifest;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.net.URLFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -46,7 +46,8 @@ import org.apache.jackrabbit.net.URLFactory;
 class ClassLoaderResource {
 
     /** default log category */
-    private static final Log log = LogFactory.getLog(ClassLoaderResource.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(ClassLoaderResource.class);
 
     /**
      * The class path entry which loaded this class loader resource

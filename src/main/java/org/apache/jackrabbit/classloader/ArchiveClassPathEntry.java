@@ -29,9 +29,9 @@ import java.util.jar.Manifest;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.net.URLFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -45,8 +45,8 @@ import org.apache.jackrabbit.net.URLFactory;
 class ArchiveClassPathEntry extends ClassPathEntry {
 
     /** Default logger */
-    private static final Log log =
-        LogFactory.getLog(ArchiveClassPathEntry.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(ArchiveClassPathEntry.class);
 
     /** The property containing the archive */
     private final Property prop;

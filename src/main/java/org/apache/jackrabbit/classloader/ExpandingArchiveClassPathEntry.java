@@ -34,8 +34,8 @@ import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ExpandingArchiveClassPathEntry</code> extends the
@@ -64,8 +64,8 @@ import org.apache.commons.logging.LogFactory;
     public static final String PROP_EXPAND_DATE = "rep:jarExpanded";
 
     /** Default logger */
-    private static final Log log =
-        LogFactory.getLog(ExpandingArchiveClassPathEntry.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(ExpandingArchiveClassPathEntry.class);
 
     /** The node of the unpacked JAR contents */
     private Node jarContents;

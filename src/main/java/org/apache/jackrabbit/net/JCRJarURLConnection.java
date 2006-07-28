@@ -25,8 +25,8 @@ import java.util.jar.JarInputStream;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JCRJarURLConnection</code> extends the
@@ -75,7 +75,8 @@ import org.apache.commons.logging.LogFactory;
 public class JCRJarURLConnection extends JCRURLConnection {
 
     /** default log category */
-    private static final Log log = LogFactory.getLog(JCRJarURLConnection.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(JCRJarURLConnection.class);
 
     /**
      * The name of the MIME content type for this connection's content if

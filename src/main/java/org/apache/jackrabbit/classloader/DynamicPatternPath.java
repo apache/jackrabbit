@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.classloader;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -26,8 +25,8 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>DynamicPatternPath</code> class is a {@link PatternPath}
@@ -46,8 +45,8 @@ import org.apache.commons.logging.LogFactory;
         implements EventListener {
 
     /** default logger */
-    private static final Log log =
-        LogFactory.getLog(DynamicPatternPath.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(DynamicPatternPath.class);
 
     /** The list of registered listeners for this list */
     private final ArrayList listeners = new ArrayList();
