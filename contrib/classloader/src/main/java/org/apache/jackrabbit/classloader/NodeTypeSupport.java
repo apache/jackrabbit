@@ -18,20 +18,14 @@ package org.apache.jackrabbit.classloader;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.List;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
+import javax.jcr.nodetype.NodeTypeManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
-import org.apache.jackrabbit.core.nodetype.compact.ParseException;
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>NodeTypeSupport</code> contains a single utility method
@@ -47,7 +41,8 @@ import org.apache.jackrabbit.core.nodetype.compact.ParseException;
 /* package */ class NodeTypeSupport {
 
     /** Default log */
-    private static final Log log = LogFactory.getLog(NodeTypeSupport.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(NodeTypeSupport.class);
 
     /**
      * The name of the class path resource containing the node type definition
@@ -57,18 +52,12 @@ import org.apache.jackrabbit.core.nodetype.compact.ParseException;
     private static final String TYPE_FILE = "type.cnd";
 
     /**
-     * The encoding used to read the node type definition file (value is
-     * "ISO-8859-1").
-     */
-    private static final String ENCODING = "ISO-8859-1";
-
-    /**
      * Registers the required node type (<code>rep:jarFile</code>) with the
      * node type manager available from the given <code>workspace</code>.
      * <p>
      * The <code>NodeTypeManager</code> returned by the <code>workspace</code>
      * is expected to be of type
-     * <code>org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl</code> for
+     * <code>org.apache.jackrabbit.api.JackrabbitNodeTypeManager</code> for
      * the node type registration to succeed.
      * <p>
      * This method is not synchronized. It is up to the calling method to
@@ -90,62 +79,24 @@ import org.apache.jackrabbit.core.nodetype.compact.ParseException;
             return false;
         }
 
-        // Wrap the stream with a reader
-        InputStreamReader reader = null;
         try {
-            reader = new InputStreamReader(ins, ENCODING);
-        } catch (UnsupportedEncodingException uee) {
-            log.warn("Required Encoding " + ENCODING + " not supported, " +
-                    "using platform default encoding", uee);
-
-            reader = new InputStreamReader(ins);
-        }
-
-        try {
-            // Create a CompactNodeTypeDefReader
-            CompactNodeTypeDefReader cndReader =
-                new CompactNodeTypeDefReader(reader, TYPE_FILE);
-
-            // Get the List of NodeTypeDef objects
-            List ntdList = cndReader.getNodeTypeDefs();
-
-            // Get the NodeTypeManager from the Workspace.
-            // Note that it must be cast from the generic JCR NodeTypeManager
-            // to the Jackrabbit-specific implementation.
-            NodeTypeManagerImpl ntmgr =
-                (NodeTypeManagerImpl) workspace.getNodeTypeManager();
-
-            // Acquire the NodeTypeRegistry
-            NodeTypeRegistry ntreg = ntmgr.getNodeTypeRegistry();
-
-            // register the node types from the file in a batch
-            ntreg.registerNodeTypes(ntdList);
-
-            // get here and succeed
-            return true;
-
-        } catch (ParseException pe) {
-            log.error("Unexpected failure to parse compact node defintion " + TYPE_FILE, pe);
-
-        } catch (InvalidNodeTypeDefException ie) {
-            log.error("Cannot define required node type", ie);
-
-        } catch (RepositoryException re) {
-            log.error("General problem accessing the repository", re);
-
-        } catch (ClassCastException cce) {
-            log.error("Unexpected object type encountered", cce);
-
-        } finally {
-            // make sure the reader is closed - expect to be non-null here !
-            try {
-                reader.close();
-            } catch (IOException ioe) {
-                // ignore
+            NodeTypeManager ntm = workspace.getNodeTypeManager();
+            if (ntm instanceof JackrabbitNodeTypeManager) {
+                log.debug("Using Jackrabbit to import node types from {0}",
+                    TYPE_FILE);
+                JackrabbitNodeTypeManager jntm = (JackrabbitNodeTypeManager) ntm;
+                jntm.registerNodeTypes(ins,
+                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+                return true;
             }
+        } catch (IOException ioe) {
+            log.error("Cannot register node types from {0}", TYPE_FILE, ioe);
+        } catch (RepositoryException re) {
+            log.error("Cannot register node types from {0}", TYPE_FILE, re);
         }
 
         // fall back to failure
+        log.warn("Repository is not a Jackrabbit, cannot import node types");
         return false;
     }
 }

@@ -28,9 +28,9 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.classloader.DynamicPatternPath.Listener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -70,8 +70,8 @@ public class DynamicRepositoryClassLoader extends RepositoryClassLoader
         implements EventListener, Listener {
 
     /** default log category */
-    private static final Log log =
-        LogFactory.getLog(DynamicRepositoryClassLoader.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(DynamicRepositoryClassLoader.class);
 
     /**
      * Cache of resources used to check class loader expiry. The map is indexed

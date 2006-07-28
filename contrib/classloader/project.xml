@@ -67,26 +67,15 @@
             <version>1.0</version>
             <type>jar</type>
         </dependency>
+
+        <!-- Logging -->
         <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.0</version>
-            <type>jar</type>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.0.1</version>
         </dependency>
 
         <!-- Unit Testing -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.0</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.8</version>
-            <type>jar</type>
-        </dependency>
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>

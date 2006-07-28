@@ -38,10 +38,10 @@ import java.util.jar.Manifest;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.net.JCRURLConnection;
 import org.apache.jackrabbit.net.URLFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -65,8 +65,8 @@ import org.apache.jackrabbit.net.URLFactory;
 public class RepositoryClassLoader extends URLClassLoader {
 
     /** default log category */
-    private static final Log log =
-        LogFactory.getLog(RepositoryClassLoader.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(RepositoryClassLoader.class);
 
     /** An empty list of url paths to call superclass constructor */
     private static final URL[] NULL_PATH = {};
