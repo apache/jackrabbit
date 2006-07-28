@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.PropertyId;
 
 /**
  * <code>ItemStateFactory</code> provides methods to create child
@@ -28,48 +28,32 @@ public interface ItemStateFactory {
 
     /**
      * Creates the child <code>NodeState</code> with the given
-     * <code>uuid</code>, which has the given <code>parent</code>.
+     * <code>nodeId</code>.
      *
-     * @param parent the parent of the <code>NodeState</code> to create.
-     * @param uuid   the uuid of the <code>NodeState</code> to create.
+     * @param nodeId the id of the <code>NodeState</code> to create.
+     * @param ism    the item state manager to retrievev the parent of the
+     *               <code>NodeState</code> to create.
      * @return the created <code>NodeState</code>.
      * @throws NoSuchItemStateException if there is no such <code>NodeState</code>.
      * @throws ItemStateException       if an error occurs while retrieving the
      *                                  <code>NodeState</code>.
      */
-    public NodeState createNodeState(NodeState parent, String uuid)
+    public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
             throws NoSuchItemStateException, ItemStateException;
 
     /**
-     * Creates the child <code>NodeState</code> with the given
-     * <code>nameElement</code>, which has the given <code>parent</code>.
+     * Creates the <code>PropertyState</code> with the given
+     * <code>propertyId</code>.
      *
-     * @param parent      the parent of the <code>NodeState</code> to create.
-     * @param nameElement the name element of the <code>NodeState</code> to
-     *                    create.
-     * @return the created <code>NodeState</code>.
-     * @throws NoSuchItemStateException if there is no such <code>NodeState</code>.
-     * @throws ItemStateException       if an error occurs while retrieving the
-     *                                  <code>NodeState</code>.
-     */
-    public NodeState createNodeState(NodeState parent,
-                                     Path.PathElement nameElement)
-            throws NoSuchItemStateException, ItemStateException;
-
-    /**
-     * Creates the <code>PropertyState</code> with the given <code>name</code>,
-     * which has the given <code>parent</code>.
-     *
-     * @param parent       the parent of the <code>PropertyState</code> to
-     *                     create.
-     * @param propertyName the name of the <code>PropertyState</code> to
-     *                     create.
+     * @param propertyId the id of the <code>PropertyState</code> to create.
+     * @param ism        the item state manager to retrievev the parent of the
+     *                   <code>NodeState</code> to create.
      * @return the created <code>PropertyState</code>.
      * @throws NoSuchItemStateException if there is no such <code>PropertyState</code>.
      * @throws ItemStateException       if an error occurs while retrieving the
      *                                  <code>PropertyState</code>.
      */
-    public PropertyState createPropertyState(NodeState parent,
-                                             QName propertyName)
+    public PropertyState createPropertyState(PropertyId propertyId,
+                                             ItemStateManager ism)
             throws NoSuchItemStateException, ItemStateException;
 }

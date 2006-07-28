@@ -23,6 +23,8 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 
 import java.util.Map;
@@ -40,9 +42,10 @@ import java.util.Iterator;
 public class CachingItemStateManager implements ItemStateManager, InternalEventListener {
 
     /**
-     * The underlying item state manager.
+     * The item state factory to create <code>ItemState</code>s that are not
+     * present in the cache.
      */
-    private final ItemStateManager ism;
+    private final ItemStateFactory isf;
 
     /**
      * Maps a String uuid to a {@link NodeState}.
@@ -54,8 +57,14 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
      */
     private final PathMap path2State;
 
-    public CachingItemStateManager(ItemStateManager ism) {
-        this.ism = ism;
+    /**
+     * The Id factory.
+     */
+    private final IdFactory idFactory;
+
+    public CachingItemStateManager(ItemStateFactory isf, IdFactory idFactory) {
+        this.isf = isf;
+        this.idFactory = idFactory;
         this.uuid2PathElement = new HashMap(); // TODO: must use weak references
         path2State = new PathMap();      // TODO: must use weak references
     }
@@ -88,8 +97,8 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
      */
     public NodeReferences getNodeReferences(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
-        // TODO: caching missing
-        return ism.getNodeReferences(id);
+        // TODO: implement
+        return null;
     }
 
     /**
@@ -97,8 +106,8 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
      * @see ItemStateManager#hasNodeReferences(NodeId)
      */
     public boolean hasNodeReferences(NodeId id) {
-        // TODO: caching missing
-        return ism.hasNodeReferences(id);
+        // TODO: caching implement
+        return false;
     }
 
     //-------------------------------< InternalEventListener >------------------
@@ -224,8 +233,8 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
             elem = (PathMap.Element) uuid2PathElement.get(uuid);
             if (elem == null || elem.get() == null) {
                 // state identified by the uuid is not yet cached -> get from ISM
-                ItemId refId = (relPath == null) ? id : new NodeIdImpl(uuid);
-                ItemState state = ism.getItemState(refId);
+                NodeId refId = (relPath == null) ? (NodeId) id : idFactory.createNodeId(uuid);
+                NodeState state = isf.createNodeState(refId, this);
 
                 // put this state to cache
                 // but first we have to make sure that the parent of this state
@@ -265,8 +274,13 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
         if (relPath != null) {
             PathMap.Element tmp = elem.getDescendant(relPath, true);
             if (tmp == null || tmp.get() == null) {
-                // not yet cached, load from ism
-                ItemState state = ism.getItemState(id);
+                // not yet cached, load from isf
+                ItemState state;
+                if (id.denotesNode()) {
+                    state = isf.createNodeState((NodeId) id, this);
+                } else {
+                    state = isf.createPropertyState((PropertyId) id, this);
+                }
                 // put to cache
                 if (tmp == null) {
                     tmp = elem.getDescendant(relPath, false);
@@ -331,52 +345,6 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
             }
         } else {
             return state.getId().getRelativePath().getNameElement();
-        }
-    }
-
-    //--------------------------------------------------------< Inner class >---
-    /**
-     * Simple implementation of the NodeId interface that always wraps around a
-     * UUID String only and never takes a relative path.
-     * Since the uuid is retrieved from an existing <code>ItemId</code> there is
-     * no need to pass the IdFactory and using this simple implementation instead.
-     */
-    private static final class NodeIdImpl implements NodeId {
-
-        private final String uuid;
-
-        public NodeIdImpl(String uuid) {
-            if (uuid == null) {
-                throw new IllegalArgumentException("Expected non-null uuid.");
-            }
-            this.uuid = uuid;
-        }
-
-        /**
-         * Always return <code>true</code>.
-         *
-         * @return true
-         */
-        public boolean denotesNode() {
-            return true;
-        }
-
-        /**
-         * Always returns a non-null string.
-         *
-         * @return uuid passed to the constructor, which is never <code>null</code>.
-         */
-        public String getUUID() {
-            return uuid;
-        }
-
-        /**
-         * Always return <code>null</code>.
-         *
-         * @return <code>null</code>
-         */
-        public Path getRelativePath() {
-            return null;
         }
     }
 }

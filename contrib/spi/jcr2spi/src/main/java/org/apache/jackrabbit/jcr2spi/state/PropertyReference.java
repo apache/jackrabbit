@@ -17,11 +17,18 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.PropertyId;
 
 /**
  * <code>PropertyReference</code> implements a reference to a property state.
  */
 public class PropertyReference extends ChildItemReference {
+
+    /**
+     * IdFactory to create an ItemId based on the parent NodeId
+     */
+    private final IdFactory idFactory;
 
     /**
      * Creates a new <code>PropertyReference</code>.
@@ -30,18 +37,20 @@ public class PropertyReference extends ChildItemReference {
      *               belongs to.
      * @param name   the name of the property.
      */
-    public PropertyReference(NodeState parent, QName name) {
+    public PropertyReference(NodeState parent, QName name, IdFactory idFactory) {
         super(parent, name);
+        this.idFactory = idFactory;
     }
 
     /**
      * @inheritDoc
-     * @see ChildItemReference#doResolve(ItemStateFactory)
+     * @see ChildItemReference#doResolve(ItemStateFactory, ItemStateManager)
      * <p/>
      * Returns a <code>PropertyState</code>.
      */
-    protected ItemState doResolve(ItemStateFactory isf)
+    protected ItemState doResolve(ItemStateFactory isf, ItemStateManager ism)
             throws NoSuchItemStateException, ItemStateException {
-        return isf.createPropertyState(parent, name);
+        PropertyId id = idFactory.createPropertyId(parent.getNodeId(), name);
+        return isf.createPropertyState(id, ism);
     }
 }

@@ -60,14 +60,15 @@ abstract class ChildItemReference {
      * Resolves this <code>ChildItemReference</code> and returns the target
      * <code>ItemState</code> of this reference.
      *
-     * @param isf    the item state factory responsible for creating node
-     *               states.
+     * @param isf the item state factory responsible for creating node states.
+     * @param ism the item state manager to access already created / known
+     *            <code>ItemState</code>s.
      * @return the <code>ItemState</code> where this reference points to.
      * @throws NoSuchItemStateException if the referenced <code>ItemState</code>
      *                                  does not exist.
      * @throws ItemStateException       if an error occurs.
      */
-    public ItemState resolve(ItemStateFactory isf)
+    public ItemState resolve(ItemStateFactory isf, ItemStateManager ism)
             throws NoSuchItemStateException, ItemStateException {
         // check if cached
         if (target != null) {
@@ -77,7 +78,7 @@ abstract class ChildItemReference {
             }
         }
         // not cached. retrieve and keep weak reference to state
-        ItemState state = doResolve(isf);
+        ItemState state = doResolve(isf, ism);
         target = new WeakReference(state);
         return state;
     }
@@ -96,13 +97,15 @@ abstract class ChildItemReference {
      * Resolves this <code>ChildItemReference</code> and returns the target
      * <code>ItemState</code> of this reference.
      *
-     * @param isf    the item state factory responsible for creating node
-     *               states.
+     * @param isf the item state factory responsible for creating node states.
+     * @param ism the item state manager to access already created / known
+     *            <code>ItemState</code>s.
      * @return the <code>ItemState</code> where this reference points to.
      * @throws NoSuchItemStateException if the referenced <code>ItemState</code>
      *                                  does not exist.
      * @throws ItemStateException       if an error occurs.
      */
-    protected abstract ItemState doResolve(ItemStateFactory isf)
+    protected abstract ItemState doResolve(ItemStateFactory isf,
+                                           ItemStateManager ism)
             throws NoSuchItemStateException, ItemStateException;
 }

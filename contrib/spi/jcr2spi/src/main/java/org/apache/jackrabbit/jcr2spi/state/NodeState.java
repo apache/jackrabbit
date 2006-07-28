@@ -873,7 +873,7 @@ public class NodeState extends ItemState {
      * <code>ChildNodeEntries</code> also provides an unmodifiable
      * <code>List</code> view.
      */
-    private static class ChildNodeEntries implements List, Cloneable {
+    private class ChildNodeEntries implements List, Cloneable {
 
         // insertion-ordered map of entries (key=NodeId, value=entry)
         private LinkedMap entries;
@@ -930,7 +930,6 @@ public class NodeState extends ItemState {
 
         ChildNodeEntry add(QName nodeName, NodeId id) {
             List siblings = null;
-            int index = Path.INDEX_UNDEFINED;
             Object obj = nameMap.get(nodeName);
             if (obj != null) {
                 if (obj instanceof ArrayList) {
@@ -943,11 +942,9 @@ public class NodeState extends ItemState {
                     siblings.add(obj);
                     nameMap.put(nodeName, siblings);
                 }
-                index = siblings.size();
             }
-            index++;
 
-            ChildNodeEntry entry = new ChildNodeEntryImpl(nodeName, id, index);
+            ChildNodeEntry entry = createChildNodeEntry(nodeName, id);
             if (siblings != null) {
                 siblings.add(entry);
             } else {
@@ -998,16 +995,6 @@ public class NodeState extends ItemState {
             ChildNodeEntry removedEntry = (ChildNodeEntry) siblings.remove(index - 1);
             // remove from ordered entries map
             entries.remove(removedEntry.getId());
-
-            // update indices of subsequent same-name siblings
-            for (int i = index - 1; i < siblings.size(); i++) {
-                ChildNodeEntry oldEntry = (ChildNodeEntry) siblings.get(i);
-                ChildNodeEntry newEntry = new ChildNodeEntryImpl(nodeName, oldEntry.getId(), oldEntry.getIndex() - 1);
-                // overwrite old entry with updated entry in siblings list
-                siblings.set(i, newEntry);
-                // overwrite old entry with updated entry in ordered entries map
-                entries.put(newEntry.getId(), newEntry);
-            }
 
             // clean up name lookup map if necessary
             if (siblings.size() == 0) {
@@ -1126,6 +1113,22 @@ public class NodeState extends ItemState {
             }
 
             return result;
+        }
+
+        /**
+         * Creates a <code>ChildNodeEntry</code> instance based on
+         * <code>nodeName</code>, <code>id</code> and <code>index</code>.
+         *
+         * @param nodeName the name of the child node.
+         * @param id the id of the child node.
+         * @return
+         */
+        private ChildNodeEntry createChildNodeEntry(QName nodeName, NodeId id) {
+            if (id.getRelativePath() != null) {
+                return new PathElementReference(NodeState.this, nodeName, NodeState.this.idFactory);
+            } else {
+                return new UUIDReference(NodeState.this, id, nodeName);
+            }
         }
 
         //-------------------------------------------< unmodifiable List view >
