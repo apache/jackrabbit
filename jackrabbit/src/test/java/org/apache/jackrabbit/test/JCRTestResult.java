@@ -43,7 +43,13 @@ public class JCRTestResult extends TestResult {
      * Set of Strings that identify the test methods that currently fails but
      * are recognized as known issues. Those will not be reported as errors.
      */
-    private final Set knownIssues = new HashSet();
+    private final Set knownIssues;
+
+    /**
+     * Set of Strings that identify the test methods that are listed as known
+     * issues but whose test failures should still be reported.
+     */
+    private final Set knownIssuesOverride;
 
     /**
      * Creates a new JCRTestResult that delegates to <code>orig</code>.
@@ -53,13 +59,8 @@ public class JCRTestResult extends TestResult {
     public JCRTestResult(TestResult orig, LogPrintWriter log) {
         this.orig = orig;
         this.log = log;
-        String propValue = System.getProperty("known.issues");
-        if (propValue != null) {
-            StringTokenizer tok = new StringTokenizer(propValue);
-            while (tok.hasMoreTokens()) {
-                knownIssues.add(tok.nextToken());
-            }
-        }
+        this.knownIssues = JCRTestResult.tokenize("known.issues");
+        this.knownIssuesOverride = JCRTestResult.tokenize("known.issues.override");
     }
 
     /**
@@ -145,16 +146,75 @@ public class JCRTestResult extends TestResult {
     //------------------------------< internal >--------------------------------
 
     /**
-     * Returns <code>true</code> if <code>test</code> is a known issue;
-     * <code>false</code> otherwise.
+     * Takes the named system property and returns the set of string tokens
+     * in the property value. Returns an empty set if the named property does
+     * not exist.
+     *
+     * @param name name of the system property
+     * @return set of string tokens
+     */
+    private static Set tokenize(String name) {
+        Set tokens = new HashSet();
+        StringTokenizer tokenizer =
+            new StringTokenizer(System.getProperty(name, ""));
+        while (tokenizer.hasMoreTokens()) {
+            tokens.add(tokenizer.nextToken());
+        }
+        return tokens;
+    }
+
+    /**
+     * Checks if a variation of the name of the given test case is included
+     * in the given set of token. The tested variations are:
+     * <ul>
+     *   <li>package name</li>
+     *   <li>non-qualified class name</li>
+     *   <li>fully qualified class name</li>
+     *   <li>non-qualified method name</li>
+     *   <li>class-qualified method name</li>
+     *   <li>fully-qualified method name</li>
+     * </ul>
+     *
+     * @param tokens set of string tokens
+     * @param test test case
+     * @return <code>true</code> if the test case name is included,
+     *         <code>false</code> otherwise
+     */
+    private static boolean contains(Set tokens, TestCase test) {
+        String className = test.getClass().getName();
+        String methodName = test.getName();
+
+        int i = className.lastIndexOf('.');
+        if (i >= 0) {
+            String packageName = className.substring(0, i);
+            String shortName = className.substring(i + 1);
+            return tokens.contains(packageName)
+                || tokens.contains(shortName)
+                || tokens.contains(className)
+                || tokens.contains(methodName)
+                || tokens.contains(shortName + "#" + methodName)
+                || tokens.contains(className + "#" + methodName);
+        } else {
+            return tokens.contains(className)
+                || tokens.contains(methodName)
+                || tokens.contains(className + "#" + methodName);
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if <code>test</code> is a known issue
+     * whose test result should be ignored; <code>false</code> otherwise.
+     *
      * @param test the test case to check.
-     * @return <code>true</code> if <code>test</code> is a known issue.
+     * @return <code>true</code> if <code>test</code> result should be ignored
      */
     private boolean isKnownIssue(Test test) {
-        String testName = "-";
         if (test instanceof TestCase) {
-            testName = test.getClass().getName() + "#" + ((TestCase) test).getName();
+            return contains(knownIssues, (TestCase) test)
+                && !contains(knownIssuesOverride, (TestCase) test);
+        } else {
+            return false;
         }
-        return knownIssues.contains(testName);
     }
+
 }
