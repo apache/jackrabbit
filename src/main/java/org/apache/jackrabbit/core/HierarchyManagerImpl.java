@@ -510,19 +510,5 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throw new RepositoryException(msg, ise);
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateOverlaid(ItemState state) {
-        // ignore
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateUncovered(ItemState state) {
-        // ignore
-    }
 }
 

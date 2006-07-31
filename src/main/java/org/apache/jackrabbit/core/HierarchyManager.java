@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 
@@ -105,22 +104,4 @@ public interface HierarchyManager {
      */
     boolean isAncestor(NodeId nodeId, ItemId itemId)
             throws ItemNotFoundException, RepositoryException;
-
-    /**
-     * Returns the id of the root node of this hierarchy.
-     * @return the root node id.
-     */
-    NodeId getRootNodeId();
-
-    /**
-     * The hierarchy manager is notified when a state is overlaid
-     * @param state
-     */
-    void stateOverlaid(ItemState state);
-
-    /**
-     * The hierarchy manager is notified when a state is uncovered.
-     * @param state
-     */
-    void stateUncovered(ItemState state);
 }
