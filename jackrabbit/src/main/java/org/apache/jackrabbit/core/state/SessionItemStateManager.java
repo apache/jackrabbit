@@ -59,12 +59,7 @@ public class SessionItemStateManager
     /**
      * Hierarchy manager
      */
-    private final HierarchyManager hierMgr;
-
-    /**
-     * the namespace resolver used by this session
-     */
-    private final NamespaceResolver nsResolver;
+    private CachingHierarchyManager hierMgr;
 
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
@@ -78,7 +73,6 @@ public class SessionItemStateManager
                                    NamespaceResolver nsResolver) {
 
         this.persistentStateMgr = persistentStateMgr;
-        this.nsResolver = nsResolver;
         // create transient item state manager
         transientStateMgr = new TransientItemStateManager();
         // create hierarchy manager that uses both transient and persistent state
@@ -413,7 +407,7 @@ public class SessionItemStateManager
                 new ZombieHierarchyManager(hierMgr.getRootNodeId(),
                         this,
                         transientStateMgr.getAttic(),
-                        nsResolver);
+                        hierMgr.getNamespaceResolver());
 
         // use an array of lists to group the descendants by relative depth;
         // the depth is used as array index

@@ -95,7 +95,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
      * (i.e. that is isolated from transient changes made through
      * the session).
      */
-    protected final HierarchyManager hierMgr;
+    protected final HierarchyManagerImpl hierMgr;
 
     /**
      * The <code>ObservationManager</code> instance for this session.
