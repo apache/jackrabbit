@@ -420,6 +420,15 @@ indexing, etc.
             </roles>
             <timezone>+1</timezone>
         </contributor>
+        <contributor>
+            <name>Julian Reschke</name>
+            <email>julian.reschke@greenbytes.de</email>
+            <organization>greenbytes GmbH</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
     </contributors>
 
     <!-- ====================================================================== -->
