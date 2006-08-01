@@ -54,7 +54,6 @@ public class ValueHelper {
      *
      * @param srcValue
      * @param targetType
-     * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
      * @deprecated Use {@link #convert(String, int, ValueFactory)} instead.
@@ -69,7 +68,6 @@ public class ValueHelper {
      * @param srcValue
      * @param targetType
      * @param factory
-     * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
      * @see #convert(Value, int, ValueFactory)
@@ -89,7 +87,6 @@ public class ValueHelper {
      *
      * @param srcValue
      * @param targetType
-     * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
      * @deprecated Use {@link #convert(InputStream, int, ValueFactory)} instead.
@@ -103,7 +100,6 @@ public class ValueHelper {
      * @param srcValue
      * @param targetType
      * @param factory
-     * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
      */
@@ -122,7 +118,6 @@ public class ValueHelper {
      *
      * @param srcValues
      * @param targetType
-     * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
      * @deprecated Use {@link #convert(String[], int, ValueFactory)} instead.
@@ -139,7 +134,6 @@ public class ValueHelper {
      *
      * @param srcValues
      * @param targetType
-     * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
      * @see #convert(Value, int, ValueFactory)
@@ -159,7 +153,6 @@ public class ValueHelper {
     /**
      * @param srcValues
      * @param targetType
-     * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
      * @see #convert(Value, int, ValueFactory)
@@ -183,7 +176,6 @@ public class ValueHelper {
      *
      * @param srcValues
      * @param targetType
-     * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
      * @deprecated Use {@link #convert(Value[], int, ValueFactory)} instead.
@@ -198,7 +190,6 @@ public class ValueHelper {
      * @param srcValues
      * @param targetType
      * @param factory
-     * @return
      * @throws ValueFormatException
      * @throws IllegalArgumentException
      * @see #convert(Value, int, ValueFactory)
@@ -237,7 +228,6 @@ public class ValueHelper {
 
      * @param srcValue
      * @param targetType
-     * @return
      * @throws ValueFormatException
      * @throws IllegalStateException
      * @throws IllegalArgumentException
@@ -258,7 +248,6 @@ public class ValueHelper {
      * @param srcValue
      * @param targetType
      * @param factory
-     * @return
      * @throws ValueFormatException
      * @throws IllegalStateException
      * @throws IllegalArgumentException
@@ -469,7 +458,6 @@ public class ValueHelper {
      * Same as {@link #copy(Value, ValueFactory)} using <code>ValueFactoryImpl</code>.
      *
      * @param srcValue
-     * @return
      * @throws IllegalStateException
      * @deprecated Use {@link #copy(Value, ValueFactory)} instead.
      */
@@ -481,7 +469,6 @@ public class ValueHelper {
      *
      * @param srcValue
      * @param factory
-     * @return
      * @throws IllegalStateException
      */
     public static Value copy(Value srcValue, ValueFactory factory)
@@ -533,7 +520,6 @@ public class ValueHelper {
      * Same as {@link #copy(Value[], ValueFactory)} using <code>ValueFactoryImpl</code>.
      *
      * @param srcValues
-     * @return
      * @throws IllegalStateException
      * @deprecated Use {@link #copy(Value[], ValueFactory)} instead.
      */
@@ -544,7 +530,6 @@ public class ValueHelper {
     /**
      * @param srcValues
      * @param factory
-     * @return
      * @throws IllegalStateException
      */
     public static Value[] copy(Value[] srcValues, ValueFactory factory)

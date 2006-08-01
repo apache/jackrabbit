@@ -63,7 +63,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     /**
      * DateFormat pattern for type
-     * {@link org.apache.jackrabbit.core.query.QueryConstants.TYPE_DATE}.
+     * {@link org.apache.jackrabbit.core.query.QueryConstants#TYPE_DATE}.
      */
     private static final String DATE_PATTERN = "yyyy-MM-dd";
 

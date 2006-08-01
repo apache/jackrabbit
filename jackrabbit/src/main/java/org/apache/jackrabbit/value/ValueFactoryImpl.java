@@ -43,7 +43,6 @@ public class ValueFactoryImpl implements ValueFactory {
     //--------------------------------------------------------------------------
     /**
      *
-     * @return
      */
     public static ValueFactory getInstance() {
         return valueFactory;

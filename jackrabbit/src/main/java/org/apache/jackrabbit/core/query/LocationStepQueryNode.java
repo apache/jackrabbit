@@ -120,7 +120,7 @@ public class LocationStepQueryNode extends NAryQueryNode {
     /**
      * Sets a new value for the includeDescendants property.
      * @param include the new value.
-     * @see {@link #getIncludeDescendants()}
+     * @see #getIncludeDescendants()
      */
     public void setIncludeDescendants(boolean include) {
         this.includeDescendants = include;
