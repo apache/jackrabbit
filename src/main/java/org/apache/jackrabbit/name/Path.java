@@ -165,7 +165,6 @@ public final class Path {
      * @param jcrPath
      * @param resolver
      * @param normalize
-     * @return
      * @throws MalformedPathException
      * @deprecated Use PathFormat#parse(String, NamespaceResolver)} instead.
      */
@@ -189,7 +188,6 @@ public final class Path {
      * @param relJCRPath
      * @param resolver
      * @param canonicalize
-     * @return
      * @throws MalformedPathException
      * @deprecated Use {@link PathFormat#parse(Path, String, NamespaceResolver)} instead.
      */
@@ -213,7 +211,6 @@ public final class Path {
      * @param parent
      * @param relPath
      * @param normalize
-     * @return
      * @throws MalformedPathException if <code>relPath</code> is absolute
      */
     public static Path create(Path parent, Path relPath, boolean normalize)
@@ -991,8 +988,8 @@ public final class Path {
         /**
          * Creates a new path element with the given qualified name and index.
          * If the name is equals to the name of a special element, like the
-         * {@link PARENT_ELEMENT},{@link CURRENT_ELEMENT} or the
-         * {@link ROOT_ELEMENT}, then it's instance is returned.
+         * {@link #PARENT_ELEMENT},{@link #CURRENT_ELEMENT} or the
+         * {@link #ROOT_ELEMENT}, then it's instance is returned.
          * <p/>
          * the private constructor must never be called but from these 2 methods.
          *
@@ -1017,8 +1014,8 @@ public final class Path {
         /**
          * Creates a new path element with the given qualified name and index.
          * If the name is equals to the name of a special element, like the
-         * {@link PARENT_ELEMENT},{@link CURRENT_ELEMENT} or the
-         * {@link ROOT_ELEMENT}, then it's instance is returned.
+         * {@link #PARENT_ELEMENT},{@link #CURRENT_ELEMENT} or the
+         * {@link #ROOT_ELEMENT}, then it's instance is returned.
          * <p/>
          * the private constructor must never be called but from these 2 methods.
          *
@@ -1271,7 +1268,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesName()
+         * @see Path.PathElement#denotesName()
          */
         public boolean denotesName() {
             return false;
@@ -1281,7 +1278,7 @@ public final class Path {
          * Returns true.
          *
          * @return true
-         * @see PathElement#denotesRoot()
+         * @see Path.PathElement#denotesRoot()
          */
         public boolean denotesRoot() {
             return true;
@@ -1291,7 +1288,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesParent()
+         * @see Path.PathElement#denotesParent()
          */
         public boolean denotesParent() {
             return false;
@@ -1301,7 +1298,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesCurrent()
+         * @see Path.PathElement#denotesCurrent()
          */
         public boolean denotesCurrent() {
             return false;
@@ -1345,7 +1342,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesName()
+         * @see Path.PathElement#denotesName()
          */
         public boolean denotesName() {
             return false;
@@ -1355,7 +1352,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesRoot()
+         * @see Path.PathElement#denotesRoot()
          */
         public boolean denotesRoot() {
             return false;
@@ -1365,7 +1362,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesParent()
+         * @see Path.PathElement#denotesParent()
          */
         public boolean denotesParent() {
             return false;
@@ -1375,7 +1372,7 @@ public final class Path {
          * Returns true.
          *
          * @return true
-         * @see PathElement#denotesCurrent()
+         * @see Path.PathElement#denotesCurrent()
          */
         public boolean denotesCurrent() {
             return true;
@@ -1418,7 +1415,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesName()
+         * @see Path.PathElement#denotesName()
          */
         public boolean denotesName() {
             return false;
@@ -1428,7 +1425,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesRoot()
+         * @see Path.PathElement#denotesRoot()
          */
         public boolean denotesRoot() {
             return false;
@@ -1438,7 +1435,7 @@ public final class Path {
          * Returns true.
          *
          * @return true
-         * @see PathElement#denotesParent()
+         * @see Path.PathElement#denotesParent()
          */
         public boolean denotesParent() {
             return true;
@@ -1448,7 +1445,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesCurrent()
+         * @see Path.PathElement#denotesCurrent()
          */
         public boolean denotesCurrent() {
             return false;
@@ -1490,7 +1487,7 @@ public final class Path {
          * Returns true.
          *
          * @return true
-         * @see PathElement#denotesName()
+         * @see Path.PathElement#denotesName()
          */
         public boolean denotesName() {
             return true;
@@ -1500,7 +1497,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesRoot()
+         * @see Path.PathElement#denotesRoot()
          */
         public boolean denotesRoot() {
             return false;
@@ -1510,7 +1507,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesParent()
+         * @see Path.PathElement#denotesParent()
          */
         public boolean denotesParent() {
             return false;
@@ -1520,7 +1517,7 @@ public final class Path {
          * Returns false.
          *
          * @return false
-         * @see PathElement#denotesCurrent()
+         * @see Path.PathElement#denotesCurrent()
          */
         public boolean denotesCurrent() {
             return false;

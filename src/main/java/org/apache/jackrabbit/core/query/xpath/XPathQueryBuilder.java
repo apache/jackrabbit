@@ -886,7 +886,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * Returns true if <code>node</code> has a child node which is the attribute
      * axis.
      *
-     * @param node a node with type {@link org.apache.jackrabbit.core.query.xpath.XPathTreeConstants.JJTSTEPEXPR}.
+     * @param node a node with type {@link org.apache.jackrabbit.core.query.xpath.XPathTreeConstants#JJTSTEPEXPR}.
      * @return <code>true</code> if this step expression uses the attribute axis.
      */
     private boolean isAttributeAxis(SimpleNode node) {
