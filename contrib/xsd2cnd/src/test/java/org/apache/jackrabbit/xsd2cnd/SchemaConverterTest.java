@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.nodetype.converter;
+package org.apache.jackrabbit.xsd2cnd;
 
 
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
