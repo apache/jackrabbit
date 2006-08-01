@@ -412,6 +412,14 @@ indexing, etc.
             </roles>
             <timezone>+1</timezone>
         </contributor>
+        <contributor>
+            <name>Nicolas Toper</name>
+            <organization>Google Summer of Code 2006</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
     </contributors>
 
     <!-- ====================================================================== -->
