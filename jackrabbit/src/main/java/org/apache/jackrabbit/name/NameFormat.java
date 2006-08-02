@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 public class NameFormat {
 
     /**
-     * The reqular expression pattern used to validate and doParse
+     * The reqular expression pattern used to validate and parse
      * qualified names.
      * <p/>
      * The pattern contains the following groups:
@@ -38,7 +38,8 @@ public class NameFormat {
      * <li>group 3 is localName
      * </ul>
      */
-    private static final Pattern NAME_PATTERN = Pattern.compile("(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
+    private static final Pattern NAME_PATTERN = Pattern.compile(
+            "(([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?):)?"
             + "([^ /:\\[\\]*'\"|](?:[^/:\\[\\]*'\"|]*[^ /:\\[\\]*'\"|])?)");
 
     /**
