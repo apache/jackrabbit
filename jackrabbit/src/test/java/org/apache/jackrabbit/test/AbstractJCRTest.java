@@ -26,6 +26,7 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.Repository;
 import javax.jcr.NamespaceException;
 import javax.jcr.RangeIterator;
+import javax.jcr.nodetype.NodeDefinition;
 import java.util.StringTokenizer;
 import java.util.Random;
 import java.util.List;
@@ -527,7 +528,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
             // clean test root
             testRootNode = root.getNode(testPath);
             for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
-                children.nextNode().remove();
+                Node child = children.nextNode();
+                NodeDefinition nodeDef = child.getDefinition();
+                if (!nodeDef.isMandatory() && !nodeDef.isProtected()) {
+                    child.remove();
+                }
             }
         } else {
             // create nodes to testPath
