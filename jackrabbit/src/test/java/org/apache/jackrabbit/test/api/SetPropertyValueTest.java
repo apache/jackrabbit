@@ -374,11 +374,11 @@ public class SetPropertyValueTest extends AbstractJCRTest {
      * the value array by removing all null values
      */
     public void testCompactValueArrayWithNulls() throws Exception {
-        testRootNode.setProperty(propertyName2, vArrayWithNulls);
+        testNode.setProperty(propertyName2, vArrayWithNulls);
         superuser.save();
         assertEquals("Node.setProperty(String, valueArrayWithNulls[]) did not compact the value array by removing the null values",
                 2,
-                testRootNode.getProperty(propertyName2).getValues().length);
+                testNode.getProperty(propertyName2).getValues().length);
     }
 
     /**
