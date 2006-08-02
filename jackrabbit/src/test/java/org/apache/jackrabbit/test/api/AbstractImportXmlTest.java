@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Attr;
@@ -279,7 +280,12 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
     public boolean isMixRefRespected() throws RepositoryException, IOException {
         boolean respected = false;
         if (supportsNodeType(mixReferenceable)) {
-            String uuid = createReferenceableNode(referenced);
+            String uuid;
+            try {
+                uuid = createReferenceableNode(referenced);
+            } catch (NotExecutableException e) {
+                return false;
+            }
             Document document = dom.newDocument();
             Element root = document.createElement(rootElem);
             root.setAttribute(XML_NS + ":jcr", NS_JCR_URI);
@@ -309,8 +315,10 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
      * @param name
      * @return
      * @throws RepositoryException
+     * @throws NotExecutableException if the created node is not referenceable
+     * and cannot be made referenceable by adding mix:referenceable.
      */
-    public String createReferenceableNode(String name) throws RepositoryException {
+    public String createReferenceableNode(String name) throws RepositoryException, NotExecutableException {
         // remove a yet existing node at the target
         try {
             Node node = testRootNode.getNode(name);
@@ -320,7 +328,13 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
             // ok
         }
         // a referenceable node
-        Node n1 = testRootNode.addNode(name);
+        Node n1 = testRootNode.addNode(name, testNodeType);
+        if (!n1.isNodeType(mixReferenceable) && !n1.canAddMixin(mixReferenceable)) {
+            n1.remove();
+            session.save();
+            throw new NotExecutableException("node type " + testNodeType +
+                    " does not support mix:referenceable");
+        }
         n1.addMixin(mixReferenceable);
         // make sure jcr:uuid is available
         testRootNode.save();
