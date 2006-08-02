@@ -336,7 +336,7 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Tries to create a node using {@link javax.jcr.Node#addNode(String,
-            * String)}  at a location where there is already a node with same name and
+     * String)}  at a location where there is already a node with same name and
      * the parent does not allow same name siblings. <br/><br/> This should
      * throw an {@link javax.jcr.ItemExistsException }. <br/><br> Prerequisites:
      * <ul> <li><code>javax.jcr.tck.NodeTest.testAddNodeItemExistsException.nodetype<code>
@@ -358,6 +358,7 @@ public class NodeTest extends AbstractJCRTest {
         try {
             // try to add a node with same name again
             defaultTestNode.addNode(nodeName3, testNodeType);
+            defaultRootNode.save();
             fail("Adding a node to a location where same name siblings are not allowed, but a node with same name" +
                     " already exists should throw ItemExistsException ");
         } catch (ItemExistsException e) {
