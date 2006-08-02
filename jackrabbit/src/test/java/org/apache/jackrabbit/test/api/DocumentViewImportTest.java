@@ -106,6 +106,13 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
             SAXException, NotExecutableException {
 
         importXML(target, createSimpleDocument(), uuidBehaviour, withWorkspace);
+
+        // some implementations may require a refresh to get content
+        // added diretly to the workspace
+        if (withWorkspace) {
+            session.refresh(false);
+        }
+
         performTests();
     }
 
@@ -127,6 +134,13 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
             SAXException, IOException, NotExecutableException {
 
         importWithHandler(target, createSimpleDocument(), uuidBehaviour, withWorkspace);
+
+        // some implementations may require a refresh to get content
+        // added diretly to the workspace
+        if (withWorkspace) {
+            session.refresh(false);
+        }
+
         performTests();
     }
 
