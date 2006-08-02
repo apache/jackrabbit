@@ -28,6 +28,7 @@ import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Property;
+import javax.jcr.ValueFormatException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -495,9 +496,9 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 
     /**
      * Tests if <code>Node.setProperty(String, Value[], int)</code> throws a
-     * ConstraintViolationException if the type parameter and the type of the
-     * property do not match. The exception has to be thrown either immediately
-     * (by this method) or on save.
+     * ConstraintViolationException or ValueFormatException if the type
+     * parameter and the type of the property do not match. The exception has to
+     * be thrown either immediately (by this method) or on save.
      */
     public void testValuesConstraintVioloationExceptionBecauseOfInvalidTypeParameter()
         throws NotExecutableException, RepositoryException {
@@ -519,10 +520,11 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
             testNode.setProperty(testPropName, stringValues, PropertyType.DATE);
             testRootNode.save();
             fail("Node.setProperty(String, Value, int) must throw a " +
-                 "ConstraintViolationExcpetion if the type parameter and the " +
-                 "type of the property do not match." );
-        }
-        catch (ConstraintViolationException e) {
+                    "ConstraintViolationExcpetion or a ValueFormatException if " +
+                    "the type parameter and the type of the property do not match.");
+        } catch (ConstraintViolationException e) {
+            // success
+        } catch (ValueFormatException e) {
             // success
         }
     }
