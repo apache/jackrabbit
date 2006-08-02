@@ -20,15 +20,12 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.nodetype.NodeTypeUtil;
 
-import javax.jcr.Session;
 import javax.jcr.PropertyType;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.nodetype.NodeType;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.util.Calendar;
@@ -44,55 +41,6 @@ import java.util.Calendar;
  * @keywords level2
  */
 public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
-    /**
-     * The session we use for the tests
-     */
-    private Session session;
-
-    private Property booleanProperty;
-    private Property dateProperty;
-
-    /**
-     * Sets up the fixture for the test cases.
-     */
-    protected void setUp() throws Exception {
-        super.setUp();
-        session = helper.getReadOnlySession();
-
-        // create a node with a boolean property
-        PropertyDefinition booleanPropDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.BOOLEAN, false, false, false, false);
-        if (booleanPropDef != null) {
-            NodeType nodeType = booleanPropDef.getDeclaringNodeType();
-
-            Node n = testRootNode.addNode(nodeName1, nodeType.getName());
-
-            Value initValue = NodeTypeUtil.getValueOfType(session, PropertyType.BOOLEAN);
-            booleanProperty = n.setProperty(booleanPropDef.getName(), initValue);
-        }
-
-        // create a node with a date property
-        PropertyDefinition datePropDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.DATE, false, false, false, false);
-        if (datePropDef != null) {
-            NodeType nodeType = datePropDef.getDeclaringNodeType();
-
-            Node n = testRootNode.addNode(nodeName2, nodeType.getName());
-
-            Value initValue = NodeTypeUtil.getValueOfType(session, PropertyType.DATE);
-            dateProperty = n.setProperty(datePropDef.getName(), initValue);
-        }
-    }
-
-    /**
-     * Releases the session aquired in {@link #setUp()}.
-     */
-    protected void tearDown() throws Exception {
-        if (session != null) {
-            session.logout();
-        }
-        super.tearDown();
-    }
 
     /**
      * Tests if setValue(Value) throws a ValueFormatException immediately (not
@@ -101,17 +49,13 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testValue()
         throws NotExecutableException, RepositoryException {
 
-        if (booleanProperty == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
+        Property booleanProperty = createProperty(PropertyType.BOOLEAN, false);
         try {
-            Value dateValue = NodeTypeUtil.getValueOfType(session, PropertyType.DATE);
+            Value dateValue = NodeTypeUtil.getValueOfType(superuser, PropertyType.DATE);
             booleanProperty.setValue(dateValue);
             fail("Property.setValue(Value) must throw a ValueFormatException " +
                     "immediately if a conversion fails.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
         }
     }
@@ -123,28 +67,14 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testValueArray()
         throws NotExecutableException, RepositoryException {
 
-        // create a node with a multiple boolean property
-        PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.BOOLEAN, true, false, false, false);
-        if (propDef == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
-        NodeType nodeType = propDef.getDeclaringNodeType();
-
-        Node n = testRootNode.addNode(nodeName3, nodeType.getName());
-
-        Value initValues[] = new Value[] {NodeTypeUtil.getValueOfType(session, PropertyType.BOOLEAN)};
-        Property property = n.setProperty(propDef.getName(), initValues);
-
+        Property booleanProperty = createProperty(PropertyType.BOOLEAN, true);
         try {
             Value dateValues[] =
-                new Value[] {NodeTypeUtil.getValueOfType(session, PropertyType.DOUBLE)};
-            property.setValue(dateValues);
+                    new Value[]{NodeTypeUtil.getValueOfType(superuser, PropertyType.DOUBLE)};
+            booleanProperty.setValue(dateValues);
             fail("Property.setValue(Value[]) must throw a ValueFormatException " +
                     "immediately if a conversion fails.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
         }
     }
@@ -156,16 +86,12 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testString()
         throws NotExecutableException, RepositoryException {
 
-        if (dateProperty == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
+        Property dateProperty = createProperty(PropertyType.DATE, false);
         try {
             dateProperty.setValue("abc");
             fail("Property.setValue(String) must throw a ValueFormatException " +
                     "immediately if a conversion fails.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
         }
     }
@@ -177,27 +103,13 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testStringArray()
         throws NotExecutableException, RepositoryException {
 
-        // create a node with a multiple date property
-        PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.DATE, true, false, false, false);
-        if (propDef == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
-        NodeType nodeType = propDef.getDeclaringNodeType();
-
-        Node n = testRootNode.addNode(nodeName3, nodeType.getName());
-
-        Value initValues[] = new Value[] {NodeTypeUtil.getValueOfType(session, PropertyType.DATE)};
-        Property property = n.setProperty(propDef.getName(), initValues);
-
+        Property dateProperty = createProperty(PropertyType.DATE, true);
         try {
-            String values[] = new String[] {"abc"};
-            property.setValue(values);
+            String values[] = new String[]{"abc"};
+            dateProperty.setValue(values);
             fail("Property.setValue(String[]) must throw a ValueFormatException " +
                     "immediately if a conversion fails.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
         }
     }
@@ -209,18 +121,14 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testInputStream()
         throws NotExecutableException, RepositoryException {
 
-        if (dateProperty == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
+        Property dateProperty = createProperty(PropertyType.DATE, false);
         try {
             byte[] bytes = {123};
             InputStream value = new ByteArrayInputStream(bytes);
             dateProperty.setValue(value);
             fail("Property.setValue(InputStream) must throw a ValueFormatException " +
                     "immediately if a conversion fails.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
         }
     }
@@ -232,16 +140,12 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testLong()
         throws NotExecutableException, RepositoryException {
 
-        if (booleanProperty == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
+        Property booleanProperty = createProperty(PropertyType.BOOLEAN, false);
         try {
             booleanProperty.setValue(123);
             fail("Property.setValue(long) must throw a ValueFormatException " +
                     "immediately if a conversion fails.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
         }
     }
@@ -253,16 +157,12 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testDouble()
         throws NotExecutableException, RepositoryException {
 
-        if (booleanProperty == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
+        Property booleanProperty = createProperty(PropertyType.BOOLEAN, false);
         try {
             booleanProperty.setValue(1.23);
             fail("Property.setValue(double) must throw a ValueFormatException " +
                     "immediately if a conversion fails.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
         }
     }
@@ -274,16 +174,12 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testCalendar()
         throws NotExecutableException, RepositoryException {
 
-        if (booleanProperty == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
+        Property booleanProperty = createProperty(PropertyType.BOOLEAN, false);
         try {
             booleanProperty.setValue(Calendar.getInstance());
             fail("Property.setValue(Calendar) must throw a ValueFormatException " +
                     "immediately if a conversion fails.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
         }
     }
@@ -295,16 +191,12 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testBoolean()
         throws NotExecutableException, RepositoryException {
 
-        if (dateProperty == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
+        Property dateProperty = createProperty(PropertyType.DATE, false);
         try {
             dateProperty.setValue(true);
             fail("Property.setValue(boolean) must throw a ValueFormatException " +
                     "immediately if a conversion fails.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
         }
     }
@@ -316,10 +208,7 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testNode()
         throws NotExecutableException, RepositoryException {
 
-        if (booleanProperty == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
-        }
-
+        Property booleanProperty = createProperty(PropertyType.BOOLEAN, false);
         try {
             Node referenceableNode = testRootNode.addNode(nodeName3);
             referenceableNode.addMixin(mixReferenceable);
@@ -340,31 +229,67 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
     public void testNodeNotReferenceable()
         throws NotExecutableException, RepositoryException {
 
-        // create a node with a reference property
-        PropertyDefinition propDef =
-                NodeTypeUtil.locatePropertyDef(session, PropertyType.REFERENCE, false, false, false, false);
-        if (propDef == null) {
-            throw new NotExecutableException("Failed to set up required test items.");
+        if (testRootNode.isNodeType(mixReferenceable)) {
+            throw new NotExecutableException("test requires testRootNode to be non-referenceable");
         }
-        NodeType nodeType = propDef.getDeclaringNodeType();
-        Node n = testRootNode.addNode(nodeName3, nodeType.getName());
 
-        // create a referenceable node (to init property)
-        Node referenceableNode = testRootNode.addNode(nodeName4 + "Ref");
-        referenceableNode.addMixin(mixReferenceable);
-
-        // create a not referenceable node (to throw the exception)
-        Node notReferenceableNode = testRootNode.addNode(nodeName4 + "NotRef");
-
-        Property property = n.setProperty(propDef.getName(), referenceableNode);
-
+        Property referenceProperty = createProperty(PropertyType.REFERENCE, false);
         try {
-            property.setValue(notReferenceableNode);
+            referenceProperty.setValue(testRootNode);
             fail("Property.setValue(Node) must throw a ValueFormatException " +
                     "immediately if the specified node is not referenceable.");
-        }
-        catch (ValueFormatException e) {
+        } catch (ValueFormatException e) {
             // success
+        }
+    }
+
+    /**
+     * Creates a node under {@link #testRootNode} and sets a property on with
+     * <code>propertyType</code> on the newly created node.
+     *
+     * @param propertyType the type of the property to create.
+     * @param multiple     if the property must support multiple values.
+     * @return the property
+     * @throws RepositoryException    if an error occurs
+     * @throws NotExecutableException if there is no such property defined on
+     *                                the node type for the new child node.
+     */
+    private Property createProperty(int propertyType, boolean multiple) throws RepositoryException, NotExecutableException {
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        if (propertyType == PropertyType.REFERENCE && !n.isNodeType(mixReferenceable)) {
+            if (!n.canAddMixin(mixReferenceable)) {
+                throw new NotExecutableException(testNodeType + " does not support adding of mix:referenceable");
+            } else {
+                n.addMixin(mixReferenceable);
+            }
+        }
+
+        Value initValue;
+        if (propertyType == PropertyType.REFERENCE) {
+            initValue = superuser.getValueFactory().createValue(n);
+        } else {
+            initValue = NodeTypeUtil.getValueOfType(superuser, propertyType);
+        }
+
+        if (multiple) {
+            Value[] initValues = new Value[]{initValue};
+            if (!n.getPrimaryNodeType().canSetProperty(propertyName1, initValues)) {
+
+                throw new NotExecutableException("Node type: " + testNodeType +
+                        " does not support a multi valued " +
+                        PropertyType.nameFromValue(propertyType) + " property " +
+                        "called: " + propertyName1);
+            }
+            return n.setProperty(propertyName1, initValues);
+        } else {
+            if (!n.getPrimaryNodeType().canSetProperty(propertyName1, initValue)) {
+
+                throw new NotExecutableException("Node type: " + testNodeType +
+                        " does not support a single valued " +
+                        PropertyType.nameFromValue(propertyType) + " property " +
+                        "called: " + propertyName1);
+            }
+            return n.setProperty(propertyName1, initValue);
         }
     }
 }
