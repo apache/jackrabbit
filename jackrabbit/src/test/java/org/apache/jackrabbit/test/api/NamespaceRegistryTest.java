@@ -154,6 +154,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
         for (int t = 0; t < SYSTEM_PREFIXES.length; t++) {
             try {
                 nsp.unregisterNamespace(SYSTEM_PREFIXES[t]);
+                fail("Trying to unregister " + SYSTEM_PREFIXES[t] + " must fail");
             } catch (NamespaceException e) {
                 // expected behaviour
             }
@@ -163,6 +164,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
         // must throw a NamespaceException.
         try {
             nsp.unregisterNamespace("ThisNamespaceIsNotCurrentlyRegistered");
+            fail("Trying to unregister an unused prefix must fail");
         } catch (NamespaceException e) {
             // expected behaviour
         }
