@@ -286,7 +286,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
      * receives a new uuid when imported in any case.
      */
     public void checkImportDocumentView_IMPORT_UUID_CREATE_NEW()
-            throws RepositoryException, IOException, SAXException {
+            throws RepositoryException, IOException, SAXException, NotExecutableException {
 
         String uuid = createReferenceableNode(referenced);
         // import a document with a element having the same uuid as the node referenced
@@ -304,7 +304,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
      * the existing node is removed in case of uuid collision.
      */
     public void checkImportDocumentView_IMPORT_UUID_COLLISION_REMOVE_EXISTING()
-            throws RepositoryException, IOException, SAXException {
+            throws RepositoryException, IOException, SAXException, NotExecutableException {
 
         String uuid = createReferenceableNode(referenced);
         // import a document with a element having the same uuid as the node referenced
@@ -334,7 +334,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
      * collision occurs.
      */
     public void checkImportDocumentView_IMPORT_UUID_COLLISION_REPLACE_EXISTING()
-            throws RepositoryException, IOException, SAXException {
+            throws RepositoryException, IOException, SAXException, NotExecutableException {
 
         String uuid = createReferenceableNode(referenced);
         // import a document with a element having the same uuid as the node referenced
@@ -359,7 +359,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
      * @throws IOException
      */
     public void checkImportDocumentView_IMPORT_UUID_COLLISION_THROW()
-            throws RepositoryException, IOException, SAXException {
+            throws RepositoryException, IOException, SAXException, NotExecutableException {
 
         String uuid = createReferenceableNode(referenced);
         try {
@@ -390,7 +390,7 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
      * parent of the import target.
      */
     public void doTestSameUUIDAtAncestor(boolean withWorkspace, boolean withHandler)
-            throws RepositoryException, IOException, SAXException {
+            throws RepositoryException, IOException, SAXException, NotExecutableException {
 
         String uuid = createReferenceableNode(referenced);
         Node node = testRootNode.getNode(referenced);
@@ -418,22 +418,22 @@ public class DocumentViewImportTest extends AbstractImportXmlTest {
     }
 
     public void testSameUUIDAtAncestorWorkspaceHandler()
-            throws RepositoryException, IOException, SAXException {
+            throws RepositoryException, IOException, SAXException, NotExecutableException {
         doTestSameUUIDAtAncestor(WORKSPACE, CONTENTHANDLER);
     }
 
     public void testSameUUIDAtAncestorWorkspace()
-            throws RepositoryException, IOException, SAXException {
+            throws RepositoryException, IOException, SAXException, NotExecutableException {
         doTestSameUUIDAtAncestor(WORKSPACE, STREAM);
     }
 
     public void testSameUUIDAtAncestorSessionHandler()
-            throws RepositoryException, IOException, SAXException  {
+            throws RepositoryException, IOException, SAXException, NotExecutableException  {
         doTestSameUUIDAtAncestor(SESSION, CONTENTHANDLER);
     }
 
     public void testSameUUIDAtAncestorSession()
-            throws RepositoryException, IOException, SAXException{
+            throws RepositoryException, IOException, SAXException, NotExecutableException {
         doTestSameUUIDAtAncestor(SESSION, STREAM);
     }
 }
