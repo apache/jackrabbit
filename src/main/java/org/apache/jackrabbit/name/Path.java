@@ -384,12 +384,18 @@ public final class Path {
                 if (last.denotesRoot()) {
                     // the first element is the root element;
                     // ".." would refer to the parent of root
-                    throw new MalformedPathException("Path can not be canonicalized: unresolvable '..' element");
+                    throw new MalformedPathException(
+                            "Path can not be canonicalized: unresolvable '..' element");
                 }
                 queue.removeLast();
-                last = queue.isEmpty() ? PARENT_ELEMENT : (PathElement) queue.getLast();
+                if (queue.isEmpty()) {
+                    last = PARENT_ELEMENT;
+                } else {
+                    last = (PathElement) queue.getLast();
+                }
             } else if (!elem.denotesCurrent()) {
-                queue.add(last = elem);
+                last = elem;
+                queue.add(last);
             }
         }
         if (queue.isEmpty()) {
@@ -939,26 +945,15 @@ public final class Path {
             // no need to check the path format, assuming all names correct
             return new Path(elements, isNormalized);
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        public Object clone() throws CloneNotSupportedException {
-            super.clone();
-            PathBuilder clone = new PathBuilder();
-            clone.queue.addAll(queue);
-            return clone;
-        }
     }
 
-    //---------------------------------------------------------< Path Elements >
-
+    //---------------------------------------------< PathElement & subclasses >
     /**
      * Object representation of a single JCR path element. A PathElement
      * object contains the qualified name and optional index of a single
      * JCR path element.
      * <p/>
-     * Once created, a NameElement object is immutable.
+     * Once created, a PathElement object is immutable.
      */
     public abstract static class PathElement {
 
@@ -973,9 +968,11 @@ public final class Path {
          */
         private final int index;
 
-
         /**
-         * Creates a path element with the given qualified name and index.
+         * Private constructor for creating a path element with the given
+         * qualified name and index. Instead of using this constructor directly
+         * the factory methods {@link #create(QName)} and {@link #create(QName, int)}
+         * should be used.
          *
          * @param name  qualified name
          * @param index index
@@ -986,12 +983,12 @@ public final class Path {
         }
 
         /**
-         * Creates a new path element with the given qualified name and index.
-         * If the name is equals to the name of a special element, like the
-         * {@link #PARENT_ELEMENT},{@link #CURRENT_ELEMENT} or the
-         * {@link #ROOT_ELEMENT}, then it's instance is returned.
+         * Creates a path element with the given qualified name.
+         * The created path element does not contain an explicit index.
          * <p/>
-         * the private constructor must never be called but from these 2 methods.
+         * If the specified name denotes a <i>special</i> path element (either
+         * {@link Path#PARENT_ELEMENT}, {@link Path#CURRENT_ELEMENT} or
+         * {@link Path#ROOT_ELEMENT}) then the associated constant is returned.
          *
          * @param name the name of the element
          * @return a path element
@@ -1012,30 +1009,34 @@ public final class Path {
         }
 
         /**
-         * Creates a new path element with the given qualified name and index.
-         * If the name is equals to the name of a special element, like the
-         * {@link #PARENT_ELEMENT},{@link #CURRENT_ELEMENT} or the
-         * {@link #ROOT_ELEMENT}, then it's instance is returned.
+         * Same as {@link #create(QName)} except that an explicit index can be
+         * specified.
          * <p/>
-         * the private constructor must never be called but from these 2 methods.
+         * Note that an IllegalArgumentException will be thrown if the specified
+         * name denotes a <i>special</i> path element (either
+         * {@link Path#PARENT_ELEMENT}, {@link Path#CURRENT_ELEMENT} or
+         * {@link Path#ROOT_ELEMENT}) since an explicit index is not allowed
+         * in this context.
          *
          * @param name  the name of the element
          * @param index the 1-based index.
          * @return a path element
-         * @throws IllegalArgumentException if the name is <code>null</code> or
-         *                                  if the given index is less than 1.
+         * @throws IllegalArgumentException if the name is <code>null</code>,
+         *                                  if the given index is less than 1
+         *                                  or if name denoting a special path
+         *                                  element and an index greater than 1
+         *                                  have been specified.
          */
         public static PathElement create(QName name, int index) {
             if (index < INDEX_DEFAULT) {
                 throw new IllegalArgumentException("index is 1-based.");
             } else if (name == null) {
                 throw new IllegalArgumentException("name must not be null");
-            } else if (name.equals(PARENT_ELEMENT.getName())) {
-                return PARENT_ELEMENT;
-            } else if (name.equals(CURRENT_ELEMENT.getName())) {
-                return CURRENT_ELEMENT;
-            } else if (name.equals(ROOT_ELEMENT.getName())) {
-                return ROOT_ELEMENT;
+            } else if (name.equals(PARENT_ELEMENT.getName())
+                    || name.equals(CURRENT_ELEMENT.getName())
+                    || name.equals(ROOT_ELEMENT.getName())) {
+                throw new IllegalArgumentException(
+                        "special path elements (root, '.' and '..') can not have an explicit index");
             } else {
                 return new NameElement(name, index);
             }
@@ -1305,10 +1306,10 @@ public final class Path {
         }
 
         /**
-         * Returns the JCR name of this path element.
-         *
-         * @param resolver
-         * @return ""
+         * {@inheritDoc}
+         * <p/>
+         * Returns <code>""</code>
+         * @return <code>""</code>
          */
         public String toJCRName(NamespaceResolver resolver) {
             return "";
@@ -1379,10 +1380,10 @@ public final class Path {
         }
 
         /**
-         * Returns the JCR name of this path element.
-         *
-         * @param resolver
-         * @return {@link #LITERAL}
+         * {@inheritDoc}
+         * <p/>
+         * Returns <code>"."</code>
+         * @return <code>"."</code>
          */
         public String toJCRName(NamespaceResolver resolver) {
             return LITERAL;
@@ -1452,10 +1453,10 @@ public final class Path {
         }
 
         /**
-         * Returns the JCR name of this path element.
-         *
-         * @param resolver
-         * @return {@link #LITERAL}
+         * {@inheritDoc}
+         * <p/>
+         * Returns <code>".."</code>
+         * @return <code>".."</code>
          */
         public String toJCRName(NamespaceResolver resolver) {
             return LITERAL;
