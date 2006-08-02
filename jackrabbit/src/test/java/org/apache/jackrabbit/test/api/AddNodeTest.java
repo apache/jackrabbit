@@ -149,62 +149,57 @@ public class AddNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Creates two new nodes using {@link Node#addNode(String)} and
-     * {@link Node#addNode(String,String)}, saves using {@link javax.jcr.Node#save()}
-     * on parent node. Uses a second session to verify if the nodes have been saved.
+     * Creates a new node using {@link Node#addNode(String,String)}, saves using
+     * {@link javax.jcr.Node#save()} on parent node. Uses a second session to
+     * verify if the node have been saved.
      */
     public void testAddNodeParentSave() throws RepositoryException {
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
 
-        // add two nodes
+        // add node
         Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
-        Node testNode2 = defaultRootNode.addNode(nodeName2);
 
-        // save new nodes
+        // save new node
         defaultRootNode.save();
 
         // use a different session to verify if the node is there
         Session session = helper.getReadOnlySession();
         try {
-            testNode = (Node) session.getItem(testNode.getPath());
-            testNode2 = (Node) session.getItem(testNode2.getPath());
+            session.getItem(testNode.getPath());
         } finally {
             session.logout();
         }
     }
 
     /**
-     * Creates new nodes using {@link Node#addNode(String)} and
-     * {@link Node#addNode(String, String)}, saves using
-     * {@link javax.jcr.Session#save()}. Uses a second session to
-     * verify if the node has been safed.
+     * Creates a new node using {@link Node#addNode(String, String)}, saves using
+     * {@link javax.jcr.Session#save()}. Uses a second session to verify if the
+     * node has been safed.
      */
     public void testAddNodeSessionSave() throws RepositoryException {
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
 
-        // add nodes
+        // add node
         Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
-        Node testNode2 = defaultRootNode.addNode(nodeName2);
 
-        // save new nodes
+        // save new node
         superuser.save();
 
         // use a different session to verify if the node is there
         Session session = helper.getReadOnlySession();
         try {
-            testNode = (Node) session.getItem(testNode.getPath());
-            testNode2 = (Node) session.getItem(testNode2.getPath());
+            session.getItem(testNode.getPath());
         } finally {
             session.logout();
         }
     }
     
     /**
-     * Creates new nodes using {@link Node#addNode(String)} and
-     * {@link Node#addNode(String, String)}, then tries to call
-     * {@link javax.jcr.Node#save()} on the new nodes. <br/><br/>
+     * Creates a new node using {@link Node#addNode(String, String)}, then tries
+     * to call {@link javax.jcr.Node#save()} on the new node.
+     * <br/><br/>
      * This should throw an {@link RepositoryException}.
      */
     public void testAddNodeRepositoryExceptionSaveOnNewNode() throws RepositoryException {
@@ -213,18 +208,10 @@ public class AddNodeTest extends AbstractJCRTest {
 
         // add a node
         Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
-        Node testNode2 = defaultRootNode.addNode(nodeName2);
 
         try {
             // try to call save on newly created node
             testNode.save();
-            fail("Calling Node.save() on a newly created node should throw RepositoryException");
-        } catch (RepositoryException e) {
-            // ok, works as expected.
-        }
-        try {
-            // try to call save on newly created node
-            testNode2.save();
             fail("Calling Node.save() on a newly created node should throw RepositoryException");
         } catch (RepositoryException e) {
             // ok, works as expected.
