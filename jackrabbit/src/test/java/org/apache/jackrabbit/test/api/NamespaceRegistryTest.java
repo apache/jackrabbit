@@ -138,6 +138,10 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
 
         testRootNode.addNode(namespacePrefix + ":root");
         testRootNode.save();
+
+        // Need to remove it here, otherwise teardown can't unregister the NS.
+        testRootNode.getNode(namespacePrefix + ":root").remove();
+        testRootNode.save();
     }
 
     /**
