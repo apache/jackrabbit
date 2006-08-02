@@ -17,11 +17,14 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.Session;
 import javax.jcr.Credentials;
 import javax.jcr.NodeIterator;
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.LoginException;
 import java.security.AccessControlException;
 
 /**
@@ -38,9 +41,14 @@ public class ImpersonateTest extends AbstractJCRTest {
     /**
      * Tests if <code>Session.impersonate(Credentials)</code> works properly
      */
-    public void testImpersonate() throws Exception {
+    public void testImpersonate() throws RepositoryException, NotExecutableException {
         // impersonate to read-only user
-        Session session = superuser.impersonate(helper.getReadOnlyCredentials());
+        Session session;
+        try {
+            session = superuser.impersonate(helper.getReadOnlyCredentials());
+        } catch (LoginException e) {
+            throw new NotExecutableException("impersonate threw LoginException");
+        }
 
         // get a path to test the permissions on
         String thePath = "";
