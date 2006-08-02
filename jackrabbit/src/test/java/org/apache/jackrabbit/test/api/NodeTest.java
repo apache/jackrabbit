@@ -29,6 +29,8 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
+import javax.jcr.Value;
+import javax.jcr.PropertyType;
 import javax.jcr.lock.LockException;
 
 /**
@@ -1106,10 +1108,10 @@ public class NodeTest extends AbstractJCRTest {
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
 
         Node testNode = defaultRootNode.addNode(nodeName1, testNodeType);
-        testNode.addMixin(mixReferenceable);
 
+        Value mixinName = superuser.getValueFactory().createValue(mixLockable, PropertyType.NAME);
         try {
-            testNode.setProperty(jcrMixinTypes,mixLockable);
+            testNode.setProperty(jcrMixinTypes, new Value[]{mixinName});
             fail("Manually setting jcr:mixinTypes should throw a ConstraintViolationException");
         }
         catch (ConstraintViolationException success) {
