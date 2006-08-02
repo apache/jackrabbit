@@ -512,7 +512,7 @@ public final class QName implements Cloneable, Comparable, Serializable {
     /** The internalized namespace URI of this qualified name. */
     private final String namespaceURI;
 
-    /** The internalized local part of this qualified name. */
+    /** The local part of this qualified name. */
     private final String localName;
 
     /**
@@ -534,27 +534,15 @@ public final class QName implements Cloneable, Comparable, Serializable {
         if (localName == null) {
             throw new IllegalArgumentException("invalid localName specified");
         }
-        // internalize only namespaceURI to improve performance of QName
-        // comparisons. Please note that we do not internalize the localname
-        // since this could blow perm space for big repositories.
+        // internalize namespaceURI to improve performance of QName comparisons.
+        // Please note that we do *not* internalize localName since this could
+        // blow perm space for large repositories
         this.namespaceURI = namespaceURI.intern();
         this.localName = localName;
         hash = 0;
     }
 
-    /**
-     * Returns a new instance of this class with the same namespace URI and
-     * local name as has been deserialized.
-     * <p>
-     * If just sing plain serialization, the strings are just created but not
-     * internalized.
-     */
-    private Object readResolve() {
-        return new QName(namespaceURI, localName);
-    }
-
     //------------------------------------------------------< factory methods >
-
     /**
      * Parses the given prefixed JCR name into a qualified name using the
      * given namespace resolver.
@@ -708,8 +696,7 @@ public final class QName implements Cloneable, Comparable, Serializable {
         }
         if (obj instanceof QName) {
             QName other = (QName) obj;
-            // namespaceURI is internalized, we only have to compare their
-            // references
+            // we can use == operator for namespaceURI since it is internalized
             return namespaceURI == other.namespaceURI
                     && localName.equals(other.localName);
         }
@@ -763,12 +750,23 @@ public final class QName implements Cloneable, Comparable, Serializable {
         if (this == o) {
             return 0;
         }
+
         QName other = (QName) o;
-        // == comparison ok, because of .intern() strings
+        // we can use == operator for namespaceURI since it is internalized
         if (namespaceURI == other.namespaceURI) {
             return localName.compareTo(other.localName);
         } else {
             return namespaceURI.compareTo(other.namespaceURI);
         }
+    }
+
+    //-------------------------------------------------< Serializable support >
+    /**
+     * Creates a new <code>QName</code> instance using the proper constructor
+     * during deserialization in order to make sure that internalized strings
+     * are used where appropriate.
+     */
+    private Object readResolve() {
+        return new QName(namespaceURI, localName);
     }
 }
