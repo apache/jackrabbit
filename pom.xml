@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.jackrabbit</groupId>
+  <artifactId>jackrabbit-jcr-rmi</artifactId>
+  <name>JCR-RMI</name>
+  <version>1.0-SNAPSHOT</version>
+  <description>
+    JCR-RMI is a transparent Remote Method Invocation (RMI) layer
+    for the Content Repository for Java Technology API (JCR). The
+    layer makes it possible to remotely access JCR content
+    repositories. JCR-RMI is developed as a part of the Apache
+    Jackrabbit project, but the implementation is compatible with
+    all JCR content repositories.
+  </description>
+  <url>http://incubator.apache.org/projects/jackrabbit.html</url>
+  <issueManagement>
+    <url>http://issues.apache.org/jira/browse/JCR</url>
+  </issueManagement>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>/LICENSE.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <connection>
+      scm:svn:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk
+    </connection>
+    <developerConnection>
+      scm:svn:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk
+    </developerConnection>
+    <url>http://svn.apache.org/viewcvs</url>
+  </scm>
+  <organization>
+    <name>The Apache Software Foundation</name>
+    <url>http://incubator.apache.org/projects/jackrabbit.html</url>
+  </organization>
+  <build>
+    <sourceDirectory>src/java</sourceDirectory>
+    <testSourceDirectory>src/test</testSourceDirectory>
+    <resources>
+      <!-- Does not work with eclipse. Maybe we can move README.txt to src/main/resources? -->
+      <!-- resource>
+        <targetPath>META-INF</targetPath>
+        <directory>.</directory>
+        <includes>
+        <include>README.txt</include>
+        </includes>
+        </resource -->
+      <resource>
+        <targetPath>.</targetPath>
+        <directory>src/resources</directory>
+        <includes>
+          <include>*</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <target>1.4</target>
+          <source>1.4</source>
+        </configuration>
+      </plugin>
+      <plugin>
+        <inherited>true</inherited>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- plugin>
+        <inherited>true</inherited>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+        <execution>
+        <id>attach-javadocs</id>
+        <goals>
+        <goal>jar</goal>
+        </goals>
+        </execution>
+        </executions>
+        </plugin -->
+    </plugins>
+  </build>
+  <dependencies>
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>1.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Runtime dependencies -->
+    <dependency>
+      <groupId>jsr170</groupId>
+      <artifactId>jcr</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.8</version>
+    </dependency>
+  </dependencies>
+  <distributionManagement>
+    <repository>
+      <id>apache.releases</id>
+      <name>Apache Repository for PMC approved releases</name>
+      <url>
+        scp://cvs.apache.org/www/www.apache.org/dist/maven-repository/
+      </url>
+    </repository>
+    <snapshotRepository>
+      <id>apache.snapshots</id>
+      <name>Apache Development Repository</name>
+      <url>
+        scp://cvs.apache.org/www/cvs.apache.org/maven-snapshot-repository
+      </url>
+    </snapshotRepository>
+    <site>
+      <id>website</id>
+      <url>
+        scp://cvs.apache.org/www/incubator.apache.org/jackrabbit/
+      </url>
+    </site>
+  </distributionManagement>
+</project>
