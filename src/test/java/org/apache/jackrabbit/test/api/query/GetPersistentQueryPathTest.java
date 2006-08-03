@@ -16,8 +16,11 @@
  */
 package org.apache.jackrabbit.test.api.query;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 import javax.jcr.query.Query;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 /**
  * Test the method {@link javax.jcr.query.Query#getStoredQueryPath()}.
@@ -34,10 +37,19 @@ import javax.jcr.RepositoryException;
 public class GetPersistentQueryPathTest extends AbstractQueryTest {
 
     /**
-     * Tests if {@link Query#getStoredQueryPath()} returns the correct
-     * path where the query had been saved.
+     * Tests if {@link Query#getStoredQueryPath()} returns the correct path
+     * where the query had been saved.
+     *
+     * @throws NotExecutableException if the repository does not support the
+     *                                node type nt:query.
      */
-    public void testGetPersistentQueryPath() throws RepositoryException {
+    public void testGetPersistentQueryPath() throws RepositoryException, NotExecutableException {
+        try {
+            superuser.getWorkspace().getNodeTypeManager().getNodeType(ntQuery);
+        } catch (NoSuchNodeTypeException e) {
+            // not supported
+            throw new NotExecutableException("repository does not support nt:query");
+        }
         String statement = "/" + jcrRoot;
         Query q = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         String path = testRoot + "/" + nodeName1;
