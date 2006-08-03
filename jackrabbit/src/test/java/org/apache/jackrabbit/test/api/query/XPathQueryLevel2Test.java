@@ -21,6 +21,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
 import javax.jcr.Value;
+import javax.jcr.NodeIterator;
 
 /**
  * Tests XPath queries on content written to the workspace by the test itself.
@@ -59,10 +60,9 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
         checkResult(result, 1);
 
         // evaluate result
-        RowIterator itr = result.getRows();
+        NodeIterator itr = result.getNodes();
         while (itr.hasNext()) {
-            Row row = itr.nextRow();
-            Value value = row.getValue(propertyName1);
+            Value value = itr.nextNode().getProperty(propertyName1).getValue();
             if (value != null) {
                 String fullText = value.getString();
                 if (fullText.indexOf("cat") > 0) {
@@ -85,7 +85,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
         checkResult(result, 1);
 
         // evaluate result
-        checkValue(result.getRows(), propertyName1, "b");
+        checkValue(result.getNodes(), propertyName1, "b");
     }
 
     /**
@@ -101,7 +101,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
         checkResult(result, 1);
 
         // evaluate result
-        checkValue(result.getRows(), propertyName1, "existence");
+        checkValue(result.getNodes(), propertyName1, "existence");
     }
 
     /**
@@ -134,7 +134,6 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
         tmp.append(jcrRoot).append(testRoot);
         tmp.append("/*[").append(jcrContains);
         tmp.append("(., \"'quick brown' -cat\")]");
-        tmp.append("/@").append(propertyName1);
         return new Statement(tmp.toString(), Query.XPATH);
     }
 
@@ -147,7 +146,6 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
         tmp.append(jcrRoot).append(testRoot);
         tmp.append("/*[@").append(propertyName2).append(" = 'two'");
         tmp.append(" and @").append(propertyName1).append(" = 'existence']");
-        tmp.append("/@").append(propertyName1);
         return new Statement(tmp.toString(), Query.XPATH);
     }
 
@@ -161,7 +159,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
         tmp.append(propertyName1);
         tmp.append(" <= 'b' and @");
         tmp.append(propertyName1);
-        tmp.append(" > 'a']/@").append(propertyName1);
+        tmp.append(" > 'a']");
         return new Statement(tmp.toString(), Query.XPATH);
     }
 }

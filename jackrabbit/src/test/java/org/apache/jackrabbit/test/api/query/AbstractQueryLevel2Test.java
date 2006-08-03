@@ -24,6 +24,7 @@ import javax.jcr.query.Row;
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 
 /**
  * Implements common setup methods for level 2 queries.
@@ -111,6 +112,27 @@ public abstract class AbstractQueryLevel2Test extends AbstractQueryTest {
             if (value == null) {
                 fail("Search Test: fails result does not contain value for selected property");
             }
+            assertEquals("Value in query result row does not match expected value",
+                    expectedValue, value.getString());
+        }
+    }
+
+    /**
+     * Checks if all nodes in <code>itr</code> have a property with name
+     * <code>propertyName</code> and have the <code>expectedValue</code>.
+     *
+     * @param itr           the nodes to check.
+     * @param propertyName  the name of the property.
+     * @param expectedValue the exected value of the property.
+     * @throws RepositoryException if an error occurs.
+     */
+    protected void checkValue(NodeIterator itr,
+                              String propertyName,
+                              String expectedValue) throws RepositoryException {
+        while (itr.hasNext()) {
+            Node node = itr.nextNode();
+            // check fullText
+            Value value = node.getProperty(propertyName).getValue();
             assertEquals("Value in query result row does not match expected value",
                     expectedValue, value.getString());
         }
