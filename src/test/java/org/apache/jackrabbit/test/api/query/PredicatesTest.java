@@ -78,7 +78,7 @@ public class PredicatesTest extends AbstractQueryTest {
      * @throws RepositoryException
      */
     public void testEquality() throws RepositoryException {
-        String stmt = "/" + jcrRoot + "/*[@" + jcrPrimaryType + "='" + nodeTypeName + "']";
+        String stmt = "/" + jcrRoot + "/" + testPath+ "/*[@" + jcrPrimaryType + "='" + nodeTypeName + "']";
 
         try {
             qm.createQuery(stmt, Query.XPATH);
@@ -93,7 +93,7 @@ public class PredicatesTest extends AbstractQueryTest {
      * @throws RepositoryException
      */
     public void testCombinedOr() throws RepositoryException {
-        String stmt = "/" + jcrRoot + "/*[@" + jcrPrimaryType + "='" + nodeTypeName + "' or @" + jcrPrimaryType + "='" + ntBase + "']";
+        String stmt = "/" + jcrRoot + "/" + testPath+ "/*[@" + jcrPrimaryType + "='" + nodeTypeName + "' or @" + jcrPrimaryType + "='" + ntBase + "']";
 
         try {
             qm.createQuery(stmt, Query.XPATH);
@@ -108,7 +108,7 @@ public class PredicatesTest extends AbstractQueryTest {
      * @throws RepositoryException
      */
     public void testOr() throws RepositoryException {
-        String stmt = "/" + jcrRoot + "/*[@" + jcrPrimaryType + " or @" + jcrMixinTypes + "]";
+        String stmt = "/" + jcrRoot + "/" + testPath+ "/*[@" + jcrPrimaryType + " or @" + jcrMixinTypes + "]";
 
         try {
             qm.createQuery(stmt, Query.XPATH);
@@ -123,7 +123,7 @@ public class PredicatesTest extends AbstractQueryTest {
      * @throws RepositoryException
      */
     public void testAnd() throws RepositoryException {
-        String stmt = "/" + jcrRoot + "/*[@" + jcrPrimaryType + " and @" + jcrMixinTypes + "]";
+        String stmt = "/" + jcrRoot + "/" + testPath+ "/*[@" + jcrPrimaryType + " and @" + jcrMixinTypes + "]";
 
         try {
             qm.createQuery(stmt, Query.XPATH);
@@ -138,7 +138,7 @@ public class PredicatesTest extends AbstractQueryTest {
      * @throws RepositoryException
      */
     public void testCombinedAnd() throws RepositoryException {
-        String stmt = "/" + jcrRoot + "/*[@" + jcrPrimaryType + "='" + nodeTypeName + "' and @" + jcrPrimaryType + "='" + ntBase + "']";
+        String stmt = "/" + jcrRoot + "/" + testPath+ "/*[@" + jcrPrimaryType + "='" + nodeTypeName + "' and @" + jcrPrimaryType + "='" + ntBase + "']";
 
         try {
             qm.createQuery(stmt, Query.XPATH);
