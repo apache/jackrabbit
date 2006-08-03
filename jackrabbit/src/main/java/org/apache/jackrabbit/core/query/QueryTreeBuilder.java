@@ -46,6 +46,13 @@ public interface QueryTreeBuilder {
      *         <code>false</code> otherwise.
      */
     boolean canHandle(String language);
+    
+    /**
+     * Returns the set of query languages supported by this builder.
+     * 
+     * @return String array containing the names of the supported languages.
+     */
+    String[] getSupportedLanguages();
 
     /**
      * Creates a String representation of the query node tree in the syntax this
