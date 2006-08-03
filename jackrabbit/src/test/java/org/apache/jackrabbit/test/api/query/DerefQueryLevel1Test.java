@@ -74,7 +74,7 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
         }
         Node target = refProp.getNode();
         String xpath = createStatement(refProp, target.getName());
-        executeXPathQuery(session, xpath, new Node[]{target});
+        executeDerefQuery(session, xpath, new Node[]{target});
     }
 
     /**
@@ -91,7 +91,7 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
         }
         Node target = refProp.getNode();
         String xpath = createStatement(refProp, "*");
-        executeXPathQuery(session, xpath, new Node[]{target});
+        executeDerefQuery(session, xpath, new Node[]{target});
     }
 
     /**
@@ -122,7 +122,7 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
         }
         targetNodes = (Node[]) resultNodes.toArray(new Node[resultNodes.size()]);
         String xpath = createStatement(refProp, nodeName);
-        executeXPathQuery(session, xpath, targetNodes);
+        executeDerefQuery(session, xpath, targetNodes);
     }
 
     /**
@@ -145,7 +145,7 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
             throw new NotExecutableException("Reference property does not contain a value");
         }
         String xpath = createStatement(refProp, "*");
-        executeXPathQuery(session, xpath, targetNodes);
+        executeDerefQuery(session, xpath, targetNodes);
     }
 
     //----------------------------< internal >----------------------------------
@@ -164,5 +164,26 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
         stmt.append(refProperty.getName()).append(", '");
         stmt.append(nameTest).append("')");
         return stmt.toString();
+    }
+
+    /**
+     * Executes the <code>xpath</code> query and checks the results against the
+     * specified <code>nodes</code>.
+     *
+     * @param session the session to use for the query.
+     * @param xpath   the xpath query.
+     * @param nodes   the expected result nodes.
+     * @throws NotExecutableException if this repository does not support the
+     *                                jcr:deref() function.
+     */
+    private void executeDerefQuery(Session session,
+                                   String xpath,
+                                   Node[] nodes) throws NotExecutableException {
+        try {
+            executeXPathQuery(session, xpath, nodes);
+        } catch (RepositoryException e) {
+            // assume jcr:deref() is not supported
+            throw new NotExecutableException(e.getMessage());
+        }
     }
 }
