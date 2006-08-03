@@ -1,39 +1,127 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd ">
   <modelVersion>4.0.0</modelVersion>
+
+<!-- ====================================================================== -->
+<!-- P R O J E C T  D E S C R I P T I O N                                   -->
+<!-- ====================================================================== -->
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-core</artifactId>
   <name>Jackrabbit</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>SNAPSHOT</version>
   <description>
-    The Jackrabbit Project has been formed to develop an open source implementation of the Content Repository for Java
-    Technology API (JCR), being specified within the Java Community Process as &lt;a
-    href="http://www.jcp.org/en/jsr/detail?id=170">JSR-170&lt;/a>. &lt;a href="http://www.day.com/">Day Software&lt;/a>,
-    the JSR-170 specification lead, has licensed an initial implementation of the JCR reference implementation for use
-    as seed code for this project. JCR specifies an API for application developers (and application frameworks) to use
-    for interaction with modern content repositories -- content management systems that provide content services such as
-    versioning, transactions, indexing, workflow, etc.
+    The Apache Jackrabbit Project has been formed to develop and maintain an
+    open source implementation of the Content Repository for Java Technology
+    API (JCR), as specified within the Java Community Process by
+    &lt;a href="http://www.jcp.org/en/jsr/detail?id=170"&gt;JSR 170&lt;/a&gt;
+    and
+    &lt;a href="http://www.jcp.org/en/jsr/detail?id=283"&gt;JSR 283&lt;/a&gt;.
+    JCR specifies an API for application developers (and application
+    frameworks) to use for interaction with modern content repositories --
+    content management systems that provide content services such as
+    versioning, transactions, indexing, etc.
   </description>
-  <url>http://incubator.apache.org/projects/jackrabbit.html</url>
+  <url>http://jackrabbit.apache.org/</url>
+  <prerequisites>
+    <maven>2.0</maven>
+  </prerequisites>
   <issueManagement>
+    <system>Jira</system>
     <url>http://issues.apache.org/jira/browse/JCR</url>
   </issueManagement>
   <inceptionYear>2004</inceptionYear>
+
+<!-- ====================================================================== -->
+<!-- M A I L I N G   L I S T S                                              -->
+<!-- ====================================================================== -->
+  <mailingLists>
+    <mailingList>
+      <name>Jackrabbit Announce List</name>
+      <subscribe>announce-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>announce-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <archive>http://mail-archives.apache.org/mod_mbox/jackrabbit-announce/</archive>
+    </mailingList>
+    <mailingList>
+      <name>Jackrabbit Users List</name>
+      <subscribe>users-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>users-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <post>users at jackrabbit.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/jackrabbit-users/</archive>
+      <otherArchives>
+        <otherArchive>
+          http://dir.gmane.org/gmane.comp.apache.jackrabbit.user
+        </otherArchive>
+        <otherArchive>
+          http://www.mail-archive.com/users@jackrabbit.apache.org/
+        </otherArchive>
+      </otherArchives>
+    </mailingList>
+    <mailingList>
+      <name>Jackrabbit Development List</name>
+      <subscribe>dev-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <post>dev at jackrabbit.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/jackrabbit-dev/</archive>
+      <otherArchives>
+        <otherArchive>
+          http://dir.gmane.org/gmane.comp.apache.jackrabbit.devel
+        </otherArchive>
+        <otherArchive>
+          http://www.mail-archive.com/dev@jackrabbit.apache.org/
+        </otherArchive>
+        <otherArchive>
+          http://www.mail-archive.com/jackrabbit-dev@incubator.apache.org/
+        </otherArchive>
+      </otherArchives>
+    </mailingList>
+    <mailingList>
+      <name>Jackrabbit Source Control List</name>
+      <subscribe>commits-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <archive>http://mail-archives.apache.org/mod_mbox/jackrabbit-commits/</archive>
+    </mailingList>
+  </mailingLists>
+
+<!-- ====================================================================== -->
+<!-- P E O P L E                                                            -->
+<!-- ====================================================================== -->
   <developers>
     <developer>
-      <id>fielding</id>
       <name>Roy T. Fielding</name>
+      <id>fielding</id>
+      <email />
       <organization>Day Software</organization>
       <roles>
-        <role>Mentor</role>
-        <role>Java Developer</role>
+        <role>Chair</role>
+        <role>Documentation</role>
       </roles>
       <timezone>-8</timezone>
     </developer>
     <developer>
-      <id>stefan</id>
       <name>Stefan Guggisberg</name>
+      <id>stefan</id>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
@@ -42,14 +130,18 @@
     </developer>
     <developer>
       <name>Serge Huber</name>
+      <email />
+      <organization />
       <roles>
         <role>Java Developer</role>
       </roles>
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>stefano</id>
       <name>Stefano Mazzocchi</name>
+      <id>stefano</id>
+      <email />
+      <organization />
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -57,6 +149,7 @@
     </developer>
     <developer>
       <name>Felix Meschberger</name>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
@@ -66,15 +159,18 @@
     <developer>
       <name>Brian Moseley</name>
       <email>bcm@osafoundation.org</email>
-      <organization>Open Source Applications Foundation (OSAF)</organization>
+      <organization>
+        Open Source Applications Foundation (OSAF)
+      </organization>
       <roles>
         <role>Java Developer</role>
       </roles>
       <timezone>-8</timezone>
     </developer>
     <developer>
-      <id>uncled</id>
       <name>David Nuescheler</name>
+      <id>uncled</id>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
@@ -82,8 +178,9 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>dpfister</id>
       <name>Dominique Pfister</name>
+      <id>dpfister</id>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
@@ -91,8 +188,9 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>ppiegaze</id>
       <name>Peeter Piegaze</name>
+      <id>ppiegaze</id>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
@@ -100,25 +198,29 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>gianugo</id>
       <name>Gianugo Rabellino</name>
+      <id>gianugo</id>
+      <email />
+      <organization />
       <roles>
         <role>Java Developer</role>
       </roles>
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>treilly</id>
       <name>Tim Reilly</name>
+      <id>treilly</id>
       <email>treilly at apache dot org</email>
+      <organization />
       <roles>
         <role>Java Developer</role>
       </roles>
       <timezone>-5</timezone>
     </developer>
     <developer>
-      <id>mreutegg</id>
       <name>Marcel Reutegger</name>
+      <id>mreutegg</id>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
@@ -126,16 +228,20 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>prussell</id>
       <name>Paul Russell</name>
+      <id>prussell</id>
+      <email></email>
+      <organization />
       <roles>
         <role>Java Developer</role>
       </roles>
       <timezone>+0</timezone>
     </developer>
     <developer>
-      <id>asavory</id>
       <name>Andrew Savory</name>
+      <id>asavory</id>
+      <email />
+      <organization />
       <roles>
         <role>Java Developer</role>
       </roles>
@@ -143,6 +249,7 @@
     </developer>
     <developer>
       <name>Angela Schreiber</name>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
@@ -150,8 +257,9 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>tripod</id>
       <name>Tobias Bocanegra</name>
+      <id>tripod</id>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Java Developer</role>
@@ -159,16 +267,18 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>sylvain</id>
       <name>Sylvain Wallez</name>
+      <id>sylvain</id>
+      <email />
+      <organization />
       <roles>
         <role>Java Developer</role>
       </roles>
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>jukka</id>
       <name>Jukka Zitting</name>
+      <id>jukka</id>
       <email>jz@yukatan.fi</email>
       <organization>Yukatan</organization>
       <roles>
@@ -177,17 +287,20 @@
       <timezone>+2</timezone>
     </developer>
     <developer>
-      <id>edgarpoce</id>
       <name>Edgar Poce</name>
+      <id>edgarpoce</id>
       <email>edgarpoce@gmail.com</email>
+      <organization />
       <roles>
         <role>Java Developer</role>
       </roles>
+      <timezone />
     </developer>
   </developers>
   <contributors>
     <contributor>
       <name>Lydia Balazs</name>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Unit Tests</role>
@@ -205,6 +318,7 @@
     </contributor>
     <contributor>
       <name>Norbert Braeker</name>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Unit Tests</role>
@@ -213,6 +327,7 @@
     </contributor>
     <contributor>
       <name>Philipp Koch</name>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>TCK Webapp</role>
@@ -228,6 +343,7 @@
     </contributor>
     <contributor>
       <name>Mike Pfaff</name>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Unit Tests</role>
@@ -245,6 +361,7 @@
     </contributor>
     <contributor>
       <name>Vinzenz Wyser</name>
+      <email />
       <organization>Day Software</organization>
       <roles>
         <role>Unit Tests</role>
@@ -259,21 +376,56 @@
       </roles>
       <timezone>+1</timezone>
     </contributor>
+    <contributor>
+      <name>Paul Bloch</name>
+      <email>openartist@gmail.com</email>
+      <roles>
+        <role>Apache &amp;amp; Built By Logo design</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>Michael Eppelheimer</name>
+      <organization>Day Software</organization>
+      <roles>
+        <role>Graphic Designer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>Nicolas Toper</name>
+      <organization>Google Summer of Code 2006</organization>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>Julian Reschke</name>
+      <email>julian.reschke@greenbytes.de</email>
+      <organization>greenbytes GmbH</organization>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
   </contributors>
+
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
-      <url>/LICENSE.txt</url>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
     </license>
   </licenses>
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk</developerConnection>
-    <url>http://svn.apache.org/viewcvs</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit</developerConnection>
+    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit</url>
   </scm>
   <organization>
     <name>The Apache Software Foundation</name>
-    <url>http://incubator.apache.org/projects/jackrabbit.html</url>
+    <url>http://www.apache.org/</url>
   </organization>
   <build>
     <resources>
@@ -454,6 +606,7 @@
       </plugin>
     </plugins>
   </build>
+
   <dependencies>
     <dependency>
       <groupId>concurrent</groupId>
@@ -466,9 +619,9 @@
       <version>3.1</version>
     </dependency>
     <dependency>
-      <groupId>javax.transaction</groupId>
-      <artifactId>jta</artifactId>
-      <version>1.0.1B</version>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>jsr170</groupId>
@@ -491,11 +644,6 @@
       <version>1.4.3</version>
     </dependency>
     <dependency>
-      <groupId>xerces</groupId>
-      <artifactId>xercesImpl</artifactId>
-      <version>2.6.2</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
       <version>10.1.1.0</version>
@@ -508,20 +656,22 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <distributionManagement>
     <repository>
       <id>apache.releases</id>
       <name>Apache Repository for PMC approved releases</name>
-      <url>scp://cvs.apache.org/www/www.apache.org/dist/maven-repository/</url>
+      <url>scp://people.apache.org/www/www.apache.org/dist/maven-repository/</url>
     </repository>
     <snapshotRepository>
       <id>apache.snapshots</id>
       <name>Apache Development Repository</name>
-      <url>scp://cvs.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
+      <url>scp://people.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
     </snapshotRepository>
     <site>
       <id>website</id>
-      <url>scp://cvs.apache.org/www/incubator.apache.org/jackrabbit/</url>
+      <url>scp://people.apache.org/www/jackrabbit.apache.org/</url>
     </site>
   </distributionManagement>
+
 </project>
