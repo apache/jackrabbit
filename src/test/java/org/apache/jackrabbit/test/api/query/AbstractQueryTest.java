@@ -205,16 +205,16 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected void evaluateResultOrder(QueryResult queryResult, String propName,
                                        boolean descending)
             throws RepositoryException, NotExecutableException {
-        RowIterator rows = queryResult.getRows();
-        if (getSize(rows) < 2) {
+        NodeIterator nodes = queryResult.getNodes();
+        if (getSize(nodes) < 2) {
             fail("Workspace does not contain sufficient content to test ordering on result nodes.");
         }
-        // need to re-aquire rows, {@link #getSize} may consume elements.
-        rows = queryResult.getRows();
+        // need to re-aquire nodes, {@link #getSize} may consume elements.
+        nodes = queryResult.getNodes();
         int changeCnt = 0;
         String last = descending ? "\uFFFF" : "";
-        while (rows.hasNext()) {
-            String value = rows.nextRow().getValue(propName).getString();
+        while (nodes.hasNext()) {
+            String value = nodes.nextNode().getProperty(propName).getString();
             int cp = value.compareTo(last);
             // if value changed evaluate if the ordering is correct
             if (cp != 0) {

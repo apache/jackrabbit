@@ -48,7 +48,7 @@ public class XPathOrderByTest extends AbstractQueryTest {
         tmp.append(jcrRoot).append(testRoot);
         tmp.append("/*[@");
         tmp.append(propertyName1);
-        tmp.append("]/@").append(propertyName1).append(" order by @");
+        tmp.append("] order by @");
         tmp.append(propertyName1);
         baseStatement = tmp.toString();
     }
