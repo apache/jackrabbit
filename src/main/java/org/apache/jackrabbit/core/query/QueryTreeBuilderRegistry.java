@@ -22,8 +22,12 @@ import org.slf4j.LoggerFactory;
 import javax.imageio.spi.ServiceRegistry;
 import javax.jcr.query.InvalidQueryException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Implements a central access to QueryTreeBuilder instances.
@@ -39,17 +43,26 @@ public class QueryTreeBuilderRegistry {
      * List of <code>QueryTreeBuilder</code> instances known to the classloader.
      */
     private static final List BUILDERS = new ArrayList();
+    
+    /**
+     * Set of languages known to the registered builders.
+     */
+    private static final Set LANGUAGES;
 
     static {
+        Set languages = new HashSet();
         try {
             Iterator it = ServiceRegistry.lookupProviders(QueryTreeBuilder.class,
                     QueryTreeBuilderRegistry.class.getClassLoader());
             while (it.hasNext()) {
-                BUILDERS.add(it.next());
+                QueryTreeBuilder qtb = (QueryTreeBuilder) it.next();
+                BUILDERS.add(qtb);
+                languages.addAll(Arrays.asList(qtb.getSupportedLanguages()));
             }
         } catch (Error e) {
             log.warn("Unable to load providers for QueryTreeBuilder: " + e);
         }
+        LANGUAGES = Collections.unmodifiableSet(languages);
     }
 
     /**
@@ -69,5 +82,15 @@ public class QueryTreeBuilderRegistry {
             }
         }
         throw new InvalidQueryException("Unsupported language: " + language);
+    }
+    
+    /**
+     * Returns the set of query languages supported by all registered
+     * {@link QueryTreeBuilder} implementations.
+     * 
+     * @return String array containing the names of the supported languages.
+     */
+    public static String[] getSupportedLanguages() {
+        return (String[]) LANGUAGES.toArray(new String[LANGUAGES.size()]);
     }
 }

@@ -45,6 +45,14 @@ public class QueryBuilder implements QueryTreeBuilder {
     }
 
     /**
+     * This builder supports {@link Query#XPATH}.
+     * @inheritDoc
+     */
+    public String[] getSupportedLanguages() {
+        return new String[]{Query.XPATH};
+    }
+
+    /**
      * @inheritDoc
      */
     public String toString(QueryRootNode root, NamespaceResolver resolver)
