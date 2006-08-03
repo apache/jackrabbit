@@ -37,9 +37,7 @@ public class QueryManagerImpl implements QueryManager {
     /**
      * Defines all supported query languages
      */
-    private static final String[] SUPPORTED_QUERIES = new String[]{
-        Query.SQL, Query.XPATH
-    };
+    private static final String[] SUPPORTED_QUERIES = QueryTreeBuilderRegistry.getSupportedLanguages();
 
     /**
      * List of all supported query languages
