@@ -79,7 +79,7 @@ public class SetValueDateTest extends AbstractJCRTest {
     public void testDateSession() throws RepositoryException {
         property1.setValue(value);
         superuser.save();
-        assertEquals("Date node property not saved", value.getDate(), property1.getValue().getDate());
+        assertEquals("Date node property not saved", value, property1.getValue());
     }
 
     /**
@@ -89,7 +89,8 @@ public class SetValueDateTest extends AbstractJCRTest {
     public void testDateParent() throws RepositoryException {
         property1.setValue(value.getDate());
         node.save();
-        assertEquals("Date node property not saved", value.getDate(), property1.getValue().getDate());
+        Value orig = superuser.getValueFactory().createValue(value.getDate());
+        assertEquals("Date node property not saved", orig, property1.getValue());
     }
 
     /**
