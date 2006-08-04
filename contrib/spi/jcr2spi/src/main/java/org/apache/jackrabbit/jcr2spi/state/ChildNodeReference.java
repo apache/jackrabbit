@@ -59,6 +59,14 @@ abstract class ChildNodeReference extends ChildItemReference implements ChildNod
      */
     public NodeState getNodeState()
             throws NoSuchItemStateException, ItemStateException {
-        return (NodeState) resolve(isf);
+        return (NodeState) resolve();
+    }
+
+    /**
+     * @inheritDoc
+     * @see ChildNodeEntry#isAvailable()
+     */
+    public boolean isAvailable() {
+        return isResolved();
     }
 }

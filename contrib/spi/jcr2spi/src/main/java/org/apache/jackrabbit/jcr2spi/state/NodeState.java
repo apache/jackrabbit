@@ -75,6 +75,7 @@ public class NodeState extends ItemState {
 
     /**
      * insertion-ordered collection of ChildNodeEntry objects
+     * TODO: cache needs to be notified when a child node entry is traversed or NodeState is created
      */
     private ChildNodeEntries childNodeEntries = new ChildNodeEntries();
 
@@ -628,7 +629,7 @@ public class NodeState extends ItemState {
         if (propRef == null) {
             throw new NoSuchItemStateException(idFactory.createPropertyId(getNodeId(), propertyName).toString());
         }
-        return (PropertyState) propRef.resolve(isf);
+        return (PropertyState) propRef.resolve();
     }
 
     /**

@@ -67,13 +67,12 @@ abstract class ChildItemReference {
      * Resolves this <code>ChildItemReference</code> and returns the target
      * <code>ItemState</code> of this reference.
      *
-     * @param isf the item state factory responsible for creating node states.
      * @return the <code>ItemState</code> where this reference points to.
      * @throws NoSuchItemStateException if the referenced <code>ItemState</code>
      *                                  does not exist.
      * @throws ItemStateException       if an error occurs.
      */
-    public ItemState resolve(ItemStateFactory isf)
+    public ItemState resolve()
             throws NoSuchItemStateException, ItemStateException {
         // check if cached
         if (target != null) {
@@ -96,6 +95,18 @@ abstract class ChildItemReference {
      */
     public NodeState getParent() {
         return parent;
+    }
+
+    /**
+     * @return <code>true</code> if this reference is resolved;
+     *         <code>false</code> otherwise.
+     */
+    protected boolean isResolved() {
+        ItemState state = null;
+        if (target != null) {
+            state = (ItemState) target.get();
+        }
+        return state != null;
     }
 
     /**
