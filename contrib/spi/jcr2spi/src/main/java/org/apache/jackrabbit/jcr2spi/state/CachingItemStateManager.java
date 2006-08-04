@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.util.PathMap;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections.map.LRUMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,6 +42,11 @@ import java.util.Iterator;
 public class CachingItemStateManager implements ItemStateManager, InternalEventListener {
 
     /**
+     * The logger instance for this class.
+     */
+    private static Logger log = LoggerFactory.getLogger(CachingItemStateManager.class);
+
+    /**
      * The item state factory to create <code>ItemState</code>s that are not
      * present in the cache.
      */
@@ -50,23 +55,40 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
     /**
      * Maps a String uuid to a {@link NodeState}.
      */
-    private final Map uuid2PathElement;
+    private final Map uuid2NodeState;
 
     /**
-     * Maps a path to an {@link ItemState}.
+     * Map of recently used <code>ItemState</code>.
      */
-    private final PathMap path2State;
+    private final Map recentlyUsed;
+
+    /**
+     * The root node of the workspace.
+     */
+    private final NodeState root;
 
     /**
      * The Id factory.
      */
     private final IdFactory idFactory;
 
-    public CachingItemStateManager(ItemStateFactory isf, IdFactory idFactory) {
+    /**
+     * Creates a new <code>CachingItemStateManager</code>.
+     *
+     * @param isf       the item state factory to create item state instances.
+     * @param idFactory the id factory.
+     * @throws NoSuchItemStateException if the root node cannot be obtained.
+     * @throws ItemStateException       if any other error occurs while
+     *                                  obtaining the root node.
+     */
+    public CachingItemStateManager(ItemStateFactory isf, IdFactory idFactory)
+            throws ItemStateException, NoSuchItemStateException {
         this.isf = isf;
         this.idFactory = idFactory;
-        this.uuid2PathElement = new HashMap(); // TODO: must use weak references
-        path2State = new PathMap();      // TODO: must use weak references
+        this.uuid2NodeState = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        this.recentlyUsed = new LRUMap(1000); // TODO: make configurable
+        // initialize root
+        root = isf.createNodeState(idFactory.createNodeId((String) null, Path.ROOT), this);
     }
 
     //---------------------------------------------------< ItemStateManager >---
@@ -75,7 +97,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
      * @see ItemStateManager#getItemState(ItemId)
      */
     public ItemState getItemState(ItemId id) throws NoSuchItemStateException, ItemStateException {
-        return (ItemState) getPathElement(id).get();
+        return resolve(id);
     }
 
     /**
@@ -84,7 +106,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
      */
     public boolean hasItemState(ItemId id) {
         try {
-            getPathElement(id);
+            resolve(id);
         } catch (ItemStateException e) {
             return false;
         }
@@ -142,68 +164,52 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
             switch (e.getType()) {
                 case Event.NODE_ADDED:
                 case Event.PROPERTY_ADDED:
-                    PathMap.Element elem = lookup(itemId);
-                    if (elem != null) {
+                    state = lookup(itemId);
+                    if (state != null) {
                         // TODO: item already exists ???
                         // remove from cache and invalidate
-                        state = (ItemState) elem.get();
-                        if (itemId.denotesNode()) {
-                            elem.set(null);
-                        } else {
-                            elem.remove();
-                        }
-                        if (state != null) {
-                            state.discard();
-                        }
+                        recentlyUsed.remove(state);
+                        state.discard();
                     }
-                    elem = lookup(parentId);
-                    if (elem != null) {
+                    parent = (NodeState) lookup(parentId);
+                    if (parent != null) {
                         // discard and let wsp manager reload state when accessed next time
-                        parent = (NodeState) elem.get();
-                        if (parent != null) {
-                            parent.discard();
-                            elem.set(null);
-                        }
+                        recentlyUsed.remove(parent);
+                        parent.discard();
                     }
                     break;
                 case Event.NODE_REMOVED:
                 case Event.PROPERTY_REMOVED:
-                    elem = lookup(itemId);
-                    if (elem != null) {
-                        state = (ItemState) elem.get();
+                    state = lookup(itemId);
+                    if (state != null) {
                         if (itemId.denotesNode()) {
                             if (itemId.getRelativePath() == null) {
                                 // also remove mapping from uuid
-                                uuid2PathElement.remove(itemId.getUUID());
+                                uuid2NodeState.remove(itemId.getUUID());
                             }
                         }
-
-                        elem.remove();
-
-                        if (state != null) {
-                            state.notifyStateDestroyed();
-                        }
+                        recentlyUsed.remove(state);
+                        state.notifyStateDestroyed();
                     }
-                    elem = lookup(parentId);
-                    if (elem != null && elem.get() != null) {
-                        parent = (NodeState) elem.get();
+                    state = lookup(parentId);
+                    if (state != null) {
+                        parent = (NodeState) state;
                         // check if removed as well
                         if (removedNodeIds.contains(parent.getId())) {
                             // do not invalidate here
                         } else {
                             // discard and let wsp manager reload state when accessed next time
+                            recentlyUsed.remove(parent);
                             parent.discard();
-                            elem.set(null);
                         }
                     }
                     break;
                 case Event.PROPERTY_CHANGED:
-                    elem = lookup(itemId);
+                    state = lookup(itemId);
                     // discard and let wsp manager reload state when accessed next time
-                    if (elem != null) {
-                        state = (ItemState) elem.get();
+                    if (state != null) {
+                        recentlyUsed.remove(state);
                         state.discard();
-                        elem.remove();
                     }
             }
         }
@@ -212,139 +218,80 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
     //------------------------------< internal >--------------------------------
 
     /**
-     * Returns the PathMap.Element which holds the ItemState with
-     * <code>id</code>. The returned <code>PathMap.Element</code> is guaranteed
-     * to reference an <code>ItemState</code> calling {@link
-     * PathMap.Element#get()};
+     * Called whenever an item state is accessed. Calling this method will update
+     * the LRU map which keeps track of most recently used item states.
      *
-     * @param id the id of the item state.
-     * @return the PathElement.Element.
-     * @throws NoSuchItemStateException if there is no ItemState with this id.
-     * @throws ItemStateException       if another error occurs.
+     * @param state the touched state.
      */
-    private PathMap.Element getPathElement(ItemId id)
-            throws NoSuchItemStateException, ItemStateException {
-        String uuid = id.getUUID();
-        Path relPath = id.getRelativePath();
-        PathMap.Element elem = null;
-
-        // first get PathElement of uuid part
-        if (uuid != null) {
-            elem = (PathMap.Element) uuid2PathElement.get(uuid);
-            if (elem == null || elem.get() == null) {
-                // state identified by the uuid is not yet cached -> get from ISM
-                NodeId refId = (relPath == null) ? (NodeId) id : idFactory.createNodeId(uuid);
-                NodeState state = isf.createNodeState(refId, this);
-
-                // put this state to cache
-                // but first we have to make sure that the parent of this state
-                // is already cached
-
-                if (state.getParentId() == null) {
-                    // shortcut for the root node
-                    elem = path2State.map(Path.ROOT, true);
-                    elem.set(state);
-                    uuid2PathElement.put(uuid, elem);
-                    return elem;
-                } else {
-                    // get element of parent this will force loading of
-                    // parent into cache if needed
-                    PathMap.Element parentElement = getPathElement(state.getParentId());
-                    // create path element if necessary
-                    if (elem == null) {
-                        Path.PathElement[] elements = new Path.PathElement[]{
-                            getNameElement((NodeState) parentElement.get(), state)};
-                        Path p = null;
-                        try {
-                            p = new Path.PathBuilder(elements).getPath();
-                        } catch (MalformedPathException e) {
-                            // elements is never empty
-                        }
-                        elem = parentElement.getDescendant(p, false);
-                    }
-                    elem.set(state);
-                    // now put current state to cache
-                    uuid2PathElement.put(uuid, elem);
-                }
-            }
-        }
-
-        // at this point we are guaranteed to have an element
-        // now resolve relative path part of id if there is one
-        if (relPath != null) {
-            PathMap.Element tmp = elem.getDescendant(relPath, true);
-            if (tmp == null || tmp.get() == null) {
-                // not yet cached, load from isf
-                ItemState state;
-                if (id.denotesNode()) {
-                    state = isf.createNodeState((NodeId) id, this);
-                } else {
-                    state = isf.createPropertyState((PropertyId) id, this);
-                }
-                // put to cache
-                if (tmp == null) {
-                    tmp = elem.getDescendant(relPath, false);
-                }
-                tmp.set(state);
-            }
-            elem = tmp;
-        }
-        return elem;
+    private void touch(ItemState state) {
+        recentlyUsed.put(state, state);
     }
 
     /**
-     * Looks up the <code>Element</code> with id but does not try to load the
+     * Resolves the id into an <code>ItemState</code>.
+     *
+     * @param id the id of the <code>ItemState</code> to resolve.
+     * @return the <code>ItemState</code>.
+     * @throws NoSuchItemStateException if there is no <code>ItemState</code>
+     *                                  with <code>id</code>
+     * @throws ItemStateException       if any other error occurs.
+     */
+    private ItemState resolve(ItemId id) throws NoSuchItemStateException, ItemStateException {
+        String uuid = id.getUUID();
+        Path relPath = id.getRelativePath();
+
+        NodeState nodeState = null;
+        // resolve uuid part
+        if (uuid != null) {
+            nodeState = (NodeState) uuid2NodeState.get(uuid);
+            if (nodeState == null) {
+                // state identified by the uuid is not yet cached -> get from ISM
+                NodeId refId = (relPath == null) ? (NodeId) id : idFactory.createNodeId(uuid);
+                nodeState = isf.createNodeState(refId, this);
+                uuid2NodeState.put(uuid, nodeState);
+            }
+        }
+
+        ItemState s = nodeState;
+        if (relPath != null) {
+            s = PathResolver.resolve(nodeState, relPath);
+        }
+        touch(s);
+        return s;
+    }
+
+    /**
+     * Looks up the <code>ItemState</code> with id but does not try to load the
      * item if it is not present in the cache.
      *
      * @param id the id of the ItemState to look up.
-     * @return the cached <code>Element</code> or <code>null</code> if it is not
+     * @return the cached <code>ItemState</code> or <code>null</code> if it is not
      *         present in the cache.
      */
-    private PathMap.Element lookup(ItemId id) {
-        PathMap.Element elem;
+    private ItemState lookup(ItemId id) {
+        ItemState state;
         // resolve UUID
         if (id.getUUID() != null) {
-            elem = (PathMap.Element) uuid2PathElement.get(id.getUUID());
-            if (elem == null) {
+            state = (ItemState) uuid2NodeState.get(id.getUUID());
+            if (state == null) {
                 // not cached
                 return null;
             }
         } else {
             // start from root
-            elem = path2State.map(Path.ROOT, false);
+            state = root;
         }
 
         // resolve relative path
         if (id.getRelativePath() != null) {
-            elem = elem.getDescendant(id.getRelativePath(), true);
-        }
-
-        return elem;
-    }
-
-    /**
-     * Returns the name of <code>state</code> starting from
-     * <code>parent</code>. This method only works for a direct parent of
-     * <code>state</code>.
-     *
-     * @param parent the parent of <code>state</code>.
-     * @param state the state.
-     * @return the name element for <code>state</code> starting from
-     * <code>parent</code>
-     * @throws ItemStateException if an error occurs
-     */
-    private static Path.PathElement getNameElement(NodeState parent, ItemState state)
-            throws ItemStateException {
-        if (state.isNode()) {
-            ChildNodeEntry entry = parent.getChildNodeEntry((NodeId) state.getId());
-            if (entry == null) {
-                throw new ItemStateException("No child node entry " +
-                        state.getId() + " found in " + parent.getId());
-            } else {
-                return Path.create(entry.getName(), entry.getIndex()).getNameElement();
+            try {
+                state = PathResolver.lookup(state, id.getRelativePath());
+            } catch (ItemStateException e) {
+                log.warn("exception while looking up state with id: " + id);
+                return null;
             }
-        } else {
-            return state.getId().getRelativePath().getNameElement();
         }
+
+        return state;
     }
 }

@@ -49,4 +49,14 @@ public interface ChildNodeEntry {
      */
     public NodeState getNodeState()
             throws NoSuchItemStateException, ItemStateException;
+
+    /**
+     * Returns <code>true</code> if the referenced <code>NodeState</code> is
+     * available. That is, the referenced <code>NodeState</code> is already
+     * cached and ready to be returned by {@link #getNodeState()}.
+     *
+     * @return <code>true</code> if the <code>NodeState</code> is available;
+     *         otherwise <code>false</code>.
+     */
+    public boolean isAvailable();
 }
