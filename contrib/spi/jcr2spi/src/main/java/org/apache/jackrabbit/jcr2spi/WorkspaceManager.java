@@ -144,16 +144,20 @@ public class WorkspaceManager implements UpdatableItemStateManager,
     private Set listeners = new HashSet();
 
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo) throws RepositoryException {
-        this.service = service;
-        this.sessionInfo = sessionInfo;
+        try {
+            this.service = service;
+            this.sessionInfo = sessionInfo;
 
-        cache = new CachingItemStateManager(this, service.getIdFactory());
-        addEventListener(cache);
+            cache = new CachingItemStateManager(this, service.getIdFactory());
+            addEventListener(cache);
 
-        nsRegistry = createNamespaceRegistry();
-        ntRegistry = createNodeTypeRegistry(nsRegistry);
-        rootNodeId = createRootNodeId();
-        externalChangeListener = createChangeListener();
+            nsRegistry = createNamespaceRegistry();
+            ntRegistry = createNodeTypeRegistry(nsRegistry);
+            rootNodeId = createRootNodeId();
+            externalChangeListener = createChangeListener();
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     public NamespaceRegistryImpl getNamespaceRegistryImpl() {
@@ -507,12 +511,10 @@ public class WorkspaceManager implements UpdatableItemStateManager,
         try {
             QName ntName = info.getNodetype();
 
-            // TODO pass parent in constructor of NodeState
-
             // build the node state
             // NOTE: unable to retrieve definitionId -> needs to be retrieved
             // by the itemManager upon Node creation.
-            NodeState state = new NodeState(info.getId(), ntName, parent.getNodeId(), ItemState.STATUS_EXISTING, false, getIdFactory());
+            NodeState state = new NodeState(info.getId(), parent, ntName, ItemState.STATUS_EXISTING, false, this);
             // set mixin nodetypes
             state.setMixinTypeNames(info.getMixins());
 
