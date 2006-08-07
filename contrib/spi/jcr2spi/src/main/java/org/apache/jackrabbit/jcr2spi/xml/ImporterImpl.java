@@ -379,7 +379,7 @@ public class ImporterImpl implements Importer, SessionListener {
 
             case ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING:
                 // 'replace' current parent with parent of conflicting
-                parent = conflicting.getParentState();
+                parent = conflicting.getParent();
                 if (parent == null) {
                     msg = "Root node cannot be replaced";
                     log.debug(msg);

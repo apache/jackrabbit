@@ -158,11 +158,11 @@ public abstract class ItemImpl implements Item, TransientItemStateListener {
      */
     public int getDepth() throws RepositoryException {
         checkStatus();
-        if (state.getParentState() == null) {
+        if (state.getParent() == null) {
             // shortcut
             return Path.ROOT_DEPTH;
         }
-        return session.getHierarchyManager().getDepth(state.getParentState().getId());
+        return session.getHierarchyManager().getDepth(state.getParent().getId());
     }
 
     /**

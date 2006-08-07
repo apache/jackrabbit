@@ -74,7 +74,7 @@ public class VersionManagerImpl implements VersionManager {
              * this would have a negative impact on performance though...
              */
             while (!nodeState.hasPropertyName(QName.JCR_ISCHECKEDOUT)) {
-                NodeState parentState = nodeState.getParentState();
+                NodeState parentState = nodeState.getParent();
                 if (parentState == null) {
                     // reached root state without finding a jcr:isCheckedOut property
                     return true;

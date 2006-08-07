@@ -362,7 +362,7 @@ public abstract class ItemState implements ItemStateListener {
      *
      * @return the parent <code>NodeState</code>'s Id
      */
-    public abstract NodeState getParentState();
+    public abstract NodeState getParent();
 
     /**
      * Returns the status of this item.

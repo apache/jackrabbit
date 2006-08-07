@@ -127,12 +127,12 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public String getName() throws RepositoryException {
         checkStatus();
-        QName name = session.getHierarchyManager().getQName(getId());
+        QName qName = getQName();
         try {
-            return NameFormat.format(name, session.getNamespaceResolver());
+            return NameFormat.format(getQName(), session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
-            String msg = "internal error: encountered unregistered namespace " + name.getNamespaceURI();
+            String msg = "internal error: encountered unregistered namespace " + qName.getNamespaceURI();
             log.debug(msg);
             throw new RepositoryException(msg, npde);
         }
@@ -144,7 +144,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         checkStatus();
         // check if root node
-        NodeState parentState = getItemState().getParentState();
+        NodeState parentState = getItemState().getParent();
         if (parentState == null) {
             String msg = "root node doesn't have a parent";
             log.debug(msg);
@@ -537,7 +537,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public int getIndex() throws RepositoryException {
         checkStatus();
-        NodeState parentState = getItemState().getParentState();
+        NodeState parentState = getItemState().getParent();
         if (parentState == null) {
             // the root node cannot have same-name siblings; always return the
             // default index
