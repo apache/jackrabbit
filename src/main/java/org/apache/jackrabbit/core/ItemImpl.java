@@ -1420,7 +1420,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         }
         if (otherItem instanceof ItemImpl) {
             ItemImpl other = (ItemImpl) otherItem;
-            return id.equals(other.id);
+            return id.equals(other.id) 
+                    && session.getWorkspace().getName().equals(
+                            other.getSession().getWorkspace().getName());
         }
         return false;
     }
