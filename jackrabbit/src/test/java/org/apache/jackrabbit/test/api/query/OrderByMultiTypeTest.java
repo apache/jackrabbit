@@ -43,9 +43,9 @@ public class OrderByMultiTypeTest extends AbstractOrderByTest {
      * Tests order by queries with a String property and a long property.
      */
     public void testMultipleOrder() throws Exception {
-        Node n1 = testRootNode.addNode(nodeName1);
-        Node n2 = testRootNode.addNode(nodeName2);
-        Node n3 = testRootNode.addNode(nodeName3);
+        Node n1 = testRootNode.addNode(nodeName1, testNodeType);
+        Node n2 = testRootNode.addNode(nodeName2, testNodeType);
+        Node n3 = testRootNode.addNode(nodeName3, testNodeType);
 
         n1.setProperty(propertyName1, "aaa");
         n1.setProperty(propertyName2, 3);
