@@ -468,9 +468,9 @@ public class ItemStateValidator {
 
         // access restriction on prop.
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
-            PropertyId pId = parentState.getPropertyId(propertyName);
             // make sure current session is granted write access on new prop
-            if (!mgrProvider.getAccessManager().isGranted(pId, new String[] {AccessManager.SET_PROPERTY_ACTION})) {
+            Path relPath = Path.create(propertyName, Path.INDEX_UNDEFINED);
+            if (!mgrProvider.getAccessManager().isGranted(parentState.getNodeId(), relPath, new String[] {AccessManager.SET_PROPERTY_ACTION})) {
                 throw new AccessDeniedException(safeGetJCRPath(parentState.getId()) + ": not allowed to create property with name " + propertyName);
             }
         }
@@ -739,7 +739,13 @@ public class ItemStateValidator {
         }
         // check for name collisions with existing properties
         if (parentState.hasPropertyName(propertyName)) {
-            PropertyId errorId = parentState.getPropertyId(propertyName);
+            PropertyId errorId = null;
+            try {
+                errorId = parentState.getPropertyState(propertyName).getPropertyId();
+            } catch (ItemStateException e) {
+                // should not occur. existance has been asserted before
+                throw new RepositoryException(e);
+            }
             throw new ItemExistsException(safeGetJCRPath(errorId));
         }
     }
@@ -762,18 +768,22 @@ public class ItemStateValidator {
 
         } else if (parentState.hasChildNodeEntry(nodeName)) {
             // retrieve the existing node state that ev. conflicts with the new one.
-            ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName, 1);
-            NodeState conflictingState = getNodeState(entry.getId());
+            try {
+                ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName, 1);
+                NodeState conflictingState = entry.getNodeState();
+                QNodeDefinition conflictDef = conflictingState.getDefinition();
+                QNodeDefinition newDef = getApplicableNodeDefinition(nodeName, nodeTypeName, parentState);
 
-            QNodeDefinition conflictDef = conflictingState.getDefinition();
-            QNodeDefinition newDef = getApplicableNodeDefinition(nodeName, nodeTypeName, parentState);
-
-            // check same-name sibling setting of both target and existing node
-            if (!(conflictDef.allowsSameNameSiblings() && newDef.allowsSameNameSiblings())) {
-                throw new ItemExistsException("Cannot add child node '"
-                    + nodeName.getLocalName() + "' to "
-                    + safeGetJCRPath(parentState.getNodeId())
-                    + ": colliding with same-named existing node.");
+                // check same-name sibling setting of both target and existing node
+                if (!(conflictDef.allowsSameNameSiblings() && newDef.allowsSameNameSiblings())) {
+                    throw new ItemExistsException("Cannot add child node '"
+                        + nodeName.getLocalName() + "' to "
+                        + safeGetJCRPath(parentState.getNodeId())
+                        + ": colliding with same-named existing node.");
+                }
+            } catch (ItemStateException e) {
+                // should not occur, since existence has been asserted before
+                throw new RepositoryException(e);
             }
         }
     }
@@ -826,28 +836,6 @@ public class ItemStateValidator {
     }
 
     /**
-     * Retrieves the state of the node at the given path.
-     * <p/>
-     * Note that access rights are <b><i>not</i></b> enforced!
-     *
-     * @param nodePath
-     * @return
-     * @throws PathNotFoundException
-     * @throws RepositoryException
-     */
-    public NodeState getNodeState(Path nodePath) throws PathNotFoundException, RepositoryException {
-        try {
-            ItemId id = mgrProvider.getHierarchyManager().getItemId(nodePath);
-            if (!id.denotesNode()) {
-                throw new PathNotFoundException(safeGetJCRPath(nodePath));
-            }
-            return getNodeState((NodeId) id);
-        } catch (ItemNotFoundException infe) {
-            throw new PathNotFoundException(safeGetJCRPath(nodePath));
-        }
-    }
-
-    /**
      * Retrieves the state of the item with the specified id using the given
      * item state manager.
      * <p/>
@@ -861,23 +849,6 @@ public class ItemStateValidator {
     public NodeState getNodeState(NodeId id) throws ItemNotFoundException, RepositoryException {
         try {
             return (NodeState) mgrProvider.getItemStateManager().getItemState(id);
-        } catch (NoSuchItemStateException nsise) {
-            throw new ItemNotFoundException(safeGetJCRPath(id));
-        } catch (ItemStateException ise) {
-            String msg = "internal error: failed to retrieve state of " + safeGetJCRPath(id);
-            log.debug(msg);
-            throw new RepositoryException(msg, ise);
-        }
-    }
-
-    public PropertyState getPropertyState(NodeId parentId, QName propertyName) throws ItemNotFoundException, RepositoryException {
-        NodeState nState = getNodeState(parentId);
-        return getPropertyState(nState.getPropertyId(propertyName));
-    }
-
-    public PropertyState getPropertyState(PropertyId id) throws ItemNotFoundException, RepositoryException {
-        try {
-            return (PropertyState) mgrProvider.getItemStateManager().getItemState(id);
         } catch (NoSuchItemStateException nsise) {
             throw new ItemNotFoundException(safeGetJCRPath(id));
         } catch (ItemStateException ise) {

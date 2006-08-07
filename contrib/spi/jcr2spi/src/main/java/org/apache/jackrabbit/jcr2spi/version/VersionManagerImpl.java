@@ -80,7 +80,7 @@ public class VersionManagerImpl implements VersionManager {
                 }
                 nodeState = (NodeState) stateManager.getItemState(nodeState.getParentId());
             }
-            PropertyId propId = nodeState.getPropertyId(QName.JCR_ISCHECKEDOUT);
+            PropertyId propId = nodeState.getPropertyState(QName.JCR_ISCHECKEDOUT).getPropertyId();
             PropertyState propState = (PropertyState) stateManager.getItemState(propId);
 
             Boolean b = Boolean.valueOf(propState.getValue().getString());

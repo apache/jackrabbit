@@ -35,6 +35,8 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
@@ -1275,7 +1277,7 @@ public class NodeImpl extends ItemImpl implements Node {
         Operation an = AddNode.create(getNodeState(), nodeName, nodeTypeName, null);
         itemStateMgr.execute(an);
 
-        // retrieve id of state that has been created during execution of AddNode        
+        // retrieve id of state that has been created during execution of AddNode
         NodeId childId;
         List cne = getNodeState().getChildNodeEntries(nodeName);
         if (definition.allowsSameNameSiblings()) {
@@ -1298,11 +1300,16 @@ public class NodeImpl extends ItemImpl implements Node {
     // TODO: protected due to usage within VersionImpl, VersionHistoryImpl (check for alternatives)
     protected Property getProperty(QName qName) throws PathNotFoundException, RepositoryException {
         checkStatus();
-        PropertyId propId = getNodeState().getPropertyId(qName);
         try {
-            return (Property) itemMgr.getItem(propId);
+            PropertyState pState = getNodeState().getPropertyState(qName);
+            return (Property) itemMgr.getItem(pState.getId());
         } catch (AccessDeniedException ade) {
             throw new ItemNotFoundException(qName.toString());
+        } catch (NoSuchItemStateException e) {
+            throw new PathNotFoundException(qName.toString());
+        } catch (ItemStateException e) {
+            String msg = "Error while accessing property " + qName.toString();
+            throw new RepositoryException(msg, e);
         }
     }
 
@@ -1560,7 +1567,12 @@ public class NodeImpl extends ItemImpl implements Node {
                 QName propName = NameFormat.parse(relPath, session.getNamespaceResolver());
                 // check if property entry exists
                 if (getNodeState().hasPropertyName(propName)) {
-                    return getNodeState().getPropertyId(propName);
+                    try {
+                        return getNodeState().getPropertyState(propName).getPropertyId();
+                    } catch (ItemStateException e) {
+                        // should not occur due, since existance has been checked
+                        throw new RepositoryException(e);
+                    }
                 } else {
                     // there's no property with that name
                     return null;

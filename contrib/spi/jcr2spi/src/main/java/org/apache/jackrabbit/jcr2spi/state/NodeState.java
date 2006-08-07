@@ -26,7 +26,6 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -359,21 +358,6 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Return the id of the Property with the specified name or <code>null</code>
-     * if no property exists with the given name.
-     * 
-     * @param propName
-     * @return
-     */
-    public synchronized PropertyId getPropertyId(QName propName) {
-        if (hasPropertyName(propName)) {
-            return idFactory.createPropertyId(id, propName);
-        } else {
-            return null;
-        }
-    }
-
-    /**
      * Returns the <code>ChildNodeEntry</code> with the specified name and index
      * or <code>null</code> if there's no matching entry.
      *
@@ -459,8 +443,7 @@ public class NodeState extends ItemState {
         }
         ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
         if (oldEntry != null) {
-            ChildNodeEntry newEntry =
-                    childNodeEntries.add(newName, oldEntry.getId());
+            ChildNodeEntry newEntry = childNodeEntries.add(newName, oldEntry.getId());
             notifyNodeAdded(newEntry);
             notifyNodeRemoved(oldEntry);
             return true;

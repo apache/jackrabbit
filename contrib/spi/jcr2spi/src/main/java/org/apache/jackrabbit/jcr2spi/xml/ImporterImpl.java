@@ -22,6 +22,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
@@ -58,6 +59,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
@@ -129,17 +131,28 @@ public class ImporterImpl implements Importer, SessionListener {
         this.hierMgr = hierManager;
         this.stateMgr = stateManager;
         this.idFactory = idFactory;
-
-        // perform preliminary checks
-        importTarget = validator.getNodeState(parentPath);
-        // DIFF JR: remove check for overall writability on target-node.
-
         this.uuidBehavior = uuidBehavior;
         this.isWspImport = isWspImport;
 
-        refTracker = new ReferenceChangeTracker();
-        parents = new Stack();
-        parents.push(importTarget);
+        // perform preliminary checks
+        try {
+            ItemId id = hierMgr.getItemId(parentPath);
+            if (!id.denotesNode()) {
+                throw new PathNotFoundException(hierMgr.safeGetJCRPath(parentPath));
+            }
+            importTarget = validator.getNodeState((NodeId) id);
+
+            refTracker = new ReferenceChangeTracker();
+            parents = new Stack();
+            parents.push(importTarget);
+        } catch (ItemNotFoundException infe) {
+            throw new PathNotFoundException(hierMgr.safeGetJCRPath(parentPath));
+        }
+
+
+        // DIFF JR: remove check for overall writability on target-node.
+
+
     }
 
     //-----------------------------------------------------------< Importer >---
@@ -175,7 +188,13 @@ public class ImporterImpl implements Importer, SessionListener {
            if (parent.hasChildNodeEntry(nodeInfo.getName())) {
                // a node with that name already exists...
                ChildNodeEntry entry = parent.getChildNodeEntry(nodeInfo.getName(), 1);
-               NodeState existing = validator.getNodeState(entry.getId());
+               NodeState existing = null;
+               try {
+                   existing = entry.getNodeState();
+               } catch (ItemStateException e) {
+                   // should not occur. existance has been checked before
+                   throw new RepositoryException(e);
+               }
                QNodeDefinition def = existing.getDefinition();
                if (!def.allowsSameNameSiblings()) {
                    // existing doesn't allow same-name siblings, check for conflicts
@@ -408,36 +427,41 @@ public class ImporterImpl implements Importer, SessionListener {
              *
              * see http://issues.apache.org/jira/browse/JCR-61
              */
-            PropertyState conflicting = validator.getPropertyState(parent.getNodeId(), nodeInfo.getName());
-            if (conflicting.getStatus() == ItemState.STATUS_NEW) {
-                // assume this property has been imported as well;
-                // rename conflicting property
-                // @todo use better reversible escaping scheme to create unique name
-                QName newName = new QName(nodeInfo.getName().getNamespaceURI(), nodeInfo.getName().getLocalName() + "_");
-                if (parent.hasPropertyName(newName)) {
-                    newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
-                }
-                // since name changes, need to find new applicable definition
-                QPropertyDefinition propDef;
-                if (conflicting.getValues().length == 1) {
-                    // could be single- or multi-valued (n == 1)
-                    try {
-                        // try single-valued
-                        propDef = validator.getApplicablePropertyDefinition(newName, conflicting.getType(), false, parent);
-                    } catch (ConstraintViolationException cve) {
-                        // try multi-valued
+            try {
+                PropertyState conflicting = parent.getPropertyState(nodeInfo.getName());
+                if (conflicting.getStatus() == ItemState.STATUS_NEW) {
+                    // assume this property has been imported as well;
+                    // rename conflicting property
+                    // @todo use better reversible escaping scheme to create unique name
+                    QName newName = new QName(nodeInfo.getName().getNamespaceURI(), nodeInfo.getName().getLocalName() + "_");
+                    if (parent.hasPropertyName(newName)) {
+                        newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
+                    }
+                    // since name changes, need to find new applicable definition
+                    QPropertyDefinition propDef;
+                    if (conflicting.getValues().length == 1) {
+                        // could be single- or multi-valued (n == 1)
+                        try {
+                            // try single-valued
+                            propDef = validator.getApplicablePropertyDefinition(newName, conflicting.getType(), false, parent);
+                        } catch (ConstraintViolationException cve) {
+                            // try multi-valued
+                            propDef = validator.getApplicablePropertyDefinition(newName, conflicting.getType(), true, parent);
+                        }
+                    } else {
+                        // can only be multi-valued (n == 0 || n > 1)
                         propDef = validator.getApplicablePropertyDefinition(newName, conflicting.getType(), true, parent);
                     }
-                } else {
-                    // can only be multi-valued (n == 0 || n > 1)
-                    propDef = validator.getApplicablePropertyDefinition(newName, conflicting.getType(), true, parent);
-                }
 
-                PropertyId newPId = idFactory.createPropertyId(parent.getNodeId(), newName);
-                Operation ap = AddProperty.create(newPId, conflicting.getType(), propDef, conflicting.getValues());
-                stateMgr.execute(ap);
-                Operation rm = Remove.create(conflicting);
-                stateMgr.execute(rm);
+                    PropertyId newPId = idFactory.createPropertyId(parent.getNodeId(), newName);
+                    Operation ap = AddProperty.create(newPId, conflicting.getType(), propDef, conflicting.getValues());
+                    stateMgr.execute(ap);
+                    Operation rm = Remove.create(conflicting);
+                    stateMgr.execute(rm);
+                }
+            } catch (ItemStateException e) {
+                // should not occur. existance has been checked before
+                throw new RepositoryException(e);
             }
         }
 
@@ -450,21 +474,25 @@ public class ImporterImpl implements Importer, SessionListener {
             Operation an = AddNode.create(parent, nodeInfo.getName(), nodeInfo.getNodeTypeName(), nodeInfo.getId());
             stateMgr.execute(an);
             // retrieve id of state that has been created during execution of AddNode
-            NodeId childId;
-            List cne = parent.getChildNodeEntries(nodeInfo.getName());
-            if (def.allowsSameNameSiblings()) {
-                // TODO: find proper solution. problem with same-name-siblings
-                childId = ((ChildNodeEntry)cne.get(cne.size()-1)).getId();
-            } else {
-                childId = ((ChildNodeEntry)cne.get(0)).getId();
+            NodeState childState;
+            try {
+                List cne = parent.getChildNodeEntries(nodeInfo.getName());
+                if (def.allowsSameNameSiblings()) {
+                    // TODO: find proper solution. problem with same-name-siblings
+                    childState = ((ChildNodeEntry)cne.get(cne.size()-1)).getNodeState();
+                } else {
+                    childState = ((ChildNodeEntry)cne.get(0)).getNodeState();
+                }
+            } catch (ItemStateException e) {
+                // should not occur, since nodestate is retrieved from cne-list
+                throw new RepositoryException(e);
             }
-            NodeState nodeState = validator.getNodeState(childId);
-            
+
             // and set mixin types
-            PropertyId mixinPId = idFactory.createPropertyId(childId, QName.JCR_MIXINTYPES);
+            PropertyId mixinPId = idFactory.createPropertyId(childState.getNodeId(), QName.JCR_MIXINTYPES);
             Operation sm = SetMixin.create(mixinPId, nodeInfo.getMixinNames());
             stateMgr.execute(sm);
-            return nodeState;
+            return childState;
         }
     }
 
@@ -481,25 +509,30 @@ public class ImporterImpl implements Importer, SessionListener {
         TextValue[] tva = pi.getValues();
         int infoType = pi.getType();
 
-        PropertyState prop = null;
+        PropertyState propState = null;
         QPropertyDefinition def;
 
         if (nodeState.hasPropertyName(propName)) {
             // a property with that name already exists...
-            PropertyState existing = validator.getPropertyState(nodeState.getNodeId(), propName);
-            def = existing.getDefinition();
-            if (def.isProtected()) {
-                // skip protected property
-                log.debug("skipping protected property " + hierMgr.safeGetJCRPath(existing.getPropertyId()));
-                return;
-            }
-            if (def.isAutoCreated()
-                && (existing.getType() == infoType || infoType == PropertyType.UNDEFINED)
-                && def.isMultiple() == existing.isMultiValued()) {
-                // this property has already been auto-created, no need to create it
-                prop = existing;
-            } else {
-                throw new ItemExistsException(hierMgr.safeGetJCRPath(existing.getPropertyId()));
+            try {
+                PropertyState existing = nodeState.getPropertyState(propName);
+                def = existing.getDefinition();
+                if (def.isProtected()) {
+                    // skip protected property
+                    log.debug("skipping protected property " + hierMgr.safeGetJCRPath(existing.getPropertyId()));
+                    return;
+                }
+                if (def.isAutoCreated()
+                    && (existing.getType() == infoType || infoType == PropertyType.UNDEFINED)
+                    && def.isMultiple() == existing.isMultiValued()) {
+                    // this property has already been auto-created, no need to create it
+                    propState = existing;
+                } else {
+                    throw new ItemExistsException(hierMgr.safeGetJCRPath(existing.getPropertyId()));
+                }
+            } catch (ItemStateException e) {
+                // should not occur. existance has been checked before
+                throw new RepositoryException(e);
             }
         } else {
             // there's no property with that name, find applicable definition
@@ -530,21 +563,26 @@ public class ImporterImpl implements Importer, SessionListener {
         }
 
         QValue[] values = getPropertyValues(pi, targetType, def.isMultiple(), nsResolver);
-        if (prop == null) {
+        if (propState == null) {
             // create new property
             PropertyId newPId = idFactory.createPropertyId(nodeState.getNodeId(), propName);
             Operation ap = AddProperty.create(newPId, targetType, def, values);
             stateMgr.execute(ap);
-            prop = validator.getPropertyState(nodeState.getNodeId(), propName);
+            try {
+                propState = nodeState.getPropertyState(propName);
+            } catch (ItemStateException e) {
+                // should not occur since prop-state has been created before
+                throw new RepositoryException(e);
+            }
         } else {
             // modify value of existing property
-            Operation sp = SetPropertyValue.create(prop, values, targetType);
+            Operation sp = SetPropertyValue.create(propState, values, targetType);
             stateMgr.execute(sp);
         }
 
         // store reference for later resolution
-        if (prop != null && prop.getType() == PropertyType.REFERENCE) {
-            refTracker.processedReference(prop);
+        if (propState != null && propState.getType() == PropertyType.REFERENCE) {
+            refTracker.processedReference(propState);
         }
     }
 

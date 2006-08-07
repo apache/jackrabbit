@@ -1052,8 +1052,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             // update/create corresponding property state
             if (nState.hasPropertyName(QName.JCR_MIXINTYPES)) {
                 // execute value of existing property
-                PropertyState pState = validator.getPropertyState(nState.getNodeId(), QName.JCR_MIXINTYPES);
-                setPropertyStateValue(pState, QValue.create(mixinNames), PropertyType.NAME);
+                try {
+                    PropertyState pState = nState.getPropertyState(QName.JCR_MIXINTYPES);
+                    setPropertyStateValue(pState, QValue.create(mixinNames), PropertyType.NAME);
+                } catch (ItemStateException e) {
+                    // should not occur, since existance has been asserted before
+                    throw new RepositoryException(e);
+                }
             } else {
                 // create new jcr:mixinTypes property
                 EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
@@ -1069,9 +1074,14 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
             // remove the jcr:mixinTypes property state if already present
             if (nState.hasPropertyName(QName.JCR_MIXINTYPES)) {
-                PropertyState pState = validator.getPropertyState(nState.getNodeId(), QName.JCR_MIXINTYPES);
-                int options = 0; // no checks required
-                removeItemState(pState, options);
+                try {
+                    PropertyState pState = nState.getPropertyState(QName.JCR_MIXINTYPES);
+                    int options = 0; // no checks required
+                    removeItemState(pState, options);
+                } catch (ItemStateException e) {
+                    // should not occur, since existance has been asserted before
+                    throw new RepositoryException(e);
+                }
             } else {
                 // alternative: make sure changes on nodeState are reflected in state manager.
                 store(nState);
@@ -1086,30 +1096,40 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             // use temp set to avoid ConcurrentModificationException
             Iterator childProps = new HashSet(nState.getPropertyNames()).iterator();
             while (childProps.hasNext()) {
-                PropertyState childState = validator.getPropertyState(nState.getNodeId(), (QName) childProps.next());
-                QName declNtName = childState.getDefinition().getDeclaringNodeType();
-                // check if property has been defined by mixin type (or one of its supertypes)
-                if (!ent.includesNodeType(declNtName)) {
-                    // the remaining effective node type doesn't include the
-                    // node type that declared this property, it is thus safe
-                    // to remove it
-                    int options = 0; // no checks required
-                    removeItemState(childState, options);
+                try {
+                    PropertyState childState = nState.getPropertyState((QName) childProps.next());
+                    QName declNtName = childState.getDefinition().getDeclaringNodeType();
+                    // check if property has been defined by mixin type (or one of its supertypes)
+                    if (!ent.includesNodeType(declNtName)) {
+                        // the remaining effective node type doesn't include the
+                        // node type that declared this property, it is thus safe
+                        // to remove it
+                        int options = 0; // no checks required
+                        removeItemState(childState, options);
+                    }
+                } catch (ItemStateException e) {
+                    // ignore. cleanup will occure upon save anyway
+                    log.error("Error while removing child node defined by removed mixin: {0}", e.getMessage());
                 }
             }
             // use temp array to avoid ConcurrentModificationException
             Iterator childNodes = new ArrayList(nState.getChildNodeEntries()).iterator();
             while (childNodes.hasNext()) {
-                ChildNodeEntry entry = (ChildNodeEntry) childNodes.next();
-                NodeState childState = validator.getNodeState(entry.getId());
-                // check if node has been defined by mixin type (or one of its supertypes)
-                QName declNtName = childState.getDefinition().getDeclaringNodeType();
-                if (!ent.includesNodeType(declNtName)) {
-                    // the remaining effective node type doesn't include the
-                    // node type that declared this child node, it is thus safe
-                    // to remove it.
-                    int options = 0; // NOTE: referencial intergrity checked upon save.
-                    removeItemState(childState, options);
+                try {
+                    ChildNodeEntry entry = (ChildNodeEntry) childNodes.next();
+                    NodeState childState = entry.getNodeState();
+                    // check if node has been defined by mixin type (or one of its supertypes)
+                    QName declNtName = childState.getDefinition().getDeclaringNodeType();
+                    if (!ent.includesNodeType(declNtName)) {
+                        // the remaining effective node type doesn't include the
+                        // node type that declared this child node, it is thus safe
+                        // to remove it.
+                        int options = 0; // NOTE: referencial intergrity checked upon save.
+                        removeItemState(childState, options);
+                    }
+                } catch (ItemStateException e) {
+                    // ignore. cleanup will occure upon save anyway
+                    log.error("Error while removing child property defined by removed mixin: {0}", e.getMessage());
                 }
             }
         }
@@ -1121,9 +1141,17 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @inheritDoc
      */
     public void visit(SetPropertyValue operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        PropertyState pState = validator.getPropertyState(operation.getPropertyId());
-        setPropertyStateValue(pState, operation.getValues(), operation.getPropertyType());
-        transientStateMgr.addOperation(operation);
+        try {
+            PropertyState pState = (PropertyState) getItemState(operation.getPropertyId());
+            setPropertyStateValue(pState, operation.getValues(), operation.getPropertyType());
+            transientStateMgr.addOperation(operation);
+        } catch (NoSuchItemStateException nsise) {
+            throw new ItemNotFoundException(getHierarchyManager().safeGetJCRPath(operation.getPropertyId()));
+        } catch (ItemStateException ise) {
+            String msg = "internal error: failed to retrieve state of " + getHierarchyManager().safeGetJCRPath(operation.getPropertyId());
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
     }
 
     /**
@@ -1425,12 +1453,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             while (tmpIter.hasNext()) {
                 ChildNodeEntry entry = (ChildNodeEntry) tmpIter.next();
                 try {
-                    NodeState child = validator.getNodeState(entry.getId());
+                    NodeState child = entry.getNodeState();
                     // remove child node
                     // DIFF JR: don't recheck permission for child states
                     // DIFF JR: jr first calls recursive-method then removes c-n-entry
                     removeNodeState(targetState, child);
-                } catch (ItemNotFoundException e) {
+                } catch (ItemStateException e) {
                     // ignore
                     // TODO: check if correct
                 }
@@ -1442,9 +1470,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         while (tmpIter.hasNext()) {
             QName propName = (QName) tmpIter.next();
             try {
-                PropertyState child = validator.getPropertyState(targetState.getNodeId(), propName);
+                PropertyState child = targetState.getPropertyState(propName);
                 removePropertyState(targetState, child);
-            } catch (ItemNotFoundException e) {
+            } catch (ItemStateException e) {
                 // ignore
                 // TODO: check if correct
             }

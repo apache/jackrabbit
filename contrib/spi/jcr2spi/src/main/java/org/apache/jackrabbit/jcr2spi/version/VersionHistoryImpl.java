@@ -76,7 +76,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         if (vhState.hasChildNodeEntry(QName.JCR_VERSIONLABELS)) {
             ChildNodeEntry lnEntry = vhState.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
             try {
-                labelNodeState = (NodeState) itemStateMgr.getItemState(lnEntry.getId());
+                labelNodeState = lnEntry.getNodeState();
             } catch (ItemStateException e) {
                 throw new VersionException("nt:versionHistory requires a mandatory, autocreated child node jcr:versionLabels.");
             }
@@ -366,9 +366,14 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     private NodeId getVersionIdByLabel(QName qLabel) throws VersionException, RepositoryException {
         if (labelNodeState.hasPropertyName(qLabel)) {
             // retrieve reference property value -> and convert it to a NodeId
-            PropertyId pId = labelNodeState.getPropertyId(qLabel);
-            Node version = ((Property) itemMgr.getItem(pId)).getNode();
-            return (NodeId) session.getHierarchyManager().getItemId(version);
+            try {
+                PropertyId pId = labelNodeState.getPropertyState(qLabel).getPropertyId();
+                Node version = ((Property) itemMgr.getItem(pId)).getNode();
+                return (NodeId) session.getHierarchyManager().getItemId(version);
+            } catch (ItemStateException e) {
+                // should not occur. existance of property state has been checked
+                throw new RepositoryException(e);
+            }
         } else {
             throw new VersionException("Version with label '" + qLabel + "' does not exist.");
         }

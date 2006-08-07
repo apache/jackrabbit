@@ -218,7 +218,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 // property is not the last element in the path
                 throw new PathNotFoundException(safeGetJCRPath(path));
             }
-            childId = parentState.getPropertyId(name);
+            childId = parentState.getPropertyState(name).getId();
         } else {
             // no such item
             throw new PathNotFoundException(safeGetJCRPath(path));
