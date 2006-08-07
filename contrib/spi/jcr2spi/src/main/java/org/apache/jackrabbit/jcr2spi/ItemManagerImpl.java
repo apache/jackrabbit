@@ -102,12 +102,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
     private NodeDefinition getDefinition(NodeState state)
             throws RepositoryException {
-        NodeId parentId = state.getParentId();
-        NodeState parentState = null;
-        if (parentId != null) {
-            NodeImpl parent = (NodeImpl) getItem(parentId);
-            parentState = (NodeState) parent.getItemState();
-        }
+        NodeState parentState = state.getParentState();
         NodeDefinition def = session.getItemDefinitionManager().getNodeDefinition(state, parentState);
         return def;
     }
@@ -115,9 +110,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     private PropertyDefinition getDefinition(PropertyState state)
         throws RepositoryException {
         // fallback: try finding applicable definition
-        NodeId parentId = state.getParentId();
-        NodeImpl parent = (NodeImpl) getItem(parentId);
-        NodeState parentState = (NodeState) parent.getItemState();
+        NodeState parentState = state.getParentState();
         PropertyDefinition def = session.getItemDefinitionManager().getPropertyDefinition(state, parentState);
         return def;
     }

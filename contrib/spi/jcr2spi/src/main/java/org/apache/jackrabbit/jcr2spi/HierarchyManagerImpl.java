@@ -112,7 +112,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @see ZombieHierarchyManager#getParentId(ItemState)
      */
     protected NodeId getParentId(ItemState state) {
-        return state.getParentId();
+        return state.getParentState().getNodeId();
     }
 
     /**
@@ -244,25 +244,24 @@ public class HierarchyManagerImpl implements HierarchyManager {
             return;
         }
 
-        NodeId parentId = state.getParentId();
-        if (parentId == null) {
+        NodeState parentState = state.getParentState();
+        if (parentState == null) {
             String msg = "failed to build path of " + state.getId()
                     + ": orphaned item";
             log.debug(msg);
             throw new ItemNotFoundException(msg);
         }
 
-        NodeState parent = (NodeState) getItemState(parentId);
         // recursively build path of parent
-        buildPath(builder, parent);
+        buildPath(builder, parentState);
 
         if (state.isNode()) {
             NodeState nodeState = (NodeState) state;
             NodeId id = nodeState.getNodeId();
-            ChildNodeEntry entry = getChildNodeEntry(parent, id);
+            ChildNodeEntry entry = getChildNodeEntry(parentState, id);
             if (entry == null) {
                 String msg = "failed to build path of " + state.getId() + ": "
-                        + parent.getNodeId() + " has no child entry for "
+                        + parentState.getNodeId() + " has no child entry for "
                         + id;
                 log.debug(msg);
                 throw new ItemNotFoundException(msg);

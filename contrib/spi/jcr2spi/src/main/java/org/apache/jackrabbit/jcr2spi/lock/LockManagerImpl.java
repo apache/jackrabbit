@@ -299,11 +299,12 @@ public class LockManagerImpl implements LockManager, SessionListener {
              * this would have a negative impact on performance though...
              */
             while (!nodeState.hasPropertyName(QName.JCR_LOCKOWNER)) {
-                if (nodeState.getParentId() == null) {
+                NodeState parentState = nodeState.getParentState();
+                if (parentState == null) {
                     // reached root state without finding a locked node
                     return null;
                 }
-                nodeState = (NodeState) wspManager.getItemState(nodeState.getParentId());
+                nodeState = parentState;
             }
             return nodeState;
         } catch (ItemStateException e) {

@@ -126,7 +126,7 @@ public class TransientChangeLog extends ChangeLog implements TransientItemStateM
      */
     public NodeState createNodeState(NodeId id,
                                      QName nodeTypeName,
-                                     NodeId parentId) {
+                                     NodeState parent) {
         // DIFF JACKRABBIT: not needed anymore
         // check map; synchronized to ensure an entry is not created twice.
 //        synchronized (addedStates) {
@@ -143,7 +143,7 @@ public class TransientChangeLog extends ChangeLog implements TransientItemStateM
 //            return state;
 //        }
 
-        return new NodeState(id, nodeTypeName, parentId, ItemState.STATUS_NEW, true, idFactory);
+        return new NodeState(id, nodeTypeName, parent, ItemState.STATUS_NEW, true, idFactory);
     }
 
     /**
@@ -172,9 +172,9 @@ public class TransientChangeLog extends ChangeLog implements TransientItemStateM
     /**
      * @inheritDoc
      */
-    public PropertyState createPropertyState(NodeId parentId, QName propName) {
-        PropertyId id = idFactory.createPropertyId(parentId, propName);
-        return new PropertyState(id, ItemState.STATUS_NEW, true);
+    public PropertyState createPropertyState(NodeState parentState, QName propName) {
+        PropertyId id = idFactory.createPropertyId(parentState.getNodeId(), propName);
+        return new PropertyState(id, parentState, ItemState.STATUS_NEW, true);
     }
 
     /**

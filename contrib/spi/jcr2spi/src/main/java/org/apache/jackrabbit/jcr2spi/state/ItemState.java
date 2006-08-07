@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -357,13 +356,13 @@ public abstract class ItemState implements ItemStateListener {
     }
 
     /**
-     * Returns the NodeId of the parent <code>NodeState</code> or <code>null</code>
+     * Returns the parent <code>NodeState</code> or <code>null</code>
      * if either this item state represents the root node or this item state is
      * 'free floating', i.e. not attached to the repository's hierarchy.
      *
      * @return the parent <code>NodeState</code>'s Id
      */
-    public abstract NodeId getParentId();
+    public abstract NodeState getParentState();
 
     /**
      * Returns the status of this item.
