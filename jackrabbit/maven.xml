@@ -289,4 +289,13 @@
         /> 
     </goal>
 
+
+   <postGoal name="xdoc">
+       <ant:replaceregexp
+           match="&lt;tr class=&quot;[ab]&quot;&gt;"
+           replace="&lt;tr&gt;" flags="g" byline="true">
+           <ant:fileset dir="${maven.docs.dest}" includes="**/*.html"/>
+       </ant:replaceregexp>
+   </postGoal>
+
 </project>
