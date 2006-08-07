@@ -184,7 +184,7 @@ public class NodeState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    public NodeState getParentState() {
+    public NodeState getParent() {
         return parent;
     }
 

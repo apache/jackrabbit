@@ -61,7 +61,7 @@ public class Remove extends AbstractOperation {
 
     //------------------------------------------------------------< Factory >---
     public static Operation create(ItemState state) {
-        Remove rm = new Remove(state.getId(), state.getParentState().getNodeId());
+        Remove rm = new Remove(state.getId(), state.getParent().getNodeId());
         return rm;
     }
 }

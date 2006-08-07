@@ -47,7 +47,6 @@
     <option name="DEPRECATION" value="true" />
     <option name="ADDITIONAL_OPTIONS_STRING" value="" />
     <option name="MAXIMUM_HEAP_SIZE" value="128" />
-    <option name="USE_GENERICS_COMPILER" value="false" />
   </component>
   <component name="JavadocGenerationManager">
     <option name="OUTPUT_DIRECTORY" />
@@ -179,13 +178,19 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://D:/dev/jackrabbit_2006_06_27/jackrabbit/jackrabbit-core.iml" filepath="D:/dev/jackrabbit_2006_06_27/jackrabbit/jackrabbit-core.iml" />
+      <module fileurl="file://D:/dev/jackrabbit_2006_06_27/jcr-server/client/jackrabbit-jcr-client.iml" filepath="D:/dev/jackrabbit_2006_06_27/jcr-server/client/jackrabbit-jcr-client.iml" />
+      <module fileurl="file://D:/dev/jackrabbit_2006_06_27/jcr-server/server/jackrabbit-jcr-server.iml" filepath="D:/dev/jackrabbit_2006_06_27/jcr-server/server/jackrabbit-jcr-server.iml" />
+      <module fileurl="file://D:/dev/jackrabbit_2006_06_27/jcr-server/webdav/jackrabbit-jcr-webdav.iml" filepath="D:/dev/jackrabbit_2006_06_27/jcr-server/webdav/jackrabbit-jcr-webdav.iml" />
+      <module fileurl="file://D:/dev/jackrabbit_2006_06_27/jcr-server/webapp/jackrabbit-server.iml" filepath="D:/dev/jackrabbit_2006_06_27/jcr-server/webapp/jackrabbit-server.iml" />
       <module fileurl="file://$PROJECT_DIR$/spi/jackrabbit-spi.iml" filepath="$PROJECT_DIR$/spi/jackrabbit-spi.iml" />
       <module fileurl="file://$PROJECT_DIR$/commons/jackrabbit-spi-commons.iml" filepath="$PROJECT_DIR$/commons/jackrabbit-spi-commons.iml" />
       <module fileurl="file://$PROJECT_DIR$/jcr2spi/jackrabbit-spi-jcr2spi.iml" filepath="$PROJECT_DIR$/jcr2spi/jackrabbit-spi-jcr2spi.iml" />
       <module fileurl="file://$PROJECT_DIR$/spi2dav/jackrabbit-spi-spi2dav.iml" filepath="$PROJECT_DIR$/spi2dav/jackrabbit-spi-spi2dav.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test/test.iml" filepath="$PROJECT_DIR$/test/test.iml" />
     </modules>
   </component>
-  <component name="ProjectRootManager" version="2" assert-keyword="true" jdk-15="false" project-jdk-name="java version &quot;1.4.2&quot;" />
+  <component name="ProjectRootManager" version="2" assert-keyword="true" jdk-15="false" project-jdk-name="java version &quot;1.4.2_04&quot;" />
   <component name="RmicSettings">
     <option name="IS_EANABLED" value="false" />
     <option name="DEBUGGING_INFO" value="true" />
@@ -199,5 +204,6 @@
     <option name="INSTRUMENT_CLASSES" value="true" />
     <option name="COPY_FORMS_RUNTIME_TO_OUTPUT" value="true" />
   </component>
+  <UsedPathMacros />
 </project>
 

@@ -217,7 +217,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManag
         QPropertyDefinition def = propState.getDefinition();
         if (def == null) {
             try {
-                def = ntReg.getEffectiveNodeType(parentState.getNodeTypeNames()).getApplicablePropertyDefinition(propState.getName(), propState.getType(), propState.isMultiValued());
+                def = ntReg.getEffectiveNodeType(parentState.getNodeTypeNames()).getApplicablePropertyDefinition(propState.getQName(), propState.getType(), propState.isMultiValued());
                 propState.setDefinition(def);
             } catch (NodeTypeConflictException e) {
                 String msg = "internal error: failed to build effective node type.";

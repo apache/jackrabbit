@@ -131,7 +131,7 @@ public class PropertyState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    public NodeState getParentState() {
+    public NodeState getParent() {
         return parent;
     }
 
@@ -140,7 +140,7 @@ public class PropertyState extends ItemState {
      *
      * @return the name of this property.
      */
-    public QName getName() {
+    public QName getQName() {
         return id.getQName();
     }
 

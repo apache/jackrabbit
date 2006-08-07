@@ -847,8 +847,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 Set dependentIDs = new HashSet();
                 if (nodeState.hasOverlayedState()) {
                     // TODO: review usage of NodeId
-                    NodeId oldParentId = nodeState.getOverlayedState().getParentState().getNodeId();
-                    NodeId newParentId = nodeState.getParentState().getNodeId();
+                    NodeId oldParentId = nodeState.getOverlayedState().getParent().getNodeId();
+                    NodeId newParentId = nodeState.getParent().getNodeId();
                     if (oldParentId != null) {
                         if (newParentId == null) {
                             // node has been removed, add old parent
@@ -1381,7 +1381,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         boolean success = false;
         try {
             // assert parent is transient state
-            NodeState parent = create(itemState.getParentState());
+            NodeState parent = create(itemState.getParent());
             if (itemState.isNode()) {
                 removeNodeState(parent, (NodeState)itemState);
             } else {
@@ -1425,7 +1425,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private void removePropertyState(NodeState parent, PropertyState target) {
         PropertyState modifiableTarget = create(target);
         // remove property entry
-        parent.removePropertyName(modifiableTarget.getName());
+        parent.removePropertyName(modifiableTarget.getQName());
         // destroy property state
         destroy(modifiableTarget);
     }

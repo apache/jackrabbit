@@ -22,7 +22,6 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
@@ -71,8 +70,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public String getName() throws RepositoryException {
         checkStatus();
-        PropertyId propId = getPropertyId();
-        QName name = propId.getQName();
+        QName name = getQName();
         try {
             return NameFormat.format(name, session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
@@ -88,7 +86,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         checkStatus();
-        return (Node) itemMgr.getItem(getItemState().getParentState().getId());
+        return (Node) itemMgr.getItem(getItemState().getParent().getId());
     }
 
     /**
@@ -413,15 +411,14 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     //-----------------------------------------------------------< ItemImpl >---
     /**
-     * Returns the QName defined with this <code>PropertyId</code>
+     * Returns the QName defined with this <code>PropertyState</code>
      *
      * @return
-     * @see PropertyId#getQName()
+     * @see PropertyState#getQName()
      * @see ItemImpl#getQName()
      */
     QName getQName() {
-        PropertyId propId = (PropertyId)getId();
-        return propId.getQName();
+        return getPropertyState().getQName();
     }
 
     //------------------------------------------------------< check methods >---
@@ -557,13 +554,5 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     private PropertyState getPropertyState() {
         return (PropertyState) getItemState();
-    }
-
-    /**
-     *
-     * @return
-     */
-    private PropertyId getPropertyId() {
-        return (PropertyId) getId();
     }
 }

@@ -87,7 +87,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
     protected NodeId getParentId(ItemState state) {
         if (state.hasOverlayedState()) {
             // use 'old' parent in case item has been removed
-            return state.getOverlayedState().getParentState().getNodeId();
+            return state.getOverlayedState().getParent().getNodeId();
         }
         // delegate to base class
         return super.getParentId(state);

@@ -419,7 +419,7 @@ public class ItemStateValidator {
         VersionException, LockException, ItemNotFoundException,
         ItemExistsException, PathNotFoundException, RepositoryException {
 
-        checkWriteProperty(propState.getParentState(), propState.getName(), propState.getDefinition(), options);
+        checkWriteProperty(propState.getParent(), propState.getQName(), propState.getDefinition(), options);
     }
 
     /**
@@ -587,7 +587,7 @@ public class ItemStateValidator {
         // NOTE: referencial integrity should be asserted for all child-nodes.
 
         ItemId targetId = targetState.getId();
-        NodeState parentState = targetState.getParentState();
+        NodeState parentState = targetState.getParent();
         if (parentState == null) {
             // root or orphaned node
             throw new ConstraintViolationException("Cannot remove root node");
@@ -648,7 +648,7 @@ public class ItemStateValidator {
         if (itemState.getStatus() == ItemState.STATUS_NEW) {
             return;
         }
-        NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParentState();
+        NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParent();
         if (!mgrProvider.getVersionManager().isCheckedOut(nodeState.getNodeId())) {
             throw new VersionException(safeGetJCRPath(nodeState.getNodeId()) + " is checked-in");
         }
@@ -669,7 +669,7 @@ public class ItemStateValidator {
         // for properties.
         NodeState nodeState = (itemState.isNode())
             ? ((NodeState)itemState)
-            : itemState.getParentState();
+            : itemState.getParent();
         mgrProvider.getLockManager().checkLock(nodeState.getNodeId());
     }
 

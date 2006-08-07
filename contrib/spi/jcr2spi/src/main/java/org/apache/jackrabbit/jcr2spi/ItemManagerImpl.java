@@ -102,7 +102,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
     private NodeDefinition getDefinition(NodeState state)
             throws RepositoryException {
-        NodeState parentState = state.getParentState();
+        NodeState parentState = state.getParent();
         NodeDefinition def = session.getItemDefinitionManager().getNodeDefinition(state, parentState);
         return def;
     }
@@ -110,7 +110,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     private PropertyDefinition getDefinition(PropertyState state)
         throws RepositoryException {
         // fallback: try finding applicable definition
-        NodeState parentState = state.getParentState();
+        NodeState parentState = state.getParent();
         PropertyDefinition def = session.getItemDefinitionManager().getPropertyDefinition(state, parentState);
         return def;
     }
@@ -355,16 +355,14 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         // check sanity of session
         session.checkIsAlive();
 
-        // check privileges
-        if (!session.getAccessManager().canRead(id)) {
-            // clear cache
-            evictItem(id);
-            throw new AccessDeniedException("cannot read item " + id);
-        }
-
         // check cache
         ItemImpl item = retrieveItem(id);
         if (item == null) {
+            // not yet in cache, need to create instance:
+            // check privileges
+            if (!session.getAccessManager().canRead(id)) {
+                throw new AccessDeniedException("cannot read item " + id);
+            }
             // create instance of item
             item = createItemInstance(id);
         }

@@ -166,8 +166,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         if (state.isNode()) {
             try {
                 cache((NodeState) state, builder.getPath());
-            } catch (org.apache.jackrabbit.name.MalformedPathException e) {
-                e.printStackTrace();
+            } catch (MalformedPathException e) {
+                // should not occur
+                throw new RepositoryException(e);
             }
         }
     }
