@@ -27,6 +27,7 @@ import javax.jcr.Repository;
 import javax.jcr.NamespaceException;
 import javax.jcr.RangeIterator;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.StringTokenizer;
 import java.util.Random;
 import java.util.List;
@@ -531,7 +532,12 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 Node child = children.nextNode();
                 NodeDefinition nodeDef = child.getDefinition();
                 if (!nodeDef.isMandatory() && !nodeDef.isProtected()) {
-                    child.remove();
+                    // try to remove child
+                    try {
+                        child.remove();
+                    } catch (ConstraintViolationException e) {
+                        log.println("unable to remove node: " + child.getPath());
+                    }
                 }
             }
         } else {
