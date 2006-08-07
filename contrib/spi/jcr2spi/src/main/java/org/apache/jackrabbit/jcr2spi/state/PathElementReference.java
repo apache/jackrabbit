@@ -63,7 +63,6 @@ public class PathElementReference extends ChildNodeReference implements ChildNod
      * @see ChildNodeEntry#getId()
      */
     public NodeId getId() {
-        return idFactory.createNodeId(parent.getNodeId(),
-                Path.create(getName(), getIndex()));
+        return idFactory.createNodeId(parent.getNodeId(), Path.create(getName(), getIndex()));
     }
 }

@@ -151,26 +151,6 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Constructs a new node state that is not connected.
-     *
-     * @param id            id of this node
-     * @param nodeTypeName  node type of this node
-     * @param parent        the parent node state
-     * @param initialStatus the initial status of the node state object
-     * @param isTransient   flag indicating whether this state is transient or not
-     */
-    public NodeState(NodeId id, QName nodeTypeName, NodeState parent,
-                     int initialStatus, boolean isTransient, IdFactory idFactory) {
-        super(initialStatus, isTransient);
-        this.id = id;
-        this.parent = parent;
-        this.nodeTypeName = nodeTypeName;
-        this.idFactory = idFactory;
-        // TODO: remove this constructor
-        this.isf = null;
-    }
-
-    /**
      * {@inheritDoc}
      */
     protected synchronized void copy(ItemState state) {
@@ -201,6 +181,9 @@ public class NodeState extends ItemState {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public NodeState getParentState() {
         return parent;
     }
@@ -1171,9 +1154,9 @@ public class NodeState extends ItemState {
          */
         private ChildNodeEntry createChildNodeEntry(QName nodeName, NodeId id) {
             if (id.getRelativePath() != null) {
-                return new PathElementReference(NodeState.this, nodeName, NodeState.this.isf, NodeState.this.idFactory);
+                return new PathElementReference(NodeState.this, nodeName, isf, idFactory);
             } else {
-                return new UUIDReference(NodeState.this, id, NodeState.this.isf, nodeName);
+                return new UUIDReference(NodeState.this, id, isf, nodeName);
             }
         }
 
