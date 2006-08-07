@@ -846,8 +846,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 NodeState nodeState = (NodeState) transientState;
                 Set dependentIDs = new HashSet();
                 if (nodeState.hasOverlayedState()) {
-                    NodeId oldParentId = nodeState.getOverlayedState().getParentId();
-                    NodeId newParentId = nodeState.getParentId();
+                    // TODO: review usage of NodeId
+                    NodeId oldParentId = nodeState.getOverlayedState().getParentState().getNodeId();
+                    NodeId newParentId = nodeState.getParentState().getNodeId();
                     if (oldParentId != null) {
                         if (newParentId == null) {
                             // node has been removed, add old parent
@@ -985,7 +986,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             // remove child node entry from old parent
             srcParent.removeChildNodeEntry(srcName, srcIndex);
             // re-parent target node
-            srcState.setParentId(destParent.getNodeId());
+            srcState.setParent(destParent);
             // add child node entry to new parent
             destParent.addChildNodeEntry(operation.getDestinationName(), srcState.getNodeId());
         }
@@ -1295,7 +1296,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // assert transient parent state
         NodeState parentState = create(parent);
         // create property state
-        PropertyState propState = createNew(propertyName, parentState.getNodeId());
+        PropertyState propState = createNew(propertyName, parentState);
         propState.setDefinition(pDef);
 
         // NOTE: callers must make sure, the property type is not 'undefined'
@@ -1339,7 +1340,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         NodeState parentState = create(parent);
         // ev. create new id
         NodeId newId = (uuid == null) ? idFactory.createNodeId(UUID.randomUUID().toString()) : idFactory.createNodeId(uuid);
-        NodeState nodeState = createNew(newId, nodeTypeName, parentState.getNodeId());
+        NodeState nodeState = createNew(newId, nodeTypeName, parentState);
         nodeState.setDefinition(definition);
 
         // now add new child node entry to parent
@@ -1380,7 +1381,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         boolean success = false;
         try {
             // assert parent is transient state
-            NodeState parent = create(validator.getNodeState(itemState.getParentId()));
+            NodeState parent = create(itemState.getParentState());
             if (itemState.isNode()) {
                 removeNodeState(parent, (NodeState)itemState);
             } else {
@@ -1479,7 +1480,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
 
         // now actually do unlink target state
-        targetState.setParentId(null);
+        targetState.setParent(null);
         // destroy target state
         // DIFF JR: destroy targetState (not overlayed state)
         destroy(targetState);
@@ -1539,14 +1540,14 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      *
      * @param id           the id of the node
      * @param nodeTypeName qualified node type name
-     * @param parentId     parent node's id
+     * @param parent     parent node's id
      * @return a node state
      * @throws IllegalStateException if the manager is not in edit mode.
      */
-    private NodeState createNew(NodeId id, QName nodeTypeName, NodeId parentId)
+    private NodeState createNew(NodeId id, QName nodeTypeName, NodeState parent)
             throws IllegalStateException {
         // DIFF JACKRABBIT: return workspaceItemStateMgr.createNew(id, nodeTypeName, parentId);
-        return transientStateMgr.createNodeState(id, nodeTypeName, parentId);
+        return transientStateMgr.createNodeState(id, nodeTypeName, parent);
     }
 
     /**
@@ -1579,12 +1580,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * on the returned object to make it persistent.
      *
      * @param propName   qualified property name
-     * @param parentId   parent node Id
+     * @param parent   parent node state
      * @return a property state
      */
-    private PropertyState createNew(QName propName, NodeId parentId) {
+    private PropertyState createNew(QName propName, NodeState parent) {
         // DIFF JACKRABBIT: return workspaceItemStateMgr.createNew(propName, parentId);
-        return transientStateMgr.createPropertyState(parentId, propName);
+        return transientStateMgr.createPropertyState(parent, propName);
     }
 
     /**

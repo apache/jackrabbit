@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.value.QValue;
 
 /**
@@ -34,6 +33,11 @@ public class PropertyState extends ItemState {
      * the id of this property state
      */
     private PropertyId id;
+
+    /**
+     * The parent state
+     */
+    private NodeState parent;
 
     /**
      * the internal values
@@ -73,9 +77,10 @@ public class PropertyState extends ItemState {
      * @param initialStatus the initial status of the property state object
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    public PropertyState(PropertyId id, int initialStatus, boolean isTransient) {
+    public PropertyState(PropertyId id, NodeState parent, int initialStatus, boolean isTransient) {
         super(initialStatus, isTransient);
         this.id = id;
+        this.parent = parent;
         type = PropertyType.UNDEFINED;
         values = QValue.EMPTY_ARRAY;
         multiValued = false;
@@ -88,6 +93,7 @@ public class PropertyState extends ItemState {
         synchronized (state) {
             PropertyState propState = (PropertyState) state;
             id = propState.id;
+            parent = propState.parent;
             type = propState.type;
             def = propState.getDefinition();
             values = propState.values;
@@ -125,8 +131,8 @@ public class PropertyState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    public NodeId getParentId() {
-        return id.getParentId();
+    public NodeState getParentState() {
+        return parent;
     }
 
     /**

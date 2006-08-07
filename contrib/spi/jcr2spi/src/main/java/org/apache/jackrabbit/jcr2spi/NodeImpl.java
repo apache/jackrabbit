@@ -144,14 +144,14 @@ public class NodeImpl extends ItemImpl implements Node {
     public Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         checkStatus();
         // check if root node
-        NodeId parentId = getItemState().getParentId();
-        if (parentId == null) {
+        NodeState parentState = getItemState().getParentState();
+        if (parentState == null) {
             String msg = "root node doesn't have a parent";
             log.debug(msg);
             throw new ItemNotFoundException(msg);
         }
 
-        return (Node) itemMgr.getItem(parentId);
+        return (Node) itemMgr.getItem(parentState.getNodeId());
     }
 
     /**
@@ -537,22 +537,14 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public int getIndex() throws RepositoryException {
         checkStatus();
-        NodeId parentId = getItemState().getParentId();
-        if (parentId == null) {
+        NodeState parentState = getItemState().getParentState();
+        if (parentState == null) {
             // the root node cannot have same-name siblings; always return the
             // default index
             return Path.INDEX_DEFAULT;
         }
-        try {
-            NodeState parent = (NodeState) itemStateMgr.getItemState(parentId);
-            ChildNodeEntry parentEntry = parent.getChildNodeEntry(getNodeId());
-            return parentEntry.getIndex();
-        } catch (ItemStateException ise) {
-            // should never get here...
-            String msg = "internal error: failed to determine index";
-            log.error(msg, ise);
-            throw new RepositoryException(msg, ise);
-        }
+        ChildNodeEntry parentEntry = parentState.getChildNodeEntry(getNodeId());
+        return parentEntry.getIndex();
     }
 
     /**

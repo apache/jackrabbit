@@ -62,10 +62,10 @@ public class NodeState extends ItemState {
     private NodeId id;
 
     /**
-     * The id of the parent <code>NodeState</code> or <code>null</code> if this
+     * The parent <code>NodeState</code> or <code>null</code> if this
      * instance represents the root node.
      */
-    private NodeId parentId;
+    private NodeState parent;
     
     /**
      * this node's definition
@@ -127,6 +127,7 @@ public class NodeState extends ItemState {
                      int initialStatus, boolean isTransient, ItemStateFactory isf) {
         super(initialStatus, isTransient);
         this.id = id;
+        this.parent = parent;
         this.idFactory = parent.idFactory;
         this.nodeTypeName = nodeTypeName;
         this.isf = isf;
@@ -154,15 +155,15 @@ public class NodeState extends ItemState {
      *
      * @param id            id of this node
      * @param nodeTypeName  node type of this node
-     * @param parentId      id of the parent node
+     * @param parent        the parent node state
      * @param initialStatus the initial status of the node state object
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    public NodeState(NodeId id, QName nodeTypeName, NodeId parentId,
+    public NodeState(NodeId id, QName nodeTypeName, NodeState parent,
                      int initialStatus, boolean isTransient, IdFactory idFactory) {
         super(initialStatus, isTransient);
         this.id = id;
-        this.parentId = parentId;
+        this.parent = parent;
         this.nodeTypeName = nodeTypeName;
         this.idFactory = idFactory;
         // TODO: remove this constructor
@@ -176,7 +177,7 @@ public class NodeState extends ItemState {
         synchronized (state) {
             NodeState nodeState = (NodeState) state;
             id = nodeState.id;
-            parentId = nodeState.parentId;
+            parent = nodeState.parent;
             nodeTypeName = nodeState.nodeTypeName;
             mixinTypeNames = nodeState.mixinTypeNames;
             def = nodeState.getDefinition();
@@ -200,11 +201,8 @@ public class NodeState extends ItemState {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public NodeId getParentId() {
-        return parentId;
+    public NodeState getParentState() {
+        return parent;
     }
 
     /**
@@ -225,13 +223,13 @@ public class NodeState extends ItemState {
     /**
      * Sets the Id of the parent <code>NodeState</code>.
      *
-     * @param parentId the parent <code>NodeState</code>'s Id or <code>null</code>
+     * @param parent the parent <code>NodeState</code> or <code>null</code>
      * if either this node state should represent the root node or this node
      * state should be 'free floating', i.e. detached from the repository's
      * hierarchy.
      */
-    public void setParentId(NodeId parentId) {
-        this.parentId = parentId;
+    public void setParent(NodeState parent) {
+        this.parent = parent;
     }
 
     /**

@@ -378,21 +378,14 @@ public class ImporterImpl implements Importer, SessionListener {
                 break;
 
             case ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING:
-                NodeId parentId = conflicting.getParentId();
-                if (parentId == null) {
+                // 'replace' current parent with parent of conflicting
+                parent = conflicting.getParentState();
+                if (parent == null) {
                     msg = "Root node cannot be replaced";
                     log.debug(msg);
                     throw new RepositoryException(msg);
                 }
-                // 'replace' current parent with parent of conflicting
-                try {
-                    parent = validator.getNodeState(parentId);
-                } catch (ItemNotFoundException infe) {
-                    // should never get here...
-                    msg = "Internal error: failed to retrieve parent state";
-                    log.error(msg, infe);
-                    throw new RepositoryException(msg, infe);
-                }
+                
                 // do remove conflicting (recursive), including validation checks
                 op = Remove.create(conflicting);
                 stateMgr.execute(op);

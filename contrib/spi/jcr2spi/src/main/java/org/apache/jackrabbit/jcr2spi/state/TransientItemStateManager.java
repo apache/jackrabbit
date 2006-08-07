@@ -66,11 +66,11 @@ interface TransientItemStateManager extends ItemStateManager {
      *
      * @param id the <code>NodeId</code> of the new node state.
      * @param nodeTypeName name of the node type of the new node state.
-     * @param parentId the parent id of the new node state.
+     * @param parent the parent of the new node state.
      * @return a new transient {@link NodeState}.
      */
     NodeState createNodeState(NodeId id, QName nodeTypeName,
-                              NodeId parentId);
+                              NodeState parent);
 
     /**
      * DIFF JACKRABBIT: does not throw ItemStateException
@@ -81,11 +81,11 @@ interface TransientItemStateManager extends ItemStateManager {
 
     /**
      * DIFF JACKRABBIT: does not throw ItemStateException
-     * @param parentId
+     * @param parent
      * @param propName
      * @return
      */
-    PropertyState createPropertyState(NodeId parentId, QName propName);
+    PropertyState createPropertyState(NodeState parent, QName propName);
 
     /**
      * DIFF JACKRABBIT: does not throw ItemStateException

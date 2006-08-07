@@ -74,11 +74,12 @@ public class VersionManagerImpl implements VersionManager {
              * this would have a negative impact on performance though...
              */
             while (!nodeState.hasPropertyName(QName.JCR_ISCHECKEDOUT)) {
-                if (nodeState.getParentId() == null) {
+                NodeState parentState = nodeState.getParentState();
+                if (parentState == null) {
                     // reached root state without finding a jcr:isCheckedOut property
                     return true;
                 }
-                nodeState = (NodeState) stateManager.getItemState(nodeState.getParentId());
+                nodeState = parentState;
             }
             PropertyId propId = nodeState.getPropertyState(QName.JCR_ISCHECKEDOUT).getPropertyId();
             PropertyState propState = (PropertyState) stateManager.getItemState(propId);
