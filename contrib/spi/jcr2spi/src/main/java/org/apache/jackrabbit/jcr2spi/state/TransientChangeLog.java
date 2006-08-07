@@ -143,7 +143,8 @@ public class TransientChangeLog extends ChangeLog implements TransientItemStateM
 //            return state;
 //        }
 
-        return new NodeState(id, nodeTypeName, parent, ItemState.STATUS_NEW, true, idFactory);
+        ItemStateFactory isf = null; // TODO: probably not correct
+        return new NodeState(id, parent, nodeTypeName, ItemState.STATUS_NEW, true, isf);
     }
 
     /**
