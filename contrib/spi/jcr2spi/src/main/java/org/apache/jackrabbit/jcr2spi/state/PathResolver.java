@@ -145,8 +145,7 @@ public class PathResolver {
             Path.PathElement elem = relPath.getElement(i);
             // first try to resolve node
             if (state.hasChildNodeEntry(elem.getName(), elem.getNormalizedIndex())) {
-                ChildNodeEntry cne = state.getChildNodeEntry(elem.getName(),
-                        elem.getNormalizedIndex());
+                ChildNodeEntry cne = state.getChildNodeEntry(elem.getName(), elem.getNormalizedIndex());
                 if (cne.isAvailable()) {
                     state = cne.getNodeState();
                 } else {

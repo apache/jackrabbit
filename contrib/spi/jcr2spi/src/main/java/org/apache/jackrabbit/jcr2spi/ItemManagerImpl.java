@@ -344,7 +344,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     /**
      * @inheritDoc
      */
-    public synchronized ItemImpl getItem(org.apache.jackrabbit.name.Path path)
+    public synchronized ItemImpl getItem(Path path)
             throws PathNotFoundException, AccessDeniedException, RepositoryException {
         ItemId id = hierMgr.getItemId(path);
         try {
@@ -455,11 +455,15 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
         while (iter.hasNext()) {
             QName propName = (QName) iter.next();
-
-            PropertyId id = nodeState.getPropertyId(propName);
-            // check read access
-            if (session.getAccessManager().canRead(id)) {
-                return true;
+            try {
+                PropertyId id = nodeState.getPropertyState(propName).getPropertyId();
+                // check read access
+                if (session.getAccessManager().canRead(id)) {
+                    return true;
+                }
+            } catch (ItemStateException e) {
+                // should not occur.
+                throw new RepositoryException(e);
             }
         }
 
@@ -486,10 +490,15 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
         while (iter.hasNext()) {
             QName propName = (QName) iter.next();
-            PropertyId id = nodeState.getPropertyId(propName);
-            // check read access
-            if (session.getAccessManager().canRead(id)) {
-                childIds.add(id);
+            try {
+                PropertyId id = nodeState.getPropertyState(propName).getPropertyId();
+                // check read access
+                if (session.getAccessManager().canRead(id)) {
+                    childIds.add(id);
+                }
+            } catch (ItemStateException e) {
+                // should not occur.
+                throw new RepositoryException(e);
             }
         }
 
