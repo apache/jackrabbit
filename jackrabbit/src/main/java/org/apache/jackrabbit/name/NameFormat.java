@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 public class NameFormat {
 
     /**
-     * The reqular expression pattern used to validate and parse
+     * The regular expression pattern used to validate and parse
      * qualified names.
      * <p/>
      * The pattern contains the following groups:
