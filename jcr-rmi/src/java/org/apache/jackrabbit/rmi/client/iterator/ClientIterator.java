@@ -129,8 +129,10 @@ public abstract class ClientIterator extends ClientObject
             positionInBuffer += skipNum;
         } else {
             try {
-                remote.skip(skipNum - (buffer.length - positionInBuffer));
+                skipNum -= buffer.length - positionInBuffer;
+                remote.skip(skipNum);
                 positionInBuffer = buffer.length;
+                positionOfBuffer += skipNum;
             } catch (RemoteException e) {
                 throw new RemoteRuntimeException(e);
             } catch (NoSuchElementException e) {
