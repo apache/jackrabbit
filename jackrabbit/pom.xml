@@ -130,6 +130,7 @@
     </developer>
     <developer>
       <name>Serge Huber</name>
+      <id>shuber</id>
       <email />
       <organization />
       <roles>
@@ -149,6 +150,7 @@
     </developer>
     <developer>
       <name>Felix Meschberger</name>
+      <id>fmeschbe</id>
       <email />
       <organization>Day Software</organization>
       <roles>
@@ -158,6 +160,7 @@
     </developer>
     <developer>
       <name>Brian Moseley</name>
+      <id>moseley</id>
       <email>bcm@osafoundation.org</email>
       <organization>
         Open Source Applications Foundation (OSAF)
@@ -249,6 +252,7 @@
     </developer>
     <developer>
       <name>Angela Schreiber</name>
+      <id>angela</id>
       <email />
       <organization>Day Software</organization>
       <roles>
