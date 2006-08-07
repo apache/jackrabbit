@@ -15,6 +15,7 @@
     <!-- P R O J E C T  D E S C R I P T I O N                                   -->
     <!-- ====================================================================== -->
     <pomVersion>3</pomVersion>
+    <artifactId>jackrabbit-spi-contrib</artifactId>
     <groupId>org.apache.jackrabbit</groupId>
     <name>SPI Contribution</name>
     <currentVersion>${jackrabbit.build.version.spi}</currentVersion>
