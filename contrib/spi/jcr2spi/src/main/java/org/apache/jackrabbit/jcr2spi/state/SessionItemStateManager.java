@@ -142,7 +142,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         this.rootId = rootId;
         this.workspaceItemStateMgr = workspaceItemStateMgr;
         // DIFF JACKRABBIT: this.transientStateMgr = new TransientItemStateManager();
-        this.transientStateMgr = new TransientChangeLog(idFactory);
+        this.transientStateMgr = new TransientChangeLog(idFactory, workspaceItemStateMgr);
         // DIFF JR: validator added
         this.validator = validator;
         // DIFF JR: idFactory added
@@ -333,7 +333,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
 
         // list of transient items that should be discarded
-        ChangeLog changeLog = new TransientChangeLog(idFactory);
+        ChangeLog changeLog = new TransientChangeLog(idFactory, workspaceItemStateMgr);
 
         // check status of current item's state
         if (state.isTransient()) {
@@ -636,7 +636,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @throws ItemStateException
      */
     private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException {
-        ChangeLog changeLog = new TransientChangeLog(idFactory);
+        ChangeLog changeLog = new TransientChangeLog(idFactory, workspaceItemStateMgr);
         if (rootId.equals(itemState.getId())) {
             // get all item states
             for (Iterator it = transientStateMgr.addedStates(); it.hasNext(); ) {

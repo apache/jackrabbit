@@ -134,20 +134,22 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Constructs a new <code>NodeState</code> that is initially connected to
-     * an overlayed state.
+     * Constructs a new <code>NodeState</code> that is initially connected to an
+     * overlayed state.
      *
      * @param overlayedState the backing node state being overlayed
+     * @param parent         the parent of this NodeState
      * @param initialStatus  the initial status of the node state object
-     * @param isTransient    flag indicating whether this state is transient or not
+     * @param isTransient    flag indicating whether this state is transient or
+     *                       not
      */
-    public NodeState(NodeState overlayedState, int initialStatus,
-                     boolean isTransient) {
+    public NodeState(NodeState overlayedState, NodeState parent, int initialStatus,
+                     boolean isTransient, ItemStateFactory isf) {
         super(overlayedState, initialStatus, isTransient);
         pull();
-        idFactory = overlayedState.idFactory;
-        // TODO: remove this constructor
-        this.isf = null;
+        this.parent = parent;
+        idFactory = parent.idFactory;
+        this.isf = isf;
     }
 
     /**

@@ -17,45 +17,38 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.IdKeyMap;
-import org.apache.jackrabbit.jcr2spi.DefaultIdKeyMap;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.LinkedHashSet;
 
 /**
  * Registers changes made to states and references and consolidates
  * empty changes.
  */
-// DIFF JR: implements ItemStateManager instead of separate 'get' 'has'
-public class ChangeLog implements ItemStateManager {
+public class ChangeLog {
 
     /**
      * Added states
      */
-    // TODO: TO-BE-FIXED. With SPI_ItemId simple map cannot be used any more
-    protected final IdKeyMap addedStates = new DefaultIdKeyMap(); // JR: new LinkedMap();
+    protected final Set addedStates = new LinkedHashSet();
 
     /**
      * Modified states
      */
-    // TODO: TO-BE-FIXED. With SPI_ItemId simple map cannot be used any more
-    protected final IdKeyMap modifiedStates = new DefaultIdKeyMap(); // JR: new LinkedMap();
+    protected final Set modifiedStates = new LinkedHashSet();
 
     /**
      * Deleted states
      */
-    // TODO: TO-BE-FIXED. With SPI_ItemId simple map cannot be used any more
-    protected final IdKeyMap deletedStates = new DefaultIdKeyMap(); // JR: new LinkedMap();
+    protected final Set deletedStates = new LinkedHashSet();
 
     /**
      * Modified references
      */
-    // TODO: TO-BE-FIXED. With SPI_ItemId simple map cannot be used any more
-    protected final IdKeyMap modifiedRefs = new DefaultIdKeyMap(); // JR: new LinkedMap();
+    protected final Set modifiedRefs = new LinkedHashSet();
 
     /**
      * Type of operation this changelog is collection state modifications for.
@@ -80,7 +73,7 @@ public class ChangeLog implements ItemStateManager {
      * @param state state that has been added
      */
     public void added(ItemState state) {
-        addedStates.put(state.getId(), state);
+        addedStates.add(state);
     }
 
     /**
@@ -92,9 +85,9 @@ public class ChangeLog implements ItemStateManager {
      * @param state state that has been modified
      */
     public void modified(ItemState state) {
-        if (!addedStates.containsKey(state.getId())) {
+        if (!addedStates.contains(state)) {
             state.disconnect();
-            modifiedStates.put(state.getId(), state);
+            modifiedStates.add(state);
         }
     }
 
@@ -108,10 +101,10 @@ public class ChangeLog implements ItemStateManager {
      * @param state state that has been deleted
      */
     public void deleted(ItemState state) {
-        if (addedStates.remove(state.getId()) == null) {
+        if (addedStates.remove(state)) {
             state.disconnect();
-            modifiedStates.remove(state.getId());
-            deletedStates.put(state.getId(), state);
+            modifiedStates.remove(state);
+            deletedStates.add(state);
         }
     }
 
@@ -121,7 +114,7 @@ public class ChangeLog implements ItemStateManager {
      * @param refs refs that has been modified
      */
     public void modified(NodeReferences refs) {
-        modifiedRefs.put(refs.getId(), refs);
+        modifiedRefs.add(refs);
     }
 
     //----------------------< Retrieve information present in the ChangeLog >---
@@ -145,7 +138,7 @@ public class ChangeLog implements ItemStateManager {
      * @return iterator over all added states.
      */
     public Iterator addedStates() {
-        return addedStates.values().iterator();
+        return addedStates.iterator();
     }
 
     /**
@@ -154,7 +147,7 @@ public class ChangeLog implements ItemStateManager {
      * @return iterator over all modified states.
      */
     public Iterator modifiedStates() {
-        return modifiedStates.values().iterator();
+        return modifiedStates.iterator();
     }
 
     /**
@@ -163,7 +156,7 @@ public class ChangeLog implements ItemStateManager {
      * @return iterator over all deleted states.
      */
     public Iterator deletedStates() {
-        return deletedStates.values().iterator();
+        return deletedStates.iterator();
     }
 
     /**
@@ -172,7 +165,7 @@ public class ChangeLog implements ItemStateManager {
      * @return iterator over all modified references.
      */
     public Iterator modifiedRefs() {
-        return modifiedRefs.values().iterator();
+        return modifiedRefs.iterator();
     }
 
     //-----------------------------< Inform ChangeLog about Success/Failure >---
@@ -286,65 +279,6 @@ public class ChangeLog implements ItemStateManager {
             ((ItemState) iter.next()).discard();
         }
         reset();
-    }
-
-    //---------------------------------------------------< ItemStateManager >---
-    /**
-     * Return an item state given its id. Returns <code>null</code>
-     * if the item state is neither in the added nor in the modified
-     * section. Throws a <code>NoSuchItemStateException</code> if
-     * the item state is in the deleted section.
-     *
-     * @return item state or <code>null</code>
-     * @throws NoSuchItemStateException if the item has been deleted
-     * @see ItemStateManager#getItemState(ItemId)
-     */
-    public ItemState getItemState(ItemId id) throws NoSuchItemStateException, ItemStateException {
-        ItemState state = (ItemState) addedStates.get(id);
-        if (state == null) {
-            state = (ItemState) modifiedStates.get(id);
-            if (state == null) {
-                if (deletedStates.containsKey(id)) {
-                    throw new NoSuchItemStateException("State has been marked destroyed: " + id);
-                }
-            }
-        }
-        return state;
-    }
-
-    /**
-     * Return a flag indicating whether a given item state exists.
-     *
-     * @return <code>true</code> if item state exists within this
-     *         log; <code>false</code> otherwise
-     * @see ItemStateManager#hasItemState(ItemId)
-     */
-    public boolean hasItemState(ItemId id) {
-        return addedStates.containsKey(id) || modifiedStates.containsKey(id);
-    }
-
-    /**
-     * Return a node references object given its id. Returns
-     * <code>null</code> if the node reference is not in the modified
-     * section.
-     *
-     * @return node references or <code>null</code>
-     * @see ItemStateManager#getNodeReferences(NodeId)
-     */
-    public NodeReferences getNodeReferences(NodeId id) throws NoSuchItemStateException, ItemStateException {
-        return (NodeReferences) modifiedRefs.get(id);
-    }
-
-    /**
-     * Returns <code>false</code> if the node reference is not in the modified
-     * section.
-     *
-     * @return false if no references are present in this changelog for the
-     * given id.
-     * @see ItemStateManager#hasNodeReferences(NodeId)
-     */
-    public boolean hasNodeReferences(NodeId id) {
-        return modifiedRefs.get(id) != null;
     }
 
     //-------------------------------------------------------------< Object >---
