@@ -404,7 +404,8 @@ public class TransientChangeLog extends ChangeLog
         } else {
             id = idFactory.createNodeId(uuid);
         }
-        NodeState nodeState = new NodeState(id, parent, null, ItemState.STATUS_NEW, true, this);
+        NodeState nodeState = new NodeState(id, parent, null,
+                ItemState.STATUS_NEW, true, this);
         // get a notification when this item state is saved or invalidated
         nodeState.addListener(this);
         added(nodeState);
@@ -417,7 +418,8 @@ public class TransientChangeLog extends ChangeLog
      */
     public PropertyState createNewPropertyState(QName name, NodeState parent) {
         PropertyId id = idFactory.createPropertyId(parent.getNodeId(), name);
-        PropertyState propState = new PropertyState(id, parent, ItemState.STATUS_NEW, true);
+        PropertyState propState = new PropertyState(id, parent,
+                ItemState.STATUS_NEW, true);
         // get a notification when this item state is saved or invalidated
         propState.addListener(this);
         added(propState);
@@ -434,7 +436,10 @@ public class TransientChangeLog extends ChangeLog
         NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
         NodeId parentId = overlayedState.getParent().getNodeId();
         NodeState parentState = (NodeState) ism.getItemState(parentId);
-        return new NodeState(overlayedState, parentState, ItemState.STATUS_EXISTING, true, this);
+        NodeState nodeState = new NodeState(overlayedState, parentState,
+                ItemState.STATUS_EXISTING, true, this);
+        nodeState.addListener(this);
+        return nodeState;
     }
 
     /**
@@ -445,7 +450,10 @@ public class TransientChangeLog extends ChangeLog
             throws NoSuchItemStateException, ItemStateException {
         // retrieve state to overlay
         NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
-        return new NodeState(overlayedState, parentState, ItemState.STATUS_EXISTING, true, this);
+        NodeState nodeState = new NodeState(overlayedState, parentState,
+                ItemState.STATUS_EXISTING, true, this);
+        nodeState.addListener(this);
+        return nodeState;
     }
 
     /**
@@ -459,7 +467,10 @@ public class TransientChangeLog extends ChangeLog
         PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
         NodeId parentId = overlayedState.getParent().getNodeId();
         NodeState parentState = (NodeState) ism.getItemState(parentId);
-        return new PropertyState(overlayedState, parentState, ItemState.STATUS_EXISTING, true);
+        PropertyState propState = new PropertyState(overlayedState, parentState,
+                ItemState.STATUS_EXISTING, true);
+        propState.addListener(this);
+        return propState;
     }
 
     /**
@@ -471,7 +482,10 @@ public class TransientChangeLog extends ChangeLog
             throws NoSuchItemStateException, ItemStateException {
         // retrieve state to overlay
         PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
-        return new PropertyState(overlayedState, parentState, ItemState.STATUS_EXISTING, true);
+        PropertyState propState = new PropertyState(overlayedState, parentState,
+                ItemState.STATUS_EXISTING, true);
+        propState.addListener(this);
+        return propState;
     }
 
     //-----------------------< ItemStateLifeCycleListener >---------------------
