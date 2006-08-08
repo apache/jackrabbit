@@ -64,10 +64,11 @@ public class PropertyState extends ItemState {
      * @param initialStatus  the initial status of the property state object
      * @param isTransient    flag indicating whether this state is transient or not
      */
-    public PropertyState(PropertyState overlayedState, int initialStatus,
+    public PropertyState(PropertyState overlayedState, NodeState parent, int initialStatus,
                          boolean isTransient) {
         super(overlayedState, initialStatus, isTransient);
         pull();
+        this.parent = parent;
     }
 
     /**
