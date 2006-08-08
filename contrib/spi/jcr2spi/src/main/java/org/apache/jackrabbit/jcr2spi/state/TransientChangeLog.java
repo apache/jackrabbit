@@ -35,7 +35,7 @@ import java.util.Iterator;
  * when added.
  */
 public class TransientChangeLog extends ChangeLog
-        implements TransientItemStateManager, TransientItemStateFactory, ItemStateListener {
+        implements TransientItemStateManager, TransientItemStateFactory, ItemStateLifeCycleListener {
 
     // TODO: TO-BE-FIXED. Usage of SPI_ItemId requries different handling
 
@@ -474,7 +474,7 @@ public class TransientChangeLog extends ChangeLog
         return new PropertyState(overlayedState, parentState, ItemState.STATUS_EXISTING, true);
     }
 
-    //---------------------------< ItemStateListener >--------------------------
+    //-----------------------< ItemStateLifeCycleListener >---------------------
 
     /**
      * @inheritDoc
@@ -506,6 +506,18 @@ public class TransientChangeLog extends ChangeLog
      */
     public void stateDiscarded(ItemState discarded) {
         // TODO: remove from modified (and deleted?) set of change log
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
+     */
+    public void statusChanged(ItemState state, int previousStatus) {
+        // TODO: depending on status of state adapt change log
+        // e.g. a revert on states will reset the status from
+        // 'existing modified' to 'existing'.
+        // a state which changes from 'existing' to 'existing modified' will
+        // go into the modified set of the change log, etc.
     }
 
     //--------------------------------------------------------< inner classes >

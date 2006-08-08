@@ -165,13 +165,13 @@ public abstract class ItemState implements ItemStateListener {
      * <code>LocalItemStateManager</code> when this item state has been disposed.
      */
     void onDisposed() {
+        disconnect();
+        overlayedState = null;
+        setStatus(STATUS_UNDEFINED);
         // prepare this instance so it can be gc'ed
         synchronized (listeners) {
             listeners.clear();
         }
-        disconnect();
-        overlayedState = null;
-        status = STATUS_UNDEFINED;
     }
 
     /**
@@ -314,6 +314,22 @@ public abstract class ItemState implements ItemStateListener {
         }
     }
 
+    /**
+     * Notify the life cycle listeners that this state has changed its status.
+     */
+    protected void notifyStatusChanged(int oldStatus) {
+        // copy listeners to array to avoid ConcurrentModificationException
+        ItemStateListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] instanceof ItemStateLifeCycleListener) {
+                ((ItemStateLifeCycleListener) la[i]).statusChanged(this, oldStatus);
+            }
+        }
+    }
+
     //-------------------------------------------------------< public methods >
     /**
      * Determines if this item state represents a node.
@@ -374,11 +390,17 @@ public abstract class ItemState implements ItemStateListener {
     }
 
     /**
+     * TODO: this method should be at least protected. the outside should not
+     * TODO: control the status of an item state
      * Sets the new status of this item.
      *
      * @param newStatus the new status
      */
     public void setStatus(int newStatus) {
+        if (status == newStatus) {
+            return;
+        }
+        int oldStatus = status;
         switch (newStatus) {
             case STATUS_NEW:
             case STATUS_EXISTING:
@@ -388,12 +410,13 @@ public abstract class ItemState implements ItemStateListener {
             case STATUS_STALE_DESTROYED:
             case STATUS_UNDEFINED:
                 status = newStatus;
-                return;
+                break;
             default:
                 String msg = "illegal status: " + newStatus;
                 log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
+        notifyStatusChanged(oldStatus);
     }
 
     /**
@@ -429,7 +452,7 @@ public abstract class ItemState implements ItemStateListener {
             // notify listeners
             notifyStateDiscarded();
             // reset status
-            status = STATUS_UNDEFINED;
+            setStatus(STATUS_UNDEFINED);
         }
     }
 
@@ -484,7 +507,7 @@ public abstract class ItemState implements ItemStateListener {
      */
     public void stateCreated(ItemState created) {
         // underlying state has been permanently created
-        status = STATUS_EXISTING;
+        setStatus(STATUS_EXISTING); // TODO: shouldn't the status change happen after pull?
         pull();
     }
 
@@ -494,9 +517,9 @@ public abstract class ItemState implements ItemStateListener {
     public void stateDestroyed(ItemState destroyed) {
         // underlying state has been permanently destroyed
         if (isTransient) {
-            status = STATUS_STALE_DESTROYED;
+            setStatus(STATUS_STALE_DESTROYED);
         } else {
-            status = STATUS_EXISTING_REMOVED;
+            setStatus(STATUS_EXISTING_REMOVED);
             notifyStateDestroyed();
         }
     }
@@ -507,7 +530,7 @@ public abstract class ItemState implements ItemStateListener {
     public void stateModified(ItemState modified) {
         // underlying state has been modified
         if (isTransient) {
-            status = STATUS_STALE_MODIFIED;
+            setStatus(STATUS_STALE_MODIFIED);
         } else {
             synchronized (this) {
                 // this instance represents existing state, update it
