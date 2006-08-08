@@ -369,7 +369,7 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries() {
-        return childNodeEntries;
+        return Collections.unmodifiableList(childNodeEntries);
     }
 
     /**
@@ -381,7 +381,7 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries(QName nodeName) {
-        return childNodeEntries.get(nodeName);
+        return Collections.unmodifiableList(childNodeEntries.get(nodeName));
     }
 
     /**
@@ -481,6 +481,17 @@ public class NodeState extends ItemState {
      */
     public synchronized Set getPropertyNames() {
         return Collections.unmodifiableSet(properties.keySet());
+    }
+
+    /**
+     * Returns the complete collection of {@link ChildPropertyEntry}s.
+     *
+     * @return unmodifiable collection of <code>ChildPropertyEntry</code> objects
+     * @see #addPropertyName
+     * @see #removePropertyName
+     */
+    public synchronized Collection getPropertyEntries() {
+        return Collections.unmodifiableCollection(properties.values());
     }
 
     /**

@@ -20,11 +20,11 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.Item;
 
 /**
  * The <code>HierarchyManager</code> interface ...
@@ -32,58 +32,45 @@ import javax.jcr.Item;
 public interface HierarchyManager {
 
     /**
-     * Returns the id of the given <code>Item</code>.
-     *
-     * @param item
-     * @return
-     * @throws PathNotFoundException
-     * @throws RepositoryException
-     */
-    ItemId getItemId(Item item) throws PathNotFoundException, RepositoryException;
-
-    // DIFF JR: renamed from 'resolveQPath'
-    /**
-     * Resolves a path into an item id.
+     * Resolves a path into an item state.
      *
      * @param qPath
      * @return
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    ItemId getItemId(Path qPath) throws PathNotFoundException, RepositoryException;
+    ItemState getItemState(Path qPath) throws PathNotFoundException, RepositoryException;
 
     /**
-     * Returns the path to the given item.
+     * Returns the path to the item represented by the given state object.
      *
-     * @param id
+     * @param itemState
      * @return
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    Path getQPath(ItemId id) throws ItemNotFoundException, RepositoryException;
+    Path getQPath(ItemState itemState) throws ItemNotFoundException, RepositoryException;
 
     /**
-     * Returns the name of the specified item.
+     * Returns the qualified name of the specified item state.
      *
-     * @param id id of item whose name should be returned
+     * @param itemState state of item whose name should be returned
      * @return
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    QName getQName(ItemId id) throws ItemNotFoundException, RepositoryException;
+    QName getQName(ItemState itemState) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the depth of the specified item which is equivalent to
      * <code>getQPath(id).getAncestorCount()</code>. The depth reflects the
      * absolute hierarchy level.
      *
-     * @param id item id
+     * @param itemState item state
      * @return the depth of the specified item
-     * @throws ItemNotFoundException if the specified <code>id</code> does not
-     *                               denote an existing item.
-     * @throws RepositoryException   if another error occurs
+     * @throws RepositoryException if another error occurs
      */
-    int getDepth(ItemId id) throws ItemNotFoundException, RepositoryException;
+    int getDepth(ItemState itemState) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the depth of the specified descendant relative to the given
@@ -102,22 +89,4 @@ public interface HierarchyManager {
      */
     int getRelativeDepth(NodeId ancestorId, ItemId descendantId)
             throws ItemNotFoundException, RepositoryException;
-
-     /**
-     * Failsafe conversion of an <code>ItemId</code> to JCR path for use in
-     * error messages etc.
-     *
-     * @param itemId id to convert
-     * @return JCR path
-     */
-    String safeGetJCRPath(ItemId itemId);
-
-     /**
-     * Failsafe conversion of internal <code>Path</code> to JCR path for use in
-     * error messages etc.
-     *
-     * @param qPath path to convert
-     * @return JCR path
-     */
-    String safeGetJCRPath(Path qPath);
 }

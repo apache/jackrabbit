@@ -223,6 +223,8 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * method returns, then there are no more valid element in this iterator.
      */
     private void fetchNext() {
+        // TODO
+        /*
         // reset
         next = null;
         while (next == null && ids.hasNext()) {
@@ -251,5 +253,6 @@ class NodeIteratorImpl implements ScoreNodeIterator {
             }
         }
         pos++;
+        */
     }
 }

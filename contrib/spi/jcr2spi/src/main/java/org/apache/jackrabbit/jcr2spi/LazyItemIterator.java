@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -42,22 +42,20 @@ import java.util.Collection;
  * for some reason (e.g. because of insufficient access rights or because they
  * have been removed since the iterator has been retrieved) are silently
  * skipped. As a result the size of the iterator as reported by
- * {@link #getSize()} might appear to be shrinking while iterating over the
- * items.
- * todo should getSize() better always return -1?
- *
- * @see #getSize()
+ * {@link #getSize()} always returns -1.
  */
 public class LazyItemIterator implements NodeIterator, PropertyIterator, VersionIterator {
 
     /** Logger instance for this class */
     private static Logger log = LoggerFactory.getLogger(LazyItemIterator.class);
 
+    private static final long UNDEFINED_SIZE = -1;
+
     /** the item manager that is used to lazily fetch the items */
     private final ItemManager itemMgr;
 
-    /** the list of item ids */
-    private final List idList;
+    /** the list of item states */
+    private final List stateList;
 
     /** the position of the next item */
     private int pos;
@@ -69,11 +67,11 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
      * Creates a new <code>LazyItemIterator</code> instance.
      *
      * @param itemMgr item manager
-     * @param ids Collection of item id's
+     * @param stateList Collection of item states
      */
-    public LazyItemIterator(ItemManager itemMgr, Collection ids) {
+    public LazyItemIterator(ItemManager itemMgr, Collection stateList) {
         this.itemMgr = itemMgr;
-        this.idList = new ArrayList(ids);
+        this.stateList = new ArrayList(stateList);
         // prefetch first item
         pos = 0;
         prefetchNext();
@@ -88,19 +86,19 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
     private void prefetchNext() {
         // reset
         next = null;
-        while (next == null && pos < idList.size()) {
-            ItemId id = (ItemId) idList.get(pos);
+        while (next == null && pos < stateList.size()) {
+            ItemState state = (ItemState) stateList.get(pos);
             try {
-                next = itemMgr.getItem(id);
+                next = itemMgr.getItem(state);
             } catch (ItemNotFoundException e) {
-                log.debug("ignoring nonexistent item " + id);
+                log.debug("ignoring nonexistent item " + state);
                 // remove invalid id
-                idList.remove(pos);
+                stateList.remove(pos);
                 // try next
             } catch (RepositoryException e) {
-                log.error("failed to fetch item " + id + ", skipping...", e);
+                log.error("failed to fetch item " + state + ", skipping...", e);
                 // remove invalid id
-                idList.remove(pos);
+                stateList.remove(pos);
                 // try next
             }
         }
@@ -141,15 +139,12 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
     /**
      * {@inheritDoc}
      * <p/>
-     * Note that the size of the iterator as reported by {@link #getSize()}
-     * might appear to be shrinking while iterating because items that for
-     * some reason cannot be retrieved through this iterator are silently
-     * skipped, thus reducing the size of this iterator.
-     *
-     * todo better to always return -1?
+     * Always returns -1
      */
     public long getSize() {
-        return idList.size();
+        // DIFF JR always return -1, since original list may contains items that
+        // are not accessible due to access constraints
+        return UNDEFINED_SIZE;
     }
 
     /**
@@ -171,21 +166,21 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
         // skip the first (skipNum - 1) items without actually retrieving them
         while (--skipNum > 0) {
             pos++;
-            if (pos >= idList.size()) {
+            if (pos >= stateList.size()) {
                 // skipped past last item
                 throw new NoSuchElementException();
             }
-            ItemId id = (ItemId) idList.get(pos);
+            ItemState state = (ItemState) stateList.get(pos);
             // eliminate invalid items from this iterator
-            while (!itemMgr.itemExists(id)) {
-                log.debug("ignoring nonexistent item " + id);
+            while (!itemMgr.itemExists(state)) {
+                log.debug("ignoring nonexistent item " + state);
                 // remove invalid id
-                idList.remove(pos);
-                if (pos >= idList.size()) {
+                stateList.remove(pos);
+                if (pos >= stateList.size()) {
                     // skipped past last item
                     throw new NoSuchElementException();
                 }
-                id = (ItemId) idList.get(pos);
+                state = (ItemState) stateList.get(pos);
                 // try next
                 continue;
             }

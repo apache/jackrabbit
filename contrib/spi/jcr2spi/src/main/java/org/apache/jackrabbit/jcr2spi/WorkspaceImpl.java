@@ -20,6 +20,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.query.QueryManagerImpl;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
@@ -33,6 +34,7 @@ import org.apache.jackrabbit.jcr2spi.lock.DefaultLockManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManagerImpl;
 import org.apache.jackrabbit.jcr2spi.version.DefaultVersionManager;
+import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.jcr2spi.xml.WorkspaceContentHandler;
@@ -41,7 +43,6 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.xml.sax.ContentHandler;
@@ -128,7 +129,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         Path srcPath = session.getQPath(srcAbsPath);
         Path destPath = session.getQPath(destAbsPath);
 
-        Operation op = Copy.create(srcPath, destPath, this, validator);
+        Operation op = Copy.create(srcPath, destPath, this, this);
         getUpdatableItemStateManager().execute(op);
     }
 
@@ -164,7 +165,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
             WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
             // do cross-workspace copy
-            Operation op = Copy.create(srcPath, destPath, srcWsp.getName(), srcWsp, validator);
+            Operation op = Copy.create(srcPath, destPath, srcWsp.getName(), srcWsp, this);
             getUpdatableItemStateManager().execute(op);
         } finally {
             if (srcSession != null) {
@@ -207,7 +208,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
             WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
             // do clone
-            Operation op = Clone.create(srcPath, destPath, srcWsp.getName(), removeExisting, srcWsp, validator);
+            Operation op = Clone.create(srcPath, destPath, srcWsp.getName(), removeExisting, srcWsp, this);
             getUpdatableItemStateManager().execute(op);
         } finally {
             if (srcSession != null) {
@@ -227,7 +228,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         Path srcPath = session.getQPath(srcAbsPath);
         Path destPath = session.getQPath(destAbsPath);
 
-        Operation op = Move.create(srcPath, destPath, validator);
+        Operation op = Move.create(srcPath, destPath, getHierarchyManager(), getNamespaceResolver());
         getUpdatableItemStateManager().execute(op);
     }
 
@@ -240,9 +241,8 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
 
         NodeId[] versionIds = new NodeId[versions.length];
         for (int i = 0; i < versions.length; i++) {
-            ItemId versionId = session.getHierarchyManager().getItemId(versions[i]);
-            if (versionId.denotesNode()) {
-                versionIds[i] = (NodeId) versionId;
+            if (versions[i] instanceof VersionImpl) {
+                versionIds[i] = (NodeId) ((VersionImpl)versions[i]).getId();
             } else {
                 throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for the given version " + versions[i].getPath());
             }
@@ -307,8 +307,8 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         session.checkIsAlive();
 
         Path parentPath = session.getQPath(parentAbsPath);
-        ItemId parentId = getHierarchyManager().getItemId(parentPath);
-        if (parentId.denotesNode()) {
+        ItemState parentState = getHierarchyManager().getItemState(parentPath);
+        if (parentState.isNode()) {
             return new WorkspaceContentHandler(this, parentAbsPath, uuidBehavior);
         } else {
             throw new PathNotFoundException("No node at path " + parentAbsPath);
@@ -325,9 +325,9 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         LockException, RepositoryException {
 
         Path parentPath = session.getQPath(parentAbsPath);
-        ItemId parentId = getHierarchyManager().getItemId(parentPath);
-        if (parentId.denotesNode()) {
-            wspManager.importXml((NodeId) parentId, in, uuidBehavior);
+        ItemState parentState = getHierarchyManager().getItemState(parentPath);
+        if (parentState.isNode()) {
+            wspManager.importXml((NodeId) parentState.getId(), in, uuidBehavior);
         } else {
             throw new PathNotFoundException("No node at path " + parentAbsPath);
         }
@@ -346,7 +346,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      */
     public HierarchyManager getHierarchyManager() {
         if (hierManager == null) {
-            hierManager = new CachingHierarchyManager(getRootNodeId(),
+            hierManager = new HierarchyManagerImpl(getRootNodeId(),
                 getItemStateManager(), getNamespaceResolver());
         }
         return hierManager;

@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.lock;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+
 import org.apache.jackrabbit.spi.NodeId;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
@@ -25,12 +27,15 @@ import javax.jcr.lock.LockException;
  * Defines the functionality needed for locking and unlocking nodes.
  */
 public interface LockManager {
-    
+
+    // TODO Review usage of NodeId
+
     /**
      * Lock a node. Checks whether the node is not locked and then
      * returns a lock object for this node.
      *
      * @param nodeId node id.
+     * @param node
      * @param isDeep whether the lock applies to this node only
      * @param isSessionScoped whether the lock is session scoped
      * @return lock object
@@ -38,7 +43,8 @@ public interface LockManager {
      *         node is locked and <code>isDeep</code> is <code>true</code>
      * @see javax.jcr.Node#lock
      */
-    Lock lock(NodeId nodeId, boolean isDeep, boolean isSessionScoped)
+    // TODO review params
+    Lock lock(NodeId nodeId, Node node, boolean isDeep, boolean isSessionScoped)
         throws LockException, RepositoryException;
 
     /**

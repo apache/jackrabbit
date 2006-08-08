@@ -86,7 +86,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         checkStatus();
-        return (Node) itemMgr.getItem(getItemState().getParent().getId());
+        return (Node) itemMgr.getItem(getItemState().getParent());
     }
 
     /**

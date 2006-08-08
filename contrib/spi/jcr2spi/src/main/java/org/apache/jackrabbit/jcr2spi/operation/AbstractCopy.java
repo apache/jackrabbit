@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.NodeId;
@@ -48,15 +48,15 @@ public abstract class AbstractCopy extends AbstractOperation {
      * @param srcMgrProvider
      */
     AbstractCopy(Path srcPath, Path destPath, String srcWorkspaceName,
-                 ManagerProvider srcMgrProvider, ItemStateValidator validator)
+                 ManagerProvider srcMgrProvider, ManagerProvider destMgrProvider)
         throws RepositoryException {
 
-        ItemId srcItemId = srcMgrProvider.getHierarchyManager().getItemId(srcPath);
-        if (!srcItemId.denotesNode()) {
-            throw new PathNotFoundException("Source path " + validator.safeGetJCRPath(srcItemId) + " is not a valid path.");
+        ItemState srcItemState = srcMgrProvider.getHierarchyManager().getItemState(srcPath);
+        if (!srcItemState.isNode()) {
+            throw new PathNotFoundException("Source path " + LogUtil.safeGetJCRPath(srcPath, srcMgrProvider.getNamespaceResolver()) + " is not a valid path.");
         }
-        this.srcId = (NodeId)srcItemId;
-        this.destParentId = validator.getNodeId(destPath.getAncestor(1));
+        this.srcId = (NodeId)srcItemState.getId();
+        this.destParentId = getNodeId(destPath.getAncestor(1), destMgrProvider.getHierarchyManager(), destMgrProvider.getNamespaceResolver());
         addAffectedItemId(destParentId);
 
         // check for illegal index present in destination path

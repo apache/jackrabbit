@@ -22,6 +22,7 @@ import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -39,10 +40,10 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.value.QValue;
 
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -147,7 +148,7 @@ public class ItemStateValidator {
         QName[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
         for (int i = 0; i < requiredPrimaryTypes.length; i++) {
             if (!entPrimary.includesNodeType(requiredPrimaryTypes[i])) {
-                String msg = safeGetJCRPath(nodeState.getNodeId())
+                String msg = safeGetJCRPath(nodeState)
                         + ": missing required primary type "
                         + requiredPrimaryTypes[i];
                 log.debug(msg);
@@ -159,7 +160,7 @@ public class ItemStateValidator {
         for (int i = 0; i < pda.length; i++) {
             QPropertyDefinition pd = pda[i];
             if (!nodeState.hasPropertyName(pd.getQName())) {
-                String msg = safeGetJCRPath(nodeState.getNodeId())
+                String msg = safeGetJCRPath(nodeState)
                         + ": mandatory property " + pd.getQName()
                         + " does not exist";
                 log.debug(msg);
@@ -171,7 +172,7 @@ public class ItemStateValidator {
         for (int i = 0; i < cnda.length; i++) {
             QNodeDefinition cnd = cnda[i];
             if (!nodeState.hasChildNodeEntry(cnd.getQName())) {
-                String msg = safeGetJCRPath(nodeState.getNodeId())
+                String msg = safeGetJCRPath(nodeState)
                         + ": mandatory child node " + cnd.getQName()
                         + " does not exist";
                 log.debug(msg);
@@ -231,7 +232,7 @@ public class ItemStateValidator {
         try {
             return getEffectiveNodeType(nodeState.getNodeTypeNames());
         } catch (NodeTypeConflictException ntce) {
-            String msg = "Internal error: failed to build effective node type from node types defined with " + safeGetJCRPath(nodeState.getId());
+            String msg = "Internal error: failed to build effective node type from node types defined with " + safeGetJCRPath(nodeState);
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
@@ -253,26 +254,15 @@ public class ItemStateValidator {
     }
 
     /**
-     * Failsafe conversion of internal <code>Path</code> to JCR path for use in
-     * error messages etc.
-     *
-     * @param path path to convert
-     * @return JCR path
-     */
-    public String safeGetJCRPath(Path path) {
-        return mgrProvider.getHierarchyManager().safeGetJCRPath(path);
-    }
-
-    /**
-     * Failsafe translation of internal <code>ItemId</code> to JCR path for use
+     * Failsafe translation of internal <code>ItemState</code> to JCR path for use
      * in error messages etc.
      *
-     * @param id id to translate
+     * @param itemState
      * @return JCR path
-     * @see HierarchyManager#safeGetJCRPath(ItemId)
+     * @see LogUtil#safeGetJCRPath(ItemState, NamespaceResolver, HierarchyManager)
      */
-    public String safeGetJCRPath(ItemId id) {
-        return mgrProvider.getHierarchyManager().safeGetJCRPath(id);
+    private String safeGetJCRPath(ItemState itemState) {
+        return LogUtil.safeGetJCRPath(itemState, mgrProvider.getNamespaceResolver(), mgrProvider.getHierarchyManager());
     }
 
     /**
@@ -365,7 +355,7 @@ public class ItemStateValidator {
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             // make sure current session is granted read access on parent node
             if (!mgrProvider.getAccessManager().canRead(parentState.getNodeId())) {
-                throw new ItemNotFoundException(safeGetJCRPath(parentState.getNodeId()));
+                throw new ItemNotFoundException(safeGetJCRPath(parentState));
             }
         }
 
@@ -471,7 +461,7 @@ public class ItemStateValidator {
             // make sure current session is granted write access on new prop
             Path relPath = Path.create(propertyName, Path.INDEX_UNDEFINED);
             if (!mgrProvider.getAccessManager().isGranted(parentState.getNodeId(), relPath, new String[] {AccessManager.SET_PROPERTY_ACTION})) {
-                throw new AccessDeniedException(safeGetJCRPath(parentState.getId()) + ": not allowed to create property with name " + propertyName);
+                throw new AccessDeniedException(safeGetJCRPath(parentState) + ": not allowed to create property with name " + propertyName);
             }
         }
 
@@ -534,7 +524,7 @@ public class ItemStateValidator {
             // TODO build Id instead 
             Path relPath = Path.create(nodeName, org.apache.jackrabbit.name.Path.INDEX_UNDEFINED);
             if (!mgrProvider.getAccessManager().isGranted(parentState.getNodeId(), relPath, new String[] {AccessManager.ADD_NODE_ACTION})) {
-                throw new AccessDeniedException(safeGetJCRPath(parentState.getNodeId()) + ": not allowed to add child node '" + nodeName +"'");
+                throw new AccessDeniedException(safeGetJCRPath(parentState) + ": not allowed to add child node '" + nodeName +"'");
             }
         }
 
@@ -601,16 +591,16 @@ public class ItemStateValidator {
             try {
                 // make sure current session is granted read access on parent node
                 if (!mgrProvider.getAccessManager().canRead(targetId)) {
-                    throw new PathNotFoundException(safeGetJCRPath(targetId));
+                    throw new PathNotFoundException(safeGetJCRPath(targetState));
                 }
                 // make sure current session is allowed to remove target node
                 if (!mgrProvider.getAccessManager().canRemove(targetId)) {
-                    throw new AccessDeniedException(safeGetJCRPath(targetId)
+                    throw new AccessDeniedException(safeGetJCRPath(targetState)
                             + ": not allowed to remove node");
                 }
             } catch (ItemNotFoundException infe) {
                 String msg = "internal error: failed to check access rights for "
-                        + safeGetJCRPath(targetId);
+                        + safeGetJCRPath(targetState);
                 log.debug(msg);
                 throw new RepositoryException(msg, infe);
             }
@@ -650,7 +640,7 @@ public class ItemStateValidator {
         }
         NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParent();
         if (!mgrProvider.getVersionManager().isCheckedOut(nodeState.getNodeId())) {
-            throw new VersionException(safeGetJCRPath(nodeState.getNodeId()) + " is checked-in");
+            throw new VersionException(safeGetJCRPath(nodeState) + " is checked-in");
         }
     }
 
@@ -741,14 +731,14 @@ public class ItemStateValidator {
         }
         // check for name collisions with existing properties
         if (parentState.hasPropertyName(propertyName)) {
-            PropertyId errorId = null;
+            PropertyState errorState = null;
             try {
-                errorId = parentState.getPropertyState(propertyName).getPropertyId();
+                errorState = parentState.getPropertyState(propertyName);
             } catch (ItemStateException e) {
                 // should not occur. existance has been asserted before
                 throw new RepositoryException(e);
             }
-            throw new ItemExistsException(safeGetJCRPath(errorId));
+            throw new ItemExistsException(safeGetJCRPath(errorState));
         }
     }
 
@@ -765,7 +755,7 @@ public class ItemStateValidator {
         if (parentState.hasPropertyName(nodeName)) {
             // there's already a property with that name
             throw new ItemExistsException("cannot add child node '"
-                + nodeName.getLocalName() + "' to " + safeGetJCRPath(parentState.getNodeId())
+                + nodeName.getLocalName() + "' to " + safeGetJCRPath(parentState)
                 + ": colliding with same-named existing property");
 
         } else if (parentState.hasChildNodeEntry(nodeName)) {
@@ -780,7 +770,7 @@ public class ItemStateValidator {
                 if (!(conflictDef.allowsSameNameSiblings() && newDef.allowsSameNameSiblings())) {
                     throw new ItemExistsException("Cannot add child node '"
                         + nodeName.getLocalName() + "' to "
-                        + safeGetJCRPath(parentState.getNodeId())
+                        + safeGetJCRPath(parentState)
                         + ": colliding with same-named existing node.");
                 }
             } catch (ItemStateException e) {
@@ -811,52 +801,15 @@ public class ItemStateValidator {
                 try {
                     NodeReferences refs = stateMgr.getNodeReferences(targetId);
                     if (refs.hasReferences()) {
-                        throw new ReferentialIntegrityException(safeGetJCRPath(targetId)
+                        throw new ReferentialIntegrityException(safeGetJCRPath(targetState)
                             + ": cannot remove node with references");
                     }
                 } catch (ItemStateException ise) {
-                    String msg = "internal error: failed to check references on " + safeGetJCRPath(targetId);
+                    String msg = "internal error: failed to check references on " + safeGetJCRPath(targetState);
                     log.error(msg, ise);
                     throw new RepositoryException(msg, ise);
                 }
             }
-        }
-    }
-
-    //--------------------------------------------------------------------------
-
-    public NodeId getNodeId(Path nodePath) throws PathNotFoundException, RepositoryException {
-        try {
-            ItemId id = mgrProvider.getHierarchyManager().getItemId(nodePath);
-            if (!id.denotesNode()) {
-                throw new PathNotFoundException(safeGetJCRPath(nodePath));
-            }
-            return (NodeId)id;
-        } catch (ItemNotFoundException infe) {
-            throw new PathNotFoundException(safeGetJCRPath(nodePath));
-        }
-    }
-
-    /**
-     * Retrieves the state of the item with the specified id using the given
-     * item state manager.
-     * <p/>
-     * Note that access rights are <b><i>not</i></b> enforced!
-     *
-     * @param id
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    public NodeState getNodeState(NodeId id) throws ItemNotFoundException, RepositoryException {
-        try {
-            return (NodeState) mgrProvider.getItemStateManager().getItemState(id);
-        } catch (NoSuchItemStateException nsise) {
-            throw new ItemNotFoundException(safeGetJCRPath(id));
-        } catch (ItemStateException ise) {
-            String msg = "internal error: failed to retrieve state of " + safeGetJCRPath(id);
-            log.debug(msg);
-            throw new RepositoryException(msg, ise);
         }
     }
 }

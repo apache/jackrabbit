@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.name.Path;
 
@@ -34,8 +33,9 @@ import javax.jcr.version.VersionException;
  */
 public class Copy extends AbstractCopy  {
 
-    private Copy(Path srcPath, Path destPath, String srcWorkspaceName, ManagerProvider srcMgrProvider, ItemStateValidator validator) throws RepositoryException {
-        super(srcPath, destPath, srcWorkspaceName, srcMgrProvider, validator);
+    private Copy(Path srcPath, Path destPath, String srcWorkspaceName,
+                 ManagerProvider srcMgrProvider, ManagerProvider destMgrProvider) throws RepositoryException {
+        super(srcPath, destPath, srcWorkspaceName, srcMgrProvider, destMgrProvider);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -50,19 +50,19 @@ public class Copy extends AbstractCopy  {
     //------------------------------------------------------------< Factory >---
     public static Operation create(Path srcPath, Path destPath,
                                    ManagerProvider mgrProvider,
-                                   ItemStateValidator validator)
+                                   ManagerProvider destMgrProvider)
         throws RepositoryException, ConstraintViolationException, AccessDeniedException,
         ItemExistsException, VersionException {
-        return create(srcPath, destPath, null, mgrProvider, validator);
+        return create(srcPath, destPath, null, mgrProvider, destMgrProvider);
     }
 
     public static Operation create(Path srcPath, Path destPath,
                                    String srcWorkspaceName,
                                    ManagerProvider srcMgrProvider,
-                                   ItemStateValidator validator)
+                                   ManagerProvider destMgrProvider)
         throws RepositoryException, ConstraintViolationException, AccessDeniedException,
         ItemExistsException, VersionException {
-        Copy cp = new Copy(srcPath, destPath, srcWorkspaceName, srcMgrProvider, validator);
+        Copy cp = new Copy(srcPath, destPath, srcWorkspaceName, srcMgrProvider, destMgrProvider);
         return cp;
     }
 }

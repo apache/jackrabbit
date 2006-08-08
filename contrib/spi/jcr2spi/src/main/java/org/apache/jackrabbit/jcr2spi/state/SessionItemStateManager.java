@@ -17,10 +17,11 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.jackrabbit.jcr2spi.CachingHierarchyManager;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.ZombieHierarchyManager;
+import org.apache.jackrabbit.jcr2spi.HierarchyManagerImpl;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
@@ -98,12 +99,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private static Logger log = LoggerFactory.getLogger(SessionItemStateManager.class);
 
     /**
-     * Id of the root node.
-     */
-    // TODO: TO-BE-FIXED. With SPI_ItemId rootId must not be stored separately
-    private final NodeId rootId;
-
-    /**
      * State manager that allows updates
      */
     private final UpdatableItemStateManager workspaceItemStateMgr;
@@ -117,13 +112,16 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     /**
      * Hierarchy manager
      */
-    // DIFF JACKRABBIT: private CachingHierarchyManager hierMgr;
-    private final CachingHierarchyManager hierMgr;
+    private final HierarchyManager hierMgr;
     private final NamespaceResolver nsResolver;
 
     private final IdFactory idFactory;
     private final ValueFactory valueFactory;
     private final ItemStateValidator validator;
+
+    // DIFF JR: store root id. since 'CachingItemStateManager' not used any more
+    // TODO: TO-BE-FIXED. With SPI_ItemId rootId must not be stored separately
+    private NodeId rootId;
 
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
@@ -138,8 +136,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                                    ValueFactory valueFactory,
                                    ItemStateValidator validator,
                                    NamespaceResolver nsResolver) {
-        // DIFF JACKRABBIT: added rootId
-        this.rootId = rootId;
         this.workspaceItemStateMgr = workspaceItemStateMgr;
         // DIFF JACKRABBIT: this.transientStateMgr = new TransientItemStateManager();
         this.transientStateMgr = new TransientChangeLog(idFactory, workspaceItemStateMgr);
@@ -150,13 +146,16 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // DIFF JR: valueFactory added
         this.valueFactory = valueFactory;
 
-        // create hierarchy manager that uses both transient and persistent state
-        hierMgr = new CachingHierarchyManager(rootId, this, nsResolver);
         this.nsResolver = nsResolver;
+        this.rootId = rootId;
+
+        // create hierarchy manager
+        hierMgr = new HierarchyManagerImpl(rootId, this, nsResolver);
+
     }
 
     /**
-     * 
+     *
      * @return
      */
     public HierarchyManager getHierarchyManager() {
@@ -488,7 +487,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 // determine relative depth: > 0 means it's a descendant
                 int depth;
                 try {
-                    depth = hierMgr.getRelativeDepth(parentId, state.getId());
+                    depth = getHierarchyManager().getRelativeDepth(parentId, state.getId());
                 } catch (ItemNotFoundException infe) {
                     /**
                      * one of the parents of the specified item has been
@@ -570,10 +569,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         // use a special attic-aware hierarchy manager
         ZombieHierarchyManager zombieHierMgr =
-                new ZombieHierarchyManager(hierMgr.getRootNodeId(),
+                new ZombieHierarchyManager(rootId,
                         this,
                         transientStateMgr.getAttic(),
-                        hierMgr.getNamespaceResolver());
+                        nsResolver);
 
         // use an array of lists to group the descendants by relative depth;
         // the depth is used as array index
@@ -638,7 +637,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException {
         ChangeLog changeLog = new TransientChangeLog(idFactory, workspaceItemStateMgr);
         if (rootId.equals(itemState.getId())) {
-            // get all item states
+            // root state -> get all item states
             for (Iterator it = transientStateMgr.addedStates(); it.hasNext(); ) {
                 changeLog.added((ItemState) it.next());
             }
@@ -730,28 +729,28 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
                 case ItemState.STATUS_NEW:
                     {
-                        String msg = hierMgr.safeGetJCRPath(state.getId()) + ": cannot save a new item.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, getHierarchyManager()) + ": cannot save a new item.";
                         log.debug(msg);
                         throw new ItemStateException(msg);
                     }
 
                 case ItemState.STATUS_STALE_MODIFIED:
                     {
-                        String msg = hierMgr.safeGetJCRPath(state.getId()) + ": the item cannot be saved because it has been modified externally.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, getHierarchyManager()) + ": the item cannot be saved because it has been modified externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
 
                 case ItemState.STATUS_STALE_DESTROYED:
                     {
-                        String msg = hierMgr.safeGetJCRPath(state.getId()) + ": the item cannot be saved because it has been deleted externally.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, getHierarchyManager()) + ": the item cannot be saved because it has been deleted externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
 
                 case ItemState.STATUS_UNDEFINED:
                     {
-                        String msg = hierMgr.safeGetJCRPath(state.getId()) + ": the item cannot be saved; it seems to have been removed externally.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, getHierarchyManager()) + ": the item cannot be saved; it seems to have been removed externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
@@ -884,8 +883,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                     NodeId id = (NodeId) depIt.next();
                     if (!affectedIds.contains(id)) {
                         // need to save the parent as well
-                        String msg = hierMgr.safeGetJCRPath(id)
-                            + " needs to be saved as well.";
+                        // TODO convert id to human-readable id
+                        String msg = id.toString() + " needs to be saved as well.";
                         log.debug(msg);
                         throw new ItemStateException(msg);
                     }
@@ -902,7 +901,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_COLLISION
             | ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_CONSTRAINTS;
 
-        NodeState parent = validator.getNodeState(operation.getParentId());
+        NodeState parent = getNodeState(operation.getParentId());
         QNodeDefinition def = validator.getApplicableNodeDefinition(operation.getNodeName(), operation.getNodeTypeName(), parent);
         addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, options);
 
@@ -913,7 +912,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @inheritDoc
      */
     public void visit(AddProperty operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        NodeState parent = validator.getNodeState(operation.getParentId());
+        NodeState parent = getNodeState(operation.getParentId());
         QName propertyName = operation.getPropertyName();
         QPropertyDefinition pDef = validator.getApplicablePropertyDefinition(propertyName, operation.getPropertyType(), operation.isMultiValued(), parent);
         int targetType = pDef.getRequiredType();
@@ -952,10 +951,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
 
         // retrieve states and assert they are modifiable
-        NodeState srcState = create(validator.getNodeState(operation.getNodeId()));
-        NodeState srcParent = create(validator.getNodeState(operation.getSourceParentId()));
+        NodeState srcState = create(getNodeState(operation.getNodeId()));
+        NodeState srcParent = create(getNodeState(operation.getSourceParentId()));
 
-        NodeState destParent = create(validator.getNodeState(operation.getDestinationParentId()));
+        NodeState destParent = create(getNodeState(operation.getDestinationParentId()));
 
         // state validation: move-Source can be removed from old/added to new parent
         validator.checkRemoveItem(srcState,
@@ -1038,7 +1037,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         boolean anyRemoved;
 
         QName[] mixinNames = operation.getMixinNames();
-        NodeState nState = create(validator.getNodeState(operation.getNodeId()));
+        NodeState nState = create(getNodeState(operation.getNodeId()));
 
         // mixin-names to be execute on the nodestate (and corresponding property state)
         if (mixinNames != null && mixinNames.length > 0) {
@@ -1095,10 +1094,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         if (anyRemoved) {
             EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
             // use temp set to avoid ConcurrentModificationException
-            Iterator childProps = new HashSet(nState.getPropertyNames()).iterator();
+            Iterator childProps = new HashSet(nState.getPropertyEntries()).iterator();
             while (childProps.hasNext()) {
                 try {
-                    PropertyState childState = nState.getPropertyState((QName) childProps.next());
+                    ChildPropertyEntry entry = (ChildPropertyEntry) childProps.next();
+                    PropertyState childState = entry.getPropertyState();
                     QName declNtName = childState.getDefinition().getDeclaringNodeType();
                     // check if property has been defined by mixin type (or one of its supertypes)
                     if (!ent.includesNodeType(declNtName)) {
@@ -1147,9 +1147,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             setPropertyStateValue(pState, operation.getValues(), operation.getPropertyType());
             transientStateMgr.addOperation(operation);
         } catch (NoSuchItemStateException nsise) {
-            throw new ItemNotFoundException(getHierarchyManager().safeGetJCRPath(operation.getPropertyId()));
+            // TODO convert id to human-readable id
+            throw new ItemNotFoundException(operation.getPropertyId().toString());
         } catch (ItemStateException ise) {
-            String msg = "internal error: failed to retrieve state of " + getHierarchyManager().safeGetJCRPath(operation.getPropertyId());
+            // TODO convert id to human-readable id
+            String msg = "internal error: failed to retrieve state of " + operation.getPropertyId().toString();
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
@@ -1160,7 +1162,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     public void visit(ReorderNodes operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         // make sure the parent state is modifiable
-        NodeState parent = create(validator.getNodeState(operation.getParentId()));
+        NodeState parent = create(getNodeState(operation.getParentId()));
 
         NodeId srcId = operation.getInsertNodeId();
         NodeId beforeId = operation.getBeforeNodeId();
@@ -1467,11 +1469,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
 
         // remove properties
-        Iterator tmpIter = new HashSet(targetState.getPropertyNames()).iterator();
+        Iterator tmpIter = new HashSet(targetState.getPropertyEntries()).iterator();
         while (tmpIter.hasNext()) {
-            QName propName = (QName) tmpIter.next();
+            ChildPropertyEntry entry = (PropertyReference) tmpIter.next();
             try {
-                PropertyState child = targetState.getPropertyState(propName);
+                PropertyState child = entry.getPropertyState();
                 removePropertyState(targetState, child);
             } catch (ItemStateException e) {
                 // ignore
@@ -1652,7 +1654,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @return the computed values
      */
     private QValue[] computeSystemGeneratedPropertyValues(NodeState parent,
-                                                                 QPropertyDefinition def)
+                                                          QPropertyDefinition def)
         throws RepositoryException {
         QValue[] genValues = null;
         /**
@@ -1696,5 +1698,29 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             }
         }
         return genValues;
+    }
+
+
+    /**
+     * Retrieves the state of the item with the specified id using the given
+     * item state manager.
+     * <p/>
+     * Note that access rights are <b><i>not</i></b> enforced!
+     *
+     * @param id
+     * @return
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    private NodeState getNodeState(NodeId id) throws ItemNotFoundException, RepositoryException {
+        try {
+            return (NodeState) getItemState(id);
+        } catch (NoSuchItemStateException e) {
+            throw new ItemNotFoundException(id.toString());
+        } catch (ItemStateException e) {
+            String msg = "internal error: failed to retrieve state of " + id.toString();
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
     }
 }
