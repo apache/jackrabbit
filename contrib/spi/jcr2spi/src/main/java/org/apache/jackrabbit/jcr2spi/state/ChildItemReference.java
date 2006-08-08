@@ -65,7 +65,10 @@ abstract class ChildItemReference {
 
     /**
      * Resolves this <code>ChildItemReference</code> and returns the target
-     * <code>ItemState</code> of this reference.
+     * <code>ItemState</code> of this reference. This method may return a
+     * cached <code>ItemState</code> if this method was called before already
+     * otherwise this method will forward the call to {@link #doResolve()}
+     * and cache its return value.
      *
      * @return the <code>ItemState</code> where this reference points to.
      * @throws NoSuchItemStateException if the referenced <code>ItemState</code>
