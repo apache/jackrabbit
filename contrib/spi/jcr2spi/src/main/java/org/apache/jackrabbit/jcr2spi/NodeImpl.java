@@ -37,6 +37,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
@@ -48,11 +49,11 @@ import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Update;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
+import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,7 +152,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ItemNotFoundException(msg);
         }
 
-        return (Node) itemMgr.getItem(parentState.getNodeId());
+        return (Node) itemMgr.getItem(parentState);
     }
 
     /**
@@ -419,11 +420,11 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Node getNode(String relPath) throws PathNotFoundException, RepositoryException {
         checkStatus();
-        NodeId id = resolveRelativeNodePath(relPath);
-        if (id == null) {
+        NodeState state = resolveRelativeNodePath(relPath);
+        if (state == null) {
             throw new PathNotFoundException(relPath);
         }
-        return (Node) itemMgr.getItem(id);
+        return (Node) itemMgr.getItem(state);
     }
 
     /**
@@ -439,7 +440,7 @@ public class NodeImpl extends ItemImpl implements Node {
          * recursion!
          */
         try {
-            return itemMgr.getChildNodes(getNodeId());
+            return itemMgr.getChildNodes(getNodeState());
         } catch (ItemNotFoundException infe) {
             String msg = "failed to list the child nodes of " + safeGetJCRPath();
             log.debug(msg);
@@ -467,11 +468,11 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property getProperty(String relPath) throws PathNotFoundException, RepositoryException {
         checkStatus();
-        PropertyId id = resolveRelativePropertyPath(relPath);
-        if (id == null) {
+        PropertyState state = resolveRelativePropertyPath(relPath);
+        if (state == null) {
             throw new PathNotFoundException(relPath);
         }
-        return (Property) itemMgr.getItem(id);
+        return (Property) itemMgr.getItem(state);
     }
 
     /**
@@ -480,7 +481,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyIterator getProperties() throws RepositoryException {
         checkStatus();
         try {
-            return itemMgr.getChildProperties(getNodeId());
+            return itemMgr.getChildProperties(getNodeState());
         } catch (ItemNotFoundException infe) {
             String msg = "Failed to list the child properties of " + getPath();
             log.debug(msg);
@@ -574,8 +575,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean hasNode(String relPath) throws RepositoryException {
         checkStatus();
-        NodeId id = resolveRelativeNodePath(relPath);
-        return (id != null) ? itemMgr.itemExists(id) : false;
+        NodeState childState = resolveRelativeNodePath(relPath);
+        return (childState != null) ? itemMgr.itemExists(childState) : false;
     }
 
     /**
@@ -583,8 +584,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean hasProperty(String relPath) throws RepositoryException {
         checkStatus();
-        PropertyId pId = resolveRelativePropertyPath(relPath);
-        return (pId != null) ? itemMgr.itemExists(pId) : false;
+        PropertyState childState = resolveRelativePropertyPath(relPath);
+        return (childState != null) ? itemMgr.itemExists(childState) : false;
     }
 
     /**
@@ -603,7 +604,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean hasNodes() throws RepositoryException {
         checkStatus();
-        return itemMgr.hasChildNodes(getNodeId());
+        return itemMgr.hasChildNodes(getNodeState());
     }
 
     /**
@@ -611,7 +612,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean hasProperties() throws RepositoryException {
         checkStatus();
-        return itemMgr.hasChildProperties(getNodeId());
+        return itemMgr.hasChildProperties(getNodeState());
     }
 
     /**
@@ -825,9 +826,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new VersionException(msg);
         }
 
-        ItemId versionId = session.getHierarchyManager().getItemId(version);
-        if (versionId.denotesNode()) {
-            session.getVersionManager().resolveMergeConflict(getNodeId(), (NodeId) versionId, done);
+        if (version instanceof VersionImpl) {
+            session.getVersionManager().resolveMergeConflict(getNodeId(), (NodeId) ((VersionImpl)version).getId(), done);
         } else {
             throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for version " + version.getPath());
         }
@@ -1026,9 +1026,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     private void restore(NodeId nodeId, Version version, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        ItemId versionId = session.getHierarchyManager().getItemId(version);
-        if (versionId.denotesNode()) {
-            session.getVersionManager().restore(nodeId, (NodeId) versionId, removeExisting);
+        if (version instanceof VersionImpl) {
+            session.getVersionManager().restore(nodeId, (NodeId) ((VersionImpl)version).getId(), removeExisting);
         } else {
             throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for the given version " + version.getPath());
         }
@@ -1071,7 +1070,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsLockable();
         checkHasPendingChanges();
 
-        return session.getLockManager().lock(getNodeId(), isDeep, isSessionScoped);
+        return session.getLockManager().lock(getNodeId(), this, isDeep, isSessionScoped);
     }
 
     /**
@@ -1154,7 +1153,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see ItemImpl#getQName()
      */
     QName getQName() throws RepositoryException {
-        return session.getHierarchyManager().getQName(getId());
+        return session.getHierarchyManager().getQName(getNodeState());
     }
 
 
@@ -1270,16 +1269,21 @@ public class NodeImpl extends ItemImpl implements Node {
         itemStateMgr.execute(an);
 
         // retrieve id of state that has been created during execution of AddNode
-        NodeId childId;
-        List cne = getNodeState().getChildNodeEntries(nodeName);
-        if (definition.allowsSameNameSiblings()) {
-            // TODO: find proper solution. problem with same-name-siblings
-            childId = ((ChildNodeEntry)cne.get(cne.size()-1)).getId();
-        } else {
-            childId = ((ChildNodeEntry)cne.get(0)).getId();
+        NodeState childState;
+        try {
+            List cne = getNodeState().getChildNodeEntries(nodeName);
+            if (definition.allowsSameNameSiblings()) {
+                // TODO: find proper solution. problem with same-name-siblings
+                childState = ((ChildNodeEntry)cne.get(cne.size()-1)).getNodeState();
+            } else {
+                childState = ((ChildNodeEntry)cne.get(0)).getNodeState();
+            }
+        } catch (ItemStateException e) {
+            // should not occur
+            throw new RepositoryException(e);
         }
         // finally retrieve the new node
-        return (Node) itemMgr.getItem(childId);
+        return (Node) itemMgr.getItem(childState);
     }
 
     /**
@@ -1294,7 +1298,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkStatus();
         try {
             PropertyState pState = getNodeState().getPropertyState(qName);
-            return (Property) itemMgr.getItem(pState.getId());
+            return (Property) itemMgr.getItem(pState);
         } catch (AccessDeniedException ade) {
             throw new ItemNotFoundException(qName.toString());
         } catch (NoSuchItemStateException e) {
@@ -1500,13 +1504,13 @@ public class NodeImpl extends ItemImpl implements Node {
      * Note that access rights are not checked.
      *
      * @param relPath relative path of a (possible) node.
-     * @return the id of the node at <code>relPath</code> or <code>null</code>
+     * @return the state of the node at <code>relPath</code> or <code>null</code>
      * if no node exists at <code>relPath</code>.
      * @throws RepositoryException if <code>relPath</code> is not a valid
      * relative path.
      */
-    private NodeId resolveRelativeNodePath(String relPath) throws RepositoryException {
-        NodeId targetId = null;
+    private NodeState resolveRelativeNodePath(String relPath) throws RepositoryException {
+        NodeState targetState = null;
         try {
             Path p = getQPath(relPath);
             // if relative path is just the last path element -> simply retrieve
@@ -1518,13 +1522,13 @@ public class NodeImpl extends ItemImpl implements Node {
                     int index = pe.getNormalizedIndex();
                     ChildNodeEntry cne = getNodeState().getChildNodeEntry(pe.getName(), index);
                     if (cne != null) {
-                        targetId = cne.getId();
+                        targetState = cne.getNodeState();
                     } // else: there's no child node with that name
                 }
             } else {
-                ItemId id = session.getHierarchyManager().getItemId(p.getCanonicalPath());
-                if (id.denotesNode()) {
-                    targetId = (NodeId) id;
+                ItemState itemState = session.getHierarchyManager().getItemState(p.getCanonicalPath());
+                if (itemState.isNode()) {
+                    targetState = (NodeState) itemState;
                 } // else:  not a node
             }
         } catch (PathNotFoundException e) {
@@ -1533,8 +1537,13 @@ public class NodeImpl extends ItemImpl implements Node {
             String msg = "Invalid relative path: " + relPath;
             log.debug(msg);
             throw new RepositoryException(msg, e);
+        } catch (ItemStateException e) {
+            // should not occure
+            String msg = "Invalid relative path: " + relPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
         }
-        return targetId;
+        return targetState;
     }
 
     /**
@@ -1544,12 +1553,12 @@ public class NodeImpl extends ItemImpl implements Node {
      * Note that access rights are not checked.
      *
      * @param relPath relative path of a (possible) property
-     * @return the id of the property at <code>relPath</code> or
+     * @return the state of the property at <code>relPath</code> or
      *         <code>null</code> if no property exists at <code>relPath</code>
      * @throws RepositoryException if <code>relPath</code> is not a valid
      *                             relative path
      */
-    private PropertyId resolveRelativePropertyPath(String relPath) throws RepositoryException {
+    private PropertyState resolveRelativePropertyPath(String relPath) throws RepositoryException {
         try {
             /**
              * first check if relPath is just a name (in which case we don't
@@ -1560,7 +1569,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 // check if property entry exists
                 if (getNodeState().hasPropertyName(propName)) {
                     try {
-                        return getNodeState().getPropertyState(propName).getPropertyId();
+                        return getNodeState().getPropertyState(propName);
                     } catch (ItemStateException e) {
                         // should not occur due, since existance has been checked
                         throw new RepositoryException(e);
@@ -1575,9 +1584,9 @@ public class NodeImpl extends ItemImpl implements Node {
              */
             Path p = getQPath(relPath).getCanonicalPath();
             try {
-                ItemId id = session.getHierarchyManager().getItemId(p);
-                if (!id.denotesNode()) {
-                    return (PropertyId) id;
+                ItemState itemState = session.getHierarchyManager().getItemState(p);
+                if (!itemState.isNode()) {
+                    return (PropertyState) itemState;
                 } else {
                     // not a property
                     return null;

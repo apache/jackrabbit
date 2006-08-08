@@ -23,10 +23,12 @@ import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
@@ -59,7 +61,6 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.value.ValueFormat;
@@ -136,17 +137,17 @@ public class ImporterImpl implements Importer, SessionListener {
 
         // perform preliminary checks
         try {
-            ItemId id = hierMgr.getItemId(parentPath);
-            if (!id.denotesNode()) {
-                throw new PathNotFoundException(hierMgr.safeGetJCRPath(parentPath));
+            ItemState itemState = hierMgr.getItemState(parentPath);
+            if (!itemState.isNode()) {
+                throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getNamespaceResolver()));
             }
-            importTarget = validator.getNodeState((NodeId) id);
+            importTarget = (NodeState) itemState;
 
             refTracker = new ReferenceChangeTracker();
             parents = new Stack();
             parents.push(importTarget);
         } catch (ItemNotFoundException infe) {
-            throw new PathNotFoundException(hierMgr.safeGetJCRPath(parentPath));
+            throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getNamespaceResolver()));
         }
 
 
@@ -202,14 +203,14 @@ public class ImporterImpl implements Importer, SessionListener {
                    if (def.isProtected() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                        // skip protected node
                        parents.push(null); // push null onto stack for skipped node
-                       log.debug("skipping protected node " + hierMgr.safeGetJCRPath(existing.getId()));
+                       log.debug("skipping protected node " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), hierMgr));
                        return;
                    }
                    if (def.isAutoCreated() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                        // this node has already been auto-created, no need to create it
                        nodeState = existing;
                    } else {
-                       throw new ItemExistsException(hierMgr.safeGetJCRPath(existing.getId()));
+                       throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), hierMgr));
                    }
                }
            }
@@ -222,11 +223,15 @@ public class ImporterImpl implements Importer, SessionListener {
                } else {
                    // potential uuid conflict
                    try {
-                       NodeState conflicting = validator.getNodeState(nodeInfo.getId());
+                       NodeState conflicting = (NodeState) stateMgr.getItemState(nodeInfo.getId());
                        nodeState = resolveUUIDConflict(parent, conflicting, nodeInfo);
-                   } catch (ItemNotFoundException infe) {
+                   } catch (NoSuchItemStateException e) {
                        // no conflict: create new with given uuid
                        nodeState = importNode(nodeInfo, parent);
+                   } catch (ItemStateException e) {
+                       String msg = "Internal error: failed to retrieve state of " + nodeInfo.getId().toString();
+                       log.debug(msg);
+                       throw new RepositoryException(msg, e);
                    }
                }
            }
@@ -356,8 +361,8 @@ public class ImporterImpl implements Importer, SessionListener {
 
             case ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING:
                 // make sure conflicting node is not importTarget or an ancestor thereof
-                Path p0 = hierMgr.getQPath(importTarget.getId());
-                Path p1 = hierMgr.getQPath(conflicting.getId());
+                Path p0 = hierMgr.getQPath(importTarget);
+                Path p1 = hierMgr.getQPath(conflicting);
                 try {
                     if (p1.equals(p0) || p1.isAncestorOf(p0)) {
                         msg = "cannot remove ancestor node";
@@ -512,7 +517,7 @@ public class ImporterImpl implements Importer, SessionListener {
                 def = existing.getDefinition();
                 if (def.isProtected()) {
                     // skip protected property
-                    log.debug("skipping protected property " + hierMgr.safeGetJCRPath(existing.getPropertyId()));
+                    log.debug("skipping protected property " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), hierMgr));
                     return;
                 }
                 if (def.isAutoCreated()
@@ -521,7 +526,7 @@ public class ImporterImpl implements Importer, SessionListener {
                     // this property has already been auto-created, no need to create it
                     propState = existing;
                 } else {
-                    throw new ItemExistsException(hierMgr.safeGetJCRPath(existing.getPropertyId()));
+                    throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), hierMgr));
                 }
             } catch (ItemStateException e) {
                 // should not occur. existance has been checked before

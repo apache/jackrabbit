@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.name.Path;
 
@@ -38,9 +37,9 @@ public class Clone extends AbstractCopy {
 
     private Clone(Path srcPath, Path destPath, String srcWorkspaceName,
                   boolean removeExisting, ManagerProvider srcMgrProvider,
-                  ItemStateValidator validator)
+                  ManagerProvider destMgrProvider)
         throws RepositoryException {
-        super(srcPath, destPath, srcWorkspaceName, srcMgrProvider, validator);
+        super(srcPath, destPath, srcWorkspaceName, srcMgrProvider, destMgrProvider);
         this.removeExisting = removeExisting;
     }
 
@@ -63,11 +62,11 @@ public class Clone extends AbstractCopy {
     public static Operation create(Path srcPath, Path destPath,
                                    String srcWorkspaceName, boolean removeExisting,
                                    ManagerProvider srcMgrProvider,
-                                   ItemStateValidator validator)
+                                   ManagerProvider destMgrProvider)
         throws RepositoryException, ConstraintViolationException, AccessDeniedException,
         ItemExistsException, VersionException {
 
-        Clone cl = new Clone(srcPath, destPath, srcWorkspaceName, removeExisting, srcMgrProvider, validator);
+        Clone cl = new Clone(srcPath, destPath, srcWorkspaceName, removeExisting, srcMgrProvider, destMgrProvider);
         return cl;
     }
 }

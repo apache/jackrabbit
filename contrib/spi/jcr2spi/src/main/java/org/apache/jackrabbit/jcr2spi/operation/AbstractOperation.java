@@ -17,7 +17,15 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.jcr2spi.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
 
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,5 +64,24 @@ public abstract class AbstractOperation implements Operation {
      */
     protected void addAffectedItemId(ItemId affectedId) {
         affectedIds.add(affectedId);
+    }
+
+    // TODO to be removed after ID refactoring completed
+
+    /**
+     * 
+     * @param nodePath
+     * @param hierMgr
+     * @param nsResolver
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    protected static NodeId getNodeId(Path nodePath, HierarchyManager hierMgr, NamespaceResolver nsResolver) throws PathNotFoundException, RepositoryException {
+        ItemState itemState = hierMgr.getItemState(nodePath);
+        if (!itemState.isNode()) {
+            throw new PathNotFoundException(LogUtil.safeGetJCRPath(nodePath, nsResolver));
+        }
+        return (NodeId)itemState.getId();
     }
 }

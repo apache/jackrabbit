@@ -23,7 +23,7 @@ import org.apache.jackrabbit.spi.PropertyId;
 /**
  * <code>PropertyReference</code> implements a reference to a property state.
  */
-public class PropertyReference extends ChildItemReference {
+class PropertyReference extends ChildItemReference implements ChildPropertyEntry {
 
     /**
      * IdFactory to create an ItemId based on the parent NodeId
@@ -52,7 +52,28 @@ public class PropertyReference extends ChildItemReference {
      */
     protected ItemState doResolve()
             throws NoSuchItemStateException, ItemStateException {
-        PropertyId id = idFactory.createPropertyId(parent.getNodeId(), name);
-        return isf.createPropertyState(id, getParent());
+        return isf.createPropertyState(getId(), getParent());
+    }
+
+    //-------------------------------------------------< ChildPropertyEntry >---
+    /**
+     * @inheritDoc
+     */
+    public PropertyId getId() {
+        return idFactory.createPropertyId(parent.getNodeId(), name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public QName getName() {
+        return name;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public PropertyState getPropertyState() throws NoSuchItemStateException, ItemStateException {
+        return (PropertyState) resolve();
     }
 }

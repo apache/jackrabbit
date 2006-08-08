@@ -24,6 +24,7 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Node;
 
 /**
  * <code>DefaultLockManager</code>...
@@ -32,7 +33,7 @@ public class DefaultLockManager implements LockManager {
 
     private static Logger log = LoggerFactory.getLogger(DefaultLockManager.class);
 
-    public Lock lock(NodeId nodeId, boolean isDeep, boolean isSessionScoped) throws LockException, RepositoryException {
+    public Lock lock(NodeId nodeId, Node node, boolean isDeep, boolean isSessionScoped) throws LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException("Locking ist not supported by this repository.");
     }
 

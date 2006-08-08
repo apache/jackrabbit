@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
+import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -82,16 +84,16 @@ public class Move extends AbstractOperation {
     }
 
     //------------------------------------------------------------< Factory >---
-    public static Operation create(Path srcPath, Path destPath, ItemStateValidator validator) throws RepositoryException , NoSuchNodeTypeException {
+    public static Operation create(Path srcPath, Path destPath, HierarchyManager hierMgr, NamespaceResolver nsResolver) throws RepositoryException , NoSuchNodeTypeException {
         // src must not be ancestor of destination
         try {
             if (srcPath.isAncestorOf(destPath)) {
-                String msg = "Invalid destination path: cannot be descendant of source path (" +validator.safeGetJCRPath(destPath) + "," + validator.safeGetJCRPath(srcPath) + ")";
+                String msg = "Invalid destination path: cannot be descendant of source path (" + LogUtil.safeGetJCRPath(destPath, nsResolver) + "," + LogUtil.safeGetJCRPath(srcPath, nsResolver) + ")";
                 log.debug(msg);
                 throw new RepositoryException(msg);
             }
         } catch (MalformedPathException e) {
-            String msg = "Invalid destination path: cannot be descendant of source path (" +validator.safeGetJCRPath(destPath) + "," + validator.safeGetJCRPath(srcPath) + ")";
+            String msg = "Invalid destination path: cannot be descendant of source path (" +LogUtil.safeGetJCRPath(destPath, nsResolver) + "," + LogUtil.safeGetJCRPath(srcPath, nsResolver) + ")";
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
@@ -100,7 +102,7 @@ public class Move extends AbstractOperation {
         int index = destElement.getIndex();
         if (index > org.apache.jackrabbit.name.Path.INDEX_UNDEFINED) {
             // subscript in name element
-            String msg = "Invalid destination path: subscript in name element is not allowed (" + validator.safeGetJCRPath(destPath) + ")";
+            String msg = "Invalid destination path: subscript in name element is not allowed (" + LogUtil.safeGetJCRPath(destPath, nsResolver) + ")";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -111,9 +113,9 @@ public class Move extends AbstractOperation {
             throw new RepositoryException(msg);
         }
 
-        NodeId srcId = validator.getNodeId(srcPath);
-        NodeId srcParentId = validator.getNodeId(srcPath.getAncestor(1));
-        NodeId destParentId = validator.getNodeId(destPath.getAncestor(1));
+        NodeId srcId = getNodeId(srcPath, hierMgr, nsResolver);
+        NodeId srcParentId = getNodeId(srcPath.getAncestor(1), hierMgr, nsResolver);
+        NodeId destParentId = getNodeId(destPath.getAncestor(1), hierMgr, nsResolver);
         Move move = new Move(srcId, srcParentId, destParentId, destElement.getName());
         return move;
     }

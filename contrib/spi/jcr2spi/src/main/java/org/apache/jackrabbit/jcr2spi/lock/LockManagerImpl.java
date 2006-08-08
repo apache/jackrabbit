@@ -57,7 +57,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
     private final ItemManager itemManager;
 
     /**
-     * Internal map holding all locks that where created by {@link #lock(NodeId, boolean, boolean)}
+     * Internal map holding all locks that where created by
+     * {@link #lock(NodeId, Node, boolean, boolean)}
      * or accessed by {@link #getLock(NodeId)} until they end their life by
      * an unlock (be it by the current Session or external reported by means
      * of events).
@@ -71,11 +72,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
     }
 
     /**
-     * @see LockManager#lock(NodeId, boolean, boolean)
+     * @see LockManager#lock(NodeId, Node, boolean, boolean)
      */
-    public Lock lock(NodeId nodeId, boolean isDeep, boolean isSessionScoped) throws LockException, RepositoryException {
-        // make sure the node is accessible before trying to create a lock.
-        Node node = (Node) itemManager.getItem(nodeId);
+    public Lock lock(NodeId nodeId, Node node, boolean isDeep, boolean isSessionScoped) throws LockException, RepositoryException {
         // execute the operation
         Operation op = LockOperation.create(nodeId, isDeep, isSessionScoped);
         wspManager.execute(op);
@@ -112,7 +111,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
 
             // retrieve lock holding node. not that this may fail if the session
             // does not have permission to see this node.
-            Item lockHoldingNode = itemManager.getItem(lhNodeId);
+            Item lockHoldingNode = itemManager.getItem(lockHoldingState);
             // TODO: we don;t know if lock is session scoped -> set flag to false
             // TODO: ev. add 'isSessionScoped' to RepositoryService lock-call.
             Lock l = new LockImpl(lhNodeId, (Node)lockHoldingNode, false);

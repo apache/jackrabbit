@@ -23,11 +23,11 @@ import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.Item;
 
 /**
  * <code>HierarchyManagerImpl</code> ...
@@ -47,9 +46,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     private static Logger log = LoggerFactory.getLogger(HierarchyManagerImpl.class);
 
-    // DIFF JR: QName.ROOT replaces the EMPTY_NAME QName defined in JR....
-
-    // TODO: TO-BE-FIXED. With SPI_ItemId rootId must not be stored separately    
+    // TODO: TO-BE-FIXED. With SPI_ItemId rootId must not be stored separately
     protected final NodeId rootNodeId;
     protected final ItemStateManager itemStateManager;
     // used for outputting user-friendly paths and names
@@ -65,10 +62,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     public NodeId getRootNodeId() {
         return rootNodeId;
-    }
-
-    public NamespaceResolver getNamespaceResolver() {
-        return nsResolver;
     }
 
     //---------------------------------------------------------< overridables >
@@ -116,6 +109,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
+     *
+     * @param state
+     * @return
+     */
+    protected NodeState getParentState(ItemState state) {
+        return state.getParent();
+    }
+
+    /**
      * Returns the <code>ChildNodeEntry</code> of <code>parent</code> with the
      * specified <code>uuid</code> or <code>null</code> if there's no such entry.
      * <p/>
@@ -155,47 +157,21 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * Resolve a path into an item id. Recursively invoked method that may be
-     * overridden by some subclass to either return cached responses or add
-     * response to cache.
-     *
-     * @param path full path of item to resolve
-     * @param id   intermediate item id
-     * @param next next path element index to resolve
-     * @return the id of the item denoted by <code>path</code>
-     */
-    protected ItemId resolvePath(Path path, ItemId id, int next)
-            throws RepositoryException {
-
-        try {
-            return resolvePath(path, getItemState(id), next);
-        } catch (NoSuchItemStateException e) {
-            String msg = "failed to retrieve state of intermediary node";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        } catch (ItemStateException e) {
-            String msg = "failed to retrieve state of intermediary node";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-    }
-
-    /**
-     * Resolve a path into an item id. Recursively invoked method that may be
+     * Resolve a path into an item state. Recursively invoked method that may be
      * overridden by some subclass to either return cached responses or add
      * response to cache.
      *
      * @param path  full path of item to resolve
      * @param state intermediate state
      * @param next  next path element index to resolve
-     * @return the id of the item denoted by <code>path</code>
+     * @return the state of the item denoted by <code>path</code>
      */
-    protected ItemId resolvePath(Path path, ItemState state, int next)
-            throws PathNotFoundException, ItemStateException {
+    protected ItemState resolvePath(Path path, ItemState state, int next)
+        throws PathNotFoundException, RepositoryException {
 
         Path.PathElement[] elements = path.getElements();
         if (elements.length == next) {
-            return state.getId();
+            return state;
         }
         Path.PathElement elem = elements[next];
 
@@ -203,27 +179,37 @@ public class HierarchyManagerImpl implements HierarchyManager {
         int index = elem.getNormalizedIndex();
 
         NodeState parentState = (NodeState) state;
-        ItemId childId;
+        ItemState childState;
 
         if (parentState.hasChildNodeEntry(name, index)) {
             // child node
             ChildNodeEntry nodeEntry = getChildNodeEntry(parentState, name, index);
-            childId = nodeEntry.getId();
+            try {
+                childState = nodeEntry.getNodeState();
+            } catch (ItemStateException e) {
+                // should never occur
+                throw new RepositoryException(e);
+            }
         } else if (parentState.hasPropertyName(name)) {
             // property
-            if (index > org.apache.jackrabbit.name.Path.INDEX_DEFAULT) {
+            if (index > Path.INDEX_DEFAULT) {
                 // properties can't have same name siblings
-                throw new PathNotFoundException(safeGetJCRPath(path));
+                throw new PathNotFoundException(LogUtil.safeGetJCRPath(path, nsResolver));
             } else if (next < elements.length - 1) {
                 // property is not the last element in the path
-                throw new PathNotFoundException(safeGetJCRPath(path));
+                throw new PathNotFoundException(LogUtil.safeGetJCRPath(path, nsResolver));
             }
-            childId = parentState.getPropertyState(name).getId();
+            try {
+                childState = parentState.getPropertyState(name);
+            } catch (ItemStateException e) {
+                // should never occur
+                throw new RepositoryException(e);
+            }
         } else {
             // no such item
-            throw new PathNotFoundException(safeGetJCRPath(path));
+            throw new PathNotFoundException(LogUtil.safeGetJCRPath(path, nsResolver));
         }
-        return resolvePath(path, getItemState(childId), next + 1);
+        return resolvePath(path, childState, next + 1);
     }
 
     /**
@@ -280,99 +266,68 @@ public class HierarchyManagerImpl implements HierarchyManager {
         }
     }
 
-    //-----------------------------------------------------< HierarchyManager >
+    //---------------------------------------------------< HierarchyManager >---
     /**
-     * {@inheritDoc}
+     * @see HierarchyManager#getItemState(Path)
      */
-    public ItemId getItemId(Item item) throws PathNotFoundException, RepositoryException {
-        if (item instanceof ItemImpl) {
-            return ((ItemImpl)item).getId();
-        } else {
-            try {
-                return getItemId(PathFormat.parse(item.getPath(), nsResolver));
-            } catch (MalformedPathException e) {
-                // should not occur.
-                throw new RepositoryException(e);
+    public ItemState getItemState(Path qPath) throws PathNotFoundException, RepositoryException {
+        try {
+            ItemState rootState = itemStateManager.getItemState(rootNodeId);
+            // shortcut
+            if (qPath.denotesRoot()) {
+                return rootState;
             }
+
+            if (!qPath.isCanonical()) {
+                String msg = "path is not canonical";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
+
+            return resolvePath(qPath, rootState, 1);
+        } catch (ItemStateException e) {
+            // should never occur
+            throw new RepositoryException(e);
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @see HierarchyManager#getQPath(ItemState)
      */
-    public ItemId getItemId(Path qPath)
-            throws PathNotFoundException, RepositoryException {
-        // shortcut
-        if (qPath.denotesRoot()) {
-            return rootNodeId;
-        }
-
-        if (!qPath.isCanonical()) {
-            String msg = "path is not canonical";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        return resolvePath(qPath, rootNodeId, 1);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Path getQPath(ItemId id)
-            throws ItemNotFoundException, RepositoryException {
-        // shortcut
-        if (id.equals(rootNodeId)) {
-            return Path.ROOT;
-        }
+    public Path getQPath(ItemState itemState) throws ItemNotFoundException, RepositoryException {
 
         Path.PathBuilder builder = new Path.PathBuilder();
-
         try {
-            buildPath(builder, getItemState(id));
+            buildPath(builder, itemState);
             return builder.getPath();
-        } catch (NoSuchItemStateException nsise) {
-            String msg = "failed to build path of " + id;
+        } catch (NoSuchItemStateException e) {
+            String msg = "failed to build path of " + itemState.getId();
             log.debug(msg);
-            throw new ItemNotFoundException(msg, nsise);
-        } catch (ItemStateException ise) {
-            String msg = "failed to build path of " + id;
+            throw new ItemNotFoundException(msg, e);
+        } catch (ItemStateException e) {
+            String msg = "failed to build path of " + itemState.getId();
             log.debug(msg);
-            throw new RepositoryException(msg, ise);
+            throw new RepositoryException(msg, e);
         } catch (MalformedPathException e) {
-            String msg = "failed to build path of " + id;
+            String msg = "failed to build path of " + itemState.getId();
             throw new RepositoryException(msg, e);
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @see HierarchyManager#getQName(ItemState)
      */
-    public QName getQName(ItemId itemId)
+    public QName getQName(ItemState itemState)
             throws ItemNotFoundException, RepositoryException {
-        if (itemId.denotesNode()) {
-            NodeId nodeId = (NodeId) itemId;
-            NodeState parentState;
-            try {
-                NodeState nodeState = (NodeState) getItemState(nodeId);
-                NodeId parentId= getParentId(nodeState);
-                if (parentId == null) {
-                    // this is the root or an orphaned node
-                    return QName.ROOT;
-                }
-                parentState = (NodeState) getItemState(parentId);
-            } catch (NoSuchItemStateException nsis) {
-                String msg = "failed to resolve name of " + nodeId;
-                log.debug(msg);
-                throw new ItemNotFoundException(nodeId.toString());
-            } catch (ItemStateException ise) {
-                String msg = "failed to resolve name of " + nodeId;
-                log.debug(msg);
-                throw new RepositoryException(msg, ise);
+        if (itemState.isNode()) {
+            NodeState parentState = itemState.getParent();
+            if (parentState == null) {
+                // shortcut. the given state represents the root or an orphaned node
+                return QName.ROOT;
             }
 
-            ChildNodeEntry entry =
-                    getChildNodeEntry(parentState, nodeId);
+            NodeId nodeId = ((NodeState)itemState).getNodeId();
+            ChildNodeEntry entry = getChildNodeEntry(parentState, nodeId);
             if (entry == null) {
                 String msg = "failed to resolve name of " + nodeId;
                 log.debug(msg);
@@ -380,38 +335,22 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
             return entry.getName();
         } else {
-            return ((PropertyId) itemId).getQName();
+            return ((PropertyState)itemState).getQName();
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @see HierarchyManager#getDepth(ItemState)
      */
-    public int getDepth(ItemId id)
-            throws ItemNotFoundException, RepositoryException {
-        int depth = org.apache.jackrabbit.name.Path.ROOT_DEPTH;
-        // shortcut
-        if (id.equals(rootNodeId)) {
-            return depth;
+    public int getDepth(ItemState itemState) throws ItemNotFoundException, RepositoryException {
+        int depth = Path.ROOT_DEPTH;
+        NodeState parentState = getParentState(itemState);
+        while (parentState != null) {
+            depth++;
+            itemState = parentState;
+            parentState = getParentState(itemState);
         }
-        try {
-            ItemState state = getItemState(id);
-            NodeId parentId = getParentId(state);
-            while (parentId != null) {
-                depth++;
-                state = getItemState(parentId);
-                parentId = getParentId(state);
-            }
-            return depth;
-        } catch (NoSuchItemStateException nsise) {
-            String msg = "failed to determine depth of " + id;
-            log.debug(msg);
-            throw new ItemNotFoundException(msg, nsise);
-        } catch (ItemStateException ise) {
-            String msg = "failed to determine depth of " + id;
-            log.debug(msg);
-            throw new RepositoryException(msg, ise);
-        }
+        return depth;
     }
 
     /**
@@ -446,31 +385,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     + " relative to " + ancestorId;
             log.debug(msg);
             throw new RepositoryException(msg, ise);
-        }
-    }
-
-    /**
-     * @see HierarchyManager#safeGetJCRPath(ItemId)
-     */
-    public String safeGetJCRPath(ItemId itemId) {
-        try {
-            return safeGetJCRPath(getQPath(itemId));
-        } catch (RepositoryException e) {
-            log.error("failed to convert " + itemId + " to JCR path.");
-            return itemId.toString();
-        }
-    }
-
-    /**
-     * @see HierarchyManager#safeGetJCRPath(Path)
-     */
-    public String safeGetJCRPath(Path qPath) {
-        try {
-            return PathFormat.format(qPath, nsResolver);
-        } catch (NoPrefixDeclaredException npde) {
-            log.error("failed to convert " + qPath + " to JCR path.");
-            // return string representation of internal path as a fallback
-            return qPath.toString();
         }
     }
 }

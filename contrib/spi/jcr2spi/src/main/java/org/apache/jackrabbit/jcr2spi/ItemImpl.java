@@ -27,6 +27,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -162,7 +163,7 @@ public abstract class ItemImpl implements Item, TransientItemStateListener {
             // shortcut
             return Path.ROOT_DEPTH;
         }
-        return session.getHierarchyManager().getDepth(state.getParent().getId());
+        return session.getHierarchyManager().getDepth(state);
     }
 
     /**
@@ -602,7 +603,7 @@ public abstract class ItemImpl implements Item, TransientItemStateListener {
      * @return the primary path to this <code>Item</code>
      */
     Path getQPath() throws RepositoryException {
-        return session.getHierarchyManager().getQPath(id);
+        return session.getHierarchyManager().getQPath(state);
     }
 
     /**
@@ -631,6 +632,6 @@ public abstract class ItemImpl implements Item, TransientItemStateListener {
      * @return JCR path
      */
     String safeGetJCRPath() {
-        return session.getHierarchyManager().safeGetJCRPath(getId());
+        return LogUtil.safeGetJCRPath(getItemState(), session.getNamespaceResolver(), session.getHierarchyManager());
     }
 }

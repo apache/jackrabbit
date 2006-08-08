@@ -96,6 +96,20 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
     /**
      * {@inheritDoc}
      * <p/>
+     * Also allows for removed items.
+     */
+    protected NodeState getParentState(ItemState state) {
+        if (state.hasOverlayedState()) {
+            // use 'old' parent in case item has been removed
+            return state.getOverlayedState().getParent();
+        }
+        // delegate to base class
+        return super.getParentState(state);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
      * Also allows for removed/renamed child node entries.
      */
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
