@@ -1,9 +1,9 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
+ * contributor license agreements.  See the NOTICE backupFile distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
+ * The ASF licenses this backupFile to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this backupFile except in compliance with
  * the License.  You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -25,6 +25,7 @@ import java.util.Properties;
 
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.xml.sax.InputSource;
 
 
@@ -37,17 +38,15 @@ import org.xml.sax.InputSource;
  *
  */
 public class BackupConfig {
-    
-    //TODO Useful?
-    private PersistenceManagerConfig pmc;
-    //Tused to backup a workspace first in a file
-    private File workFolder;
+
+    //used to backup a workspace first in a backupFile
+    private final File workFolder;
+    //Not final since BackupManager adds some resources
     private Collection allResources;
-    private File file;
-    private File repoConfFile;
-    private String login;
-    private String password;
-    
+    private final File backupFile;
+    private final File repoConfFile;
+
+
     /**
      * Parses the given repository configuration document and returns the
      * parsed and initialized repository configuration. The given repository
@@ -57,83 +56,58 @@ public class BackupConfig {
      * method also initializes the configuration (creates the configured
      * directories, etc.). The {@link RepositoryConfigurationParser} class should be
      * used directly to just parse the configuration.
-     * @param repoConfFile 
+     * @param repoConfFile
      *
-     * @param xml repository configuration document
-     * @param home repository home directory
+     * @param myFile repository configuration document
+     * @param repoConfFile repository file configuration
      * @return repository configuration
      * @throws ConfigurationException on configuration errors
-     * @throws IllegalAccessException 
-     * @throws InstantiationException 
-     * @throws ClassNotFoundException 
-     * @throws IOException 
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     * @throws ClassNotFoundException
+     * @throws IOException
      */
-    public static BackupConfig create(String myFile, String repoConfFile, String login, String password)
+    public static BackupConfig create(String myFile, String repoConfFile)
             throws ConfigurationException, ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
-        
         URI uri = new File(myFile).toURI();
         InputSource is = new InputSource(uri.toString());
-
         BackupConfigurationParser parser = new BackupConfigurationParser(new Properties());
-
-        BackupConfig config = parser.parseBackupConfig(is, myFile, repoConfFile, login, password);
-        
+        BackupConfig config = parser.parseBackupConfig(is, myFile, repoConfFile);
         return config;
     }
-    
- 
 
-    //TODO see if path is really useful?
-    public BackupConfig(PersistenceManagerConfig pmc, File path, Collection allResources, String myFile, String repoConfFile, String login, String password) throws IOException {
-        
+      public BackupConfig(File path, Collection allResources, String myFile, String repoConfFile) throws IOException {
+
         //Logic application: not in the parser: this code has to be here
         if (!(path.isDirectory() && path.canWrite())) {
-            throw new IOException();
-        }     
-        
-        this.pmc = pmc;
+            //if path not set in the conf file then create one as the current dir
+            path = new File(".");
+        }
+
         this.workFolder = path;
         this.allResources = allResources;
-        this.file = new File(myFile);
+        this.backupFile = new File(myFile);
         this.repoConfFile = new File(repoConfFile);
-        this.password = password;
-        this.login = login;
     }
 
     public Collection getAllResources() {
         return allResources;
     }
 
+    public void addResource(Backup b) {
+        this.allResources.add(b);
+    }
+
     public File getWorkFolder() {
         return workFolder;
     }
 
-    public PersistenceManagerConfig getPmc() {
-        return pmc;
-    }
 
     public File getFile() {
-        return this.file;       
+        return this.backupFile;
     }
-
-
 
     public File getRepoConfFile() {
         return repoConfFile;
     }
-
-
-
-    public String getPassword() {
-        return this.password;
-    }
-
-
-
-    public String getLogin() {
-        return this.login;
-    }
-
-
-
 }

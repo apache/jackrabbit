@@ -18,16 +18,20 @@ package org.apache.jackrabbit.backup;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.zip.ZipException;
 
+/**
+ * Represent a backup/restore file. This is where
+ * the content should be sent to/fetched from.
+ *
+ */
 public interface BackupIOHandler {
-    
-    //Add reference to the file
-    // How to precise if in or out... Maybe not needed?
     void close() throws IOException;
-    void initBackup() throws FileNotFoundException, IOException;
-    void initRestore() throws FileNotFoundException;
     void write(String name, File f) throws IOException;
     void write(String name, ByteArrayOutputStream fos) throws IOException;
+    byte[] read(String zipEntry) throws ZipException, IOException;
+    public void read(String zipEntry, File myFile) throws ZipException, IOException;
+    Enumeration getEntries() throws ZipException, IOException;
 }

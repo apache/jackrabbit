@@ -27,39 +27,44 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.core.RepositoryImpl;
 
 /**
- * This class manages the backup/restore process. It is responsible to transmit it to the BackupIOHandler and to add the repository to the 
+ * This class manages the backup/restore process. It is responsible to send to/fetch from the BackupIOHandler and to add the repository to the
  * BackupConfig.
- * 
- * It extends Backup since it is based on the same semantics. However it is not at the same type as a ResourceBackup (indicated by different names)
- * 
+ *
+ * It extends Backup since it is based on the same semantics. However it is not the same type as a ResourceBackup
+ * (the different semantics are indicated by different names)
+ *
  * It uses a work folder to get first all backup/restore information, zip them and send them to the handler.
- * 
+ *
  * @author ntoper
  *
  */
 public class BackupManager extends Backup {
-    
-    public BackupManager(RepositoryImpl repo, BackupConfig conf) throws LoginException, RepositoryException {
-        super(repo, conf);
-        
+
+
+    public BackupManager(RepositoryImpl repo, BackupConfig conf, String login, String password) throws LoginException, RepositoryException {
+        super(repo, conf, login , password);
+
+
         //Initiate correctly all objects in allResources
-        Iterator it = this.conf.getAllResources().iterator();
-        
-        while(it.hasNext()) {
+        Iterator it = this.getConf().getAllResources().iterator();
+        while ( it.hasNext() ) {
             Backup b = (Backup) it.next();
-            b.init(repo, conf);
+            b.init(repo, conf, login, password);
         }
     }
-    
-    
-    public static BackupManager create(RepositoryImpl impl, BackupConfig conf2) throws LoginException, RepositoryException {
-		return new BackupManager(impl, conf2);
+
+    public BackupManager() {
+        super();
+    }
+
+
+    public static BackupManager create(RepositoryImpl impl, BackupConfig conf2, String login, String password) throws LoginException, RepositoryException {
+		return new BackupManager(impl, conf2, login, password);
 	}
     /**
      * Used to backup the repository and all subclasses. Call all classes when needed.
      * This class stores the backup config file also. (simplify its fetching and logical since it's not a configurable resource)
      * 
-     * TODO visibility of the conf is huge: each ResourceBackup can get and set others resources modifiers. Is it really bad?
      * 
      * @param The BackupIOHandler where the backup will be saved
      * @throws RepositoryException 
@@ -71,16 +76,16 @@ public class BackupManager extends Backup {
          *  It is responsible to initiate and close the zipFile.
          *  Each backup method, use the BackupIOHandler to write the file directly.
          */
-        
-        h.initBackup();
+
+        //We need to put those two Backup resources here for backup since they are handled differently
+        //for restore
+        this.addResource(new RepositoryBackup());
+        this.addResource(new BackupConfigurationBackup());
+
         try {
-            
-           
-            Collection resources = this.conf.getAllResources();
-            
-         
+            Collection resources = this.getConf().getAllResources();
             Iterator it = resources.iterator();
-            
+
             while (it.hasNext()) {
                 Backup b = (Backup) it.next();
                 b.backup(h);
@@ -90,13 +95,51 @@ public class BackupManager extends Backup {
             h.close();
         }
     }
-    
-    public void restore(BackupIOHandler h) {
-        // TODO Auto-generated method stub
-        
+    /**
+     * TODO commment
+     * @param backup
+     * @throws RepositoryException 
+     * @throws LoginException 
+     */
+    private void addResource(Backup backup) throws LoginException, RepositoryException {
+        String login = this.getCredentials().getUserID();
+        String password = this.getCredentials().getPassword().toString();
+        backup.init(this.getRepo(), this.getConf(), login, password);
+        this.getConf().addResource(backup);
     }
 
-   
- 
+    /**
+     * Same method as backup but for restore.
+     * TODO Comment
+     * @throws IllegalAccessException 
+     * @throws InstantiationException 
+     * @throws ClassNotFoundException 
+     *
+     */
+    public void restore(BackupIOHandler h) throws RepositoryException, IOException {
 
+        /*
+         * There is a dissimetry in the restore operation compared to the backup one.
+         * It is because of the need to first restore the repository and launch it where during the backup we can
+         * backup the repository and the configuration file the same way as the other.
+         *
+         * (to make repository + backup file mandatory, they are added automatically in BAckupManager)
+         *
+         *
+         * Ignore any repository or backupConfig restore orders...
+         *
+         */
+        try {
+           Collection resources = this.getConf().getAllResources();
+           Iterator it = resources.iterator();
+
+           while (it.hasNext()) {
+               Backup b = (Backup) it.next();
+               b.restore(h);
+           }
+       }
+       finally  {
+           h.close();
+       }
+   }
 }
