@@ -20,7 +20,6 @@ import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.IdIterator;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.slf4j.LoggerFactory;
@@ -28,7 +27,6 @@ import org.slf4j.Logger;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Item;
 
 import java.util.NoSuchElementException;
 
