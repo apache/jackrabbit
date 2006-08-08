@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 

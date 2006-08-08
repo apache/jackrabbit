@@ -25,13 +25,11 @@ import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
-import org.apache.jackrabbit.name.PathFormat;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
