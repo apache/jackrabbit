@@ -79,22 +79,10 @@ public class NodeState extends ItemState {
     private ChildNodeEntries childNodeEntries = new ChildNodeEntries();
 
     /**
-     * Set to <code>true</code> if {@link #childNodeEntries} are shared between
-     * different <code>NodeState</code> instance.
-     */
-    private boolean sharedChildNodeEntries = false;
-
-    /**
      * Map of properties. Key = {@link QName} of property. Value = {@link
      * PropertyReference}.
      */
     private HashMap properties = new HashMap();
-
-    /**
-     * Set to <code>true</code> if {@link #properties} is shared between
-     * different <code>NodeState</code> instances.
-     */
-    private boolean sharedPropertyNames = false;
 
     /**
      * Listeners (weak references)
@@ -159,16 +147,21 @@ public class NodeState extends ItemState {
         synchronized (state) {
             NodeState nodeState = (NodeState) state;
             id = nodeState.id;
-            parent = nodeState.parent;
+            parent = nodeState.parent; // TODO: parent from wrong ism layer
             nodeTypeName = nodeState.nodeTypeName;
             mixinTypeNames = nodeState.mixinTypeNames;
             def = nodeState.getDefinition();
-            properties = nodeState.properties;
-            sharedPropertyNames = true;
-            nodeState.sharedPropertyNames = true;
-            childNodeEntries = nodeState.childNodeEntries;
-            sharedChildNodeEntries = true;
-            nodeState.sharedChildNodeEntries = true;
+            // re-create property references
+            properties.clear(); // TODO: any more cleanup work to do? try some kind of merging?
+            for (Iterator it = nodeState.getPropertyNames().iterator(); it.hasNext(); ) {
+                addPropertyName((QName) it.next());
+            }
+            // re-create child node entries
+            childNodeEntries.clear(); // TODO: any mre cleanup work to do? try some kind of merging?
+            for (Iterator it = nodeState.getChildNodeEntries().iterator(); it.hasNext(); ) {
+                ChildNodeEntry cne = (ChildNodeEntry) it.next();
+                childNodeEntries.add(cne.getName(), cne.getId());
+            }
         }
     }
 
@@ -400,10 +393,6 @@ public class NodeState extends ItemState {
      */
     public synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
                                                          NodeId id) {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         ChildNodeEntry entry = childNodeEntries.add(nodeName, id);
         notifyNodeAdded(entry);
         return entry;
@@ -420,10 +409,6 @@ public class NodeState extends ItemState {
      */
     public synchronized boolean renameChildNodeEntry(QName oldName, int index,
                                                      QName newName) {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
         if (oldEntry != null) {
             ChildNodeEntry newEntry = childNodeEntries.add(newName, oldEntry.getId());
@@ -443,10 +428,6 @@ public class NodeState extends ItemState {
      *         in the list of child node entries and could be removed.
      */
     public synchronized boolean removeChildNodeEntry(QName nodeName, int index) {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         ChildNodeEntry entry = childNodeEntries.remove(nodeName, index);
         if (entry != null) {
             notifyNodeRemoved(entry);
@@ -462,10 +443,6 @@ public class NodeState extends ItemState {
      *         in the list of child node entries and could be removed.
      */
     public synchronized boolean removeChildNodeEntry(NodeId id) {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         ChildNodeEntry entry = childNodeEntries.remove(id);
         if (entry != null) {
             notifyNodeRemoved(entry);
@@ -477,10 +454,6 @@ public class NodeState extends ItemState {
      * Removes all <code>ChildNodeEntry</code>s.
      */
     public synchronized void removeAllChildNodeEntries() {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         childNodeEntries.removeAll();
     }
 
@@ -489,20 +462,11 @@ public class NodeState extends ItemState {
      * child nodes of this node.
      */
     public synchronized void setChildNodeEntries(List nodeEntries) {
-        if (nodeEntries instanceof ChildNodeEntries) {
-            // optimization
-            ChildNodeEntries entries = (ChildNodeEntries) nodeEntries;
-            childNodeEntries = (ChildNodeEntries) entries.clone();
-            sharedChildNodeEntries = false;
-        } else {
-            if (sharedChildNodeEntries) {
-                childNodeEntries = new ChildNodeEntries();
-                sharedChildNodeEntries = false;
-            } else {
-                childNodeEntries.removeAll();
-            }
-            childNodeEntries.addAll(nodeEntries);
-
+        // re-create child node entries
+        childNodeEntries.clear(); // TODO: any mre cleanup work to do? try some kind of merging?
+        for (Iterator it = nodeEntries.iterator(); it.hasNext(); ) {
+            ChildNodeEntry cne = (ChildNodeEntry) it.next();
+            childNodeEntries.add(cne.getName(), cne.getId());
         }
         notifyNodesReplaced();
     }
@@ -525,10 +489,6 @@ public class NodeState extends ItemState {
      * @param propName <code>QName</code> object specifying the property name
      */
     public synchronized void addPropertyName(QName propName) {
-        if (sharedPropertyNames) {
-            properties = (HashMap) properties.clone();
-            sharedPropertyNames = false;
-        }
         properties.put(propName, new PropertyReference(this, propName, isf, idFactory));
     }
 
@@ -540,10 +500,6 @@ public class NodeState extends ItemState {
      *         in the list of property name entries and could be removed.
      */
     public synchronized boolean removePropertyName(QName propName) {
-        if (sharedPropertyNames) {
-            properties = (HashMap) properties.clone();
-            sharedPropertyNames = false;
-        }
         return properties.remove(propName) != null;
     }
 
@@ -551,12 +507,7 @@ public class NodeState extends ItemState {
      * Removes all property name entries.
      */
     public synchronized void removeAllPropertyNames() {
-        if (sharedPropertyNames) {
-            properties = new HashMap();
-            sharedPropertyNames = false;
-        } else {
-            properties.clear();
-        }
+        properties.clear();
     }
 
     /**
