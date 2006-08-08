@@ -18,6 +18,7 @@ package org.apache.jackrabbit.backup;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.zip.ZipException;
 
 import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
@@ -26,7 +27,7 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 
 /**
  * Backup/Restore the XML file used to configure this backup.
- * 
+ *
  * @author ntoper
  *
  */
@@ -35,34 +36,38 @@ public class BackupConfigurationBackup extends Backup {
     /**
      * @param repo
      * @param conf
-     * @throws RepositoryException 
-     * @throws LoginException 
+     * @param login
+     * @param password
+     * @throws RepositoryException
+     * @throws LoginException
      */
-    public BackupConfigurationBackup(RepositoryImpl repo, BackupConfig conf) throws LoginException, RepositoryException {
-        super(repo, conf);
-        
+    public BackupConfigurationBackup(RepositoryImpl repo, BackupConfig conf, String login, String password) 
+                                                                throws LoginException, RepositoryException {
+        super(repo, conf, login, password);
+
     }
-    
-    public BackupConfigurationBackup() {
+
+    protected BackupConfigurationBackup() {
         super();
     }
-    
-   
+
     /* (non-Javadoc)
      * @see org.apache.jackrabbit.backup.Backup#backup(org.apache.jackrabbit.backup.BackupIOHandler)
      */
     public void backup(BackupIOHandler h) throws RepositoryException,
             IOException {
-        File file = conf.getFile();
+        File file = this.getConf().getFile();
         h.write("backup.xml", file);
     }
 
     /* (non-Javadoc)
+     * This method is quite special. It is used to restore content from scratch. To break cyclic reference, we restore the file
+     * in the current directory (we don't have yet the temporary one).
+     *
      * @see org.apache.jackrabbit.backup.Backup#restore(org.apache.jackrabbit.backup.BackupIOHandler)
      */
-    public void restore(BackupIOHandler h) {
-        // TODO Auto-generated method stub
-
+    public void restore(BackupIOHandler h) throws ZipException, IOException {
+        File conf = new File("backup.xml");
+        h.read("backup.xml", conf);
     }
-
 }

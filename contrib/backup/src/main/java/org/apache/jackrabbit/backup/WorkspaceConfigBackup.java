@@ -18,16 +18,18 @@ package org.apache.jackrabbit.backup;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.zip.ZipException;
 
 import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
+
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.config.ConfigurationException;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.backup.Backup;
 
 /**
  * @author ntoper
@@ -35,22 +37,21 @@ import org.apache.jackrabbit.backup.Backup;
  */
 public class WorkspaceConfigBackup extends Backup {
 
-    private static int called = 0;
     private String wspName;
-    
+
     /**
      * @param repo
      * @param conf
      * @throws RepositoryException 
      * @throws LoginException 
      */
-    public WorkspaceConfigBackup(RepositoryImpl repo, BackupConfig conf, String name) throws LoginException, RepositoryException {
-        super(repo, conf);
+    public WorkspaceConfigBackup(RepositoryImpl repo, BackupConfig conf, String name, String login, String password) throws LoginException, RepositoryException {
+        super(repo, conf, login, password);
         this.wspName = name;
     }
     
-    public void init(RepositoryImpl repo, BackupConfig conf, String name) throws LoginException, RepositoryException {
-        super.init(repo, conf);
+    public void init(RepositoryImpl repo, BackupConfig conf, String name, String login, String password) throws LoginException, RepositoryException {
+        super.init(repo, conf, login, password);
         this.wspName = name;
     }
 
@@ -63,23 +64,23 @@ public class WorkspaceConfigBackup extends Backup {
      */
     public void backup(BackupIOHandler h) throws RepositoryException,
             IOException {
-        Session s = repo.login(new SimpleCredentials(this.conf.getLogin(), this.conf.getPassword().toCharArray()), this.wspName);
-     
+        Session s = this.getRepo().login(this.getCredentials(), this.wspName);
+
         WorkspaceImpl wsp = (WorkspaceImpl) s.getWorkspace();
         WorkspaceConfig c = wsp.getConfig();
-        
+
         String home = c.getHomeDir();
         File wspXml = new File (home + "/workspace.xml");
-        h.write("WspConf" + called , wspXml);
-        called += 1;
+        h.write("WspConf_" + this.wspName , wspXml);
     }
 
     /* (non-Javadoc)
      * @see org.apache.jackrabbit.backup.Backup#restore(org.apache.jackrabbit.backup.BackupIOHandler)
      */
-    public void restore(BackupIOHandler h) {
-        // TODO Auto-generated method stub
+    public void restore(BackupIOHandler h) throws ConfigurationException, ZipException, IOException {
 
+        //Replace workspace.xml if needed
+        File wspXml = new File(this.getConf().getWorkFolder() + "/workspace.xml");
+        h.read("WspConf_" + this.wspName, wspXml);
     }
-
 }

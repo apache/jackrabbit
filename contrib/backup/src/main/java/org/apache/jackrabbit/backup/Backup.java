@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.backup;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.jcr.LoginException;
@@ -33,64 +34,120 @@ import org.apache.jackrabbit.core.RepositoryImpl;
  */
 public abstract class Backup {
 
-    RepositoryImpl repo;
-    BackupConfig conf;
-    Session session;
+    private RepositoryImpl repo;
+    private BackupConfig conf;
+    private Session session;;
+    private SimpleCredentials credentials;
 
     /**
-     *
+     * @param login
+     * @param password
      * @param repo The repository to backup
      * @param conf The specific BackupConfig object (usually a subset of backup.xml)
-     * @param name Name of the resource to backup. Unique. Useful?
-     * @throws RepositoryException 
-     * @throws LoginException 
+     * @throws RepositoryException
+     * @throws LoginException
      */
-    //TODO Useful?
-    public Backup(RepositoryImpl repo, BackupConfig conf) throws LoginException, RepositoryException {
+    public Backup(RepositoryImpl repo, BackupConfig conf, String login, String password) 
+                                                throws LoginException, RepositoryException {
         this.repo = repo;
         this.conf = conf;
-        this.session = this.repo.login(
-                new SimpleCredentials(this.conf.getLogin(), this.conf.getPassword().toCharArray()));
-        
+        this.credentials =  new SimpleCredentials(login, password.toCharArray());
+        this.session = this.repo.login(this.credentials);
+    }
+
+    /**
+     * Used only by BackupManager. No attributes are initialized.
+     */
+    protected Backup() {
     }
     
-    public Backup() {
-        
+    /**
+     * This constructor is used explicitly for restore operations
+     * 
+     * @param login
+     * @param password
+     */
+    protected Backup(String login, String password) {
+        this.credentials =  new SimpleCredentials(login, password.toCharArray());
     }
-    
-    public void init(RepositoryImpl repo, BackupConfig conf) throws LoginException, RepositoryException {
+    /**
+     * Used by BackupManager with the empty constructor.
+     *
+     * @param repo
+     * @param conf
+     * @param login
+     * @param password
+     * @throws LoginException
+     * @throws RepositoryException
+     */
+
+    protected void init(RepositoryImpl repo, BackupConfig conf, String login, String password) throws LoginException, RepositoryException {
         this.repo = repo;
         this.conf = conf;
-        this.session = this.repo.login(
-                new SimpleCredentials(this.conf.getLogin(), this.conf.getPassword().toCharArray()));
+        this.credentials =  new SimpleCredentials(login, password.toCharArray());
+        this.session = this.repo.login(this.credentials);
     }
 
     public RepositoryImpl getRepo() {
         return this.repo;
     }
-      
+
+    protected void setRepo(RepositoryImpl repo) {
+        this.repo = repo;
+    }
+
     /*
      * Each ResourceBackup is responsible to handle the backup.
-     * 
+     *
      * We use file when we cannot assume anything on the size of the data or we know it's big. When
      * we know the data is small we store it in RAM.
-     * 
-     *  
-     * 
+     *
      * For each resource
      *   Test maxFileSize
      * Zip the whole workingFolder
      * check the checksum
-     * Send it to out      
+     * Send it to out
      */
+   /**
+    * Backup the resource designated by this class to h from the current repository
+    * @param h
+    * @throws FileNotFoundException
+    * @throws RepositoryException
+    * @throws IOException
+    *
+    */
     public abstract void backup(BackupIOHandler h) throws RepositoryException, IOException;
-    public abstract void restore(BackupIOHandler h);
 
-    public Session getSession() {
+    /**
+     * Restore the resource designated by this class from h to the current repository
+     * @param h
+     * @throws FileNotFoundException
+     * @throws RepositoryException
+     * @throws IOException
+     */
+    public abstract void restore(BackupIOHandler h) throws FileNotFoundException, RepositoryException, IOException;
+
+    protected Session getSession() {
         return this.session;
     }
 
-    //TODO call sesssion.logout or useless?
-    
+    protected BackupConfig getConf() {
+        return conf;
+    }
 
+    protected void setConf(BackupConfig conf2) {
+        this.conf = conf2;
+    }
+
+    protected SimpleCredentials getCredentials() {
+        return credentials;
+    }
+
+    protected void setCredentials(SimpleCredentials cred) {
+        this.credentials = cred;
+    }
+
+    public void finalize() {
+        this.session.logout();
+    }
 }

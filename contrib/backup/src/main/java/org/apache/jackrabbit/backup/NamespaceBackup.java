@@ -16,18 +16,22 @@
  */
 package org.apache.jackrabbit.backup;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 
 import javax.jcr.LoginException;
+import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.RepositoryImpl;
 
 
@@ -41,51 +45,53 @@ import org.apache.jackrabbit.core.RepositoryImpl;
  *
  */
 public class NamespaceBackup extends Backup implements Serializable {
-
+    
     /**
      * 
      */
     private static final long serialVersionUID = 4703796138774238005L;
-
+    
     /**
      * This class holds all namespaces in a serializable way. We only put the relevant information.
      * (Do not change this class or you might lose backward compatibility; instead use another version)
      * 
      */
     private class Namespaces implements Serializable {
-        
+
         private static final long serialVersionUID = 8384076353482950602L;
-        
-        HashMap h;
+        private HashMap h;
 
-
-        public Namespaces() {
-            h = new HashMap();            
-        }
-        
-        public void addNamespace(String prefix, String uri) {
-            h.put(prefix, uri);          
+        protected Namespaces() {
+            h = new HashMap();
         }
 
+        protected void addNamespace(String uri, String prefix) {
+            h.put(uri, prefix);
+        }
+
+        protected String[] getAllUri() {
+            String[] s = new String[1];
+            return  (String[]) h.keySet().toArray(s);
+        }
+
+        public String getPrefix(String uri) {
+            return (String) h.get(uri);
+        }
     }
 
-   /**
+    /**
      * @param repo
      * @param conf
- * @throws RepositoryException 
- * @throws LoginException 
+     * @throws RepositoryException 
+     * @throws LoginException 
      */
-    public NamespaceBackup(RepositoryImpl repo, BackupConfig conf) throws LoginException, RepositoryException {
-        super(repo, conf);
-       
-        
-       
+    public NamespaceBackup(RepositoryImpl repo, BackupConfig conf, String login, String password) throws LoginException, RepositoryException {
+        super(repo, conf, login, password);
     }
-    
+
     public NamespaceBackup() {    
         super();
     }
-
 
     /* (non-Javadoc)
      * TODO where do I find the local ns?
@@ -94,35 +100,49 @@ public class NamespaceBackup extends Backup implements Serializable {
      */
     public void backup(BackupIOHandler h) throws RepositoryException, IOException {
         
-       Session s = this.getSession();
-       Workspace wsp = s.getWorkspace();
-       NamespaceRegistry ns = wsp.getNamespaceRegistry();
-       
-       Namespaces myNs = new Namespaces();
+        Session s = this.getSession();
+        Workspace wsp = s.getWorkspace();
+        NamespaceRegistry ns = wsp.getNamespaceRegistry();
         
-       String[] allPrefixes = ns.getPrefixes();
-              
-       for (int i = 0; i < allPrefixes.length; i++) {
-           String prefix = allPrefixes[i];
-           myNs.addNamespace(prefix, ns.getURI(prefix));          
-       }
-       
-       String name = this.getClass().toString();
-       
-       ByteArrayOutputStream fos = new ByteArrayOutputStream();
-       ObjectOutputStream oos = new ObjectOutputStream(fos);
-       oos.writeObject(myNs);       
-       h.write(name, fos);     
+        Namespaces myNs = new Namespaces();
+        
+        String[] allPrefixes = ns.getPrefixes();
+        
+        for (int i = 0; i < allPrefixes.length; i++) {
+            String prefix = allPrefixes[i];
+            myNs.addNamespace(ns.getURI(prefix),prefix);
+        }
+        
+        String name = this.getClass().toString();
+        
+        ByteArrayOutputStream fos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(myNs);
+        h.write(name, fos);
     }
-
+    
     /* (non-Javadoc)
      * @see org.apache.jackrabbit.backup.Backup#restore(org.apache.jackrabbit.backup.BackupIOHandler)
      */
-    public void restore(BackupIOHandler h) {
-        // TODO Auto-generated method stub
-
+    public void restore(BackupIOHandler h) throws RepositoryException, IOException {
+        String name = this.getClass().toString();
+        byte[] ns = h.read(name);
+        ByteArrayInputStream bis = new ByteArrayInputStream(ns);
+        ObjectInputStream ois = new ObjectInputStream(bis);
+        
+        try {
+            Namespaces allNs = (Namespaces) ois.readObject();
+            String[] allUri = allNs.getAllUri();
+            
+            Session s = this.getSession();
+            Workspace wsp = s.getWorkspace();
+            NamespaceRegistryImpl nsr = (NamespaceRegistryImpl) wsp.getNamespaceRegistry();
+            
+            for (int i = 0; i < allUri.length; i++) {
+                nsr.safeRegisterNamespace(allNs.getPrefix(allUri[i]), allUri[i]);
+            }
+        } catch (ClassNotFoundException e) {
+            throw new RepositoryException();
+        }
     }
-    
-    
-
 }

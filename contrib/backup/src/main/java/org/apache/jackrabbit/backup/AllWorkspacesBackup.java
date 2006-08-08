@@ -17,6 +17,9 @@
 package org.apache.jackrabbit.backup;
 
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 
 import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
@@ -26,25 +29,32 @@ import javax.jcr.Workspace;
 import org.apache.jackrabbit.core.RepositoryImpl;
 
 /**
- * @author ntoper
+ * This class allows the backup and restore of all the worskspaces.
  *
  */
 public class AllWorkspacesBackup extends Backup {
 
     /**
-     * @param repo
-     * @param conf
-     * @throws RepositoryException 
-     * @throws LoginException 
+     * @param repo the repository
+     * @param conf the BackupConfig object holding all informations about the backup/restore operations
+     * @param login
+     * @param password
+     * @throws RepositoryException
+     * @throws LoginException
      */
-    public AllWorkspacesBackup(RepositoryImpl repo, BackupConfig conf) throws LoginException, RepositoryException {
-        super(repo, conf);
+    public AllWorkspacesBackup(RepositoryImpl repo, BackupConfig conf, String login, String password) 
+                                                            throws LoginException, RepositoryException {
+        super(repo, conf, login, password);
     }
-    
-    public AllWorkspacesBackup() {
+
+    /**
+     * Constructor used by BackupManager.
+     *
+     */
+    protected AllWorkspacesBackup() {
       super();
     }
-    
+
 
     /* (non-Javadoc)
      * @see org.apache.jackrabbit.backup.Backup#backup(org.apache.jackrabbit.backup.BackupIOHandler)
@@ -54,12 +64,13 @@ public class AllWorkspacesBackup extends Backup {
        Session s = this.getSession();
        Workspace wsp = s.getWorkspace();
        String[] allWsp = wsp.getAccessibleWorkspaceNames();
-       
+       String login = this.getCredentials().getUserID();
+       String password = this.getCredentials().getPassword().toString();
+
        for (int i = 0; i < allWsp.length; i++) {
-           WorkspaceBackup wspb = new WorkspaceBackup(this.repo, this.conf, allWsp[i]);
-           wspb.backup(h);           
-           
-           WorkspaceConfigBackup wspConfb = new WorkspaceConfigBackup(this.repo, this.conf, allWsp[i]);
+           WorkspaceBackup wspb = new WorkspaceBackup(this.getRepo(), this.getConf(), allWsp[i], login, password);
+           wspb.backup(h);
+           WorkspaceConfigBackup wspConfb = new WorkspaceConfigBackup(this.getRepo(), this.getConf(), allWsp[i], login, password);
            wspConfb.backup(h);
        }
     }
@@ -67,9 +78,29 @@ public class AllWorkspacesBackup extends Backup {
     /* (non-Javadoc)
      * @see org.apache.jackrabbit.backup.Backup#restore(org.apache.jackrabbit.backup.BackupIOHandler)
      */
-    public void restore(BackupIOHandler h) {
-        // TODO Auto-generated method stub
+    public void restore(BackupIOHandler h) throws ZipException, IOException, LoginException, RepositoryException {
+        //Get All workspaces name in the zip
+        Enumeration entries = h.getEntries();
+        while (entries.hasMoreElements()) {
+            String s = ((ZipEntry) entries.nextElement()).getName();
+            if (s.indexOf("export_") != -1 && s.endsWith(".xml")) {
+                int begin = "export_".length();
+                //Allow to manage is we backup 110 workspaces for instance
+                int end = s.length() - ".xml".length();
+                String name = s.substring(begin, end);
+                String login = this.getCredentials().getUserID();
+                String password = this.getCredentials().getPassword().toString();
 
+                //No need to check if the config file is there: if not, we will throw an exception later.
+                //Restore the config
+                WorkspaceConfigBackup wspConfb = new WorkspaceConfigBackup(this.getRepo(), this.getConf(), name, login, password);
+                wspConfb.restore(h);
+
+                //Restore the content
+                WorkspaceBackup wsb = new WorkspaceBackup(this.getRepo(), this.getConf(), name, login, password);
+                wsb.restore(h);
+            }
+        }
     }
 
 }
