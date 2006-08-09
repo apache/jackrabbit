@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.ItemExistsException;
@@ -78,13 +77,6 @@ interface TransientItemStateManager extends ItemStateManager {
                               NodeState parent);
 
     /**
-     * DIFF JACKRABBIT: does not throw ItemStateException
-     * @param overlayedState
-     * @return
-     */
-    NodeState createNodeState(NodeState overlayedState);
-
-    /**
      * Creates a new transient property state for a given <code>parent</code>
      * node state.
      *
@@ -96,13 +88,6 @@ interface TransientItemStateManager extends ItemStateManager {
      */
     PropertyState createPropertyState(NodeState parent, QName propName)
             throws ItemExistsException;
-
-    /**
-     * DIFF JACKRABBIT: does not throw ItemStateException
-     * @param overlayedState
-     * @return
-     */
-    PropertyState createPropertyState(PropertyState overlayedState);
 
     /**
      * Disposes the specified instance, i.e. discards it and removes it from

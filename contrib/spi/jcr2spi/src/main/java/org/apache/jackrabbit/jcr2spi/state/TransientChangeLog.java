@@ -247,30 +247,6 @@ public class TransientChangeLog extends ChangeLog
     }
 
     /**
-     * TODO: remove this method
-     * @inheritDoc
-     */
-    public NodeState createNodeState(NodeState overlayedState) {
-        ItemId id = overlayedState.getNodeId();
-
-        // check map; synchronized to ensure an entry is not created twice.
-        synchronized (addedStates) {
-            NodeState state;
-//            if ((state = (NodeState) addedStates.get(id)) != null
-//                    || (state = (NodeState) modifiedStates.get(id)) != null) {
-//                String msg = "there's already a node state instance with id " + id;
-//                log.warn(msg);
-//                return state;
-//            }
-
-            state = new NodeState(overlayedState, null, ItemState.STATUS_EXISTING_MODIFIED, true, this);
-            // put transient state in the map
-            modifiedStates.add(state);
-            return state;
-        }
-    }
-
-    /**
      * @inheritDoc
      * @see TransientItemStateManager#createPropertyState(NodeState, QName)
      */
@@ -281,31 +257,6 @@ public class TransientChangeLog extends ChangeLog
         addedStates.add(propState);
         propState.addListener(this);
         return propState;
-    }
-
-    /**
-     * TODO: remove this method
-     * @inheritDoc
-     */
-    public PropertyState createPropertyState(PropertyState overlayedState) {
-
-        PropertyId id = overlayedState.getPropertyId();
-
-        // check map; synchronized to ensure an entry is not created twice.
-        synchronized (addedStates) {
-            PropertyState state;
-//            if ((state = (PropertyState) addedStates.get(id)) != null
-//                    || (state = (PropertyState) modifiedStates.get(id)) != null) {
-//                String msg = "there's already a property state instance with id " + id;
-//                log.warn(msg);
-//                return state;
-//            }
-
-            state = new PropertyState(overlayedState, null, ItemState.STATUS_EXISTING_MODIFIED, true);
-            // put transient state in the map
-            modifiedStates.add(state);
-            return state;
-        }
     }
 
     /**
