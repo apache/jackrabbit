@@ -147,6 +147,10 @@ NOTE: This list only contains major open issues.
    Definition of XASessionInfo must be reviewed.
 
 
+12) SessionImpl.switchWorkspace(String) used to create session on other 
+    workspace for current subject. Missing implementation
+
+
 
 
 
