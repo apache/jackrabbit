@@ -39,7 +39,7 @@ public class XASessionImpl extends SessionImpl implements XASession {
      *
      * @param repository the repository instance associated with this session.
      * @param sessionInfo the session info.
-     * @param service the underlying repository service.
+     * @param config the underlying repository configuration.
      * @throws RepositoryException if an error occurs while creating a session.
      */
     XASessionImpl(XASessionInfo sessionInfo, Repository repository,
