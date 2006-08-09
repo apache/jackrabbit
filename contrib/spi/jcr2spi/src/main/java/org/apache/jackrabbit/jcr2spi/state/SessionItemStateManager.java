@@ -968,6 +968,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // TODO: TO-BE-FIXED. Move with SPI id       
         boolean renameOnly = srcParent.getNodeId().equals(destParent.getNodeId());
         ChildNodeEntry cne = srcParent.getChildNodeEntry(srcState.getNodeId());
+        if (cne == null) {
+            String msg = "Unexpected error: Move source " + LogUtil.safeGetJCRPath(srcParent, nsResolver, hierMgr) + " does not contain a child node entry with the given id" + LogUtil.safeGetJCRPath(srcState, nsResolver, hierMgr);
+            log.error(msg);
+            throw new RepositoryException(msg);
+        }
         QName srcName = cne.getName();
         int srcIndex = cne.getIndex();
         if (renameOnly) {

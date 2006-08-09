@@ -24,14 +24,13 @@ import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.CachingItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.WorkspaceItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -70,12 +69,8 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.value.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -106,15 +101,12 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Collection;
-import java.util.Collections;
 import java.io.InputStream;
-import java.io.IOException;
 
 /**
  * <code>WorkspaceManager</code>...
  */
-public class WorkspaceManager implements UpdatableItemStateManager,
-        ItemStateFactory, NamespaceStorage, NodeTypeStorage, AccessManager {
+public class WorkspaceManager implements UpdatableItemStateManager, NamespaceStorage, NodeTypeStorage, AccessManager {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceManager.class);
 
@@ -148,7 +140,8 @@ public class WorkspaceManager implements UpdatableItemStateManager,
             this.service = service;
             this.sessionInfo = sessionInfo;
 
-            cache = new CachingItemStateManager(this, service.getIdFactory());
+            ItemStateFactory isf = createItemStateFactory();
+            cache = new CachingItemStateManager(isf, service.getIdFactory());
             addEventListener(cache);
 
             nsRegistry = createNamespaceRegistry();
@@ -256,8 +249,11 @@ public class WorkspaceManager implements UpdatableItemStateManager,
     public void removeEventListener(InternalEventListener listener) {
         listeners.remove(listener);
     }
-    //--------------------------------------------------------------------------
 
+    //--------------------------------------------------------------------------
+    private ItemStateFactory createItemStateFactory() {
+        return new WorkspaceItemStateFactory(service, sessionInfo);
+    }
 
     private NamespaceRegistryImpl createNamespaceRegistry() throws RepositoryException {
         return new NamespaceRegistryImpl(this, service.getRegisteredNamespaces(sessionInfo));
@@ -451,185 +447,6 @@ public class WorkspaceManager implements UpdatableItemStateManager,
      */
     public void unregisterNodeTypes(QName[] nodeTypeNames) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
         service.unregisterNodeTypes(sessionInfo, nodeTypeNames);
-    }
-
-    //---------------------------------------------------< ItemStateFactory >---
-
-    /**
-     * Creates the node with information retrieved from the
-     * <code>RepositoryService</code>.
-     *
-     * @inheritDoc
-     * @see ItemStateFactory#createNodeState(NodeId, ItemStateManager)
-     */
-    public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
-            throws NoSuchItemStateException, ItemStateException {
-        try {
-            NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
-
-            // get parent
-            NodeId parentId = (info.getParentId() != null) ? info.getParentId() : null;
-            NodeState parent = (parentId != null) ? (NodeState) ism.getItemState(parentId) : null;
-
-            return createNodeState(info, parent);
-        } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Creates the node with information retrieved from the
-     * <code>RepositoryService</code>.
-     *
-     * @inheritDoc
-     * @see ItemStateFactory#createNodeState(NodeId, NodeState)
-     */
-    public NodeState createNodeState(NodeId nodeId, NodeState parent)
-            throws NoSuchItemStateException, ItemStateException {
-        try {
-            NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
-            return createNodeState(info, parent);
-        } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Creates the node with information retrieved from <code>info</code>.
-     *
-     * @param info   the <code>NodeInfo</code> to use to create the
-     *               <code>NodeState</code>.
-     * @param parent the parent <code>NodeState</code>.
-     * @return the new <code>NodeState</code>.
-     */
-    private NodeState createNodeState(NodeInfo info, NodeState parent)
-            throws NoSuchItemStateException, ItemStateException {
-        try {
-            QName ntName = info.getNodetype();
-
-            // build the node state
-            // NOTE: unable to retrieve definitionId -> needs to be retrieved
-            // by the itemManager upon Node creation.
-            NodeState state = new NodeState(info.getId(), parent, ntName, ItemState.STATUS_EXISTING, false, this);
-            // set mixin nodetypes
-            state.setMixinTypeNames(info.getMixins());
-
-            // references to child items
-            for (IdIterator it = info.getNodeIds(); it.hasNext(); ) {
-                NodeInfo childInfo = service.getNodeInfo(sessionInfo, (NodeId) it.nextId());
-                NodeId childId = childInfo.getId();
-                state.addChildNodeEntry(childInfo.getQName(), childId);
-            }
-
-            // references to properties
-            for (IdIterator it = info.getPropertyIds(); it.hasNext(); ) {
-                PropertyId pId = (PropertyId) it.nextId();
-                state.addPropertyName(pId.getQName());
-            }
-
-            // copied from local-state-mgr TODO... check
-            // register as listener
-            // TODO check if needed
-            //state.addListener(this);
-            return state;
-        } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Creates the property with information retrieved from the
-     * <code>RepositoryService</code>.
-     *
-     * @inheritDoc
-     * @see ItemStateFactory#createPropertyState(PropertyId, ItemStateManager)
-     */
-    public PropertyState createPropertyState(PropertyId propertyId,
-                                             ItemStateManager ism)
-            throws NoSuchItemStateException, ItemStateException {
-        try {
-            PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
-            NodeState parent = (NodeState) ism.getItemState(info.getParentId());
-            return createPropertyState(info, parent);
-        } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Creates the property with information retrieved from the
-     * <code>RepositoryService</code>.
-     *
-     * @inheritDoc
-     * @see ItemStateFactory#createPropertyState(PropertyId, NodeState)
-     */
-    public PropertyState createPropertyState(PropertyId propertyId,
-                                             NodeState parent)
-            throws NoSuchItemStateException, ItemStateException {
-        try {
-            PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
-            return createPropertyState(info, parent);
-        } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Creates the property with information retrieved from <code>info</code>.
-     *
-     * @param info   the <code>PropertyInfo</code> to use to create the
-     *               <code>PropertyState</code>.
-     * @param parent the parent <code>NodeState</code>.
-     * @return the new <code>PropertyState</code>.
-     * @throws ItemStateException if an error occurs while retrieving the
-     *                            <code>PropertyState</code>.
-     */
-    private PropertyState createPropertyState(PropertyInfo info,
-                                              NodeState parent)
-            throws ItemStateException {
-        try {
-            // TODO: pass parent in constructor of PropertyState
-
-            // build the PropertyState
-            // NOTE: unable to retrieve definitionId -> needs to be retrieved
-            // by the itemManager upon Property creation.
-            PropertyState state = new PropertyState(info.getId(), parent, ItemState.STATUS_EXISTING, false);
-            state.setMultiValued(info.isMultiValued());
-            state.setType(info.getType());
-            QValue[] qValues;
-            if (info.getType() == PropertyType.BINARY) {
-                InputStream[] ins = info.getValuesAsStream();
-                qValues = new QValue[ins.length];
-                for (int i = 0; i < ins.length; i++) {
-                    qValues[i] = QValue.create(ins[i]);
-                }
-            } else {
-                String[] str = info.getValues();
-                qValues = new QValue[str.length];
-                for (int i = 0; i < str.length; i++) {
-                    qValues[i] = QValue.create(str[i], info.getType());
-                }
-            }
-
-            state.internalSetValues(qValues);
-
-            // register as listener
-            // TODO check if needed
-            // state.addListener(this);
-            return state;
-        } catch (IOException e) {
-            throw new ItemStateException(e.getMessage(), e);
-        }
     }
 
     //--------------------------------------------------------------------------
@@ -920,80 +737,4 @@ public class WorkspaceManager implements UpdatableItemStateManager,
             return (Event) next();
         }
     }
-
-    /**
-     * <code>NodeReferences</code> represents the references (i.e. properties of
-     * type <code>REFERENCE</code>) to a particular node (denoted by its uuid).
-     */
-    public class NodeReferencesImpl implements NodeReferences {
-
-        /**
-         * identifier of this <code>NodeReferences</code> instance.
-         */
-        private NodeId id;
-
-        /**
-         * list of PropertyId's (i.e. the id's of the properties that refer to
-         * the target node denoted by <code>id.getTargetId()</code>).
-         * <p/>
-         * note that the list can contain duplicate entries because a specific
-         * REFERENCE property can contain multiple references (if it's multi-valued)
-         * to potentially the same target node.
-         */
-        private ArrayList references = new ArrayList();
-
-        /**
-         * Package private constructor
-         *
-         * @param id
-         */
-        private NodeReferencesImpl(NodeId id) {
-            this.id = id;
-        }
-
-        //-------------------------------------------------< NodeReferences >---
-        /**
-         * Returns the identifier of this node references object.
-         *
-         * @return the id of this node references object.
-         */
-        public NodeId getId() {
-            return id;
-        }
-
-        /**
-         * Returns a flag indicating whether this object holds any references
-         *
-         * @return <code>true</code> if this object holds references,
-         *         <code>false</code> otherwise
-         */
-        public boolean hasReferences() {
-            return !references.isEmpty();
-        }
-
-        /**
-         * @return the list of references
-         */
-        public List getReferences() {
-            return Collections.unmodifiableList(references);
-        }
-
-        //--------------------------------------------------------< private >---
-        /**
-         * @param refId
-         */
-        private void addReference(PropertyId refId) {
-            references.add(refId);
-        }
-
-        /**
-         * @param refId
-         * @return <code>true</code> if the reference was removed;
-         *        <code>false</code> otherwise.
-         */
-        private boolean removeReference(PropertyId refId) {
-            return references.remove(refId);
-        }
-    }
-
 }

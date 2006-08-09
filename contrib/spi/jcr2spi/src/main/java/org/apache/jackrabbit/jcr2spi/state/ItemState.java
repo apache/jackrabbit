@@ -369,7 +369,7 @@ public abstract class ItemState implements ItemStateListener {
      * if either this item state represents the root node or this item state is
      * 'free floating', i.e. not attached to the repository's hierarchy.
      *
-     * @return the parent <code>NodeState</code>'s Id
+     * @return the parent <code>NodeState</code>
      */
     public abstract NodeState getParent();
 

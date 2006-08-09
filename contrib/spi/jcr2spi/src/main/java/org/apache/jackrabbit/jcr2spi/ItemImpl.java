@@ -69,8 +69,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     protected static final int STATUS_DESTROYED = 2;
     protected static final int STATUS_INVALIDATED = 3;
 
-    private ItemId id;
-
     private int status;
     private ItemState state;
 
@@ -89,7 +87,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         //DIFF JACKRABBIT: rep = (RepositoryImpl) session.getRepository();
         //DIFF JACKRABBIT: stateMgr = session.getSessionItemStateManager();
         itemStateMgr = session.getSessionItemStateManager();
-        this.id = state.getId();
+
         this.itemMgr = itemManager;
         this.state = state;
         status = STATUS_NORMAL;
@@ -425,7 +423,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemLifeCycleListener[] la = (ItemLifeCycleListener[]) listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
-            la[i].itemCreated(id, this);
+            la[i].itemCreated(this);
         }
     }
 
@@ -438,7 +436,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         ItemLifeCycleListener[] la = (ItemLifeCycleListener[]) listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
-                la[i].itemInvalidated(id, this);
+                la[i].itemInvalidated(this);
             }
         }
     }
@@ -452,7 +450,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         ItemLifeCycleListener[] la = (ItemLifeCycleListener[]) listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
-                la[i].itemDestroyed(id, this);
+                la[i].itemDestroyed(this);
             }
         }
     }
@@ -495,7 +493,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
             case STATUS_DESTROYED:
             case STATUS_INVALIDATED:
-                throw new InvalidItemStateException("Item '" + id + "' doesn't exist anymore");
+                throw new InvalidItemStateException("Item '" + getPath() + "' doesn't exist anymore");
         }
     }
 
@@ -564,7 +562,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * @return the id of this <code>Item</code>
      */
     public ItemId getId() {
-        return id;
+        return getItemState().getId();
     }
 
     /**

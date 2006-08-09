@@ -188,7 +188,7 @@ public class ImporterImpl implements Importer, SessionListener {
            NodeState nodeState = null;
            if (parent.hasChildNodeEntry(nodeInfo.getName())) {
                // a node with that name already exists...
-               ChildNodeEntry entry = parent.getChildNodeEntry(nodeInfo.getName(), 1);
+               ChildNodeEntry entry = parent.getChildNodeEntry(nodeInfo.getName(), Path.INDEX_DEFAULT);
                NodeState existing = null;
                try {
                    existing = entry.getNodeState();
@@ -196,7 +196,7 @@ public class ImporterImpl implements Importer, SessionListener {
                    // should not occur. existance has been checked before
                    throw new RepositoryException(e);
                }
-               QNodeDefinition def = existing.getDefinition();
+               QNodeDefinition def = existing.getDefinition(session.getNodeTypeRegistry());
                if (!def.allowsSameNameSiblings()) {
                    // existing doesn't allow same-name siblings, check for conflicts
                    EffectiveNodeType entExisting = validator.getEffectiveNodeType(existing);
@@ -514,7 +514,7 @@ public class ImporterImpl implements Importer, SessionListener {
             // a property with that name already exists...
             try {
                 PropertyState existing = nodeState.getPropertyState(propName);
-                def = existing.getDefinition();
+                def = existing.getDefinition(session.getNodeTypeRegistry());
                 if (def.isProtected()) {
                     // skip protected property
                     log.debug("skipping protected property " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), hierMgr));

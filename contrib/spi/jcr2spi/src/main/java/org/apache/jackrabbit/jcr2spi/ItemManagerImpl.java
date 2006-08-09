@@ -30,6 +30,9 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -39,10 +42,12 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Item;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.io.PrintStream;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * There's one <code>ItemManagerImpl</code> instance per <code>Session</code>
@@ -76,11 +81,11 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     //private final ItemStateManager itemStateMgr;
     private final HierarchyManager hierMgr;
 
+    // TODO: TO-BE-FIXED. With SPI_ItemId simple map cannot be used any more
     /**
      * A cache for item instances created by this <code>ItemManagerImpl</code>
      */
-    // TODO: TO-BE-FIXED. Usage of SPI-Id required refactoring of the cache
-    private IdKeyMap itemCache;
+    private Map itemCache;
 
     /**
      * Creates a new per-session instance <code>ItemManagerImpl</code> instance.
@@ -92,19 +97,19 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         this.hierMgr = hierMgr;
         this.session = session;
         // setup item cache with weak references to items
-        itemCache = new DefaultIdKeyMap(); // TODO, JR: new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
     }
 
     //--------------------------------------------------------< ItemManager >---
     /**
-     * @inheritDoc
+     * @see ItemManager#dispose()
      */
     public void dispose() {
         itemCache.clear();
     }
 
     /**
-     * @inheritDoc
+     * @see ItemManager#itemExists(Path)
      */
     public boolean itemExists(Path path) {
         try {
@@ -124,7 +129,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     /**
-     * @inheritDoc
+     * @see ItemManager#itemExists(ItemState)
      */
     public boolean itemExists(ItemState itemState) {
         try {
@@ -144,9 +149,9 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     /**
-     * @inheritDoc
+     * @see ItemManager#getItem(Path)
      */
-    public synchronized ItemImpl getItem(Path path)
+    public synchronized Item getItem(Path path)
             throws PathNotFoundException, AccessDeniedException, RepositoryException {
         ItemState itemState = hierMgr.getItemState(path);
         try {
@@ -157,9 +162,9 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     /**
-     * @inheritDoc
+     * @see ItemManager#getItem(ItemState)
      */
-    public ItemImpl getItem(ItemState itemState) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+    public Item getItem(ItemState itemState) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         ItemId id = itemState.getId();
         // first try to access item from cache
         ItemImpl item = retrieveItem(id);
@@ -178,7 +183,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     /**
-     * @inheritDoc
+     * @see ItemManager#hasChildNodes(NodeState)
      */
     public synchronized boolean hasChildNodes(NodeState parentState)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
@@ -199,7 +204,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     /**
-     * @inheritDoc
+     * @see ItemManager#getChildNodes(NodeState)
      */
     public synchronized NodeIterator getChildNodes(NodeState parentState)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
@@ -225,7 +230,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     /**
-     * @inheritDoc
+     * @see ItemManager#hasChildProperties(NodeState)
      */
     public synchronized boolean hasChildProperties(NodeState parentState)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
@@ -247,7 +252,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     /**
-     * @inheritDoc
+     * @see ItemManager#getChildProperties(NodeState)
      */
     public synchronized PropertyIterator getChildProperties(NodeState parentState)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
@@ -279,43 +284,43 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
     //----------------------------------------------< ItemLifeCycleListener >---
     /**
-     * {@inheritDoc}
+     * @see ItemLifeCycleListener#itemCreated(ItemImpl)
      */
-    public void itemCreated(ItemId id, ItemImpl item) {
+    public void itemCreated(ItemImpl item) {
         if (log.isDebugEnabled()) {
-            log.debug("created item " + id);
+            log.debug("created item " + item);
         }
         // add instance to cache
         cacheItem(item);
     }
 
     /**
-     * {@inheritDoc}
+     * @see ItemLifeCycleListener#itemInvalidated(ItemImpl)
      */
-    public void itemInvalidated(ItemId id, ItemImpl item) {
+    public void itemInvalidated(ItemImpl item) {
         if (log.isDebugEnabled()) {
-            log.debug("invalidated item " + id);
+            log.debug("invalidated item " + item);
         }
         // remove instance from cache
-        evictItem(id);
+        evictItem(item.getId());
     }
 
     /**
-     * {@inheritDoc}
+     * @see ItemLifeCycleListener#itemDestroyed(ItemImpl)
      */
-    public void itemDestroyed(ItemId id, ItemImpl item) {
+    public void itemDestroyed(ItemImpl item) {
         if (log.isDebugEnabled()) {
-            log.debug("destroyed item " + id);
+            log.debug("destroyed item " + item);
         }
         // we're no longer interested in this item
         item.removeLifeCycleListener(this);
         // remove instance from cache
-        evictItem(id);
+        evictItem(item.getId());
     }
 
     //-----------------------------------------------------------< Dumpable >---
     /**
-     * {@inheritDoc}
+     * @see Dumpable#dump(PrintStream)
      */
     public void dump(PrintStream ps) {
         ps.println("ItemManagerImpl (" + this + ")");
@@ -341,6 +346,12 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     //----------------------------------------------------< private methods >---
+    /**
+     *
+     * @param state
+     * @param removeFromCache
+     * @throws RepositoryException
+     */
     private void checkAccess(ItemState state, boolean removeFromCache) throws RepositoryException {
         // check privileges
         ItemId id = state.getId();
@@ -356,8 +367,12 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         }
     }
 
-    private NodeImpl createNodeInstance(NodeState state, NodeDefinition def)
-            throws RepositoryException {
+    private NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
+        // 1. get definition of the specified node
+        QNodeDefinition qnd = state.getDefinition(session.getNodeTypeRegistry());
+        NodeDefinition def = session.getNodeTypeManager().getNodeDefinition(qnd);
+
+        // 2. create instance
         // we want to be informed on life cycle changes of the new node object
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
@@ -373,20 +388,16 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
             // create common node object
             return new NodeImpl(this, session, state, def, listeners);
         }
-
     }
 
-    private NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
-        // 1. get definition of the specified node
-        NodeState parentState = state.getParent();
-        NodeDefinition def = session.getItemDefinitionManager().getNodeDefinition(state, parentState);
+    private PropertyImpl createPropertyInstance(PropertyState state)
+            throws RepositoryException {
+        // 1. get definition for the specified property
+        QPropertyDefinition qpd = state.getDefinition(session.getNodeTypeRegistry());
+        PropertyDefinition def = session.getNodeTypeManager().getPropertyDefinition(qpd);
+
         // 2. create instance
-        return createNodeInstance(state, def);
-    }
-
-    private PropertyImpl createPropertyInstance(PropertyState state,
-                                                PropertyDefinition def) {
-        // we want to be informed on life cycle changes of the new property object
+                // we want to be informed on life cycle changes of the new property object
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
         // create property object
@@ -394,17 +405,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         return prop;
     }
 
-    private PropertyImpl createPropertyInstance(PropertyState state)
-            throws RepositoryException {
-        // 1. get definition for the specified property
-        NodeState parentState = state.getParent();
-        PropertyDefinition def = session.getItemDefinitionManager().getPropertyDefinition(state, parentState);
-
-        // 2. create instance
-        return createPropertyInstance(state, def);
-    }
-
-    //---------------------------------------------------< item cache methods >
+    //-------------------------------------------------< item cache methods >---
 
     /**
      * Returns an item reference from the cache.

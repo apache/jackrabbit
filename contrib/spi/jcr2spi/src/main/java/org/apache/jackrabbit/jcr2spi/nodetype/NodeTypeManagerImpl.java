@@ -24,9 +24,6 @@ import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.IteratorHelper;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -55,8 +52,7 @@ import java.io.PrintStream;
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
  * NodeTypeManager.
  */
-public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManager,
-        NodeTypeRegistryListener, Dumpable {
+public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryListener, Dumpable {
 
     /**
      * Logger instance for this class
@@ -109,13 +105,12 @@ public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManag
         this.ntReg.addListener(this);
         this.valueFactory = valueFactory;
 
-        // initialize ItemDefinitionManager
-        // 1) setup caches with soft references to node type
+        // setup caches with soft references to node type
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
-        // 2) setup root definition and update cache
+        // setup root definition and update cache
         QNodeDefinition rootDef = ntReg.getRootNodeDef();
         NodeDefinition rootNodeDefinition = new NodeDefinitionImpl(rootDef, this, nsResolver);
         ndCache.put(rootDef, rootNodeDefinition);
@@ -153,10 +148,12 @@ public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManag
         return isRegistered;
     }
 
-    //----------------------------------------------< ItemDefinitionManager >---
-    // DIFF JR: new interface ItemDefinitionManager -> avoid usage of NodeTypeManagerImpl
     /**
-     * @inheritDoc
+     * Retrieve the <code>NodeDefinition</code> for the given
+     * <code>QNodeDefinition</code>.
+     *
+     * @param def
+     * @return
      */
     public NodeDefinition getNodeDefinition(QNodeDefinition def) {
         synchronized (ndCache) {
@@ -170,7 +167,11 @@ public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManag
     }
 
     /**
-     * @inheritDoc
+     * Retrieve the <code>PropertyDefinition</code> for the given
+     * <code>QPropertyDefinition</code>.
+     *
+     * @param def
+     * @return
      */
     public PropertyDefinition getPropertyDefinition(QPropertyDefinition def) {
         synchronized (pdCache) {
@@ -182,52 +183,7 @@ public class NodeTypeManagerImpl implements NodeTypeManager, ItemDefinitionManag
             return pdi;
         }
     }
-
-    /**
-     * @inheritDoc
-     */
-    // DIFF JACKRABBIT: method added (JR defines similar in ItemManager)
-    public NodeDefinition getNodeDefinition(NodeState nodeState, NodeState parentState) throws RepositoryException {
-        QNodeDefinition def = nodeState.getDefinition();
-        if (def == null) {
-            try {
-                if (parentState == null) {
-                    // special case for root state
-                    def = ntReg.getRootNodeDef();
-                } else {
-                    ChildNodeEntry cne = parentState.getChildNodeEntry(nodeState.getNodeId());
-                    def = ntReg.getEffectiveNodeType(parentState.getNodeTypeNames()).getApplicableNodeDefinition(cne.getName(), nodeState.getNodeTypeName());
-                }
-            } catch (NodeTypeConflictException e) {
-                String msg = "internal error: failed to build effective node type.";
-                log.debug(msg);
-                throw new RepositoryException(msg, e);
-            }
-            // make sure the state has the definition set now
-            nodeState.setDefinition(def);
-        }
-        return getNodeDefinition(def);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    // DIFF JACKRABBIT: method added (JR defines similar in ItemManager)
-    public PropertyDefinition getPropertyDefinition(PropertyState propState, NodeState parentState) throws RepositoryException {
-        QPropertyDefinition def = propState.getDefinition();
-        if (def == null) {
-            try {
-                def = ntReg.getEffectiveNodeType(parentState.getNodeTypeNames()).getApplicablePropertyDefinition(propState.getQName(), propState.getType(), propState.isMultiValued());
-                propState.setDefinition(def);
-            } catch (NodeTypeConflictException e) {
-                String msg = "internal error: failed to build effective node type.";
-                log.debug(msg);
-                throw new RepositoryException(msg, e);
-            }
-        }
-        return getPropertyDefinition(def);
-    }
-
+    
     //-------------------------------------------< NodeTypeRegistryListener >---
     /**
      * {@inheritDoc}

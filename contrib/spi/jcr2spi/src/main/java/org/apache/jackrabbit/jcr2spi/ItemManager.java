@@ -26,6 +26,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
+import javax.jcr.Item;
 
 /**
  * <code>ItemManager</code>...
@@ -33,7 +34,7 @@ import javax.jcr.PropertyIterator;
 public interface ItemManager extends ItemLifeCycleListener {
 
     // DIFF JR: removed 'getRootNode' shortcut
-    
+
     /**
      * Disposes this <code>ItemManager</code> and frees resources.
      */
@@ -63,7 +64,7 @@ public interface ItemManager extends ItemLifeCycleListener {
      * @throws javax.jcr.AccessDeniedException
      * @throws javax.jcr.RepositoryException
      */
-    public ItemImpl getItem(Path path)
+    public Item getItem(Path path)
         throws PathNotFoundException, AccessDeniedException, RepositoryException;
 
     /**
@@ -74,7 +75,7 @@ public interface ItemManager extends ItemLifeCycleListener {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public ItemImpl getItem(ItemState itemState)
+    public Item getItem(ItemState itemState)
         throws ItemNotFoundException, AccessDeniedException, RepositoryException;
 
     /**
