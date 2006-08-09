@@ -212,20 +212,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         session.checkIsAlive();
         checkAccess(parentState, true);
 
-        /*
-        // REMOVED. left check for access to Iterator (getSize() returns -1)
-        ArrayList childIds = new ArrayList();
-        Iterator iter = parentState.getChildNodeEntries().iterator();
-
-        while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-            NodeId id = entry.getId();
-            // check read access
-            if (session.getAccessManager().canRead(id)) {
-                childIds.add(id);
-            }
-        }
-        */
         return new LazyItemIterator(this, parentState.getChildNodeEntries());
     }
 
@@ -260,25 +246,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         session.checkIsAlive();
         checkAccess(parentState, true);
 
-        /*
-        // REMOVED. left check for access to Iterator (getSize() returns -1)
-        ArrayList childIds = new ArrayList();
-        Iterator iter = parentState.getPropertyNames().iterator();
-
-        while (iter.hasNext()) {
-            QName propName = (QName) iter.next();
-            try {
-                PropertyId id = parentState.getPropertyState(propName).getPropertyId();
-                // check read access
-                if (session.getAccessManager().canRead(id)) {
-                    childIds.add(id);
-                }
-            } catch (ItemStateException e) {
-                // should not occur.
-                throw new RepositoryException(e);
-            }
-        }
-        */
         return new LazyItemIterator(this, parentState.getPropertyEntries());
     }
 
