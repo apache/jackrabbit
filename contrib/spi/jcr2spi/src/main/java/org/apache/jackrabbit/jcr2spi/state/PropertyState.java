@@ -210,6 +210,19 @@ public class PropertyState extends ItemState {
      * @param values the new values
      */
     public void setValues(QValue[] values) {
+        internalSetValues(values);
+        markModified();
+    }
+
+    /**
+     * TODO: rather separate PropertyState into interface and implementation
+     * TODO: and move internalSetValues to implementation only.
+     * Sets the value(s) of this property without marking this property state
+     * as modified.
+     *
+     * @param values the new values
+     */
+    public void internalSetValues(QValue[] values) {
         this.values = values;
     }
 

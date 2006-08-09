@@ -64,6 +64,23 @@ abstract class ChildItemReference {
     }
 
     /**
+     * Creates a new <code>ChildItemReference</code> with the given parent
+     * <code>NodeState</code> and an already initialized child item state.
+     *
+     * @param parent the <code>NodeState</code> that owns this child node
+     *               reference.
+     * @param child  the child item state.
+     * @param name   the name of the child item.
+     * @param isf    the item state factory to re-create the item state.
+     */
+    public ChildItemReference(NodeState parent, ItemState child, QName name, ItemStateFactory isf) {
+        this.parent = parent;
+        this.name = name;
+        this.isf = isf;
+        this.target = new WeakReference(child);
+    }
+
+    /**
      * Resolves this <code>ChildItemReference</code> and returns the target
      * <code>ItemState</code> of this reference. This method may return a
      * cached <code>ItemState</code> if this method was called before already

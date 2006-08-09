@@ -48,6 +48,20 @@ public class PathElementReference extends ChildNodeReference implements ChildNod
     }
 
     /**
+     * Creates a new <code>PathElementReference</code> with the given parent
+     * <code>NodeState</code> and an already initialized child node state.
+     *
+     * @param child  the child node state.
+     * @param isf    the item state factory to re-create the node state.
+     * @param idFactory the <code>IdFactory</code> to create new ItemIds
+     */
+    public PathElementReference(NodeState child, ItemStateFactory isf,
+                                IdFactory idFactory) {
+        super(child, isf);
+        this.idFactory = idFactory;
+    }
+
+    /**
      * @inheritDoc
      * @see ChildItemReference#doResolve()
      * <p/>

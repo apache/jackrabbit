@@ -25,7 +25,7 @@ import org.apache.jackrabbit.spi.NodeId;
  *
  * @see NodeState#addListener
  */
-public interface NodeStateListener extends TransientItemStateListener {
+public interface NodeStateListener extends ItemStateListener {
 
     /**
      * Called when a child node has been added

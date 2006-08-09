@@ -621,7 +621,7 @@ public class WorkspaceManager implements UpdatableItemStateManager,
                 }
             }
 
-            state.setValues(qValues);
+            state.internalSetValues(qValues);
 
             // register as listener
             // TODO check if needed

@@ -20,6 +20,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
 
+import javax.jcr.ItemExistsException;
 import java.util.Iterator;
 
 /**
@@ -60,16 +61,20 @@ interface TransientItemStateManager extends ItemStateManager {
     //----------------< methods for creating & discarding ItemState instances >
 
     /**
-     * DIFF JACKRABBIT: does not throw ItemStateException
      * Creates a new transient {@link NodeState} that does not overlay any other
      * {@link NodeState}.
      *
-     * @param id the <code>NodeId</code> of the new node state.
+     * @param name         the name of the <code>NodeState</code> to create.
+     * @param uuid         the uuid of the <code>NodeState</code> to create or
+     *                     <code>null</code> if the created <code>NodeState</code>
+     *                     cannot be identified by a UUID.
      * @param nodeTypeName name of the node type of the new node state.
-     * @param parent the parent of the new node state.
+     * @param parent       the parent of the new node state.
      * @return a new transient {@link NodeState}.
      */
-    NodeState createNodeState(NodeId id, QName nodeTypeName,
+    NodeState createNodeState(QName name,
+                              String uuid,
+                              QName nodeTypeName,
                               NodeState parent);
 
     /**
@@ -80,12 +85,17 @@ interface TransientItemStateManager extends ItemStateManager {
     NodeState createNodeState(NodeState overlayedState);
 
     /**
-     * DIFF JACKRABBIT: does not throw ItemStateException
-     * @param parent
-     * @param propName
-     * @return
+     * Creates a new transient property state for a given <code>parent</code>
+     * node state.
+     *
+     * @param parent   the node state where to the new property is added.
+     * @param propName the name of the property state to create.
+     * @return the created property state.
+     * @throws ItemExistsException if <code>parent</code> already has a property
+     *                             with the given name.
      */
-    PropertyState createPropertyState(NodeState parent, QName propName);
+    PropertyState createPropertyState(NodeState parent, QName propName)
+            throws ItemExistsException;
 
     /**
      * DIFF JACKRABBIT: does not throw ItemStateException

@@ -51,6 +51,23 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
     }
 
     /**
+     * Creates a new <code>UUIDReference</code> with the given parent
+     * <code>NodeState</code> and an already initialized child node state.
+     *
+     * @param child     the child node state.
+     * @param isf       the item state factory to re-create the node state.
+     * @throws IllegalArgumentException if the id of <code>child</code> has a
+     *                                  relative path component.
+     */
+    public UUIDReference(NodeState child, ItemStateFactory isf) {
+        super(child, isf);
+        this.childId = child.getNodeId();
+        if (childId.getRelativePath() == null) {
+            throw new IllegalArgumentException("id of child must not contain a relative path");
+        }
+    }
+
+    /**
      * @inheritDoc
      * @see ChildItemReference#doResolve()
      * <p/>
