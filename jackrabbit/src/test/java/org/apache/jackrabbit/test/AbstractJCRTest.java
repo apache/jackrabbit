@@ -358,7 +358,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         }
     }
 
-    protected void tearDown() throws Exception {
+    protected void cleanUp() throws Exception {
         if (superuser != null) {
             try {
                 if (!isReadOnly) {
@@ -370,6 +370,10 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 superuser.logout();
             }
         }
+    }
+    
+    protected void tearDown() throws Exception {
+        cleanUp();
         super.tearDown();
     }
 
