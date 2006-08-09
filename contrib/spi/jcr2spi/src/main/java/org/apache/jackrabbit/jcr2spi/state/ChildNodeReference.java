@@ -38,6 +38,17 @@ abstract class ChildNodeReference extends ChildItemReference implements ChildNod
     }
 
     /**
+     * Creates a new <code>ChildNodeReference</code> with the given parent
+     * <code>NodeState</code> and an already initialized child node state.
+     *
+     * @param child  the child node state.
+     * @param isf    the item state factory to re-create the node state.
+     */
+    public ChildNodeReference(NodeState child, ItemStateFactory isf) {
+        super(child.getParent(), child, null, isf); // TODO: get name from child instead of null
+    }
+
+    /**
      * @inheritDoc
      * @see ChildNodeEntry#getIndex()
      */

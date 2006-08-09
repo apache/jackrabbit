@@ -19,12 +19,12 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.TransientItemStateListener;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateListener;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
@@ -58,8 +58,9 @@ import java.util.Collections;
 
 /**
  * <code>ItemImpl</code>...
+ * TODO: remove status in ItemImpl and ask item state for status!
  */
-public abstract class ItemImpl implements Item, TransientItemStateListener {
+public abstract class ItemImpl implements Item, ItemStateListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemImpl.class);
 
@@ -295,7 +296,7 @@ public abstract class ItemImpl implements Item, TransientItemStateListener {
         itemStateMgr.execute(rm);
     }
 
-    //--------------------------------------------< TransientItemStateListener >
+    //-----------------------------------------------------< ItemStateListener >
     /**
      * {@inheritDoc}
      */
@@ -412,26 +413,6 @@ public abstract class ItemImpl implements Item, TransientItemStateListener {
         notifyInvalidated();
         // now render this instance 'invalid'
         status = STATUS_INVALIDATED;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void stateOverlaid(ItemState overlayer) {
-        state.removeListener(this);
-        state = overlayer;
-        state.addListener(this);
-        status = STATUS_MODIFIED;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void stateUncovering(ItemState overlayer) {
-        state.removeListener(this);
-        state = overlayer.getOverlayedState();
-        state.addListener(this);
-        status = STATUS_NORMAL;
     }
 
     //----------------------------------------------------------< LiveCycle >---

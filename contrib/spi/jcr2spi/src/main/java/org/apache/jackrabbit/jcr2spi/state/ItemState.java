@@ -278,43 +278,6 @@ public abstract class ItemState implements ItemStateListener {
     }
 
     /**
-     * Notify the transient state listeners that this state has overlayed
-     * another state.
-     *
-     * @param overlayer the state that now overlays the state that the listener
-     *                  is registered to.
-     */
-    protected void notifyStateOverlaid(ItemState overlayer) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] instanceof TransientItemStateListener) {
-                ((TransientItemStateListener) la[i]).stateOverlaid(overlayer);
-            }
-        }
-    }
-
-    /**
-     * Notify the transient state listeners that this state no longer overlays
-     * another state.
-     */
-    protected void notifyStateUncovering() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] instanceof TransientItemStateListener) {
-                ((TransientItemStateListener) la[i]).stateUncovering(this);
-            }
-        }
-    }
-
-    /**
      * Notify the life cycle listeners that this state has changed its status.
      */
     protected void notifyStatusChanged(int oldStatus) {
@@ -329,6 +292,36 @@ public abstract class ItemState implements ItemStateListener {
             }
         }
     }
+
+    /**
+     * Marks this item state as modified.
+     */
+    protected void markModified() {
+        switch (status) {
+            case STATUS_EXISTING:
+                setStatus(STATUS_EXISTING_MODIFIED);
+                break;
+            case STATUS_EXISTING_MODIFIED:
+                // already modified, do nothing
+                break;
+            case STATUS_NEW:
+                // still new, do nothing
+                break;
+            case STATUS_STALE_DESTROYED:
+            case STATUS_STALE_MODIFIED:
+                // should actually get here because item should check before
+                // it modifies an item state. do nothing because item state
+                // is stale anyway.
+                break;
+            case STATUS_EXISTING_REMOVED:
+            case STATUS_UNDEFINED:
+            default:
+                String msg = "Cannot mark item state with status " +
+                        status + " modified.";
+                throw new IllegalStateException(msg);
+        }
+    }
+
 
     //-------------------------------------------------------< public methods >
     /**

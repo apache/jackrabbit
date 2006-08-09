@@ -26,6 +26,8 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+
+import javax.jcr.ItemExistsException;
 import java.util.Iterator;
 
 /**
@@ -228,30 +230,20 @@ public class TransientChangeLog extends ChangeLog
     }
 
     /**
-     * TODO: remove this method
+     * TODO: throw ItemExistsException? how to check?
      * @inheritDoc
+     * @see TransientItemStateManager#createNodeState(QName, String, QName, NodeState)
      */
-    public NodeState createNodeState(NodeId id,
+    public NodeState createNodeState(QName nodeName,
+                                     String uuid,
                                      QName nodeTypeName,
                                      NodeState parent) {
-        // DIFF JACKRABBIT: not needed anymore
-        // check map; synchronized to ensure an entry is not created twice.
-//        synchronized (addedStates) {
-//            if (addedStates.containsKey(id) || modifiedStates.containsKey(id)) {
-//                String msg = "there's already a node state instance with id " + id;
-//                log.debug(msg);
-//                throw new ItemStateException(msg);
-//            }
-//
-//            NodeState state = new NodeState(id, nodeTypeName, parentId,
-//                    initialStatus, true);
-//            // put transient state in the map
-//            addedStates.put(id, state);
-//            return state;
-//        }
-
-        // TODO: replace with call to createNewNodeState() and finally remove method
-        return new NodeState(id, parent, nodeTypeName, ItemState.STATUS_NEW, true, this);
+        NodeState nodeState = createNewNodeState(nodeName, uuid, parent);
+        nodeState.setNodeTypeName(nodeTypeName);
+        parent.addChildNodeState(nodeState, uuid);
+        addedStates.add(nodeState);
+        nodeState.addListener(this);
+        return nodeState;
     }
 
     /**
@@ -279,12 +271,16 @@ public class TransientChangeLog extends ChangeLog
     }
 
     /**
-     * TODO: remove this method
      * @inheritDoc
+     * @see TransientItemStateManager#createPropertyState(NodeState, QName)
      */
-    public PropertyState createPropertyState(NodeState parentState, QName propName) {
-        PropertyId id = idFactory.createPropertyId(parentState.getNodeId(), propName);
-        return new PropertyState(id, parentState, ItemState.STATUS_NEW, true);
+    public PropertyState createPropertyState(NodeState parentState, QName propName)
+            throws ItemExistsException {
+        PropertyState propState = createNewPropertyState(propName, parentState);
+        parentState.addPropertyState(propState);
+        addedStates.add(propState);
+        propState.addListener(this);
+        return propState;
     }
 
     /**

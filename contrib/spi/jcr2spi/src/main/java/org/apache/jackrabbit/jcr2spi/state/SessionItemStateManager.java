@@ -293,8 +293,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         Iterator it = new IteratorChain(changeLog.addedStates(), changeLog.modifiedStates());
         while (it.hasNext()) {
             ItemState transientState = (ItemState) it.next();
-            // notify uncovering of transient state
-            transientState.notifyStateUncovering();
             // dispose the transient state, it is no longer used
             transientStateMgr.disposeItemState(transientState);
         }
@@ -398,12 +396,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             // this will indirectly (through stateDiscarded listener method)
             // either restore or permanently invalidate the wrapping Item instances
             ItemState transientState = (ItemState) transIter.next();
-            switch (transientState.getStatus()) {
-                case ItemState.STATUS_STALE_MODIFIED:
-                case ItemState.STATUS_STALE_DESTROYED:
-                case ItemState.STATUS_EXISTING_MODIFIED:
-                    transientState.notifyStateUncovering();
-            }
             transientStateMgr.disposeItemState(transientState);
         }
         // process list of deleted states
@@ -951,10 +943,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
 
         // retrieve states and assert they are modifiable
-        NodeState srcState = create(getNodeState(operation.getNodeId()));
-        NodeState srcParent = create(getNodeState(operation.getSourceParentId()));
+        NodeState srcState = getNodeState(operation.getNodeId());
+        NodeState srcParent = getNodeState(operation.getSourceParentId());
 
-        NodeState destParent = create(getNodeState(operation.getDestinationParentId()));
+        NodeState destParent = getNodeState(operation.getDestinationParentId());
 
         // state validation: move-Source can be removed from old/added to new parent
         validator.checkRemoveItem(srcState,
@@ -993,15 +985,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // change definition of target node
         srcState.setDefinition(newDefinition);
 
-        // store states
-        store(srcState);
-        if (renameOnly) {
-            store(srcParent);
-        } else {
-            store(srcParent);
-            store(destParent);
-        }
-
         // remember operation
         transientStateMgr.addOperation(operation);
     }
@@ -1037,7 +1020,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         boolean anyRemoved;
 
         QName[] mixinNames = operation.getMixinNames();
-        NodeState nState = create(getNodeState(operation.getNodeId()));
+        NodeState nState = getNodeState(operation.getNodeId());
 
         // mixin-names to be execute on the nodestate (and corresponding property state)
         if (mixinNames != null && mixinNames.length > 0) {
@@ -1082,9 +1065,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                     // should not occur, since existance has been asserted before
                     throw new RepositoryException(e);
                 }
-            } else {
-                // alternative: make sure changes on nodeState are reflected in state manager.
-                store(nState);
             }
         }
 
@@ -1161,8 +1141,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @inheritDoc
      */
     public void visit(ReorderNodes operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        // make sure the parent state is modifiable
-        NodeState parent = create(getNodeState(operation.getParentId()));
+        NodeState parent = getNodeState(operation.getParentId());
 
         NodeId srcId = operation.getInsertNodeId();
         NodeId beforeId = operation.getBeforeNodeId();
@@ -1216,9 +1195,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
 
         // modify the the parent node state ...
+        // TODO: do not set whole list but rather implement a proper reorder on NodeState!
+        // TODO: then remove NodeState.setChildNodeEntries()
         parent.setChildNodeEntries(list);
-        // ... and mark it as modified on the stateMgr.
-        store(parent);
 
         // remember the operation
         transientStateMgr.addOperation(operation);
@@ -1295,23 +1274,14 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // given property definition.
         validator.validate(propertyType, values, pDef);
 
-        // assert transient parent state
-        NodeState parentState = create(parent);
         // create property state
-        PropertyState propState = createNew(propertyName, parentState);
+        PropertyState propState = transientStateMgr.createPropertyState(parent, propertyName);
         propState.setDefinition(pDef);
 
         // NOTE: callers must make sure, the property type is not 'undefined'
         propState.setType(propertyType);
         propState.setMultiValued(pDef.isMultiple());
         propState.setValues(values);
-
-        // now add new property entry to parent
-        parentState.addPropertyName(propertyName);
-        // store parent
-        store(parentState);
-        // store property
-        store(propState);
     }
 
     private void addNodeState(NodeState parent, QName nodeName, QName nodeTypeName, String uuid, QNodeDefinition definition, int options) throws RepositoryException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchNodeTypeException, ItemExistsException, VersionException {
@@ -1338,15 +1308,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             }
         }
 
-        // assert parent state is transient
-        NodeState parentState = create(parent);
-        // ev. create new id
-        NodeId newId = (uuid == null) ? idFactory.createNodeId(UUID.randomUUID().toString()) : idFactory.createNodeId(uuid);
-        NodeState nodeState = createNew(newId, nodeTypeName, parentState);
+        NodeState nodeState = transientStateMgr.createNodeState(nodeName, uuid, nodeTypeName, parent);
         nodeState.setDefinition(definition);
-
-        // now add new child node entry to parent
-        parentState.addChildNodeEntry(nodeName, newId);
 
         EffectiveNodeType ent = validator.getEffectiveNodeType(nodeState);
         // add 'auto-create' properties defined in node type
@@ -1367,11 +1330,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             int opt = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_COLLISION;
             addNodeState(nodeState, nd.getQName(), nd.getDefaultPrimaryType(), null, nd, opt);
         }
-
-        // store node
-        store(nodeState);
-        // store parent
-        store(parentState);
     }
 
     // TODO: TO-BE-FIXED. removal of same-name-sibling node must include reordering
@@ -1382,16 +1340,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // recursively remove the complete tree including the given node state.
         boolean success = false;
         try {
-            // assert parent is transient state
-            NodeState parent = create(itemState.getParent());
+            NodeState parent = itemState.getParent();
             if (itemState.isNode()) {
                 removeNodeState(parent, (NodeState)itemState);
             } else {
                 removePropertyState(parent, (PropertyState)itemState);
             }
-            // store parent
-            // DIFF JR: only store parent if removal is successful... check if correct.
-            store(parent);
             success = true;
         } finally {
             if (!success) {
@@ -1412,11 +1366,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @param target
      */
     private void removeNodeState(NodeState parent, NodeState target) throws ItemNotFoundException, RepositoryException {
-        NodeState modifiableTarget = create(target);
+        // TODO: implement this functionality in NodeState. i.e. target.remove()
         // remove child node entry from parent
-        parent.removeChildNodeEntry(modifiableTarget.getNodeId());
+        parent.removeChildNodeEntry(target.getNodeId());
         // remove target
-        recursiveRemoveNodeState(modifiableTarget);
+        recursiveRemoveNodeState(target);
     }
 
     /**
@@ -1425,11 +1379,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @param target
      */
     private void removePropertyState(NodeState parent, PropertyState target) {
-        PropertyState modifiableTarget = create(target);
+        // TODO: implement this functionality in PropertyState. i.e. target.remove()
         // remove property entry
-        parent.removePropertyName(modifiableTarget.getQName());
+        parent.removePropertyName(target.getQName());
         // destroy property state
-        destroy(modifiableTarget);
+        destroy(target);
     }
 
     /**
@@ -1512,11 +1466,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // make sure property is valid according to its definition
         validator.validate(valueType, iva, propState.getDefinition());
 
-        // make sure the state is modifiable
-        PropertyState propertyState = create(propState);
-
         // free old values as necessary
-        QValue[] oldValues = propertyState.getValues();
+        QValue[] oldValues = propState.getValues();
         if (oldValues != null) {
             for (int i = 0; i < oldValues.length; i++) {
                 QValue old = oldValues[i];
@@ -1528,108 +1479,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             }
         }
 
-        propertyState.setValues(iva);
-        propertyState.setType(valueType);
-
-        // store property
-        store(propertyState);
-    }
-
-    /**
-     * Creates a {@link NodeState} instance representing new,
-     * i.e. not yet existing state. Call {@link #store}
-     * on the returned object to make it persistent.
-     *
-     * @param id           the id of the node
-     * @param nodeTypeName qualified node type name
-     * @param parent     parent node's id
-     * @return a node state
-     * @throws IllegalStateException if the manager is not in edit mode.
-     */
-    private NodeState createNew(NodeId id, QName nodeTypeName, NodeState parent)
-            throws IllegalStateException {
-        // DIFF JACKRABBIT: return workspaceItemStateMgr.createNew(id, nodeTypeName, parentId);
-        return transientStateMgr.createNodeState(id, nodeTypeName, parent);
-    }
-
-    /**
-     * Creates a modifiable {@link NodeState} instances representing an existing
-     * <code>state</code>. Call {@link #store(ItemState)} on the returned
-     * object to make it persistent.
-     * <p/>
-     * If <code>state</code> is a transient state, it is immediately returned.
-     * Otherwise, after a transient state has been created that overlays
-     * <code>state</code> {@link TransientItemStateListener} registered on
-     * <code>state</code> are notified about the overlay via the the callback
-     * {@link TransientItemStateListener#stateOverlaid(ItemState)}.
-     *
-     * @param state the node as retrieved with {@link #getItemState(ItemId)}
-     * @return a modifiable {@link NodeState}.
-     */
-    private NodeState create(NodeState state) {
-        if (state.isTransient()) {
-            // already transient state
-            return state;
-        }
-        NodeState transientState = transientStateMgr.createNodeState(state);
-        state.notifyStateOverlaid(transientState);
-        return transientState;
-    }
-
-    /**
-     * Creates a {@link PropertyState} instance representing new,
-     * i.e. not yet existing state. Call {@link #store}
-     * on the returned object to make it persistent.
-     *
-     * @param propName   qualified property name
-     * @param parent   parent node state
-     * @return a property state
-     */
-    private PropertyState createNew(QName propName, NodeState parent) {
-        // DIFF JACKRABBIT: return workspaceItemStateMgr.createNew(propName, parentId);
-        return transientStateMgr.createPropertyState(parent, propName);
-    }
-
-    /**
-     * Creates a modifiable {@link PropertyState} instances representing an existing
-     * <code>state</code>. Call {@link #store(ItemState)} on the returned
-     * object to make it persistent.
-     * <p/>
-     * If <code>state</code> is a transient state, it is immediately returned.
-     * Otherwise, after a transient state has been created that overlays
-     * <code>state</code> {@link TransientItemStateListener} registered on
-     * <code>state</code> are notified about the overlay via the the callback
-     * {@link TransientItemStateListener#stateOverlaid(ItemState)}.
-     *
-     * @param state the node as retrieved with {@link #getItemState(ItemId)}
-     * @return a modifiable {@link PropertyState}.
-     */
-    private PropertyState create(PropertyState state) {
-        if (state.isTransient()) {
-            // already transient state
-            return state;
-        }
-        PropertyState transientState = transientStateMgr.createPropertyState(state);
-        state.notifyStateOverlaid(transientState);
-        return transientState;
-    }
-
-    /**
-     * Store the given item state, which may be a new one previously created by
-     * calling <code>createNew</code> or a modified existing state.
-     *
-     * @param state item state that should be stored
-     */
-    private void store(ItemState state) throws IllegalStateException {
-        // DIFF JACKRABBIT: workspaceItemStateMgr.store(state);
-        if (state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED) {
-            transientStateMgr.modified(state);
-        } else if (state.getStatus() == ItemState.STATUS_NEW) {
-            transientStateMgr.added(state);
-        } else {
-            // todo throw InvalidItemStateException?
-            throw new IllegalStateException("invalid state: " + state.getStatus());
-        }
+        propState.setValues(iva);
+        propState.setType(valueType);
     }
 
     /**

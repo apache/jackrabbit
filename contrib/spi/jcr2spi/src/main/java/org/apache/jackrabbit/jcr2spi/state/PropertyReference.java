@@ -36,11 +36,24 @@ class PropertyReference extends ChildItemReference implements ChildPropertyEntry
      * @param parent    the parent <code>NodeState</code> where the property
      *                  belongs to.
      * @param name      the name of the property.
-     * @param isf       the item state factory to create the node state.
+     * @param isf       the item state factory to create the property state.
      * @param idFactory the id factory to create new ids.
      */
     public PropertyReference(NodeState parent, QName name, ItemStateFactory isf, IdFactory idFactory) {
         super(parent, name, isf);
+        this.idFactory = idFactory;
+    }
+
+    /**
+     * Creates a new <code>PropertyReference</code> for an property state that
+     * already exists.
+     *
+     * @param propState the property state.
+     * @param isf       the item state factory to re-create the property state.
+     * @param idFactory the id factory to create new ids.
+     */
+    public PropertyReference(PropertyState propState, ItemStateFactory isf, IdFactory idFactory) {
+        super(propState.getParent(), propState, propState.getQName(), isf);
         this.idFactory = idFactory;
     }
 

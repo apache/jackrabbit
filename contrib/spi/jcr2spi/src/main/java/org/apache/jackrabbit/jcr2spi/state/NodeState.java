@@ -29,6 +29,7 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import javax.jcr.ItemExistsException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,6 +58,7 @@ public class NodeState extends ItemState {
     private QName[] mixinTypeNames = new QName[0];
 
     /**
+     * TODO: id is not stable unless sole uuid.
      * The id of this node state.
      */
     private NodeId id;
@@ -399,6 +401,31 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * TODO: move this method to a node state implementation which contains all transient related methods?
+     *
+     * Adds a child node state to this node state.
+     *
+     * @param child the node state to add.
+     * @param uuid  the uuid of the child node state or <code>null</code> if
+     *              <code>child</code> cannot be identified with a uuid.
+     * @throws IllegalArgumentException if <code>this</code> is not the parent
+     *                                  of <code>child</code>.
+     */
+    synchronized void addChildNodeState(NodeState child, String uuid) {
+        if (child.getParent() != this) {
+            throw new IllegalArgumentException("This NodeState is not the parent of child");
+        }
+        ChildNodeEntry cne;
+        if (uuid != null) {
+            cne = new UUIDReference(child, isf);
+        } else {
+            cne = new PathElementReference(child, isf, idFactory);
+        }
+        childNodeEntries.add(cne);
+        markModified();
+    }
+
+    /**
      * Renames a new <code>ChildNodeEntry</code>.
      *
      * @param oldName <code>QName</code> object specifying the entry's old name
@@ -495,12 +522,36 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Adds a property name entry.
+     * Adds a property name entry. This method will not create a property!
      *
      * @param propName <code>QName</code> object specifying the property name
      */
     public synchronized void addPropertyName(QName propName) {
         properties.put(propName, new PropertyReference(this, propName, isf, idFactory));
+    }
+
+    /**
+     * TODO: move this method to a node state implementation which contains all transient related methods?
+     *
+     * Adds a property state to this node state.
+     *
+     * @param propState the property state to add.
+     * @throws ItemExistsException      if <code>this</code> node state already
+     *                                  contains a property state with the same
+     *                                  name as <code>propState</code>.
+     * @throws IllegalArgumentException if <code>this</code> is not the parent
+     *                                  of <code>propState</code>.
+     */
+    synchronized void addPropertyState(PropertyState propState) throws ItemExistsException {
+        if (propState.getParent() != this) {
+            throw new IllegalArgumentException("This NodeState is not the parent of propState");
+        }
+        QName propertyName = propState.getQName();
+        if (properties.containsKey(propertyName)) {
+            throw new ItemExistsException(propertyName.toString());
+        }
+        properties.put(propertyName, new PropertyReference(propState, isf, idFactory));
+        markModified();
     }
 
     /**
@@ -868,6 +919,7 @@ public class NodeState extends ItemState {
      */
     private class ChildNodeEntries implements List, Cloneable {
 
+        // TODO: turn this into a linked set. NodeId cannot be use as key!
         // insertion-ordered map of entries (key=NodeId, value=entry)
         private LinkedMap entries;
         // map used for lookup by name
@@ -946,6 +998,31 @@ public class NodeState extends ItemState {
             entries.put(id, entry);
 
             return entry;
+        }
+
+        void add(ChildNodeEntry cne) {
+            QName nodeName = cne.getName();
+            List siblings = null;
+            Object obj = nameMap.get(nodeName);
+            if (obj != null) {
+                if (obj instanceof ArrayList) {
+                    // map entry is a list of siblings
+                    siblings = (ArrayList) obj;
+                } else {
+                    // map entry is a single child node entry,
+                    // convert to siblings list
+                    siblings = new ArrayList();
+                    siblings.add(obj);
+                    nameMap.put(nodeName, siblings);
+                }
+            }
+
+            if (siblings != null) {
+                siblings.add(cne);
+            } else {
+                nameMap.put(nodeName, cne);
+            }
+            entries.put(cne.getId(), cne);
         }
 
         void addAll(List entriesList) {
