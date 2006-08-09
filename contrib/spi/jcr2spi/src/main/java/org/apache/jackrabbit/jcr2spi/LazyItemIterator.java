@@ -67,11 +67,11 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
      * Creates a new <code>LazyItemIterator</code> instance.
      *
      * @param itemMgr item manager
-     * @param stateList Collection of item states
+     * @param itemStates Collection of item states
      */
-    public LazyItemIterator(ItemManager itemMgr, Collection stateList) {
+    public LazyItemIterator(ItemManager itemMgr, Collection itemStates) {
         this.itemMgr = itemMgr;
-        this.stateList = new ArrayList(stateList);
+        this.stateList = new ArrayList(itemStates);
         // prefetch first item
         pos = 0;
         prefetchNext();

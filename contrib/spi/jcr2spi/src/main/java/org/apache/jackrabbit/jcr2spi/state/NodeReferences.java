@@ -18,7 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.spi.NodeId;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * <code>NodeReferences</code>...
@@ -42,7 +42,8 @@ public interface NodeReferences {
     public boolean hasReferences();
 
     /**
-     * @return the list of references
+     * @return the collection of states referring to the node identified by this
+     * <code>NodeReference</code>.
      */
-    public List getReferences();
+    public Collection getReferences();
 }

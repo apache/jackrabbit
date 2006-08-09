@@ -92,6 +92,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * <code>NodeImpl</code>...
@@ -561,9 +562,9 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             if (itemStateMgr.hasNodeReferences(getNodeId())) {
                 NodeReferences refs = itemStateMgr.getNodeReferences(getNodeId());
-                // refs.getReferences() returns a list of PropertyId's
-                List idList = refs.getReferences();
-                return new LazyItemIterator(itemMgr, idList);
+                // refs.getReferences() returns a list of Property states
+                Collection refStates = refs.getReferences();
+                return new LazyItemIterator(itemMgr, refStates);
             } else {
                 // there are no references, return empty iterator
                 return IteratorHelper.EMPTY;
@@ -871,11 +872,26 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure the workspace exists and is accessible for this session.
         session.checkAccessibleWorkspace(srcWorkspace);
 
+        // TODO: improve... (and review return value of VM.merge)
         Collection failedIds = session.getVersionManager().merge(getNodeId(), srcWorkspace, bestEffort);
         if (failedIds.isEmpty()) {
             return IteratorHelper.EMPTY;
         } else {
-            return new LazyItemIterator(itemMgr, failedIds);
+            List failedStates = new ArrayList();
+            Iterator it = failedIds.iterator();
+            while (it.hasNext()) {
+                try {
+                    ItemState state = session.getItemStateManager().getItemState((NodeId) it.next());
+                    if (state.isNode()) {
+                        failedStates.add(state);
+                    } else {
+                        throw new RepositoryException("Unexpected error: NodeState expected.");
+                    }
+                } catch (ItemStateException e) {
+                    throw new RepositoryException("Unexpected error", e);
+                }
+            }
+            return new LazyItemIterator(itemMgr, failedStates);
         }
     }
 

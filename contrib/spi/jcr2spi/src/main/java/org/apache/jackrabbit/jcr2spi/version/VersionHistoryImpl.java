@@ -126,16 +126,20 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public VersionIterator getAllVersions() throws RepositoryException {
         Iterator childIter = vhState.getChildNodeEntries().iterator();
-        Set versionIds = new HashSet();
+        Set versionStates = new HashSet();
 
         // all child-nodes except from jcr:versionLabels point to Versions.
         while (childIter.hasNext()) {
             ChildNodeEntry entry = (ChildNodeEntry) childIter.next();
             if (!QName.JCR_VERSIONLABELS.equals(entry.getName())) {
-                versionIds.add(entry.getId());
+                try {
+                    versionStates.add(entry.getNodeState());
+                } catch (ItemStateException e) {
+                    throw new RepositoryException(e);
+                }
             }
         }
-        return new LazyItemIterator(itemMgr, versionIds);
+        return new LazyItemIterator(itemMgr, versionStates);
     }
 
     /**
