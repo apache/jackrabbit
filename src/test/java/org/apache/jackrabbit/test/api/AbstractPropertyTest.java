@@ -57,6 +57,7 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
 
         prop = PropertyUtil.searchProp(session, session.getRootNode().getNode(testPath), getPropertyType());
         if (prop == null) {
+            cleanUp();
             String msg = "Workspace does not contain a node with a " +
                     PropertyType.nameFromValue(getPropertyType()) + " property.";
             throw new NotExecutableException(msg);
@@ -64,19 +65,26 @@ abstract class AbstractPropertyTest extends AbstractJCRTest {
         multiple = prop.getDefinition().isMultiple();
         Value val = PropertyUtil.getValue(prop);
         if (val == null) {
+            cleanUp();
             String msg = PropertyType.nameFromValue(getPropertyType()) +
                     " property does not contain a value";
             throw new NotExecutableException(msg);
         }
     }
 
+    protected void cleanUp() throws Exception {
+        if (session != null) {
+            session.logout();
+        }
+        super.cleanUp();
+    }
+    
+    
     /**
      * Releases the session aquired in {@link #setUp()}.
      */
     protected void tearDown() throws Exception {
-        if (session != null) {
-            session.logout();
-        }
+        cleanUp();
         super.tearDown();
     }
 }
