@@ -65,7 +65,7 @@ public interface EffectiveNodeType {
      * @return
      * @throws NoSuchNodeTypeException
      * @throws ConstraintViolationException if no applicable child node definition
-     *                                      could be found
+     * could be found
      */
     public QNodeDefinition getApplicableNodeDefinition(QName name, QName nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException;

@@ -862,14 +862,6 @@ class ReferenceConstraint extends ValueConstraint {
         switch (value.getType()) {
             case PropertyType.REFERENCE:
                 // @todo check REFERENCE value constraint (requires a session)
-                /*
-                UUID targetUUID = (UUID) value.internalValue();
-                NodeImpl targetNode = (NodeImpl) session.getNodeByUUID(targetUUID.toString());
-                if (!targetNode.isNodeType(ntName)) {
-                    throw new ConstraintViolationException("the node with uuid "
-                            + targetUUID + " does not satisfy the constraint '" + definition + "'");
-                }
-                */
                 log.warn("validation of REFERENCE constraint is not yet implemented");
                 return;
 
