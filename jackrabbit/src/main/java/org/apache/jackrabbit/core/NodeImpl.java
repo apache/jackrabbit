@@ -4032,12 +4032,29 @@ public class NodeImpl extends ItemImpl implements Node {
         synchronized (lockMgr) {
             Lock lock = lockMgr.lock(this, isDeep, isSessionScoped);
 
-            // add properties to content
-            internalSetProperty(QName.JCR_LOCKOWNER,
-                    InternalValue.create(getSession().getUserID()));
-            internalSetProperty(QName.JCR_LOCKISDEEP,
-                    InternalValue.create(isDeep));
-            save();
+            boolean succeeded = false;
+
+            try {
+                // add properties to content
+                internalSetProperty(QName.JCR_LOCKOWNER,
+                        InternalValue.create(getSession().getUserID()));
+                internalSetProperty(QName.JCR_LOCKISDEEP,
+                        InternalValue.create(isDeep));
+                save();
+                succeeded = true;
+            } finally {
+                if (!succeeded) {
+                    // failed to set lock meta-data content, cleanup
+                    try {
+                        lockMgr.unlock(this);
+                        refresh(false);
+                    } catch (RepositoryException re) {
+                        // cleanup failed
+                        log.error("error while cleaning up after failed lock attempt", re);
+                    }
+                }
+            }
+
             return lock;
         }
     }
