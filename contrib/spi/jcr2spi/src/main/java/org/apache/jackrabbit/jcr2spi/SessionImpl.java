@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionManager;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.security.SecurityConstants;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
@@ -43,6 +43,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
@@ -256,10 +258,20 @@ public class SessionImpl implements Session, ManagerProvider {
      */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
         // sanity check performed by getNodeById
-        NodeImpl node = getNodeById(getIdFactory().createNodeId(uuid));
-        if (node.isNodeType(QName.MIX_REFERENCEABLE)) {
+        Node node = getNodeById(getIdFactory().createNodeId(uuid));
+        if (node instanceof NodeImpl && ((NodeImpl)node).isNodeType(QName.MIX_REFERENCEABLE)) {
             return node;
         } else {
+            // fall back
+            try {
+                String mixReferenceable = NameFormat.format(QName.MIX_REFERENCEABLE, getNamespaceResolver());
+                if (node.isNodeType(mixReferenceable)) {
+                    return node;
+                }
+            } catch (NoPrefixDeclaredException e) {
+                // should not occur.
+                throw new RepositoryException(e);
+            }
             // there is a node with that uuid but the node does not expose it
             throw new ItemNotFoundException(uuid);
         }
@@ -274,12 +286,18 @@ public class SessionImpl implements Session, ManagerProvider {
      * <code>Session</code> does not have permission to access the node.
      * @throws RepositoryException
      */
-    private NodeImpl getNodeById(NodeId id) throws ItemNotFoundException, RepositoryException {
+    private Node getNodeById(NodeId id) throws ItemNotFoundException, RepositoryException {
         // check sanity of this session
         checkIsAlive();
         try {
             ItemState state = getItemStateManager().getItemState(id);
-            return (NodeImpl) getItemManager().getItem(state);
+            Item item = getItemManager().getItem(state);
+            if (item.isNode()) {
+                return (Node) item;
+            } else {
+                log.error("NodeId '" + id + " does not point to a Node");
+                throw new ItemNotFoundException(id.toString());
+            }
         } catch (AccessDeniedException ade) {
             throw new ItemNotFoundException(id.toString());
         } catch (NoSuchItemStateException e) {
@@ -757,8 +775,8 @@ public class SessionImpl implements Session, ManagerProvider {
         return ntManager;
     }
 
-    public ItemDefinitionManager getItemDefinitionManager() {
-        return ntManager;
+    public NodeTypeRegistry getNodeTypeRegistry() {
+        return workspace.getNodeTypeRegistry();
     }
 
     //--------------------------------------------------------------------------

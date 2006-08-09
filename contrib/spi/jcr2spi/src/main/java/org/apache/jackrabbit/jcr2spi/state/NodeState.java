@@ -26,9 +26,13 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,7 +72,7 @@ public class NodeState extends ItemState {
      * instance represents the root node.
      */
     private NodeState parent;
-    
+
     /**
      * this node's definition
      */
@@ -152,22 +156,24 @@ public class NodeState extends ItemState {
             parent = nodeState.parent; // TODO: parent from wrong ism layer
             nodeTypeName = nodeState.nodeTypeName;
             mixinTypeNames = nodeState.mixinTypeNames;
-            def = nodeState.getDefinition();
+            def = nodeState.def;
             // re-create property references
             properties.clear(); // TODO: any more cleanup work to do? try some kind of merging?
-            for (Iterator it = nodeState.getPropertyNames().iterator(); it.hasNext(); ) {
+            Iterator it = nodeState.getPropertyNames().iterator();
+            while (it.hasNext()) {
                 addPropertyName((QName) it.next());
             }
             // re-create child node entries
             childNodeEntries.clear(); // TODO: any mre cleanup work to do? try some kind of merging?
-            for (Iterator it = nodeState.getChildNodeEntries().iterator(); it.hasNext(); ) {
+            it = nodeState.getChildNodeEntries().iterator();
+            while (it.hasNext()) {
                 ChildNodeEntry cne = (ChildNodeEntry) it.next();
                 childNodeEntries.add(cne.getName(), cne.getId());
             }
         }
     }
 
-    //-----------------------------------------------------< public methods >---
+    //----------------------< public READ methods and package private WRITE >---
     /**
      * Determines if this item state represents a node.
      *
@@ -186,6 +192,18 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * Sets the the parent <code>NodeState</code>.
+     *
+     * @param parent the parent <code>NodeState</code> or <code>null</code>
+     * if either this node state should represent the root node or this node
+     * state should be 'free floating', i.e. detached from the repository's
+     * hierarchy.
+     */
+    void setParent(NodeState parent) {
+        this.parent = parent;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public ItemId getId() {
@@ -201,24 +219,22 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Sets the Id of the parent <code>NodeState</code>.
-     *
-     * @param parent the parent <code>NodeState</code> or <code>null</code>
-     * if either this node state should represent the root node or this node
-     * state should be 'free floating', i.e. detached from the repository's
-     * hierarchy.
-     */
-    public void setParent(NodeState parent) {
-        this.parent = parent;
-    }
-
-    /**
      * Returns the name of this node's node type.
      *
      * @return the name of this node's node type.
      */
     public QName getNodeTypeName() {
         return nodeTypeName;
+    }
+
+    /**
+     * Set the node type name. Needed for deserialization and should therefore
+     * not change the internal status.
+     *
+     * @param nodeTypeName node type name
+     */
+    synchronized void setNodeTypeName(QName nodeTypeName) {
+        this.nodeTypeName = nodeTypeName;
     }
 
     /**
@@ -235,7 +251,7 @@ public class NodeState extends ItemState {
      *
      * @param mixinTypeNames set of names of mixin types
      */
-    public synchronized void setMixinTypeNames(QName[] mixinTypeNames) {
+    synchronized void setMixinTypeNames(QName[] mixinTypeNames) {
         if (mixinTypeNames != null) {
             this.mixinTypeNames = mixinTypeNames;
         } else {
@@ -259,11 +275,48 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns the id of the definition applicable to this node state.
+     * Returns the {@link QNodeDefinition definition} defined for this
+     * node state or <code>null</code> if the definition has not been
+     * set before (i.e. the corresponding item has not been accessed before).
      *
-     * @return the id of the definition
+     * @return definition of this state
+     * @see #getDefinition(NodeTypeRegistry) for the corresponding method
+     * that never returns <code>null</code>.
      */
     public QNodeDefinition getDefinition() {
+        return def;
+    }
+
+    /**
+     * Returns the definition applicable to this node state. Since the definition
+     * is not defined upon state creation this state may have to retrieve
+     * the definition from the given <code>NodeTypeRegistry</code> first.
+     *
+     * @param ntRegistry
+     * @return the definition of this state
+     * @see #getDefinition()
+     */
+    public QNodeDefinition getDefinition(NodeTypeRegistry ntRegistry)
+        throws RepositoryException {
+        // make sure the state has the definition set now
+        if (def == null) {
+            NodeState parentState = getParent();
+            try {
+                if (parentState == null) {
+                    // special case for root state
+                    def = ntRegistry.getRootNodeDef();
+                } else {
+                    ChildNodeEntry cne = parentState.getChildNodeEntry(getNodeId());
+                    EffectiveNodeType ent = ntRegistry.getEffectiveNodeType(parentState.getNodeTypeNames());
+                    setDefinition(ent.getApplicableNodeDefinition(cne.getName(), getNodeTypeName()));
+                }
+            } catch (NodeTypeConflictException e) {
+                String msg = "internal error: failed to build effective node type.";
+                log.debug(msg);
+                throw new RepositoryException(msg, e);
+            }
+
+        }
         return def;
     }
 
@@ -272,7 +325,7 @@ public class NodeState extends ItemState {
      *
      * @param def the definition
      */
-    public void setDefinition(QNodeDefinition def) {
+    void setDefinition(QNodeDefinition def) {
         this.def = def;
     }
 
@@ -300,18 +353,6 @@ public class NodeState extends ItemState {
 
     /**
      * Determines if there is a <code>ChildNodeEntry</code> with the
-     * specified <code>NodeId</code>.
-     *
-     * @param id the id of the child node
-     * @return <code>true</code> if there is a <code>ChildNodeEntry</code> with
-     *         the specified <code>name</code>.
-     */
-    public synchronized boolean hasChildNodeEntry(NodeId id) {
-        return childNodeEntries.get(id) != null;
-    }
-
-    /**
-     * Determines if there is a <code>ChildNodeEntry</code> with the
      * specified <code>name</code> and <code>index</code>.
      *
      * @param name  <code>QName</code> object specifying a node name
@@ -321,18 +362,6 @@ public class NodeState extends ItemState {
      */
     public synchronized boolean hasChildNodeEntry(QName name, int index) {
         return childNodeEntries.get(name, index) != null;
-    }
-
-    /**
-     * Determines if there is a property entry with the specified
-     * <code>QName</code>.
-     *
-     * @param propName <code>QName</code> object specifying a property name
-     * @return <code>true</code> if there is a property entry with the specified
-     *         <code>QName</code>.
-     */
-    public synchronized boolean hasPropertyName(QName propName) {
-        return properties.containsKey(propName);
     }
 
     /**
@@ -363,19 +392,21 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns a list of <code>ChildNodeEntry</code> objects denoting the
-     * child nodes of this node.
+     * Returns a unmodifiable collection of <code>ChildNodeEntry</code> objects
+     * denoting the child nodes of this node.
      *
-     * @return list of <code>ChildNodeEntry</code> objects
+     * @return collection of <code>ChildNodeEntry</code> objects
      * @see #addChildNodeEntry
      * @see #removeChildNodeEntry
      */
-    public synchronized List getChildNodeEntries() {
-        return Collections.unmodifiableList(childNodeEntries);
+    public synchronized Collection getChildNodeEntries() {
+        // NOTE: List representation of 'ChildNodeEntries' is already unmodifiable
+        return childNodeEntries;
     }
 
     /**
-     * Returns a list of <code>ChildNodeEntry</code>s with the specified name.
+     * Returns a unmodifiable list of <code>ChildNodeEntry</code>s with the
+     * specified name.
      *
      * @param nodeName name of the child node entries that should be returned
      * @return list of <code>ChildNodeEntry</code> objects
@@ -383,7 +414,8 @@ public class NodeState extends ItemState {
      * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries(QName nodeName) {
-        return Collections.unmodifiableList(childNodeEntries.get(nodeName));
+        // NOTE: SubList retrieved from 'ChildNodeEntries' is already unmodifiable
+        return childNodeEntries.get(nodeName);
     }
 
     /**
@@ -393,7 +425,7 @@ public class NodeState extends ItemState {
      * @param id the id the new entry is refering to.
      * @return the newly added <code>ChildNodeEntry</code>
      */
-    public synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
+    synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
                                                          NodeId id) {
         ChildNodeEntry entry = childNodeEntries.add(nodeName, id);
         notifyNodeAdded(entry);
@@ -434,7 +466,7 @@ public class NodeState extends ItemState {
      * @return <code>true</code> if the entry was sucessfully renamed;
      *         otherwise <code>false</code>
      */
-    public synchronized boolean renameChildNodeEntry(QName oldName, int index,
+    synchronized boolean renameChildNodeEntry(QName oldName, int index,
                                                      QName newName) {
         ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
         if (oldEntry != null) {
@@ -454,7 +486,7 @@ public class NodeState extends ItemState {
      * @return <code>true</code> if the specified child node entry was found
      *         in the list of child node entries and could be removed.
      */
-    public synchronized boolean removeChildNodeEntry(QName nodeName, int index) {
+    synchronized boolean removeChildNodeEntry(QName nodeName, int index) {
         ChildNodeEntry entry = childNodeEntries.remove(nodeName, index);
         if (entry != null) {
             notifyNodeRemoved(entry);
@@ -469,7 +501,7 @@ public class NodeState extends ItemState {
      * @return <code>true</code> if the specified child node entry was found
      *         in the list of child node entries and could be removed.
      */
-    public synchronized boolean removeChildNodeEntry(NodeId id) {
+    synchronized boolean removeChildNodeEntry(NodeId id) {
         ChildNodeEntry entry = childNodeEntries.remove(id);
         if (entry != null) {
             notifyNodeRemoved(entry);
@@ -480,7 +512,7 @@ public class NodeState extends ItemState {
     /**
      * Removes all <code>ChildNodeEntry</code>s.
      */
-    public synchronized void removeAllChildNodeEntries() {
+    synchronized void removeAllChildNodeEntries() {
         childNodeEntries.removeAll();
     }
 
@@ -488,7 +520,7 @@ public class NodeState extends ItemState {
      * Sets the list of <code>ChildNodeEntry</code> objects denoting the
      * child nodes of this node.
      */
-    public synchronized void setChildNodeEntries(List nodeEntries) {
+    synchronized void setChildNodeEntries(List nodeEntries) {
         // re-create child node entries
         childNodeEntries.clear(); // TODO: any mre cleanup work to do? try some kind of merging?
         for (Iterator it = nodeEntries.iterator(); it.hasNext(); ) {
@@ -499,6 +531,18 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * Determines if there is a property entry with the specified
+     * <code>QName</code>.
+     *
+     * @param propName <code>QName</code> object specifying a property name
+     * @return <code>true</code> if there is a property entry with the specified
+     *         <code>QName</code>.
+     */
+    public synchronized boolean hasPropertyName(QName propName) {
+        return properties.containsKey(propName);
+    }
+
+    /**
      * Returns the names of this node's properties as a set of
      * <code>QNames</code> objects.
      *
@@ -506,7 +550,7 @@ public class NodeState extends ItemState {
      * @see #addPropertyName
      * @see #removePropertyName
      */
-    public synchronized Set getPropertyNames() {
+    public synchronized Collection getPropertyNames() {
         return Collections.unmodifiableSet(properties.keySet());
     }
 
@@ -526,7 +570,7 @@ public class NodeState extends ItemState {
      *
      * @param propName <code>QName</code> object specifying the property name
      */
-    public synchronized void addPropertyName(QName propName) {
+    synchronized void addPropertyName(QName propName) {
         properties.put(propName, new PropertyReference(this, propName, isf, idFactory));
     }
 
@@ -561,14 +605,14 @@ public class NodeState extends ItemState {
      * @return <code>true</code> if the specified property name was found
      *         in the list of property name entries and could be removed.
      */
-    public synchronized boolean removePropertyName(QName propName) {
+    synchronized boolean removePropertyName(QName propName) {
         return properties.remove(propName) != null;
     }
 
     /**
      * Removes all property name entries.
      */
-    public synchronized void removeAllPropertyNames() {
+    synchronized void removeAllPropertyNames() {
         properties.clear();
     }
 
@@ -576,21 +620,11 @@ public class NodeState extends ItemState {
      * Sets the set of <code>QName</code> objects denoting the
      * properties of this node.
      */
-    public synchronized void setPropertyNames(Set propNames) {
+    synchronized void setPropertyNames(Set propNames) {
         removeAllPropertyNames();
         for (Iterator it = propNames.iterator(); it.hasNext(); ) {
             addPropertyName((QName) it.next());
         }
-    }
-
-    /**
-     * Set the node type name. Needed for deserialization and should therefore
-     * not change the internal status.
-     *
-     * @param nodeTypeName node type name
-     */
-    public synchronized void setNodeTypeName(QName nodeTypeName) {
-        this.nodeTypeName = nodeTypeName;
     }
 
     /**
@@ -608,29 +642,7 @@ public class NodeState extends ItemState {
         if (propRef == null) {
             throw new NoSuchItemStateException(idFactory.createPropertyId(getNodeId(), propertyName).toString());
         }
-        return (PropertyState) propRef.resolve();
-    }
-
-    /**
-     * Returns the node state with the given relative path.
-     *
-     * @param relPath the relative path (actually PathElement) of the child node
-     *                state.
-     * @return the child node state
-     * @throws NoSuchItemStateException if there is no node state with the given
-     *                                  <code>relPath</code>.
-     * @throws ItemStateException       if an error occurs while retrieving the
-     *                                  node state.
-     */
-    public synchronized NodeState getNodeState(Path.PathElement relPath)
-            throws NoSuchItemStateException, ItemStateException {
-        ChildNodeEntry cne = childNodeEntries.get(relPath.getName(), relPath.getNormalizedIndex());
-        if (cne == null) {
-            Path p = Path.create(relPath.getName(), relPath.getIndex());
-            NodeId id = idFactory.createNodeId(getNodeId(), p);
-            throw new NoSuchItemStateException(id.toString());
-        }
-        return cne.getNodeState();
+        return propRef.getPropertyState();
     }
 
     //---------------------------------------------------------< diff methods >
@@ -809,7 +821,22 @@ public class NodeState extends ItemState {
         }
     }
 
-    //--------------------------------------------------< ItemState overrides >
+    /**
+     * TODO: find a better way to provide the index of a child node entry
+     * Returns the index of the given <code>ChildNodeEntry</code> and with
+     * <code>name</code>.
+     *
+     * @param name the name of the child node.
+     * @param cne  the <code>ChildNodeEntry</code> instance.
+     * @return the index of the child node entry or <code>0</code> if it is not
+     *         found in this <code>NodeState</code>.
+     */
+    int getChildNodeIndex(QName name, ChildNodeEntry cne) {
+        List sns = childNodeEntries.get(name);
+        return sns.indexOf(cne) + 1;
+    }
+
+    //---------------------------------------------------< Listener support >---
     /**
      * {@inheritDoc}
      * <p/>
@@ -846,22 +873,7 @@ public class NodeState extends ItemState {
         super.removeListener(listener);
     }
 
-    /**
-     * TODO: find a better way to provide the index of a child node entry
-     * Returns the index of the given <code>ChildNodeEntry</code> and with
-     * <code>name</code>.
-     *
-     * @param name the name of the child node.
-     * @param cne  the <code>ChildNodeEntry</code> instance.
-     * @return the index of the child node entry or <code>0</code> if it is not
-     *         found in this <code>NodeState</code>.
-     */
-    int getChildNodeIndex(QName name, ChildNodeEntry cne) {
-        List sns = childNodeEntries.get(name);
-        return sns.indexOf(cne) + 1;
-    }
-
-    //-------------------------------------------------< misc. helper methods >
+    //----------------------------------------------< Listener notification >---
     /**
      * Notify the listeners that a child node entry has been added
      */
@@ -908,7 +920,7 @@ public class NodeState extends ItemState {
         }
     }
 
-    //--------------------------------------------------------< inner classes >
+    //------------------------------------------------------< inner classes >---
     /**
      * <code>ChildNodeEntries</code> represents an insertion-ordered
      * collection of <code>ChildNodeEntry</code>s that also maintains
@@ -1405,5 +1417,4 @@ public class NodeState extends ItemState {
             }
         }
     }
-
 }

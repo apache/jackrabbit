@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.spi.ItemId;
-
 /**
  * The <code>ItemLifeCycleListener</code> interface allows an implementing
  * object to be informed about changes on an <code>Item</code> instance.
@@ -29,10 +27,9 @@ public interface ItemLifeCycleListener {
     /**
      * Called when an <code>Item</code> instance has been created.
      *
-     * @param id
      * @param item the instance which has been created
      */
-    public void itemCreated(ItemId id, ItemImpl item);
+    public void itemCreated(ItemImpl item);
 
     /**
      * Called when an <code>ItemImpl</code> instance has been invalidated
@@ -43,10 +40,9 @@ public interface ItemLifeCycleListener {
      * methods will throw an <code>InvalidItemStateException</code> when called
      * on an 'invalidated' item.
      *
-     * @param id   the id of the instance that has been discarded
      * @param item the instance which has been discarded
      */
-    void itemInvalidated(ItemId id, ItemImpl item);
+    void itemInvalidated(ItemImpl item);
 
     /**
      * Called when an <code>ItemImpl</code> instance has been destroyed
@@ -57,8 +53,7 @@ public interface ItemLifeCycleListener {
      * methods will throw an <code>InvalidItemStateException</code> when called
      * on a 'destroyed' item.
      *
-     * @param id   the id of the instance that has been destroyed
      * @param item the instance which has been destroyed
      */
-    void itemDestroyed(ItemId id, ItemImpl item);
+    void itemDestroyed(ItemImpl item);
 }

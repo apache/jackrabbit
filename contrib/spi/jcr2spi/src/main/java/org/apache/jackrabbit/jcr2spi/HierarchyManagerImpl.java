@@ -129,7 +129,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, NodeId)
      */
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                                         NodeId id) {
+                                               NodeId id) {
         return parent.getChildNodeEntry(id);
     }
 
@@ -149,8 +149,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, QName, int)
      */
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                                         QName name,
-                                                         int index) {
+                                               QName name,
+                                               int index) {
         return parent.getChildNodeEntry(name, index);
     }
 

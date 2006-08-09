@@ -55,6 +55,7 @@ import java.util.Iterator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * <code>VersionHistoryImpl</code>...
@@ -104,8 +105,14 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public Version getRootVersion() throws RepositoryException {
         try {
-            NodeState vState = vhState.getChildNodeEntry(QName.JCR_ROOTVERSION, Path.INDEX_DEFAULT).getNodeState();
-            return (Version) itemMgr.getItem(vState);
+            if (vhState.hasChildNodeEntry(QName.JCR_ROOTVERSION)) {
+                NodeState vState = vhState.getChildNodeEntry(QName.JCR_ROOTVERSION, Path.INDEX_DEFAULT).getNodeState();
+                return (Version) itemMgr.getItem(vState);
+            } else {
+                String msg = "Unexpected error: VersionHistory state does not contain a root version child node entry.";
+                log.error(msg);
+                throw new RepositoryException(msg);
+            }
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
@@ -323,7 +330,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @return
      */
     private QName[] getQLabels() {
-        Set labelQNames = labelNodeState.getPropertyNames();
+        Collection labelQNames = labelNodeState.getPropertyNames();
         return (QName[]) labelQNames.toArray(new QName[labelQNames.size()]);
     }
 

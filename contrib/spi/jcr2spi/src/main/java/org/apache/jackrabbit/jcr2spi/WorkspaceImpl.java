@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
@@ -93,14 +92,11 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     private LockManager lockManager;
     private VersionManager versionManager;
 
-    private final ItemStateValidator validator;
-
     public WorkspaceImpl(String name, SessionImpl session, RepositoryService service, SessionInfo sessionInfo) throws RepositoryException {
         this.name = name;
         this.session = session;
 
         wspManager = this.createManager(service, sessionInfo);
-        validator = new ItemStateValidator(getNodeTypeRegistry(), this);
     }
 
     //----------------------------------------------------------< Workspace >---

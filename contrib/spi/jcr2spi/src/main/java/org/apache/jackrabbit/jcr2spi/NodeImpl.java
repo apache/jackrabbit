@@ -206,8 +206,13 @@ public class NodeImpl extends ItemImpl implements Node {
                 String msg = "Cannot add a node to property " + parentPath;
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
+            } else if (!(parent instanceof NodeImpl)) {
+                String msg = "Incompatible Node object: " + parent + "(" + safeGetJCRPath() + ")";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            } else {
+                parentNode = (NodeImpl) parent;
             }
-            parentNode = (NodeImpl) parent;
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(relPath);
         }
@@ -564,7 +569,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 return IteratorHelper.EMPTY;
             }
         } catch (ItemStateException e) {
-            String msg = "Unable to retrieve REFERENCE properties that refer to " + getId();
+            String msg = "Unable to retrieve REFERENCE properties that refer to " + getPath();
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
@@ -888,7 +893,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
             // search nearest ancestor that is referenceable
             NodeImpl referenceableNode = this;
-            while (referenceableNode.getDepth() != Path.ROOT_DEPTH && !referenceableNode.isNodeType(QName.MIX_REFERENCEABLE)) {
+            while (referenceableNode.getDepth() != Path.ROOT_DEPTH
+                && !referenceableNode.isNodeType(QName.MIX_REFERENCEABLE)) {
                 referenceableNode = (NodeImpl) referenceableNode.getParent();
             }
 
@@ -994,7 +1000,8 @@ public class NodeImpl extends ItemImpl implements Node {
                 if (parent.isNode()) {
                     try {
                         Path relQPath = parentPath.computeRelativePath(nPath);
-                        nId = session.getIdFactory().createNodeId(((NodeImpl)parent).getNodeId(), relQPath);
+                        NodeId parentId = ((NodeImpl)parent).getNodeId();
+                        nId = session.getIdFactory().createNodeId(parentId, relQPath);
                     } catch (MalformedPathException e) {
                         // should not occur
                         throw new RepositoryException(e);

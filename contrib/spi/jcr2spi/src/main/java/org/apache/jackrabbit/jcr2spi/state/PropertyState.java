@@ -18,16 +18,25 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import javax.jcr.PropertyType;
 import javax.jcr.ValueFormatException;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
  */
 public class PropertyState extends ItemState {
+
+    private static Logger log = LoggerFactory.getLogger(PropertyState.class);
 
     /**
      * the id of this property state
@@ -96,13 +105,13 @@ public class PropertyState extends ItemState {
             id = propState.id;
             parent = propState.parent;
             type = propState.type;
-            def = propState.getDefinition();
+            def = propState.def;
             values = propState.values;
             multiValued = propState.multiValued;
         }
     }
 
-    //-------------------------------------------------------< public methods >
+    //----------------------< public READ methods and package private WRITE >---
     /**
      * Determines if this item state represents a node.
      *
@@ -146,25 +155,6 @@ public class PropertyState extends ItemState {
     }
 
     /**
-     * Sets the type of the property value(s)
-     *
-     * @param type the type to be set
-     * @see PropertyType
-     */
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    /**
-     * Sets the flag indicating whether this property is multi-valued.
-     *
-     * @param multiValued flag indicating whether this property is multi-valued
-     */
-    public void setMultiValued(boolean multiValued) {
-        this.multiValued = multiValued;
-    }
-
-    /**
      * Returns the type of the property value(s).
      *
      * @return the type of the property value(s).
@@ -178,6 +168,17 @@ public class PropertyState extends ItemState {
     }
 
     /**
+     * Sets the type of the property value(s)
+     *
+     * @param type the type to be set
+     * @see PropertyType
+     */
+    void setType(int type) {
+        this.type = type;
+    }
+
+
+    /**
      * Returns true if this property is multi-valued, otherwise false.
      *
      * @return true if this property is multi-valued, otherwise false.
@@ -187,11 +188,50 @@ public class PropertyState extends ItemState {
     }
 
     /**
-     * Returns the id of the definition applicable to this property state.
+     * Sets the flag indicating whether this property is multi-valued.
      *
-     * @return the id of the definition
+     * @param multiValued flag indicating whether this property is multi-valued
+     */
+    void setMultiValued(boolean multiValued) {
+        this.multiValued = multiValued;
+    }
+
+
+    /**
+     * Returns the {@link QPropertyDefinition definition} defined for this
+     * property state or <code>null</code> if the definition has not been
+     * set before (i.e. the corresponding item has not been accessed before).
+     *
+     * @return definition of this state
+     * @see #getDefinition(NodeTypeRegistry) for the corresponding method
+     * that never returns <code>null</code>.
      */
     public QPropertyDefinition getDefinition() {
+        return def;
+    }
+
+    /**
+     * Returns the definition applicable to this property state. Since the definition
+     * is not defined upon state creation this state may have to retrieve
+     * the definition from the given <code>NodeTypeRegistry</code> first.
+     *
+     * @param ntRegistry
+     * @return definition of this state
+     * @see #getDefinition()
+     */
+    public QPropertyDefinition getDefinition(NodeTypeRegistry ntRegistry)
+        throws RepositoryException {
+        if (def == null) {
+            try {
+                NodeState parentState = getParent();
+                EffectiveNodeType ent = ntRegistry.getEffectiveNodeType(parentState.getNodeTypeNames());
+                setDefinition(ent.getApplicablePropertyDefinition(getQName(), getType(), isMultiValued()));
+            } catch (NodeTypeConflictException e) {
+                String msg = "internal error: failed to build effective node type.";
+                log.debug(msg);
+                throw new RepositoryException(msg, e);
+            }
+        }
         return def;
     }
 
@@ -200,8 +240,17 @@ public class PropertyState extends ItemState {
      *
      * @param def the id of the definition
      */
-    public void setDefinition(QPropertyDefinition def) {
+    void setDefinition(QPropertyDefinition def) {
         this.def = def;
+    }
+
+    /**
+     * Returns the value(s) of this property.
+     *
+     * @return the value(s) of this property.
+     */
+    public QValue[] getValues() {
+        return values;
     }
 
     /**
@@ -209,7 +258,7 @@ public class PropertyState extends ItemState {
      *
      * @param values the new values
      */
-    public void setValues(QValue[] values) {
+    void setValues(QValue[] values) {
         internalSetValues(values);
         markModified();
     }
@@ -222,17 +271,8 @@ public class PropertyState extends ItemState {
      *
      * @param values the new values
      */
-    public void internalSetValues(QValue[] values) {
+    void internalSetValues(QValue[] values) {
         this.values = values;
-    }
-
-    /**
-     * Returns the value(s) of this property.
-     *
-     * @return the value(s) of this property.
-     */
-    public QValue[] getValues() {
-        return values;
     }
 
     /**

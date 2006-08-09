@@ -138,8 +138,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
         // check removed child node entries first
         Iterator iter = parent.getRemovedChildNodeEntries().iterator();
         while (iter.hasNext()) {
-            ChildNodeEntry entry =
-                    (ChildNodeEntry) iter.next();
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             if (entry.getId().equals(id)) {
                 return entry;
             }
