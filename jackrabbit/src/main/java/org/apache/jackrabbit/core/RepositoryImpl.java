@@ -1566,6 +1566,22 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * @throws RepositoryException if an error occured during the initialization
          */
         boolean initialize() throws RepositoryException {
+            // check initialize status
+            try {
+                initLock.readLock().acquire();
+            } catch (InterruptedException e) {
+                throw new RepositoryException("Unable to aquire read lock.", e);
+            }
+            try {
+                if (initialized) {
+                    // already initialized, we're done
+                    return false;
+                }
+            } finally {
+                initLock.readLock().release();
+            }
+
+            // workspace info was not initialized, now check again with write lock
             try {
                 initLock.writeLock().acquire();
             } catch (InterruptedException e) {
@@ -1573,7 +1589,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             }
             try {
                 if (initialized) {
-                    // already initialized, we're done
+                    // already initialized, some other thread was quicker, we're done
                     return false;
                 }
 
