@@ -94,7 +94,15 @@ public interface RepositoryService {
     public boolean isGranted(SessionInfo sessionInfo, ItemId itemId, String[] actions) throws RepositoryException;
 
     //------------------------------------------------------< Reading items >---
+
     /**
+     * The <code>NodeId</code> of the root node may basically have two
+     * characteristics. If the root node can be identified with a UUID the
+     * returned <code>NodeId</code> simply has a UUID part and the relative path
+     * part is <code>null</code>. If the root node cannot be identified with a
+     * UUID the UUID part is <code>null</code> and the relative path will be set
+     * to '.' (current element).
+     *
      * @param sessionInfo
      * @return
      * @throws RepositoryException
