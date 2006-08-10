@@ -352,7 +352,7 @@ public class TransientChangeLog extends ChangeLog
             id = idFactory.createNodeId(uuid);
         }
         NodeState nodeState = new NodeState(id, parent, null,
-                ItemState.STATUS_NEW, true, this);
+                ItemState.STATUS_NEW, true, this, idFactory);
         // get a notification when this item state is saved or invalidated
         nodeState.addListener(this);
         added(nodeState);
@@ -383,7 +383,7 @@ public class TransientChangeLog extends ChangeLog
         NodeId parentId = overlayedState.getParent().getNodeId();
         NodeState parentState = (NodeState) ism.getItemState(parentId);
         NodeState nodeState = new NodeState(overlayedState, parentState,
-                ItemState.STATUS_EXISTING, true, this);
+                ItemState.STATUS_EXISTING, true, this, idFactory);
         nodeState.addListener(this);
         return nodeState;
     }
@@ -397,7 +397,7 @@ public class TransientChangeLog extends ChangeLog
         // retrieve state to overlay
         NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
         NodeState nodeState = new NodeState(overlayedState, parentState,
-                ItemState.STATUS_EXISTING, true, this);
+                ItemState.STATUS_EXISTING, true, this, idFactory);
         nodeState.addListener(this);
         return nodeState;
     }

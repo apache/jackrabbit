@@ -117,13 +117,16 @@ public class NodeState extends ItemState {
      *                      not.
      * @param isf           the item state factory responsible for creating node
      *                      states.
+     * @param idFactory     the <code>IdFactory</code> to create new id
+     *                      instance.
      */
     public NodeState(NodeId id, NodeState parent, QName nodeTypeName,
-                     int initialStatus, boolean isTransient, ItemStateFactory isf) {
+                     int initialStatus, boolean isTransient,
+                     ItemStateFactory isf, IdFactory idFactory) {
         super(initialStatus, isTransient);
         this.id = id;
         this.parent = parent;
-        this.idFactory = parent.idFactory;
+        this.idFactory = idFactory;
         this.nodeTypeName = nodeTypeName;
         this.isf = isf;
     }
@@ -137,13 +140,16 @@ public class NodeState extends ItemState {
      * @param initialStatus  the initial status of the node state object
      * @param isTransient    flag indicating whether this state is transient or
      *                       not
+     * @param idFactory      the <code>IdFactory</code> to create new id
+     *                       instance.
      */
-    public NodeState(NodeState overlayedState, NodeState parent, int initialStatus,
-                     boolean isTransient, ItemStateFactory isf) {
+    public NodeState(NodeState overlayedState, NodeState parent,
+                     int initialStatus, boolean isTransient,
+                     ItemStateFactory isf, IdFactory idFactory) {
         super(overlayedState, initialStatus, isTransient);
         pull();
         this.parent = parent;
-        idFactory = parent.idFactory;
+        this.idFactory = idFactory;
         this.isf = isf;
     }
 
