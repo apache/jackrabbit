@@ -108,7 +108,8 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             // build the node state
             // NOTE: unable to retrieve definitionId -> needs to be retrieved
             // by the itemManager upon Node creation.
-            NodeState state = new NodeState(info.getId(), parent, ntName, ItemState.STATUS_EXISTING, false, this);
+            NodeState state = new NodeState(info.getId(), parent, ntName,
+                    ItemState.STATUS_EXISTING, false, this, service.getIdFactory());
             // set mixin nodetypes
             state.setMixinTypeNames(info.getMixins());
 
