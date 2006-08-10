@@ -192,12 +192,11 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
                                               NodeState parent)
             throws ItemStateException {
         try {
-            // TODO: pass parent in constructor of PropertyState
-
             // build the PropertyState
             // NOTE: unable to retrieve definitionId -> needs to be retrieved
             // by the itemManager upon Property creation.
-            PropertyState state = new PropertyState(info.getId(), parent, ItemState.STATUS_EXISTING, false);
+            PropertyState state = new PropertyState(info.getQName(), parent,
+                    ItemState.STATUS_EXISTING, false);
             state.setMultiValued(info.isMultiValued());
             state.setType(info.getType());
             QValue[] qValues;

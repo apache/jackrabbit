@@ -47,7 +47,6 @@ import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
 import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
