@@ -26,6 +26,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
@@ -563,6 +564,18 @@ public class NodeState extends ItemState {
      */
     public synchronized Collection getPropertyEntries() {
         return Collections.unmodifiableCollection(properties.values());
+    }
+
+    /**
+     * Returns the <code>PropertyId</code> for a property with
+     * <code>propertyName</code>. The property does not necessarily have to
+     * exist on <code>this</code> node state.
+     *
+     * @param propertyName the name of a property.
+     * @return the property id.
+     */
+    PropertyId getPropertyId(QName propertyName) {
+        return idFactory.createPropertyId(getNodeId(), propertyName);
     }
 
     /**

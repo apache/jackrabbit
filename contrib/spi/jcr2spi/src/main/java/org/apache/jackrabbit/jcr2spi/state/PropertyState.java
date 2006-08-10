@@ -39,9 +39,9 @@ public class PropertyState extends ItemState {
     private static Logger log = LoggerFactory.getLogger(PropertyState.class);
 
     /**
-     * the id of this property state
+     * The name of this property state.
      */
-    private PropertyId id;
+    private QName name;
 
     /**
      * The parent state
@@ -83,13 +83,14 @@ public class PropertyState extends ItemState {
     /**
      * Create a new <code>PropertyState</code>
      *
-     * @param id            id of the property
+     * @param name          the name of the property
      * @param initialStatus the initial status of the property state object
-     * @param isTransient   flag indicating whether this state is transient or not
+     * @param isTransient   flag indicating whether this state is transient or
+     *                      not
      */
-    public PropertyState(PropertyId id, NodeState parent, int initialStatus, boolean isTransient) {
+    public PropertyState(QName name, NodeState parent, int initialStatus, boolean isTransient) {
         super(initialStatus, isTransient);
-        this.id = id;
+        this.name = name;
         this.parent = parent;
         type = PropertyType.UNDEFINED;
         values = QValue.EMPTY_ARRAY;
@@ -102,7 +103,7 @@ public class PropertyState extends ItemState {
     protected synchronized void copy(ItemState state) {
         synchronized (state) {
             PropertyState propState = (PropertyState) state;
-            id = propState.id;
+            name = propState.name;
             parent = propState.parent;
             type = propState.type;
             def = propState.def;
@@ -126,7 +127,7 @@ public class PropertyState extends ItemState {
      * {@inheritDoc}
      */
     public ItemId getId() {
-        return id;
+        return getPropertyId();
     }
 
     /**
@@ -135,7 +136,7 @@ public class PropertyState extends ItemState {
      * @return the id of this property.
      */
     public PropertyId getPropertyId() {
-        return id;
+        return parent.getPropertyId(name);
     }
 
     /**
@@ -151,7 +152,7 @@ public class PropertyState extends ItemState {
      * @return the name of this property.
      */
     public QName getQName() {
-        return id.getQName();
+        return name;
     }
 
     /**

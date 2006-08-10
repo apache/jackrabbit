@@ -364,8 +364,7 @@ public class TransientChangeLog extends ChangeLog
      * @see TransientItemStateFactory#createNewPropertyState(QName, NodeState)
      */
     public PropertyState createNewPropertyState(QName name, NodeState parent) {
-        PropertyId id = idFactory.createPropertyId(parent.getNodeId(), name);
-        PropertyState propState = new PropertyState(id, parent,
+        PropertyState propState = new PropertyState(name, parent,
                 ItemState.STATUS_NEW, true);
         // get a notification when this item state is saved or invalidated
         propState.addListener(this);
