@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.query;
 // DIFF JR: this class uses a different package than the jackrabbit original
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
@@ -34,7 +35,7 @@ import javax.jcr.query.RowIterator;
 /**
  * Implements the <code>javax.jcr.query.QueryResult</code> interface.
  */
-public class QueryResultImpl implements QueryResult {
+class QueryResultImpl implements QueryResult {
 
     /**
      * The logger instance for this class
@@ -47,12 +48,17 @@ public class QueryResultImpl implements QueryResult {
     private final ItemManager itemMgr;
 
     /**
+     * The item state manager of the session executing the query
+     */
+    private final ItemStateManager itemStateMgr;
+
+    /**
      * The spi query result.
      */
     private final QueryInfo queryInfo;
 
     /**
-     * The namespace resolver of the session executing the query
+     * The namespace nsResolver of the session executing the query
      */
     private final NamespaceResolver nsResolver;
 
@@ -60,15 +66,16 @@ public class QueryResultImpl implements QueryResult {
      * Creates a new query result.
      *
      * @param itemMgr     the item manager of the session executing the query.
+     * @param itemStateMgr the item state manager of the session executing the query.
      * @param queryInfo   the spi query result.
-     * @param resolver    the namespace nsResolver of the session executing the query.
+     * @param nsResolver    the namespace nsResolver of the session executing the query.
      */
-    public QueryResultImpl(ItemManager itemMgr,
-                           QueryInfo queryInfo,
-                           NamespaceResolver resolver) {
+    QueryResultImpl(ItemManager itemMgr, ItemStateManager itemStateMgr,
+                    QueryInfo queryInfo, NamespaceResolver nsResolver) {
         this.itemMgr = itemMgr;
+        this.itemStateMgr = itemStateMgr;
         this.queryInfo = queryInfo;
-        this.nsResolver = resolver;
+        this.nsResolver = nsResolver;
     }
 
     /**
@@ -110,6 +117,6 @@ public class QueryResultImpl implements QueryResult {
      * @return a node iterator over the result nodes.
      */
     private ScoreNodeIterator getNodeIterator() throws RepositoryException {
-        return new NodeIteratorImpl(itemMgr, nsResolver, queryInfo);
+        return new NodeIteratorImpl(itemMgr, itemStateMgr, queryInfo);
     }
 }

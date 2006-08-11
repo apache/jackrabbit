@@ -26,7 +26,6 @@ import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -46,6 +45,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     // TODO: TO-BE-FIXED. With SPI_ItemId rootId must not be stored separately
     protected final NodeId rootNodeId;
+
     protected final ItemStateManager itemStateManager;
     // used for outputting user-friendly paths and names
     protected final NamespaceResolver nsResolver;
@@ -58,41 +58,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
         this.nsResolver = nsResolver;
     }
 
-    public NodeId getRootNodeId() {
-        return rootNodeId;
-    }
-
     //---------------------------------------------------------< overridables >
-    /**
-     * Return an item state, given its item id.
-     * <p/>
-     * Low-level hook provided for specialized derived classes.
-     *
-     * @param id item id
-     * @return item state
-     * @throws NoSuchItemStateException if the item does not exist
-     * @throws ItemStateException       if an error occurs
-     * @see ZombieHierarchyManager#getItemState(ItemId)
-     */
-    protected ItemState getItemState(ItemId id)
-            throws NoSuchItemStateException, ItemStateException {
-        return itemStateManager.getItemState(id);
-    }
-
-    /**
-     * Determines whether an item state for a given item id exists.
-     * <p/>
-     * Low-level hook provided for specialized derived classes.
-     *
-     * @param id item id
-     * @return <code>true</code> if an item state exists, otherwise
-     *         <code>false</code>
-     * @see ZombieHierarchyManager#hasItemState(ItemId)
-     */
-    protected boolean hasItemState(ItemId id) {
-        return itemStateManager.hasItemState(id);
-    }
-
+    // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
     /**
      * Returns the <code>parentUUID</code> of the given item.
      * <p/>
@@ -106,6 +73,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         return state.getParent().getNodeId();
     }
 
+    // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
     /**
      *
      * @param state
@@ -115,6 +83,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         return state.getParent();
     }
 
+    // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
     /**
      * Returns the <code>ChildNodeEntry</code> of <code>parent</code> with the
      * specified <code>uuid</code> or <code>null</code> if there's no such entry.
@@ -133,6 +102,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         return parent.getChildNodeEntry(id);
     }
 
+    // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
     /**
      * Returns the <code>ChildNodeEntry</code> of <code>parent</code> with the
      * specified <code>name</code> and <code>index</code> or <code>null</code>
@@ -221,7 +191,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     protected void buildPath(Path.PathBuilder builder, ItemState state)
             throws ItemStateException, RepositoryException {
-
         // shortcut
         if (state.getId().equals(rootNodeId)) {
             builder.addRoot();
@@ -313,31 +282,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * @see HierarchyManager#getQName(ItemState)
-     */
-    public QName getQName(ItemState itemState)
-            throws ItemNotFoundException, RepositoryException {
-        if (itemState.isNode()) {
-            NodeState parentState = itemState.getParent();
-            if (parentState == null) {
-                // shortcut. the given state represents the root or an orphaned node
-                return QName.ROOT;
-            }
-
-            NodeId nodeId = ((NodeState)itemState).getNodeId();
-            ChildNodeEntry entry = getChildNodeEntry(parentState, nodeId);
-            if (entry == null) {
-                String msg = "failed to resolve name of " + nodeId;
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            }
-            return entry.getName();
-        } else {
-            return ((PropertyState)itemState).getQName();
-        }
-    }
-
-    /**
      * @see HierarchyManager#getDepth(ItemState)
      */
     public int getDepth(ItemState itemState) throws ItemNotFoundException, RepositoryException {
@@ -352,38 +296,25 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * {@inheritDoc}
+     * @see HierarchyManager#getRelativeDepth(NodeState, ItemState)
      */
-    public int getRelativeDepth(NodeId ancestorId, ItemId descendantId)
+    public int getRelativeDepth(NodeState ancestor, ItemState descendant)
             throws ItemNotFoundException, RepositoryException {
-        if (ancestorId.equals(descendantId)) {
+        if (ancestor.equals(descendant)) {
             return 0;
         }
         int depth = 1;
-        try {
-            ItemState state = getItemState(descendantId);
-            NodeId parentId = getParentId(state);
-            while (parentId != null) {
-                if (parentId.equals(ancestorId)) {
-                    return depth;
-                }
-                depth++;
-                state = getItemState(parentId);
-                parentId = getParentId(state);
+        NodeState parent = descendant.getParent();
+        while (parent != null) {
+            if (parent.equals(ancestor)) {
+                return depth;
             }
-            // not an ancestor
-            return -1;
-        } catch (NoSuchItemStateException nsise) {
-            String msg = "failed to determine depth of " + descendantId
-                    + " relative to " + ancestorId;
-            log.debug(msg);
-            throw new ItemNotFoundException(msg, nsise);
-        } catch (ItemStateException ise) {
-            String msg = "failed to determine depth of " + descendantId
-                    + " relative to " + ancestorId;
-            log.debug(msg);
-            throw new RepositoryException(msg, ise);
+            depth++;
+            descendant = parent;
+            parent = descendant.getParent();
         }
+        // not an ancestor
+        return -1;
     }
 }
 

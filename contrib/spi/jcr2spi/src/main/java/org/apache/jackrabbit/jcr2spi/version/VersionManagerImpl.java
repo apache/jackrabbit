@@ -27,6 +27,9 @@ import org.apache.jackrabbit.jcr2spi.operation.Checkin;
 import org.apache.jackrabbit.jcr2spi.operation.Restore;
 import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
 import org.apache.jackrabbit.jcr2spi.operation.Merge;
+import org.apache.jackrabbit.jcr2spi.operation.Remove;
+import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -35,7 +38,6 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
 
 import java.util.Collection;
 import java.util.List;
@@ -54,20 +56,26 @@ public class VersionManagerImpl implements VersionManager {
         this.stateManager = stateManager;
     }
 
-    public void checkin(NodeId nodeId) throws RepositoryException {
-        Operation ci = Checkin.create(nodeId);
+    public void checkin(NodeState nodeState) throws RepositoryException {
+        Operation ci = Checkin.create(nodeState.getNodeId());
         stateManager.execute(ci);
     }
 
-    public void checkout(NodeId nodeId) throws RepositoryException {
-        Operation co = Checkout.create(nodeId);
+    public void checkout(NodeState nodeState) throws RepositoryException {
+        Operation co = Checkout.create(nodeState.getNodeId());
         stateManager.execute(co);
     }
 
-    public boolean isCheckedOut(NodeId nodeId) throws RepositoryException {
+    /**
+     * Search nearest ancestor that is versionable. If no versionable ancestor
+     * can be found, <code>true</code> is returned.
+     *
+     * @param nodeState
+     * @return
+     * @throws RepositoryException
+     */
+    public boolean isCheckedOut(NodeState nodeState) throws RepositoryException {
         try {
-            NodeState nodeState = (NodeState) stateManager.getItemState(nodeId);
-            // search nearest ancestor that is versionable
             /**
              * FIXME should not only rely on existence of jcr:isCheckedOut property
              * but also verify that node.isNodeType("mix:versionable")==true;
@@ -81,15 +89,28 @@ public class VersionManagerImpl implements VersionManager {
                 }
                 nodeState = parentState;
             }
-            PropertyId propId = nodeState.getPropertyState(QName.JCR_ISCHECKEDOUT).getPropertyId();
-            PropertyState propState = (PropertyState) stateManager.getItemState(propId);
-
+            PropertyState propState = nodeState.getPropertyState(QName.JCR_ISCHECKEDOUT);
             Boolean b = Boolean.valueOf(propState.getValue().getString());
             return b.booleanValue();
         } catch (ItemStateException e) {
             // should not occur
             throw new RepositoryException(e);
         }
+    }
+
+    public void removeVersion(NodeId versionHistoryId, NodeId versionId) throws RepositoryException {
+        Operation op = Remove.create(versionId, versionHistoryId);
+        stateManager.execute(op);
+    }
+
+    public void addVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel, boolean moveLabel) throws RepositoryException {
+        Operation op = AddLabel.create(versionHistoryId, versionId, qLabel, moveLabel);
+        stateManager.execute(op);
+    }
+
+    public void removeVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel) throws RepositoryException {
+        Operation op = RemoveLabel.create(versionHistoryId, versionId, qLabel);
+        stateManager.execute(op);
     }
 
     public void restore(NodeId nodeId, NodeId versionId, boolean removeExisting) throws RepositoryException {

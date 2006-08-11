@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import javax.jcr.Item;
+
 /**
  * The <code>ItemLifeCycleListener</code> interface allows an implementing
  * object to be informed about changes on an <code>Item</code> instance.
@@ -29,20 +31,20 @@ public interface ItemLifeCycleListener {
      *
      * @param item the instance which has been created
      */
-    public void itemCreated(ItemImpl item);
+    public void itemCreated(Item item);
 
     /**
-     * Called when an <code>ItemImpl</code> instance has been invalidated
+     * Called when an <code>Item</code> instance has been invalidated
      * (i.e. it has been temporarily rendered 'invalid').
      * <p/>
-     * Note that most <code>{@link javax.jcr.Item}</code>,
+     * Note that most methods of <code>{@link javax.jcr.Item}</code>,
      * <code>{@link javax.jcr.Node}</code> and <code>{@link javax.jcr.Property}</code>
-     * methods will throw an <code>InvalidItemStateException</code> when called
+     * will throw an <code>InvalidItemStateException</code> when called
      * on an 'invalidated' item.
      *
      * @param item the instance which has been discarded
      */
-    void itemInvalidated(ItemImpl item);
+    void itemInvalidated(Item item);
 
     /**
      * Called when an <code>ItemImpl</code> instance has been destroyed
@@ -55,5 +57,5 @@ public interface ItemLifeCycleListener {
      *
      * @param item the instance which has been destroyed
      */
-    void itemDestroyed(ItemImpl item);
+    void itemDestroyed(Item item);
 }

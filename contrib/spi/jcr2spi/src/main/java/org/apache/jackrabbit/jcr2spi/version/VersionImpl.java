@@ -41,7 +41,8 @@ public class VersionImpl extends NodeImpl implements Version {
 
     private static Logger log = LoggerFactory.getLogger(VersionImpl.class);
 
-    public VersionImpl(ItemManager itemMgr, SessionImpl session, NodeState state, NodeDefinition definition, ItemLifeCycleListener[] listeners) {
+    public VersionImpl(ItemManager itemMgr, SessionImpl session, NodeState state,
+                       NodeDefinition definition, ItemLifeCycleListener[] listeners) {
         super(itemMgr, session, state, definition, listeners);
     }
 

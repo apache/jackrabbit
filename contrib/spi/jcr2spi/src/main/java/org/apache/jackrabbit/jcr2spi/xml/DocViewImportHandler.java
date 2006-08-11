@@ -28,8 +28,6 @@ import org.slf4j.Logger;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.IdFactory;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -59,8 +57,8 @@ class DocViewImportHandler extends TargetImportHandler {
      * @param importer
      * @param nsContext
      */
-    DocViewImportHandler(Importer importer, NamespaceResolver nsContext, IdFactory idFactory) {
-        super(importer, nsContext, idFactory);
+    DocViewImportHandler(Importer importer, NamespaceResolver nsContext) {
+        super(importer, nsContext);
     }
 
     /**
@@ -171,7 +169,7 @@ class DocViewImportHandler extends TargetImportHandler {
             nodeName = ISO9075.decode(nodeName);
 
             // properties
-            NodeId id = null;
+            String uuid = null;
             QName nodeTypeName = null;
             QName[] mixinTypes = null;
 
@@ -220,14 +218,14 @@ class DocViewImportHandler extends TargetImportHandler {
                 } else if (propName.equals(QName.JCR_UUID)) {
                     // jcr:uuid
                     if (attrValue.length() > 0) {
-                        id = idFactory.createNodeId(attrValue);
+                        uuid = attrValue;
                     }
                 } else {
                     props.add(new Importer.PropInfo(propName, PropertyType.UNDEFINED, propValues));
                 }
             }
 
-            Importer.NodeInfo node = new Importer.NodeInfo(nodeName, nodeTypeName, mixinTypes, id);
+            Importer.NodeInfo node = new Importer.NodeInfo(nodeName, nodeTypeName, mixinTypes, uuid);
             // all information has been collected, now delegate to importer
             importer.startNode(node, props, nsContext);
             // push current node data onto stack

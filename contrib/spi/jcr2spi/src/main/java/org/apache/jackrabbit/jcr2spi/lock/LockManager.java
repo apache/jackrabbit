@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.jcr2spi.lock;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Node;
 
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 
@@ -27,15 +27,12 @@ import javax.jcr.lock.LockException;
  * Defines the functionality needed for locking and unlocking nodes.
  */
 public interface LockManager {
-
-    // TODO Review usage of NodeId
-
+    
     /**
      * Lock a node. Checks whether the node is not locked and then
      * returns a lock object for this node.
      *
-     * @param nodeId node id.
-     * @param node
+     * @param nodeState
      * @param isDeep whether the lock applies to this node only
      * @param isSessionScoped whether the lock is session scoped
      * @return lock object
@@ -43,43 +40,42 @@ public interface LockManager {
      *         node is locked and <code>isDeep</code> is <code>true</code>
      * @see javax.jcr.Node#lock
      */
-    // TODO review params
-    Lock lock(NodeId nodeId, Node node, boolean isDeep, boolean isSessionScoped)
+    Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped)
         throws LockException, RepositoryException;
 
     /**
      * Returns the Lock object that applies to a node. This may be either a lock
      * on this node itself or a deep lock on a node above this node.
      *
-     * @param nodeId
+     * @param nodeState
      * @return lock object
      * @throws LockException if this node is not locked
      * @see javax.jcr.Node#getLock
      */
-    Lock getLock(NodeId nodeId) throws LockException, RepositoryException;
+    Lock getLock(NodeState nodeState) throws LockException, RepositoryException;
 
     /**
      * Removes the lock on a node.
      *
-     * @param nodeId
+     * @param nodeState
      * @throws LockException if this node is not locked or the session does not
      * have the correct lock token
      * @see javax.jcr.Node#unlock
      */
-    void unlock(NodeId nodeId) throws LockException, RepositoryException;
+    void unlock(NodeState nodeState) throws LockException, RepositoryException;
 
     /**
      * Returns <code>true</code> if this node is locked either as a result
      * of a lock held by this node or by a deep lock on a node above this
      * node; otherwise returns <code>false</code>.
      *
-     * @param nodeId
+     * @param nodeState
      * @return <code>true</code> if this node is locked either as a result
      * of a lock held by this node or by a deep lock on a node above this
      * node; otherwise returns <code>false</code>
      * @see javax.jcr.Node#isLocked
      */
-    boolean isLocked(NodeId nodeId) throws RepositoryException;
+    boolean isLocked(NodeState nodeState) throws RepositoryException;
 
     /**
      * Check whether the node given is locked by somebody else than the
@@ -88,11 +84,11 @@ public interface LockManager {
      * contains the lock token for the lock. If the node is not locked at
      * all this method returns silently.
      *
-     * @param nodeId to check
+     * @param nodeState
      * @throws LockException if write access to the specified node is not allowed
      * @throws RepositoryException if some other error occurs
      */
-    void checkLock(NodeId nodeId) throws LockException, RepositoryException;
+    void checkLock(NodeState nodeState) throws LockException, RepositoryException;
 
     /**
      *

@@ -348,6 +348,17 @@ public class ItemStateValidator {
     }
 
     //------------------------------------------------------< check methods >---
+    /**
+     *
+     * @param parentState
+     * @param options
+     * @throws VersionException
+     * @throws LockException
+     * @throws ItemNotFoundException
+     * @throws ItemExistsException
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
     public void checkIsWritable(NodeState parentState, int options) throws VersionException,
         LockException, ItemNotFoundException,
         ItemExistsException, PathNotFoundException, RepositoryException {
@@ -450,6 +461,21 @@ public class ItemStateValidator {
         checkWriteProperty(parentState, propertyName, definition, options);
     }
 
+    /**
+     * 
+     * @param parentState
+     * @param propertyName
+     * @param definition
+     * @param options
+     * @throws ConstraintViolationException
+     * @throws AccessDeniedException
+     * @throws VersionException
+     * @throws LockException
+     * @throws ItemNotFoundException
+     * @throws ItemExistsException
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
     public void checkWriteProperty(NodeState parentState, QName propertyName, QPropertyDefinition definition, int options)
         throws ConstraintViolationException, AccessDeniedException,
         VersionException, LockException, ItemNotFoundException,
@@ -640,7 +666,7 @@ public class ItemStateValidator {
             return;
         }
         NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParent();
-        if (!mgrProvider.getVersionManager().isCheckedOut(nodeState.getNodeId())) {
+        if (!mgrProvider.getVersionManager().isCheckedOut(nodeState)) {
             throw new VersionException(safeGetJCRPath(nodeState) + " is checked-in");
         }
     }
@@ -661,7 +687,7 @@ public class ItemStateValidator {
         NodeState nodeState = (itemState.isNode())
             ? ((NodeState)itemState)
             : itemState.getParent();
-        mgrProvider.getLockManager().checkLock(nodeState.getNodeId());
+        mgrProvider.getLockManager().checkLock(nodeState);
     }
 
     /**

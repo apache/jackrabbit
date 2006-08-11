@@ -17,49 +17,52 @@
 package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
-import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Item;
 
 import java.util.NoSuchElementException;
+import java.util.Iterator;
 
 // DIFF JR: this class uses a different package than the jackrabbit original
 /**
  * Implements a {@link javax.jcr.NodeIterator} returned by
  * {@link javax.jcr.query.QueryResult#getNodes()}.
  */
-class NodeIteratorImpl implements ScoreNodeIterator {
+public class NodeIteratorImpl implements ScoreNodeIterator {
 
     /** Logger instance for this class */
     private static final Logger log = LoggerFactory.getLogger(NodeIteratorImpl.class);
 
     /** ItemManager to turn Ids into Node instances */
-    protected final ItemManager itemMgr;
+    private final ItemManager itemMgr;
 
-    /** The namespace resolver */
-    protected final NamespaceResolver resolver;
+    /** ItemManager to turn Ids into Node instances */
+    private final ItemStateManager itemStateMgr;
 
     /** The query result info */
-    protected final QueryInfo queryInfo;
+    private final QueryInfo queryInfo;
 
     /** The ItemId's of the result nodes */
-    protected final IdIterator ids;
+    private final IdIterator ids;
 
     /** Index of the jcr:score column. */
-    protected final int scoreIndex;
+    private final int scoreIndex;
 
     /** Current position of this node iterator */
-    protected int pos = -1;
+    private int pos = -1;
 
     /** Number of invalid nodes */
-    protected int invalid = 0;
+    private int invalid = 0;
 
     /** Id of the next Node */
     private NodeId nextId;
@@ -70,26 +73,25 @@ class NodeIteratorImpl implements ScoreNodeIterator {
     /**
      * Creates a new <code>NodeIteratorImpl</code> instance.
      *
-     * @param itemMgr   the <code>ItemManager</code> to turn Id's into
-     *                  <code>Node</code> instances.
-     * @param resolver  the namespace resolver.
+     * @param itemMgr The <code>ItemManager</code> to build <code>Node</code> instances.
+     * @param itemStateMgr The <code>ItemStateManager</code> used to build
+     * <code>ItemState</code>s from the ids returned by the query.
      * @param queryInfo the query result.
-     * @throws RepositoryException if an error occurs while creating a node
-     *                             iterator.
+     * @throws RepositoryException if an error occurs while creating a node iterator.
      */
     // DIFF JR: use QueryInfo instead of UUID String[]
-    NodeIteratorImpl(ItemManager itemMgr,
-                     NamespaceResolver resolver,
-                     QueryInfo queryInfo) throws RepositoryException {
+    public NodeIteratorImpl(ItemManager itemMgr, ItemStateManager itemStateMgr,
+                            QueryInfo queryInfo) throws RepositoryException {
         this.itemMgr = itemMgr;
-        this.resolver = resolver;
+        this.itemStateMgr = itemStateMgr;
         this.queryInfo = queryInfo;
         this.ids = queryInfo.getNodeIds();
+        
         QName[] columnNames = queryInfo.getColumnNames();
         int idx = -1;
         for (int i = 0; i < columnNames.length; i++) {
             if (columnNames[i].getNamespaceURI().equals(QName.NS_JCR_URI)
-                    && columnNames[i].getLocalName().startsWith(QName.JCR_SCORE.getLocalName())) {
+                && columnNames[i].getLocalName().startsWith(QName.JCR_SCORE.getLocalName())) {
                 idx = i;
                 break;
             }
@@ -101,12 +103,34 @@ class NodeIteratorImpl implements ScoreNodeIterator {
         fetchNext();
     }
 
+    //------------------------------------------------------< ScoreIterator >---
+    /**
+     * Returns the score of the node returned by {@link #nextNode()}. In other
+     * words, this method returns the score value of the next <code>Node</code>.
+     *
+     * @return the score of the node returned by {@link #nextNode()}.
+     * @throws NoSuchElementException if there is no next node.
+     * @see ScoreNodeIterator#getScore()
+     */
+    public float getScore() throws NoSuchElementException {
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
+        String scoreString = queryInfo.getValues(nextId)[scoreIndex];
+        try {
+            return Float.parseFloat(scoreString);
+        } catch (NumberFormatException e) {
+            throw new NoSuchElementException();
+        }
+    }
+
+    //-------------------------------------------------------< NodeIterator >---
     /**
      * Returns the next <code>Node</code> in the result set.
      *
      * @return the next <code>Node</code> in the result set.
-     * @throws NoSuchElementException if iteration has no more
-     *   <code>Node</code>s.
+     * @throws NoSuchElementException if iteration has no more <code>Node</code>s.
+     * @see javax.jcr.NodeIterator#nextNode()
      */
     public Node nextNode() throws NoSuchElementException {
         if (next == null) {
@@ -117,23 +141,14 @@ class NodeIteratorImpl implements ScoreNodeIterator {
         return n;
     }
 
-    /**
-     * Returns the next <code>Node</code> in the result set.
-     *
-     * @return the next <code>Node</code> in the result set.
-     * @throws NoSuchElementException if iteration has no more
-     *   <code>Node</code>s.
-     */
-    public Object next() throws NoSuchElementException {
-        return nextNode();
-    }
-
+    //------------------------------------------------------< RangeIterator >---
     /**
      * Skip a number of <code>Node</code>s in this iterator.
      *
      * @param skipNum the non-negative number of <code>Node</code>s to skip
-     * @throws NoSuchElementException
-     *          if skipped past the last <code>Node</code> in this iterator.
+     * @throws NoSuchElementException if skipped past the last <code>Node</code>
+     * in this iterator.
+     * @see javax.jcr.NodeIterator#skip(long)
      */
     public void skip(long skipNum) throws NoSuchElementException {
         if (skipNum < 0) {
@@ -159,6 +174,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * invalid node is detected, the size of this iterator is adjusted.
      *
      * @return the number of node in this iterator.
+     * @see javax.jcr.RangeIterator#getSize()
      */
     public long getSize() {
         if (ids.getSize() != -1) {
@@ -172,9 +188,21 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * Returns the current position in this <code>NodeIterator</code>.
      *
      * @return the current position in this <code>NodeIterator</code>.
+     * @see javax.jcr.RangeIterator#getPosition()
      */
     public long getPosition() {
         return pos - invalid;
+    }
+
+    /**
+     * Returns the next <code>Node</code> in the result set.
+     *
+     * @return the next <code>Node</code> in the result set.
+     * @throws NoSuchElementException if iteration has no more <code>Node</code>s.
+     * @see java.util.Iterator#next()
+     */
+    public Object next() throws NoSuchElementException {
+        return nextNode();
     }
 
     /**
@@ -183,6 +211,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      *
      * @return <code>true</code> if there is another <code>Node</code>
      *  available; <code>false</code> otherwise.
+     * @see java.util.Iterator#hasNext()
      */
     public boolean hasNext() {
         return next != null;
@@ -190,30 +219,13 @@ class NodeIteratorImpl implements ScoreNodeIterator {
 
     /**
      * @throws UnsupportedOperationException always.
+     * @see Iterator#remove()
      */
     public void remove() {
         throw new UnsupportedOperationException("remove");
     }
 
-    /**
-     * Returns the score of the node returned by {@link #nextNode()}. In other
-     * words, this method returns the score value of the next <code>Node</code>.
-     * 
-     * @return the score of the node returned by {@link #nextNode()}.
-     * @throws NoSuchElementException if there is no next node.
-     */
-    public float getScore() throws NoSuchElementException {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
-        String scoreString = queryInfo.getValues(nextId)[scoreIndex];
-        try {
-            return Float.parseFloat(scoreString);
-        } catch (NumberFormatException e) {
-            throw new NoSuchElementException();
-        }
-    }
-
+    //------------------------------------------------------------< private >---
     /**
      * Clears {@link #next} and tries to fetch the next Node instance.
      * When this method returns {@link #next} refers to the next available
@@ -221,8 +233,6 @@ class NodeIteratorImpl implements ScoreNodeIterator {
      * method returns, then there are no more valid element in this iterator.
      */
     private void fetchNext() {
-        // TODO
-        /*
         // reset
         next = null;
         while (next == null && ids.hasNext()) {
@@ -233,7 +243,7 @@ class NodeIteratorImpl implements ScoreNodeIterator {
                     continue;
                 }
                 nextId = (NodeId)id;
-                Item tmp = itemMgr.getItem(nextId);
+                Item tmp = itemMgr.getItem(itemStateMgr.getItemState(nextId));
 
                 if (tmp.isNode()) {
                     next = (Node) tmp;
@@ -251,6 +261,5 @@ class NodeIteratorImpl implements ScoreNodeIterator {
             }
         }
         pos++;
-        */
     }
 }

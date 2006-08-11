@@ -56,9 +56,8 @@ class CachingNamespaceResolver implements NamespaceResolver, NamespaceListener, 
     /**
      * Creates a new <code>CachingNamespaceResolver</code>.
      *
-     * @param base      a base namespace resolver with support for listener
-     *                  registration.
-     * @param cacheSize number of mappings this resolver may cache.
+     * @param base A base namespace resolver with support for listener registration.
+     * @param cacheSize Number of mappings this nsResolver may cache.
      */
     CachingNamespaceResolver(AbstractNamespaceResolver base, int cacheSize) {
         this.base = base;
@@ -111,7 +110,6 @@ class CachingNamespaceResolver implements NamespaceResolver, NamespaceListener, 
             throws NoPrefixDeclaredException {
         String jcrName = (String) qnameToJCRName.get(qName);
         if (jcrName == null) {
-            // DIFF JR: moved method from QName to NameFormat
             jcrName = NameFormat.format(qName, this);
             qnameToJCRName.put(qName, jcrName);
         }

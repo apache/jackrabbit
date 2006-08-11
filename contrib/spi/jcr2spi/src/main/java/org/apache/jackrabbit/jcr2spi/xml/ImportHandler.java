@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceRegistry;
-import org.apache.jackrabbit.spi.IdFactory;
 
 /**
  * An <code>ImportHandler</code> instance can be used to import serialized
@@ -57,7 +56,6 @@ public class ImportHandler extends DefaultHandler {
     private final Importer importer;
     private final NamespaceRegistry nsReg;
     private final NamespaceResolver nsResolver;
-    private final IdFactory idFactory;
 
     private Locator locator;
     private ContentHandler targetHandler;
@@ -77,11 +75,10 @@ public class ImportHandler extends DefaultHandler {
 
     // DIFF JACKRABBIT: pass NamespaceRegistry instead of impl.
     public ImportHandler(Importer importer, NamespaceResolver nsResolver,
-                         NamespaceRegistry nsReg, IdFactory idFactory) {
+                         NamespaceRegistry nsReg) {
         this.importer = importer;
         this.nsResolver = nsResolver;
         this.nsReg = nsReg;
-        this.idFactory = idFactory;
 
         nsContext = new NamespaceContext();
     }
@@ -227,9 +224,9 @@ public class ImportHandler extends DefaultHandler {
             systemViewXML = QName.NS_SV_URI.equals(namespaceURI);
 
             if (systemViewXML) {
-                targetHandler = new SysViewImportHandler(importer, nsContext, idFactory);
+                targetHandler = new SysViewImportHandler(importer, nsContext);
             } else {
-                targetHandler = new DocViewImportHandler(importer, nsContext, idFactory);
+                targetHandler = new DocViewImportHandler(importer, nsContext);
             }
             targetHandler.startDocument();
             initialized = true;

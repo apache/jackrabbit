@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.util;
 
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.value.QValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,15 +64,15 @@ public class ReferenceChangeTracker {
      * Store the given uuid mapping for later lookup using
      * <code>#adjustReferences(UpdatableItemStateManager, ItemStateValidator)</code>.
      *
-     * @param oldNodeId old nodeId
-     * @param newNodeId new nodeId
+     * @param oldUUID
+     * @param newUUID
      */
-    public void mappedNodeIds(NodeId oldNodeId, NodeId newNodeId) {
-        if (oldNodeId.equals(newNodeId) || oldNodeId.getUUID() == null) {
+    public void mappedUUIDs(String oldUUID, String newUUID) {
+        if (oldUUID.equals(newUUID) || oldUUID == null) {
             // only remember if uuid exists and has changed
             return;
         }
-        uuidMap.put(oldNodeId.getUUID(), newNodeId.getUUID());
+        uuidMap.put(oldUUID, newUUID);
     }
 
     /**
@@ -82,7 +81,7 @@ public class ReferenceChangeTracker {
      *
      * @param oldReference old uuid represented by the given <code>QValue</code>
      * @return mapped new QValue of the reference value or <code>null</code> if no such mapping exists
-     * @see #mappedNodeIds(NodeId,NodeId)
+     * @see #mappedUUIDs(String,String)
      */
     public QValue getMappedReference(QValue oldReference) {
         QValue remapped = null;

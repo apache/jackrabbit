@@ -25,6 +25,7 @@ import java.util.Collection;
  */
 public interface NodeReferences {
 
+    // TODO: probably not needed with spi -> remove
     // DIFF JR: return NodeId instead of NodeReferenceId
     /**
      * Returns the identifier of this node references object.

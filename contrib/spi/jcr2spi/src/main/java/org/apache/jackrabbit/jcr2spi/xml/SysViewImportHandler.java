@@ -27,7 +27,6 @@ import org.xml.sax.SAXException;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import org.apache.jackrabbit.spi.IdFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -61,8 +60,8 @@ class SysViewImportHandler extends TargetImportHandler {
      * @param importer
      * @param nsContext
      */
-    SysViewImportHandler(Importer importer, NamespaceResolver nsContext, IdFactory idFactory) {
-        super(importer, nsContext, idFactory);
+    SysViewImportHandler(Importer importer, NamespaceResolver nsContext) {
+        super(importer, nsContext);
     }
 
     private void processNode(ImportState state, boolean start, boolean end)
@@ -78,7 +77,7 @@ class SysViewImportHandler extends TargetImportHandler {
             nodeInfo.setMixinNames(mixins);
         }
         if (state.uuid != null) {
-            nodeInfo.setId(idFactory.createNodeId(state.uuid));
+            nodeInfo.setUUID(state.uuid);
         }
         // call Importer
         try {
