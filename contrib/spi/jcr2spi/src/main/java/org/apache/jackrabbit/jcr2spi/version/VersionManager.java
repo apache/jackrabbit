@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.version;
 
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import java.util.Collection;
@@ -26,11 +28,20 @@ import java.util.Collection;
  */
 public interface VersionManager {
 
-    public void checkin(NodeId nodeId) throws RepositoryException;
+    // TODO fix method definitions (throw clauses)
+    // TODO review usage of NodeId. for Restore it is requried, since the target must not point to an existing node.
 
-    public void checkout(NodeId nodeId) throws RepositoryException;
+    public void checkin(NodeState nodeState) throws RepositoryException;
 
-    public boolean isCheckedOut(NodeId nodeId) throws RepositoryException;
+    public void checkout(NodeState nodeState) throws RepositoryException;
+
+    public boolean isCheckedOut(NodeState nodeState) throws RepositoryException;
+
+    public void removeVersion(NodeId versionHistoryId, NodeId versionId) throws RepositoryException;
+
+    public void addVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel, boolean moveLabel) throws RepositoryException;
+
+    public void removeVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel) throws RepositoryException;
 
     public void restore(NodeId nodeId, NodeId versionId, boolean removeExisting) throws RepositoryException;
 
@@ -44,7 +55,7 @@ public interface VersionManager {
      * @return A Collection of <code>ItemId</code> containing the ids of those
      * <code>Node</code>s that failed to be merged and need manual resolution
      * by the user of the API.
-     * @see #resolveMergeConflict(NodeId, NodeId, boolean)
+     * @see #resolveMergeConflict(NodeId,NodeId,boolean)
      */
     public Collection merge(NodeId nodeId, String workspaceName, boolean bestEffort) throws RepositoryException;
 

@@ -56,7 +56,7 @@ import java.util.Map;
  * <p/>
  * The <code>ItemManagerImpl</code>'s responsabilities are:
  * <ul>
- * <li>providing access to <code>Item</code> instances by <code>ItemId</code>
+ * <li>providing access to <code>Item</code> instances by <code>ItemState</code>
  * whereas <code>Node</code> and <code>Item</code> are only providing relative access.
  * <li>returning the instance of an existing <code>Node</code> or <code>Property</code>,
  * given its absolute path.
@@ -78,12 +78,14 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
     private final SessionImpl session;
 
-    //private final ItemStateManager itemStateMgr;
     private final HierarchyManager hierMgr;
 
-    // TODO: TO-BE-FIXED. With SPI_ItemId simple map cannot be used any more
     /**
-     * A cache for item instances created by this <code>ItemManagerImpl</code>
+     * A cache for item instances created by this <code>ItemManagerImpl</code>.
+     * // DIFF JR:
+     * The <code>ItemState</code>s act as keys for the map. In contrast to
+     * o.a.j.core the item state are copied to transient space for reading and
+     * will therefor not change upon transient modifications.
      */
     private Map itemCache;
 
@@ -96,8 +98,8 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     ItemManagerImpl(HierarchyManager hierMgr, SessionImpl session) {
         this.hierMgr = hierMgr;
         this.session = session;
-        // setup item cache with weak references to items
-        itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        /* Setup item cache with weak keys (ItemState) and weak values (Item).*/
+        itemCache = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
     }
 
     //--------------------------------------------------------< ItemManager >---
@@ -165,9 +167,8 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      * @see ItemManager#getItem(ItemState)
      */
     public Item getItem(ItemState itemState) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        ItemId id = itemState.getId();
         // first try to access item from cache
-        ItemImpl item = retrieveItem(id);
+        Item item = retrieveItem(itemState);
         // not yet in cache, need to create instance
         if (item == null) {
             // check privileges
@@ -251,38 +252,50 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
     //----------------------------------------------< ItemLifeCycleListener >---
     /**
-     * @see ItemLifeCycleListener#itemCreated(ItemImpl)
+     * @see ItemLifeCycleListener#itemCreated(Item)
      */
-    public void itemCreated(ItemImpl item) {
+    public void itemCreated(Item item) {
+        if (!(item instanceof ItemImpl)) {
+            String msg = "Incompatible Item object: " + ItemImpl.class.getName() + " expected.";
+            throw new IllegalArgumentException(msg);
+        }
         if (log.isDebugEnabled()) {
             log.debug("created item " + item);
         }
         // add instance to cache
-        cacheItem(item);
+        cacheItem(((ItemImpl)item).getItemState(), item);
     }
 
     /**
-     * @see ItemLifeCycleListener#itemInvalidated(ItemImpl)
+     * @see ItemLifeCycleListener#itemInvalidated(Item)
      */
-    public void itemInvalidated(ItemImpl item) {
+    public void itemInvalidated(Item item) {
+        if (!(item instanceof ItemImpl)) {
+            String msg = "Incompatible Item object: " + ItemImpl.class.getName() + " expected.";
+            throw new IllegalArgumentException(msg);
+        }
         if (log.isDebugEnabled()) {
             log.debug("invalidated item " + item);
         }
         // remove instance from cache
-        evictItem(item.getId());
+        evictItem(((ItemImpl)item).getItemState());
     }
 
     /**
-     * @see ItemLifeCycleListener#itemDestroyed(ItemImpl)
+     * @see ItemLifeCycleListener#itemDestroyed(Item)
      */
-    public void itemDestroyed(ItemImpl item) {
+    public void itemDestroyed(Item item) {
+        if (!(item instanceof ItemImpl)) {
+            String msg = "Incompatible Item object: " + ItemImpl.class.getName() + " expected.";
+            throw new IllegalArgumentException(msg);
+        }
         if (log.isDebugEnabled()) {
             log.debug("destroyed item " + item);
         }
         // we're no longer interested in this item
-        item.removeLifeCycleListener(this);
+        ((ItemImpl)item).removeLifeCycleListener(this);
         // remove instance from cache
-        evictItem(item.getId());
+        evictItem(((ItemImpl)item).getItemState());
     }
 
     //-----------------------------------------------------------< Dumpable >---
@@ -290,25 +303,27 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      * @see Dumpable#dump(PrintStream)
      */
     public void dump(PrintStream ps) {
-        ps.println("ItemManagerImpl (" + this + ")");
+        ps.println("ItemManager (" + this + ")");
         ps.println();
         ps.println("Items in cache:");
         ps.println();
         Iterator iter = itemCache.keySet().iterator();
         while (iter.hasNext()) {
-            ItemId id = (ItemId) iter.next();
-            ItemImpl item = (ItemImpl) itemCache.get(id);
+            ItemState state = (ItemState) iter.next();
+            Item item = (Item) itemCache.get(state);
             if (item.isNode()) {
                 ps.print("Node: ");
             } else {
                 ps.print("Property: ");
             }
-            if (item.getItemState().isTransient()) {
-                ps.print("transient ");
+            if (item.isNew()) {
+                ps.print("new ");
+            } else if (item.isModified()) {
+                ps.print("modified ");
             } else {
-                ps.print("          ");
+                ps.print("- ");
             }
-            ps.println(id + "\t" + LogUtil.safeGetJCRPath(item.getItemState(), session.getNamespaceResolver(), hierMgr) + " (" + item + ")");
+            ps.println(state.getId() + "\t" + LogUtil.safeGetJCRPath(state, session.getNamespaceResolver(), hierMgr) + " (" + item + ")");
         }
     }
 
@@ -325,15 +340,21 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         if (!session.getAccessManager().canRead(id)) {
             if (removeFromCache) {
                 // clear cache
-                ItemImpl item = retrieveItem(id);
+                Item item = retrieveItem(state);
                 if (item != null) {
-                    evictItem(id);
+                    evictItem(state);
                 }
             }
             throw new AccessDeniedException("cannot read item " + id);
         }
     }
 
+    /**
+     *
+     * @param state
+     * @return
+     * @throws RepositoryException
+     */
     private NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
         // 1. get definition of the specified node
         QNodeDefinition qnd = state.getDefinition(session.getNodeTypeRegistry());
@@ -357,6 +378,12 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         }
     }
 
+    /**
+     * 
+     * @param state
+     * @return
+     * @throws RepositoryException
+     */
     private PropertyImpl createPropertyInstance(PropertyState state)
             throws RepositoryException {
         // 1. get definition for the specified property
@@ -373,44 +400,42 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     //-------------------------------------------------< item cache methods >---
-
-    /**
-     * Returns an item reference from the cache.
-     *
-     * @param id id of the item that should be retrieved.
-     * @return the item reference stored in the corresponding cache entry
-     *         or <code>null</code> if there's no corresponding cache entry.
-     */
-    private ItemImpl retrieveItem(ItemId id) {
-        return (ItemImpl) itemCache.get(id);
-    }
-
     /**
      * Puts the reference of an item in the cache with
      * the item's path as the key.
      *
      * @param item the item to cache
      */
-    private void cacheItem(ItemImpl item) {
-        ItemId id = item.getId();
-        if (itemCache.containsKey(id)) {
-            log.warn("overwriting cached item " + id);
+    private void cacheItem(ItemState state, Item item) {
+        if (itemCache.containsKey(state)) {
+            log.warn("overwriting cached item " + state);
         }
         if (log.isDebugEnabled()) {
-            log.debug("caching item " + id);
+            log.debug("caching item " + state);
         }
-        itemCache.put(id, item);
+        itemCache.put(state, item);
+    }
+
+    /**
+     * Returns an item reference from the cache.
+     *
+     * @param state State of the item that should be retrieved.
+     * @return the item reference stored in the corresponding cache entry
+     *         or <code>null</code> if there's no corresponding cache entry.
+     */
+    private Item retrieveItem(ItemState state) {
+        return (Item) itemCache.get(state);
     }
 
     /**
      * Removes a cache entry for a specific item.
      *
-     * @param id id of the item to remove from the cache
+     * @param itemState state of the item to remove from the cache
      */
-    private void evictItem(ItemId id) {
+    private void evictItem(ItemState itemState) {
         if (log.isDebugEnabled()) {
-            log.debug("removing item " + id + " from cache");
+            log.debug("removing item " + itemState + " from cache");
         }
-        itemCache.remove(id);
+        itemCache.remove(itemState);
     }
 }

@@ -17,10 +17,8 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
@@ -52,16 +50,6 @@ public interface HierarchyManager {
     Path getQPath(ItemState itemState) throws ItemNotFoundException, RepositoryException;
 
     /**
-     * Returns the qualified name of the specified item state.
-     *
-     * @param itemState state of item whose name should be returned
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    QName getQName(ItemState itemState) throws ItemNotFoundException, RepositoryException;
-
-    /**
      * Returns the depth of the specified item which is equivalent to
      * <code>getQPath(id).getAncestorCount()</code>. The depth reflects the
      * absolute hierarchy level.
@@ -74,19 +62,19 @@ public interface HierarchyManager {
 
     /**
      * Returns the depth of the specified descendant relative to the given
-     * ancestor. If <code>ancestorId</code> and <code>descendantId</code>
-     * denote the same item 0 is returned. If <code>ancestorId</code> does not
+     * ancestor. If <code>ancestor</code> and <code>descendant</code>
+     * denote the same item 0 is returned. If <code>ancestor</code> does not
      * denote an ancestor -1 is returned.
      *
-     * @param ancestorId ancestor id
-     * @param descendantId descendant id
-     * @return the relative depth; -1 if <code>ancestorId</code> does not
-     *         denote an ancestor of the item denoted by <code>descendantId</code>
-     *         (or itself).
-     * @throws ItemNotFoundException if either of the specified id's does not
-     *                               denote an existing item.
-     * @throws RepositoryException   if another error occurs
+     * @param ancestor NodeState that must be an ancestor of the descendant
+     * @param descendant ItemState
+     * @return the relative depth; -1 if <code>ancestor</code> does not
+     * denote an ancestor of the item denoted by <code>descendant</code>
+     * (or itself).
+     * @throws ItemNotFoundException If either of the specified id's does not
+     * denote an existing item.
+     * @throws RepositoryException If another error occurs.
      */
-    int getRelativeDepth(NodeId ancestorId, ItemId descendantId)
+    int getRelativeDepth(NodeState ancestor, ItemState descendant)
             throws ItemNotFoundException, RepositoryException;
 }

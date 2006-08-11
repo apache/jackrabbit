@@ -17,12 +17,13 @@
 package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
-import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.name.NamespaceResolver;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
@@ -35,18 +36,23 @@ public class QueryManagerImpl implements QueryManager {
     /**
      * The <code>Session</code> for this QueryManager.
      */
-    private final SessionImpl session;
+    private final Session session;
 
     /**
-     * The namespace resolver for this query manager.
+     * The namespace nsResolver for this query manager.
      */
     // DIFF JR: added
-    private final NamespaceResolver resolver;
+    private final NamespaceResolver nsResolver;
 
     /**
      * The <code>ItemManager</code> of for item retrieval in search results
      */
     private final ItemManager itemMgr;
+
+    /**
+     * The <code>ItemStateManager</code> of for item retrieval in search results
+     */
+    private final ItemStateManager itemStateManager;
 
     /**
      * The <code>WorkspaceManager</code> where queries are executed.
@@ -55,52 +61,54 @@ public class QueryManagerImpl implements QueryManager {
 
     /**
      * Creates a new <code>QueryManagerImpl</code> for the passed
-     * <code>session</code>
+     * <code>Session</code>.
      *
      * @param session
-     * @param resolver
+     * @param nsResolver
      * @param itemMgr
+     * @param itemStateManager
      * @param wspManager
      */
-    public QueryManagerImpl(SessionImpl session,
-                            NamespaceResolver resolver,
+    public QueryManagerImpl(Session session,
+                            NamespaceResolver nsResolver,
                             ItemManager itemMgr,
+                            ItemStateManager itemStateManager,
                             WorkspaceManager wspManager) {
         this.session = session;
-        this.resolver = resolver;
+        this.nsResolver = nsResolver;
         this.itemMgr = itemMgr;
+        this.itemStateManager = itemStateManager;
         this.wspManager = wspManager;
     }
 
     /**
-     * {@inheritDoc}
+     * @see QueryManager#createQuery(String, String)
      */
     public Query createQuery(String statement, String language)
             throws InvalidQueryException, RepositoryException {
-        sanityCheck();
-        QueryImpl query = new QueryImpl();
-        query.init(session, resolver, itemMgr, wspManager, statement, language);
+        checkIsAlive();
+        QueryImpl query = new QueryImpl(session, nsResolver, itemMgr, itemStateManager, wspManager, statement, language);
         return query;
     }
 
     /**
-     * {@inheritDoc}
+     * @see QueryManager#getQuery(Node)
      */
     public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
-        sanityCheck();
-        QueryImpl query = new QueryImpl();
-        query.init(session, resolver, itemMgr, wspManager, node);
+        checkIsAlive();
+        QueryImpl query = new QueryImpl(session, nsResolver, itemMgr, itemStateManager, wspManager, node);
         return query;
     }
 
     /**
-     * {@inheritDoc}
+     * @see QueryManager#getSupportedQueryLanguages()
      */
     public String[] getSupportedQueryLanguages() throws RepositoryException {
         return wspManager.getSupportedQueryLanguages();
     }
 
+    //------------------------------------------------------------< private >---
     /**
      * Checks if this <code>QueryManagerImpl</code> instance is still usable,
      * otherwise throws a {@link javax.jcr.RepositoryException}.
@@ -108,7 +116,7 @@ public class QueryManagerImpl implements QueryManager {
      * @throws RepositoryException if this query manager is not usable anymore,
      *                             e.g. the corresponding session is closed.
      */
-    private void sanityCheck() throws RepositoryException {
+    private void checkIsAlive() throws RepositoryException {
         if (!session.isLive()) {
             throw new RepositoryException("corresponding session has been closed");
         }

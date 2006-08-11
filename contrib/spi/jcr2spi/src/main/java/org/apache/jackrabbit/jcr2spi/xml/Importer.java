@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.xml;
 
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
 
@@ -61,16 +60,16 @@ public interface Importer {
         private QName name;
         private QName nodeTypeName;
         private QName[] mixinNames;
-        private NodeId id;
+        private String uuid;
 
         public NodeInfo() {
         }
 
-        public NodeInfo(QName name, QName nodeTypeName, QName[] mixinNames, NodeId id) {
+        public NodeInfo(QName name, QName nodeTypeName, QName[] mixinNames, String uuid) {
             this.name = name;
             this.nodeTypeName = nodeTypeName;
             this.mixinNames = mixinNames;
-            this.id = id;
+            this.uuid = uuid;
         }
 
         public void setName(QName name) {
@@ -97,12 +96,12 @@ public interface Importer {
             return mixinNames;
         }
 
-        public void setId(NodeId id) {
-            this.id = id;
+        public void setUUID(String uuid) {
+            this.uuid = uuid;
         }
 
-        public NodeId getId() {
-            return id;
+        public String getUUID() {
+            return uuid;
         }
     }
 

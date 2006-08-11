@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package org.apache.jackrabbit.jcr2spi.query;
-// DIFF JR: this class uses a different package than the jackrabbit original
 
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -33,12 +32,14 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.Node;
+import javax.jcr.RangeIterator;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.Iterator;
 
 /**
  * Implements the {@link javax.jcr.query.RowIterator} interface returned by
@@ -77,23 +78,26 @@ class RowIteratorImpl implements RowIterator {
         this.nsResolver = resolver;
     }
 
+    //--------------------------------------------------------< RowIterator >---
     /**
      * Returns the next <code>Row</code> in the iteration.
      *
      * @return the next <code>Row</code> in the iteration.
-     * @throws NoSuchElementException if iteration has no more
-     *                                <code>Row</code>s.
+     * @throws NoSuchElementException if iteration has no more <code>Row</code>s.
+     * @see RowIterator#nextRow()
      */
     public Row nextRow() throws NoSuchElementException {
         return new RowImpl(nodes.getScore(), nodes.nextNode());
     }
 
+    //------------------------------------------------------< RangeIterator >---
     /**
      * Skip a number of <code>Row</code>s in this iterator.
      *
      * @param skipNum the non-negative number of <code>Row</code>s to skip
-     * @throws NoSuchElementException if skipped past the last
-     *                                <code>Row</code> in this iterator.
+     * @throws NoSuchElementException if skipped past the last <code>Row</code>
+     * in this iterator.
+     * @see javax.jcr.RangeIterator#skip(long)
      */
     public void skip(long skipNum) throws NoSuchElementException {
         nodes.skip(skipNum);
@@ -103,6 +107,7 @@ class RowIteratorImpl implements RowIterator {
      * Returns the number of <code>Row</code>s in this iterator.
      *
      * @return the number of <code>Row</code>s in this iterator.
+     * @see RangeIterator#getSize()
      */
     public long getSize() {
         return nodes.getSize();
@@ -117,6 +122,7 @@ class RowIteratorImpl implements RowIterator {
      * i.e. an empty iterator will always return 0.
      *
      * @return the current position withing this iterator.
+     * @see RangeIterator#getPosition()
      */
     public long getPosition() {
         return nodes.getPosition();
@@ -124,6 +130,7 @@ class RowIteratorImpl implements RowIterator {
 
     /**
      * @throws UnsupportedOperationException always.
+     * @see Iterator#remove()
      */
     public void remove() {
         throw new UnsupportedOperationException("remove");
@@ -135,6 +142,7 @@ class RowIteratorImpl implements RowIterator {
      * return an <code>Row</code> rather than throwing an exception.)
      *
      * @return <code>true</code> if the iterator has more elements.
+     * @see Iterator#hasNext()
      */
     public boolean hasNext() {
         return nodes.hasNext();
@@ -145,13 +153,13 @@ class RowIteratorImpl implements RowIterator {
      *
      * @return the next <code>Row</code> in the iteration.
      * @throws NoSuchElementException if iteration has no more <code>Row</code>s.
+     * @see Iterator#next()
      */
     public Object next() throws NoSuchElementException {
         return nextRow();
     }
 
-    //---------------------< class RowImpl >------------------------------------
-
+    //---------------------< inner class RowImpl >------------------------------
     /**
      * Implements the {@link javax.jcr.query.Row} interface, which represents
      * a row in the query result.
@@ -186,11 +194,12 @@ class RowIteratorImpl implements RowIterator {
          * @param node  the underlying <code>Node</code> for this <code>Row</code>.
          */
         // DIFF JR: use Node instead of NodeImpl
-        RowImpl(float score, Node node) {
+        private RowImpl(float score, Node node) {
             this.score = score;
             this.node = node;
         }
 
+        //------------------------------------------------------------< Row >---
         /**
          * Returns an array of all the values in the same order as the property
          * names (column names) returned by
@@ -198,7 +207,8 @@ class RowIteratorImpl implements RowIterator {
          *
          * @return a <code>Value</code> array.
          * @throws RepositoryException if an error occurs while retrieving the
-         *                             values from the <code>Node</code>.
+         * values from the <code>Node</code>.
+         * @see Row#getValues()
          */
         public Value[] getValues() throws RepositoryException {
             if (values == null) {
@@ -252,6 +262,7 @@ class RowIteratorImpl implements RowIterator {
          *                               among the column names of the query result table.
          * @throws RepositoryException   if <code>propertyName</code> is not a
          *                               valid property name.
+         * @see Row#getValue(String)
          */
         public Value getValue(String propertyName) throws ItemNotFoundException, RepositoryException {
             if (propertySet == null) {

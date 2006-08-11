@@ -22,6 +22,8 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.spi.ItemId;
@@ -70,6 +72,24 @@ public class LogUtil {
             ItemId id = itemState.getId();
             log.error("failed to convert " + id + " to JCR path.");
             return id.toString();
+        }
+    }
+
+    /**
+     * Failsafe conversion of a <code>QName</code> to a JCR name for use in
+     * error messages etc.
+     *
+     * @param qName
+     * @param nsResolver
+     * @return JCR name or String representation of the given <code>QName</code>
+     * in case the resolution fails.
+     */
+    public static String saveGetJCRName(QName qName, NamespaceResolver nsResolver) {
+        try {
+            return NameFormat.format(qName, nsResolver);
+        } catch (NoPrefixDeclaredException e) {
+            log.error("failed to convert " + qName + " to JCR name.");
+            return qName.toString();
         }
     }
 }

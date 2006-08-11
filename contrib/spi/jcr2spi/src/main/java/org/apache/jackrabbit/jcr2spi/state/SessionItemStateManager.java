@@ -58,8 +58,6 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.value.QValue;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.value.ValueFormat;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
@@ -74,8 +72,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Session;
 import javax.jcr.MergeException;
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -89,6 +85,7 @@ import java.util.HashSet;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.io.InputStream;
+import java.io.IOException;
 
 /**
  * <code>SessionItemStateManager</code> ...
@@ -115,7 +112,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private final NamespaceResolver nsResolver;
 
     private final IdFactory idFactory;
-    private final ValueFactory valueFactory;
     private final ItemStateValidator validator;
 
     // DIFF JR: store root id. since 'CachingItemStateManager' not used any more
@@ -132,7 +128,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     public SessionItemStateManager(NodeId rootId,
                                    UpdatableItemStateManager workspaceItemStateMgr,
                                    IdFactory idFactory,
-                                   ValueFactory valueFactory,
                                    ItemStateValidator validator,
                                    NamespaceResolver nsResolver) {
         this.workspaceItemStateMgr = workspaceItemStateMgr;
@@ -142,8 +137,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         this.validator = validator;
         // DIFF JR: idFactory added
         this.idFactory = idFactory;
-        // DIFF JR: valueFactory added
-        this.valueFactory = valueFactory;
 
         this.nsResolver = nsResolver;
         this.rootId = rootId;
@@ -348,9 +341,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
 
         if (state.isNode()) {
-            NodeId nodeId = ((NodeState)state).getNodeId();
+            NodeState nodeState = (NodeState)state;
             // build list of 'new', 'modified' or 'stale' descendants
-            Iterator iter = getDescendantTransientItemStates(nodeId);
+            Iterator iter = getDescendantTransientItemStates(nodeState);
             while (iter.hasNext()) {
                 ItemState childState = (ItemState) iter.next();
                 switch (childState.getStatus()) {
@@ -370,7 +363,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             }
 
             // build list of deleted states
-            Iterator atticIter = getDescendantTransientItemStatesInAttic(nodeId);
+            Iterator atticIter = getDescendantTransientItemStatesInAttic(nodeState);
             while (atticIter.hasNext()) {
                 ItemState transientState = (ItemState) atticIter.next();
                 changeLog.deleted(transientState);
@@ -455,11 +448,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * <p/>
      * The instances are returned in depth-first tree traversal order.
      *
-     * @param parentId the id of the common parent of the transient item state
-     *                 instances to be returned.
+     * @param parent the common parent state of the transient item state
+     * instances to be returned.
      * @return an iterator over descendant transient item state instances
      */
-    private Iterator getDescendantTransientItemStates(NodeId parentId) {
+    private Iterator getDescendantTransientItemStates(NodeState parent) {
         // DIFF JACKRABBIT: if (!transientStateMgr.hasAnyItemStates()) {
         if (transientStateMgr.getEntriesCount() == 0) {
             return Collections.EMPTY_LIST.iterator();
@@ -478,7 +471,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 // determine relative depth: > 0 means it's a descendant
                 int depth;
                 try {
-                    depth = getHierarchyManager().getRelativeDepth(parentId, state.getId());
+                    depth = getHierarchyManager().getRelativeDepth(parent, state);
                 } catch (ItemNotFoundException infe) {
                     /**
                      * one of the parents of the specified item has been
@@ -542,14 +535,14 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     }
 
     /**
-     * Same as <code>{@link #getDescendantTransientItemStates(NodeId)}</code>
+     * Same as <code>{@link #getDescendantTransientItemStates(NodeState)}</code>
      * except that item state instances in the attic are returned.
      *
-     * @param parentId the id of the common parent of the transient item state
-     *                 instances to be returned.
+     * @param parent the common parent of the transient item state
+     * instances to be returned.
      * @return an iterator over descendant transient item state instances in the attic
      */
-    private Iterator getDescendantTransientItemStatesInAttic(NodeId parentId) {
+    private Iterator getDescendantTransientItemStatesInAttic(NodeState parent) {
         // DIFF JACKRABBIT: if (!transientStateMgr.hasAnyItemStatesInAttic()) {
         if (!transientStateMgr.hasEntriesInAttic()) {
             return Collections.EMPTY_LIST.iterator();
@@ -573,7 +566,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 // determine relative depth: > 0 means it's a descendant
-                int depth = zombieHierMgr.getRelativeDepth(parentId, state.getId());
+                int depth = zombieHierMgr.getRelativeDepth(parent, state);
                 if (depth < 1) {
                     // not a descendant
                     continue;
@@ -675,7 +668,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         throws StaleItemStateException {
         ItemState transientState;
         if (root.isNode()) {
-            Iterator iter = getDescendantTransientItemStatesInAttic((NodeId) root.getId());
+            Iterator iter = getDescendantTransientItemStatesInAttic((NodeState)root);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 // check if stale
@@ -755,7 +748,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         if (state.isNode()) {
             // build list of 'new' or 'modified' descendants
-            Iterator iter = getDescendantTransientItemStates((NodeId) state.getId());
+            Iterator iter = getDescendantTransientItemStates((NodeState) state);
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 // fail-fast test: check status of transient state
@@ -1321,9 +1314,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         for (int i = 0; i < pda.length; i++) {
             QPropertyDefinition pd = pda[i];
             QValue[] autoValue = computeSystemGeneratedPropertyValues(nodeState, pd);
-            int propOptions = 0; // nothing to check
-            // execute 'addProperty' without adding operation.
-            addPropertyState(nodeState, pd.getQName(), pd.getRequiredType(), autoValue, pd, propOptions);
+            if (autoValue != null) {
+                int propOptions = 0; // nothing to check
+                // execute 'addProperty' without adding operation.
+                addPropertyState(nodeState, pd.getQName(), pd.getRequiredType(), autoValue, pd, propOptions);
+            }
         }
 
         // recursively add 'auto-create' child nodes defined in node type
@@ -1509,17 +1504,24 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @return the computed values
      */
     private QValue[] computeSystemGeneratedPropertyValues(NodeState parent,
-                                                          QPropertyDefinition def)
-        throws RepositoryException {
+                                                          QPropertyDefinition def) {
         QValue[] genValues = null;
         /**
          * todo: need to come up with some callback mechanism for applying system generated values
          * (e.g. using a NodeTypeInstanceHandler interface)
          */
-        String[] defaultValues = def.getDefaultValues();
-        if (defaultValues != null && defaultValues.length > 0) {
-            Value[] vs = ValueHelper.convert(defaultValues, def.getRequiredType(), valueFactory);
-            genValues = ValueFormat.getQValues(vs, nsResolver);
+        String[] qDefaultValues = def.getDefaultValues();
+        if (qDefaultValues != null && qDefaultValues.length > 0) {
+            if (def.getRequiredType() == PropertyType.BINARY) {
+                try {
+                    genValues = QValue.create(def.getDefaultValuesAsStream(), def.getRequiredType());
+                } catch (IOException e) {
+                    log.error("Internal error while build QValue from property definition: ", e.getMessage());
+                    return null;
+                }
+            } else {
+               genValues = QValue.create(qDefaultValues, def.getRequiredType());
+            }
         } else {
             // some predefined nodetypes declare auto-created properties without
             // default values

@@ -544,7 +544,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // modify the state of this property
         Operation op = SetPropertyValue.create(getPropertyState(), qValues, valueType);
-        itemStateMgr.execute(op);
+        session.getSessionItemStateManager().execute(op);
     }
 
     /**

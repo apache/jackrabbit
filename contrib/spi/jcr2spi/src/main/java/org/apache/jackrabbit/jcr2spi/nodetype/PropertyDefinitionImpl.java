@@ -26,7 +26,9 @@ import org.slf4j.Logger;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.PropertyType;
 import javax.jcr.nodetype.PropertyDefinition;
+import java.io.IOException;
 
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
@@ -42,7 +44,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
     private static Logger log = LoggerFactory.getLogger(PropertyDefinitionImpl.class);
 
     private final ValueFactory valueFactory;
-    
+
     /**
      * Package private constructor
      *
@@ -61,20 +63,28 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      * {@inheritDoc}
      */
     public Value[] getDefaultValues() {
-        QValue[] defVals = QValue.create(((QPropertyDefinition) itemDef).getDefaultValues());
-        if (defVals == null) {
-            return null;
+        QPropertyDefinition pDef = ((QPropertyDefinition) itemDef);
+        QValue[] defVals;
+        if (pDef.getRequiredType() == PropertyType.BINARY) {
+            try {
+                defVals = QValue.create(pDef.getDefaultValuesAsStream(), pDef.getRequiredType());
+            } catch (IOException e) {
+                String propName = (getName() == null) ? "[null]" : getName();
+                log.error("Illegal default value specified for property " + propName + " in node type " + getDeclaringNodeType(), e);
+                return null;
+            }
+        } else {
+            defVals = QValue.create(pDef.getDefaultValues(), pDef.getRequiredType());
         }
+
         Value[] values = new Value[defVals.length];
         for (int i = 0; i < defVals.length; i++) {
             try {
                 values[i] = ValueFormat.getJCRValue(defVals[i], nsResolver, valueFactory);
-            } catch (RepositoryException re) {
+            } catch (RepositoryException e) {
                 // should never get here
                 String propName = (getName() == null) ? "[null]" : getName();
-                log.error("illegal default value specified for property "
-                        + propName + " in node type " + getDeclaringNodeType(),
-                        re);
+                log.error("illegal default value specified for property " + propName + " in node type " + getDeclaringNodeType(), e);
                 return null;
             }
         }

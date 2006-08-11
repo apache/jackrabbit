@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
-import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
@@ -26,6 +26,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.spi.QueryInfo;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -33,6 +34,7 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
@@ -48,80 +50,80 @@ public class QueryImpl implements Query {
     /**
      * The session of the user executing this query
      */
-    protected SessionImpl session;
+    private final Session session;
 
     /**
-     * The namespace resolver of the session that executes this query.
+     * The namespace nsResolver of the session that executes this query.
      */
     // DIFF JR: added
-    protected NamespaceResolver resolver;
+    private final NamespaceResolver nsResolver;
 
     /**
      * The item manager of the session that executes this query.
      */
-    protected ItemManager itemManager;
+    private final ItemManager itemManager;
+
+    /**
+     * The item state manager of the session that executes this query.
+     */
+    private final ItemStateManager itemStateManager;
 
     /**
      * The query statement
      */
-    protected String statement;
+    private String statement;
 
     /**
      * The syntax of the query statement
      */
-    protected String language;
+    private String language;
 
     /**
      * The node where this query is persisted. Only set when this is a persisted
      * query.
      */
-    protected Node node;
+    private Node node;
 
     /**
      * The query handler for this query.
      */
     // DIFF JR: use WorkspaceManager (-> RepositoryService) instead
     //protected QueryHandler handler;
-    protected WorkspaceManager wspManager;
+    private WorkspaceManager wspManager;
 
     /**
-     * Flag indicating whether this query is initialized.
-     */
-    private boolean initialized = false;
-
-    /**
-     * Initializes this query.
+     * Creates a new query.
      *
      * @param session    the session that created this query.
+     * @param nsResolver the namespace resolver to be used.
      * @param itemMgr    the item manager of that session.
+     * @param itemStateManager the item state manager of that session.
      * @param wspManager the workspace manager that belongs to the session.
      * @param statement  the query statement.
      * @param language   the language of the query statement.
      * @throws InvalidQueryException if the query is invalid.
      */
     // DIFF JR: uses WorkspaceManager instead of QueryHandler
-    public void init(SessionImpl session,
-                     NamespaceResolver resolver,
-                     ItemManager itemMgr,
+    public QueryImpl(Session session, NamespaceResolver nsResolver,
+                     ItemManager itemMgr, ItemStateManager itemStateManager,
                      WorkspaceManager wspManager,
-                     String statement,
-                     String language) throws InvalidQueryException {
-        checkNotInitialized();
+                     String statement, String language) throws InvalidQueryException {
         this.session = session;
-        this.resolver = resolver;
+        this.nsResolver = nsResolver;
         this.itemManager = itemMgr;
+        this.itemStateManager = itemStateManager;
         this.statement = statement;
         this.language = language;
         this.wspManager = wspManager;
         // DIFF JR: todo validate statement
         //this.query = handler.createExecutableQuery(session, itemMgr, statement, language);
-        initialized = true;
     }
 
     /**
-     * Initializes this query from a node.
+     * Creates a query from a node.
      *
      * @param session    the session that created this query.
+     * @param nsResolver the namespace resolver to be used.
      * @param itemMgr    the item manager of that session.
      * @param wspManager the workspace manager that belongs to the session.
      * @param node       the node from where to read the query.
@@ -130,129 +132,94 @@ public class QueryImpl implements Query {
      *                               the node.
      */
     // DIFF JR: uses WorkspaceManager instead of QueryHandler
-    public void init(SessionImpl session,
-                     NamespaceResolver resolver,
-                     ItemManager itemMgr,
-                     WorkspaceManager wspManager,
-                     Node node)
-            throws InvalidQueryException, RepositoryException {
-        checkNotInitialized();
+    public QueryImpl(Session session, NamespaceResolver nsResolver,
+                     ItemManager itemMgr, ItemStateManager itemStateManager,
+                     WorkspaceManager wspManager, Node node)
+        throws InvalidQueryException, RepositoryException {
+
         this.session = session;
-        this.resolver = resolver;
+        this.nsResolver = nsResolver;
         this.itemManager = itemMgr;
+        this.itemStateManager = itemStateManager;
         this.node = node;
         this.wspManager = wspManager;
 
         try {
-            if (!node.isNodeType(NameFormat.format(QName.NT_QUERY, resolver))) {
-                throw new InvalidQueryException("node is not of type nt:query");
+            if (!node.isNodeType(NameFormat.format(QName.NT_QUERY, nsResolver))) {
+                throw new InvalidQueryException("Node is not of type nt:query");
             }
-            statement = node.getProperty(NameFormat.format(QName.JCR_STATEMENT, resolver)).getString();
-            language = node.getProperty(NameFormat.format(QName.JCR_LANGUAGE, resolver)).getString();
+            statement = node.getProperty(NameFormat.format(QName.JCR_STATEMENT, nsResolver)).getString();
+            language = node.getProperty(NameFormat.format(QName.JCR_LANGUAGE, nsResolver)).getString();
             // DIFF JR: todo validate statement
             //query = handler.createExecutableQuery(session, itemMgr, statement, language);
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
-        initialized = true;
     }
 
     /**
-     * {@inheritDoc}
+     * @see Query#execute() 
      */
     public QueryResult execute() throws RepositoryException {
-        checkInitialized();
-        return new QueryResultImpl(itemManager,
-                wspManager.executeQuery(statement, language), resolver);
+        QueryInfo qI = wspManager.executeQuery(statement, language);
+        return new QueryResultImpl(itemManager, itemStateManager, qI, nsResolver);
     }
 
     /**
-     * {@inheritDoc}
+     * @see Query#getStatement()
      */
     public String getStatement() {
-        checkInitialized();
         return statement;
     }
 
     /**
-     * {@inheritDoc}
+     * @see Query#getLanguage()
      */
     public String getLanguage() {
-        checkInitialized();
         return language;
     }
 
     /**
-     * {@inheritDoc}
+     * @see Query#getStoredQueryPath()
      */
-    public String getStoredQueryPath()
-            throws ItemNotFoundException, RepositoryException {
-        checkInitialized();
+    public String getStoredQueryPath() throws ItemNotFoundException, RepositoryException {
         if (node == null) {
-            throw new ItemNotFoundException("not a persistent query");
+            throw new ItemNotFoundException("Not a persistent query.");
         }
         return node.getPath();
     }
 
     /**
-     * {@inheritDoc}
+     * @see Query#storeAsNode(String)
      */
-    public Node storeAsNode(String absPath)
-            throws ItemExistsException,
-            PathNotFoundException,
-            VersionException,
-            ConstraintViolationException,
-            LockException,
-            UnsupportedRepositoryOperationException,
-            RepositoryException {
+    public Node storeAsNode(String absPath) throws ItemExistsException,
+        PathNotFoundException, VersionException, ConstraintViolationException,
+        LockException, UnsupportedRepositoryOperationException, RepositoryException {
 
-        checkInitialized();
         try {
-            Path p = PathFormat.parse(absPath, resolver).getNormalizedPath();
+            Path p = PathFormat.parse(absPath, nsResolver).getNormalizedPath();
             if (!p.isAbsolute()) {
                 throw new RepositoryException(absPath + " is not an absolute path");
             }
             if (session.itemExists(absPath)) {
                 throw new ItemExistsException(absPath);
             }
-            String jcrParent = PathFormat.format(p.getAncestor(1), resolver);
+            String jcrParent = PathFormat.format(p.getAncestor(1), nsResolver);
             if (!session.itemExists(jcrParent)) {
                 throw new PathNotFoundException(jcrParent);
             }
-            String relPath = PathFormat.format(p, resolver).substring(1);
-            String ntName = NameFormat.format(QName.NT_QUERY, resolver);
+            String relPath = PathFormat.format(p, nsResolver).substring(1);
+            String ntName = NameFormat.format(QName.NT_QUERY, nsResolver);
             Node queryNode = session.getRootNode().addNode(relPath, ntName);
             // set properties
-            queryNode.setProperty(NameFormat.format(QName.JCR_LANGUAGE, resolver), language);
-            queryNode.setProperty(NameFormat.format(QName.JCR_STATEMENT, resolver), statement);
+            queryNode.setProperty(NameFormat.format(QName.JCR_LANGUAGE, nsResolver), language);
+            queryNode.setProperty(NameFormat.format(QName.JCR_STATEMENT, nsResolver), statement);
             node = queryNode;
             return node;
         } catch (MalformedPathException e) {
             throw new RepositoryException(e.getMessage(), e);
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);
-        }
-    }
-
-    //-----------------------------< internal >---------------------------------
-
-    /**
-     * Checks if this query is not yet initialized and throws an
-     * <code>IllegalStateException</code> if it is already initialized.
-     */
-    protected void checkNotInitialized() {
-        if (initialized) {
-            throw new IllegalStateException("already initialized");
-        }
-    }
-
-    /**
-     * Checks if this query is initialized and throws an
-     * <code>IllegalStateException</code> if it is not yet initialized.
-     */
-    protected void checkInitialized() {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
         }
     }
 }

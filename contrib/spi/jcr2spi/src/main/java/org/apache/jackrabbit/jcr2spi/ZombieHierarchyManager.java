@@ -17,13 +17,10 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.NodeId;
 
@@ -47,36 +44,6 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
                                   NamespaceResolver nsResolver) {
         super(rootNodeId, provider, nsResolver);
         this.attic = attic;
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Delivers state from attic if such exists, otherwise calls base class.
-     */
-    protected ItemState getItemState(ItemId id)
-            throws NoSuchItemStateException, ItemStateException {
-        // always check attic first
-        if (attic.hasItemState(id)) {
-            return attic.getItemState(id);
-        }
-        // delegate to base class
-        return super.getItemState(id);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Returns <code>true</code>  if there's state on the attic for the
-     * requested item; otherwise delegates to base class.
-     */
-    protected boolean hasItemState(ItemId id) {
-        // always check attic first
-        if (attic.hasItemState(id)) {
-            return true;
-        }
-        // delegate to base class
-        return super.hasItemState(id);
     }
 
     /**

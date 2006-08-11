@@ -21,7 +21,10 @@ import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.NodeId;
+
 import java.util.Collection;
 
 /**
@@ -31,17 +34,29 @@ public class DefaultVersionManager implements VersionManager {
 
     private static Logger log = LoggerFactory.getLogger(DefaultVersionManager.class);
 
-    public void checkin(NodeId nodeId) throws RepositoryException {
+    public void checkin(NodeState nodeState) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public void checkout(NodeId nodeId) throws RepositoryException {
+    public void checkout(NodeState nodeState) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public boolean isCheckedOut(NodeId nodeId) throws RepositoryException {
+    public boolean isCheckedOut(NodeState nodeState) throws RepositoryException {
         log.debug("Versioning is not supported by this repository.");
         return true;
+    }
+
+    public void removeVersion(NodeId versionHistoryId, NodeId versionId) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
+    }
+
+    public void addVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel, boolean moveLabel) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
+    }
+
+    public void removeVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
     public void restore(NodeId nodeId, NodeId versionId, boolean removeExisting) throws RepositoryException {

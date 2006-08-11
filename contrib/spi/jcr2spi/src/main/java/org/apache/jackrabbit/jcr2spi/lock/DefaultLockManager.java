@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.lock;
 
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -24,7 +24,6 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Node;
 
 /**
  * <code>DefaultLockManager</code>...
@@ -33,23 +32,23 @@ public class DefaultLockManager implements LockManager {
 
     private static Logger log = LoggerFactory.getLogger(DefaultLockManager.class);
 
-    public Lock lock(NodeId nodeId, Node node, boolean isDeep, boolean isSessionScoped) throws LockException, RepositoryException {
+    public Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped) throws LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException("Locking ist not supported by this repository.");
     }
 
-    public Lock getLock(NodeId nodeId) throws LockException, RepositoryException {
+    public Lock getLock(NodeState nodeState) throws LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException("Locking ist not supported by this repository.");
     }
 
-    public void unlock(NodeId nodeId) throws LockException, RepositoryException {
+    public void unlock(NodeState nodeState) throws LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException("Locking ist not supported by this repository.");
     }
 
-    public boolean isLocked(NodeId nodeId) throws RepositoryException {
+    public boolean isLocked(NodeState nodeState) throws RepositoryException {
         return false;
     }
 
-    public void checkLock(NodeId nodeId) throws LockException, RepositoryException {
+    public void checkLock(NodeState nodeState) throws LockException, RepositoryException {
         // nothing to do since locking is not supported
     }
 

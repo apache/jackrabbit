@@ -64,4 +64,8 @@ public class Remove extends AbstractOperation {
         Remove rm = new Remove(state.getId(), state.getParent().getNodeId());
         return rm;
     }
+
+    public static Operation create(ItemId removeId, NodeId parentId) {
+        return new Remove(removeId, parentId);
+    }
 }

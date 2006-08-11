@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
@@ -72,7 +71,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     private int status;
     private ItemState state;
 
-    protected SessionItemStateManager itemStateMgr;
+    // protected fields for VersionImpl and VersionHistoryImpl
     protected ItemManager itemMgr;
     protected SessionImpl session;
 
@@ -84,9 +83,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     public ItemImpl(ItemManager itemManager, SessionImpl session, ItemState state,
                     ItemLifeCycleListener[] listeners) {
         this.session = session;
-        //DIFF JACKRABBIT: rep = (RepositoryImpl) session.getRepository();
-        //DIFF JACKRABBIT: stateMgr = session.getSessionItemStateManager();
-        itemStateMgr = session.getSessionItemStateManager();
 
         this.itemMgr = itemManager;
         this.state = state;
@@ -236,7 +232,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // check state of this instance
         checkStatus();
         try {
-            itemStateMgr.save(getItemState());
+            session.getSessionItemStateManager().save(getItemState());
         } catch (StaleItemStateException e) {
             throw new InvalidItemStateException(e);
         } catch (ItemStateException e) {
@@ -274,7 +270,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         }
         // reset all transient modifications from this item and its decendants.
         try {
-            itemStateMgr.undo(state);
+            session.getSessionItemStateManager().undo(state);
         } catch (ItemStateException e) {
             String msg = "Unable to update item (" + safeGetJCRPath() + ")";
             log.debug(msg);
@@ -291,7 +287,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
         // validation checks are performed within remove operation
         Operation rm = Remove.create(getItemState());
-        itemStateMgr.execute(rm);
+        session.getSessionItemStateManager().execute(rm);
     }
 
     //-----------------------------------------------------< ItemStateListener >

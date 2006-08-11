@@ -30,7 +30,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.jcr2spi.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.jcr2spi.xml.ImportHandler;
-import org.apache.jackrabbit.jcr2spi.xml.ImporterImpl;
+import org.apache.jackrabbit.jcr2spi.xml.SessionImporter;
 import org.apache.jackrabbit.jcr2spi.xml.Importer;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
@@ -439,8 +439,8 @@ public class SessionImpl implements Session, ManagerProvider {
 
         Path parentPath = getQPath(parentAbsPath);
         // DIFF JR: check for writable parent is performed within importer
-        Importer importer = new ImporterImpl(parentPath, this, getHierarchyManager(), itemStateManager, validator, getIdFactory(), uuidBehavior, false);
-        return new ImportHandler(importer, getNamespaceResolver(), workspace.getNamespaceRegistry(), getIdFactory());
+        Importer importer = new SessionImporter(parentPath, this, itemStateManager, uuidBehavior);
+        return new ImportHandler(importer, getNamespaceResolver(), workspace.getNamespaceRegistry());
     }
 
     // DIFF JR: dont cast getImportContentHandler to 'ImportHandler' check for instanceof ErrorHandler
@@ -583,7 +583,7 @@ public class SessionImpl implements Session, ManagerProvider {
         // notify listeners that session is about to be closed
         notifyLoggingOut();
 
-        // dispose name resolver
+        // dispose name nsResolver
         nsMappings.dispose();
         // dispose session item state manager
         itemStateManager.dispose();
@@ -707,7 +707,7 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     protected SessionItemStateManager createSessionItemStateManager(NodeId rootId, UpdatableItemStateManager workspaceStateManager, NamespaceResolver nsResolver) {
-        return new SessionItemStateManager(rootId, workspaceStateManager, getIdFactory(), valueFactory, getValidator(), nsResolver);
+        return new SessionItemStateManager(rootId, workspaceStateManager, getIdFactory(), getValidator(), nsResolver);
     }
 
     protected ItemManager createItemManager(HierarchyManager hierarchyMgr) {
@@ -754,11 +754,13 @@ public class SessionImpl implements Session, ManagerProvider {
         return itemManager;
     }
 
-    ItemStateValidator getValidator() {
+    // TODO public for SessionImport only. review
+    public ItemStateValidator getValidator() {
         return validator;
     }
 
-    IdFactory getIdFactory() {
+    // TODO public for SessionImport only. review
+    public IdFactory getIdFactory() {
         return workspace.getIdFactory();
     }
 
@@ -775,6 +777,7 @@ public class SessionImpl implements Session, ManagerProvider {
         return ntManager;
     }
 
+    // TODO public for SessionImport only. review
     public NodeTypeRegistry getNodeTypeRegistry() {
         return workspace.getNodeTypeRegistry();
     }

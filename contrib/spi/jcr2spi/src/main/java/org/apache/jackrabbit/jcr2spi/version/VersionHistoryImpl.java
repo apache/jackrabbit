@@ -23,10 +23,6 @@ import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
-import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
-import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
@@ -72,10 +68,11 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                               ItemLifeCycleListener[] listeners) throws VersionException {
         super(itemMgr, session, state, definition, listeners);
 
+        this.vhState = state;
+
         // retrieve nodestate of the jcr:versionLabels node
-        vhState = state;
-        if (vhState.hasChildNodeEntry(QName.JCR_VERSIONLABELS)) {
-            ChildNodeEntry lnEntry = vhState.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
+        if (state.hasChildNodeEntry(QName.JCR_VERSIONLABELS)) {
+            ChildNodeEntry lnEntry = state.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
             try {
                 labelNodeState = lnEntry.getNodeState();
             } catch (ItemStateException e) {
@@ -151,8 +148,13 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersion(String)
      */
     public Version getVersion(String versionName) throws VersionException, RepositoryException {
-        NodeState vState = getVersionState(versionName);
-        return (Version) itemMgr.getItem(vState);
+        try {
+            NodeState vState = getVersionEntry(versionName).getNodeState();
+            return (Version) itemMgr.getItem(vState);
+        } catch (ItemStateException e) {
+            // should not occur
+            throw new RepositoryException(e);
+        }
     }
 
     /**
@@ -167,6 +169,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             return (Version) itemMgr.getItem(vEntry.getNodeState());
         } catch (ItemStateException e) {
+            // should not occur
             throw new RepositoryException(e);
         }
     }
@@ -182,10 +185,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public void addVersionLabel(String versionName, String label, boolean moveLabel) throws VersionException, RepositoryException {
         QName qLabel = getQLabel(label);
-        // TODO: ev. delegate to versionmanager
         ChildNodeEntry vEntry = getVersionEntry(versionName);
-        Operation op = AddLabel.create(vhState.getNodeId(), vEntry.getId(), qLabel, moveLabel);
-        itemStateMgr.execute(op);
+        // delegate to version manager that operates on workspace directely
+        session.getVersionManager().addVersionLabel(vhState.getNodeId(), vEntry.getId(), qLabel, moveLabel);
     }
 
     /**
@@ -197,10 +199,10 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public void removeVersionLabel(String label) throws VersionException, RepositoryException {
         QName qLabel = getQLabel(label);
-        // TODO: ev. delegate to versionmanager
         ChildNodeEntry vEntry = getVersionEntryByLabel(getQLabel(label));
-        Operation op = RemoveLabel.create(vhState.getNodeId(), vEntry.getId(), qLabel);
-        itemStateMgr.execute(op);
+
+        // delegate to version manager that operates on workspace directely
+        session.getVersionManager().removeVersionLabel(vhState.getNodeId(), vEntry.getId(), qLabel);
     }
 
     /**
@@ -304,11 +306,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException
      * @see VersionHistory#removeVersion(String)
      */
-    public void removeVersion(String versionName) throws ReferentialIntegrityException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        NodeState vState = getVersionState(versionName);
-        // TODO: ev. delegate to versionmanager
-        Operation rm = Remove.create(vState);
-        itemStateMgr.execute(rm);
+    public void removeVersion(String versionName) throws RepositoryException {
+        ChildNodeEntry vEntry = getVersionEntry(versionName);
+        session.getVersionManager().removeVersion(vEntry.getId(), vhState.getNodeId());
     }
 
     //---------------------------------------------------------------< Item >---
@@ -355,21 +355,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                 return vEntry;
             }
         } catch (NameException e) {
-            throw new RepositoryException(e);
-        }
-    }
-
-    /**
-     *
-     * @param versionName
-     * @return
-     * @throws VersionException
-     * @throws RepositoryException
-     */
-    private NodeState getVersionState(String versionName) throws VersionException, RepositoryException {
-        try {
-            return getVersionEntry(versionName).getNodeState();
-        } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
     }
