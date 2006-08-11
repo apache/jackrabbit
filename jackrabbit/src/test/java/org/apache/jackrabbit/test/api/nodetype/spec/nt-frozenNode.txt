@@ -21,7 +21,6 @@ ChildNodeDefinition
 PropertyDefinition
   Name jcr:frozenMixinTypes
   RequiredType NAME
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory false
@@ -31,7 +30,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:frozenPrimaryType
   RequiredType NAME
-  ValueConstraints []
   DefaultValues null
   AutoCreated true
   Mandatory true
@@ -41,7 +39,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:frozenUuid
   RequiredType STRING
-  ValueConstraints []
   DefaultValues null
   AutoCreated true
   Mandatory true
@@ -51,7 +48,6 @@ PropertyDefinition
 PropertyDefinition
   Name "*"
   RequiredType UNDEFINED
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory false
@@ -61,7 +57,6 @@ PropertyDefinition
 PropertyDefinition
   Name "*"
   RequiredType UNDEFINED
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory false

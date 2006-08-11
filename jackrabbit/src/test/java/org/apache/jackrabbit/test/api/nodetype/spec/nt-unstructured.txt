@@ -20,7 +20,6 @@ ChildNodeDefinition
 PropertyDefinition
   Name "*"
   RequiredType UNDEFINED
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory false
@@ -30,7 +29,6 @@ PropertyDefinition
 PropertyDefinition
   Name "*"
   RequiredType UNDEFINED
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory false
