@@ -39,7 +39,6 @@ ChildNodeDefinition
 PropertyDefinition
   Name jcr:versionableUuid
   RequiredType STRING
-  ValueConstraints []
   DefaultValues null
   AutoCreated true
   Mandatory true

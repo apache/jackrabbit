@@ -12,7 +12,6 @@ PrimaryItemName
 PropertyDefinition
   Name jcr:data
   RequiredType BINARY
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory true
@@ -22,7 +21,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:encoding
   RequiredType STRING
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory false
@@ -32,7 +30,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:lastModified
   RequiredType DATE
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory true
@@ -42,7 +39,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:mimeType
   RequiredType STRING
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory true
