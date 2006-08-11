@@ -11,7 +11,6 @@ PrimaryItemName
 PropertyDefinition
   Name jcr:baseVersion
   RequiredType REFERENCE
-  ValueConstraints [nt:version]
   DefaultValues null
   AutoCreated false
   Mandatory true
@@ -21,7 +20,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:isCheckedOut
   RequiredType BOOLEAN
-  ValueConstraints []
   DefaultValues [true]
   AutoCreated true
   Mandatory true
@@ -31,7 +29,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:mergeFailed
   RequiredType REFERENCE
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory false
@@ -41,7 +38,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:predecessors
   RequiredType REFERENCE
-  ValueConstraints [nt:version]
   DefaultValues null
   AutoCreated false
   Mandatory true
@@ -51,7 +47,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:versionHistory
   RequiredType REFERENCE
-  ValueConstraints [nt:versionHistory]
   DefaultValues null
   AutoCreated false
   Mandatory true

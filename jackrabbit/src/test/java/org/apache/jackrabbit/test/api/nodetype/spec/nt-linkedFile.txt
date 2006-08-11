@@ -11,7 +11,6 @@ PrimaryItemName
 PropertyDefinition
   Name jcr:content
   RequiredType REFERENCE
-  ValueConstraints []
   DefaultValues null
   AutoCreated false
   Mandatory true

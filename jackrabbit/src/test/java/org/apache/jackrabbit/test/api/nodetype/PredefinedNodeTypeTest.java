@@ -364,15 +364,6 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         }
         String type = PropertyType.nameFromValue(property.getRequiredType());
         writer.println("  RequiredType " + type.toUpperCase());
-        writer.print("  ValueConstraints [");
-        String[] constraints = property.getValueConstraints();
-        for (int i = 0; i < constraints.length; i++) {
-            if (i > 0) {
-                writer.print(',');
-            }
-            writer.print(constraints[i]);
-        }
-        writer.println("]");
         Value[] values = property.getDefaultValues();
         if (values != null && values.length > 0) {
             writer.print("  DefaultValues [");

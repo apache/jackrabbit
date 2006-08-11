@@ -21,7 +21,6 @@ ChildNodeDefinition
 PropertyDefinition
   Name jcr:created
   RequiredType DATE
-  ValueConstraints []
   DefaultValues null
   AutoCreated true
   Mandatory true
@@ -31,7 +30,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:predecessors
   RequiredType REFERENCE
-  ValueConstraints [nt:version]
   DefaultValues null
   AutoCreated false
   Mandatory false
@@ -41,7 +39,6 @@ PropertyDefinition
 PropertyDefinition
   Name jcr:successors
   RequiredType REFERENCE
-  ValueConstraints [nt:version]
   DefaultValues null
   AutoCreated false
   Mandatory false
