@@ -342,11 +342,12 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 // test root is the root node
                 testRootNode = superuser.getRootNode();
             } else if (!superuser.getRootNode().hasNode(testPath)) {
+                cleanUp();
                 fail("Workspace does not contain test data at: " + testRoot);
             } else {
                 testRootNode = superuser.getRootNode().getNode(testPath);
             }
-        } else {
+        } else if (isSupported(Repository.LEVEL_2_SUPPORTED)) {
             testRootNode = cleanUpTestRoot(superuser);
             // also clean second workspace
             Session s = helper.getSuperuserSession(workspaceName);
@@ -355,13 +356,16 @@ public abstract class AbstractJCRTest extends JUnitTest {
             } finally {
                 s.logout();
             }
+        } else {
+            cleanUp();
+            fail("Test case requires level 2 support.");
         }
     }
 
     protected void cleanUp() throws Exception {
         if (superuser != null) {
             try {
-                if (!isReadOnly) {
+                if (!isReadOnly && isSupported(Repository.LEVEL_2_SUPPORTED)) {
                     cleanUpTestRoot(superuser);
                 }
             } catch (Exception e) {
