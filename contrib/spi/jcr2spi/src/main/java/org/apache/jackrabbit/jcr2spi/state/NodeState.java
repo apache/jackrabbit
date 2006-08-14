@@ -24,6 +24,7 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.PropertyId;
@@ -53,6 +54,22 @@ public class NodeState extends ItemState {
     private static Logger log = LoggerFactory.getLogger(NodeState.class);
 
     /**
+     * A current element Path instance.
+     */
+    private static final Path CURRENT_PATH;
+
+    static {
+        try {
+            Path.PathBuilder builder = new Path.PathBuilder();
+            builder.addFirst(Path.CURRENT_ELEMENT);
+            CURRENT_PATH = builder.getPath();
+        } catch (MalformedPathException e) {
+            // path is always valid
+            throw new InternalError("unable to create path from '.'");
+        }
+    }
+
+    /**
      * the name of this node's primary type
      */
     private QName nodeTypeName;
@@ -63,10 +80,15 @@ public class NodeState extends ItemState {
     private QName[] mixinTypeNames = new QName[0];
 
     /**
-     * TODO: id is not stable unless sole uuid.
-     * The id of this node state.
+     * The UUID of this node state or <code>null</code> if this node state
+     * cannot be identified with a uuid.
      */
-    private NodeId id;
+    private String uuid;
+
+    /**
+     * The name of this node
+     */
+    private QName name;
 
     /**
      * The parent <code>NodeState</code> or <code>null</code> if this
@@ -109,7 +131,9 @@ public class NodeState extends ItemState {
     /**
      * Constructs a new node state that is not connected.
      *
-     * @param id            id of this NodeState
+     * @param name          the name of this NodeState
+     * @param uuid          the uuid of this NodeState or <code>null</code> if
+     *                      this node state cannot be identified with a UUID.
      * @param parent        the parent of this NodeState
      * @param nodeTypeName  node type of this node
      * @param initialStatus the initial status of the node state object
@@ -120,11 +144,12 @@ public class NodeState extends ItemState {
      * @param idFactory     the <code>IdFactory</code> to create new id
      *                      instance.
      */
-    public NodeState(NodeId id, NodeState parent, QName nodeTypeName,
-                     int initialStatus, boolean isTransient,
+    public NodeState(QName name, String uuid, NodeState parent,
+                     QName nodeTypeName, int initialStatus, boolean isTransient,
                      ItemStateFactory isf, IdFactory idFactory) {
         super(initialStatus, isTransient);
-        this.id = id;
+        this.name = name;
+        this.uuid = uuid;
         this.parent = parent;
         this.idFactory = idFactory;
         this.nodeTypeName = nodeTypeName;
@@ -159,7 +184,8 @@ public class NodeState extends ItemState {
     protected synchronized void copy(ItemState state) {
         synchronized (state) {
             NodeState nodeState = (NodeState) state;
-            id = nodeState.id;
+            name = nodeState.name;
+            uuid = nodeState.uuid;
             parent = nodeState.parent; // TODO: parent from wrong ism layer
             nodeTypeName = nodeState.nodeTypeName;
             mixinTypeNames = nodeState.mixinTypeNames;
@@ -214,15 +240,36 @@ public class NodeState extends ItemState {
      * {@inheritDoc}
      */
     public ItemId getId() {
-        return id;
+        return getNodeId();
     }
 
     /**
      * Returns the id of this node state.
+     *
      * @return the id of this node state.
      */
     public NodeId getNodeId() {
-        return id;
+        if (uuid != null) {
+            return idFactory.createNodeId(uuid);
+        } else if (parent != null) {
+            // find this in parent child node entries
+            for (Iterator it = parent.getChildNodeEntries(name).iterator(); it.hasNext(); ) {
+                ChildNodeEntry cne = (ChildNodeEntry) it.next();
+                try {
+                    if (cne.getNodeState() == this) {
+                        Path relPath = Path.create(cne.getName(), cne.getIndex());
+                        return idFactory.createNodeId(parent.getNodeId(), relPath);
+                    }
+                } catch (ItemStateException e) {
+                    log.warn("Unable to access child node entry: " + cne.getId());
+                }
+            }
+        } else {
+            // root node
+            return idFactory.createNodeId((String) null, CURRENT_PATH);
+        }
+        // TODO: replace with ItemStateException instead of error.
+        throw new InternalError("Unable to retrieve NodeId for NodeState");
     }
 
     /**

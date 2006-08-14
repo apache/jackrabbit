@@ -315,7 +315,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      *                            to be canceled as well in another sub-tree.
      */
     public void undo(ItemState state) throws ItemStateException {
-        if (rootId.equals(state.getId())) {
+        if (state.getParent() == null) {
             // optimization for root
             transientStateMgr.disposeAllItemStates();
             return;
@@ -620,7 +620,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException {
         ChangeLog changeLog = new TransientChangeLog(idFactory, workspaceItemStateMgr);
-        if (rootId.equals(itemState.getId())) {
+        if (itemState.getParent() == null) {
             // root state -> get all item states
             for (Iterator it = transientStateMgr.addedStates(); it.hasNext(); ) {
                 changeLog.added((ItemState) it.next());

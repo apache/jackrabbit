@@ -64,6 +64,11 @@ public abstract class ItemState implements ItemStateListener {
     public static final int STATUS_STALE_DESTROYED = 6;
 
     /**
+     * a new state was deleted and is now 'removed'
+     */
+    public static final int STATUS_REMOVED = 7;
+
+    /**
      * the internal status of this item state
      */
     protected int status = STATUS_UNDEFINED;

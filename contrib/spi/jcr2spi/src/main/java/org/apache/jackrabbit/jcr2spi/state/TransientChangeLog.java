@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.PropertyId;
@@ -345,13 +344,7 @@ public class TransientChangeLog extends ChangeLog
      * @see TransientItemStateFactory#createNewNodeState(QName, String, NodeState)
      */
     public NodeState createNewNodeState(QName name, String uuid, NodeState parent) {
-        NodeId id;
-        if (uuid == null) {
-            id = idFactory.createNodeId(parent.getNodeId(), Path.create(name, 0));
-        } else {
-            id = idFactory.createNodeId(uuid);
-        }
-        NodeState nodeState = new NodeState(id, parent, null,
+        NodeState nodeState = new NodeState(name, uuid, parent, null,
                 ItemState.STATUS_NEW, true, this, idFactory);
         // get a notification when this item state is saved or invalidated
         nodeState.addListener(this);
@@ -441,7 +434,7 @@ public class TransientChangeLog extends ChangeLog
      * @see ItemStateListener#stateCreated(ItemState)
      */
     public void stateCreated(ItemState created) {
-        // TODO: remove from added set of change log
+        addedStates.remove(created);
     }
 
     /**
@@ -449,7 +442,7 @@ public class TransientChangeLog extends ChangeLog
      * @see ItemStateListener#stateModified(ItemState)
      */
     public void stateModified(ItemState modified) {
-        // TODO: remove from modified set of change log
+        modifiedStates.remove(modified);
     }
 
     /**
@@ -457,7 +450,7 @@ public class TransientChangeLog extends ChangeLog
      * @see ItemStateListener#stateDestroyed(ItemState)
      */
     public void stateDestroyed(ItemState destroyed) {
-        // TODO: remove from deleted set of change log
+        deletedStates.remove(destroyed);
     }
 
     /**
@@ -478,6 +471,51 @@ public class TransientChangeLog extends ChangeLog
         // 'existing modified' to 'existing'.
         // a state which changes from 'existing' to 'existing modified' will
         // go into the modified set of the change log, etc.
+        switch (state.getStatus()) {
+            case ItemState.STATUS_EXISTING:
+                if (previousStatus == ItemState.STATUS_EXISTING_MODIFIED) {
+                    // was modified and is now refreshed
+                    modifiedStates.remove(state);
+                } else if (previousStatus == ItemState.STATUS_EXISTING_REMOVED) {
+                    // was removed and is now refreshed
+                    deletedStates.remove(state);
+                } else if (previousStatus == ItemState.STATUS_STALE_MODIFIED) {
+                    // was modified and state and is now refreshed
+                    modifiedStates.remove(state);
+                }
+                break;
+            case ItemState.STATUS_EXISTING_MODIFIED:
+                modifiedStates.add(state);
+                break;
+            case ItemState.STATUS_EXISTING_REMOVED:
+                // check if modified earlier
+                if (previousStatus == ItemState.STATUS_EXISTING_MODIFIED) {
+                    modifiedStates.remove(state);
+                }
+                deletedStates.add(state);
+                break;
+            case ItemState.STATUS_REMOVED:
+                // remove from added
+                addedStates.remove(state);
+                break;
+            case ItemState.STATUS_STALE_DESTROYED:
+                // state is now stale. keep in modified. wait until refreshed.
+                // TODO: how is a stale destroyed state refreshed?
+                break;
+            case ItemState.STATUS_STALE_MODIFIED:
+                // state is now stale. keep in modified. wait until refreshed
+                break;
+            case ItemState.STATUS_NEW:
+                // should never happen
+                log.warn("ItemState changed status to 'new'");
+                break;
+            case ItemState.STATUS_UNDEFINED:
+                // should never happen
+                log.warn("ItemState changed status to 'undefined'");
+                break;
+            default:
+                log.warn("ItemState has invalid status: " + state.getStatus());
+        }
     }
 
     //--------------------------------------------------------< inner classes >
