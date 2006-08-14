@@ -45,20 +45,23 @@ public class PropertyState extends ItemState {
     private QName name;
 
     /**
-     * the internal values
+     * The internal value(s)
      */
     private QValue[] values;
 
     /**
-     * the type of this property state
+     * The type of this property state
      */
     private int type;
 
     /**
-     * flag indicating if this is a multivalue property
+     * Flag indicating if this is a multivalue property
      */
     private boolean multiValued;
 
+    /**
+     * Property definition
+     */
     private QPropertyDefinition def;
 
     /**
@@ -69,8 +72,8 @@ public class PropertyState extends ItemState {
      * @param initialStatus  the initial status of the property state object
      * @param isTransient    flag indicating whether this state is transient or not
      */
-    protected PropertyState(PropertyState overlayedState, NodeState parent, int initialStatus,
-                         boolean isTransient, IdFactory idFactory) {
+    protected PropertyState(PropertyState overlayedState, NodeState parent,
+                            int initialStatus, boolean isTransient, IdFactory idFactory) {
         super(overlayedState, parent, initialStatus, isTransient, idFactory);
         pull();
     }
@@ -117,7 +120,7 @@ public class PropertyState extends ItemState {
     public boolean isNode() {
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */

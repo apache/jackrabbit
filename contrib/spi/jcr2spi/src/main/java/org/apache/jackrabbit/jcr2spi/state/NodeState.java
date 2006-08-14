@@ -85,21 +85,12 @@ public class NodeState extends ItemState {
     private String uuid;
 
     /**
-<<<<<<< .mine
-=======
-     * The name of this node
+     * The name of this node state
      */
     private QName name;
 
     /**
-     * The parent <code>NodeState</code> or <code>null</code> if this
-     * instance represents the root node.
-     */
-    private NodeState parent;
-
-    /**
->>>>>>> .r431350
-     * this node's definition
+     * Definition of this node state
      */
     private QNodeDefinition def;
 
