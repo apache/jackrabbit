@@ -208,7 +208,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                 // any transient modifications.
                 // TODO: TO_BE_FIXED check if this is sufficient check (SPI-id)
                 ItemId thisId = (state.hasOverlayedState()) ? state.getOverlayedState().getId() : state.getId();
-                ItemId otherId = (other.getItemState().hasOverlayedState()) ? other.getItemState().getOverlayedState().getId() : other.getId();
+                ItemId otherId = (other.getItemState().hasOverlayedState()) ? other.getItemState().getOverlayedState().getId() : other.getItemState().getId();
                 return thisId.equals(otherId);
             }
         }
@@ -290,7 +290,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         session.getSessionItemStateManager().execute(rm);
     }
 
-    //-----------------------------------------------------< ItemStateListener >
+    //--------------------------------------------------< ItemStateListener >---
     /**
      * {@inheritDoc}
      */
@@ -553,15 +553,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
     //------------------------------------< Implementation specific methods >---
     /**
-     * Return the id of this <code>Item</code>.
-     *
-     * @return the id of this <code>Item</code>
-     */
-    public ItemId getId() {
-        return getItemState().getId();
-    }
-
-    /**
      * Same as <code>{@link Item#getName()}</code> except that
      * this method returns a <code>QName</code> instead of a
      * <code>String</code>.
@@ -571,7 +562,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      */
     abstract QName getQName() throws RepositoryException;
 
-    // DIFF JR: getPrimaryPath
     /**
      * Returns the primary path to this <code>Item</code>.
      *

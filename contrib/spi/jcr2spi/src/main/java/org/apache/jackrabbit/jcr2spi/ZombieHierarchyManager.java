@@ -38,11 +38,10 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      */
     protected ItemStateManager attic;
 
-    public ZombieHierarchyManager(NodeId rootNodeId,
-                                  ItemStateManager provider,
+    public ZombieHierarchyManager(ItemStateManager itemStateManager,
                                   ItemStateManager attic,
                                   NamespaceResolver nsResolver) {
-        super(rootNodeId, provider, nsResolver);
+        super(itemStateManager, nsResolver);
         this.attic = attic;
     }
 

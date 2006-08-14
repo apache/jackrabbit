@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.jcr2spi.security;
 
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NoSuchWorkspaceException;
@@ -46,52 +46,50 @@ public interface AccessManager {
      * Determines whether the specified <code>permissions</code> are granted
      * on the item with the specified path.
      *
-     * @param parentId The node id the existing ancestor.
+     * @param parentState The node state of the next existing ancestor.
      * @param relPath The relative path pointing to the non-existing target item.
      * @param actions An array of actions that need to be checked.
      * @return <code>true</code> if the actions are granted; otherwise <code>false</code>
      * @throws ItemNotFoundException if the target item does not exist
      * @throws RepositoryException if another error occurs
      */
-    // TODO: method can be removed, if jcr2spi uses spi-ids as well
-    boolean isGranted(NodeId parentId, Path relPath, String[] actions) throws ItemNotFoundException, RepositoryException;
+    boolean isGranted(NodeState parentState, Path relPath, String[] actions) throws ItemNotFoundException, RepositoryException;
 
     /**
-      * Determines whether the specified <code>permissions</code> are granted
-      * on the item with the specified path.
-      *
-      * @param itemId The id of an existing target item.
-      * @param actions An array of actions that need to be checked.
-      * @return <code>true</code> if the actions are granted; otherwise <code>false</code>
-      * @throws ItemNotFoundException if the target item does not exist
-      * @throws RepositoryException if another error occurs
-      */
-     boolean isGranted(ItemId itemId, String[] actions) throws ItemNotFoundException, RepositoryException;
+     * Determines whether the specified <code>permissions</code> are granted
+     * on the item with the specified path.
+     *
+     * @param itemState
+     * @param actions An array of actions that need to be checked.
+     * @return <code>true</code> if the actions are granted; otherwise <code>false</code>
+     * @throws ItemNotFoundException if the target item does not exist
+     * @throws RepositoryException if another error occurs
+     */
+     boolean isGranted(ItemState itemState, String[] actions) throws ItemNotFoundException, RepositoryException;
 
 
     /**
      * Returns true if the existing item with the given <code>ItemId</code> can
      * be read.
      *
-     * @param id The id of an existing target item.
+     * @param itemState
      * @return
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    boolean canRead(ItemId id) throws ItemNotFoundException, RepositoryException;
+    boolean canRead(ItemState itemState) throws ItemNotFoundException, RepositoryException;
 
     // TODO need for canWrite(ItemId ?)
 
     /**
-     * Returns true if the existing item with the given <code>ItemId</code> can
-     * be removed.
+     * Returns true if the existing item state can be removed.
      *
-     * @param id The id of an existing target item.
+     * @param itemState
      * @return
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    boolean canRemove(ItemId id) throws ItemNotFoundException, RepositoryException;
+    boolean canRemove(ItemState itemState) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Determines whether the subject of the current context is granted access

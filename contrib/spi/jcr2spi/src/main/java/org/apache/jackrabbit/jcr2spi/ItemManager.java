@@ -33,8 +33,6 @@ import javax.jcr.Item;
  */
 public interface ItemManager extends ItemLifeCycleListener {
 
-    // DIFF JR: removed 'getRootNode' shortcut
-
     /**
      * Disposes this <code>ItemManager</code> and frees resources.
      */

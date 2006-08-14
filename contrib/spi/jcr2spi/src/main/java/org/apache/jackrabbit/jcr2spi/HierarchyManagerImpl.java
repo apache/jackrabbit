@@ -43,17 +43,12 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     private static Logger log = LoggerFactory.getLogger(HierarchyManagerImpl.class);
 
-    // TODO: TO-BE-FIXED. With SPI_ItemId rootId must not be stored separately
-    protected final NodeId rootNodeId;
-
     protected final ItemStateManager itemStateManager;
     // used for outputting user-friendly paths and names
     protected final NamespaceResolver nsResolver;
 
-    public HierarchyManagerImpl(NodeId rootNodeId,
-                                ItemStateManager itemStateManager,
+    public HierarchyManagerImpl(ItemStateManager itemStateManager,
                                 NamespaceResolver nsResolver) {
-        this.rootNodeId = rootNodeId;
         this.itemStateManager = itemStateManager;
         this.nsResolver = nsResolver;
     }
@@ -191,18 +186,11 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     protected void buildPath(Path.PathBuilder builder, ItemState state)
             throws ItemStateException, RepositoryException {
-        // shortcut
-        if (state.getParent() == null) {
+        NodeState parentState = state.getParent();
+        // shortcut for root state
+        if (parentState == null) {
             builder.addRoot();
             return;
-        }
-
-        NodeState parentState = state.getParent();
-        if (parentState == null) {
-            String msg = "failed to build path of " + state.getId()
-                    + ": orphaned item";
-            log.debug(msg);
-            throw new ItemNotFoundException(msg);
         }
 
         // recursively build path of parent
@@ -239,7 +227,8 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     public ItemState getItemState(Path qPath) throws PathNotFoundException, RepositoryException {
         try {
-            ItemState rootState = itemStateManager.getItemState(rootNodeId);
+            // retrieve root state first
+            NodeState rootState = itemStateManager.getRootState();
             // shortcut
             if (qPath.denotesRoot()) {
                 return rootState;
@@ -251,9 +240,9 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 throw new RepositoryException(msg);
             }
 
-            return resolvePath(qPath, rootState, 1);
+            return resolvePath(qPath, rootState, Path.INDEX_DEFAULT);
         } catch (ItemStateException e) {
-            // should never occur
+            // should not occur
             throw new RepositoryException(e);
         }
     }
@@ -262,9 +251,14 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @see HierarchyManager#getQPath(ItemState)
      */
     public Path getQPath(ItemState itemState) throws ItemNotFoundException, RepositoryException {
+        // shortcut for root state
+        if (itemState.getParent() == null) {
+            return Path.ROOT;
+        }
 
-        Path.PathBuilder builder = new Path.PathBuilder();
+        // build path otherwise
         try {
+            Path.PathBuilder builder = new Path.PathBuilder();
             buildPath(builder, itemState);
             return builder.getPath();
         } catch (NoSuchItemStateException e) {

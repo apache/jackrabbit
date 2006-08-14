@@ -27,7 +27,6 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
@@ -86,6 +85,8 @@ public class NodeState extends ItemState {
     private String uuid;
 
     /**
+<<<<<<< .mine
+=======
      * The name of this node
      */
     private QName name;
@@ -97,6 +98,7 @@ public class NodeState extends ItemState {
     private NodeState parent;
 
     /**
+>>>>>>> .r431350
      * this node's definition
      */
     private QNodeDefinition def;
@@ -117,10 +119,6 @@ public class NodeState extends ItemState {
      * Listeners (weak references)
      */
     private final transient Collection listeners = new WeakIdentityCollection(3);
-
-    // DIFF JR: limit creation of property-ids to the nodeState
-    // TODO: check again....
-    private final IdFactory idFactory;
 
     /**
      * The <code>ItemStateFactory</code> which is used to create new
@@ -144,14 +142,12 @@ public class NodeState extends ItemState {
      * @param idFactory     the <code>IdFactory</code> to create new id
      *                      instance.
      */
-    public NodeState(QName name, String uuid, NodeState parent,
+    protected NodeState(QName name, String uuid, NodeState parent,
                      QName nodeTypeName, int initialStatus, boolean isTransient,
                      ItemStateFactory isf, IdFactory idFactory) {
-        super(initialStatus, isTransient);
+        super(parent, initialStatus, isTransient, idFactory);
         this.name = name;
         this.uuid = uuid;
-        this.parent = parent;
-        this.idFactory = idFactory;
         this.nodeTypeName = nodeTypeName;
         this.isf = isf;
     }
@@ -168,13 +164,11 @@ public class NodeState extends ItemState {
      * @param idFactory      the <code>IdFactory</code> to create new id
      *                       instance.
      */
-    public NodeState(NodeState overlayedState, NodeState parent,
+    protected NodeState(NodeState overlayedState, NodeState parent,
                      int initialStatus, boolean isTransient,
                      ItemStateFactory isf, IdFactory idFactory) {
-        super(overlayedState, initialStatus, isTransient);
+        super(overlayedState, parent, initialStatus, isTransient, idFactory);
         pull();
-        this.parent = parent;
-        this.idFactory = idFactory;
         this.isf = isf;
     }
 
@@ -206,7 +200,7 @@ public class NodeState extends ItemState {
         }
     }
 
-    //----------------------< public READ methods and package private WRITE >---
+    //--------------------< public READ methods and package private Setters >---
     /**
      * Determines if this item state represents a node.
      *
@@ -218,13 +212,6 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public NodeState getParent() {
-        return parent;
-    }
-
-    /**
      * Sets the the parent <code>NodeState</code>.
      *
      * @param parent the parent <code>NodeState</code> or <code>null</code>
@@ -232,6 +219,7 @@ public class NodeState extends ItemState {
      * state should be 'free floating', i.e. detached from the repository's
      * hierarchy.
      */
+    // TODO: change to private and only let new parent node state set the parent.
     void setParent(NodeState parent) {
         this.parent = parent;
     }
@@ -355,21 +343,20 @@ public class NodeState extends ItemState {
         // make sure the state has the definition set now
         if (def == null) {
             NodeState parentState = getParent();
-            try {
-                if (parentState == null) {
-                    // special case for root state
-                    def = ntRegistry.getRootNodeDef();
-                } else {
+            if (parentState == null) {
+                // special case for root state
+                def = ntRegistry.getRootNodeDef();
+            } else {
+                try {
                     ChildNodeEntry cne = parentState.getChildNodeEntry(getNodeId());
                     EffectiveNodeType ent = ntRegistry.getEffectiveNodeType(parentState.getNodeTypeNames());
-                    setDefinition(ent.getApplicableNodeDefinition(cne.getName(), getNodeTypeName()));
+                    def = ent.getApplicableNodeDefinition(cne.getName(), getNodeTypeName());
+                } catch (NodeTypeConflictException e) {
+                    String msg = "internal error: failed to build effective node type.";
+                    log.debug(msg);
+                    throw new RepositoryException(msg, e);
                 }
-            } catch (NodeTypeConflictException e) {
-                String msg = "internal error: failed to build effective node type.";
-                log.debug(msg);
-                throw new RepositoryException(msg, e);
             }
-
         }
         return def;
     }
@@ -480,7 +467,7 @@ public class NodeState extends ItemState {
      * @return the newly added <code>ChildNodeEntry</code>
      */
     synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
-                                                         NodeId id) {
+                                                  NodeId id) {
         ChildNodeEntry entry = childNodeEntries.add(nodeName, id);
         notifyNodeAdded(entry);
         return entry;
@@ -617,18 +604,6 @@ public class NodeState extends ItemState {
      */
     public synchronized Collection getPropertyEntries() {
         return Collections.unmodifiableCollection(properties.values());
-    }
-
-    /**
-     * Returns the <code>PropertyId</code> for a property with
-     * <code>propertyName</code>. The property does not necessarily have to
-     * exist on <code>this</code> node state.
-     *
-     * @param propertyName the name of a property.
-     * @return the property id.
-     */
-    PropertyId getPropertyId(QName propertyName) {
-        return idFactory.createPropertyId(getNodeId(), propertyName);
     }
 
     /**

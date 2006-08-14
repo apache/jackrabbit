@@ -31,6 +31,8 @@ import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.CachingItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.WorkspaceItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -56,6 +58,7 @@ import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.util.IteratorHelper;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -69,7 +72,6 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.value.QValue;
 import org.slf4j.LoggerFactory;
@@ -116,9 +118,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     // TODO: TO-BE-FIXED. Major refactoring of caching mechanism with change to SPI ids
     private final CachingItemStateManager cache;
 
-    // TODO: TO-BE-FIXED. With SPI_ItemId rootId must not be stored separately
-    private final NodeId rootNodeId;
-
     private final NamespaceRegistryImpl nsRegistry;
     private final NodeTypeRegistry ntRegistry;
 
@@ -146,7 +145,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
             nsRegistry = createNamespaceRegistry();
             ntRegistry = createNodeTypeRegistry(nsRegistry);
-            rootNodeId = createRootNodeId();
             externalChangeListener = createChangeListener();
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
@@ -159,10 +157,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     public NodeTypeRegistry getNodeTypeRegistry() {
         return ntRegistry;
-    }
-
-    public NodeId getRootNodeId() {
-        return rootNodeId;
     }
 
     public String[] getWorkspaceNames() throws RepositoryException {
@@ -297,13 +291,21 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         return l;
     }
 
-    private NodeId createRootNodeId() throws RepositoryException {
-        return service.getRootId(sessionInfo);
-    }
-
     //---------------------------------------------------< ItemStateManager >---
     /**
      * @inheritDoc
+     * @see ItemStateManager#getRootState()
+     */
+    public NodeState getRootState() throws ItemStateException {
+        // retrieve through cache
+        synchronized (cache) {
+            return cache.getRootState();
+        }
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemStateManager#getItemState(ItemId)
      */
     public ItemState getItemState(ItemId id) throws NoSuchItemStateException, ItemStateException {
         // retrieve through cache
@@ -314,6 +316,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     /**
      * @inheritDoc
+     * @see ItemStateManager#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
         synchronized (cache) {
@@ -323,6 +326,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     /**
      * @inheritDoc
+     * @see ItemStateManager#getNodeReferences(NodeId)
      */
     public NodeReferences getNodeReferences(NodeId id) throws NoSuchItemStateException, ItemStateException {
         synchronized (cache) {
@@ -332,6 +336,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     /**
      * @inheritDoc
+     * @see ItemStateManager#hasNodeReferences(NodeId)
      */
     public boolean hasNodeReferences(NodeId id) {
         synchronized (cache) {
@@ -370,7 +375,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     public void dispose() {
         if (externalChangeListener != null) {
             try {
-                service.removeEventListener(sessionInfo, rootNodeId, externalChangeListener);
+                service.removeEventListener(sessionInfo, service.getRootId(sessionInfo), externalChangeListener);
             } catch (RepositoryException e) {
                 log.warn("exception while disposing workspace manager: " + e);
             }
@@ -378,25 +383,39 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
     //------------------------------------------------------< AccessManager >---
 
-    // TODO: method can be removed, if jcr2spi uses spi-ids as well
-    public boolean isGranted(NodeId parentId, Path relPath, String[] actions) throws ItemNotFoundException, RepositoryException {
+    /**
+     * @see AccessManager#isGranted(NodeState, Path, String[])
+     */
+    public boolean isGranted(NodeState parentState, Path relPath, String[] actions) throws ItemNotFoundException, RepositoryException {
         // TODO: 'createNodeId' is basically wrong since isGranted is unspecific for any item.
-        ItemId id = getIdFactory().createNodeId(parentId, relPath);
-        return isGranted(id, actions);
-    }
-
-    public boolean isGranted(ItemId id, String[] actions) throws ItemNotFoundException, RepositoryException {
+        ItemId id = getIdFactory().createNodeId(parentState.getNodeId(), relPath);
         return service.isGranted(sessionInfo, id, actions);
     }
 
-    public boolean canRead(ItemId id) throws ItemNotFoundException, RepositoryException {
-        return service.isGranted(sessionInfo, id, AccessManager.READ);
+    /**
+     * @see AccessManager#isGranted(ItemState, String[])
+     */
+    public boolean isGranted(ItemState itemState, String[] actions) throws ItemNotFoundException, RepositoryException {
+        return service.isGranted(sessionInfo, itemState.getId(), actions);
     }
 
-    public boolean canRemove(ItemId id) throws ItemNotFoundException, RepositoryException {
-        return service.isGranted(sessionInfo, id, AccessManager.REMOVE);
+    /**
+     * @see AccessManager#canRead(ItemState)
+     */
+    public boolean canRead(ItemState itemState) throws ItemNotFoundException, RepositoryException {
+        return service.isGranted(sessionInfo, itemState.getId(), AccessManager.READ);
     }
 
+    /**
+     * @see AccessManager#canRemove(ItemState)
+     */
+    public boolean canRemove(ItemState itemState) throws ItemNotFoundException, RepositoryException {
+        return service.isGranted(sessionInfo, itemState.getId(), AccessManager.REMOVE);
+    }
+
+    /**
+     * @see AccessManager#canAccess(String)
+     */
     public boolean canAccess(String workspaceName) throws NoSuchWorkspaceException, RepositoryException {
         String[] wspNames = getWorkspaceNames();
         for (int i = 0; i < wspNames.length; i++) {

@@ -26,7 +26,16 @@ import org.apache.jackrabbit.spi.NodeId;
 public interface ItemStateManager {
 
     /**
+     * Returns the <code>NodeState</code> of the root node.
+     *
+     * @return node state of the root node.
+     * @throws ItemStateException
+     */
+    NodeState getRootState() throws ItemStateException;
+
+    /**
      * Return an item state, given its item id.
+     *
      * @param id item id
      * @return item state
      * @throws NoSuchItemStateException if the item does not exist
@@ -37,6 +46,7 @@ public interface ItemStateManager {
     /**
      * Return a flag indicating whether an item state for a given
      * item id exists.
+     *
      * @param id item id
      * @return <code>true</code> if an item state exists,
      *         otherwise <code>false</code>
@@ -45,7 +55,8 @@ public interface ItemStateManager {
 
     // DIFF JR: NodeId param instead of NodeReferenceId
     /**
-     * Return a node references object, given its target id
+     * Return a node references object, given its target id.
+     *
      * @param id target id
      * @return node references object
      * @throws NoSuchItemStateException if the item does not exist
@@ -58,6 +69,7 @@ public interface ItemStateManager {
     /**
      * Return a flag indicating whether a node references object
      * for a given target id exists.
+     *
      * @param id target id
      * @return <code>true</code> if a node reference object exists for the given
      *         id, otherwise <code>false</code>.

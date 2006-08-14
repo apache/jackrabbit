@@ -40,7 +40,6 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -365,7 +364,7 @@ public class ItemStateValidator {
 
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             // make sure current session is granted read access on parent node
-            if (!mgrProvider.getAccessManager().canRead(parentState.getNodeId())) {
+            if (!mgrProvider.getAccessManager().canRead(parentState)) {
                 throw new ItemNotFoundException(safeGetJCRPath(parentState));
             }
         }
@@ -487,7 +486,7 @@ public class ItemStateValidator {
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             // make sure current session is granted write access on new prop
             Path relPath = Path.create(propertyName, Path.INDEX_UNDEFINED);
-            if (!mgrProvider.getAccessManager().isGranted(parentState.getNodeId(), relPath, new String[] {AccessManager.SET_PROPERTY_ACTION})) {
+            if (!mgrProvider.getAccessManager().isGranted(parentState, relPath, new String[] {AccessManager.SET_PROPERTY_ACTION})) {
                 throw new AccessDeniedException(safeGetJCRPath(parentState) + ": not allowed to create property with name " + propertyName);
             }
         }
@@ -550,7 +549,7 @@ public class ItemStateValidator {
             // make sure current session is granted write access on parent node
             // TODO build Id instead 
             Path relPath = Path.create(nodeName, org.apache.jackrabbit.name.Path.INDEX_UNDEFINED);
-            if (!mgrProvider.getAccessManager().isGranted(parentState.getNodeId(), relPath, new String[] {AccessManager.ADD_NODE_ACTION})) {
+            if (!mgrProvider.getAccessManager().isGranted(parentState, relPath, new String[] {AccessManager.ADD_NODE_ACTION})) {
                 throw new AccessDeniedException(safeGetJCRPath(parentState) + ": not allowed to add child node '" + nodeName +"'");
             }
         }
@@ -602,14 +601,11 @@ public class ItemStateValidator {
 
         // TODO: missing check if all affected child-states can be removed as well
         // NOTE: referencial integrity should be asserted for all child-nodes.
-
-        ItemId targetId = targetState.getId();
         NodeState parentState = targetState.getParent();
         if (parentState == null) {
-            // root or orphaned node
-            throw new ConstraintViolationException("Cannot remove root node");
+            // root node
+            throw new ConstraintViolationException("Cannot remove root node.");
         }
-
         // check parent
         checkIsWritable(parentState, options);
 
@@ -617,11 +613,11 @@ public class ItemStateValidator {
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             try {
                 // make sure current session is granted read access on parent node
-                if (!mgrProvider.getAccessManager().canRead(targetId)) {
+                if (!mgrProvider.getAccessManager().canRead(targetState)) {
                     throw new PathNotFoundException(safeGetJCRPath(targetState));
                 }
                 // make sure current session is allowed to remove target node
-                if (!mgrProvider.getAccessManager().canRemove(targetId)) {
+                if (!mgrProvider.getAccessManager().canRemove(targetState)) {
                     throw new AccessDeniedException(safeGetJCRPath(targetState)
                             + ": not allowed to remove node");
                 }
@@ -683,10 +679,8 @@ public class ItemStateValidator {
     private void checkLock(ItemState itemState)
             throws LockException, RepositoryException {
         // make sure there's no foreign lock present the node (or the parent node
-        // for properties.
-        NodeState nodeState = (itemState.isNode())
-            ? ((NodeState)itemState)
-            : itemState.getParent();
+        // in case the state represents a PropertyState).
+        NodeState nodeState = (itemState.isNode()) ? ((NodeState)itemState) : itemState.getParent();
         mgrProvider.getLockManager().checkLock(nodeState);
     }
 

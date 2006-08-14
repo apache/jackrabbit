@@ -187,7 +187,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         QName qLabel = getQLabel(label);
         ChildNodeEntry vEntry = getVersionEntry(versionName);
         // delegate to version manager that operates on workspace directely
-        session.getVersionManager().addVersionLabel(vhState.getNodeId(), vEntry.getId(), qLabel, moveLabel);
+        session.getVersionManager().addVersionLabel(getNodeId(), vEntry.getId(), qLabel, moveLabel);
     }
 
     /**
@@ -202,7 +202,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         ChildNodeEntry vEntry = getVersionEntryByLabel(getQLabel(label));
 
         // delegate to version manager that operates on workspace directely
-        session.getVersionManager().removeVersionLabel(vhState.getNodeId(), vEntry.getId(), qLabel);
+        session.getVersionManager().removeVersionLabel(getNodeId(), vEntry.getId(), qLabel);
     }
 
     /**
@@ -308,7 +308,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public void removeVersion(String versionName) throws RepositoryException {
         ChildNodeEntry vEntry = getVersionEntry(versionName);
-        session.getVersionManager().removeVersion(vEntry.getId(), vhState.getNodeId());
+        session.getVersionManager().removeVersion(vEntry.getId(), getNodeId());
     }
 
     //---------------------------------------------------------------< Item >---
@@ -323,7 +323,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             // since all version histories are referenceable, protected and live
             // in the same workspace, a simple comparison of the ids is sufficient
             VersionHistoryImpl other = ((VersionHistoryImpl) otherItem);
-            return other.getId().equals(getId());
+            return getNodeId().equals(other.getNodeId());
         }
         return false;
     }

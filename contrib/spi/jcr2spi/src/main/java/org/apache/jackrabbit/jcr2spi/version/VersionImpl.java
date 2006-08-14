@@ -99,7 +99,7 @@ public class VersionImpl extends NodeImpl implements Version {
             // since all versions are referenceable, protected and live
             // in the same workspace, a simple comparision of the ids is sufficient
             VersionImpl other = ((VersionImpl) otherItem);
-            return other.getId().equals(getId());
+            return other.getNodeId().equals(other.getNodeId());
         }
         return false;
     }

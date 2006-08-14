@@ -114,19 +114,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private final IdFactory idFactory;
     private final ItemStateValidator validator;
 
-    // DIFF JR: store root id. since 'CachingItemStateManager' not used any more
-    // TODO: TO-BE-FIXED. With SPI_ItemId rootId must not be stored separately
-    private NodeId rootId;
-
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
      *
-     * @param rootId
      * @param workspaceItemStateMgr
      * @param nsResolver
      */
-    public SessionItemStateManager(NodeId rootId,
-                                   UpdatableItemStateManager workspaceItemStateMgr,
+    public SessionItemStateManager(UpdatableItemStateManager workspaceItemStateMgr,
                                    IdFactory idFactory,
                                    ItemStateValidator validator,
                                    NamespaceResolver nsResolver) {
@@ -139,10 +133,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         this.idFactory = idFactory;
 
         this.nsResolver = nsResolver;
-        this.rootId = rootId;
 
         // create hierarchy manager
-        hierMgr = new HierarchyManagerImpl(rootId, this, nsResolver);
+        hierMgr = new HierarchyManagerImpl(this, nsResolver);
 
     }
 
@@ -158,6 +151,16 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     //---------------------------------------------------< ItemStateManager >---
     /**
      * {@inheritDoc}
+     * @see ItemStateManager#getRootState()
+     */
+    public NodeState getRootState() throws ItemStateException {
+        // TODO
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see ItemStateManager#getItemState(ItemId)
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -189,6 +192,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * {@inheritDoc}
+     * @see ItemStateManager#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
         // first check if the specified item has been transiently removed
@@ -210,6 +214,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * {@inheritDoc}
+     * @see ItemStateManager#getNodeReferences(NodeId)
      */
     public NodeReferences getNodeReferences(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
@@ -219,6 +224,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * {@inheritDoc}
+     * @see ItemStateManager#hasNodeReferences(NodeId)
      */
     public boolean hasNodeReferences(NodeId id) {
         return workspaceItemStateMgr.hasNodeReferences(id);
@@ -308,14 +314,14 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * This will undo all changes made to <code>state</code> and descendant
      * items of <code>state</code> inside this item state manager.
      *
-     * @param state the root state of the cancel operation.
+     * @param itemState the root state of the cancel operation.
      * @throws ItemStateException if undoing changes made to <code>state</code>
      *                            and descendant items is not a closed set of
      *                            changes. That is, at least another item needs
      *                            to be canceled as well in another sub-tree.
      */
-    public void undo(ItemState state) throws ItemStateException {
-        if (state.getParent() == null) {
+    public void undo(ItemState itemState) throws ItemStateException {
+        if (itemState.getParent() == null) {
             // optimization for root
             transientStateMgr.disposeAllItemStates();
             return;
@@ -325,23 +331,23 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         ChangeLog changeLog = new TransientChangeLog(idFactory, workspaceItemStateMgr);
 
         // check status of current item's state
-        if (state.isTransient()) {
-            switch (state.getStatus()) {
+        if (itemState.isTransient()) {
+            switch (itemState.getStatus()) {
                 case ItemState.STATUS_STALE_MODIFIED:
                 case ItemState.STATUS_STALE_DESTROYED:
                 case ItemState.STATUS_EXISTING_MODIFIED:
                     // add this item's state to the list
-                    changeLog.modified(state);
+                    changeLog.modified(itemState);
                     break;
                 default:
-                    log.debug("unexpected state status (" + state.getStatus() + ")");
+                    log.debug("unexpected state status (" + itemState.getStatus() + ")");
                     // ignore
                     break;
             }
         }
 
-        if (state.isNode()) {
-            NodeState nodeState = (NodeState)state;
+        if (itemState.isNode()) {
+            NodeState nodeState = (NodeState)itemState;
             // build list of 'new', 'modified' or 'stale' descendants
             Iterator iter = getDescendantTransientItemStates(nodeState);
             while (iter.hasNext()) {
@@ -471,7 +477,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 // determine relative depth: > 0 means it's a descendant
                 int depth;
                 try {
-                    depth = getHierarchyManager().getRelativeDepth(parent, state);
+                    depth = hierMgr.getRelativeDepth(parent, state);
                 } catch (ItemNotFoundException infe) {
                     /**
                      * one of the parents of the specified item has been
@@ -553,10 +559,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         // use a special attic-aware hierarchy manager
         ZombieHierarchyManager zombieHierMgr =
-                new ZombieHierarchyManager(rootId,
-                        this,
-                        transientStateMgr.getAttic(),
-                        nsResolver);
+                new ZombieHierarchyManager(this, transientStateMgr.getAttic(), nsResolver);
 
         // use an array of lists to group the descendants by relative depth;
         // the depth is used as array index
@@ -713,28 +716,28 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
                 case ItemState.STATUS_NEW:
                     {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, getHierarchyManager()) + ": cannot save a new item.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": cannot save a new item.";
                         log.debug(msg);
                         throw new ItemStateException(msg);
                     }
 
                 case ItemState.STATUS_STALE_MODIFIED:
                     {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, getHierarchyManager()) + ": the item cannot be saved because it has been modified externally.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been modified externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
 
                 case ItemState.STATUS_STALE_DESTROYED:
                     {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, getHierarchyManager()) + ": the item cannot be saved because it has been deleted externally.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been deleted externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
 
                 case ItemState.STATUS_UNDEFINED:
                     {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, getHierarchyManager()) + ": the item cannot be saved; it seems to have been removed externally.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved; it seems to have been removed externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
@@ -957,7 +960,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         QNodeDefinition newDefinition = validator.getApplicableNodeDefinition(operation.getDestinationName(), srcState.getNodeTypeName(), destParent);
 
         // perform the move (modifying states)
-        // TODO: TO-BE-FIXED. Move with SPI id       
+        // TODO: TO-BE-FIXED. Move with SPI id
         boolean renameOnly = srcParent.getNodeId().equals(destParent.getNodeId());
         ChildNodeEntry cne = srcParent.getChildNodeEntry(srcState.getNodeId());
         if (cne == null) {
@@ -1434,8 +1437,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             }
         }
 
-        // now actually do unlink target state
-        targetState.setParent(null);
         // destroy target state
         // DIFF JR: destroy targetState (not overlayed state)
         destroy(targetState);
