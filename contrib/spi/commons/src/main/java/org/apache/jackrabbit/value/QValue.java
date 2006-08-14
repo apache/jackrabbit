@@ -38,6 +38,8 @@ import java.io.FileOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Calendar;
 import java.util.Arrays;
 
@@ -85,36 +87,60 @@ public class QValue {
     }
 
     /**
-     * @param qValue
+     * @param values
      * @return
      */
-    public static QValue create(String qValue, int type) {
-        if (qValue == null) {
+    public static QValue[] create(String[] values) {
+        QValue[] ret = new QValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = new QValue(values[i]);
+        }
+        return ret;
+    }
+
+    /**
+     * @param value
+     * @return
+     */
+    public static QValue create(String value, int type) {
+        if (value == null) {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
         switch (type) {
             case PropertyType.BOOLEAN:
-                return new QValue(Boolean.valueOf(qValue).booleanValue());
+                return new QValue(Boolean.valueOf(value).booleanValue());
             case PropertyType.DATE:
-                return new QValue(ISO8601.parse(qValue));
+                return new QValue(ISO8601.parse(value));
             case PropertyType.DOUBLE:
-                return new QValue(Double.valueOf(qValue).doubleValue());
+                return new QValue(Double.valueOf(value).doubleValue());
             case PropertyType.LONG:
-                return new QValue(Long.valueOf(qValue).longValue());
+                return new QValue(Long.valueOf(value).longValue());
             case PropertyType.REFERENCE:
                 // DIFF JR: references are not forced to represent a UUID object
-                return new QValue(qValue, true);
+                return new QValue(value, true);
             case PropertyType.PATH:
-                return new QValue(Path.valueOf(qValue));
+                return new QValue(Path.valueOf(value));
             case PropertyType.NAME:
-                return new QValue(QName.valueOf(qValue));
+                return new QValue(QName.valueOf(value));
             case PropertyType.STRING:
-                return new QValue(qValue);
+                return new QValue(value);
             case PropertyType.BINARY:
                 throw new IllegalArgumentException("this method does not support the type PropertyType.BINARY");
             default:
                 throw new IllegalArgumentException("illegal type");
         }
+    }
+
+    /**
+     * @param values
+     * @return
+     */
+    public static QValue[] create(String[] values, int type) {
+        QValue[] ret = new QValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = QValue.create(values[i], type);
+        }
+        return ret;
     }
 
     /**
@@ -172,7 +198,7 @@ public class QValue {
      * @return
      * @throws IOException
      */
-    public static QValue create(InputStream value, int type) throws IOException, RepositoryException {
+    public static QValue create(InputStream value, int type) throws IOException {
         if (value == null) {
             throw new IllegalArgumentException("Cannot create QValue from null value.");
         }
@@ -201,15 +227,27 @@ public class QValue {
                     return create(text, type);
 
                 } catch (UnsupportedEncodingException e) {
-                    throw new RepositoryException(DEFAULT_ENCODING + " not supported on this platform", e);
+                    throw new IllegalArgumentException(DEFAULT_ENCODING + " not supported on this platform: " + e.getMessage());
                 } catch (IOException e) {
-                    throw new RepositoryException("conversion from stream to string failed", e);
+                    throw new IllegalArgumentException("conversion from stream to string failed: " + e.getMessage());
                 } finally {
                     value.close();
                 }
             default:
                 throw new IllegalArgumentException("illegal type");
         }
+    }
+
+    /**
+     * @param values
+     * @return
+     */
+    public static QValue[] create(InputStream[] values, int type) throws IOException {
+        QValue[] ret = new QValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = QValue.create(values[i], type);
+        }
+        return ret;
     }
 
     /**
@@ -252,30 +290,6 @@ public class QValue {
     }
 
     /**
-     * @param values
-     * @return
-     */
-    public static QValue[] create(String[] values) {
-        QValue[] ret = new QValue[values.length];
-        for (int i = 0; i < values.length; i++) {
-            ret[i] = new QValue(values[i]);
-        }
-        return ret;
-    }
-
-    /**
-     * @param values
-     * @return
-     */
-    public static QValue[] create(Calendar[] values) {
-        QValue[] ret = new QValue[values.length];
-        for (int i = 0; i < values.length; i++) {
-            ret[i] = new QValue(values[i]);
-        }
-        return ret;
-    }
-
-    /**
      * @param value
      * @return
      */
@@ -291,6 +305,7 @@ public class QValue {
         return new QValue(value);
     }
 
+    //--------------------------------------------------------------------------
     /**
      * @return
      */
