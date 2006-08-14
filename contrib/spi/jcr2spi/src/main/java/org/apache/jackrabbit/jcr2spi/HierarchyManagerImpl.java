@@ -192,7 +192,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     protected void buildPath(Path.PathBuilder builder, ItemState state)
             throws ItemStateException, RepositoryException {
         // shortcut
-        if (state.getId().equals(rootNodeId)) {
+        if (state.getParent() == null) {
             builder.addRoot();
             return;
         }
