@@ -27,6 +27,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.jcr2spi.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.jcr2spi.xml.ImportHandler;
@@ -48,7 +49,6 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.LoggerFactory;
@@ -163,7 +163,7 @@ public class SessionImpl implements Session, ManagerProvider {
 
         // build the state mananger
         // DIFF JACKRABBIT: itemStateMgr = createSessionItemStateManager(wsp.getSessionItemStateManager());
-        itemStateManager = createSessionItemStateManager(workspace.getRootNodeId(), workspace.getUpdatableItemStateManager(), nsMappings);
+        itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager(), nsMappings);
 
         // DIFF JACKRABBIT: itemManager = createItemManager(itemStateMgr, hierMgr);
         itemManager = createItemManager(getHierarchyManager());
@@ -242,10 +242,8 @@ public class SessionImpl implements Session, ManagerProvider {
     public Node getRootNode() throws RepositoryException {
         checkIsAlive();
         try {
-            ItemState state = getItemStateManager().getItemState(workspace.getRootNodeId());
+            ItemState state = getItemStateManager().getRootState();
             return (Node) itemManager.getItem(state);
-        } catch (NoSuchItemStateException e) {
-            throw new ItemNotFoundException();
         } catch (ItemStateException e) {
             String msg = "Failed to retrieve root node.";
             log.error(msg, e);
@@ -401,25 +399,24 @@ public class SessionImpl implements Session, ManagerProvider {
         boolean isGranted;
         if (itemExists(absPath)) {
             ItemState itemState = getHierarchyManager().getItemState(targetPath);
-            isGranted = getAccessManager().isGranted(itemState.getId(), actionsArr);
+            isGranted = getAccessManager().isGranted(itemState, actionsArr);
         } else {
             // TODO: if spi-ids are used, its possible to build an id for a non-existing item (see also Node.restore)
             // The given abs-path may point to a non-existing item
             Path parentPath = targetPath;
-            NodeId parentId = null;
-            while (parentId == null) {
+            NodeState parentState = null;
+            while (parentState == null) {
                 parentPath = parentPath.getAncestor(1);
                 if (itemManager.itemExists(parentPath)) {
-                    ItemId id = getHierarchyManager().getItemState(parentPath).getId();
-                    if (id.denotesNode()) {
-                        parentId = (NodeId) id;
+                    ItemState itemState = getHierarchyManager().getItemState(parentPath);
+                    if (itemState.isNode()) {
+                        parentState = itemState.getParent();
                     }
                 }
             }
-            // TODO build Id instead
             try {
                 Path relPath = parentPath.computeRelativePath(targetPath);
-                isGranted = getAccessManager().isGranted(parentId, relPath, actionsArr);
+                isGranted = getAccessManager().isGranted(parentState, relPath, actionsArr);
                 if (!isGranted) {
                     throw new AccessControlException(actions);
                 }
@@ -706,8 +703,8 @@ public class SessionImpl implements Session, ManagerProvider {
         return new WorkspaceImpl(sessionInfo.getWorkspaceName(), this, service, sessionInfo);
     }
 
-    protected SessionItemStateManager createSessionItemStateManager(NodeId rootId, UpdatableItemStateManager workspaceStateManager, NamespaceResolver nsResolver) {
-        return new SessionItemStateManager(rootId, workspaceStateManager, getIdFactory(), getValidator(), nsResolver);
+    protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager workspaceStateManager, NamespaceResolver nsResolver) {
+        return new SessionItemStateManager(workspaceStateManager, getIdFactory(), getValidator(), nsResolver);
     }
 
     protected ItemManager createItemManager(HierarchyManager hierarchyMgr) {

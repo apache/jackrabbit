@@ -101,6 +101,19 @@ public class TransientChangeLog extends ChangeLog
     //-----------------------< ItemStateManager >-------------------------------
 
     /**
+     * Return the root node state or <code>null</code> if the root state has
+     * not been modified yet.
+     *
+     * @return
+     * @throws ItemStateException
+     * @see ItemStateManager#getRootState()
+     */
+    public NodeState getRootState() throws ItemStateException {
+        // TODO
+        return null;
+    }
+
+    /**
      * Return an item state given its id. Returns <code>null</code>
      * if the item state is neither in the added nor in the modified
      * section. Throws a <code>NoSuchItemStateException</code> if
@@ -358,7 +371,7 @@ public class TransientChangeLog extends ChangeLog
      */
     public PropertyState createNewPropertyState(QName name, NodeState parent) {
         PropertyState propState = new PropertyState(name, parent,
-                ItemState.STATUS_NEW, true);
+                ItemState.STATUS_NEW, true, idFactory);
         // get a notification when this item state is saved or invalidated
         propState.addListener(this);
         added(propState);
@@ -407,7 +420,7 @@ public class TransientChangeLog extends ChangeLog
         NodeId parentId = overlayedState.getParent().getNodeId();
         NodeState parentState = (NodeState) ism.getItemState(parentId);
         PropertyState propState = new PropertyState(overlayedState, parentState,
-                ItemState.STATUS_EXISTING, true);
+                ItemState.STATUS_EXISTING, true, idFactory);
         propState.addListener(this);
         return propState;
     }
@@ -422,7 +435,7 @@ public class TransientChangeLog extends ChangeLog
         // retrieve state to overlay
         PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
         PropertyState propState = new PropertyState(overlayedState, parentState,
-                ItemState.STATUS_EXISTING, true);
+                ItemState.STATUS_EXISTING, true, idFactory);
         propState.addListener(this);
         return propState;
     }
@@ -528,6 +541,18 @@ public class TransientChangeLog extends ChangeLog
     private class AtticItemStateManager implements ItemStateManager {
 
         AtticItemStateManager() {
+        }
+
+        /**
+         * Since the root node may never be removed, this method always returns
+         * <code>null</code>.
+         *
+         * @return <code>null</code> since the root node cannot be removed.
+         * @throws ItemStateException
+         * @see ItemStateManager#getRootState()
+         */
+        public NodeState getRootState() throws ItemStateException {
+            return null;
         }
 
         /**

@@ -21,15 +21,13 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.ChildPropertyEntry;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.version.VersionHistoryImpl;
 import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.commons.collections.map.ReferenceMap;
@@ -82,7 +80,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
     /**
      * A cache for item instances created by this <code>ItemManagerImpl</code>.
-     * // DIFF JR:
+     * 
      * The <code>ItemState</code>s act as keys for the map. In contrast to
      * o.a.j.core the item state are copied to transient space for reading and
      * will therefor not change upon transient modifications.
@@ -194,11 +192,15 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
         Iterator iter = parentState.getChildNodeEntries().iterator();
         while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-            NodeId id = entry.getId();
-            // check read access
-            if (session.getAccessManager().canRead(id)) {
-                return true;
+            try {
+                // check read access
+                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+                if (session.getAccessManager().canRead(entry.getNodeState())) {
+                    return true;
+                }
+            } catch (ItemStateException e) {
+                // should not occur. ignore
+                log.debug("Failed to access node state.", e);
             }
         }
         return false;
@@ -227,14 +229,17 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
         Iterator iter = parentState.getPropertyEntries().iterator();
         while (iter.hasNext()) {
-            ChildPropertyEntry entry = (ChildPropertyEntry) iter.next();
-            PropertyId id = entry.getId();
-            // check read access
-            if (session.getAccessManager().canRead(id)) {
-                return true;
+            try {
+                ChildPropertyEntry entry = (ChildPropertyEntry) iter.next();
+                // check read access
+                if (session.getAccessManager().canRead(entry.getPropertyState())) {
+                    return true;
+                }
+            } catch (ItemStateException e) {
+                // should not occur. ignore
+                log.debug("Failed to access node state.", e);
             }
         }
-
         return false;
     }
 
@@ -336,8 +341,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      */
     private void checkAccess(ItemState state, boolean removeFromCache) throws RepositoryException {
         // check privileges
-        ItemId id = state.getId();
-        if (!session.getAccessManager().canRead(id)) {
+        if (!session.getAccessManager().canRead(state)) {
             if (removeFromCache) {
                 // clear cache
                 Item item = retrieveItem(state);
@@ -345,7 +349,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
                     evictItem(state);
                 }
             }
-            throw new AccessDeniedException("cannot read item " + id);
+            throw new AccessDeniedException("cannot read item " + state.getId());
         }
     }
 

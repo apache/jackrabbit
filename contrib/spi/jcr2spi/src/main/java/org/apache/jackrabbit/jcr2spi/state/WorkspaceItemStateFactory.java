@@ -201,7 +201,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             // NOTE: unable to retrieve definitionId -> needs to be retrieved
             // by the itemManager upon Property creation.
             PropertyState state = new PropertyState(info.getQName(), parent,
-                    ItemState.STATUS_EXISTING, false);
+                    ItemState.STATUS_EXISTING, false, service.getIdFactory());
             state.setMultiValued(info.isMultiValued());
             state.setType(info.getType());
             QValue[] qValues;

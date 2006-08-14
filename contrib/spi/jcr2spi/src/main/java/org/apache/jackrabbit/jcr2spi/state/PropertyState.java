@@ -24,6 +24,7 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
@@ -42,11 +43,6 @@ public class PropertyState extends ItemState {
      * The name of this property state.
      */
     private QName name;
-
-    /**
-     * The parent state
-     */
-    private NodeState parent;
 
     /**
      * the internal values
@@ -73,11 +69,10 @@ public class PropertyState extends ItemState {
      * @param initialStatus  the initial status of the property state object
      * @param isTransient    flag indicating whether this state is transient or not
      */
-    public PropertyState(PropertyState overlayedState, NodeState parent, int initialStatus,
-                         boolean isTransient) {
-        super(overlayedState, initialStatus, isTransient);
+    protected PropertyState(PropertyState overlayedState, NodeState parent, int initialStatus,
+                         boolean isTransient, IdFactory idFactory) {
+        super(overlayedState, parent, initialStatus, isTransient, idFactory);
         pull();
-        this.parent = parent;
     }
 
     /**
@@ -88,10 +83,10 @@ public class PropertyState extends ItemState {
      * @param isTransient   flag indicating whether this state is transient or
      *                      not
      */
-    public PropertyState(QName name, NodeState parent, int initialStatus, boolean isTransient) {
-        super(initialStatus, isTransient);
+    protected PropertyState(QName name, NodeState parent, int initialStatus,
+                            boolean isTransient, IdFactory idFactory) {
+        super(parent, initialStatus, isTransient, idFactory);
         this.name = name;
-        this.parent = parent;
         type = PropertyType.UNDEFINED;
         values = QValue.EMPTY_ARRAY;
         multiValued = false;
@@ -112,9 +107,9 @@ public class PropertyState extends ItemState {
         }
     }
 
-    //----------------------< public READ methods and package private WRITE >---
+    //--------------------< public READ methods and package private Setters >---
     /**
-     * Determines if this item state represents a node.
+     * Always returns false.
      *
      * @return always false
      * @see ItemState#isNode
@@ -122,7 +117,7 @@ public class PropertyState extends ItemState {
     public boolean isNode() {
         return false;
     }
-
+    
     /**
      * {@inheritDoc}
      */
@@ -132,18 +127,11 @@ public class PropertyState extends ItemState {
 
     /**
      * Returns the identifier of this property.
-     * 
+     *
      * @return the id of this property.
      */
     public PropertyId getPropertyId() {
-        return parent.getPropertyId(name);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeState getParent() {
-        return parent;
+        return idFactory.createPropertyId(parent.getNodeId(), getQName());
     }
 
     /**
@@ -225,6 +213,11 @@ public class PropertyState extends ItemState {
         if (def == null) {
             try {
                 NodeState parentState = getParent();
+                if (parentState == null) {
+                    String msg = "Internal error: cannot determine definition for orphaned state.";
+                    log.debug(msg);
+                    throw new RepositoryException(msg);
+                }
                 EffectiveNodeType ent = ntRegistry.getEffectiveNodeType(parentState.getNodeTypeNames());
                 setDefinition(ent.getApplicablePropertyDefinition(getQName(), getType(), isMultiValued()));
             } catch (NodeTypeConflictException e) {

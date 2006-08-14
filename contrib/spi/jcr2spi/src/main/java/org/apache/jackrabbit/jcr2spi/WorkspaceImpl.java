@@ -238,7 +238,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         NodeId[] versionIds = new NodeId[versions.length];
         for (int i = 0; i < versions.length; i++) {
             if (versions[i] instanceof VersionImpl) {
-                versionIds[i] = (NodeId) ((VersionImpl)versions[i]).getId();
+                versionIds[i] = ((VersionImpl)versions[i]).getNodeId();
             } else {
                 throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for the given version " + versions[i].getPath());
             }
@@ -343,8 +343,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      */
     public HierarchyManager getHierarchyManager() {
         if (hierManager == null) {
-            hierManager = new HierarchyManagerImpl(getRootNodeId(),
-                getItemStateManager(), getNamespaceResolver());
+            hierManager = new HierarchyManagerImpl(getItemStateManager(), getNamespaceResolver());
         }
         return hierManager;
     }
@@ -388,10 +387,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         return wspManager.getIdFactory();
     }
 
-    NodeId getRootNodeId() {
-        return wspManager.getRootNodeId();
-    }
-
     NodeTypeRegistry getNodeTypeRegistry() {
         return wspManager.getNodeTypeRegistry();
     }
@@ -406,7 +401,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      *
      * @return the state manager of this workspace
      */
-    public UpdatableItemStateManager getUpdatableItemStateManager() {
+    UpdatableItemStateManager getUpdatableItemStateManager() {
         return wspManager;
     }
     //-----------------------------------------------------< initialization >---

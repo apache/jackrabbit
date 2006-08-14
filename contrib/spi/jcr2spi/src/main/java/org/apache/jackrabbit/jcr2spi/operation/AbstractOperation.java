@@ -66,8 +66,6 @@ public abstract class AbstractOperation implements Operation {
         affectedIds.add(affectedId);
     }
 
-    // TODO to be removed after ID refactoring completed
-
     /**
      * 
      * @param nodePath

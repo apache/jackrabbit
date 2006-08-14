@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.IdFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,11 +75,6 @@ public abstract class ItemState implements ItemStateListener {
     protected int status = STATUS_UNDEFINED;
 
     /**
-     * a modification counter used to prevent concurrent modifications
-     */
-    private short modCount;
-
-    /**
      * Flag indicating whether this state is transient
      */
     private final boolean isTransient;
@@ -88,18 +84,33 @@ public abstract class ItemState implements ItemStateListener {
      */
     private final transient Collection listeners = new WeakIdentityCollection(5);
 
+    // TODO: check again...
+    /**
+     *  IdFactory used to build id of the states
+     */
+    final IdFactory idFactory;
+
+    // DIFF JR
+    /**
+     * The parent <code>NodeState</code> or <code>null</code> if this
+     * instance represents the root node.
+     */
+    NodeState parent;
+
     /**
      * the backing persistent item state (may be null)
      */
-    protected transient ItemState overlayedState;
+    transient ItemState overlayedState;
 
     /**
      * Constructs a new unconnected item state
      *
+     * @param parent
      * @param initialStatus the initial status of the item state object
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected ItemState(int initialStatus, boolean isTransient) {
+    protected ItemState(NodeState parent, int initialStatus, boolean isTransient,
+                        IdFactory idFactory) {
         switch (initialStatus) {
             case STATUS_EXISTING:
             case STATUS_NEW:
@@ -110,9 +121,10 @@ public abstract class ItemState implements ItemStateListener {
                 log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
-        modCount = 0;
+        this.parent = parent;
         overlayedState = null;
         this.isTransient = isTransient;
+        this.idFactory = idFactory;
     }
 
     /**
@@ -123,7 +135,8 @@ public abstract class ItemState implements ItemStateListener {
      * @param initialStatus the initial status of the new <code>ItemState</code> instance
      * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected ItemState(ItemState overlayedState, int initialStatus, boolean isTransient) {
+    protected ItemState(ItemState overlayedState, NodeState parent, int initialStatus,
+                        boolean isTransient, IdFactory idFactory) {
         switch (initialStatus) {
             case STATUS_EXISTING:
             case STATUS_EXISTING_MODIFIED:
@@ -136,9 +149,11 @@ public abstract class ItemState implements ItemStateListener {
                 throw new IllegalArgumentException(msg);
         }
         this.isTransient = isTransient;
+        this.parent = parent;
+        this.idFactory = idFactory;
         connect(overlayedState);
     }
-    
+
     /**
      * Copy state information from another state into this state
      * @param state source state information
@@ -151,8 +166,6 @@ public abstract class ItemState implements ItemStateListener {
     void pull() {
         if (overlayedState != null) {
             copy(overlayedState);
-            // sync modification count
-            modCount = overlayedState.getModCount();
         }
     }
 
@@ -214,6 +227,19 @@ public abstract class ItemState implements ItemStateListener {
         }
     }
 
+
+    /**
+     * Discards this instance, i.e. renders it 'invalid'.
+     */
+    protected void discard() {
+        if (status != STATUS_UNDEFINED) {
+            // notify listeners
+            notifyStateDiscarded();
+            // reset status
+            setStatus(STATUS_UNDEFINED);
+        }
+    }
+
     /**
      * Notify the listeners that the persistent state this object is
      * representing has been discarded.
@@ -252,7 +278,7 @@ public abstract class ItemState implements ItemStateListener {
      * Notify the listeners that the persistent state this object is
      * representing has been updated.
      */
-    public void notifyStateUpdated() {
+    protected void notifyStateUpdated() {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemStateListener[] la;
         synchronized (listeners) {
@@ -269,7 +295,7 @@ public abstract class ItemState implements ItemStateListener {
      * Notify the listeners that the persistent state this object is
      * representing has been destroyed.
      */
-    public void notifyStateDestroyed() {
+    protected void notifyStateDestroyed() {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemStateListener[] la;
         synchronized (listeners) {
@@ -321,14 +347,13 @@ public abstract class ItemState implements ItemStateListener {
             case STATUS_EXISTING_REMOVED:
             case STATUS_UNDEFINED:
             default:
-                String msg = "Cannot mark item state with status " +
-                        status + " modified.";
+                String msg = "Cannot mark item state with status " + status + " modified.";
                 throw new IllegalStateException(msg);
         }
     }
 
 
-    //-------------------------------------------------------< public methods >
+    //--------------------< public READ methods and package private Setters >---
     /**
      * Determines if this item state represents a node.
      *
@@ -356,27 +381,15 @@ public abstract class ItemState implements ItemStateListener {
     }
 
     /**
-     * Determines whether this item state has become stale.
-     * @return true if this item state has become stale, false otherwise.
-     */
-    public boolean isStale() {
-        if (isTransient) {
-            return status == STATUS_STALE_MODIFIED
-                || status == STATUS_STALE_DESTROYED;
-        } else {
-            return overlayedState != null
-                && modCount != overlayedState.getModCount();
-        }
-    }
-
-    /**
      * Returns the parent <code>NodeState</code> or <code>null</code>
      * if either this item state represents the root node or this item state is
      * 'free floating', i.e. not attached to the repository's hierarchy.
      *
      * @return the parent <code>NodeState</code>
      */
-    public abstract NodeState getParent();
+    public NodeState getParent() {
+        return parent;
+    }
 
     /**
      * Returns the status of this item.
@@ -388,13 +401,11 @@ public abstract class ItemState implements ItemStateListener {
     }
 
     /**
-     * TODO: this method should be at least protected. the outside should not
-     * TODO: control the status of an item state
      * Sets the new status of this item.
      *
      * @param newStatus the new status
      */
-    public void setStatus(int newStatus) {
+    void setStatus(int newStatus) {
         if (status == newStatus) {
             return;
         }
@@ -415,43 +426,6 @@ public abstract class ItemState implements ItemStateListener {
                 throw new IllegalArgumentException(msg);
         }
         notifyStatusChanged(oldStatus);
-    }
-
-    /**
-     * Returns the modification count.
-     *
-     * @return the modification count.
-     */
-    public short getModCount() {
-        return modCount;
-    }
-
-    /**
-     * Sets the modification count.
-     *
-     * @param modCount the modification count of this item
-     */
-    public void setModCount(short modCount) {
-        this.modCount = modCount;
-    }
-
-    /**
-     * Updates the modification count.
-     */
-    synchronized void touch() {
-        modCount++;
-    }
-
-    /**
-     * Discards this instance, i.e. renders it 'invalid'.
-     */
-    public void discard() {
-        if (status != STATUS_UNDEFINED) {
-            // notify listeners
-            notifyStateDiscarded();
-            // reset status
-            setStatus(STATUS_UNDEFINED);
-        }
     }
 
     /**

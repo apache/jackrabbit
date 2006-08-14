@@ -146,8 +146,9 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Node getParent() throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         checkStatus();
-        // check if root node
+
         NodeState parentState = getItemState().getParent();
+        // special treatment for root node
         if (parentState == null) {
             String msg = "Root node doesn't have a parent.";
             log.debug(msg);
@@ -534,7 +535,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new UnsupportedRepositoryOperationException();
         }
         // Node is referenceable -> NodeId must contain a UUID part
-        return getNodeState().getNodeId().getUUID();
+        return getNodeId().getUUID();
     }
 
     /**
@@ -542,12 +543,14 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public int getIndex() throws RepositoryException {
         checkStatus();
+
         NodeState parentState = getItemState().getParent();
         if (parentState == null) {
             // the root node cannot have same-name siblings; always return the
             // default index
             return Path.INDEX_DEFAULT;
         }
+
         ChildNodeEntry parentEntry = parentState.getChildNodeEntry(getNodeId());
         return parentEntry.getIndex();
     }
@@ -834,7 +837,8 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         if (version instanceof VersionImpl) {
-            session.getVersionManager().resolveMergeConflict(getNodeId(), (NodeId) ((VersionImpl)version).getId(), done);
+            NodeId versionId = ((VersionImpl)version).getNodeId();
+            session.getVersionManager().resolveMergeConflict(getNodeId(), versionId, done);
         } else {
             throw new RepositoryException("Incompatible Version object :" + version);
         }
@@ -1053,7 +1057,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private void restore(NodeId nodeId, Version version, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
         if (version instanceof VersionImpl) {
-            session.getVersionManager().restore(nodeId, (NodeId) ((VersionImpl)version).getId(), removeExisting);
+            NodeId versionId = ((VersionImpl)version).getNodeId();
+            session.getVersionManager().restore(nodeId, versionId, removeExisting);
         } else {
             throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for the given version " + version.getPath());
         }
@@ -1185,10 +1190,9 @@ public class NodeImpl extends ItemImpl implements Node {
             return QName.ROOT;
         }
 
-        NodeId nodeId = getNodeState().getNodeId();
-        ChildNodeEntry entry = parentState.getChildNodeEntry(nodeId);
+        ChildNodeEntry entry = parentState.getChildNodeEntry(getNodeId());
         if (entry == null) {
-            String msg = "Failed to retrieve qualified name of Node " + nodeId;
+            String msg = "Failed to retrieve qualified name of Node " + getNodeId();
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -1491,11 +1495,12 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Return the id of this <code>Node</code>.
+     * Return the id of this <code>Node</code>. Protected for usage within
+     * <code>VersionImpl</code> and <code>VersionHistoryImpl</code>.
      *
      * @return the id of this <code>Node</code>
      */
-    private NodeId getNodeId() {
+    protected NodeId getNodeId() {
         return getNodeState().getNodeId();
     }
 

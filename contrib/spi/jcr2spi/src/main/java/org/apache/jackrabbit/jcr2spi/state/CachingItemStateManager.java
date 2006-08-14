@@ -92,6 +92,11 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
     }
 
     //---------------------------------------------------< ItemStateManager >---
+
+    public NodeState getRootState() throws ItemStateException {
+        return root;
+    }
+
     /**
      * @inheritDoc
      * @see ItemStateManager#getItemState(ItemId)
