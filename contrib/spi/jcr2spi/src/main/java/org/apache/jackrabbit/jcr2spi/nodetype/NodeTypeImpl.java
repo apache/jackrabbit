@@ -54,9 +54,17 @@ public class NodeTypeImpl implements NodeType {
     private final QNodeTypeDefinition ntd;
     private final EffectiveNodeType ent;
     private final NodeTypeManagerImpl ntMgr;
-    // namespace resolver used to translate qualified names to JCR names
+    /**
+     * Namespace resolver used to translate qualified names to JCR names
+     */
     private final NamespaceResolver nsResolver;
-    // DIFF JR: v-factory added
+    /**
+     * ValueFactory used to convert JCR values to qualified ones in order to
+     * determine whether a property specified by name and value(s) would be allowed.
+     *
+     * @see NodeType#canSetProperty(String, Value)
+     * @see NodeType#canSetProperty(String, Value[])
+     */
     private final ValueFactory valueFactory;
 
     /**
