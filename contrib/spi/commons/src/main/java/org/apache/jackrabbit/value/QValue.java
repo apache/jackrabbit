@@ -38,8 +38,6 @@ import java.io.FileOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.Calendar;
 import java.util.Arrays;
 
