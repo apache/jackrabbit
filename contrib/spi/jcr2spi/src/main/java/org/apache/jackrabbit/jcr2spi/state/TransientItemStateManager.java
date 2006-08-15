@@ -31,11 +31,17 @@ import java.util.Iterator;
 
 /**
  * <code>TransientItemStateManager</code> implements a {@link ItemStateManager}
- * and adds more methods that support transient changes (e.g. resurrect deleted
- * state).
+ * and adds support for transient changes on {@link ItemState}s. This item
+ * state manager also returns item states that are transiently deleted. It is
+ * the responsiblity of the caller to check whether a certain item state is
+ * still valid. This item state manager also provides methods to create new
+ * item states. While all other modifications can be invoked on the item state
+ * instances itself, creating a new node state is done using
+ * {@link #createNodeState(QName, String, QName, NodeState)} and
+ * {@link #createPropertyState(NodeState, QName)}.
  */
 public class TransientItemStateManager
-        implements ItemStateManager, TransientItemStateFactory, ItemStateLifeCycleListener {
+        implements ItemStateManager, ItemStateLifeCycleListener {
 
     /**
      * Logger instance for this class.
@@ -60,6 +66,12 @@ public class TransientItemStateManager
     private final ItemStateManager parent;
 
     /**
+     * The transient item state factory to create new and existing item state
+     * instances.
+     */
+    private final TransientItemStateFactory isf;
+
+    /**
      * ItemStateManager view of the states in the attic; lazily instantiated
      * in {@link #getAttic()}
      */
@@ -69,6 +81,7 @@ public class TransientItemStateManager
         this.changeLog = new ChangeLog();
         this.idFactory = idFactory;
         this.parent = parent;
+        this.isf = new TransientISFactory();
     }
 
     //-----------------------< ItemStateManager >-------------------------------
@@ -255,7 +268,7 @@ public class TransientItemStateManager
                                      String uuid,
                                      QName nodeTypeName,
                                      NodeState parent) {
-        NodeState nodeState = createNewNodeState(nodeName, uuid, parent);
+        NodeState nodeState = isf.createNewNodeState(nodeName, uuid, parent);
         nodeState.setNodeTypeName(nodeTypeName);
         parent.addChildNodeState(nodeState, uuid);
         changeLog.added(nodeState);
@@ -275,7 +288,7 @@ public class TransientItemStateManager
      */
     public PropertyState createPropertyState(NodeState parent, QName propName)
             throws ItemExistsException {
-        PropertyState propState = createNewPropertyState(propName, parent);
+        PropertyState propState = isf.createNewPropertyState(propName, parent);
         parent.addPropertyState(propState);
         changeLog.added(propState);
         propState.addListener(this);
@@ -398,92 +411,95 @@ public class TransientItemStateManager
 
     //----------------------< TransientItemStateFactory >-----------------------
 
-    /**
-     * @inheritDoc
-     * @see TransientItemStateFactory#createNewNodeState(QName, String, NodeState)
-     */
-    public NodeState createNewNodeState(QName name, String uuid, NodeState parent) {
-        NodeState nodeState = new NodeState(name, uuid, parent, null,
-                ItemState.STATUS_NEW, true, this, idFactory);
-        // get a notification when this item state is saved or invalidated
-        nodeState.addListener(this);
-        changeLog.added(nodeState);
-        return nodeState;
-    }
+    private final class TransientISFactory implements TransientItemStateFactory {
 
-    /**
-     * @inheritDoc
-     * @see TransientItemStateFactory#createNewPropertyState(QName, NodeState)
-     */
-    public PropertyState createNewPropertyState(QName name, NodeState parent) {
-        PropertyState propState = new PropertyState(name, parent,
-                ItemState.STATUS_NEW, true, idFactory);
-        // get a notification when this item state is saved or invalidated
-        propState.addListener(this);
-        changeLog.added(propState);
-        return propState;
-    }
+        /**
+         * @inheritDoc
+         * @see TransientItemStateFactory#createNewNodeState(QName, String, NodeState)
+         */
+        public NodeState createNewNodeState(QName name, String uuid, NodeState parent) {
+            NodeState nodeState = new NodeState(name, uuid, parent, null,
+                    ItemState.STATUS_NEW, true, this, idFactory);
+            // get a notification when this item state is saved or invalidated
+            nodeState.addListener(TransientItemStateManager.this);
+            changeLog.added(nodeState);
+            return nodeState;
+        }
 
-    /**
-     * @inheritDoc
-     * @see TransientItemStateFactory#createNodeState(NodeId, ItemStateManager)
-     */
-    public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
-            throws NoSuchItemStateException, ItemStateException {
-        // retrieve state to overlay
-        NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
-        NodeId parentId = overlayedState.getParent().getNodeId();
-        NodeState parentState = (NodeState) ism.getItemState(parentId);
-        NodeState nodeState = new NodeState(overlayedState, parentState,
-                ItemState.STATUS_EXISTING, true, this, idFactory);
-        nodeState.addListener(this);
-        return nodeState;
-    }
+        /**
+         * @inheritDoc
+         * @see TransientItemStateFactory#createNewPropertyState(QName, NodeState)
+         */
+        public PropertyState createNewPropertyState(QName name, NodeState parent) {
+            PropertyState propState = new PropertyState(name, parent,
+                    ItemState.STATUS_NEW, true, idFactory);
+            // get a notification when this item state is saved or invalidated
+            propState.addListener(TransientItemStateManager.this);
+            changeLog.added(propState);
+            return propState;
+        }
 
-    /**
-     * @inheritDoc
-     * @see TransientItemStateFactory#createNodeState(NodeId, NodeState)
-     */
-    public NodeState createNodeState(NodeId nodeId, NodeState parentState)
-            throws NoSuchItemStateException, ItemStateException {
-        // retrieve state to overlay
-        NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
-        NodeState nodeState = new NodeState(overlayedState, parentState,
-                ItemState.STATUS_EXISTING, true, this, idFactory);
-        nodeState.addListener(this);
-        return nodeState;
-    }
+        /**
+         * @inheritDoc
+         * @see TransientItemStateFactory#createNodeState(NodeId, ItemStateManager)
+         */
+        public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
+                throws NoSuchItemStateException, ItemStateException {
+            // retrieve state to overlay
+            NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
+            NodeId parentId = overlayedState.getParent().getNodeId();
+            NodeState parentState = (NodeState) ism.getItemState(parentId);
+            NodeState nodeState = new NodeState(overlayedState, parentState,
+                    ItemState.STATUS_EXISTING, true, this, idFactory);
+            nodeState.addListener(TransientItemStateManager.this);
+            return nodeState;
+        }
 
-    /**
-     * @inheritDoc
-     * @see TransientItemStateFactory#createPropertyState(PropertyId, ItemStateManager)
-     */
-    public PropertyState createPropertyState(PropertyId propertyId,
-                                             ItemStateManager ism)
-            throws NoSuchItemStateException, ItemStateException {
-        // retrieve state to overlay
-        PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
-        NodeId parentId = overlayedState.getParent().getNodeId();
-        NodeState parentState = (NodeState) ism.getItemState(parentId);
-        PropertyState propState = new PropertyState(overlayedState, parentState,
-                ItemState.STATUS_EXISTING, true, idFactory);
-        propState.addListener(this);
-        return propState;
-    }
+        /**
+         * @inheritDoc
+         * @see TransientItemStateFactory#createNodeState(NodeId, NodeState)
+         */
+        public NodeState createNodeState(NodeId nodeId, NodeState parentState)
+                throws NoSuchItemStateException, ItemStateException {
+            // retrieve state to overlay
+            NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
+            NodeState nodeState = new NodeState(overlayedState, parentState,
+                    ItemState.STATUS_EXISTING, true, this, idFactory);
+            nodeState.addListener(TransientItemStateManager.this);
+            return nodeState;
+        }
 
-    /**
-     * @inheritDoc
-     * @see TransientItemStateFactory#createPropertyState(PropertyId, NodeState)
-     */
-    public PropertyState createPropertyState(PropertyId propertyId,
-                                             NodeState parentState)
-            throws NoSuchItemStateException, ItemStateException {
-        // retrieve state to overlay
-        PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
-        PropertyState propState = new PropertyState(overlayedState, parentState,
-                ItemState.STATUS_EXISTING, true, idFactory);
-        propState.addListener(this);
-        return propState;
+        /**
+         * @inheritDoc
+         * @see TransientItemStateFactory#createPropertyState(PropertyId, ItemStateManager)
+         */
+        public PropertyState createPropertyState(PropertyId propertyId,
+                                                 ItemStateManager ism)
+                throws NoSuchItemStateException, ItemStateException {
+            // retrieve state to overlay
+            PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
+            NodeId parentId = overlayedState.getParent().getNodeId();
+            NodeState parentState = (NodeState) ism.getItemState(parentId);
+            PropertyState propState = new PropertyState(overlayedState, parentState,
+                    ItemState.STATUS_EXISTING, true, idFactory);
+            propState.addListener(TransientItemStateManager.this);
+            return propState;
+        }
+
+        /**
+         * @inheritDoc
+         * @see TransientItemStateFactory#createPropertyState(PropertyId, NodeState)
+         */
+        public PropertyState createPropertyState(PropertyId propertyId,
+                                                 NodeState parentState)
+                throws NoSuchItemStateException, ItemStateException {
+            // retrieve state to overlay
+            PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
+            PropertyState propState = new PropertyState(overlayedState, parentState,
+                    ItemState.STATUS_EXISTING, true, idFactory);
+            propState.addListener(TransientItemStateManager.this);
+            return propState;
+        }
     }
 
     //-----------------------< ItemStateLifeCycleListener >---------------------
