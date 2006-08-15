@@ -21,7 +21,10 @@ import org.apache.jackrabbit.webdav.DavResource;
 import java.io.IOException;
 
 /**
- * <code>IOHandler</code>...
+ * <code>IOHandler</code> interface defines methods for importing and
+ * exporting resource content as well as some fundamental resource properties
+ * which use to be set/retrieved together with content import and export (e.g.
+ * content length, modification date etc.).
  */
 public interface IOHandler {
 
