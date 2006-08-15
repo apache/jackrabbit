@@ -127,7 +127,7 @@ public class ZipHandler extends DefaultHandler {
         try {
             ZipEntry entry;
             while ((entry=zin.getNextEntry())!=null && success) {
-                importZipEntry(zin, entry, context, contentNode);
+                success = importZipEntry(zin, entry, context, contentNode);
                 zin.closeEntry();
             }
         } finally {
