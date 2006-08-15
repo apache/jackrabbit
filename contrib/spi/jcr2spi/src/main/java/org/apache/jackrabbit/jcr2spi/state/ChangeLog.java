@@ -19,8 +19,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 
 import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.LinkedHashSet;
 
@@ -53,7 +51,7 @@ public class ChangeLog {
     /**
      * Type of operation this changelog is collection state modifications for.
      */  
-    private List operations = new ArrayList();
+    private Set operations = new LinkedHashSet();
 
     //-----------------------------------------------< Inform the ChangeLog >---
     // DIFF JR: method added
@@ -78,23 +76,20 @@ public class ChangeLog {
 
     /**
      * A state has been modified. If the state is not a new state
-     * (not in the collection of added ones), then disconnect
-     * the local state from its underlying shared state and add
+     * (not in the collection of added ones), then add
      * it to the modified states collection.
      *
      * @param state state that has been modified
      */
     public void modified(ItemState state) {
         if (!addedStates.contains(state)) {
-            state.disconnect();
             modifiedStates.add(state);
         }
     }
 
     /**
      * A state has been deleted. If the state is not a new state
-     * (not in the collection of added ones), then disconnect
-     * the local state from its underlying shared state, remove
+     * (not in the collection of added ones), then remove
      * it from the modified states collection and add it to the
      * deleted states collection.
      *
@@ -102,7 +97,6 @@ public class ChangeLog {
      */
     public void deleted(ItemState state) {
         if (addedStates.remove(state)) {
-            state.disconnect();
             modifiedStates.remove(state);
             deletedStates.add(state);
         }
@@ -307,7 +301,6 @@ public class ChangeLog {
      * @return <code>true</code> if the operation was removed.
      */
     protected boolean removeOperation(Operation operation) {
-        // @todo optimize
         return operations.remove(operation);
     }
 }
