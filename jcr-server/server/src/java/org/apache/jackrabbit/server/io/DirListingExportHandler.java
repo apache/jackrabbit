@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * <code>DirListingExportHandler</code> represents a simple export for collections:
@@ -38,11 +39,17 @@ import java.util.Date;
  * Note: If {@link #exportContent(ExportContext, boolean)} is called the view list
  * child nodes only, without respecting their representation as <code>DavResource</code>s.
  */
-public class DirListingExportHandler implements IOHandler {
+public class DirListingExportHandler implements IOHandler, PropertyHandler {
 
     private static Logger log = LoggerFactory.getLogger(DirListingExportHandler.class);
 
     private IOManager ioManager;
+
+    /**
+     * Creates a new <code>DirListingExportHandler</code>
+     */
+    public DirListingExportHandler() {
+    }
 
     /**
      * Creates a new <code>DirListingExportHandler</code>
@@ -251,11 +258,42 @@ public class DirListingExportHandler implements IOHandler {
     public void setIOManager(IOManager ioManager) {
         this.ioManager = ioManager;
     }
-    
+
     /**
      * @see IOHandler#getName()
      */
     public String getName() {
         return "DirListing Export";
+    }
+
+    //----------------------------------------------------< PropertyHandler >---
+
+    public boolean canExport(PropertyExportContext context, boolean isCollection) {
+        return canExport((ExportContext)context, isCollection);
+    }
+
+    /**
+     * @see PropertyHandler#exportProperties(PropertyExportContext, boolean)
+     */
+    public boolean exportProperties(PropertyExportContext exportContext, boolean isCollection) throws RepositoryException {
+        if (!canExport(exportContext, isCollection)) {
+            throw new RepositoryException(getName() + ": Cannot export properties for context " + exportContext);
+        }
+        exportContext.setModificationTime(new Date().getTime());
+        exportContext.setContentType("text/html", "UTF-8");
+        exportContext.setETag("");
+        return true;
+    }
+
+    public boolean canImport(PropertyImportContext context, boolean isCollection) {
+        return false;
+    }
+
+    /**
+     * @see PropertyHandler#importProperties(PropertyImportContext, boolean)
+     */
+    public Map importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
+        // export facilities only -> throw
+        throw new RepositoryException(getName() + ": Cannot import properties.");
     }
 }

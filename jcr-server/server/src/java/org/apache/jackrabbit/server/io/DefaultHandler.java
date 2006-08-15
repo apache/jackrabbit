@@ -17,7 +17,12 @@
 package org.apache.jackrabbit.server.io;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,10 +31,19 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyIterator;
+import javax.jcr.Session;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.nodetype.PropertyDefinition;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * <code>DefaultHandler</code> implements a simple IOHandler that creates 'file'
@@ -53,13 +67,15 @@ import java.util.Date;
  * Subclasses therefore should provide their own {@link #importData(ImportContext, boolean, Node)
  * importData} method, that handles the data according their needs.
  */
-public class DefaultHandler implements IOHandler {
+public class DefaultHandler implements IOHandler, PropertyHandler {
 
     private static Logger log = LoggerFactory.getLogger(DefaultHandler.class);
 
     private String collectionNodetype = JcrConstants.NT_FOLDER;
     private String defaultNodetype = JcrConstants.NT_FILE;
-    private String contentNodetype = JcrConstants.NT_RESOURCE;
+    /* IMPORTANT NOTE: for webDAV compliancy the default nodetype of the content
+       node has been changed from nt:resource to nt:unstructured. */
+    private String contentNodetype = JcrConstants.NT_UNSTRUCTURED;
 
     private IOManager ioManager;
 
@@ -97,7 +113,7 @@ public class DefaultHandler implements IOHandler {
      */
     public DefaultHandler(IOManager ioManager, String collectionNodetype, String defaultNodetype, String contentNodetype) {
         this.ioManager = ioManager;
-        
+
         this.collectionNodetype = collectionNodetype;
         this.defaultNodetype = defaultNodetype;
         this.contentNodetype = contentNodetype;
@@ -406,7 +422,8 @@ public class DefaultHandler implements IOHandler {
         try {
             // only non-collections: 'jcr:created' is present on the parent 'fileNode' only
             if (!isCollection && contentNode.getDepth() > 0 && contentNode.getParent().hasProperty(JcrConstants.JCR_CREATED)) {
-                context.setCreationTime(contentNode.getParent().getProperty(JcrConstants.JCR_CREATED).getValue().getLong());
+                long cTime = contentNode.getParent().getProperty(JcrConstants.JCR_CREATED).getValue().getLong();
+                context.setCreationTime(cTime);
             }
 
             long length = IOUtil.UNDEFINED_LENGTH;
@@ -444,6 +461,7 @@ public class DefaultHandler implements IOHandler {
             }
         } catch (RepositoryException e) {
             // should never occur
+            log.error("Unexpected error {0} while exporting properties: {1}", e.getClass().getName(), e.getMessage());
             throw new IOException(e.getMessage());
         }
     }
@@ -494,5 +512,194 @@ public class DefaultHandler implements IOHandler {
      */
     protected String getContentNodeType() {
         return contentNodetype;
+    }
+
+    //----------------------------------------------------< PropertyHandler >---
+
+    public boolean canExport(PropertyExportContext context, boolean isCollection) {
+        return canExport((ExportContext) context, isCollection);
+    }
+
+    public boolean exportProperties(PropertyExportContext exportContext, boolean isCollection) throws RepositoryException {
+        if (!canExport(exportContext, isCollection)) {
+            throw new RepositoryException("PropertyHandler " + getName() + " failed to export properties.");
+        }
+
+        Node cn = getContentNode(exportContext, isCollection);
+        try {
+            // export the properties common with normal IO handling
+            exportProperties(exportContext, isCollection, cn);
+            
+            // export all other properties as well
+            PropertyIterator it = cn.getProperties();
+            while (it.hasNext()) {
+                Property p = it.nextProperty();
+                String name = p.getName();
+                PropertyDefinition def = p.getDefinition();
+                if (def.isMultiple()) {
+                    log.debug("Multivalued property '" + name + "' not added to webdav property set.");
+                    continue;
+                }
+                if (JcrConstants.JCR_DATA.equals(name)
+                    || JcrConstants.JCR_MIMETYPE.equals(name)
+                    || JcrConstants.JCR_ENCODING.equals(name)
+                    || JcrConstants.JCR_LASTMODIFIED.equals(name)) {
+                    continue;
+                }
+
+                DavPropertyName davName = getDavName(name, p.getSession());
+                exportContext.setProperty(davName, p.getValue().getString());
+            }
+            return true;
+        } catch (IOException e) {
+            // should not occur (log output see 'exportProperties')
+            return false;
+        }
+    }
+
+    public boolean canImport(PropertyImportContext context, boolean isCollection) {
+        if (context == null || context.isCompleted()) {
+            return false;
+        }
+        Item contextItem = context.getImportRoot();
+        try {
+            return contextItem != null && contextItem.isNode() && (!isCollection || ((Node)contextItem).hasNode(JcrConstants.JCR_CONTENT));
+        } catch (RepositoryException e) {
+            log.error("Unexpected error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public Map importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException {
+        if (!canImport(importContext, isCollection)) {
+            throw new RepositoryException("PropertyHandler " + getName() + " failed import properties");
+        }
+
+        // loop over List and remember all properties and propertyNames
+        // that failed to be imported (set or remove).
+        Map failures = new HashMap();
+        List changeList = importContext.getChangeList();
+
+        // for collections the import-root is the target node where properties
+        // are altered. in contrast 'non-collections' are with the handler
+        // represented by 'file' nodes, that must have a jcr:content child
+        // node, which holds all properties except jcr:created.
+        // -> see canImport for the corresponding assertions
+        Node cn = (Node) importContext.getImportRoot();
+        if (!isCollection && cn.hasNode(JcrConstants.JCR_CONTENT)) {
+            cn = cn.getNode(JcrConstants.JCR_CONTENT);
+        }
+
+        if (changeList != null) {
+            Iterator it = changeList.iterator();
+            while (it.hasNext()) {
+                Object propEntry = it.next();
+                try {
+                    if (propEntry instanceof DavPropertyName) {
+                        // remove
+                        DavPropertyName propName = (DavPropertyName)propEntry;
+                        removeJcrProperty(propName, cn);
+                    } else if (propEntry instanceof DavProperty) {
+                        // add or modify property
+                        DavProperty prop = (DavProperty)propEntry;
+                        setJcrProperty(prop, cn);
+                    } else {
+                        // ignore any other entry in the change list
+                        log.error("unknown object in change list: " + propEntry.getClass().getName());
+                    }
+                } catch (RepositoryException e) {
+                    failures.put(propEntry, e);
+                }
+            }
+        }
+        return failures;
+    }
+
+    //------------------------------------------------------------< private >---
+    /**
+     * Builds a webdav property name from the given jcrName. In case the jcrName
+     * contains a namespace prefix that would conflict with any of the predefined
+     * webdav namespaces a new prefix is assigned.<br>
+     * Please note, that the local part of the jcrName is checked for XML
+     * compatibility by calling {@link ISO9075#encode(String)}
+     *
+     * @param jcrName
+     * @param session
+     * @return a <code>DavPropertyName</code> for the given jcr name.
+     */
+    private DavPropertyName getDavName(String jcrName, Session session) throws RepositoryException {
+        // make sure the local name is xml compliant
+        String localName = ISO9075.encode(Text.getLocalName(jcrName));
+        String prefix = Text.getNamespacePrefix(jcrName);
+        String uri = session.getNamespaceURI(prefix);
+        Namespace namespace = Namespace.getNamespace(prefix, uri);
+        DavPropertyName name = DavPropertyName.create(localName, namespace);
+        return name;
+    }
+
+    /**
+     * Build jcr property name from dav property name. If the property name
+     * defines a namespace uri, that has not been registered yet, an attempt
+     * is made to register the uri with the prefix defined. Note, that no
+     * extra effort is made to generated a unique prefix.
+     *
+     * @param propName
+     * @return jcr name
+     * @throws RepositoryException
+     */
+    private String getJcrName(DavPropertyName propName, Session session) throws RepositoryException {
+        // remove any encoding necessary for xml compliance
+        String pName = ISO9075.decode(propName.getName());
+        Namespace propNamespace = propName.getNamespace();
+        if (!Namespace.EMPTY_NAMESPACE.equals(propNamespace)) {
+            String prefix;
+            String emptyPrefix = Namespace.EMPTY_NAMESPACE.getPrefix();
+            try {
+                // lookup 'prefix' in the session-ns-mappings / namespace-registry
+                prefix = session.getNamespacePrefix(propNamespace.getURI());
+            } catch (NamespaceException e) {
+                // namespace uri has not been registered yet
+                NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
+                prefix = propNamespace.getPrefix();
+                // avoid trouble with default namespace
+                if (emptyPrefix.equals(prefix)) {
+                    prefix = "_pre" + nsReg.getPrefixes().length + 1;
+                }
+                // NOTE: will fail if prefix is already in use in the namespace registry
+                nsReg.registerNamespace(prefix, propNamespace.getURI());
+            }
+            if (prefix != null && !emptyPrefix.equals(prefix)) {
+                pName = prefix + ":" + pName;
+            }
+        }
+        return pName;
+    }
+
+
+    /**
+     * @param property
+     * @throws RepositoryException
+     */
+    private void setJcrProperty(DavProperty property, Node contentNode) throws RepositoryException {
+        // Retrieve the property value. Note, that a 'null' value is replaced
+        // by empty string, since setting a jcr property value to 'null'
+        // would be equivalent to its removal.
+        String value = "";
+        if (property.getValue() != null) {
+            value = property.getValue().toString();
+        }
+        contentNode.setProperty(getJcrName(property.getName(), contentNode.getSession()), value);
+    }
+
+    /**
+     * @param propertyName
+     * @throws RepositoryException
+     */
+    private void removeJcrProperty(DavPropertyName propertyName, Node contentNode) throws RepositoryException {
+        String jcrName = getJcrName(propertyName, contentNode.getSession());
+        if (contentNode.hasProperty(jcrName)) {
+            contentNode.getProperty(jcrName).remove();
+        }
+        // removal of non existing property succeeds
     }
 }
