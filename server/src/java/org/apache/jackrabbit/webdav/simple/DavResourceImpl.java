@@ -17,14 +17,18 @@
 package org.apache.jackrabbit.webdav.simple;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.server.io.AbstractExportContext;
 import org.apache.jackrabbit.server.io.ExportContext;
 import org.apache.jackrabbit.server.io.ExportContextImpl;
 import org.apache.jackrabbit.server.io.IOManager;
 import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.server.io.ImportContext;
 import org.apache.jackrabbit.server.io.ImportContextImpl;
-import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.server.io.PropertyManager;
+import org.apache.jackrabbit.server.io.PropertyImportContext;
+import org.apache.jackrabbit.server.io.IOListener;
+import org.apache.jackrabbit.server.io.PropertyExportContext;
+import org.apache.jackrabbit.server.io.AbstractExportContext;
+import org.apache.jackrabbit.server.io.DefaultIOListener;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
@@ -57,22 +61,16 @@ import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
-import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.Lock;
-import javax.jcr.nodetype.PropertyDefinition;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -80,6 +78,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Collections;
 
 /**
  * DavResourceImpl implements a DavResource.
@@ -110,6 +110,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
 
     private ItemFilter filter;
     private IOManager ioManager;
+    private PropertyManager propManager;
 
     private long modificationTime = IOUtil.UNDEFINED_TIME;
 
@@ -128,6 +129,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         this.locator = locator;
         this.filter = config.getItemFilter();
         this.ioManager = config.getIOManager();
+        this.propManager = config.getPropertyManager();
 
         if (locator != null && locator.getResourcePath() != null) {
             try {
@@ -286,11 +288,12 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         }
 
         try {
-            ioManager.exportContent(new PropertyExportCtx(), this);
-        } catch (IOException e) {
-            // should not occure....
+            propManager.exportProperties(getPropertyExportContext(), isCollection());
+        } catch (RepositoryException e) {
+            log.warn("Error while accessing resource properties", e);
         }
 
+        // set (or reset) fundamental properties
         if (getDisplayName() != null) {
             properties.add(new DefaultDavProperty(DavPropertyName.DISPLAYNAME, getDisplayName()));
         }
@@ -313,24 +316,6 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         supportedLock.addEntry(Type.WRITE, Scope.EXCLUSIVE);
         properties.add(supportedLock);
 
-        // non-protected JCR properties defined on the underlying jcr node
-        try {
-            PropertyIterator it = node.getProperties();
-            while (it.hasNext()) {
-                Property p = it.nextProperty();
-                String pName = p.getName();
-                PropertyDefinition def = p.getDefinition();
-                if (def.isMultiple() || isFilteredItem(p)) {
-                    log.debug("Property '" + pName + "' not added to webdav property set (either multivalue or filtered).");
-                    continue;
-                }
-                DavPropertyName name = getDavName(pName, node.getSession());
-                String value = p.getValue().getString();
-                properties.add(new DefaultDavProperty(name, value, def.isProtected()));
-            }
-        } catch (RepositoryException e) {
-            log.error("Unexpected error while retrieving properties: " + e.getMessage());
-        }
         inited = true;
     }
 
@@ -340,25 +325,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @see DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
      */
     public void setProperty(DavProperty property) throws DavException {
-        if (isLocked(this)) {
-            throw new DavException(DavServletResponse.SC_LOCKED);
-        }
-        if (!exists()) {
-            throw new DavException(DavServletResponse.SC_NOT_FOUND);
-        }
-        try {
-            setJcrProperty(property);
-            node.save();
-        } catch (RepositoryException e) {
-            // revert any changes made so far an throw exception
-            JcrDavException je = new JcrDavException(e);
-            try {
-                node.refresh(false);
-            } catch (RepositoryException re) {
-                // should not happen...
-            }
-            throw je;
-        }
+        alterProperty(property);
     }
 
     /**
@@ -367,6 +334,10 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @see DavResource#removeProperty(org.apache.jackrabbit.webdav.property.DavPropertyName)
      */
     public void removeProperty(DavPropertyName propertyName) throws DavException {
+        alterProperty(propertyName);
+    }
+
+    private void alterProperty(Object prop) throws DavException {
         if (isLocked(this)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
@@ -374,9 +345,19 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
         try {
-            removeJcrProperty(propertyName);
-            node.save();
+            List l = new ArrayList(1);
+            l.add(prop);
+            alterProperties(l);
+            Map failure = propManager.alterProperties(getPropertyImportContext(l), isCollection());
+            if (failure.isEmpty()) {
+                node.save();
+            } else {
+                node.refresh(false);
+                // TODO: retrieve specific error from failure-map
+                throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         } catch (RepositoryException e) {
+            // revert any changes made so far
             JcrDavException je = new JcrDavException(e);
             try {
                 node.refresh(false);
@@ -406,7 +387,6 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                 changeList.add(it.next());
             }
         }
-
         return alterProperties(changeList);
     }
 
@@ -418,39 +398,9 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
         MultiStatusResponse msr = new MultiStatusResponse(getHref(), null);
-        boolean success = true;
-
-        // loop over List and remember all properties and propertyNames
-        // that have successfully been altered
-        List successList = new ArrayList();
-        Iterator it = changeList.iterator();
-        while (it.hasNext()) {
-            Object propEntry = it.next();
-            if (propEntry instanceof DavPropertyName) {
-                DavPropertyName propName = (DavPropertyName)propEntry;
-                try {
-                    removeJcrProperty(propName);
-                    successList.add(propName);
-                } catch (RepositoryException e) {
-                    msr.add(propName, new JcrDavException(e).getErrorCode());
-                    success = false;
-                }
-            } else if (propEntry instanceof DavProperty) {
-                DavProperty prop = (DavProperty)propEntry;
-                try {
-                    setJcrProperty(prop);
-                    successList.add(prop);
-                } catch (RepositoryException e) {
-                    msr.add(prop.getName(), new JcrDavException(e).getErrorCode());
-                    success = false;
-                }
-            } else {
-                throw new IllegalArgumentException("unknown object in change list: " + propEntry.getClass().getName());
-            }
-        }
-
         try {
-            if (success) {
+            Map failures = propManager.alterProperties(getPropertyImportContext(changeList), isCollection());
+            if (failures.isEmpty()) {
                 // save all changes together (reverted in case this fails)
                 node.save();
             } else {
@@ -462,14 +412,22 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                complete action. in case of failure set the status to 'failed-dependency'
                in order to indicate, that altering those names/properties would
                have succeeded, if no other error occured.*/
-            it = successList.iterator();
+            Iterator it = changeList.iterator();
             while (it.hasNext()) {
                 Object o = it.next();
-                int status = (success) ? DavServletResponse.SC_OK : DavServletResponse.SC_FAILED_DEPENDENCY;
-                if (o instanceof DavProperty) {
-                    msr.add(((DavProperty) o).getName(), status);
+                int statusCode;
+                if (failures.containsKey(o)) {
+                    Object error = failures.get(o);
+                    statusCode = (error instanceof RepositoryException)
+                        ? new JcrDavException((RepositoryException)o).getErrorCode()
+                        : DavServletResponse.SC_INTERNAL_SERVER_ERROR;
                 } else {
-                    msr.add((DavPropertyName) o, status);
+                    statusCode = (failures.isEmpty()) ? DavServletResponse.SC_OK : DavServletResponse.SC_FAILED_DEPENDENCY;
+                }
+                if (o instanceof DavProperty) {
+                    msr.add(((DavProperty) o).getName(), statusCode);
+                } else {
+                    msr.add((DavPropertyName) o, statusCode);
                 }
             }
             return msr;
@@ -840,6 +798,25 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     }
 
     /**
+     * Returns a new <code>PropertyImportContext</code>.
+     *
+     * @param changeList
+     * @return
+     */
+    protected PropertyImportContext getPropertyImportContext(List changeList) {
+        return new ProperyImportCtx(changeList);
+    }
+
+    /**
+     * Returns a new <code>PropertyExportContext</code>.
+     *
+     * @return
+     */
+    protected PropertyExportContext getPropertyExportContext() {
+        return new PropertyExportCtx();
+    }
+
+    /**
      * Returns true, if the underlying node is nodetype jcr:lockable,
      * without checking its current lock status. If the node is not jcr-lockable
      * an attempt is made to add the mix:lockable mixin type.
@@ -885,97 +862,6 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         }
     }
 
-    /**
-     * Builds a webdav property name from the given jcrName. In case the jcrName
-     * contains a namespace prefix that would conflict with any of the predefined
-     * webdav namespaces a new prefix is assigned.<br>
-     * Please note, that the local part of the jcrName is checked for XML
-     * compatibility by calling {@link ISO9075#encode(String)}
-     *
-     * @param jcrName
-     * @param session
-     * @return a <code>DavPropertyName</code> for the given jcr name.
-     */
-    private DavPropertyName getDavName(String jcrName, Session session) throws RepositoryException {
-        // make sure the local name is xml compliant
-        String localName = ISO9075.encode(Text.getLocalName(jcrName));
-        String prefix = Text.getNamespacePrefix(jcrName);
-        String uri = session.getNamespaceURI(prefix);
-        // check for conflicts with reserved webdav-namespaces
-        if (reservedNamespaces.containsKey(prefix) && !reservedNamespaces.get(prefix).equals(uri)) {
-            prefix = prefix + "0";
-        }
-        Namespace namespace = Namespace.getNamespace(prefix, uri);
-        DavPropertyName name = DavPropertyName.create(localName, namespace);
-        return name;
-    }
-
-    /**
-     * Build jcr property name from dav property name. If the property name
-     * defines a namespace uri, that has not been registered yet, an attempt
-     * is made to register the uri with the prefix defined. Note, that no
-     * extra effort is made to generated a unique prefix.
-     *
-     * @param propName
-     * @return jcr name
-     * @throws RepositoryException
-     */
-    private String getJcrName(DavPropertyName propName) throws RepositoryException {
-        // remove any encoding necessary for xml compliance
-        String pName = ISO9075.decode(propName.getName());
-        Namespace propNamespace = propName.getNamespace();
-        if (!Namespace.EMPTY_NAMESPACE.equals(propNamespace)) {
-            Session s = getJcrSession();
-            String prefix;
-            String emptyPrefix = Namespace.EMPTY_NAMESPACE.getPrefix();
-            try {
-                // lookup 'prefix' in the session-ns-mappings / namespace-registry
-                prefix = s.getNamespacePrefix(propNamespace.getURI());
-            } catch (NamespaceException e) {
-                // namespace uri has not been registered yet
-                NamespaceRegistry nsReg = s.getWorkspace().getNamespaceRegistry();
-                prefix = propNamespace.getPrefix();
-                // avoid trouble with default namespace
-                if (emptyPrefix.equals(prefix)) {
-                    prefix = "_pre" + nsReg.getPrefixes().length + 1;
-                }
-                // NOTE: will fail if prefix is already in use in the namespace registry
-                nsReg.registerNamespace(prefix, propNamespace.getURI());
-            }
-            if (prefix != null && !emptyPrefix.equals(prefix)) {
-                pName = prefix + ":" + pName;
-            }
-        }
-        return pName;
-    }
-
-    /**
-     * @param property
-     * @throws RepositoryException
-     */
-    private void setJcrProperty(DavProperty property) throws RepositoryException {
-        // Retrieve the property value. Note, that a 'null' value is replaced
-        // by empty string, since setting a jcr property value to 'null'
-        // would be equivalent to its removal.
-        String value = "";
-        if (property.getValue() != null) {
-            value = property.getValue().toString();
-        }
-        node.setProperty(getJcrName(property.getName()), value);
-    }
-
-    /**
-     * @param propertyName
-     * @throws RepositoryException
-     */
-    private void removeJcrProperty(DavPropertyName propertyName) throws RepositoryException {
-        String jcrName = getJcrName(propertyName);
-        if (node.hasProperty(jcrName)) {
-            node.getProperty(jcrName).remove();
-        }
-        // removal of non existing property succeeds
-    }
-
     private Session getJcrSession() {
         return session.getRepositorySession();
     }
@@ -994,7 +880,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * ExportContext that writes the properties of this <code>DavResource</code>
      * and provides not stream.
      */
-    private class PropertyExportCtx extends AbstractExportContext {
+    private class PropertyExportCtx extends AbstractExportContext implements PropertyExportContext {
 
         private PropertyExportCtx() {
             super(node, false, null);
@@ -1048,9 +934,81 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         }
 
         public void setProperty(Object propertyName, Object propertyValue) {
-            if (propertyName instanceof DavPropertyName) {
-                DavPropertyName pName = (DavPropertyName)propertyName;
+            if (propertyValue == null) {
+                log.warn("Ignore 'setProperty' for " + propertyName + "with null value.");
+                return;
+            }
+
+            if (propertyValue instanceof DavProperty) {
+                properties.add((DavProperty)propertyValue);
+            } else {
+                DavPropertyName pName;
+                if (propertyName instanceof DavPropertyName) {
+                    pName = (DavPropertyName)propertyName;
+                } else {
+                    // create property name with default DAV: namespace
+                    pName = DavPropertyName.create(propertyName.toString());
+                }
                 properties.add(new DefaultDavProperty(pName, propertyValue));
+            }
+        }
+    }
+
+    private class ProperyImportCtx implements PropertyImportContext {
+
+        private final IOListener ioListener = new DefaultIOListener(log);
+        private final List changeList;
+        private boolean completed;
+
+        private ProperyImportCtx(List changeList) {
+            this.changeList = changeList;
+        }
+
+        /**
+         * @see PropertyImportContext#getImportRoot()
+         */
+        public Item getImportRoot() {
+            return node;
+        }
+
+        /**
+         * @see PropertyImportContext#getChangeList()
+         */
+        public List getChangeList() {
+            return Collections.unmodifiableList(changeList);
+        }
+
+        public IOListener getIOListener() {
+            return ioListener;
+        }
+
+        public boolean hasStream() {
+            return false;
+        }
+
+        /**
+         * @see PropertyImportContext#informCompleted(boolean)
+         */
+        public void informCompleted(boolean success) {
+            checkCompleted();
+            completed = true;
+        }
+
+        /**
+         * @see PropertyImportContext#isCompleted()
+         */
+        public boolean isCompleted() {
+            return completed;
+        }
+
+        /**
+         * @throws IllegalStateException if the context is already completed.
+         * @see #isCompleted()
+         * @see #informCompleted(boolean)
+         */
+        private void checkCompleted() {
+            if (completed) {
+                throw new IllegalStateException("PropertyImportContext has already been consumed.");
             }
         }
     }
