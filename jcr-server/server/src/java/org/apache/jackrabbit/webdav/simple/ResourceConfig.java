@@ -19,6 +19,9 @@ package org.apache.jackrabbit.webdav.simple;
 import org.apache.jackrabbit.server.io.IOManager;
 import org.apache.jackrabbit.server.io.DefaultIOManager;
 import org.apache.jackrabbit.server.io.IOHandler;
+import org.apache.jackrabbit.server.io.PropertyManager;
+import org.apache.jackrabbit.server.io.PropertyHandler;
+import org.apache.jackrabbit.server.io.PropertyManagerImpl;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
@@ -47,6 +50,7 @@ public class ResourceConfig {
 
     private ItemFilter itemFilter;
     private IOManager ioManager;
+    private PropertyManager propManager;
     private String[] nodetypeNames = new String[0];
     private boolean collectionNames = false;
 
@@ -54,9 +58,11 @@ public class ResourceConfig {
      * Tries to parse the given xml configuration file.
      * The xml must match the following structure:<br>
      * <pre>
-     * &lt;!ELEMENT config (iomanager, (collection | noncollection)?, filter?) &gt;
+     * &lt;!ELEMENT config (iomanager, propertymanager, (collection | noncollection)?, filter?) &gt;
      * &lt;!ELEMENT iomanager (class, iohandler*) &gt;
      * &lt;!ELEMENT iohandler (class) &gt;
+     * &lt;!ELEMENT propertymanager (class, propertyhandler*) &gt;
+     * &lt;!ELEMENT propertyhandler (class) &gt;
      * &lt;!ELEMENT collection (nodetypes) &gt;
      * &lt;!ELEMENT noncollection (nodetypes) &gt;
      * &lt;!ELEMENT filter (class, namespaces?, nodetypes?) &gt;
@@ -81,7 +87,7 @@ public class ResourceConfig {
             Element config = document.getDocumentElement();
 
             if (config == null) {
-                log.error("Resource configuration: mandatory 'iomanager' element is missing.");
+                log.warn("Resource configuration: mandatory 'config' element is missing.");
                 return;
             }
 
@@ -97,16 +103,40 @@ public class ResourceConfig {
                         Element iohEl = iohElements.nextElement();
                         inst = buildClassFromConfig(iohEl);
                         if (inst != null && inst instanceof IOHandler) {
-                            this.ioManager.addIOHandler((IOHandler) inst);
+                            ioManager.addIOHandler((IOHandler) inst);
                         } else {
-                            log.error("Resource configuration: the handler is not a valid IOHandler.");
+                            log.warn("Resource configuration: the handler is not a valid IOHandler.");
                         }
                     }
                 } else {
-                    log.error("Resource configuration: 'iomanager' does not define a valid IOManager.");
+                    log.warn("Resource configuration: 'iomanager' does not define a valid IOManager.");
                 }
             } else {
-                log.error("Resource configuration: mandatory 'iomanager' element is missing.");
+                log.warn("Resource configuration: 'iomanager' element is missing.");
+            }
+
+            el = DomUtil.getChildElement(config, "propertymanager", null);
+            if (el != null) {
+                Object inst = buildClassFromConfig(el);
+                if (inst != null && inst instanceof PropertyManager) {
+                    propManager = (PropertyManager)inst;
+                    // get optional 'iohandler' child elements and populate the
+                    // ioManager with the instances
+                    ElementIterator iohElements = DomUtil.getChildren(el, "propertyhandler", null);
+                    while (iohElements.hasNext()) {
+                        Element iohEl = iohElements.nextElement();
+                        inst = buildClassFromConfig(iohEl);
+                        if (inst != null && inst instanceof PropertyHandler) {
+                            propManager.addPropertyHandler((PropertyHandler) inst);
+                        } else {
+                            log.warn("Resource configuration: the handler is not a valid PropertyHandler.");
+                        }
+                    }
+                } else {
+                    log.warn("Resource configuration: 'propertymanager' does not define a valid PropertyManager.");
+                }
+            } else {
+                log.debug("Resource configuration: 'propertymanager' element is missing.");
             }
 
             el = DomUtil.getChildElement(config, "collection", null);
@@ -202,13 +232,28 @@ public class ResourceConfig {
         return ntNames;
     }
 
-
+    /**
+     *
+     * @return
+     */
     public IOManager getIOManager() {
         if (ioManager == null) {
             log.debug("ResourceConfig: missing io-manager > building DefaultIOManager ");
             ioManager = new DefaultIOManager();
         }
         return ioManager;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public PropertyManager getPropertyManager() {
+        if (propManager == null) {
+            log.debug("ResourceConfig: missing property-manager > building default.");
+            propManager = PropertyManagerImpl.getDefaultManager();
+        }
+        return propManager;
     }
 
     /**
