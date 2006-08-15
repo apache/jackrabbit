@@ -19,27 +19,19 @@ package org.apache.jackrabbit.jcr2spi.state;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.collections.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Iterator;
 
 /**
  * <code>CachingItemStateManager</code> implements an {@link ItemStateManager}
  * and decorates it with a caching facility.
  */
-public class CachingItemStateManager implements ItemStateManager, InternalEventListener {
+public class CachingItemStateManager implements ItemStateManager, ItemStateLifeCycleListener {
 
     /**
      * The logger instance for this class.
@@ -89,6 +81,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
         this.recentlyUsed = new LRUMap(1000); // TODO: make configurable
         // initialize root
         root = isf.createNodeState(idFactory.createNodeId((String) null, Path.ROOT), this);
+        root.addListener(this);
     }
 
     //---------------------------------------------------< ItemStateManager >---
@@ -137,87 +130,31 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
         return false;
     }
 
-    //-------------------------------< InternalEventListener >------------------
+    //------------------------< ItemStateListener >-----------------------------
 
-    /**
-     * Processes <code>events</code> and invalidates cached <code>ItemState</code>s
-     * accordingly.
-     * @param events 
-     * @param isLocal
-     */
-    public void onEvent(EventIterator events, boolean isLocal) {
-        // if events origin from local changes then
-        // cache does not need invalidation
-        if (isLocal) {
-            return;
-        }
-
-        // collect set of removed node ids
-        Set removedNodeIds = new HashSet();
-        List eventList = new ArrayList();
-        while (events.hasNext()) {
-            Event e = events.nextEvent();
-            eventList.add(e);
-        }
-
-        for (Iterator it = eventList.iterator(); it.hasNext(); ) {
-            Event e = (Event) it.next();
-            ItemId itemId = e.getItemId();
-            NodeId parentId = e.getParentId();
-            ItemState state;
-            NodeState parent;
-            switch (e.getType()) {
-                case Event.NODE_ADDED:
-                case Event.PROPERTY_ADDED:
-                    state = lookup(itemId);
-                    if (state != null) {
-                        // TODO: item already exists ???
-                        // remove from cache and invalidate
-                        recentlyUsed.remove(state);
-                        state.discard();
-                    }
-                    parent = (NodeState) lookup(parentId);
-                    if (parent != null) {
-                        // discard and let wsp manager reload state when accessed next time
-                        recentlyUsed.remove(parent);
-                        parent.discard();
-                    }
-                    break;
-                case Event.NODE_REMOVED:
-                case Event.PROPERTY_REMOVED:
-                    state = lookup(itemId);
-                    if (state != null) {
-                        if (itemId.denotesNode()) {
-                            if (itemId.getRelativePath() == null) {
-                                // also remove mapping from uuid
-                                uuid2NodeState.remove(itemId.getUUID());
-                            }
-                        }
-                        recentlyUsed.remove(state);
-                        state.notifyStateDestroyed();
-                    }
-                    state = lookup(parentId);
-                    if (state != null) {
-                        parent = (NodeState) state;
-                        // check if removed as well
-                        if (removedNodeIds.contains(parent.getId())) {
-                            // do not invalidate here
-                        } else {
-                            // discard and let wsp manager reload state when accessed next time
-                            recentlyUsed.remove(parent);
-                            parent.discard();
-                        }
-                    }
-                    break;
-                case Event.PROPERTY_CHANGED:
-                    state = lookup(itemId);
-                    // discard and let wsp manager reload state when accessed next time
-                    if (state != null) {
-                        recentlyUsed.remove(state);
-                        state.discard();
-                    }
+    public void statusChanged(ItemState state, int previousStatus) {
+        if (state.getStatus() == ItemState.STATUS_REMOVED ||
+                state.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
+            recentlyUsed.remove(state);
+            if (state.isNode()) {
+                NodeState nodeState = (NodeState) state;
+                if (nodeState.getUUID() != null) {
+                    uuid2NodeState.remove(nodeState.getUUID());
+                }
             }
         }
+    }
+
+    public void stateCreated(ItemState created) {
+    }
+
+    public void stateModified(ItemState modified) {
+    }
+
+    public void stateDestroyed(ItemState destroyed) {
+    }
+
+    public void stateDiscarded(ItemState discarded) {
     }
 
     //------------------------------< internal >--------------------------------
@@ -228,7 +165,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
      *
      * @param state the touched state.
      */
-    private void touch(ItemState state) {
+    protected void touch(ItemState state) {
         recentlyUsed.put(state, state);
     }
 
@@ -245,7 +182,8 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
         String uuid = id.getUUID();
         Path relPath = id.getRelativePath();
 
-        NodeState nodeState = null;
+        // start with root node if no uuid part in id
+        NodeState nodeState = root;
         // resolve uuid part
         if (uuid != null) {
             nodeState = (NodeState) uuid2NodeState.get(uuid);
@@ -253,6 +191,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
                 // state identified by the uuid is not yet cached -> get from ISM
                 NodeId refId = (relPath == null) ? (NodeId) id : idFactory.createNodeId(uuid);
                 nodeState = isf.createNodeState(refId, this);
+                nodeState.addListener(this);
                 uuid2NodeState.put(uuid, nodeState);
             }
         }
@@ -273,7 +212,7 @@ public class CachingItemStateManager implements ItemStateManager, InternalEventL
      * @return the cached <code>ItemState</code> or <code>null</code> if it is not
      *         present in the cache.
      */
-    private ItemState lookup(ItemId id) {
+    protected ItemState lookup(ItemId id) {
         ItemState state;
         // resolve UUID
         if (id.getUUID() != null) {

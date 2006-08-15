@@ -103,7 +103,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * State manager for the transient items
      */
     // DIFF JACKRABBIT: private final TransientItemStateManager transientStateMgr;
-    private final TransientChangeLog transientStateMgr;
+    private final TransientItemStateManager transientStateMgr;
 
     /**
      * Hierarchy manager
@@ -113,6 +113,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     private final IdFactory idFactory;
     private final ItemStateValidator validator;
+
+    /**
+     * The root node state or <code>null</code> if it hasn't been retrieved yet.
+     */
+    private NodeState rootNodeState;
 
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
@@ -126,7 +131,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                                    NamespaceResolver nsResolver) {
         this.workspaceItemStateMgr = workspaceItemStateMgr;
         // DIFF JACKRABBIT: this.transientStateMgr = new TransientItemStateManager();
-        this.transientStateMgr = new TransientChangeLog(idFactory, workspaceItemStateMgr);
+        this.transientStateMgr = new TransientItemStateManager(idFactory, workspaceItemStateMgr);
         // DIFF JR: validator added
         this.validator = validator;
         // DIFF JR: idFactory added
@@ -328,7 +333,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
 
         // list of transient items that should be discarded
-        ChangeLog changeLog = new TransientChangeLog(idFactory, workspaceItemStateMgr);
+        ChangeLog changeLog = new ChangeLog();
 
         // check status of current item's state
         if (itemState.isTransient()) {
@@ -622,7 +627,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @throws ItemStateException
      */
     private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException {
-        ChangeLog changeLog = new TransientChangeLog(idFactory, workspaceItemStateMgr);
+        ChangeLog changeLog = new ChangeLog();
         if (itemState.getParent() == null) {
             // root state -> get all item states
             for (Iterator it = transientStateMgr.addedStates(); it.hasNext(); ) {
@@ -1385,7 +1390,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // remove property entry
         parent.removePropertyName(target.getQName());
         // destroy property state
-        destroy(target);
+        // DIFF JR: notification of transient item state manager is done using ItemStateLifeCycleListener
+        //destroy(target);
+        target.notifyStateDiscarded();
     }
 
     /**
@@ -1436,10 +1443,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 // TODO: check if correct
             }
         }
-
-        // destroy target state
-        // DIFF JR: destroy targetState (not overlayed state)
-        destroy(targetState);
     }
 
     /**
@@ -1482,19 +1485,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         propState.setValues(iva);
         propState.setType(valueType);
     }
-
-    /**
-     * Destroy an item state.
-     *
-     * @param state item state that should be destroyed
-     */
-    private void destroy(ItemState state) {
-        // DIFF JACKRABBIT: persistentStateMgr.destroy(state);
-        transientStateMgr.deleted(state);
-        // todo correct?
-        state.notifyStateDiscarded();
-    }
-
 
     /**
      * Computes the values of well-known system (i.e. protected) properties

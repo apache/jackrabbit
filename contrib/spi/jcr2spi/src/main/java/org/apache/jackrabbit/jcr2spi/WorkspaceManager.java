@@ -28,11 +28,11 @@ import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
-import org.apache.jackrabbit.jcr2spi.state.CachingItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.WorkspaceItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
+import org.apache.jackrabbit.jcr2spi.state.WorkspaceItemStateManager;
 import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -116,7 +116,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final SessionInfo sessionInfo;
 
     // TODO: TO-BE-FIXED. Major refactoring of caching mechanism with change to SPI ids
-    private final CachingItemStateManager cache;
+    private final WorkspaceItemStateManager cache;
 
     private final NamespaceRegistryImpl nsRegistry;
     private final NodeTypeRegistry ntRegistry;
@@ -140,7 +140,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             this.sessionInfo = sessionInfo;
 
             ItemStateFactory isf = createItemStateFactory();
-            cache = new CachingItemStateManager(isf, service.getIdFactory());
+            cache = new WorkspaceItemStateManager(isf, service.getIdFactory());
             addEventListener(cache);
 
             nsRegistry = createNamespaceRegistry();

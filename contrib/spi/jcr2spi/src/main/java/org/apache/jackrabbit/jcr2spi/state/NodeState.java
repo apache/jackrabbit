@@ -192,6 +192,22 @@ public class NodeState extends ItemState {
     }
 
     //--------------------< public READ methods and package private Setters >---
+
+    /**
+     * @return the name of this node state.
+     */
+    public final QName getName() {
+        return name;
+    }
+
+    /**
+     * @return the UUID of this node state or <code>null</code> if this
+     * node cannot be identified with a UUID.
+     */
+    public final String getUUID() {
+        return uuid;
+    }
+
     /**
      * Determines if this item state represents a node.
      *
