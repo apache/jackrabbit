@@ -31,7 +31,7 @@ import java.util.Map;
  * <code>CachingItemStateManager</code> implements an {@link ItemStateManager}
  * and decorates it with a caching facility.
  */
-public class CachingItemStateManager implements ItemStateManager, ItemStateLifeCycleListener {
+public class CachingItemStateManager implements ItemStateManager {
 
     /**
      * The logger instance for this class.
@@ -55,9 +55,10 @@ public class CachingItemStateManager implements ItemStateManager, ItemStateLifeC
     private final Map recentlyUsed;
 
     /**
-     * The root node of the workspace.
+     * The root node of the workspace or <code>null</code> if it has not been
+     * retrieved yet.
      */
-    private final NodeState root;
+    private NodeState root;
 
     /**
      * The Id factory.
@@ -65,28 +66,32 @@ public class CachingItemStateManager implements ItemStateManager, ItemStateLifeC
     private final IdFactory idFactory;
 
     /**
+     * An {@link ItemStateLifeCycleListener} to maintain the LRU and UUID
+     * reference cache.
+     */
+    private final ItemStateLifeCycleListener lifeCycleListener;
+
+    /**
      * Creates a new <code>CachingItemStateManager</code>.
      *
      * @param isf       the item state factory to create item state instances.
      * @param idFactory the id factory.
-     * @throws NoSuchItemStateException if the root node cannot be obtained.
-     * @throws ItemStateException       if any other error occurs while
-     *                                  obtaining the root node.
      */
-    public CachingItemStateManager(ItemStateFactory isf, IdFactory idFactory)
-            throws ItemStateException, NoSuchItemStateException {
+    public CachingItemStateManager(ItemStateFactory isf, IdFactory idFactory) {
         this.isf = isf;
         this.idFactory = idFactory;
         this.uuid2NodeState = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
         this.recentlyUsed = new LRUMap(1000); // TODO: make configurable
-        // initialize root
-        root = isf.createNodeState(idFactory.createNodeId((String) null, Path.ROOT), this);
-        root.addListener(this);
+        this.lifeCycleListener = new ISLifeCycleListener();
     }
 
     //---------------------------------------------------< ItemStateManager >---
 
     public NodeState getRootState() throws ItemStateException {
+        if (root == null) {
+            root = isf.createNodeState(idFactory.createNodeId((String) null, Path.ROOT), this);
+            root.addListener(lifeCycleListener);
+        }
         return root;
     }
 
@@ -130,34 +135,14 @@ public class CachingItemStateManager implements ItemStateManager, ItemStateLifeC
         return false;
     }
 
-    //------------------------< ItemStateListener >-----------------------------
-
-    public void statusChanged(ItemState state, int previousStatus) {
-        if (state.getStatus() == ItemState.STATUS_REMOVED ||
-                state.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
-            recentlyUsed.remove(state);
-            if (state.isNode()) {
-                NodeState nodeState = (NodeState) state;
-                if (nodeState.getUUID() != null) {
-                    uuid2NodeState.remove(nodeState.getUUID());
-                }
-            }
-        }
-    }
-
-    public void stateCreated(ItemState created) {
-    }
-
-    public void stateModified(ItemState modified) {
-    }
-
-    public void stateDestroyed(ItemState destroyed) {
-    }
-
-    public void stateDiscarded(ItemState discarded) {
-    }
-
     //------------------------------< internal >--------------------------------
+
+    /**
+     * @return the item state factory of this <code>ItemStateManager</code>.
+     */
+    protected final ItemStateFactory getItemStateFactory() {
+        return isf;
+    }
 
     /**
      * Called whenever an item state is accessed. Calling this method will update
@@ -183,7 +168,7 @@ public class CachingItemStateManager implements ItemStateManager, ItemStateLifeC
         Path relPath = id.getRelativePath();
 
         // start with root node if no uuid part in id
-        NodeState nodeState = root;
+        NodeState nodeState = getRootState();
         // resolve uuid part
         if (uuid != null) {
             nodeState = (NodeState) uuid2NodeState.get(uuid);
@@ -191,7 +176,7 @@ public class CachingItemStateManager implements ItemStateManager, ItemStateLifeC
                 // state identified by the uuid is not yet cached -> get from ISM
                 NodeId refId = (relPath == null) ? (NodeId) id : idFactory.createNodeId(uuid);
                 nodeState = isf.createNodeState(refId, this);
-                nodeState.addListener(this);
+                nodeState.addListener(lifeCycleListener);
                 uuid2NodeState.put(uuid, nodeState);
             }
         }
@@ -223,7 +208,12 @@ public class CachingItemStateManager implements ItemStateManager, ItemStateLifeC
             }
         } else {
             // start from root
-            state = root;
+            try {
+                state = getRootState();
+            } catch (ItemStateException e) {
+                log.warn("unable to get root node state:" + e.getMessage());
+                return null;
+            }
         }
 
         // resolve relative path
@@ -237,5 +227,35 @@ public class CachingItemStateManager implements ItemStateManager, ItemStateLifeC
         }
 
         return state;
+    }
+
+    //------------------------< ItemStateListener >-----------------------------
+
+    private class ISLifeCycleListener implements ItemStateLifeCycleListener {
+
+        public void statusChanged(ItemState state, int previousStatus) {
+            if (state.getStatus() == ItemState.STATUS_REMOVED ||
+                    state.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
+                recentlyUsed.remove(state);
+                if (state.isNode()) {
+                    NodeState nodeState = (NodeState) state;
+                    if (nodeState.getUUID() != null) {
+                        uuid2NodeState.remove(nodeState.getUUID());
+                    }
+                }
+            }
+        }
+
+        public void stateCreated(ItemState created) {
+        }
+
+        public void stateModified(ItemState modified) {
+        }
+
+        public void stateDestroyed(ItemState destroyed) {
+        }
+
+        public void stateDiscarded(ItemState discarded) {
+        }
     }
 }
