@@ -96,6 +96,18 @@ public class PropertyState extends ItemState {
     }
 
     /**
+     * @inheritDoc
+     */
+    public void remove() {
+        if (status == STATUS_NEW) {
+            setStatus(STATUS_REMOVED);
+        } else {
+            setStatus(STATUS_EXISTING_REMOVED);
+        }
+        parent.propertyStateRemoved(this);
+    }
+
+    /**
      * {@inheritDoc}
      */
     protected synchronized void copy(ItemState state) {

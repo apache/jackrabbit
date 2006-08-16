@@ -381,6 +381,20 @@ public abstract class ItemState implements ItemStateListener {
     }
 
     /**
+     * Returns <code>true</code> if this item state is valid, that is its status
+     * is one of:
+     * <ul>
+     * <li>{@link #STATUS_EXISTING}</li>
+     * <li>{@link #STATUS_EXISTING_MODIFIED}</li>
+     * <li>{@link #STATUS_NEW}</li>
+     * </ul>
+     * @return
+     */
+    public boolean isValid() {
+        return status == STATUS_EXISTING || status == STATUS_EXISTING_MODIFIED || status == STATUS_NEW;
+    }
+
+    /**
      * Returns the parent <code>NodeState</code> or <code>null</code>
      * if either this item state represents the root node or this item state is
      * 'free floating', i.e. not attached to the repository's hierarchy.
@@ -449,6 +463,17 @@ public abstract class ItemState implements ItemStateListener {
     public ItemState getOverlayedState() {
         return overlayedState;
     }
+
+    /**
+     * Removes this item state. This will change the status of this property
+     * state to either {@link #STATUS_EXISTING_REMOVED} or {@link
+     * #STATUS_REMOVED} depending on the current status.
+     *
+     * @throws ItemStateException if an error occurs while removing this item
+     *                            state. e.g. this item state is not valid
+     *                            anymore.
+     */
+    public abstract void remove() throws ItemStateException;
 
     /**
      * Add an <code>ItemStateListener</code>

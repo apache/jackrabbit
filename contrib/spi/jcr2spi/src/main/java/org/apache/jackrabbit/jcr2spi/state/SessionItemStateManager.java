@@ -1339,7 +1339,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
     }
 
-    // TODO: TO-BE-FIXED. removal of same-name-sibling node must include reordering
     private void removeItemState(ItemState itemState, int options) throws RepositoryException {
         // DIFF JR: check for both, node- and propertyState
         validator.checkRemoveItem(itemState, options);
@@ -1347,100 +1346,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // recursively remove the complete tree including the given node state.
         boolean success = false;
         try {
-            NodeState parent = itemState.getParent();
-            if (itemState.isNode()) {
-                removeNodeState(parent, (NodeState)itemState);
-            } else {
-                removePropertyState(parent, (PropertyState)itemState);
-            }
+            itemState.remove();
             success = true;
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Cannot remove item: " + e.getMessage(), e);
         } finally {
             if (!success) {
                 // TODO: undo state modifications
-            }
-        }
-    }
-
-    /**
-     * Unlinks the specified node state from its parent and recursively
-     * removes it including its properties and child nodes.
-     * <p/>
-     * Note that no checks (access rights etc.) are performed on the specified
-     * target node state. Those checks have to be performed beforehand by the
-     * caller. However, the (recursive) removal of target node's child nodes are
-     * subject to the following checks: access rights, locking, versioning.
-     *
-     * @param target
-     */
-    private void removeNodeState(NodeState parent, NodeState target) throws ItemNotFoundException, RepositoryException {
-        // TODO: implement this functionality in NodeState. i.e. target.remove()
-        // remove child node entry from parent
-        parent.removeChildNodeEntry(target.getNodeId());
-        // remove target
-        recursiveRemoveNodeState(target);
-    }
-
-    /**
-     *
-     * @param parent
-     * @param target
-     */
-    private void removePropertyState(NodeState parent, PropertyState target) {
-        // TODO: implement this functionality in PropertyState. i.e. target.remove()
-        // remove property entry
-        parent.removePropertyName(target.getQName());
-        // destroy property state
-        // DIFF JR: notification of transient item state manager is done using ItemStateLifeCycleListener
-        //destroy(target);
-        target.notifyStateDiscarded();
-    }
-
-    /**
-     * Recursively removes the given node state including its child states.
-     * <p/>
-     * The removal of child nodes is subject to the following checks:
-     * access rights, locking & versioning status. Referential integrity
-     * (references) is checked on commit.
-     * <p/>
-     * Note that the child node entry refering to <code>targetState</code> is
-     * <b><i>not</i></b> automatically removed from <code>targetState</code>'s
-     * parent.
-     *
-     * // TODO fix description
-     *
-     * @param targetState
-     */
-    private void recursiveRemoveNodeState(NodeState targetState) throws RepositoryException  {
-        if (targetState.hasChildNodeEntries()) {
-            // remove child nodes
-            // use temp array to avoid ConcurrentModificationException
-            Iterator tmpIter = new ArrayList(targetState.getChildNodeEntries()).iterator();
-            // remove from tail to avoid problems with same-name siblings
-            while (tmpIter.hasNext()) {
-                ChildNodeEntry entry = (ChildNodeEntry) tmpIter.next();
-                try {
-                    NodeState child = entry.getNodeState();
-                    // remove child node
-                    // DIFF JR: don't recheck permission for child states
-                    // DIFF JR: jr first calls recursive-method then removes c-n-entry
-                    removeNodeState(targetState, child);
-                } catch (ItemStateException e) {
-                    // ignore
-                    // TODO: check if correct
-                }
-            }
-        }
-
-        // remove properties
-        Iterator tmpIter = new HashSet(targetState.getPropertyEntries()).iterator();
-        while (tmpIter.hasNext()) {
-            ChildPropertyEntry entry = (PropertyReference) tmpIter.next();
-            try {
-                PropertyState child = entry.getPropertyState();
-                removePropertyState(targetState, child);
-            } catch (ItemStateException e) {
-                // ignore
-                // TODO: check if correct
             }
         }
     }
