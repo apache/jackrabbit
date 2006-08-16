@@ -120,8 +120,11 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             // references to child items
             for (IdIterator it = info.getNodeIds(); it.hasNext(); ) {
                 NodeInfo childInfo = service.getNodeInfo(sessionInfo, (NodeId) it.nextId());
-                NodeId childId = childInfo.getId();
-                state.addChildNodeEntry(childInfo.getQName(), childId);
+                String childUUID = null;
+                if (childInfo.getId().getRelativePath() == null) {
+                    childUUID = childInfo.getId().getUUID();
+                }
+                state.addChildNodeEntry(childInfo.getQName(), childUUID);
             }
 
             // references to properties
