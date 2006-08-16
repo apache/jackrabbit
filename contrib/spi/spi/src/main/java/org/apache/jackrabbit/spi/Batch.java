@@ -248,7 +248,7 @@ public interface Batch {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#orderBefore(String, String)
      */
-    public void reorderNodes(NodeId srcNodeId, NodeId parentId, NodeId beforeNodeId) throws RepositoryException;
+    public void reorderNodes(NodeId parentId, NodeId srcNodeId, NodeId beforeNodeId) throws RepositoryException;
 
     /**
      * @param nodeId
