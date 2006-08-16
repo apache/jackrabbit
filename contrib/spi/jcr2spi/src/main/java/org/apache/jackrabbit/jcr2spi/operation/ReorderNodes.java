@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.name.Path;
 
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -32,14 +33,18 @@ import javax.jcr.version.VersionException;
 public class ReorderNodes extends AbstractOperation {
 
     private final NodeState parentState;
-    private final NodeId insertId;
-    private final NodeId beforeId;
+    private final NodeState insert;
+    private final NodeState before;
 
-    private ReorderNodes(NodeState parentState, NodeId insertId, NodeId beforeId) {
+    private ReorderNodes(NodeState parentState, NodeState insert, NodeState before) {
         this.parentState = parentState;
-        this.insertId = insertId;
-        this.beforeId = beforeId;
+        this.insert = insert;
+        this.before = before;
         addAffectedItemState(parentState);
+        addAffectedItemState(insert);
+        if (before != null) {
+            addAffectedItemState(before);
+        }
     }
 
     //----------------------------------------------------------< Operation >---
@@ -56,21 +61,21 @@ public class ReorderNodes extends AbstractOperation {
         return parentState;
     }
 
-    public NodeId getInsertNodeId() {
-        return insertId;
+    public NodeState getInsertNode() {
+        return insert;
     }
 
-    public NodeId getBeforeNodeId() {
-        return beforeId;
+    public NodeState getBeforeNode() {
+        return before;
     }
 
     //------------------------------------------------------------< Factory >---
 
     public static Operation create(NodeState parentState, Path.PathElement srcName,
-                                   Path.PathElement beforeName) {
-        NodeId insertId = parentState.getChildNodeEntry(srcName.getName(), srcName.getNormalizedIndex()).getId();
-        NodeId beforeId = (beforeName == null) ? null : parentState.getChildNodeEntry(beforeName.getName(), beforeName.getNormalizedIndex()).getId();
-        Operation op = new ReorderNodes(parentState, insertId, beforeId);
+                                   Path.PathElement beforeName) throws NoSuchItemStateException, ItemStateException {
+        NodeState insert = parentState.getChildNodeEntry(srcName.getName(), srcName.getNormalizedIndex()).getNodeState();
+        NodeState before = (beforeName == null) ? null : parentState.getChildNodeEntry(beforeName.getName(), beforeName.getNormalizedIndex()).getNodeState();
+        Operation op = new ReorderNodes(parentState, insert, before);
         return op;
     }
 }

@@ -255,7 +255,14 @@ public class NodeImpl extends ItemImpl implements Node {
         Path.PathElement srcName = getReorderPath(srcChildRelPath).getNameElement();
         Path.PathElement beforeName = (destChildRelPath == null) ? null : getReorderPath(destChildRelPath).getNameElement();
 
-        Operation op = ReorderNodes.create(getNodeState(), srcName, beforeName);
+        Operation op = null;
+        try {
+            op = ReorderNodes.create(getNodeState(), srcName, beforeName);
+        } catch (NoSuchItemStateException e) {
+            throw new ItemNotFoundException(e.getMessage(), e);
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Unable to reorder nodes: " + e.getMessage(), e);
+        }
         session.getSessionItemStateManager().execute(op);
     }
 
@@ -551,7 +558,11 @@ public class NodeImpl extends ItemImpl implements Node {
             return Path.INDEX_DEFAULT;
         }
 
-        ChildNodeEntry parentEntry = parentState.getChildNodeEntry(getNodeId());
+        ChildNodeEntry parentEntry = parentState.getChildNodeEntry(getNodeState());
+        if (parentEntry == null) {
+            String msg = "Unable to retrieve index for: " + safeGetJCRPath();
+            throw new RepositoryException(msg);
+        }
         return parentEntry.getIndex();
     }
 
@@ -1182,19 +1193,12 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see ItemImpl#getQName()
      */
     QName getQName() throws RepositoryException {
-        NodeState parentState = getNodeState().getParent();
-        if (parentState == null) {
+        if (getNodeState().getParent() == null) {
             // shortcut. the given state represents the root or an orphaned node
             return QName.ROOT;
         }
 
-        ChildNodeEntry entry = parentState.getChildNodeEntry(getNodeId());
-        if (entry == null) {
-            String msg = "Failed to retrieve qualified name of Node " + getNodeId();
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-        return entry.getName();
+        return getNodeState().getName();
     }
 
 
