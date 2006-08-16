@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
 /**
@@ -801,12 +800,12 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns a list of child node entries that do not exist in the overlayed
-     * node state but have been added to <i>this</i> node state.
+     * Returns a collection of child node entries that do not exist in the
+     * overlayed node state but have been added to <i>this</i> node state.
      *
-     * @return list of added child node entries
+     * @return collection of added child node entries
      */
-    public synchronized List getAddedChildNodeEntries() {
+    public synchronized Collection getAddedChildNodeEntries() {
         if (!hasOverlayedState()) {
             return childNodeEntries;
         }
@@ -835,12 +834,12 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns a list of child node entries, that exist in the overlayed node state
+     * Returns a collection of child node entries, that exist in the overlayed node state
      * but have been removed from <i>this</i> node state.
      *
-     * @return list of removed child node entries
+     * @return collection of removed child node entries
      */
-    public synchronized List getRemovedChildNodeEntries() {
+    public synchronized Collection getRemovedChildNodeEntries() {
         if (!hasOverlayedState()) {
             return Collections.EMPTY_LIST;
         }
@@ -1055,6 +1054,7 @@ public class NodeState extends ItemState {
     }
 
     //------------------------------------------------------< inner classes >---
+
     /**
      * <code>ChildNodeEntries</code> represents an insertion-ordered
      * collection of <code>ChildNodeEntry</code>s that also maintains
@@ -1063,7 +1063,7 @@ public class NodeState extends ItemState {
      * <code>ChildNodeEntries</code> also provides an unmodifiable
      * <code>List</code> view.
      */
-    private class ChildNodeEntries implements List, Cloneable {
+    private class ChildNodeEntries implements Collection {
 
         // TODO: turn this into a linked set. NodeId cannot be use as key!
         // insertion-ordered map of entries (key=NodeId, value=entry)
@@ -1260,7 +1260,7 @@ public class NodeState extends ItemState {
         }
 
         /**
-         * Returns a list of <code>ChildNodeEntry</code>s who do only exist in
+         * Returns a Collection of <code>ChildNodeEntry</code>s who do only exist in
          * <code>this</code> but not in <code>other</code>.
          * <p/>
          * Note that two entries are considered identical in this context if
@@ -1272,7 +1272,7 @@ public class NodeState extends ItemState {
          * @return a new list of those entries that do only exist in
          *         <code>this</code> but not in <code>other</code>
          */
-        List removeAll(ChildNodeEntries other) {
+        Collection removeAll(ChildNodeEntries other) {
             if (entries.isEmpty()) {
                 return Collections.EMPTY_LIST;
             }
@@ -1366,53 +1366,16 @@ public class NodeState extends ItemState {
             return true;
         }
 
-        public Object get(int index) {
-            return entries.getValue(index);
-        }
-
-        public int indexOf(Object o) {
-            if (o instanceof ChildNodeEntry) {
-                return entries.indexOf(((ChildNodeEntry) o).getId());
-            } else {
-                return -1;
-            }
-        }
-
         public boolean isEmpty() {
             return entries.isEmpty();
-        }
-
-        public int lastIndexOf(Object o) {
-            // entries are unique
-            return indexOf(o);
         }
 
         public Iterator iterator() {
             return new EntriesIterator();
         }
 
-        public ListIterator listIterator() {
-            return new EntriesIterator();
-        }
-
-        public ListIterator listIterator(int index) {
-            if (index < 0 || index >= entries.size()) {
-                throw new IndexOutOfBoundsException();
-            }
-            ListIterator iter = new EntriesIterator();
-            while (index-- > 0) {
-                iter.next();
-            }
-            return iter;
-        }
-
         public int size() {
             return entries.size();
-        }
-
-        public List subList(int fromIndex, int toIndex) {
-            // @todo FIXME does not fulfil the contract of List.subList(int,int)
-            return Collections.unmodifiableList(new ArrayList(this).subList(fromIndex, toIndex));
         }
 
         public Object[] toArray() {
@@ -1440,10 +1403,6 @@ public class NodeState extends ItemState {
             return a;
         }
 
-        public void add(int index, Object element) {
-            throw new UnsupportedOperationException();
-        }
-
         public boolean add(Object o) {
             throw new UnsupportedOperationException();
         }
@@ -1452,19 +1411,11 @@ public class NodeState extends ItemState {
             throw new UnsupportedOperationException();
         }
 
-        public boolean addAll(int index, Collection c) {
-            throw new UnsupportedOperationException();
-        }
-
         public void clear() {
             throw new UnsupportedOperationException();
         }
 
-        public Object remove(int index) {
-            throw new UnsupportedOperationException();
-        }
-
-        public boolean remove(Object o) {
+       public boolean remove(Object o) {
             throw new UnsupportedOperationException();
         }
 
@@ -1476,35 +1427,9 @@ public class NodeState extends ItemState {
             throw new UnsupportedOperationException();
         }
 
-        public Object set(int index, Object element) {
-            throw new UnsupportedOperationException();
-        }
-
-        //------------------------------------------------< Cloneable support >
-        /**
-         * Returns a shallow copy of this <code>ChildNodeEntries</code> instance;
-         * the entries themselves are not cloned.
-         *
-         * @return a shallow copy of this instance.
-         */
-        protected Object clone() {
-            ChildNodeEntries clone = new ChildNodeEntries();
-            clone.entries = (LinkedMap) entries.clone();
-            clone.nameMap = new HashMap(nameMap.size());
-            for (Iterator it = nameMap.keySet().iterator(); it.hasNext();) {
-                Object key = it.next();
-                Object obj = nameMap.get(key);
-                if (obj instanceof ArrayList) {
-                    // clone List
-                    obj = ((ArrayList) obj).clone();
-                }
-                clone.nameMap.put(key, obj);
-            }
-            return clone;
-        }
-
         //----------------------------------------------------< inner classes >
-        class EntriesIterator implements ListIterator {
+
+        class EntriesIterator implements Iterator {
 
             private final OrderedMapIterator mapIter;
 
@@ -1521,32 +1446,7 @@ public class NodeState extends ItemState {
                 return mapIter.getValue();
             }
 
-            public boolean hasPrevious() {
-                return mapIter.hasPrevious();
-            }
-
-            public int nextIndex() {
-                return entries.indexOf(mapIter.getKey()) + 1;
-            }
-
-            public Object previous() {
-                mapIter.previous();
-                return mapIter.getValue();
-            }
-
-            public int previousIndex() {
-                return entries.indexOf(mapIter.getKey()) - 1;
-            }
-
-            public void add(Object o) {
-                throw new UnsupportedOperationException();
-            }
-
             public void remove() {
-                throw new UnsupportedOperationException();
-            }
-
-            public void set(Object o) {
                 throw new UnsupportedOperationException();
             }
         }
