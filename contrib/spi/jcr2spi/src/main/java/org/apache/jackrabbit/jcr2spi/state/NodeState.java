@@ -565,6 +565,36 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * Notifies this node state that a child node state has been removed.
+     *
+     * @param nodeState the node state that has been removed.
+     * @throws IllegalArgumentException if <code>this</code> is not the parent
+     *                                  of <code>nodeState</code>.
+     */
+    synchronized void childNodeStateRemoved(NodeState nodeState) {
+        if (nodeState.getParent() != this) {
+            throw new IllegalArgumentException("This NodeState is not the parent of nodeState");
+        }
+        // if nodeState does not exist anymore remove its child node entry
+        if (nodeState.getStatus() == STATUS_REMOVED) {
+            List entries = getChildNodeEntries(nodeState.getName());
+            for (Iterator it = entries.iterator(); it.hasNext(); ) {
+                ChildNodeEntry cne = (ChildNodeEntry) it.next();
+                try {
+                    if (cne.getNodeState() == nodeState) {
+                        childNodeEntries.remove(cne);
+                        break;
+                    }
+                } catch (ItemStateException e) {
+                    // does not exist anymore? TODO: better error handling
+                    log.warn("child node entry does not exist anymore", e);
+                }
+            }
+        }
+        markModified();
+    }
+
+    /**
      * Sets the list of <code>ChildNodeEntry</code> objects denoting the
      * child nodes of this node.
      */
@@ -576,6 +606,43 @@ public class NodeState extends ItemState {
             childNodeEntries.add(cne.getName(), cne.getId());
         }
         notifyNodesReplaced();
+    }
+
+    /**
+
+    /**
+     * @inheritDoc
+     * @see ItemState#remove()
+     */
+    public void remove() throws ItemStateException {
+        if (!isValid()) {
+            throw new ItemStateException("cannot remove an invalid NodeState");
+        }
+        // first remove all properties
+        for (Iterator it = properties.values().iterator(); it.hasNext(); ) {
+            PropertyState propState = ((ChildPropertyEntry) it.next()).getPropertyState();
+            if (propState.isValid()) {
+                propState.remove();
+            } else {
+                // already removed
+            }
+        }
+        // then remove child node entries
+        for (Iterator it = childNodeEntries.iterator(); it.hasNext(); ) {
+            NodeState nodeState = ((ChildNodeEntry) it.next()).getNodeState();
+            if (nodeState.isValid()) {
+                nodeState.remove();
+            } else {
+                // already removed
+            }
+        }
+        if (status == STATUS_EXISTING || status == STATUS_EXISTING_MODIFIED) {
+            setStatus(STATUS_EXISTING_REMOVED);
+        } else if (status == STATUS_NEW) {
+            setStatus(STATUS_REMOVED);
+        }
+        // now inform parent
+        parent.childNodeStateRemoved(this);
     }
 
     /**
@@ -655,6 +722,25 @@ public class NodeState extends ItemState {
      */
     synchronized boolean removePropertyName(QName propName) {
         return properties.remove(propName) != null;
+    }
+
+    /**
+     * Notifies this node state that a property state has been removed.
+     *
+     * @param propState the property state that has been removed.
+     * @throws IllegalArgumentException if <code>this</code> is not the parent
+     *                                  of <code>propState</code>.
+     */
+    synchronized void propertyStateRemoved(PropertyState propState) {
+        if (propState.getParent() != this) {
+            throw new IllegalArgumentException("This NodeState is not the parent of propState");
+        }
+        // remove property state from map of properties if it does not exist
+        // anymore, otherwise leave the property state in the map
+        if (propState.getStatus() == STATUS_REMOVED) {
+            properties.remove(propState.getQName());
+        }
+        markModified();
     }
 
     /**
