@@ -24,13 +24,9 @@
     </license>
   </licenses>
   <scm>
-    <connection>
-      scm:svn:http://svn.apache.org/repos/asf/incubator/jackrabbit/trunk
-    </connection>
-    <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/incubator/jackrabbit/trunk
-    </developerConnection>
-    <url>http://svn.apache.org/viewcvs</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jcr-rmi</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jcr-rmi</developerConnection>
+    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jcr-rmi/</url>
   </scm>
   <organization>
     <name>The Apache Software Foundation</name>
