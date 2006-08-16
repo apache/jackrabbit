@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.commons.collections.MapIterator;
-import org.apache.commons.collections.OrderedMapIterator;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.apache.jackrabbit.spi.IdFactory;
@@ -43,6 +41,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -810,8 +809,18 @@ public class NodeState extends ItemState {
             return childNodeEntries;
         }
 
-        NodeState other = (NodeState) getOverlayedState();
-        return childNodeEntries.removeAll(other.childNodeEntries);
+        List added = new ArrayList();
+        for (Iterator it = childNodeEntries.iterator(); it.hasNext(); ) {
+            ChildNodeEntry cne = (ChildNodeEntry) it.next();
+            try {
+                if (cne.getNodeState().getStatus() == STATUS_NEW) {
+                    added.add(cne);
+                }
+            } catch (ItemStateException e) {
+                log.warn("error retrieving child node state: " + e.getMessage());
+            }
+        }
+        return added;
     }
 
     /**
@@ -834,8 +843,8 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns a collection of child node entries, that exist in the overlayed node state
-     * but have been removed from <i>this</i> node state.
+     * Returns a collection of child node entries, that exist in the overlayed
+     * node state but have been removed from <i>this</i> node state.
      *
      * @return collection of removed child node entries
      */
@@ -844,114 +853,18 @@ public class NodeState extends ItemState {
             return Collections.EMPTY_LIST;
         }
 
-        NodeState other = (NodeState) getOverlayedState();
-        return other.childNodeEntries.removeAll(childNodeEntries);
-    }
-
-    /**
-     * Returns a list of child node entries that exist both in <i>this</i> node
-     * state and in the overlayed node state but have been reordered.
-     * <p/>
-     * The list may include only the minimal set of nodes that have been
-     * reordered. That is, even though a certain number of nodes have changed
-     * their absolute position the list may include less that this number of
-     * nodes.
-     * <p/>
-     * Example:<br/>
-     * Initial state:
-     * <pre>
-     *  + node1
-     *  + node2
-     *  + node3
-     * </pre>
-     * After reorder:
-     * <pre>
-     *  + node2
-     *  + node3
-     *  + node1
-     * </pre>
-     * All nodes have changed their absolute position. The returned list however
-     * may only return that <code>node1</code> has been reordered (from the
-     * first position to the end).
-     *
-     * @return list of reordered child node enties.
-     */
-    public synchronized List getReorderedChildNodeEntries() {
-        if (!hasOverlayedState()) {
-            return Collections.EMPTY_LIST;
-        }
-
-        ChildNodeEntries otherChildNodeEntries =
-                ((NodeState) overlayedState).childNodeEntries;
-
-        if (childNodeEntries.isEmpty()
-                || otherChildNodeEntries.isEmpty()) {
-            return Collections.EMPTY_LIST;
-        }
-
-        // build intersections of both collections,
-        // each preserving their relative order
-        List ours = childNodeEntries.retainAll(otherChildNodeEntries);
-        List others = otherChildNodeEntries.retainAll(childNodeEntries);
-
-        // do a lazy init
-        List reordered = null;
-        // both entry lists now contain the set of nodes that have not
-        // been removed or added, but they may have changed their position.
-        for (int i = 0; i < ours.size();) {
-            ChildNodeEntry entry = (ChildNodeEntry) ours.get(i);
-            ChildNodeEntry other = (ChildNodeEntry) others.get(i);
-            if (entry == other || entry.getId().equals(other.getId())) {
-                // no reorder, move to next child entry
-                i++;
-            } else {
-                // reordered entry detected
-                if (reordered == null) {
-                    reordered = new ArrayList();
+        List removed = new ArrayList();
+        for (Iterator it = childNodeEntries.iterator(); it.hasNext(); ) {
+            ChildNodeEntry cne = (ChildNodeEntry) it.next();
+            try {
+                if (cne.getNodeState().getStatus() == STATUS_EXISTING_REMOVED) {
+                    removed.add(cne);
                 }
-                // Note that this check will not necessarily find the
-                // minimal reorder operations required to convert the overlayed
-                // child node entries into the current.
-
-                // is there a next entry?
-                if (i + 1 < ours.size()) {
-                    // if entry is the next in the other list then probably
-                    // the other entry at position <code>i</code> was reordered
-                    if (entry.getId().equals(((ChildNodeEntry) others.get(i + 1)).getId())) {
-                        // scan for the uuid of the other entry in our list
-                        for (int j = i; j < ours.size(); j++) {
-                            if (((ChildNodeEntry) ours.get(j)).getId().equals(other.getId())) {
-                                // found it
-                                entry = (ChildNodeEntry) ours.get(j);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                reordered.add(entry);
-                // remove the entry from both lists
-                // entries > i are already cleaned
-                for (int j = i; j < ours.size(); j++) {
-                    if (((ChildNodeEntry) ours.get(j)).getId().equals(entry.getId())) {
-                        ours.remove(j);
-                    }
-                }
-                for (int j = i; j < ours.size(); j++) {
-                    if (((ChildNodeEntry) others.get(j)).getId().equals(entry.getId())) {
-                        others.remove(j);
-                    }
-                }
-                // if a reorder has been detected index <code>i</code> is not
-                // incremented because entries will be shifted when the
-                // reordered entry is removed.
+            } catch (ItemStateException e) {
+                log.warn("error retrieving child node state: " + e.getMessage());
             }
         }
-        if (reordered == null) {
-            return Collections.EMPTY_LIST;
-        } else {
-            return reordered;
-        }
+        return removed;
     }
 
     /**
@@ -1067,15 +980,10 @@ public class NodeState extends ItemState {
 
         // TODO: turn this into a linked set. NodeId cannot be use as key!
         // insertion-ordered map of entries (key=NodeId, value=entry)
-        private LinkedMap entries;
+        private final Map entries = new LinkedMap();
         // map used for lookup by name
         // (key=name, value=either a single entry or a list of sns entries)
-        private HashMap nameMap;
-
-        ChildNodeEntries() {
-            entries = new LinkedMap();
-            nameMap = new HashMap();
-        }
+        private final Map nameMap = new HashMap();
 
         ChildNodeEntry get(NodeId id) {
             return (ChildNodeEntry) entries.get(id);
@@ -1260,78 +1168,6 @@ public class NodeState extends ItemState {
         }
 
         /**
-         * Returns a Collection of <code>ChildNodeEntry</code>s who do only exist in
-         * <code>this</code> but not in <code>other</code>.
-         * <p/>
-         * Note that two entries are considered identical in this context if
-         * they have the same name and uuid, i.e. the index is disregarded
-         * whereas <code>ChildNodeEntry.equals(Object)</code> also compares
-         * the index.
-         *
-         * @param other entries to be removed
-         * @return a new list of those entries that do only exist in
-         *         <code>this</code> but not in <code>other</code>
-         */
-        Collection removeAll(ChildNodeEntries other) {
-            if (entries.isEmpty()) {
-                return Collections.EMPTY_LIST;
-            }
-            if (other.isEmpty()) {
-                return this;
-            }
-
-            List result = new ArrayList();
-            Iterator iter = iterator();
-            while (iter.hasNext()) {
-                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-                ChildNodeEntry otherEntry = other.get(entry.getId());
-                if (entry == otherEntry) {
-                    continue;
-                }
-                if (otherEntry == null || !entry.getName().equals(otherEntry.getName())) {
-                    result.add(entry);
-                }
-            }
-
-            return result;
-        }
-
-        /**
-         * Returns a list of <code>ChildNodeEntry</code>s who do exist in
-         * <code>this</code> <i>and</i> in <code>other</code>.
-         * <p/>
-         * Note that two entries are considered identical in this context if
-         * they have the same name and uuid, i.e. the index is disregarded
-         * whereas <code>ChildNodeEntry.equals(Object)</code> also compares
-         * the index.
-         *
-         * @param other entries to be retained
-         * @return a new list of those entries that do exist in
-         *         <code>this</code> <i>and</i> in <code>other</code>
-         */
-        List retainAll(ChildNodeEntries other) {
-            if (entries.isEmpty()
-                    || other.isEmpty()) {
-                return Collections.EMPTY_LIST;
-            }
-
-            List result = new ArrayList();
-            Iterator iter = iterator();
-            while (iter.hasNext()) {
-                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
-                ChildNodeEntry otherEntry = other.get(entry.getId());
-                if (entry == otherEntry) {
-                    result.add(entry);
-                } else if (otherEntry != null
-                        && entry.getName().equals(otherEntry.getName())) {
-                    result.add(entry);
-                }
-            }
-
-            return result;
-        }
-
-        /**
          * Creates a <code>ChildNodeEntry</code> instance based on
          * <code>nodeName</code>, <code>id</code> and <code>index</code>.
          *
@@ -1390,12 +1226,10 @@ public class NodeState extends ItemState {
             if (a.length < size()) {
                 a = new ChildNodeEntry[size()];
             }
-            MapIterator iter = entries.mapIterator();
+            Iterator iter = entries.values().iterator();
             int i = 0;
             while (iter.hasNext()) {
-                iter.next();
-                a[i] = entries.getValue(i);
-                i++;
+                a[i++] = iter.next();
             }
             while (i < a.length) {
                 a[i++] = null;
@@ -1415,7 +1249,7 @@ public class NodeState extends ItemState {
             throw new UnsupportedOperationException();
         }
 
-       public boolean remove(Object o) {
+        public boolean remove(Object o) {
             throw new UnsupportedOperationException();
         }
 
@@ -1431,10 +1265,10 @@ public class NodeState extends ItemState {
 
         class EntriesIterator implements Iterator {
 
-            private final OrderedMapIterator mapIter;
+            private final Iterator mapIter;
 
             EntriesIterator() {
-                mapIter = entries.orderedMapIterator();
+                mapIter = entries.values().iterator();
             }
 
             public boolean hasNext() {
@@ -1442,8 +1276,7 @@ public class NodeState extends ItemState {
             }
 
             public Object next() {
-                mapIter.next();
-                return mapIter.getValue();
+                return mapIter.next();
             }
 
             public void remove() {
