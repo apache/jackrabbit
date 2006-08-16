@@ -657,8 +657,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         public void visit(ReorderNodes operation) throws RepositoryException {
             NodeId parentId = operation.getParentState().getNodeId();
-            NodeId insertId = operation.getInsertNodeId();
-            NodeId beforeId = operation.getBeforeNodeId();
+            NodeId insertId = operation.getInsertNode().getNodeId();
+            NodeId beforeId = operation.getBeforeNode().getNodeId();
             batch.reorderNodes(parentId, insertId, beforeId);
         }
 

@@ -80,7 +80,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                NodeState state) {
-        return parent.getChildNodeEntry(state.getNodeId());
+        return parent.getChildNodeEntry(state);
     }
 
     // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear

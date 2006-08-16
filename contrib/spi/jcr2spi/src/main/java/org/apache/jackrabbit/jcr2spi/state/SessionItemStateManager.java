@@ -391,7 +391,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         Set affectedStates = new HashSet();
         Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
         while (it.hasNext()) {
-            affectedStates.add(((ItemState) it.next()));
+            affectedStates.add(it.next());
         }
         collectOperations(affectedStates, changeLog);
 
@@ -658,7 +658,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
             Set affectedStates = new HashSet();
             while (it.hasNext()) {
-                affectedStates.add((ItemState) it.next());
+                affectedStates.add(it.next());
             }
 
             checkIsSelfContained(affectedStates, changeLog);
@@ -1115,7 +1115,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         NodeState parent = operation.getParentState();
         // modify the parent node state
         try {
-            parent.reorderChildNodeEntries(operation.getInsertNodeId(), operation.getBeforeNodeId());
+            parent.reorderChildNodeEntries(operation.getInsertNode(), operation.getBeforeNode());
         } catch (NoSuchItemStateException e) {
             // invalid reorder-ids
             throw new ItemNotFoundException(e);

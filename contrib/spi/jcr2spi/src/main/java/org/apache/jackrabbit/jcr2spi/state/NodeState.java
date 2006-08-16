@@ -352,9 +352,8 @@ public class NodeState extends ItemState {
                 def = ntRegistry.getRootNodeDef();
             } else {
                 try {
-                    ChildNodeEntry cne = parentState.getChildNodeEntry(getNodeId());
                     EffectiveNodeType ent = ntRegistry.getEffectiveNodeType(parentState.getNodeTypeNames());
-                    def = ent.getApplicableNodeDefinition(cne.getName(), getNodeTypeName());
+                    def = ent.getApplicableNodeDefinition(getName(), getNodeTypeName());
                 } catch (NodeTypeConflictException e) {
                     String msg = "internal error: failed to build effective node type.";
                     log.debug(msg);
@@ -423,16 +422,18 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Returns the <code>ChildNodeEntry</code> with the specified <code>NodeId</code> or
-     * <code>null</code> if there's no matching entry.
+     * Returns the <code>ChildNodeEntry</code> with the specified
+     * <code>NodeState</code> or <code>null</code> if there's no matching
+     * entry.
      *
-     * @param id the id of the child node
-     * @return the <code>ChildNodeEntry</code> with the specified <code>NodeId</code> or
-     *         <code>null</code> if there's no matching entry.
+     * @param nodeState the child node state.
+     * @return the <code>ChildNodeEntry</code> with the specified
+     *         <code>NodeState</code> or <code>null</code> if there's no
+     *         matching entry.
      * @see #addChildNodeEntry
      */
-    public synchronized ChildNodeEntry getChildNodeEntry(NodeId id) {
-        return childNodeEntries.get(id);
+    public synchronized ChildNodeEntry getChildNodeEntry(NodeState nodeState) {
+        return childNodeEntries.get(nodeState);
     }
 
     /**
@@ -762,19 +763,22 @@ public class NodeState extends ItemState {
 
     /**
      *
-     * @param insertNodeId
-     * @param beforeNodeId
+     * @param insertNode
+     * @param beforeNode
      */
-    synchronized void reorderChildNodeEntries(NodeId insertNodeId, NodeId beforeNodeId)
+    synchronized void reorderChildNodeEntries(NodeState insertNode, NodeState beforeNode)
         throws NoSuchItemStateException {
         // validate existance of child node entries even if this has been
         // checked within NodeImpl.
-        if (childNodeEntries.get(insertNodeId) == null) {
-            throw new NoSuchItemStateException("No such child node entry: " + insertNodeId);
+        if (childNodeEntries.get(insertNode) == null) {
+            throw new NoSuchItemStateException("No such child node entry: " + insertNode.getNodeId());
         }
-        if (beforeNodeId != null && childNodeEntries.get(insertNodeId) == null) {
-            throw new NoSuchItemStateException("No such child node entry: " + beforeNodeId);
+        if (beforeNode != null && childNodeEntries.get(insertNode) == null) {
+            throw new NoSuchItemStateException("No such child node entry: " + beforeNode.getNodeId());
         }
+
+        NodeId insertNodeId = insertNode.getNodeId();
+        NodeId beforeNodeId = (beforeNode != null) ? beforeNode.getNodeId() : null;
 
         // TODO: check again. Reorder with SPI-Id
         ArrayList nodeEntries = new ArrayList(childNodeEntries);
@@ -984,8 +988,8 @@ public class NodeState extends ItemState {
         // (key=name, value=either a single entry or a list of sns entries)
         private final Map nameMap = new HashMap();
 
-        ChildNodeEntry get(NodeId id) {
-            return (ChildNodeEntry) entries.get(id);
+        ChildNodeEntry get(NodeState nodeState) {
+            return (ChildNodeEntry) entries.get(nodeState.getId());
         }
 
         List get(QName nodeName) {
