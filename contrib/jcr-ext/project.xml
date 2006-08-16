@@ -21,7 +21,7 @@
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jcr-ext</artifactId>
   <name>JCR extras</name>
-  <currentVersion>1.0-SNAPSHOT</currentVersion>
+  <currentVersion>1.1-SNAPSHOT</currentVersion>
   <inceptionYear>2004</inceptionYear>
   <package>org.apache.jackrabbit.*</package>
   <shortDescription>Utilities for JCR implementations</shortDescription>
@@ -63,7 +63,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>xerces</groupId>

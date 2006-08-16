@@ -20,7 +20,7 @@
 <project>
     <pomVersion>1</pomVersion>
     <groupId>org.apache.jackrabbit</groupId>
-    <currentVersion>1.0-SNAPSHOT</currentVersion>
+    <currentVersion>1.1-SNAPSHOT</currentVersion>
     <organization>
         <name>The Apache Software Foundation</name>
         <url>http://www.apache.org/</url>
@@ -58,7 +58,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.1-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <dependency>
