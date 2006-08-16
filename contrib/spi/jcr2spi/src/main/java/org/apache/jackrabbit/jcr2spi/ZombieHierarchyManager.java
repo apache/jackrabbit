@@ -50,20 +50,6 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      * <p/>
      * Also allows for removed items.
      */
-    protected NodeId getParentId(ItemState state) {
-        if (state.hasOverlayedState()) {
-            // use 'old' parent in case item has been removed
-            return state.getOverlayedState().getParent().getNodeId();
-        }
-        // delegate to base class
-        return super.getParentId(state);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Also allows for removed items.
-     */
     protected NodeState getParentState(ItemState state) {
         if (state.hasOverlayedState()) {
             // use 'old' parent in case item has been removed
@@ -100,17 +86,19 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      * Also allows for removed child node entries.
      */
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                                         NodeId id) {
+                                               NodeState state) {
         // check removed child node entries first
         Iterator iter = parent.getRemovedChildNodeEntries().iterator();
+        NodeId id = state.getNodeId();
         while (iter.hasNext()) {
             ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            // TODO: not correct to compare ids
             if (entry.getId().equals(id)) {
                 return entry;
             }
         }
         // no matching removed child node entry found in parent,
         // delegate to base class
-        return super.getChildNodeEntry(parent, id);
+        return super.getChildNodeEntry(parent, state);
     }
 }
