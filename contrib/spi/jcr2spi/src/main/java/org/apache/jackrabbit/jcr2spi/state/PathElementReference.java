@@ -79,4 +79,13 @@ public class PathElementReference extends ChildNodeReference implements ChildNod
     public NodeId getId() {
         return idFactory.createNodeId(parent.getNodeId(), Path.create(getName(), getIndex()));
     }
+
+    /**
+     * This implementation always returns <code>null</code>.
+     * @inheritDoc
+     * @see ChildNodeEntry#getUUID()
+     */
+    public String getUUID() {
+        return null;
+    }
 }

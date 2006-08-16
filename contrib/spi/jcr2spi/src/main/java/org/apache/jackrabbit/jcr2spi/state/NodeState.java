@@ -184,7 +184,7 @@ public class NodeState extends ItemState {
             it = nodeState.getChildNodeEntries().iterator();
             while (it.hasNext()) {
                 ChildNodeEntry cne = (ChildNodeEntry) it.next();
-                childNodeEntries.add(cne.getName(), cne.getId());
+                childNodeEntries.add(cne.getName(), cne.getUUID());
             }
         }
     }
@@ -463,12 +463,16 @@ public class NodeState extends ItemState {
     /**
      * Adds a new <code>ChildNodeEntry</code>.
      *
-     * @param nodeName <code>QName</code> object specifying the name of the new entry.
-     * @param id the id the new entry is refering to.
+     * @param nodeName <code>QName</code> object specifying the name of the new
+     *                 entry.
+     * @param uuid     the uuid the new entry is refering to or
+     *                 <code>null</code> if the child node state cannot be
+     *                 identified with a uuid.
      * @return the newly added <code>ChildNodeEntry</code>
      */
-    synchronized ChildNodeEntry addChildNodeEntry(QName nodeName, NodeId id) {
-        ChildNodeEntry entry = childNodeEntries.add(nodeName, id);
+    synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
+                                                  String uuid) {
+        ChildNodeEntry entry = childNodeEntries.add(nodeName, uuid);
         notifyNodeAdded(entry);
         return entry;
     }
@@ -528,7 +532,6 @@ public class NodeState extends ItemState {
         markModified();
     }
 
-    /**
     /**
      * @inheritDoc
      * @see ItemState#remove()
@@ -825,7 +828,7 @@ public class NodeState extends ItemState {
         childNodeEntries.clear(); // TODO: any mre cleanup work to do? try some kind of merging?
         for (Iterator it = nodeEntries.iterator(); it.hasNext(); ) {
             ChildNodeEntry cne = (ChildNodeEntry) it.next();
-            childNodeEntries.add(cne.getName(), cne.getId());
+            childNodeEntries.add(cne.getName(), cne.getUUID());
         }
         // TODO: correct?
         notifyNodesReplaced();
@@ -849,7 +852,7 @@ public class NodeState extends ItemState {
         ChildNodeEntry oldEntry = childNodeEntries.remove(childId);
         if (oldEntry != null) {
             if (newParent == this) {
-                ChildNodeEntry newEntry = childNodeEntries.add(name, oldEntry.getId());
+                ChildNodeEntry newEntry = childNodeEntries.add(name, childState.getUUID());
                 notifyNodeAdded(newEntry);
                 notifyNodeRemoved(oldEntry);
             } else {
@@ -857,7 +860,7 @@ public class NodeState extends ItemState {
                 // re-parent target node
                 childState.setParent(newParent);
                 // add child node entry to new parent
-                newParent.addChildNodeEntry(newName, childId);
+                newParent.addChildNodeEntry(newName, childState.getUUID());
             }
         } else {
             throw new RepositoryException("Unexpected error: Child state to be renamed does not exist.");
@@ -1024,7 +1027,7 @@ public class NodeState extends ItemState {
             return null;
         }
 
-        ChildNodeEntry add(QName nodeName, NodeId id) {
+        ChildNodeEntry add(QName nodeName, String uuid) {
             List siblings = null;
             Object obj = nameMap.get(nodeName);
             if (obj != null) {
@@ -1040,13 +1043,13 @@ public class NodeState extends ItemState {
                 }
             }
 
-            ChildNodeEntry entry = createChildNodeEntry(nodeName, id);
+            ChildNodeEntry entry = createChildNodeEntry(nodeName, uuid);
             if (siblings != null) {
                 siblings.add(entry);
             } else {
                 nameMap.put(nodeName, entry);
             }
-            entries.put(id, entry);
+            entries.put(idFactory.createNodeId(uuid), entry);
 
             return entry;
         }
@@ -1081,7 +1084,7 @@ public class NodeState extends ItemState {
             while (iter.hasNext()) {
                 ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                 // delegate to add(QName, String) to maintain consistency
-                add(entry.getName(), entry.getId());
+                add(entry.getName(), entry.getUUID());
             }
         }
 
@@ -1166,17 +1169,20 @@ public class NodeState extends ItemState {
 
         /**
          * Creates a <code>ChildNodeEntry</code> instance based on
-         * <code>nodeName</code>, <code>id</code> and <code>index</code>.
+         * <code>nodeName</code> and an optional <code>uuid</code>.
          *
          * @param nodeName the name of the child node.
-         * @param id the id of the child node.
-         * @return
+         * @param uuid     the UUID of the child node. If <code>null</code> the
+         *                 child node cannot be identified with a UUID.
+         * @return the created child node entry.
          */
-        private ChildNodeEntry createChildNodeEntry(QName nodeName, NodeId id) {
-            if (id.getRelativePath() != null) {
-                return new PathElementReference(NodeState.this, nodeName, isf, idFactory);
+        private ChildNodeEntry createChildNodeEntry(QName nodeName, String uuid) {
+            if (uuid == null) {
+                return new PathElementReference(NodeState.this, nodeName,
+                        isf, idFactory);
             } else {
-                return new UUIDReference(NodeState.this, id, isf, nodeName);
+                return new UUIDReference(NodeState.this,
+                        idFactory.createNodeId(uuid), isf, nodeName);
             }
         }
 

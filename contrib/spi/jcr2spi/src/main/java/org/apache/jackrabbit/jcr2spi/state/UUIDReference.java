@@ -85,4 +85,13 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
     public NodeId getId() {
         return childId;
     }
+
+    /**
+     * This implementation always returns a non-null value.
+     * @inheritDoc
+     * @see ChildNodeEntry#getUUID()
+     */
+    public String getUUID() {
+        return childId.getUUID();
+    }
 }

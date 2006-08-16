@@ -36,6 +36,13 @@ public interface ChildNodeEntry {
     public QName getName();
 
     /**
+     * @return the UUID of the node state which is referenced by this child node
+     * entry or <code>null</code> if the node state cannot be identified with a
+     * UUID.
+     */
+    public String getUUID();
+
+    /**
      * @return the index of this child node entry to suppport same-name siblings.
      */
     public int getIndex();
