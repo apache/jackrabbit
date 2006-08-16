@@ -97,9 +97,14 @@ public class VersionImpl extends NodeImpl implements Version {
     public boolean isSame(Item otherItem) {
         if (otherItem instanceof VersionImpl) {
             // since all versions are referenceable, protected and live
-            // in the same workspace, a simple comparision of the ids is sufficient
+            // in the same workspace, a simple comparision of the UUIDs is sufficient
             VersionImpl other = ((VersionImpl) otherItem);
-            return other.getNodeId().equals(other.getNodeId());
+            try {
+                return other.getUUID().equals(other.getUUID());
+            } catch (RepositoryException e) {
+                // should never occur
+                log.error("Internal error while retrieve UUID of version.", e);
+            }
         }
         return false;
     }

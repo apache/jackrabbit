@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -31,17 +31,18 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class ResolveMergeConflict extends AbstractOperation {
 
-    private final NodeId nodeId;
-    private final NodeId versionId;
+    private final NodeState nodeState;
+    private final NodeState versionState;
     private final boolean resolveDone;
 
-    private ResolveMergeConflict(NodeId nodeId, NodeId versionId, boolean resolveDone) {
-        this.nodeId = nodeId;
-        this.versionId = versionId;
+    private ResolveMergeConflict(NodeState nodeState, NodeState versionState, boolean resolveDone) {
+        this.nodeState = nodeState;
+        this.versionState = versionState;
         this.resolveDone = resolveDone;
 
-        addAffectedItemId(nodeId);
-        addAffectedItemId(versionId);
+        // TODO: correct? needed?
+        addAffectedItemState(nodeState);
+        addAffectedItemState(versionState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -53,12 +54,12 @@ public class ResolveMergeConflict extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeId;
+    public NodeState getNodeState() {
+        return nodeState;
     }
 
-    public NodeId getVersionId() {
-        return versionId;
+    public NodeState getVersionState() {
+        return versionState;
     }
 
     public boolean resolveDone() {
@@ -68,12 +69,12 @@ public class ResolveMergeConflict extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     /**
      *
-     * @param nodeId
-     * @param versionId
+     * @param nodeState
+     * @param versionState
      * @param resolveDone
      */
-    public static Operation create(NodeId nodeId, NodeId versionId, boolean resolveDone) {
-        ResolveMergeConflict up = new ResolveMergeConflict(nodeId, versionId, resolveDone);
+    public static Operation create(NodeState nodeState, NodeState versionState, boolean resolveDone) {
+        ResolveMergeConflict up = new ResolveMergeConflict(nodeState, versionState, resolveDone);
         return up;
     }
 }

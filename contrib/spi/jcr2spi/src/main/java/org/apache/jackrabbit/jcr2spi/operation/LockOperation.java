@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -31,16 +31,16 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class LockOperation extends AbstractOperation {
 
-    private final NodeId nodeId;
+    private final NodeState nodeState;
     private final boolean isDeep;
     private final boolean isSessionScoped;
 
-    private LockOperation(NodeId nodeId, boolean isDeep, boolean isSessionScoped) {
-        this.nodeId = nodeId;
+    private LockOperation(NodeState nodeState, boolean isDeep, boolean isSessionScoped) {
+        this.nodeState = nodeState;
         this.isDeep = isDeep;
         this.isSessionScoped = isSessionScoped;
 
-        this.addAffectedItemId(nodeId);
+        this.addAffectedItemState(nodeState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -52,8 +52,8 @@ public class LockOperation extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeId;
+    public NodeState getNodeState() {
+        return nodeState;
     }
 
     public boolean isDeep() {
@@ -67,12 +67,12 @@ public class LockOperation extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     /**
      *
-     * @param nodeId
+     * @param nodeState
      * @param isDeep
      * @return
      */
-    public static Operation create(NodeId nodeId, boolean isDeep, boolean isSessionScoped) {
-        Operation lck = new LockOperation(nodeId, isDeep, isSessionScoped);
+    public static Operation create(NodeState nodeState, boolean isDeep, boolean isSessionScoped) {
+        Operation lck = new LockOperation(nodeState, isDeep, isSessionScoped);
         return lck;
     }
 }

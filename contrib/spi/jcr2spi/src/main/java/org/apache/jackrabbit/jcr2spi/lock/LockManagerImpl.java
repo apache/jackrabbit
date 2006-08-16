@@ -84,7 +84,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
 
         // execute the operation
-        Operation op = LockOperation.create(nodeState.getNodeId(), isDeep, isSessionScoped);
+        Operation op = LockOperation.create(nodeState, isDeep, isSessionScoped);
         wspManager.execute(op);
 
         Lock lock = new LockImpl(nodeState, lhNode, isSessionScoped);
@@ -135,7 +135,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         // execute the operation. Note, that its possible that the session is
         // lock holder and still the lock was never accessed. thus the lockMap
         // does not provide sufficient and relyable information.
-        Operation op = LockRelease.create(nodeState.getNodeId());
+        Operation op = LockRelease.create(nodeState);
         wspManager.execute(op);
 
         // if unlock was successfull: clean up lock map and lock life cycle
@@ -449,7 +449,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 throw new LockException("Session does not hold lock.");
             } else {
                 // lock is still alive -> send refresh-lock operation.
-                Operation op = LockRefresh.create(lockHoldingState.getNodeId());
+                Operation op = LockRefresh.create(lockHoldingState);
                 wspManager.execute(op);
             }
         }

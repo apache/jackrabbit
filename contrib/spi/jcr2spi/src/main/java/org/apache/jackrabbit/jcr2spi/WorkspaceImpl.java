@@ -238,7 +238,8 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         NodeId[] versionIds = new NodeId[versions.length];
         for (int i = 0; i < versions.length; i++) {
             if (versions[i] instanceof VersionImpl) {
-                versionIds[i] = ((VersionImpl)versions[i]).getNodeId();
+                ItemState vState = ((NodeImpl)versions[i]).getItemState();
+                versionIds[i] = (NodeId) vState.getId();
             } else {
                 throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for the given version " + versions[i].getPath());
             }

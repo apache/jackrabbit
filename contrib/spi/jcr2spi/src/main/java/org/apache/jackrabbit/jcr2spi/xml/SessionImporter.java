@@ -52,7 +52,6 @@ import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -424,8 +423,7 @@ public class SessionImporter implements Importer, SessionListener {
                         propDef = session.getValidator().getApplicablePropertyDefinition(newName, conflicting.getType(), true, parent);
                     }
 
-                    PropertyId newPId = session.getIdFactory().createPropertyId(parent.getNodeId(), newName);
-                    Operation ap = AddProperty.create(newPId, conflicting.getType(), propDef, conflicting.getValues());
+                    Operation ap = AddProperty.create(parent, newName, conflicting.getType(), propDef, conflicting.getValues());
                     stateMgr.execute(ap);
                     Operation rm = Remove.create(conflicting);
                     stateMgr.execute(rm);
@@ -442,8 +440,7 @@ public class SessionImporter implements Importer, SessionListener {
             log.debug("Skipping protected nodeState (" + nodeInfo.getName() + ")");
             return null;
         } else {
-            NodeId newId = session.getIdFactory().createNodeId(nodeInfo.getUUID());
-            Operation an = AddNode.create(parent, nodeInfo.getName(), nodeInfo.getNodeTypeName(), newId);
+            Operation an = AddNode.create(parent, nodeInfo.getName(), nodeInfo.getNodeTypeName(), nodeInfo.getUUID());
             stateMgr.execute(an);
             // retrieve id of state that has been created during execution of AddNode
             NodeState childState;
@@ -461,8 +458,7 @@ public class SessionImporter implements Importer, SessionListener {
             }
 
             // and set mixin types
-            PropertyId mixinPId = session.getIdFactory().createPropertyId(childState.getNodeId(), QName.JCR_MIXINTYPES);
-            Operation sm = SetMixin.create(mixinPId, nodeInfo.getMixinNames());
+            Operation sm = SetMixin.create(childState, nodeInfo.getMixinNames());
             stateMgr.execute(sm);
             return childState;
         }
@@ -471,7 +467,7 @@ public class SessionImporter implements Importer, SessionListener {
     /**
      *
      * @param pi
-     * @param nodeState
+     * @param parentState
      * @param nsResolver
      * @throws RepositoryException
      * @throws ConstraintViolationException
@@ -537,8 +533,7 @@ public class SessionImporter implements Importer, SessionListener {
         QValue[] values = getPropertyValues(pi, targetType, def.isMultiple(), nsResolver);
         if (propState == null) {
             // create new property
-            PropertyId newPId = session.getIdFactory().createPropertyId(parentState.getNodeId(), propName);
-            Operation ap = AddProperty.create(newPId, targetType, def, values);
+            Operation ap = AddProperty.create(parentState, propName, targetType, def, values);
             stateMgr.execute(ap);
             try {
                 propState = parentState.getPropertyState(propName);

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -38,18 +37,18 @@ public class AddNode extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(AddNode.class);
 
-    private final NodeId parentId;
+    private final NodeState parentState;
     private final QName nodeName;
     private final QName nodeTypeName;
-    private final NodeId id;
+    private final String uuid;
 
-    private AddNode(NodeId parentId, QName nodeName, QName nodeTypeName, NodeId id) {
-        this.parentId = parentId;
+    private AddNode(NodeState parentState, QName nodeName, QName nodeTypeName, String uuid) {
+        this.parentState = parentState;
         this.nodeName = nodeName;
         this.nodeTypeName = nodeTypeName;
-        this.id = id;
-        addAffectedItemId(parentId);
-        addAffectedItemId(id);
+        this.uuid = uuid;
+
+        addAffectedItemState(parentState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -62,8 +61,8 @@ public class AddNode extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getParentId() {
-        return parentId;
+    public NodeState getParentState() {
+        return parentState;
     }
 
     public QName getNodeName() {
@@ -75,14 +74,14 @@ public class AddNode extends AbstractOperation {
     }
 
     public String getUuid() {
-        return (id != null) ? id.getUUID() : null;
+        return uuid;
     }
 
     //------------------------------------------------------------< Factory >---
 
     public static Operation create(NodeState parentState, QName nodeName,
-                                   QName nodeTypeName, NodeId id) {
-        AddNode an = new AddNode(parentState.getNodeId(), nodeName, nodeTypeName, id);
+                                   QName nodeTypeName, String uuid) {
+        AddNode an = new AddNode(parentState, nodeName, nodeTypeName, uuid);
         return an;
     }
 }

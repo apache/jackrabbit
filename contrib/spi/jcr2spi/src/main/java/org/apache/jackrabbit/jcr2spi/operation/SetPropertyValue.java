@@ -23,7 +23,6 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.value.QValue;
 
 import javax.jcr.version.VersionException;
@@ -35,17 +34,18 @@ import javax.jcr.nodetype.ConstraintViolationException;
  */
 public class SetPropertyValue extends AbstractOperation {
 
-    private final PropertyId propertyId;
+    private final PropertyState propertyState;
     private final QValue[] values;
     private final int propertyType;
     private final boolean isMultiValued;
 
-    private SetPropertyValue(PropertyId propertyId, int propertyType, QValue[] values, boolean isMultiValued) {
-        this.propertyId = propertyId;
+    private SetPropertyValue(PropertyState propertyState, int propertyType, QValue[] values, boolean isMultiValued) {
+        this.propertyState = propertyState;
         this.propertyType = propertyType;
         this.values = values;
         this.isMultiValued = isMultiValued;
-        addAffectedItemId(propertyId);
+        
+        addAffectedItemState(propertyState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -58,8 +58,8 @@ public class SetPropertyValue extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public PropertyId getPropertyId() {
-        return propertyId;
+    public PropertyState getPropertyState() {
+        return propertyState;
     }
 
     public int getPropertyType() {
@@ -77,7 +77,7 @@ public class SetPropertyValue extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     public static Operation create(PropertyState propState, QValue[] iva,
                                    int valueType) {
-        SetPropertyValue sv = new SetPropertyValue(propState.getPropertyId(), valueType, iva, propState.isMultiValued());
+        SetPropertyValue sv = new SetPropertyValue(propState, valueType, iva, propState.isMultiValued());
         return sv;
     }
 }

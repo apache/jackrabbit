@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -31,11 +31,11 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class Checkout extends AbstractOperation {
 
-    private final NodeId nodeId;
+    private final NodeState nodeState;
 
-    private Checkout(NodeId nodeId) {
-        this.nodeId = nodeId;
-        addAffectedItemId(nodeId);
+    private Checkout(NodeState nodeState) {
+        this.nodeState = nodeState;
+        addAffectedItemState(nodeState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -44,12 +44,12 @@ public class Checkout extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeId;
+    public NodeState getNodeState() {
+        return nodeState;
     }
     
     //------------------------------------------------------------< Factory >---
-    public static Operation create(NodeId nodeId) {
-        return new Checkout(nodeId);
+    public static Operation create(NodeState nodeState) {
+        return new Checkout(nodeState);
     }
 }

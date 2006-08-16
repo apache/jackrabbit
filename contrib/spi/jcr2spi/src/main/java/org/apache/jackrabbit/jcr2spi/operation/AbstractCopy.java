@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -35,8 +35,8 @@ public abstract class AbstractCopy extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(AbstractCopy.class);
 
-    private final NodeId srcId;
-    private final NodeId destParentId;
+    private final NodeState srcState;
+    private final NodeState destParentState;
     private final QName destName;
     
     private final String srcWorkspaceName;
@@ -55,9 +55,9 @@ public abstract class AbstractCopy extends AbstractOperation {
         if (!srcItemState.isNode()) {
             throw new PathNotFoundException("Source path " + LogUtil.safeGetJCRPath(srcPath, srcMgrProvider.getNamespaceResolver()) + " is not a valid path.");
         }
-        this.srcId = (NodeId)srcItemState.getId();
-        this.destParentId = getNodeId(destPath.getAncestor(1), destMgrProvider.getHierarchyManager(), destMgrProvider.getNamespaceResolver());
-        addAffectedItemId(destParentId);
+        this.srcState = (NodeState)srcItemState;
+        this.destParentState = getNodeState(destPath.getAncestor(1), destMgrProvider.getHierarchyManager(), destMgrProvider.getNamespaceResolver());
+        addAffectedItemState(destParentState);
 
         // check for illegal index present in destination path
         Path.PathElement destElement = destPath.getNameElement();
@@ -77,12 +77,12 @@ public abstract class AbstractCopy extends AbstractOperation {
         return srcWorkspaceName;
     }
 
-    public NodeId getNodeId() {
-        return srcId;
+    public NodeState getNodeState() {
+        return srcState;
     }
 
-    public NodeId getDestinationParentId() {
-        return destParentId;
+    public NodeState getDestinationParentState() {
+        return destParentState;
     }
 
     public QName getDestinationName() {

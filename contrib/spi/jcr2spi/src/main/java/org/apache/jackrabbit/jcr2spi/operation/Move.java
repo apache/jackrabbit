@@ -18,11 +18,11 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -42,19 +42,20 @@ public class Move extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(Move.class);
 
-    private final NodeId srcId;
-    private final NodeId srcParentId;
-    private final NodeId destParentId;
+    private final NodeState srcState;
+    private final NodeState srcParentState;
+    private final NodeState destParentState;
     private final QName destName;
 
-    private Move(NodeId srcNodeId, NodeId srcParentId, NodeId destParentId, QName destName) {
-        srcId = srcNodeId;
-        this.srcParentId = srcParentId;
-        this.destParentId = destParentId;
+    private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, QName destName) {
+        this.srcState = srcNodeState;
+        this.srcParentState = srcParentState;
+        this.destParentState = destParentState;
         this.destName = destName;
-        addAffectedItemId(srcNodeId);
-        addAffectedItemId(srcParentId);
-        addAffectedItemId(destParentId);
+        
+        addAffectedItemState(srcNodeState);
+        addAffectedItemState(srcParentState);
+        addAffectedItemState(destParentState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -67,16 +68,16 @@ public class Move extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return srcId;
+    public NodeState getNodeState() {
+        return srcState;
     }
 
-    public NodeId getSourceParentId() {
-        return srcParentId;
+    public NodeState getSourceParentState() {
+        return srcParentState;
     }
 
-    public NodeId getDestinationParentId() {
-        return destParentId;
+    public NodeState getDestinationParentState() {
+        return destParentState;
     }
 
     public QName getDestinationName() {
@@ -113,10 +114,10 @@ public class Move extends AbstractOperation {
             throw new RepositoryException(msg);
         }
 
-        NodeId srcId = getNodeId(srcPath, hierMgr, nsResolver);
-        NodeId srcParentId = getNodeId(srcPath.getAncestor(1), hierMgr, nsResolver);
-        NodeId destParentId = getNodeId(destPath.getAncestor(1), hierMgr, nsResolver);
-        Move move = new Move(srcId, srcParentId, destParentId, destElement.getName());
+        NodeState srcState = getNodeState(srcPath, hierMgr, nsResolver);
+        NodeState srcParentState = getNodeState(srcPath.getAncestor(1), hierMgr, nsResolver);
+        NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr, nsResolver);
+        Move move = new Move(srcState, srcParentState, destParentState, destElement.getName());
         return move;
     }
 }

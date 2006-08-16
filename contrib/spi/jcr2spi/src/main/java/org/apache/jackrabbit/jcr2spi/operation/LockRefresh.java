@@ -20,7 +20,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -30,12 +31,12 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class LockRefresh extends AbstractOperation {
 
-    private final NodeId nodeId;
+    private final NodeState nodeState;
 
-    private LockRefresh(NodeId nodeId) {
-        this.nodeId = nodeId;
+    private LockRefresh(NodeState nodeState) {
+        this.nodeState = nodeState;
 
-        this.addAffectedItemId(nodeId);
+        this.addAffectedItemState(nodeState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -47,18 +48,18 @@ public class LockRefresh extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeId;
+    public NodeState getNodeState() {
+        return nodeState;
     }
 
     //------------------------------------------------------------< Factory >---
     /**
      *
-     * @param nodeId
+     * @param nodeState
      * @return
      */
-    public static Operation create(NodeId nodeId) {
-        Operation lck = new LockRefresh(nodeId);
+    public static Operation create(NodeState nodeState) {
+        Operation lck = new LockRefresh(nodeState);
         return lck;
     }
 }

@@ -55,7 +55,6 @@ import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -232,7 +231,9 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * @see Node#orderBefore(String, String)
      */
-    public void orderBefore(String srcChildRelPath, String destChildRelPath) throws UnsupportedRepositoryOperationException, VersionException, ConstraintViolationException, ItemNotFoundException, LockException, RepositoryException {
+    public synchronized void orderBefore(String srcChildRelPath,
+                                         String destChildRelPath)
+        throws UnsupportedRepositoryOperationException, VersionException, ConstraintViolationException, ItemNotFoundException, LockException, RepositoryException {
         checkIsWritable();
 
         if (!getPrimaryNodeType().hasOrderableChildNodes()) {
@@ -254,8 +255,7 @@ public class NodeImpl extends ItemImpl implements Node {
         Path.PathElement srcName = getReorderPath(srcChildRelPath).getNameElement();
         Path.PathElement beforeName = (destChildRelPath == null) ? null : getReorderPath(destChildRelPath).getNameElement();
 
-        NodeState nState = getNodeState();
-        Operation op = ReorderNodes.create(nState, srcName, beforeName);
+        Operation op = ReorderNodes.create(getNodeState(), srcName, beforeName);
         session.getSessionItemStateManager().execute(op);
     }
 
@@ -674,8 +674,7 @@ public class NodeImpl extends ItemImpl implements Node {
             allMixins[currentMixins.length + i] = mixinQNames[i];
         }
         // perform the operation
-        PropertyId mixinPId = session.getIdFactory().createPropertyId(getNodeId(), QName.JCR_MIXINTYPES);
-        Operation op = SetMixin.create(mixinPId, allMixins);
+        Operation op = SetMixin.create(getNodeState(), allMixins);
         session.getSessionItemStateManager().execute(op);
     }
 
@@ -717,8 +716,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // delegate to operation
         QName[] mixins = (QName[]) remainingMixins.toArray(new QName[remainingMixins.size()]);
-        PropertyId mixinPId = session.getIdFactory().createPropertyId(getNodeId(), QName.JCR_MIXINTYPES);
-        Operation op = SetMixin.create(mixinPId, mixins);
+        Operation op = SetMixin.create(getNodeState(), mixins);
         session.getSessionItemStateManager().execute(op);
     }
 
@@ -837,8 +835,8 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         if (version instanceof VersionImpl) {
-            NodeId versionId = ((VersionImpl)version).getNodeId();
-            session.getVersionManager().resolveMergeConflict(getNodeId(), versionId, done);
+            NodeState versionState = ((NodeImpl)version).getNodeState();
+            session.getVersionManager().resolveMergeConflict(getNodeState(), versionState, done);
         } else {
             throw new RepositoryException("Incompatible Version object :" + version);
         }
@@ -858,7 +856,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure the specified workspace is visible for the current session.
         session.checkAccessibleWorkspace(srcWorkspaceName);
 
-        Operation op = Update.create(getNodeId(), srcWorkspaceName);
+        Operation op = Update.create(getNodeState(), srcWorkspaceName);
         session.getSessionItemStateManager().execute(op);
     }
 
@@ -878,7 +876,7 @@ public class NodeImpl extends ItemImpl implements Node {
         session.checkAccessibleWorkspace(srcWorkspace);
 
         // TODO: improve... (and review return value of VM.merge)
-        Collection failedIds = session.getVersionManager().merge(getNodeId(), srcWorkspace, bestEffort);
+        Collection failedIds = session.getVersionManager().merge(getNodeState(), srcWorkspace, bestEffort);
         if (failedIds.isEmpty()) {
             return IteratorHelper.EMPTY;
         } else {
@@ -1057,7 +1055,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private void restore(NodeId nodeId, Version version, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
         if (version instanceof VersionImpl) {
-            NodeId versionId = ((VersionImpl)version).getNodeId();
+            NodeId versionId = ((NodeImpl)version).getNodeId();
             session.getVersionManager().restore(nodeId, versionId, removeExisting);
         } else {
             throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for the given version " + version.getPath());
@@ -1423,8 +1421,7 @@ public class NodeImpl extends ItemImpl implements Node {
     private Property createProperty(QName qName, int type, QPropertyDefinition def,
                                     QValue[] qvs)
         throws PathNotFoundException, ConstraintViolationException, RepositoryException {
-        PropertyId newPId = session.getIdFactory().createPropertyId(getNodeId(), qName);
-        Operation op = AddProperty.create(newPId, type, def, qvs);
+        Operation op = AddProperty.create(getNodeState(), qName, type, def, qvs);
         session.getSessionItemStateManager().execute(op);
         return getProperty(qName);
     }
@@ -1495,12 +1492,11 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Return the id of this <code>Node</code>. Protected for usage within
-     * <code>VersionImpl</code> and <code>VersionHistoryImpl</code>.
+     * Return the id of this <code>Node</code>.
      *
      * @return the id of this <code>Node</code>
      */
-    protected NodeId getNodeId() {
+    private NodeId getNodeId() {
         return getNodeState().getNodeId();
     }
 

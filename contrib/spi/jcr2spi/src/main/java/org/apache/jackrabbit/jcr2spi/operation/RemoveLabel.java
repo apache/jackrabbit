@@ -18,8 +18,8 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -36,14 +36,16 @@ public class RemoveLabel extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(RemoveLabel.class);
 
-    private final NodeId versionHistoryId;
-    private final NodeId versionId;
+    private final NodeState versionHistoryState;
+    private final NodeState versionState;
     private final QName label;
 
-    private RemoveLabel(NodeId versionHistoryId, NodeId versionId, QName label) {
-        this.versionHistoryId = versionHistoryId;
-        this.versionId = versionId;
+    private RemoveLabel(NodeState versionHistoryState, NodeState versionState, QName label) {
+        this.versionHistoryState = versionHistoryState;
+        this.versionState = versionState;
         this.label = label;
+
+        // TODO: add affected states. required?
     }
     //----------------------------------------------------------< Operation >---
     /**
@@ -62,12 +64,12 @@ public class RemoveLabel extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getVersionHistoryId() {
-        return versionHistoryId;
+    public NodeState getVersionHistoryState() {
+        return versionHistoryState;
     }
 
-    public NodeId getVersionId() {
-        return versionId;
+    public NodeState getVersionState() {
+        return versionState;
     }
 
     public QName getLabel() {
@@ -77,13 +79,12 @@ public class RemoveLabel extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     /**
      *
-     * @param versionHistoryId
-     * @param versionId
+     * @param versionHistoryState
+     * @param versionState
      * @param label
-     * @param moveLabel
      * @return
      */
-    public static Operation create(NodeId versionHistoryId, NodeId versionId, QName label) {
-        return new RemoveLabel(versionHistoryId, versionId, label);
+    public static Operation create(NodeState versionHistoryState, NodeState versionState, QName label) {
+        return new RemoveLabel(versionHistoryState, versionState, label);
     }
 }

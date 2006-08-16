@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -32,18 +32,18 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class Merge extends AbstractOperation {
 
-    private final NodeId nodeId;
+    private final NodeState nodeState;
     private final String srcWorkspaceName;
     private final boolean bestEffort;
     private final InternalEventListener eventListener;
 
-    private Merge(NodeId nodeId, String srcWorkspaceName, boolean bestEffort, InternalEventListener eventListener) {
-        this.nodeId = nodeId;
+    private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, InternalEventListener eventListener) {
+        this.nodeState = nodeState;
         this.srcWorkspaceName = srcWorkspaceName;
         this.bestEffort = bestEffort;
         this.eventListener = eventListener;
 
-        this.addAffectedItemId(nodeId);
+        this.addAffectedItemState(nodeState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -55,8 +55,8 @@ public class Merge extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeId;
+    public NodeState getNodeState() {
+        return nodeState;
     }
 
     public String getSourceWorkspaceName() {
@@ -74,11 +74,11 @@ public class Merge extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     /**
      *
-     * @param nodeId
+     * @param nodeState
      * @param srcWorkspaceName
      * @return
      */
-    public static Operation create(NodeId nodeId, String srcWorkspaceName, boolean bestEffort, InternalEventListener eventListener) {
-        return new Merge(nodeId, srcWorkspaceName, bestEffort, eventListener);
+    public static Operation create(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, InternalEventListener eventListener) {
+        return new Merge(nodeState, srcWorkspaceName, bestEffort, eventListener);
     }
 }

@@ -31,15 +31,15 @@ import javax.jcr.version.VersionException;
  */
 public class ReorderNodes extends AbstractOperation {
 
-    private final NodeId parentId;
+    private final NodeState parentState;
     private final NodeId insertId;
     private final NodeId beforeId;
 
-    private ReorderNodes(NodeId parentId, NodeId insertId, NodeId beforeId) {
-        this.parentId = parentId;
+    private ReorderNodes(NodeState parentState, NodeId insertId, NodeId beforeId) {
+        this.parentState = parentState;
         this.insertId = insertId;
         this.beforeId = beforeId;
-        addAffectedItemId(parentId);
+        addAffectedItemState(parentState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -52,8 +52,8 @@ public class ReorderNodes extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getParentId() {
-        return parentId;
+    public NodeState getParentState() {
+        return parentState;
     }
 
     public NodeId getInsertNodeId() {
@@ -70,7 +70,7 @@ public class ReorderNodes extends AbstractOperation {
                                    Path.PathElement beforeName) {
         NodeId insertId = parentState.getChildNodeEntry(srcName.getName(), srcName.getNormalizedIndex()).getId();
         NodeId beforeId = (beforeName == null) ? null : parentState.getChildNodeEntry(beforeName.getName(), beforeName.getNormalizedIndex()).getId();
-        Operation op = new ReorderNodes(parentState.getNodeId(), insertId, beforeId);
+        Operation op = new ReorderNodes(parentState, insertId, beforeId);
         return op;
     }
 }
