@@ -25,7 +25,6 @@ import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -53,20 +52,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         this.nsResolver = nsResolver;
     }
 
-    //---------------------------------------------------------< overridables >
-    // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
-    /**
-     * Returns the <code>parentUUID</code> of the given item.
-     * <p/>
-     * Low-level hook provided for specialized derived classes.
-     *
-     * @param state item state
-     * @return parent <code>NodeId</code> of the given item state
-     * @see ZombieHierarchyManager#getParentId(ItemState)
-     */
-    protected NodeId getParentId(ItemState state) {
-        return state.getParent().getNodeId();
-    }
+    //-------------------------------------------------------< overridables >---
 
     // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
     /**
@@ -86,15 +72,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * Low-level hook provided for specialized derived classes.
      *
      * @param parent node state
-     * @param id   id of child node entry
+     * @param state  child state
      * @return the <code>ChildNodeEntry</code> of <code>parent</code> with
      *         the specified <code>uuid</code> or <code>null</code> if there's
      *         no such entry.
-     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, NodeId)
+     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, NodeState)
      */
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                               NodeId id) {
-        return parent.getChildNodeEntry(id);
+                                               NodeState state) {
+        return parent.getChildNodeEntry(state.getNodeId());
     }
 
     // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
@@ -198,17 +184,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
         if (state.isNode()) {
             NodeState nodeState = (NodeState) state;
-            NodeId id = nodeState.getNodeId();
-            ChildNodeEntry entry = getChildNodeEntry(parentState, id);
+            ChildNodeEntry entry = getChildNodeEntry(parentState, nodeState);
             if (entry == null) {
-                String msg = "failed to build path of " + state.getId() + ": "
-                        + parentState.getNodeId() + " has no child entry for "
-                        + id;
+                String msg = "Failed to build path of " + state + ": "
+                        + LogUtil.safeGetJCRPath(parentState, nsResolver, this) + " has such child entry.";
                 log.debug(msg);
                 throw new ItemNotFoundException(msg);
             }
             // add to path
-            if (entry.getIndex() == org.apache.jackrabbit.name.Path.INDEX_DEFAULT) {
+            if (entry.getIndex() == Path.INDEX_DEFAULT) {
                 builder.addLast(entry.getName());
             } else {
                 builder.addLast(entry.getName(), entry.getIndex());
@@ -262,15 +246,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
             buildPath(builder, itemState);
             return builder.getPath();
         } catch (NoSuchItemStateException e) {
-            String msg = "failed to build path of " + itemState.getId();
+            String msg = "Failed to build path of " + itemState;
             log.debug(msg);
             throw new ItemNotFoundException(msg, e);
         } catch (ItemStateException e) {
-            String msg = "failed to build path of " + itemState.getId();
+            String msg = "Failed to build path of " + itemState;
             log.debug(msg);
             throw new RepositoryException(msg, e);
         } catch (MalformedPathException e) {
-            String msg = "failed to build path of " + itemState.getId();
+            String msg = "Failed to build path of " + itemState;
             throw new RepositoryException(msg, e);
         }
     }
