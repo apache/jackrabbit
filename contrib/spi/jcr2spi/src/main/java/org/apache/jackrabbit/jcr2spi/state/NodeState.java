@@ -847,9 +847,8 @@ public class NodeState extends ItemState {
     // TODO: review. move with SPI Ids
     synchronized void moveChildNodeEntry(NodeState newParent, NodeState childState, QName newName)
         throws RepositoryException {
-        NodeId childId = childState.getNodeId();
         // rename only
-        ChildNodeEntry oldEntry = childNodeEntries.remove(childId);
+        ChildNodeEntry oldEntry = childNodeEntries.remove(childState);
         if (oldEntry != null) {
             if (newParent == this) {
                 ChildNodeEntry newEntry = childNodeEntries.add(name, childState.getUUID());
@@ -1136,13 +1135,24 @@ public class NodeState extends ItemState {
         }
 
         /**
-         * Removes the child node entry refering to the node with the given id.
+         * Removes the child node entry refering to the node state.
          *
-         * @param id id of node whose entry is to be removed.
+         * @param nodeState the node state whose entry is to be removed.
          * @return the removed entry or <code>null</code> if there is no such entry.
          */
-        ChildNodeEntry remove(NodeId id) {
-            ChildNodeEntry entry = (ChildNodeEntry) entries.get(id);
+        ChildNodeEntry remove(NodeState nodeState) {
+            ChildNodeEntry entry = null;
+            for (Iterator it = get(nodeState.getName()).iterator(); it.hasNext(); ) {
+                ChildNodeEntry tmp = (ChildNodeEntry) it.next();
+                try {
+                    if (tmp.getNodeState() == nodeState) {
+                        entry = tmp;
+                        break;
+                    }
+                } catch (ItemStateException e) {
+                    log.warn("error accessing child node state: " + e.getMessage());
+                }
+            }
             if (entry != null) {
                 return remove(entry.getName(), entry.getIndex());
             }
