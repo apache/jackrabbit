@@ -73,6 +73,7 @@ import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.value.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -554,13 +555,15 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
         }
         //-----------------------< OperationVisitor >---------------------------
+        // TODO: review retrival of ItemIds for transient modifications 
 
         public void visit(AddNode operation) throws RepositoryException {
-            batch.addNode(operation.getParentId(), operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid());
+            NodeId parentId = operation.getParentState().getNodeId();
+            batch.addNode(parentId, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid());
         }
 
         public void visit(AddProperty operation) throws RepositoryException {
-            org.apache.jackrabbit.spi.NodeId parentId = operation.getParentId();
+            NodeId parentId = operation.getParentState().getNodeId();
             QName propertyName = operation.getPropertyName();
             int type = operation.getPropertyType();
             if (operation.isMultiValued()) {
@@ -589,35 +592,43 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
 
         public void visit(Clone operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-            events = service.clone(sessionInfo, operation.getWorkspaceName(), operation.getNodeId(), operation.getDestinationParentId(), operation.getDestinationName(), operation.isRemoveExisting());
+            NodeId nId = operation.getNodeState().getNodeId();
+            NodeId destParentId = operation.getDestinationParentState().getNodeId();
+            events = service.clone(sessionInfo, operation.getWorkspaceName(), nId, destParentId, operation.getDestinationName(), operation.isRemoveExisting());
         }
 
         public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-            events = service.copy(sessionInfo, operation.getWorkspaceName(), operation.getNodeId(), operation.getDestinationParentId(), operation.getDestinationName());
+            NodeId nId = operation.getNodeState().getNodeId();
+            NodeId destParentId = operation.getDestinationParentState().getNodeId();
+            events = service.copy(sessionInfo, operation.getWorkspaceName(), nId, destParentId, operation.getDestinationName());
         }
 
         public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+            NodeId moveId = operation.getNodeState().getNodeId();
+            NodeId destParentId = operation.getDestinationParentState().getNodeId();
             if (batch == null) {
-                events = service.move(sessionInfo, operation.getNodeId(), operation.getDestinationParentId(), operation.getDestinationName());
+                events = service.move(sessionInfo, moveId, destParentId, operation.getDestinationName());
             } else {
-                batch.move(operation.getNodeId(), operation.getDestinationParentId(), operation.getDestinationName());
+                batch.move(moveId, destParentId, operation.getDestinationName());
             }
         }
 
         public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
-            events = service.update(sessionInfo, operation.getNodeId(), operation.getSourceWorkspaceName());
+            NodeId nId = operation.getNodeState().getNodeId();
+            events = service.update(sessionInfo, nId, operation.getSourceWorkspaceName());
         }
 
         public void visit(Remove operation) throws RepositoryException {
-            batch.remove(operation.getRemoveId());
+            ItemId id = operation.getRemoveState().getId();
+            batch.remove(id);
         }
 
         public void visit(SetMixin operation) throws RepositoryException {
-            batch.setMixins(operation.getNodeId(), operation.getMixinNames());
+            batch.setMixins(operation.getNodeState().getNodeId(), operation.getMixinNames());
         }
 
         public void visit(SetPropertyValue operation) throws RepositoryException {
-            org.apache.jackrabbit.spi.PropertyId id = operation.getPropertyId();
+            PropertyId id = operation.getPropertyState().getPropertyId();
             int type = operation.getPropertyType();
             if (operation.isMultiValued()) {
                 QValue[] values = operation.getValues();
@@ -645,15 +656,18 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
 
         public void visit(ReorderNodes operation) throws RepositoryException {
-            batch.reorderNodes(operation.getParentId(), operation.getInsertNodeId(), operation.getBeforeNodeId());
+            NodeId parentId = operation.getParentState().getNodeId();
+            NodeId insertId = operation.getInsertNodeId();
+            NodeId beforeId = operation.getBeforeNodeId();
+            batch.reorderNodes(parentId, insertId, beforeId);
         }
 
         public void visit(Checkout operation) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
-            events = service.checkout(sessionInfo, operation.getNodeId());
+            events = service.checkout(sessionInfo, operation.getNodeState().getNodeId());
         }
 
         public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-            events = service.checkin(sessionInfo, operation.getNodeId());
+            events = service.checkin(sessionInfo, operation.getNodeState().getNodeId());
         }
 
         public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
@@ -675,15 +689,16 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
 
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-            events = service.merge(sessionInfo, operation.getNodeId(), operation.getSourceWorkspaceName(), operation.bestEffort());
+            NodeId nId = operation.getNodeState().getNodeId();
+            events = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
             // todo: improve.... inform operation about modified items (build mergefailed iterator)
             operation.getEventListener().onEvent(events, true);
         }
 
         public void visit(ResolveMergeConflict operation) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
             try {
-                NodeId nId = operation.getNodeId();
-                NodeId vId = operation.getVersionId();
+                NodeId nId = operation.getNodeState().getNodeId();
+                NodeId vId = operation.getVersionState().getNodeId();
 
                 PropertyState mergeFailedState = (PropertyState) cache.getItemState(
                         getIdFactory().createPropertyId(nId, QName.JCR_MERGEFAILED));
@@ -726,23 +741,30 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
 
         public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-            events = service.lock(sessionInfo, operation.getNodeId(), operation.isDeep());
+            NodeId nId = operation.getNodeState().getNodeId();
+            events = service.lock(sessionInfo, nId, operation.isDeep());
         }
 
         public void visit(LockRefresh operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-            events = service.refreshLock(sessionInfo, operation.getNodeId());
+            NodeId nId = operation.getNodeState().getNodeId();
+            events = service.refreshLock(sessionInfo, nId);
         }
 
         public void visit(LockRelease operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-            events = service.unlock(sessionInfo, operation.getNodeId());
+            NodeId nId = operation.getNodeState().getNodeId();
+            events = service.unlock(sessionInfo, nId);
         }
 
         public void visit(AddLabel operation) throws VersionException, RepositoryException {
-            events = service.addVersionLabel(sessionInfo, operation.getVersionHistoryId(), operation.getVersionId(), operation.getLabel(), operation.moveLabel());
+            NodeId vhId = operation.getVersionHistoryState().getNodeId();
+            NodeId vId = operation.getVersionState().getNodeId();
+            events = service.addVersionLabel(sessionInfo, vhId, vId, operation.getLabel(), operation.moveLabel());
         }
 
         public void visit(RemoveLabel operation) throws VersionException, RepositoryException {
-            events = service.removeVersionLabel(sessionInfo, operation.getVersionHistoryId(), operation.getVersionId(), operation.getLabel());
+            NodeId vhId = operation.getVersionHistoryState().getNodeId();
+            NodeId vId = operation.getVersionState().getNodeId();
+            events = service.removeVersionLabel(sessionInfo, vhId, vId, operation.getLabel());
         }
     }
 

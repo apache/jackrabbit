@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -31,14 +31,23 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class SetMixin extends AbstractOperation {
 
-    private final NodeId nodeId;
+    private final NodeState nodeState;
     private final QName[] mixinNames;
 
-    private SetMixin(PropertyId propertyId, QName[] mixinNames) {
-        this.nodeId = propertyId.getParentId();
+    private SetMixin(NodeState nodeState, QName[] mixinNames) {
+        this.nodeState = nodeState;
         this.mixinNames = mixinNames;
-        addAffectedItemId(nodeId);
-        addAffectedItemId(propertyId);
+
+        // set affected states
+        addAffectedItemState(nodeState);
+        // TODO: correct?
+        if (nodeState.hasPropertyName(QName.JCR_MIXINTYPES)) {
+            try {
+                addAffectedItemState(nodeState.getPropertyState(QName.JCR_MIXINTYPES));
+            } catch (ItemStateException e) {
+                // should never occur
+            }
+        }
     }
 
     //----------------------------------------------------------< Operation >---
@@ -51,8 +60,8 @@ public class SetMixin extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeId;
+    public NodeState getNodeState() {
+        return nodeState;
     }
 
     public QName[] getMixinNames() {
@@ -61,8 +70,8 @@ public class SetMixin extends AbstractOperation {
 
     //------------------------------------------------------------< Factory >---
 
-    public static Operation create(PropertyId mixinPropertyId, QName[] mixinNames) {
-        SetMixin sm = new SetMixin(mixinPropertyId, mixinNames);
+    public static Operation create(NodeState nodeState, QName[] mixinNames) {
+        SetMixin sm = new SetMixin(nodeState, mixinNames);
         return sm;
     }
 }

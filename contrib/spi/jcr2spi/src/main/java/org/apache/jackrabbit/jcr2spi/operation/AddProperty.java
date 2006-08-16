@@ -18,9 +18,8 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
@@ -36,21 +35,21 @@ import javax.jcr.nodetype.ConstraintViolationException;
  */
 public class AddProperty extends AbstractOperation {
 
-    private final NodeId parentId;
+    private final NodeState parentState;
     private final QName propertyName;
     private final int propertyType;
     private final QValue[] values;
 
     private final QPropertyDefinition definition;
 
-    private AddProperty(PropertyId newPropertyId, int propertyType, QValue[] values, QPropertyDefinition definition) {
-        this.parentId = newPropertyId.getParentId();
-        this.propertyName = newPropertyId.getQName();
+    private AddProperty(NodeState parentState, QName propName, int propertyType, QValue[] values, QPropertyDefinition definition) {
+        this.parentState = parentState;
+        this.propertyName = propName;
         this.propertyType = propertyType;
         this.values = values;
         this.definition = definition;
-        addAffectedItemId(parentId);
-        addAffectedItemId(newPropertyId);
+
+        addAffectedItemState(parentState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -63,8 +62,8 @@ public class AddProperty extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getParentId() {
-        return parentId;
+    public NodeState getParentState() {
+        return parentState;
     }
 
     public QName getPropertyName() {
@@ -84,9 +83,18 @@ public class AddProperty extends AbstractOperation {
     }
 
     //------------------------------------------------------------< Factory >---
-    public static Operation create(PropertyId newPropertyId, int propertyType,
+    /**
+     *
+     * @param parentState
+     * @param propName
+     * @param propertyType
+     * @param def
+     * @param values
+     * @return
+     */
+    public static Operation create(NodeState parentState, QName propName, int propertyType,
                                    QPropertyDefinition def, QValue[] values) {
-        AddProperty ap = new AddProperty(newPropertyId, propertyType, values, def);
+        AddProperty ap = new AddProperty(parentState, propName, propertyType, values, def);
         return ap;
     }
 }

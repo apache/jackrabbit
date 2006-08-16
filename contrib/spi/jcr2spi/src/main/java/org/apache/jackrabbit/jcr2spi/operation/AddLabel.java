@@ -18,8 +18,8 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -36,16 +36,18 @@ public class AddLabel extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(AddLabel.class);
 
-    private final NodeId versionHistoryId;
-    private final NodeId versionId;
+    private final NodeState versionHistoryState;
+    private final NodeState versionState;
     private final QName label;
     private final boolean moveLabel;
 
-    private AddLabel(NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) {
-        this.versionHistoryId = versionHistoryId;
-        this.versionId = versionId;
+    private AddLabel(NodeState versionHistoryState, NodeState versionState, QName label, boolean moveLabel) {
+        this.versionHistoryState = versionHistoryState;
+        this.versionState = versionState;
         this.label = label;
         this.moveLabel = moveLabel;
+
+        // TODO: setting affecting states?
     }
     //----------------------------------------------------------< Operation >---
     /**
@@ -64,12 +66,12 @@ public class AddLabel extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getVersionHistoryId() {
-        return versionHistoryId;
+    public NodeState getVersionHistoryState() {
+        return versionHistoryState;
     }
 
-    public NodeId getVersionId() {
-        return versionId;
+    public NodeState getVersionState() {
+        return versionState;
     }
 
     public QName getLabel() {
@@ -83,13 +85,13 @@ public class AddLabel extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     /**
      *
-     * @param versionHistoryId
-     * @param versionId
+     * @param versionHistoryState
+     * @param versionState
      * @param label
      * @param moveLabel
      * @return
      */
-    public static Operation create(NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) {
-        return new AddLabel(versionHistoryId, versionId, label, moveLabel);
+    public static Operation create(NodeState versionHistoryState, NodeState versionState, QName label, boolean moveLabel) {
+        return new AddLabel(versionHistoryState, versionState, label, moveLabel);
     }
 }

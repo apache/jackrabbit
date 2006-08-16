@@ -158,7 +158,7 @@ public abstract class ItemState implements ItemStateListener {
      * Copy state information from another state into this state
      * @param state source state information
      */
-    protected abstract void copy(ItemState state);
+    abstract void copy(ItemState state);
 
     /**
      * Pull state information from overlayed state.
@@ -311,7 +311,7 @@ public abstract class ItemState implements ItemStateListener {
     /**
      * Notify the life cycle listeners that this state has changed its status.
      */
-    protected void notifyStatusChanged(int oldStatus) {
+    private void notifyStatusChanged(int oldStatus) {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemStateListener[] la;
         synchronized (listeners) {

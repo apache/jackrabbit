@@ -53,7 +53,6 @@ import org.slf4j.Logger;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
@@ -338,6 +337,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // check status of current item's state
         if (itemState.isTransient()) {
             switch (itemState.getStatus()) {
+                // safety... should have been checked befoe
+                case ItemState.STATUS_NEW:
+                    throw new ItemStateException("Unexpected state: cannot start undo from a new item state.");
+
                 case ItemState.STATUS_STALE_MODIFIED:
                 case ItemState.STATUS_STALE_DESTROYED:
                 case ItemState.STATUS_EXISTING_MODIFIED:
@@ -385,12 +388,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
          * build set of item id's which are within the scope of
          * (i.e. affected by) this cancel operation
          */
-        Set affectedIds = new HashSet();
+        Set affectedStates = new HashSet();
         Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
         while (it.hasNext()) {
-            affectedIds.add(((ItemState) it.next()).getId());
+            affectedStates.add(((ItemState) it.next()));
         }
-        collectOperations(affectedIds, changeLog);
+        collectOperations(affectedStates, changeLog);
 
         // process list of 'new', 'modified' or 'stale' transient states
         Iterator transIter = changeLog.modifiedStates();
@@ -627,6 +630,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @throws ItemStateException
      */
     private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException {
+
         ChangeLog changeLog = new ChangeLog();
         if (itemState.getParent() == null) {
             // root state -> get all item states
@@ -652,13 +656,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
              * (i.e. affected by) this save operation
              */
             Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
-            Set affectedIds = new HashSet();
+            Set affectedStates = new HashSet();
             while (it.hasNext()) {
-                affectedIds.add(((ItemState) it.next()).getId());
+                affectedStates.add((ItemState) it.next());
             }
 
-            checkIsSelfContained(affectedIds, changeLog);
-            collectOperations(affectedIds, changeLog);
+            checkIsSelfContained(affectedStates, changeLog);
+            collectOperations(affectedStates, changeLog);
         }
         return changeLog;
     }
@@ -799,19 +803,19 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * Retuns a list of operations that are in the scope the the change set
-     * defined by the affected <code>itemIds</code>.
+     * defined by the affected <code>ItemState</code>s.
      *
-     * @param affectedIds
+     * @param affectedStates
      * @param changeLog
      */
-    private void collectOperations(Set affectedIds, ChangeLog changeLog) {
+    private void collectOperations(Set affectedStates, ChangeLog changeLog) {
         Iterator opsIter = transientStateMgr.getOperations();
         while (opsIter.hasNext()) {
             Operation op = (Operation) opsIter.next();
-            Iterator ids = op.getAffectedItemIds().iterator();
-            while (ids.hasNext()) {
-                ItemId id = (ItemId) ids.next();
-                if (affectedIds.contains(id)) {
+            Iterator states = op.getAffectedItemStates().iterator();
+            while (states.hasNext()) {
+                ItemState state = (ItemState) states.next();
+                if (affectedStates.contains(state)) {
                     changeLog.addOperation(op);
                     break;
                 }
@@ -826,31 +830,30 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * (e.g. moving a node requires that the target node including both
      * old and new parents are saved)
      *
-     * @param affectedIds
+     * @param affectedStates
      * @param changeLog
      */
-    private void checkIsSelfContained(Set affectedIds, ChangeLog changeLog) throws ItemStateException {
+    private void checkIsSelfContained(Set affectedStates, ChangeLog changeLog) throws ItemStateException {
         Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
         while (it.hasNext()) {
             ItemState transientState = (ItemState) it.next();
             if (transientState.isNode()) {
                 NodeState nodeState = (NodeState) transientState;
-                Set dependentIDs = new HashSet();
+                Set dependentStates = new HashSet();
                 if (nodeState.hasOverlayedState()) {
-                    // TODO: review usage of NodeId
-                    NodeId oldParentId = nodeState.getOverlayedState().getParent().getNodeId();
-                    NodeId newParentId = nodeState.getParent().getNodeId();
-                    if (oldParentId != null) {
-                        if (newParentId == null) {
+                    NodeState oldParentState = nodeState.getOverlayedState().getParent();
+                    NodeState newParentState = nodeState.getParent();
+                    if (oldParentState != null) {
+                        if (newParentState == null) {
                             // node has been removed, add old parent
                             // to dependencies
-                            dependentIDs.add(oldParentId);
+                            dependentStates.add(oldParentState);
                         } else {
-                            if (!oldParentId.equals(newParentId)) {
+                            if (!oldParentState.equals(newParentState)) {
                                 // node has been moved, add old and new parent
                                 // to dependencies
-                                dependentIDs.add(oldParentId);
-                                dependentIDs.add(newParentId);
+                                dependentStates.add(oldParentState);
+                                dependentStates.add(newParentState);
                             }
                         }
                     }
@@ -859,24 +862,23 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 Iterator cneIt = nodeState.getRemovedChildNodeEntries().iterator();
                 while (cneIt.hasNext()) {
                     ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
-                    dependentIDs.add(cne.getId());
+                    dependentStates.add(cne.getNodeState());
                 }
                 // added child node entries
                 cneIt = nodeState.getAddedChildNodeEntries().iterator();
                 while (cneIt.hasNext()) {
                     ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
-                    dependentIDs.add(cne.getId());
+                    dependentStates.add(cne.getNodeState());
                 }
 
                 // now walk through dependencies and check whether they
                 // are within the scope of this save operation
-                Iterator depIt = dependentIDs.iterator();
+                Iterator depIt = dependentStates.iterator();
                 while (depIt.hasNext()) {
-                    NodeId id = (NodeId) depIt.next();
-                    if (!affectedIds.contains(id)) {
+                    NodeState dependantState = (NodeState) depIt.next();
+                    if (!affectedStates.contains(dependantState)) {
                         // need to save the parent as well
-                        // TODO convert id to human-readable id
-                        String msg = id.toString() + " needs to be saved as well.";
+                        String msg = LogUtil.safeGetJCRPath(dependantState, nsResolver, hierMgr) + " needs to be saved as well.";
                         log.debug(msg);
                         throw new ItemStateException(msg);
                     }
@@ -893,7 +895,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_COLLISION
             | ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_CONSTRAINTS;
 
-        NodeState parent = getNodeState(operation.getParentId());
+        NodeState parent = operation.getParentState();
         QNodeDefinition def = validator.getApplicableNodeDefinition(operation.getNodeName(), operation.getNodeTypeName(), parent);
         addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, options);
 
@@ -904,7 +906,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @inheritDoc
      */
     public void visit(AddProperty operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        NodeState parent = getNodeState(operation.getParentId());
+        NodeState parent = operation.getParentState();
         QName propertyName = operation.getPropertyName();
         QPropertyDefinition pDef = validator.getApplicablePropertyDefinition(propertyName, operation.getPropertyType(), operation.isMultiValued(), parent);
         int targetType = pDef.getRequiredType();
@@ -943,10 +945,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
 
         // retrieve states and assert they are modifiable
-        NodeState srcState = getNodeState(operation.getNodeId());
-        NodeState srcParent = getNodeState(operation.getSourceParentId());
+        NodeState srcState = operation.getNodeState();
+        NodeState srcParent = operation.getSourceParentState();
 
-        NodeState destParent = getNodeState(operation.getDestinationParentId());
+        NodeState destParent = operation.getDestinationParentState();
 
         // state validation: move-Source can be removed from old/added to new parent
         validator.checkRemoveItem(srcState,
@@ -965,27 +967,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         QNodeDefinition newDefinition = validator.getApplicableNodeDefinition(operation.getDestinationName(), srcState.getNodeTypeName(), destParent);
 
         // perform the move (modifying states)
-        // TODO: TO-BE-FIXED. Move with SPI id
-        boolean renameOnly = srcParent.getNodeId().equals(destParent.getNodeId());
-        ChildNodeEntry cne = srcParent.getChildNodeEntry(srcState.getNodeId());
-        if (cne == null) {
-            String msg = "Unexpected error: Move source " + LogUtil.safeGetJCRPath(srcParent, nsResolver, hierMgr) + " does not contain a child node entry with the given id" + LogUtil.safeGetJCRPath(srcState, nsResolver, hierMgr);
-            log.error(msg);
-            throw new RepositoryException(msg);
-        }
-        QName srcName = cne.getName();
-        int srcIndex = cne.getIndex();
-        if (renameOnly) {
-            // change child node entry
-            destParent.renameChildNodeEntry(srcName, srcIndex, operation.getDestinationName());
-        } else {
-            // remove child node entry from old parent
-            srcParent.removeChildNodeEntry(srcName, srcIndex);
-            // re-parent target node
-            srcState.setParent(destParent);
-            // add child node entry to new parent
-            destParent.addChildNodeEntry(operation.getDestinationName(), srcState.getNodeId());
-        }
+        srcParent.moveChildNodeEntry(destParent, srcState, operation.getDestinationName());
 
         // change definition of target node
         srcState.setDefinition(newDefinition);
@@ -1002,19 +984,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @inheritDoc
      */
     public void visit(Remove operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        try {
-            ItemState state = getItemState(operation.getRemoveId());
-            int options = ItemStateValidator.CHECK_LOCK
-                | ItemStateValidator.CHECK_VERSIONING
-                | ItemStateValidator.CHECK_CONSTRAINTS;
-            removeItemState(state, options);
-            // remember operation
-            transientStateMgr.addOperation(operation);
-        } catch (NoSuchItemStateException e) {
-            throw new PathNotFoundException(e);
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+        ItemState state = operation.getRemoveState();
+        int options = ItemStateValidator.CHECK_LOCK
+            | ItemStateValidator.CHECK_VERSIONING
+            | ItemStateValidator.CHECK_CONSTRAINTS;
+        removeItemState(state, options);
+        // remember operation
+        transientStateMgr.addOperation(operation);
     }
 
     /**
@@ -1025,7 +1001,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         boolean anyRemoved;
 
         QName[] mixinNames = operation.getMixinNames();
-        NodeState nState = getNodeState(operation.getNodeId());
+        NodeState nState = operation.getNodeState();
 
         // mixin-names to be execute on the nodestate (and corresponding property state)
         if (mixinNames != null && mixinNames.length > 0) {
@@ -1127,83 +1103,23 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @inheritDoc
      */
     public void visit(SetPropertyValue operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        try {
-            PropertyState pState = (PropertyState) getItemState(operation.getPropertyId());
-            setPropertyStateValue(pState, operation.getValues(), operation.getPropertyType());
-            transientStateMgr.addOperation(operation);
-        } catch (NoSuchItemStateException nsise) {
-            // TODO convert id to human-readable id
-            throw new ItemNotFoundException(operation.getPropertyId().toString());
-        } catch (ItemStateException ise) {
-            // TODO convert id to human-readable id
-            String msg = "internal error: failed to retrieve state of " + operation.getPropertyId().toString();
-            log.debug(msg);
-            throw new RepositoryException(msg, ise);
-        }
+        PropertyState pState = operation.getPropertyState();
+        setPropertyStateValue(pState, operation.getValues(), operation.getPropertyType());
+        transientStateMgr.addOperation(operation);
     }
 
     /**
      * @inheritDoc
      */
     public void visit(ReorderNodes operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        NodeState parent = getNodeState(operation.getParentId());
-
-        NodeId srcId = operation.getInsertNodeId();
-        NodeId beforeId = operation.getBeforeNodeId();
-
-        // TODO: TO-BE-FIXED. Reorder with SPI-Id -> instable ids
-        ArrayList list = new ArrayList(parent.getChildNodeEntries());
-        int srcInd = -1, destInd = -1;
-        for (int i = 0; i < list.size(); i++) {
-            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
-            if (srcInd == -1) {
-                if (entry.getId().equals(srcId)) {
-                    srcInd = i;
-                }
-            }
-            if (destInd == -1 && beforeId != null) {
-                if (entry.getId().equals(beforeId)) {
-                    destInd = i;
-                    if (srcInd != -1) {
-                        break;
-                    }
-                }
-            } else {
-                if (srcInd != -1) {
-                    break;
-                }
-            }
+        NodeState parent = operation.getParentState();
+        // modify the parent node state
+        try {
+            parent.reorderChildNodeEntries(operation.getInsertNodeId(), operation.getBeforeNodeId());
+        } catch (NoSuchItemStateException e) {
+            // invalid reorder-ids
+            throw new ItemNotFoundException(e);
         }
-
-        // check if resulting order would be different to current order
-        if (destInd == -1) {
-            if (srcInd == list.size() - 1) {
-                // no change, we're done
-                return;
-            }
-        } else {
-            if ((destInd - srcInd) == Path.INDEX_DEFAULT) {
-                // no change, we're done
-                return;
-            }
-        }
-        // reorder list
-        if (destInd == -1) {
-            list.add(list.remove(srcInd));
-        } else {
-            if (srcInd < destInd) {
-                list.add(destInd, list.get(srcInd));
-                list.remove(srcInd);
-            } else {
-                list.add(destInd, list.remove(srcInd));
-            }
-        }
-
-        // modify the the parent node state ...
-        // TODO: do not set whole list but rather implement a proper reorder on NodeState!
-        // TODO: then remove NodeState.setChildNodeEntries()
-        parent.setChildNodeEntries(list);
-
         // remember the operation
         transientStateMgr.addOperation(operation);
     }
@@ -1458,29 +1374,5 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             }
         }
         return genValues;
-    }
-
-
-    /**
-     * Retrieves the state of the item with the specified id using the given
-     * item state manager.
-     * <p/>
-     * Note that access rights are <b><i>not</i></b> enforced!
-     *
-     * @param id
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    private NodeState getNodeState(NodeId id) throws ItemNotFoundException, RepositoryException {
-        try {
-            return (NodeState) getItemState(id);
-        } catch (NoSuchItemStateException e) {
-            throw new ItemNotFoundException(id.toString());
-        } catch (ItemStateException e) {
-            String msg = "internal error: failed to retrieve state of " + id.toString();
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
     }
 }

@@ -57,12 +57,12 @@ public class VersionManagerImpl implements VersionManager {
     }
 
     public void checkin(NodeState nodeState) throws RepositoryException {
-        Operation ci = Checkin.create(nodeState.getNodeId());
+        Operation ci = Checkin.create(nodeState);
         stateManager.execute(ci);
     }
 
     public void checkout(NodeState nodeState) throws RepositoryException {
-        Operation co = Checkout.create(nodeState.getNodeId());
+        Operation co = Checkout.create(nodeState);
         stateManager.execute(co);
     }
 
@@ -98,18 +98,18 @@ public class VersionManagerImpl implements VersionManager {
         }
     }
 
-    public void removeVersion(NodeId versionHistoryId, NodeId versionId) throws RepositoryException {
-        Operation op = Remove.create(versionId, versionHistoryId);
+    public void removeVersion(NodeState versionHistoryState, NodeState versionState) throws RepositoryException {
+        Operation op = Remove.create(versionState);
         stateManager.execute(op);
     }
 
-    public void addVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel, boolean moveLabel) throws RepositoryException {
-        Operation op = AddLabel.create(versionHistoryId, versionId, qLabel, moveLabel);
+    public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel, boolean moveLabel) throws RepositoryException {
+        Operation op = AddLabel.create(versionHistoryState, versionState, qLabel, moveLabel);
         stateManager.execute(op);
     }
 
-    public void removeVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel) throws RepositoryException {
-        Operation op = RemoveLabel.create(versionHistoryId, versionId, qLabel);
+    public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel) throws RepositoryException {
+        Operation op = RemoveLabel.create(versionHistoryState, versionState, qLabel);
         stateManager.execute(op);
     }
 
@@ -123,7 +123,7 @@ public class VersionManagerImpl implements VersionManager {
         stateManager.execute(op);
     }
 
-    public Collection merge(NodeId nodeId, String workspaceName, boolean bestEffort) throws RepositoryException {
+    public Collection merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
         // TODO find better solution to build the mergeFailed-collection
         final List failedIds = new ArrayList();
         InternalEventListener mergeFailedCollector = new InternalEventListener() {
@@ -139,13 +139,13 @@ public class VersionManagerImpl implements VersionManager {
             }
         };
 
-        Operation op = Merge.create(nodeId, workspaceName, bestEffort, mergeFailedCollector);
+        Operation op = Merge.create(nodeState, workspaceName, bestEffort, mergeFailedCollector);
         stateManager.execute(op);
         return failedIds;
     }
 
-    public void resolveMergeConflict(NodeId nodeId, NodeId versionId, boolean done) throws RepositoryException {
-        Operation op = ResolveMergeConflict.create(nodeId, versionId, done);
+    public void resolveMergeConflict(NodeState nodeState, NodeState versionState, boolean done) throws RepositoryException {
+        Operation op = ResolveMergeConflict.create(nodeState, versionState, done);
         stateManager.execute(op);
     }
 }

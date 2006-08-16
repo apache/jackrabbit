@@ -16,13 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
@@ -38,7 +37,7 @@ public abstract class AbstractOperation implements Operation {
     /**
      * The collection of affected ItemIds.
      */
-    private final Collection affectedIds = new ArrayList();
+    private final Collection affectedStates = new ArrayList();
 
     /**
      * Returns the name of the class
@@ -53,17 +52,17 @@ public abstract class AbstractOperation implements Operation {
     /**
      * @inheritDoc
      */
-    public Collection getAffectedItemIds() {
-        return Collections.unmodifiableCollection(affectedIds);
+    public Collection getAffectedItemStates() {
+        return Collections.unmodifiableCollection(affectedStates);
     }
 
     /**
-     * Adds an affected <code>ItemId</code>.
+     * Adds an affected <code>ItemState</code>.
      *
-     * @param affectedId the <code>ItemId</code>s of the affected item.
+     * @param affectedState the <code>ItemState</code>s of the affected item.
      */
-    protected void addAffectedItemId(ItemId affectedId) {
-        affectedIds.add(affectedId);
+    protected void addAffectedItemState(ItemState affectedState) {
+        affectedStates.add(affectedState);
     }
 
     /**
@@ -75,11 +74,11 @@ public abstract class AbstractOperation implements Operation {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    protected static NodeId getNodeId(Path nodePath, HierarchyManager hierMgr, NamespaceResolver nsResolver) throws PathNotFoundException, RepositoryException {
+    protected static NodeState getNodeState(Path nodePath, HierarchyManager hierMgr, NamespaceResolver nsResolver) throws PathNotFoundException, RepositoryException {
         ItemState itemState = hierMgr.getItemState(nodePath);
         if (!itemState.isNode()) {
             throw new PathNotFoundException(LogUtil.safeGetJCRPath(nodePath, nsResolver));
         }
-        return (NodeId)itemState.getId();
+        return (NodeState) itemState;
     }
 }

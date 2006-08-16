@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -31,14 +31,14 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class Update extends AbstractOperation {
 
-    private final NodeId nodeId;
+    private final NodeState nodeState;
     private final String srcWorkspaceName;
 
-    private Update(NodeId nodeId, String srcWorkspaceName) {
-        this.nodeId = nodeId;
+    private Update(NodeState nodeState, String srcWorkspaceName) {
+        this.nodeState = nodeState;
         this.srcWorkspaceName = srcWorkspaceName;
 
-        this.addAffectedItemId(nodeId);
+        this.addAffectedItemState(nodeState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -50,8 +50,8 @@ public class Update extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeId;
+    public NodeState getNodeState() {
+        return nodeState;
     }
 
     public String getSourceWorkspaceName() {
@@ -61,12 +61,12 @@ public class Update extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     /**
      *
-     * @param nodeId
+     * @param nodeState
      * @param srcWorkspaceName
      * @return
      */
-    public static Operation create(NodeId nodeId, String srcWorkspaceName) {
-        Update up = new Update(nodeId, srcWorkspaceName);
+    public static Operation create(NodeState nodeState, String srcWorkspaceName) {
+        Update up = new Update(nodeState, srcWorkspaceName);
         return up;
     }
 }

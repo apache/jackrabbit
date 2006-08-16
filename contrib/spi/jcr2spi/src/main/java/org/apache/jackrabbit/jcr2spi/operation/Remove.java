@@ -17,8 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
@@ -30,14 +29,13 @@ import javax.jcr.version.VersionException;
  */
 public class Remove extends AbstractOperation {
 
-    private ItemId removeId;
-    private NodeId parentId;
+    private ItemState removeState;
 
-    private Remove(ItemId removeId, NodeId parentId) {
-        this.removeId = removeId;
-        this.parentId = parentId;
-        addAffectedItemId(removeId);
-        addAffectedItemId(parentId);
+    private Remove(ItemState removeState) {
+        this.removeState = removeState;
+
+        addAffectedItemState(removeState);
+        addAffectedItemState(removeState.getParent());
     }
 
     //----------------------------------------------------------< Operation >---
@@ -51,21 +49,17 @@ public class Remove extends AbstractOperation {
 
     //----------------------------------------< Access Operation Parameters >---
 
-    public ItemId getRemoveId() {
-        return removeId;
+    public ItemState getRemoveState() {
+        return removeState;
     }
 
-    public NodeId getParentId() {
-        return parentId;
+    public NodeState getParentState() {
+        return removeState.getParent();
     }
 
     //------------------------------------------------------------< Factory >---
     public static Operation create(ItemState state) {
-        Remove rm = new Remove(state.getId(), state.getParent().getNodeId());
+        Remove rm = new Remove(state);
         return rm;
-    }
-
-    public static Operation create(ItemId removeId, NodeId parentId) {
-        return new Remove(removeId, parentId);
     }
 }

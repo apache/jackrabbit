@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -31,12 +31,12 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  */
 public class LockRelease extends AbstractOperation {
 
-    private final NodeId nodeId;
+    private final NodeState nodeState;
 
-    private LockRelease(NodeId nodeId) {
-        this.nodeId = nodeId;
+    private LockRelease(NodeState nodeState) {
+        this.nodeState = nodeState;
 
-        this.addAffectedItemId(nodeId);
+        this.addAffectedItemState(nodeState);
     }
 
     //----------------------------------------------------------< Operation >---
@@ -48,18 +48,18 @@ public class LockRelease extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeId;
+    public NodeState getNodeState() {
+        return nodeState;
     }
 
     //------------------------------------------------------------< Factory >---
     /**
      *
-     * @param nodeId
+     * @param nodeState
      * @return
      */
-    public static Operation create(NodeId nodeId) {
-        Operation lck = new LockRelease(nodeId);
+    public static Operation create(NodeState nodeState) {
+        Operation lck = new LockRelease(nodeState);
         return lck;
     }
 }

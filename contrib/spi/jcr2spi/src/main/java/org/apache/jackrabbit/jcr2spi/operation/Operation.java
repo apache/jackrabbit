@@ -22,7 +22,8 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
-import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+
 import javax.jcr.version.VersionException;
 import java.util.Collection;
 
@@ -47,10 +48,9 @@ public interface Operation {
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException;
 
     /**
-     * A collection of {@link ItemId}s that are
-     * affected by this operation.
+     * A collection of {@link ItemState}s that are affected by this operation.
      *
-     * @return collection of affected <code>ItemId</code>s.
+     * @return collection of affected <code>ItemState</code>s.
      */
-    public Collection getAffectedItemIds();
+    public Collection getAffectedItemStates();
 }

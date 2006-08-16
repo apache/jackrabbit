@@ -41,10 +41,7 @@ public class Restore extends AbstractOperation {
         this.versionIds = versionIds;
         this.removeExisting = removeExisting;
 
-        addAffectedItemId(nodeId);
-        for (int i = 0; i < versionIds.length; i++) {
-            addAffectedItemId(versionIds[i]);
-        }
+        // TODO: affected states... needed?
     }
 
     //----------------------------------------------------------< Operation >---

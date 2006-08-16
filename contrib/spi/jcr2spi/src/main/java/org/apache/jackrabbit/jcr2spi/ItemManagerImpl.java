@@ -328,7 +328,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
             } else {
                 ps.print("- ");
             }
-            ps.println(state.getId() + "\t" + LogUtil.safeGetJCRPath(state, session.getNamespaceResolver(), hierMgr) + " (" + item + ")");
+            ps.println(state + "\t" + LogUtil.safeGetJCRPath(state, session.getNamespaceResolver(), hierMgr) + " (" + item + ")");
         }
     }
 
@@ -349,7 +349,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
                     evictItem(state);
                 }
             }
-            throw new AccessDeniedException("cannot read item " + state.getId());
+            throw new AccessDeniedException("Cannot read item: " + state);
         }
     }
 

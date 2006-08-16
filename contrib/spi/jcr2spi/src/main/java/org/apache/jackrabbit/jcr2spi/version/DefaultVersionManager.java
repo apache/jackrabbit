@@ -47,15 +47,15 @@ public class DefaultVersionManager implements VersionManager {
         return true;
     }
 
-    public void removeVersion(NodeId versionHistoryId, NodeId versionId) throws RepositoryException {
+    public void removeVersion(NodeState versionHistoryState, NodeState versionState) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public void addVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel, boolean moveLabel) throws RepositoryException {
+    public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel, boolean moveLabel) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public void removeVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel) throws RepositoryException {
+    public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
@@ -67,11 +67,11 @@ public class DefaultVersionManager implements VersionManager {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public Collection merge(NodeId nodeId, String workspaceName, boolean bestEffort) throws RepositoryException {
+    public Collection merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public void resolveMergeConflict(NodeId nodeId, NodeId versionId, boolean done) throws RepositoryException {
+    public void resolveMergeConflict(NodeState nodeState, NodeState versionState, boolean done) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 }

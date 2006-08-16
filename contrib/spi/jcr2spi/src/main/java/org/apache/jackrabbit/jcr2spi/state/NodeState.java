@@ -132,8 +132,8 @@ public class NodeState extends ItemState {
      *                      instance.
      */
     protected NodeState(QName name, String uuid, NodeState parent,
-                     QName nodeTypeName, int initialStatus, boolean isTransient,
-                     ItemStateFactory isf, IdFactory idFactory) {
+                        QName nodeTypeName, int initialStatus, boolean isTransient,
+                        ItemStateFactory isf, IdFactory idFactory) {
         super(parent, initialStatus, isTransient, idFactory);
         this.name = name;
         this.uuid = uuid;
@@ -154,8 +154,8 @@ public class NodeState extends ItemState {
      *                       instance.
      */
     protected NodeState(NodeState overlayedState, NodeState parent,
-                     int initialStatus, boolean isTransient,
-                     ItemStateFactory isf, IdFactory idFactory) {
+                        int initialStatus, boolean isTransient,
+                        ItemStateFactory isf, IdFactory idFactory) {
         super(overlayedState, parent, initialStatus, isTransient, idFactory);
         pull();
         this.isf = isf;
@@ -224,8 +224,7 @@ public class NodeState extends ItemState {
      * state should be 'free floating', i.e. detached from the repository's
      * hierarchy.
      */
-    // TODO: change to private and only let new parent node state set the parent.
-    void setParent(NodeState parent) {
+    private void setParent(NodeState parent) {
         this.parent = parent;
     }
 
@@ -431,7 +430,6 @@ public class NodeState extends ItemState {
      * @return the <code>ChildNodeEntry</code> with the specified <code>NodeId</code> or
      *         <code>null</code> if there's no matching entry.
      * @see #addChildNodeEntry
-     * @see #removeChildNodeEntry
      */
     public synchronized ChildNodeEntry getChildNodeEntry(NodeId id) {
         return childNodeEntries.get(id);
@@ -443,7 +441,6 @@ public class NodeState extends ItemState {
      *
      * @return collection of <code>ChildNodeEntry</code> objects
      * @see #addChildNodeEntry
-     * @see #removeChildNodeEntry
      */
     public synchronized Collection getChildNodeEntries() {
         // NOTE: List representation of 'ChildNodeEntries' is already unmodifiable
@@ -457,7 +454,6 @@ public class NodeState extends ItemState {
      * @param nodeName name of the child node entries that should be returned
      * @return list of <code>ChildNodeEntry</code> objects
      * @see #addChildNodeEntry
-     * @see #removeChildNodeEntry
      */
     public synchronized List getChildNodeEntries(QName nodeName) {
         // NOTE: SubList retrieved from 'ChildNodeEntries' is already unmodifiable
@@ -471,8 +467,7 @@ public class NodeState extends ItemState {
      * @param id the id the new entry is refering to.
      * @return the newly added <code>ChildNodeEntry</code>
      */
-    synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
-                                                  NodeId id) {
+    synchronized ChildNodeEntry addChildNodeEntry(QName nodeName, NodeId id) {
         ChildNodeEntry entry = childNodeEntries.add(nodeName, id);
         notifyNodeAdded(entry);
         return entry;
@@ -504,72 +499,13 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Renames a new <code>ChildNodeEntry</code>.
-     *
-     * @param oldName <code>QName</code> object specifying the entry's old name
-     * @param index 1-based index if there are same-name child node entries
-     * @param newName <code>QName</code> object specifying the entry's new name
-     * @return <code>true</code> if the entry was sucessfully renamed;
-     *         otherwise <code>false</code>
-     */
-    synchronized boolean renameChildNodeEntry(QName oldName, int index,
-                                                     QName newName) {
-        ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
-        if (oldEntry != null) {
-            ChildNodeEntry newEntry = childNodeEntries.add(newName, oldEntry.getId());
-            notifyNodeAdded(newEntry);
-            notifyNodeRemoved(oldEntry);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Removes a <code>ChildNodeEntry</code>.
-     *
-     * @param nodeName <code>ChildNodeEntry</code> object specifying a node name
-     * @param index    1-based index if there are same-name child node entries
-     * @return <code>true</code> if the specified child node entry was found
-     *         in the list of child node entries and could be removed.
-     */
-    synchronized boolean removeChildNodeEntry(QName nodeName, int index) {
-        ChildNodeEntry entry = childNodeEntries.remove(nodeName, index);
-        if (entry != null) {
-            notifyNodeRemoved(entry);
-        }
-        return entry != null;
-    }
-
-    /**
-     * Removes a <code>ChildNodeEntry</code>.
-     *
-     * @param id the id of the entry to be removed
-     * @return <code>true</code> if the specified child node entry was found
-     *         in the list of child node entries and could be removed.
-     */
-    synchronized boolean removeChildNodeEntry(NodeId id) {
-        ChildNodeEntry entry = childNodeEntries.remove(id);
-        if (entry != null) {
-            notifyNodeRemoved(entry);
-        }
-        return entry != null;
-    }
-
-    /**
-     * Removes all <code>ChildNodeEntry</code>s.
-     */
-    synchronized void removeAllChildNodeEntries() {
-        childNodeEntries.removeAll();
-    }
-
-    /**
      * Notifies this node state that a child node state has been removed.
      *
      * @param nodeState the node state that has been removed.
      * @throws IllegalArgumentException if <code>this</code> is not the parent
      *                                  of <code>nodeState</code>.
      */
-    synchronized void childNodeStateRemoved(NodeState nodeState) {
+    private synchronized void childNodeStateRemoved(NodeState nodeState) {
         if (nodeState.getParent() != this) {
             throw new IllegalArgumentException("This NodeState is not the parent of nodeState");
         }
@@ -593,21 +529,6 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Sets the list of <code>ChildNodeEntry</code> objects denoting the
-     * child nodes of this node.
-     */
-    synchronized void setChildNodeEntries(List nodeEntries) {
-        // re-create child node entries
-        childNodeEntries.clear(); // TODO: any mre cleanup work to do? try some kind of merging?
-        for (Iterator it = nodeEntries.iterator(); it.hasNext(); ) {
-            ChildNodeEntry cne = (ChildNodeEntry) it.next();
-            childNodeEntries.add(cne.getName(), cne.getId());
-        }
-        notifyNodesReplaced();
-    }
-
-    /**
-
     /**
      * @inheritDoc
      * @see ItemState#remove()
@@ -661,7 +582,6 @@ public class NodeState extends ItemState {
      *
      * @return set of <code>QNames</code> objects
      * @see #addPropertyName
-     * @see #removePropertyName
      */
     public synchronized Collection getPropertyNames() {
         return Collections.unmodifiableSet(properties.keySet());
@@ -672,7 +592,6 @@ public class NodeState extends ItemState {
      *
      * @return unmodifiable collection of <code>ChildPropertyEntry</code> objects
      * @see #addPropertyName
-     * @see #removePropertyName
      */
     public synchronized Collection getPropertyEntries() {
         return Collections.unmodifiableCollection(properties.values());
@@ -712,17 +631,6 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Removes a property name entry.
-     *
-     * @param propName <code>QName</code> object specifying the property name
-     * @return <code>true</code> if the specified property name was found
-     *         in the list of property name entries and could be removed.
-     */
-    synchronized boolean removePropertyName(QName propName) {
-        return properties.remove(propName) != null;
-    }
-
-    /**
      * Notifies this node state that a property state has been removed.
      *
      * @param propState the property state that has been removed.
@@ -741,25 +649,7 @@ public class NodeState extends ItemState {
         markModified();
     }
 
-    /**
-     * Removes all property name entries.
-     */
-    synchronized void removeAllPropertyNames() {
-        properties.clear();
-    }
-
-    /**
-     * Sets the set of <code>QName</code> objects denoting the
-     * properties of this node.
-     */
-    synchronized void setPropertyNames(Set propNames) {
-        removeAllPropertyNames();
-        for (Iterator it = propNames.iterator(); it.hasNext(); ) {
-            addPropertyName((QName) it.next());
-        }
-    }
-
-    /**
+    /*
      * Returns the property state with the given name.
      *
      * @param propertyName the name of the property state to return.
@@ -868,6 +758,113 @@ public class NodeState extends ItemState {
     }
 
     /**
+     *
+     * @param insertNodeId
+     * @param beforeNodeId
+     */
+    synchronized void reorderChildNodeEntries(NodeId insertNodeId, NodeId beforeNodeId)
+        throws NoSuchItemStateException {
+        // validate existance of child node entries even if this has been
+        // checked within NodeImpl.
+        if (childNodeEntries.get(insertNodeId) == null) {
+            throw new NoSuchItemStateException("No such child node entry: " + insertNodeId);
+        }
+        if (beforeNodeId != null && childNodeEntries.get(insertNodeId) == null) {
+            throw new NoSuchItemStateException("No such child node entry: " + beforeNodeId);
+        }
+
+        // TODO: check again. Reorder with SPI-Id
+        ArrayList nodeEntries = new ArrayList(childNodeEntries);
+        int srcInd = -1, destInd = -1;
+        for (int i = 0; i < nodeEntries.size(); i++) {
+            ChildNodeEntry entry = (ChildNodeEntry) nodeEntries.get(i);
+            if (srcInd == -1) {
+                if (entry.getId().equals(insertNodeId)) {
+                    srcInd = i;
+                }
+            }
+            if (destInd == -1 && beforeNodeId != null) {
+                if (entry.getId().equals(beforeNodeId)) {
+                    destInd = i;
+                    if (srcInd != -1) {
+                        break;
+                    }
+                }
+            } else {
+                if (srcInd != -1) {
+                    break;
+                }
+            }
+        }
+
+        // check if resulting order would be different to current order
+        if (destInd == -1) {
+            if (srcInd == nodeEntries.size() - 1) {
+                // no change, we're done
+                return;
+            }
+        } else {
+            if ((destInd - srcInd) == Path.INDEX_DEFAULT) {
+                // no change, we're done
+                return;
+            }
+        }
+        // reorder list
+        if (destInd == -1) {
+            nodeEntries.add(nodeEntries.remove(srcInd));
+        } else {
+            if (srcInd < destInd) {
+                nodeEntries.add(destInd, nodeEntries.get(srcInd));
+                nodeEntries.remove(srcInd);
+            } else {
+                nodeEntries.add(destInd, nodeEntries.remove(srcInd));
+            }
+        }
+
+        // re-create child node entries
+        childNodeEntries.clear(); // TODO: any mre cleanup work to do? try some kind of merging?
+        for (Iterator it = nodeEntries.iterator(); it.hasNext(); ) {
+            ChildNodeEntry cne = (ChildNodeEntry) it.next();
+            childNodeEntries.add(cne.getName(), cne.getId());
+        }
+        // TODO: correct?
+        notifyNodesReplaced();
+    }
+
+    /**
+     * Renames a new <code>ChildNodeEntry</code>.
+     *
+     * @param newParent
+     * @param childState
+     * @param newName
+     * @param newName <code>QName</code> object specifying the entry's new name
+     * @throws RepositoryException if the given child state is not a child
+     * of this node state.
+     */
+    // TODO: review. move with SPI Ids
+    synchronized void moveChildNodeEntry(NodeState newParent, NodeState childState, QName newName)
+        throws RepositoryException {
+        NodeId childId = childState.getNodeId();
+        // rename only
+        ChildNodeEntry oldEntry = childNodeEntries.remove(childId);
+        if (oldEntry != null) {
+            if (newParent == this) {
+                ChildNodeEntry newEntry = childNodeEntries.add(name, oldEntry.getId());
+                notifyNodeAdded(newEntry);
+                notifyNodeRemoved(oldEntry);
+            } else {
+                notifyNodeRemoved(oldEntry);
+                // re-parent target node
+                childState.setParent(newParent);
+                // add child node entry to new parent
+                newParent.addChildNodeEntry(newName, childId);
+            }
+        } else {
+            throw new RepositoryException("Unexpected error: Child state to be renamed does not exist.");
+        }
+    }
+    
+    /**
      * TODO: find a better way to provide the index of a child node entry
      * Returns the index of the given <code>ChildNodeEntry</code> and with
      * <code>name</code>.
@@ -923,7 +920,7 @@ public class NodeState extends ItemState {
     /**
      * Notify the listeners that a child node entry has been added
      */
-    protected void notifyNodeAdded(ChildNodeEntry added) {
+    private void notifyNodeAdded(ChildNodeEntry added) {
         synchronized (listeners) {
             Iterator iter = listeners.iterator();
             while (iter.hasNext()) {
@@ -938,7 +935,7 @@ public class NodeState extends ItemState {
     /**
      * Notify the listeners that the child node entries have been replaced
      */
-    protected void notifyNodesReplaced() {
+    private void notifyNodesReplaced() {
         synchronized (listeners) {
             Iterator iter = listeners.iterator();
             while (iter.hasNext()) {
@@ -953,7 +950,7 @@ public class NodeState extends ItemState {
     /**
      * Notify the listeners that a child node entry has been removed
      */
-    protected void notifyNodeRemoved(ChildNodeEntry removed) {
+    private void notifyNodeRemoved(ChildNodeEntry removed) {
         synchronized (listeners) {
             Iterator iter = listeners.iterator();
             while (iter.hasNext()) {

@@ -37,11 +37,11 @@ public interface VersionManager {
 
     public boolean isCheckedOut(NodeState nodeState) throws RepositoryException;
 
-    public void removeVersion(NodeId versionHistoryId, NodeId versionId) throws RepositoryException;
+    public void removeVersion(NodeState versionHistoryState, NodeState versionState) throws RepositoryException;
 
-    public void addVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel, boolean moveLabel) throws RepositoryException;
+    public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel, boolean moveLabel) throws RepositoryException;
 
-    public void removeVersionLabel(NodeId versionHistoryId, NodeId versionId, QName qLabel) throws RepositoryException;
+    public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel) throws RepositoryException;
 
     public void restore(NodeId nodeId, NodeId versionId, boolean removeExisting) throws RepositoryException;
 
@@ -49,22 +49,22 @@ public interface VersionManager {
 
     /**
      *
-     * @param nodeId
+     * @param nodeState
      * @param workspaceName
      * @param bestEffort
      * @return A Collection of <code>ItemId</code> containing the ids of those
      * <code>Node</code>s that failed to be merged and need manual resolution
      * by the user of the API.
-     * @see #resolveMergeConflict(NodeId,NodeId,boolean)
+     * @see #resolveMergeConflict(NodeState,NodeState,boolean)
      */
-    public Collection merge(NodeId nodeId, String workspaceName, boolean bestEffort) throws RepositoryException;
+    public Collection merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException;
 
     /**
      * 
-     * @param nodeId
-     * @param versionId
+     * @param nodeState
+     * @param versionState
      * @param done
      * @throws RepositoryException
      */
-    public void resolveMergeConflict(NodeId nodeId, NodeId versionId, boolean done) throws RepositoryException;
+    public void resolveMergeConflict(NodeState nodeState, NodeState versionState, boolean done) throws RepositoryException;
 }
