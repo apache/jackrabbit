@@ -255,7 +255,7 @@ public class NodeImpl extends ItemImpl implements Node {
         Path.PathElement srcName = getReorderPath(srcChildRelPath).getNameElement();
         Path.PathElement beforeName = (destChildRelPath == null) ? null : getReorderPath(destChildRelPath).getNameElement();
 
-        Operation op = null;
+        Operation op;
         try {
             op = ReorderNodes.create(getNodeState(), srcName, beforeName);
         } catch (NoSuchItemStateException e) {
