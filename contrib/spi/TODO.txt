@@ -44,25 +44,7 @@ NOTE: This list only contains major open issues.
       > reorder
       > refresh
 
-   see 10) AccessManager
 
-   b) all maps and caches using ItemId as key must be refactored in order
-   to account for the differences between SPI id and Jackrabbit/core-Ids.
-   This affects the following classes:
-
-      > ItemManagerImpl
-      > LockManagerImpl
-      > ChangeLog
-
-   c) all references to the root id
-     
-      > WorkspaceManager
-      > SessionItemStateManager
-      > HierarchyManagerImpl
-
-
-   Currently the original maps where replaced by a non-functional IdKeyMap,
-   in order to easily detect this issue within the jcr2spi project.
    In addition the code has been marked with // TODO: TO-BE-FIXED comments. 
 
 
@@ -133,24 +115,16 @@ NOTE: This list only contains major open issues.
    The call defines a NodeIterator as return value.
 
 
-10) AccessManager (improve)
-
-   isGranted(NodeId, QPath, String[]) is redundant, since SPI to non-existing
-   Items can be created from the parent Id and a relative path pointing to the
-   Item to be checked.
-
-   -> remove method and replaces usage.
-
-
-11) Transactions (work in progress)
+10) Transactions (work in progress)
 
    Definition of XASessionInfo must be reviewed.
 
 
-12) SessionImpl.switchWorkspace(String) used to create session on other 
+11) SessionImpl.switchWorkspace(String) used to create session on other 
     workspace for current subject. Missing implementation
 
 
+12) Extract interface for ItemState and derived classes
 
 
 
