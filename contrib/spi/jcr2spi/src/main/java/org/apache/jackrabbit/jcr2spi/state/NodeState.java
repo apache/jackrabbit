@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections.list.AbstractLinkedList;
+import org.apache.commons.collections.iterators.UnmodifiableIterator;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -42,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
+import java.util.AbstractList;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -977,35 +979,125 @@ public class NodeState extends ItemState {
      * the index values of same-name siblings on insertion and removal.
      * <p/>
      * <code>ChildNodeEntries</code> also provides an unmodifiable
-     * <code>List</code> view.
+     * <code>Collection</code> view.
      */
     private class ChildNodeEntries implements Collection {
 
-        // TODO: turn this into a linked set. NodeId cannot be use as key!
-        // insertion-ordered map of entries (key=NodeId, value=entry)
-        private final Map entries = new LinkedMap();
-        // map used for lookup by name
-        // (key=name, value=either a single entry or a list of sns entries)
+        /**
+         * Linked list of {@link ChildNodeEntry} instances.
+         */
+        private final LinkedEntries entries = new LinkedEntries();
+
+        /**
+         * map used for lookup by name
+         * (key=name, value=either a single {@link AbstractLinkedList.Node} or a
+         * list of {@link AbstractLinkedList.Node}s which are sns entries)
+         */
         private final Map nameMap = new HashMap();
 
+        /**
+         * Returns the <code>ChildNodeEntry</code> for the given
+         * <code>nodeState</code>.
+         *
+         * @param nodeState the node state.
+         * @return the <code>ChildNodeEntry</code> or <code>null</code> if there
+         *         is no <code>ChildNodeEntry</code> for <code>nodeState</code>.
+         */
         ChildNodeEntry get(NodeState nodeState) {
-            return (ChildNodeEntry) entries.get(nodeState.getId());
+            Object o = nameMap.get(nodeState.getName());
+            if (o == null) {
+                // no matching child node entry
+                return null;
+            }
+            if (o instanceof List) {
+                // has same name sibling
+                for (Iterator it = ((List) o).iterator(); it.hasNext(); ) {
+                    LinkedEntries.LinkNode n = (LinkedEntries.LinkNode) it.next();
+                    ChildNodeEntry cne = n.getChildNodeEntry();
+                    // only check available child node entries
+                    try {
+                        if (cne.isAvailable() && cne.getNodeState() == nodeState) {
+                            return cne;
+                        }
+                    } catch (ItemStateException e) {
+                        log.warn("error retrieving a child node state", e);
+                    }
+                }
+            } else {
+                // single child node with this name
+                ChildNodeEntry cne = ((LinkedEntries.LinkNode) o).getChildNodeEntry();
+                try {
+                    if (cne.isAvailable() && cne.getNodeState() == nodeState) {
+                        return cne;
+                    }
+                } catch (ItemStateException e) {
+                    log.warn("error retrieving a child node state", e);
+                }
+            }
+            // not found
+            return null;
         }
 
+        /**
+         * Returns a <code>List</code> of <code>ChildNodeEntry</code>s for the
+         * given <code>nodeName</code>.
+         *
+         * @param nodeName the child node name.
+         * @return same name sibling nodes with the given <code>nodeName</code>.
+         */
         List get(QName nodeName) {
             Object obj = nameMap.get(nodeName);
             if (obj == null) {
                 return Collections.EMPTY_LIST;
             }
-            if (obj instanceof ArrayList) {
+            if (obj instanceof List) {
+                final List sns = (List) obj;
                 // map entry is a list of siblings
-                return Collections.unmodifiableList((ArrayList) obj);
+                return Collections.unmodifiableList(new AbstractList() {
+
+                    public Object get(int index) {
+                        return ((LinkedEntries.LinkNode) sns.get(index)).getChildNodeEntry();
+                    }
+
+                    public int size() {
+                        return sns.size();
+                    }
+
+                    public Iterator iterator() {
+                        return new Iterator() {
+
+                            private Iterator iter = sns.iterator();
+
+                            public void remove() {
+                                throw new UnsupportedOperationException("remove");
+                            }
+
+                            public boolean hasNext() {
+                                return iter.hasNext();
+                            }
+
+                            public Object next() {
+                                return ((LinkedEntries.LinkNode) iter.next()).getChildNodeEntry();
+                            }
+                        };
+                    }
+                });
             } else {
                 // map entry is a single child node entry
-                return Collections.singletonList(obj);
+                return Collections.singletonList(
+                        ((LinkedEntries.LinkNode) obj).getChildNodeEntry());
             }
         }
 
+        /**
+         * Returns the <code>ChildNodeEntry</code> with the given
+         * <code>nodeName</code> and <code>index</code>.
+         *
+         * @param nodeName name of the child node entry.
+         * @param index    the index of the child node entry.
+         * @return the <code>ChildNodeEntry</code> or <code>null</code> if there
+         *         is no such <code>ChildNodeEntry</code>.
+         */
         ChildNodeEntry get(QName nodeName, int index) {
             if (index < Path.INDEX_DEFAULT) {
                 throw new IllegalArgumentException("index is 1-based");
@@ -1015,28 +1107,37 @@ public class NodeState extends ItemState {
             if (obj == null) {
                 return null;
             }
-            if (obj instanceof ArrayList) {
+            if (obj instanceof List) {
                 // map entry is a list of siblings
-                ArrayList siblings = (ArrayList) obj;
+                List siblings = (List) obj;
                 if (index <= siblings.size()) {
-                    return (ChildNodeEntry) siblings.get(index - 1);
+                    return ((LinkedEntries.LinkNode) siblings.get(index - 1)).getChildNodeEntry();
                 }
             } else {
                 // map entry is a single child node entry
                 if (index == Path.INDEX_DEFAULT) {
-                    return (ChildNodeEntry) obj;
+                    return ((LinkedEntries.LinkNode) obj).getChildNodeEntry();
                 }
             }
             return null;
         }
 
+        /**
+         * Adds a <code>ChildNodeEntry</code> for a child node with the given
+         * name and an optional <code>uuid</code>.
+         *
+         * @param nodeName the name of the child node.
+         * @param uuid     the UUID of the child node if it can be identified
+         *                 with a UUID; otherwise <code>null</code>.
+         * @return the created ChildNodeEntry.
+         */
         ChildNodeEntry add(QName nodeName, String uuid) {
             List siblings = null;
             Object obj = nameMap.get(nodeName);
             if (obj != null) {
-                if (obj instanceof ArrayList) {
+                if (obj instanceof List) {
                     // map entry is a list of siblings
-                    siblings = (ArrayList) obj;
+                    siblings = (List) obj;
                 } else {
                     // map entry is a single child node entry,
                     // convert to siblings list
@@ -1047,22 +1148,28 @@ public class NodeState extends ItemState {
             }
 
             ChildNodeEntry entry = createChildNodeEntry(nodeName, uuid);
+            LinkedEntries.LinkNode ln = entries.add(entry);
+
             if (siblings != null) {
-                siblings.add(entry);
+                siblings.add(ln);
             } else {
-                nameMap.put(nodeName, entry);
+                nameMap.put(nodeName, ln);
             }
-            entries.put(idFactory.createNodeId(uuid), entry);
 
             return entry;
         }
 
+        /**
+         * Adds a <code>ChildNodeEntry</code> to the end of the list.
+         *
+         * @param cne the <code>ChildNodeEntry</code> to add.
+         */
         void add(ChildNodeEntry cne) {
             QName nodeName = cne.getName();
             List siblings = null;
             Object obj = nameMap.get(nodeName);
             if (obj != null) {
-                if (obj instanceof ArrayList) {
+                if (obj instanceof List) {
                     // map entry is a list of siblings
                     siblings = (ArrayList) obj;
                 } else {
@@ -1074,14 +1181,20 @@ public class NodeState extends ItemState {
                 }
             }
 
+            LinkedEntries.LinkNode ln = entries.add(cne);
+
             if (siblings != null) {
-                siblings.add(cne);
+                siblings.add(ln);
             } else {
-                nameMap.put(nodeName, cne);
+                nameMap.put(nodeName, ln);
             }
-            entries.put(cne.getId(), cne);
         }
 
+        /**
+         * Appends a list of <code>ChildNodeEntry</code>s to this list.
+         *
+         * @param entriesList the list of <code>ChildNodeEntry</code>s to add.
+         */
         void addAll(List entriesList) {
             Iterator iter = entriesList.iterator();
             while (iter.hasNext()) {
@@ -1091,6 +1204,15 @@ public class NodeState extends ItemState {
             }
         }
 
+        /**
+         * Removes the child node entry with the given <code>nodeName</code> and
+         * <code>index</code>.
+         *
+         * @param nodeName the name of the child node entry to remove.
+         * @param index    the index of the child node entry to remove.
+         * @return the removed <code>ChildNodeEntry</code> or <code>null</code>
+         *         if there is no matching <code>ChildNodeEntry</code>.
+         */
         public ChildNodeEntry remove(QName nodeName, int index) {
             if (index < Path.INDEX_DEFAULT) {
                 throw new IllegalArgumentException("index is 1-based");
@@ -1101,27 +1223,29 @@ public class NodeState extends ItemState {
                 return null;
             }
 
-            if (obj instanceof ChildNodeEntry) {
+            if (obj instanceof LinkedEntries.LinkNode) {
                 // map entry is a single child node entry
                 if (index != Path.INDEX_DEFAULT) {
                     return null;
                 }
-                ChildNodeEntry removedEntry = (ChildNodeEntry) obj;
+                LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) obj;
                 nameMap.remove(nodeName);
-                entries.remove(removedEntry.getId());
-                return removedEntry;
+                // remove LinkNode from entries
+                ln.remove();
+                return ln.getChildNodeEntry();
             }
 
             // map entry is a list of siblings
-            List siblings = (ArrayList) obj;
+            List siblings = (List) obj;
             if (index > siblings.size()) {
                 return null;
             }
 
             // remove from siblings list
-            ChildNodeEntry removedEntry = (ChildNodeEntry) siblings.remove(index - 1);
-            // remove from ordered entries map
-            entries.remove(removedEntry.getId());
+            LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) siblings.remove(index - 1);
+            ChildNodeEntry removedEntry = ln.getChildNodeEntry();
+            // remove from ordered entries
+            ln.remove();
 
             // clean up name lookup map if necessary
             if (siblings.size() == 0) {
@@ -1149,7 +1273,7 @@ public class NodeState extends ItemState {
             for (Iterator it = get(nodeState.getName()).iterator(); it.hasNext(); ) {
                 ChildNodeEntry tmp = (ChildNodeEntry) it.next();
                 try {
-                    if (tmp.getNodeState() == nodeState) {
+                    if (tmp.isAvailable() && tmp.getNodeState() == nodeState) {
                         entry = tmp;
                         break;
                     }
@@ -1200,10 +1324,12 @@ public class NodeState extends ItemState {
             }
         }
 
-        //-------------------------------------------< unmodifiable List view >
+        //--------------------------------------< unmodifiable Collection view >
+
         public boolean contains(Object o) {
             if (o instanceof ChildNodeEntry) {
-                return entries.containsKey(((ChildNodeEntry) o).getId());
+                // narrow down to same name sibling nodes and check list
+                return get(((ChildNodeEntry) o).getName()).contains(o);
             } else {
                 return false;
             }
@@ -1224,7 +1350,7 @@ public class NodeState extends ItemState {
         }
 
         public Iterator iterator() {
-            return new EntriesIterator();
+            return UnmodifiableIterator.decorate(entries.iterator());
         }
 
         public int size() {
@@ -1243,7 +1369,7 @@ public class NodeState extends ItemState {
             if (a.length < size()) {
                 a = new ChildNodeEntry[size()];
             }
-            Iterator iter = entries.values().iterator();
+            Iterator iter = entries.iterator();
             int i = 0;
             while (iter.hasNext()) {
                 a[i++] = iter.next();
@@ -1278,27 +1404,88 @@ public class NodeState extends ItemState {
             throw new UnsupportedOperationException();
         }
 
-        //----------------------------------------------------< inner classes >
+    }
 
-        class EntriesIterator implements Iterator {
+    /**
+     * An implementation of a linked list which provides access to the internal
+     * LinkNode which links the entries of the list.
+     */
+    private static class LinkedEntries extends AbstractLinkedList {
 
-            private final Iterator mapIter;
+        /**
+         * Adds a child node entry to this list.
+         *
+         * @param cne the child node entry to add.
+         * @return the LinkNode which refers to the added <code>ChildNodeEntry</code>.
+         */
+        LinkNode add(ChildNodeEntry cne) {
+            LinkNode ln = (LinkNode) createNode(cne);
+            addNode(ln, header);
+            return ln;
+        }
 
-            EntriesIterator() {
-                mapIter = entries.values().iterator();
+        /**
+         * Reorders an existing <code>LinkNode</code> before another existing
+         * <code>LinkNode</code>. If <code>before</code> is <code>null</code>
+         * the <code>insert</code> node is moved to the end of the list.
+         *
+         * @param insert the node to reorder.
+         * @param before the node where to reorder node <code>insert</code>.
+         */
+        void reorderNode(LinkNode insert, LinkNode before) {
+            removeNode(insert);
+            if (before == null) {
+                addNode(insert, header);
+            } else {
+                addNode(insert, before);
+            }
+        }
+
+        /**
+         * Create a new <code>LinkNode</code> for a given {@link ChildNodeEntry}
+         * <code>value</code>.
+         *
+         * @param value a child node entry.
+         * @return a wrapping {@link LinkedEntries.LinkNode}.
+         */
+        protected Node createNode(Object value) {
+            return new LinkNode(value);
+        }
+
+        /**
+         * @return a new <code>LinkNode</code>.
+         */
+        protected Node createHeaderNode() {
+            return new LinkNode();
+        }
+
+        /**
+         * Extends the <code>AbstractLinkedList.Node</code>.
+         */
+        private class LinkNode extends AbstractLinkedList.Node {
+
+            protected LinkNode() {
+                super();
             }
 
-            public boolean hasNext() {
-                return mapIter.hasNext();
+            protected LinkNode(Object value) {
+                super(value);
             }
 
-            public Object next() {
-                return mapIter.next();
+            /**
+             * @return the wrapped <code>ChildNodeEntry</code>.
+             */
+            public ChildNodeEntry getChildNodeEntry() {
+                return (ChildNodeEntry) super.getValue();
             }
 
+            /**
+             * Removes this <code>LinkNode</code> from the linked list.
+             */
             public void remove() {
-                throw new UnsupportedOperationException();
+                removeNode(this);
             }
         }
     }
+
 }
