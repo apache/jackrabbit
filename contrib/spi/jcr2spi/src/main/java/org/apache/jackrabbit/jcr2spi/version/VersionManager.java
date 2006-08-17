@@ -30,7 +30,6 @@ import java.util.Collection;
 public interface VersionManager {
 
     // TODO fix method definitions (throw clauses)
-    // TODO review usage of NodeId. for Restore it is requried, since the target must not point to an existing node.
 
     public void checkin(NodeState nodeState) throws RepositoryException;
 
