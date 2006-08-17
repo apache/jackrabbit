@@ -73,7 +73,6 @@ public class ImportHandler extends DefaultHandler {
      */
     protected boolean nsContextStarted;
 
-    // DIFF JACKRABBIT: pass NamespaceRegistry instead of impl.
     public ImportHandler(Importer importer, NamespaceResolver nsResolver,
                          NamespaceRegistry nsReg) {
         this.importer = importer;
@@ -356,9 +355,8 @@ public class ImportHandler extends DefaultHandler {
      * @param uriHint namespace uri that serves as hint for the prefix generation
      * @return a unique prefix
      */
-    // DIFF JACKRABBIT: method moved from NamespaceRegistryImpl (only used here)
     public String getUniquePrefix(String uriHint) throws RepositoryException {
-        // @todo smarter unique prefix generation
+        // TODO: smarter unique prefix generation
         return "_pre" + (nsReg.getPrefixes().length + 1);
     }
 }
