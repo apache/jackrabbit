@@ -105,8 +105,6 @@ public class SessionImpl implements Session, ManagerProvider {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
-    // DIFF JR: moved access-right constants to AcessManager
-
     private boolean alive;
 
     /**
@@ -392,14 +390,12 @@ public class SessionImpl implements Session, ManagerProvider {
         // build the array of actions to be checked
         String[] actionsArr = actions.split(",");
 
-        // DIFF JR: different AccessManager (delegating to RS). No translation of actions to READ, WRITE, REMOVE.
         Path targetPath = getQPath(absPath);
         boolean isGranted;
         if (itemExists(absPath)) {
             ItemState itemState = getHierarchyManager().getItemState(targetPath);
             isGranted = getAccessManager().isGranted(itemState, actionsArr);
         } else {
-            // TODO: if spi-ids are used, its possible to build an id for a non-existing item (see also Node.restore)
             // The given abs-path may point to a non-existing item
             Path parentPath = targetPath;
             NodeState parentState = null;
@@ -433,12 +429,12 @@ public class SessionImpl implements Session, ManagerProvider {
         checkIsAlive();
 
         Path parentPath = getQPath(parentAbsPath);
-        // DIFF JR: check for writable parent is performed within importer
+        // NOTE: check if path corresponds to Node and is writable is performed
+        // within the SessionImporter.
         Importer importer = new SessionImporter(parentPath, this, itemStateManager, uuidBehavior);
         return new ImportHandler(importer, getNamespaceResolver(), workspace.getNamespaceRegistry());
     }
 
-    // DIFF JR: dont cast getImportContentHandler to 'ImportHandler' check for instanceof ErrorHandler
     /**
      * @see javax.jcr.Session#importXML(String, java.io.InputStream, int)
      */
