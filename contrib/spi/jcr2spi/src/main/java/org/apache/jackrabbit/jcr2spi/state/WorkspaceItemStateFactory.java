@@ -142,7 +142,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             // Therefore build a NodeReference instance and add it to the state.
             if (uuid != null) {
                 PropertyId[] references = info.getReferences();
-                state.addNodeReferences(new NodeReferencesImpl(info.getId(), references));
+                state.setNodeReferences(new NodeReferencesImpl(info.getId(), references));
             }
 
             // copied from local-state-mgr TODO... check
