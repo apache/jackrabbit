@@ -20,6 +20,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.query.QueryManagerImpl;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
@@ -75,9 +77,19 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceImpl.class);
 
+    /**
+     * The name of this <code>Workspace</code>.
+     */
     private final String name;
+    /**
+     * The Session that created this <code>Workspace</code> object
+     */
     private final SessionImpl session;
 
+    /**
+     * WorkspaceManager acting as ItemStateManager on the workspace level
+     * and as connection to the SPI implementation.
+     */
     private final WorkspaceManager wspManager;
 
     /**
@@ -86,11 +98,11 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * the session)
      */
     private HierarchyManager hierManager;
-
-    private QueryManager qManager;
-    private ObservationManager obsManager;
     private LockManager lockManager;
+    private ObservationManager obsManager;
+    private QueryManager qManager;
     private VersionManager versionManager;
+    private ItemStateValidator validator;
 
     public WorkspaceImpl(String name, SessionImpl session, RepositoryService service, SessionInfo sessionInfo) throws RepositoryException {
         this.name = name;
@@ -151,7 +163,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
 
         // copy (i.e. pull) subtree at srcAbsPath from srcWorkspace
         // to 'this' workspace at destAbsPath
-
         SessionImpl srcSession = null;
         try {
             // create session on other workspace for current subject
@@ -235,16 +246,16 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         session.checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         session.checkHasPendingChanges();
 
-        NodeId[] versionIds = new NodeId[versions.length];
+        NodeState[] versionStates = new NodeState[versions.length];
         for (int i = 0; i < versions.length; i++) {
             if (versions[i] instanceof VersionImpl) {
                 ItemState vState = ((NodeImpl)versions[i]).getItemState();
-                versionIds[i] = (NodeId) vState.getId();
+                versionStates[i] = (NodeState) vState;
             } else {
                 throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for the given version " + versions[i].getPath());
             }
         }
-        getVersionManager().restore(versionIds, removeExisting);
+        getVersionManager().restore(versionStates, removeExisting);
     }
 
     /**
@@ -281,6 +292,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     public ObservationManager getObservationManager() throws UnsupportedRepositoryOperationException, RepositoryException {
         session.checkSupportedOption(Repository.OPTION_OBSERVATION_SUPPORTED);
         session.checkIsAlive();
+
         if (obsManager == null) {
             obsManager = createObservationManager(getNamespaceResolver(), getNodeTypeRegistry());
         }
@@ -301,12 +313,18 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     public ContentHandler getImportContentHandler(String parentAbsPath, int uuidBehavior)
         throws PathNotFoundException, ConstraintViolationException, VersionException,
         LockException, RepositoryException {
+
         session.checkSupportedOption(Repository.LEVEL_2_SUPPORTED);
         session.checkIsAlive();
 
         Path parentPath = session.getQPath(parentAbsPath);
         ItemState parentState = getHierarchyManager().getItemState(parentPath);
         if (parentState.isNode()) {
+            // make sure the given import target is accessible, not locked and checked out.
+            int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+            getValidator().checkIsWritable((NodeState) parentState, options);
+
+            // build the content handler
             return new WorkspaceContentHandler(this, parentAbsPath, uuidBehavior);
         } else {
             throw new PathNotFoundException("No node at path " + parentAbsPath);
@@ -322,10 +340,19 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         ConstraintViolationException, InvalidSerializedDataException,
         LockException, RepositoryException {
 
+        session.checkSupportedOption(Repository.LEVEL_2_SUPPORTED);
+        session.checkIsAlive();
+
         Path parentPath = session.getQPath(parentAbsPath);
-        ItemState parentState = getHierarchyManager().getItemState(parentPath);
-        if (parentState.isNode()) {
-            wspManager.importXml((NodeId) parentState.getId(), in, uuidBehavior);
+        ItemState itemState = getHierarchyManager().getItemState(parentPath);
+        if (itemState.isNode()) {
+            // make sure the given import target is accessible, not locked and checked out.
+            NodeState parentState = (NodeState) itemState;
+            int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+            getValidator().checkIsWritable(parentState, options);
+
+            // run the import
+            wspManager.importXml(parentState, in, uuidBehavior);
         } else {
             throw new PathNotFoundException("No node at path " + parentAbsPath);
         }
@@ -405,6 +432,18 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     UpdatableItemStateManager getUpdatableItemStateManager() {
         return wspManager;
     }
+
+    /**
+     * Validator for the <code>Workspace</code>. It contrast from {@link SessionImpl#getValidator()}
+     * in terms of <code>HierarchyManager</code> and <code>ItemManager</code>.
+     * @return
+     */
+    private ItemStateValidator getValidator() {
+        if (validator == null) {
+            validator = new ItemStateValidator(getNodeTypeRegistry(), this);
+        }
+        return validator;
+    }
     //-----------------------------------------------------< initialization >---
     /**
      * Create the workspace state manager. May be overridden by subclasses.
@@ -434,12 +473,12 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
 
     /**
      *
-     * @param stateMgr
+     * @param wspManager
      * @return
      */
-    protected VersionManager createVersionManager(UpdatableItemStateManager stateMgr) {
+    protected VersionManager createVersionManager(WorkspaceManager wspManager) {
         if (session.isSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED)) {
-            return new VersionManagerImpl(stateMgr);
+            return new VersionManagerImpl(wspManager);
         } else {
             return new DefaultVersionManager();
         }

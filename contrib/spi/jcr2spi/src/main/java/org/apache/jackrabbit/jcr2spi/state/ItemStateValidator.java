@@ -39,7 +39,6 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.NamespaceResolver;
@@ -547,8 +546,7 @@ public class ItemStateValidator {
         // access restrictions on new node
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             // make sure current session is granted write access on parent node
-            // TODO build Id instead 
-            Path relPath = Path.create(nodeName, org.apache.jackrabbit.name.Path.INDEX_UNDEFINED);
+            Path relPath = Path.create(nodeName, Path.INDEX_UNDEFINED);
             if (!mgrProvider.getAccessManager().isGranted(parentState, relPath, new String[] {AccessManager.ADD_NODE_ACTION})) {
                 throw new AccessDeniedException(safeGetJCRPath(parentState) + ": not allowed to add child node '" + nodeName +"'");
             }
@@ -657,14 +655,8 @@ public class ItemStateValidator {
      */
     private void checkIsCheckedOut(ItemState itemState)
             throws PathNotFoundException, VersionException, RepositoryException {
-        // shortcut: if state is new, its ancestor must be checkout
-        if (itemState.getStatus() == ItemState.STATUS_NEW) {
-            return;
-        }
         NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParent();
-        if (!mgrProvider.getVersionManager().isCheckedOut(nodeState)) {
-            throw new VersionException(safeGetJCRPath(nodeState) + " is checked-in");
-        }
+        mgrProvider.getVersionManager().checkIsCheckedOut(nodeState);
     }
 
     /**
@@ -817,14 +809,12 @@ public class ItemStateValidator {
         }
 
         NodeState targetState = (NodeState)toDelete;
-        NodeId targetId = targetState.getNodeId();
         EffectiveNodeType ent = getEffectiveNodeType(targetState);
         if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
             ItemStateManager stateMgr = mgrProvider.getItemStateManager();
-            if (stateMgr.hasNodeReferences(targetId)) {
+            if (stateMgr.hasReferingStates(targetState)) {
                 try {
-                    NodeReferences refs = stateMgr.getNodeReferences(targetId);
-                    if (refs.hasReferences()) {
+                    if (!stateMgr.getReferingStates(targetState).isEmpty()) {
                         throw new ReferentialIntegrityException(safeGetJCRPath(targetState)
                             + ": cannot remove node with references");
                     }

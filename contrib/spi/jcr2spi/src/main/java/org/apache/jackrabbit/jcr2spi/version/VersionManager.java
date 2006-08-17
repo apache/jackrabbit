@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi.version;
 
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.version.VersionException;
 import java.util.Collection;
 
 /**
@@ -37,15 +38,17 @@ public interface VersionManager {
 
     public boolean isCheckedOut(NodeState nodeState) throws RepositoryException;
 
+    public void checkIsCheckedOut(NodeState nodeState) throws VersionException, RepositoryException;
+
     public void removeVersion(NodeState versionHistoryState, NodeState versionState) throws RepositoryException;
 
     public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel, boolean moveLabel) throws RepositoryException;
 
     public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel) throws RepositoryException;
 
-    public void restore(NodeId nodeId, NodeId versionId, boolean removeExisting) throws RepositoryException;
+    public void restore(NodeState nodeState, Path relativePath, NodeState versionState, boolean removeExisting) throws RepositoryException;
 
-    public void restore(NodeId[] versionIds, boolean removeExisting) throws RepositoryException;
+    public void restore(NodeState[] versionStates, boolean removeExisting) throws RepositoryException;
 
     /**
      *

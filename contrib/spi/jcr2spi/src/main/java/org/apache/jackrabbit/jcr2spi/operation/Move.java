@@ -101,7 +101,7 @@ public class Move extends AbstractOperation {
         Path.PathElement destElement = destPath.getNameElement();
         // destination must not contain an index
         int index = destElement.getIndex();
-        if (index > org.apache.jackrabbit.name.Path.INDEX_UNDEFINED) {
+        if (index > Path.INDEX_UNDEFINED) {
             // subscript in name element
             String msg = "Invalid destination path: subscript in name element is not allowed (" + LogUtil.safeGetJCRPath(destPath, nsResolver) + ")";
             log.debug(msg);

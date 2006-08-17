@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.name.Path;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
@@ -25,6 +26,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
+import javax.jcr.version.Version;
 import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
@@ -32,13 +34,17 @@ import javax.jcr.nodetype.ConstraintViolationException;
  */
 public class Restore extends AbstractOperation {
 
-    private final NodeId nodeId;
-    private final NodeId[] versionIds;
+    // TODO: since the restore target can point to a non-existing item -> use NodeId
+    // TODO: review this.
+    private final NodeState nodeState;
+    private final Path relQPath;
+    private final NodeState[] versionStates;
     private final boolean removeExisting;
 
-    private Restore(NodeId nodeId, NodeId[] versionIds, boolean removeExisting) {
-        this.nodeId = nodeId;
-        this.versionIds = versionIds;
+    private Restore(NodeState nodeState, Path relQPath, NodeState[] versionStates, boolean removeExisting) {
+        this.nodeState = nodeState;
+        this.relQPath = relQPath;
+        this.versionStates = versionStates;
         this.removeExisting = removeExisting;
 
         // TODO: affected states... needed?
@@ -53,12 +59,30 @@ public class Restore extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeId;
+
+    /**
+     * Returns state or the closest existing state of the restore target or
+     * <code>null</code> in case of a {@link javax.jcr.Workspace#restore(Version[], boolean)}
+     *
+     * @return
+     */
+    public NodeState getNodeState() {
+        return nodeState;
     }
 
-    public NodeId[] getVersionIds() {
-        return versionIds;
+    /**
+     * Relative qualified path to the non-existing restore target or <code>null</code>
+     * if the state returned by {@link #getNodeState()} is the target.
+     *
+     * @return
+     * @see javax.jcr.Node#restore(Version, String, boolean) 
+     */
+    public Path getRelativePath() {
+        return relQPath;
+    }
+
+    public NodeState[] getVersionStates() {
+        return versionStates;
     }
 
     public boolean removeExisting() {
@@ -68,28 +92,28 @@ public class Restore extends AbstractOperation {
     //------------------------------------------------------------< Factory >---
     /**
      *
-     * @param nodeId
-     * @param versionId
+     * @param nodeState
+     * @param versionState
      * @return
      */
-    public static Operation create(NodeId nodeId, NodeId versionId, boolean removeExisting) {
-        if (nodeId == null || versionId == null) {
-            throw new IllegalArgumentException("Neither nodeId nor versionId must be null.");
+    public static Operation create(NodeState nodeState, Path relQPath, NodeState versionState, boolean removeExisting) {
+        if (nodeState == null || versionState == null) {
+            throw new IllegalArgumentException("Neither nodeId nor versionState must be null.");
         }
-        Restore up = new Restore(nodeId, new NodeId[] {versionId}, removeExisting);
+        Restore up = new Restore(nodeState, relQPath, new NodeState[] {versionState}, removeExisting);
         return up;
     }
 
     /**
      *
-     * @param versionIds
+     * @param versionStates
      * @return
      */
-    public static Operation create(NodeId[] versionIds, boolean removeExisting) {
-        if (versionIds == null) {
-            throw new IllegalArgumentException("Neither versionIds must not be null.");
+    public static Operation create(NodeState[] versionStates, boolean removeExisting) {
+        if (versionStates == null) {
+            throw new IllegalArgumentException("Version states must not be null.");
         }
-        Restore up = new Restore(null, versionIds, removeExisting);
+        Restore up = new Restore(null, null, versionStates, removeExisting);
         return up;
     }
 }

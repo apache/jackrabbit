@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
+
+import java.util.Collection;
 
 /**
  * The <code>ItemStateManager</code> interface provides methods for retrieving
@@ -53,26 +54,25 @@ public interface ItemStateManager {
      */
     boolean hasItemState(ItemId id);  // TODO: throw ItemStateException in case of error?
 
-    // DIFF JR: NodeId param instead of NodeReferenceId
     /**
-     * Return a node references object, given its target id.
+     * Return a collection of <code>PropertyState</code>s referring to the
+     * Node identified by the given <code>NodeState</code>.
      *
-     * @param id target id
-     * @return node references object
-     * @throws NoSuchItemStateException if the item does not exist
-     * @throws ItemStateException if an error occurs
+     * @param nodeState
+     * @return property states refering to the node identified by the given id.
+     * @throws ItemStateException if the <code>PropertyState</code>s could not
+     * be retrieved or if some other error occurs.
      */
-    NodeReferences getNodeReferences(NodeId id)
-        throws NoSuchItemStateException, ItemStateException;
+    Collection getReferingStates(NodeState nodeState) throws ItemStateException;
 
-    // DIFF JR: NodeId param instead of NodeReferenceId
     /**
-     * Return a flag indicating whether a node references object
-     * for a given target id exists.
+     * Return a flag indicating whether any references to the <code>Node</code>
+     * identified by the given state exist. In case the <code>Node</code> is not
+     * referenceable this method will always return false.
      *
-     * @param id target id
-     * @return <code>true</code> if a node reference object exists for the given
-     *         id, otherwise <code>false</code>.
+     * @param nodeState
+     * @return <code>true</code> if any references exist to the <code>Node</code>
+     * identified by the given node state.
      */
-    boolean hasNodeReferences(NodeId id);
+    boolean hasReferingStates(NodeState nodeState);
 }

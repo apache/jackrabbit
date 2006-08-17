@@ -107,6 +107,11 @@ public class NodeState extends ItemState {
     private HashMap properties = new HashMap();
 
     /**
+     * NodeReferences for this node state.
+     */
+    private NodeReferences references;
+
+    /**
      * Listeners (weak references)
      */
     private final transient Collection listeners = new WeakIdentityCollection(3);
@@ -871,7 +876,15 @@ public class NodeState extends ItemState {
             throw new RepositoryException("Unexpected error: Child state to be renamed does not exist.");
         }
     }
-    
+
+    void addNodeReferences(NodeReferences references) {
+        this.references = references;
+    }
+
+    NodeReferences getNodeReferences() {
+        return references;
+    }
+
     /**
      * TODO: find a better way to provide the index of a child node entry
      * Returns the index of the given <code>ChildNodeEntry</code> and with

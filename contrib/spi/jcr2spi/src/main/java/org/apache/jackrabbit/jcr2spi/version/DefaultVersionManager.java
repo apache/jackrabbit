@@ -21,9 +21,11 @@ import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.spi.NodeId;
 
 import java.util.Collection;
 
@@ -47,6 +49,10 @@ public class DefaultVersionManager implements VersionManager {
         return true;
     }
 
+    public void checkIsCheckedOut(NodeState nodeState) throws VersionException, RepositoryException {
+        // ignore
+    }
+
     public void removeVersion(NodeState versionHistoryState, NodeState versionState) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
@@ -59,11 +65,11 @@ public class DefaultVersionManager implements VersionManager {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public void restore(NodeId nodeId, NodeId versionId, boolean removeExisting) throws RepositoryException {
+    public void restore(NodeState nodeState, Path relativePath, NodeState versionState, boolean removeExisting) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 
-    public void restore(NodeId[] versionIds, boolean removeExisting) throws RepositoryException {
+    public void restore(NodeState[] versionStates, boolean removeExisting) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 

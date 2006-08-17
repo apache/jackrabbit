@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.jcr2spi.version;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Checkout;
@@ -30,14 +30,17 @@ import org.apache.jackrabbit.jcr2spi.operation.Merge;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.NodeId;
 
 import java.util.Collection;
 import java.util.List;
@@ -50,20 +53,22 @@ public class VersionManagerImpl implements VersionManager {
 
     private static Logger log = LoggerFactory.getLogger(VersionManagerImpl.class);
 
-    private final UpdatableItemStateManager stateManager;
+    private final WorkspaceManager workspaceManager;
 
-    public VersionManagerImpl(UpdatableItemStateManager stateManager) {
-        this.stateManager = stateManager;
+    public VersionManagerImpl(WorkspaceManager workspaceManager) {
+        this.workspaceManager = workspaceManager;
     }
 
     public void checkin(NodeState nodeState) throws RepositoryException {
-        Operation ci = Checkin.create(nodeState);
-        stateManager.execute(ci);
+        NodeState wspState = getWorkspaceState(nodeState);
+        Operation ci = Checkin.create(wspState);
+        workspaceManager.execute(ci);
     }
 
     public void checkout(NodeState nodeState) throws RepositoryException {
-        Operation co = Checkout.create(nodeState);
-        stateManager.execute(co);
+        NodeState wspState = getWorkspaceState(nodeState);
+        Operation co = Checkout.create(wspState);
+        workspaceManager.execute(co);
     }
 
     /**
@@ -75,21 +80,27 @@ public class VersionManagerImpl implements VersionManager {
      * @throws RepositoryException
      */
     public boolean isCheckedOut(NodeState nodeState) throws RepositoryException {
+        // shortcut: if state is new, its ancestor must be checkout
+        if (nodeState.getStatus() == ItemState.STATUS_NEW) {
+            return true;
+        }
+
+        NodeState wspState = getWorkspaceState(nodeState);
         try {
             /**
              * FIXME should not only rely on existence of jcr:isCheckedOut property
              * but also verify that node.isNodeType("mix:versionable")==true;
              * this would have a negative impact on performance though...
              */
-            while (!nodeState.hasPropertyName(QName.JCR_ISCHECKEDOUT)) {
-                NodeState parentState = nodeState.getParent();
+            while (!wspState.hasPropertyName(QName.JCR_ISCHECKEDOUT)) {
+                NodeState parentState = wspState.getParent();
                 if (parentState == null) {
                     // reached root state without finding a jcr:isCheckedOut property
                     return true;
                 }
-                nodeState = parentState;
+                wspState = parentState;
             }
-            PropertyState propState = nodeState.getPropertyState(QName.JCR_ISCHECKEDOUT);
+            PropertyState propState = wspState.getPropertyState(QName.JCR_ISCHECKEDOUT);
             Boolean b = Boolean.valueOf(propState.getValue().getString());
             return b.booleanValue();
         } catch (ItemStateException e) {
@@ -98,32 +109,51 @@ public class VersionManagerImpl implements VersionManager {
         }
     }
 
+    public void checkIsCheckedOut(NodeState nodeState) throws VersionException, RepositoryException {
+        if (!isCheckedOut(nodeState)) {
+            throw new VersionException(nodeState + " is checked-in");
+        }
+    }
+
     public void removeVersion(NodeState versionHistoryState, NodeState versionState) throws RepositoryException {
-        Operation op = Remove.create(versionState);
-        stateManager.execute(op);
+        NodeState wspVersionState = getWorkspaceState(versionState);
+        Operation op = Remove.create(wspVersionState);
+        workspaceManager.execute(op);
     }
 
     public void addVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel, boolean moveLabel) throws RepositoryException {
-        Operation op = AddLabel.create(versionHistoryState, versionState, qLabel, moveLabel);
-        stateManager.execute(op);
+        NodeState wspVHState = getWorkspaceState(versionHistoryState);
+        NodeState wspVState = getWorkspaceState(versionState);
+        Operation op = AddLabel.create(wspVHState, wspVState, qLabel, moveLabel);
+        workspaceManager.execute(op);
     }
 
     public void removeVersionLabel(NodeState versionHistoryState, NodeState versionState, QName qLabel) throws RepositoryException {
-        Operation op = RemoveLabel.create(versionHistoryState, versionState, qLabel);
-        stateManager.execute(op);
+        NodeState wspVHState = getWorkspaceState(versionHistoryState);
+        NodeState wspVState = getWorkspaceState(versionState);
+        Operation op = RemoveLabel.create(wspVHState, wspVState, qLabel);
+        workspaceManager.execute(op);
     }
 
-    public void restore(NodeId nodeId, NodeId versionId, boolean removeExisting) throws RepositoryException {
-        Operation op = Restore.create(nodeId, versionId, removeExisting);
-        stateManager.execute(op);
+    public void restore(NodeState nodeState, Path relativePath, NodeState versionState, boolean removeExisting) throws RepositoryException {
+        NodeState wspState = getWorkspaceState(nodeState);
+        NodeState wspVState = getWorkspaceState(versionState);
+        Operation op = Restore.create(wspState, relativePath, wspVState, removeExisting);
+        workspaceManager.execute(op);
     }
 
-    public void restore(NodeId[] versionIds, boolean removeExisting) throws RepositoryException {
-        Operation op = Restore.create(versionIds, removeExisting);
-        stateManager.execute(op);
+    public void restore(NodeState[] versionStates, boolean removeExisting) throws RepositoryException {
+        NodeState[] wspStates = new NodeState[versionStates.length];
+        for (int i = 0; i < versionStates.length; i++) {
+            wspStates[i] = getWorkspaceState(versionStates[i]);
+        }
+
+        Operation op = Restore.create(wspStates, removeExisting);
+        workspaceManager.execute(op);
     }
 
     public Collection merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
+        NodeState wspState = getWorkspaceState(nodeState);
         // TODO find better solution to build the mergeFailed-collection
         final List failedIds = new ArrayList();
         InternalEventListener mergeFailedCollector = new InternalEventListener() {
@@ -139,13 +169,34 @@ public class VersionManagerImpl implements VersionManager {
             }
         };
 
-        Operation op = Merge.create(nodeState, workspaceName, bestEffort, mergeFailedCollector);
-        stateManager.execute(op);
+        Operation op = Merge.create(wspState, workspaceName, bestEffort, mergeFailedCollector);
+        workspaceManager.execute(op);
         return failedIds;
     }
 
     public void resolveMergeConflict(NodeState nodeState, NodeState versionState, boolean done) throws RepositoryException {
-        Operation op = ResolveMergeConflict.create(nodeState, versionState, done);
-        stateManager.execute(op);
+        NodeState wspState = getWorkspaceState(nodeState);
+        NodeState wspVState = getWorkspaceState(versionState);
+        Operation op = ResolveMergeConflict.create(wspState, wspVState, done);
+        workspaceManager.execute(op);
+    }
+
+    //------------------------------------------------------------< private >---
+    /**
+     * If the given <code>NodeState</code> has an overlayed state, the overlayed
+     * (workspace) state will be returned. Otherwise the given state is returned.
+     *
+     * @param nodeState
+     * @return The overlayed state or the given state, if this one does not have
+     * an overlayed state.
+     */
+    private NodeState getWorkspaceState(NodeState nodeState) {
+        if (nodeState.hasOverlayedState()) {
+            // nodestate has been obtained from  Session-ISM
+            return (NodeState) nodeState.getOverlayedState();
+        } else {
+            // nodestate has been obtained from Workspace-ISM already
+            return nodeState;
+        }
     }
 }

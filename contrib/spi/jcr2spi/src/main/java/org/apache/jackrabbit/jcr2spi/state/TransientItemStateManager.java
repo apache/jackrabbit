@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 
 import javax.jcr.ItemExistsException;
 import java.util.Iterator;
+import java.util.Collection;
 
 /**
  * <code>TransientItemStateManager</code> implements a {@link ItemStateManager}
@@ -130,19 +131,25 @@ public class TransientItemStateManager extends CachingItemStateManager
 
     /**
      * Always throws an {@link UnsupportedOperationException}. A transient item
-     * state manager does not maintain node reference.
-     * @see ItemStateManager#getNodeReferences(NodeId)
+     * state manager cannot not maintain node references.
+     *
+     * @param nodeState
+     * @throws UnsupportedOperationException
+     * @see ItemStateManager#getReferingStates(NodeState)
      */
-    public NodeReferences getNodeReferences(NodeId id) {
+    public Collection getReferingStates(NodeState nodeState) {
         throw new UnsupportedOperationException("getNodeReferences() not implemented");
     }
 
     /**
      * Always throws an {@link UnsupportedOperationException}. A transient item
-     * state manager does not maintain node reference.
-     * @see ItemStateManager#hasNodeReferences(NodeId)
+     * state manager cannot not maintain node references.
+     *
+     * @param nodeState
+     * @throws UnsupportedOperationException
+     * @see ItemStateManager#hasReferingStates(NodeState)
      */
-    public boolean hasNodeReferences(NodeId id) {
+    public boolean hasReferingStates(NodeState nodeState) {
         throw new UnsupportedOperationException("hasNodeReferences() not implemented");
     }
 
@@ -518,20 +525,30 @@ public class TransientItemStateManager extends CachingItemStateManager
         }
 
         /**
-         * {@inheritDoc}
+         * Always throws <code>UnsupportedOperationException</code>. Within the
+         * transient space node references cannot be managed.
+         *
+         * @param nodeState
+         * @throws UnsupportedOperationException
+         * @see ItemStateManager#getReferingStates(NodeState)
          */
-        public NodeReferences getNodeReferences(NodeId id)
+        public Collection getReferingStates(NodeState nodeState)
                 throws NoSuchItemStateException, ItemStateException {
             // n/a
-            throw new ItemStateException("getNodeReferences() not implemented");
+            throw new UnsupportedOperationException("getNodeReferences() not implemented");
         }
 
         /**
-         * {@inheritDoc}
+         * Always throws <code>UnsupportedOperationException</code>. Within the
+         * transient space node references cannot be managed.
+         *
+         * @param nodeState
+         * @throws UnsupportedOperationException
+         * @see ItemStateManager#hasReferingStates(NodeState)
          */
-        public boolean hasNodeReferences(NodeId id) {
+        public boolean hasReferingStates(NodeState nodeState) {
             // n/a
-            return false;
+            throw new UnsupportedOperationException("getNodeReferences() not implemented");
         }
     }
 

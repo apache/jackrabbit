@@ -44,6 +44,17 @@ public interface LockManager {
         throws LockException, RepositoryException;
 
     /**
+     * Removes the lock on a node.
+     *
+     * @param nodeState
+     * @throws LockException if this node is not locked or the session does not
+     * have the correct lock token
+     * @see javax.jcr.Node#unlock
+     */
+    void unlock(NodeState nodeState) throws LockException, RepositoryException;
+
+
+    /**
      * Returns the Lock object that applies to a node. This may be either a lock
      * on this node itself or a deep lock on a node above this node.
      *
@@ -53,16 +64,6 @@ public interface LockManager {
      * @see javax.jcr.Node#getLock
      */
     Lock getLock(NodeState nodeState) throws LockException, RepositoryException;
-
-    /**
-     * Removes the lock on a node.
-     *
-     * @param nodeState
-     * @throws LockException if this node is not locked or the session does not
-     * have the correct lock token
-     * @see javax.jcr.Node#unlock
-     */
-    void unlock(NodeState nodeState) throws LockException, RepositoryException;
 
     /**
      * Returns <code>true</code> if this node is locked either as a result
@@ -78,7 +79,7 @@ public interface LockManager {
     boolean isLocked(NodeState nodeState) throws RepositoryException;
 
     /**
-     * Check whether the node given is locked by somebody else than the
+     * Check whether the given node state is locked by somebody else than the
      * current session. Access is allowed if the node is not locked or
      * if the session itself holds the lock to this node, i.e. the session
      * contains the lock token for the lock. If the node is not locked at

@@ -36,8 +36,7 @@ public class WorkspaceItemStateManager
         extends CachingItemStateManager
         implements InternalEventListener {
 
-    public WorkspaceItemStateManager(ItemStateFactory isf, IdFactory idFactory)
-            throws ItemStateException, NoSuchItemStateException {
+    public WorkspaceItemStateManager(ItemStateFactory isf, IdFactory idFactory) {
         super(isf, idFactory);
     }
 
