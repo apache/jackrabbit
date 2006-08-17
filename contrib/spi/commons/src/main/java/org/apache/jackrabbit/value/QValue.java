@@ -21,8 +21,6 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.jackrabbit.fs.FileSystemResource;
-import org.apache.jackrabbit.fs.FileSystemException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
@@ -114,7 +112,7 @@ public class QValue {
             case PropertyType.LONG:
                 return new QValue(Long.valueOf(value).longValue());
             case PropertyType.REFERENCE:
-                // DIFF JR: references are not forced to represent a UUID object
+                // NOTE: references are not forced to represent a UUID object
                 return new QValue(value, true);
             case PropertyType.PATH:
                 return new QValue(Path.valueOf(value));
@@ -458,7 +456,6 @@ public class QValue {
         type = PropertyType.STRING;
     }
 
-    // DIFF JR: constructor added
     private QValue(String value, boolean isReference) {
         val = value;
         type = (isReference) ? PropertyType.REFERENCE : PropertyType.STRING;
@@ -500,7 +497,7 @@ public class QValue {
     }
 
     private QValue(UUID value) {
-        // DIFF JR: reference value must not represent a UUID object
+        // NOTE: reference value must not represent a UUID object
         val = (value == null) ? null : value.toString();
         type = PropertyType.REFERENCE;
     }
@@ -512,7 +509,7 @@ public class QValue {
      * state, i.e. the <code>getStream()</code> method always returns a fresh
      * <code>InputStream</code> instance.
      */
-    static class BLOBFileValue {
+    private static class BLOBFileValue {
         /**
          * empty array
          */
@@ -536,17 +533,12 @@ public class QValue {
         private final boolean temp;
 
         /**
-         * buffer for small-sized data
+         * Buffer for small-sized data
          */
         private byte[] buffer = EMPTY_BYTE_ARRAY;
 
         /**
-         * underlying file system resource
-         */
-        private final FileSystemResource fsResource;
-
-        /**
-         * converted text
+         * Converted text
          */
         private String text = null;
 
@@ -563,7 +555,7 @@ public class QValue {
          * @throws IOException if an error occurs while reading from the stream or
          *                     writing to the temporary file
          */
-        BLOBFileValue(InputStream in) throws IOException {
+        private BLOBFileValue(InputStream in) throws IOException {
             this(in, true);
         }
 
@@ -585,7 +577,7 @@ public class QValue {
          * @throws IOException if an error occurs while reading from the stream or
          *                     writing to the temporary file
          */
-        BLOBFileValue(InputStream in, boolean temp) throws IOException {
+        private BLOBFileValue(InputStream in, boolean temp) throws IOException {
             byte[] spoolBuffer = new byte[0x2000];
             int read;
             int len = 0;
@@ -624,8 +616,8 @@ public class QValue {
 
             // init vars
             file = spoolFile;
-            fsResource = null;
             this.temp = temp;
+            // buffer is EMPTY_BYTE_ARRAY (default value)
         }
 
         /**
@@ -635,10 +627,9 @@ public class QValue {
          * @param bytes byte array to be represented as a <code>BLOBFileValue</code>
          *              instance
          */
-        BLOBFileValue(byte[] bytes) {
+        private BLOBFileValue(byte[] bytes) {
             buffer = bytes;
             file = null;
-            fsResource = null;
             // this instance is not backed by a temporarily allocated buffer
             temp = false;
         }
@@ -649,7 +640,7 @@ public class QValue {
          * @param file file to be represented as a <code>BLOBFileValue</code> instance
          * @throws IOException if the file can not be read
          */
-        BLOBFileValue(File file) throws IOException {
+        private BLOBFileValue(File file) throws IOException {
             String path = file.getCanonicalPath();
             if (!file.isFile()) {
                 throw new IOException(path + ": the specified file does not exist");
@@ -657,36 +648,11 @@ public class QValue {
             if (!file.canRead()) {
                 throw new IOException(path + ": the specified file can not be read");
             }
+            // this instance is backed by a 'real' file
             this.file = file;
-            // this instance is backed by a 'real' file; set virtual fs resource to null
-            fsResource = null;
             // this instance is not backed by temporarily allocated resource/buffer
             temp = false;
-        }
-
-        /**
-         * Creates a new <code>BLOBFileValue</code> instance from a resource in the
-         * virtual file system.
-         *
-         * @param fsResource resource in virtual file system
-         * @throws IOException if the resource can not be read
-         */
-        BLOBFileValue(FileSystemResource fsResource) throws IOException {
-            try {
-                if (!fsResource.exists()) {
-                    throw new IOException(fsResource.getPath()
-                        + ": the specified resource does not exist");
-                }
-            } catch (FileSystemException fse) {
-                throw new IOException(fsResource.getPath()
-                    + ": Error while creating value: " + fse.toString());
-            }
-            // this instance is backed by a resource in the virtual file system
-            this.fsResource = fsResource;
-            // set 'real' file to null
-            file = null;
-            // this instance is not backed by temporarily allocated resource/buffer
-            temp = false;
+            // buffer is EMPTY_BYTE_ARRAY (default value)
         }
 
         /**
@@ -695,19 +661,12 @@ public class QValue {
          * @return The length, in bytes, of this <code>BLOBFileValue</code>,
          *         or -1L if the length can't be determined.
          */
-        long getLength() {
+        private long getLength() {
             if (file != null) {
                 // this instance is backed by a 'real' file
                 if (file.exists()) {
                     return file.length();
                 } else {
-                    return -1;
-                }
-            } else if (fsResource != null) {
-                // this instance is backed by a resource in the virtual file system
-                try {
-                    return fsResource.length();
-                } catch (FileSystemException fse) {
                     return -1;
                 }
             } else {
@@ -724,7 +683,7 @@ public class QValue {
          * @see #delete()
          * @see #delete(boolean)
          */
-        void discard() {
+        private void discard() {
             if (!temp) {
                 // do nothing if this instance is not backed by temporarily
                 // allocated resource/buffer
@@ -741,26 +700,11 @@ public class QValue {
 
         /**
          * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
-         * Same as <code>{@link #delete(false)}</code>.
-         * <p/>
-         * If this <code>BLOBFileValue</code> is <i>not</i> backed by a persistent
-         * resource calling this method will have no effect.
-         *
-         * @see #discard()
-         */
-        void delete() {
-            if (!temp) {
-                delete(false);
-            }
-        }
-
-        /**
-         * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
          *
          * @param pruneEmptyParentDirs if <code>true</code>, empty parent directories
          *                             will automatically be deleted
          */
-        void delete(boolean pruneEmptyParentDirs) {
+        private void delete(boolean pruneEmptyParentDirs) {
             if (file != null) {
                 // this instance is backed by a 'real' file
                 file.delete();
@@ -770,13 +714,6 @@ public class QValue {
                     while (parent != null && parent.delete()) {
                         parent = parent.getParentFile();
                     }
-                }
-            } else if (fsResource != null) {
-                // this instance is backed by a resource in the virtual file system
-                try {
-                    fsResource.delete(pruneEmptyParentDirs);
-                } catch (FileSystemException fse) {
-                    // ignore
                 }
             } else {
                 // this instance is backed by an in-memory buffer
@@ -791,7 +728,7 @@ public class QValue {
          * @throws IllegalStateException
          * @throws RepositoryException
          */
-        String getString()
+        private String getString()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
             if (text == null) {
@@ -822,7 +759,7 @@ public class QValue {
          * @throws IllegalStateException
          * @throws RepositoryException
          */
-        InputStream getStream()
+        private InputStream getStream()
             throws IllegalStateException, RepositoryException {
             // always return a 'fresh' stream
             if (file != null) {
@@ -832,14 +769,6 @@ public class QValue {
                 } catch (FileNotFoundException fnfe) {
                     throw new RepositoryException("file backing binary value not found",
                         fnfe);
-                }
-            } else if (fsResource != null) {
-                // this instance is backed by a resource in the virtual file system
-                try {
-                    return fsResource.getInputStream();
-                } catch (FileSystemException fse) {
-                    throw new RepositoryException(fsResource.getPath()
-                        + ": the specified resource does not exist", fse);
                 }
             } else {
                 return new ByteArrayInputStream(buffer);
@@ -865,14 +794,6 @@ public class QValue {
                     throw new RepositoryException("file backing binary value not found",
                         fnfe);
                 }
-            } else if (fsResource != null) {
-                // this instance is backed by a resource in the virtual file system
-                try {
-                    in = fsResource.getInputStream();
-                } catch (FileSystemException fse) {
-                    throw new RepositoryException(fsResource.getPath()
-                        + ": the specified resource does not exist", fse);
-                }
             } else {
                 // this instance is backed by an in-memory buffer
                 in = new ByteArrayInputStream(buffer);
@@ -891,7 +812,7 @@ public class QValue {
             }
         }
 
-        //-------------------------------------------< java.lang.Object overrides >
+        //-----------------------------------------------< java.lang.Object >---
         /**
          * Returns a string representation of this <code>BLOBFileValue</code>
          * instance. The string representation of a resource backed value is
@@ -905,9 +826,6 @@ public class QValue {
             if (file != null) {
                 // this instance is backed by a 'real' file
                 return file.toString();
-            } else if (fsResource != null) {
-                // this instance is backed by a resource in the virtual file system
-                return fsResource.toString();
             } else {
                 // this instance is backed by an in-memory buffer
                 return buffer.toString();
@@ -924,13 +842,11 @@ public class QValue {
             if (obj instanceof BLOBFileValue) {
                 BLOBFileValue other = (BLOBFileValue) obj;
                 return ((file == null ? other.file == null : file.equals(other.file))
-                    && (fsResource == null ? other.fsResource == null : fsResource.equals(other.fsResource))
                     && Arrays.equals(buffer, other.buffer));
             }
             return false;
         }
 
-        // TODO: obj. is not mutable. -> provide impl of hashCode.
         /**
          * Returns zero to satisfy the Object equals/hashCode contract.
          * This class is mutable and not meant to be used as a hash key.
