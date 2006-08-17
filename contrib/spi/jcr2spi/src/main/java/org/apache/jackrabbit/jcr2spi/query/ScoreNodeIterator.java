@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package org.apache.jackrabbit.jcr2spi.query;
-// DIFF JR: this class uses a different package than the jackrabbit original
 
 import javax.jcr.NodeIterator;
 

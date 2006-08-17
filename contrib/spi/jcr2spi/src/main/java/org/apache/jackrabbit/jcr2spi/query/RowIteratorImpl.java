@@ -174,7 +174,6 @@ class RowIteratorImpl implements RowIterator {
         /**
          * The underlying <code>Node</code> of this result row.
          */
-        // DIFF JR: use Node instead of NodeImpl
         private final Node node;
 
         /**
@@ -193,7 +192,6 @@ class RowIteratorImpl implements RowIterator {
          * @param score the score value for this result row
          * @param node  the underlying <code>Node</code> for this <code>Row</code>.
          */
-        // DIFF JR: use Node instead of NodeImpl
         private RowImpl(float score, Node node) {
             this.score = score;
             this.node = node;

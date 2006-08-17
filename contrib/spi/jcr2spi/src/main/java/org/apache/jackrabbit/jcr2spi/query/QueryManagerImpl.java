@@ -41,7 +41,6 @@ public class QueryManagerImpl implements QueryManager {
     /**
      * The namespace nsResolver for this query manager.
      */
-    // DIFF JR: added
     private final NamespaceResolver nsResolver;
 
     /**

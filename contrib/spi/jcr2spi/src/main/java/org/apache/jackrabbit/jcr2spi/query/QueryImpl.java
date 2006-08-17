@@ -55,7 +55,6 @@ public class QueryImpl implements Query {
     /**
      * The namespace nsResolver of the session that executes this query.
      */
-    // DIFF JR: added
     private final NamespaceResolver nsResolver;
 
     /**
@@ -85,10 +84,8 @@ public class QueryImpl implements Query {
     private Node node;
 
     /**
-     * The query handler for this query.
+     * The WorkspaceManager used to execute queries.
      */
-    // DIFF JR: use WorkspaceManager (-> RepositoryService) instead
-    //protected QueryHandler handler;
     private WorkspaceManager wspManager;
 
     /**
@@ -103,7 +100,6 @@ public class QueryImpl implements Query {
      * @param language   the language of the query statement.
      * @throws InvalidQueryException if the query is invalid.
      */
-    // DIFF JR: uses WorkspaceManager instead of QueryHandler
     public QueryImpl(Session session, NamespaceResolver nsResolver,
                      ItemManager itemMgr, ItemStateManager itemStateManager,
                      WorkspaceManager wspManager,
@@ -115,7 +111,7 @@ public class QueryImpl implements Query {
         this.statement = statement;
         this.language = language;
         this.wspManager = wspManager;
-        // DIFF JR: todo validate statement
+        // TODO: validate statement
         //this.query = handler.createExecutableQuery(session, itemMgr, statement, language);
     }
 
@@ -131,7 +127,6 @@ public class QueryImpl implements Query {
      * @throws RepositoryException   if another error occurs while reading from
      *                               the node.
      */
-    // DIFF JR: uses WorkspaceManager instead of QueryHandler
     public QueryImpl(Session session, NamespaceResolver nsResolver,
                      ItemManager itemMgr, ItemStateManager itemStateManager,
                      WorkspaceManager wspManager, Node node)
@@ -150,7 +145,7 @@ public class QueryImpl implements Query {
             }
             statement = node.getProperty(NameFormat.format(QName.JCR_STATEMENT, nsResolver)).getString();
             language = node.getProperty(NameFormat.format(QName.JCR_LANGUAGE, nsResolver)).getString();
-            // DIFF JR: todo validate statement
+            // TODO: validate statement
             //query = handler.createExecutableQuery(session, itemMgr, statement, language);
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e.getMessage(), e);

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package org.apache.jackrabbit.jcr2spi.query;
-// DIFF JR: this class uses a different package than the jackrabbit original
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
@@ -83,7 +82,6 @@ class QueryResultImpl implements QueryResult {
      */
     public String[] getColumnNames() throws RepositoryException {
         try {
-            // DIFF JR: obtain names from QueryInfo
             QName[] names = queryInfo.getColumnNames();
             String[] propNames = new String[names.length];
             for (int i = 0; i < names.length; i++) {
