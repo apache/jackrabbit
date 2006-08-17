@@ -502,7 +502,6 @@ public class ItemStateValidator {
         }
     }
 
-    // DIFF JR: copied from BatchedItemOperations
     /**
      * Checks if adding a child node called <code>nodeName</code> of node type
      * <code>nodeTypeName</code> to the given parent node is allowed in the

@@ -109,8 +109,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     private final HierarchyManager hierMgr;
     private final NamespaceResolver nsResolver;
-
-    private final IdFactory idFactory;
     private final ItemStateValidator validator;
 
     /**
@@ -133,8 +131,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         this.transientStateMgr = new TransientItemStateManager(idFactory, workspaceItemStateMgr);
         // DIFF JR: validator added
         this.validator = validator;
-        // DIFF JR: idFactory added
-        this.idFactory = idFactory;
 
         this.nsResolver = nsResolver;
 

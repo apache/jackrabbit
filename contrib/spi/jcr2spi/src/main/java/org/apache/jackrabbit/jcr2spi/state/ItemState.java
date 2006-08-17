@@ -90,7 +90,6 @@ public abstract class ItemState implements ItemStateListener {
      */
     final IdFactory idFactory;
 
-    // DIFF JR
     /**
      * The parent <code>NodeState</code> or <code>null</code> if this
      * instance represents the root node.

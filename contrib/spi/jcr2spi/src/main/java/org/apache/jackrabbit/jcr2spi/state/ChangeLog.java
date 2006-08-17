@@ -54,7 +54,6 @@ public class ChangeLog {
     private Set operations = new LinkedHashSet();
 
     //-----------------------------------------------< Inform the ChangeLog >---
-    // DIFF JR: method added
     /**
      * Add the given operation to the list of operations to be recorded within
      * the current update cycle of this ChangeLog.
@@ -112,12 +111,14 @@ public class ChangeLog {
     }
 
     //----------------------< Retrieve information present in the ChangeLog >---
-    // DIFF JR: method added
+    /**
+     *
+     * @return
+     */
     public boolean isEmpty() {
         return operations.isEmpty();
     }
 
-    // DIFF JR: method added
     /**
      *
      * @return
