@@ -97,7 +97,6 @@ public class ReferenceChangeTracker {
         return remapped;
     }
 
-    // DIFF JR: meth. signature: PropertyState instead of Object
     /**
      * Store the given reference property for later resolution.
      *
