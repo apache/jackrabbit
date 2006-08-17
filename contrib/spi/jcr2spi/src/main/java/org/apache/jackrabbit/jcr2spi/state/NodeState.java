@@ -44,6 +44,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.AbstractList;
+import java.util.NoSuchElementException;
+import java.util.ConcurrentModificationException;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -775,74 +777,7 @@ public class NodeState extends ItemState {
      */
     synchronized void reorderChildNodeEntries(NodeState insertNode, NodeState beforeNode)
         throws NoSuchItemStateException {
-        // validate existance of child node entries even if this has been
-        // checked within NodeImpl.
-        if (childNodeEntries.get(insertNode) == null) {
-            throw new NoSuchItemStateException("No such child node entry: " + insertNode.getNodeId());
-        }
-        if (beforeNode != null && childNodeEntries.get(insertNode) == null) {
-            throw new NoSuchItemStateException("No such child node entry: " + beforeNode.getNodeId());
-        }
-
-        NodeId insertNodeId = insertNode.getNodeId();
-        NodeId beforeNodeId = (beforeNode != null) ? beforeNode.getNodeId() : null;
-
-        // TODO: check again. Reorder with SPI-Id
-        ArrayList nodeEntries = new ArrayList(childNodeEntries);
-        int srcInd = -1, destInd = -1;
-        for (int i = 0; i < nodeEntries.size(); i++) {
-            ChildNodeEntry entry = (ChildNodeEntry) nodeEntries.get(i);
-            if (srcInd == -1) {
-                if (entry.getId().equals(insertNodeId)) {
-                    srcInd = i;
-                }
-            }
-            if (destInd == -1 && beforeNodeId != null) {
-                if (entry.getId().equals(beforeNodeId)) {
-                    destInd = i;
-                    if (srcInd != -1) {
-                        break;
-                    }
-                }
-            } else {
-                if (srcInd != -1) {
-                    break;
-                }
-            }
-        }
-
-        // check if resulting order would be different to current order
-        if (destInd == -1) {
-            if (srcInd == nodeEntries.size() - 1) {
-                // no change, we're done
-                return;
-            }
-        } else {
-            if ((destInd - srcInd) == Path.INDEX_DEFAULT) {
-                // no change, we're done
-                return;
-            }
-        }
-        // reorder list
-        if (destInd == -1) {
-            nodeEntries.add(nodeEntries.remove(srcInd));
-        } else {
-            if (srcInd < destInd) {
-                nodeEntries.add(destInd, nodeEntries.get(srcInd));
-                nodeEntries.remove(srcInd);
-            } else {
-                nodeEntries.add(destInd, nodeEntries.remove(srcInd));
-            }
-        }
-
-        // re-create child node entries
-        childNodeEntries.clear(); // TODO: any mre cleanup work to do? try some kind of merging?
-        for (Iterator it = nodeEntries.iterator(); it.hasNext(); ) {
-            ChildNodeEntry cne = (ChildNodeEntry) it.next();
-            childNodeEntries.add(cne.getName(), cne.getUUID());
-        }
-        // TODO: correct?
-        notifyNodesReplaced();
+        childNodeEntries.reorder(insertNode, beforeNode);
     }
 
     /**
@@ -1319,6 +1254,77 @@ public class NodeState extends ItemState {
         }
 
         /**
+         * Reorders an existing <code>NodeState</code> before another
+         * <code>NodeState</code>. If <code>beforeNode</code> is
+         * <code>null</code> <code>insertNode</code> is moved to the end of the
+         * child node entries.
+         *
+         * @param insertNode the node state to move.
+         * @param beforeNode the node state where <code>insertNode</code> is
+         *                   reordered to.
+         * @throws NoSuchItemStateException if <code>insertNode</code> or
+         *                                  <code>beforeNode</code> does not
+         *                                  have a <code>ChildNodeEntry</code>
+         *                                  in this <code>ChildNodeEntries</code>.
+         */
+        public void reorder(NodeState insertNode, NodeState beforeNode)
+                throws NoSuchItemStateException {
+            // the link node to move
+            LinkedEntries.LinkNode insertLN;
+            // the link node where insertLN is ordered before
+            LinkedEntries.LinkNode beforeLN = null;
+
+            Object insertObj = nameMap.get(insertNode.getName());
+            if (insertObj == null) {
+                // no matching child node entry
+                throw new NoSuchItemStateException(insertNode.getName().toString());
+            }
+            insertLN = getLinkNode(insertObj, insertNode);
+
+            // now retrieve LinkNode for beforeNode
+            if (beforeNode != null) {
+                Object beforeObj = nameMap.get(beforeNode.getName());
+                if (beforeObj == null) {
+                    throw new NoSuchItemStateException(beforeNode.getName().toString());
+                }
+                beforeLN = getLinkNode(beforeObj, beforeNode);
+            }
+
+            if (insertObj instanceof List) {
+                // adapt name lookup lists
+                List insertList = (List) insertObj;
+                if (beforeNode == null) {
+                    // simply move to end of list
+                    insertList.remove(insertLN);
+                    insertList.add(insertLN);
+                } else {
+                    // move based on position of beforeLN
+
+                    // count our same name siblings until we reach beforeLN
+                    int snsCount = 0;
+                    QName insertName = insertNode.getName();
+                    for (Iterator it = entries.linkNodeIterator(); it.hasNext(); ) {
+                        LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
+                        if (ln == beforeLN) {
+                            insertList.remove(insertLN);
+                            insertList.add(snsCount, insertLN);
+                            break;
+                        } else if (ln == insertLN) {
+                            // do not increment snsCount for node to reorder
+                        } else if (ln.getChildNodeEntry().getName().equals(insertName)) {
+                            snsCount++;
+                        }
+                    }
+                }
+            } else {
+                // no same name siblings -> nothing to do.
+            }
+
+            // reorder in linked list
+            entries.reorderNode(insertLN, beforeLN);
+        }
+
+        /**
          * Creates a <code>ChildNodeEntry</code> instance based on
          * <code>nodeName</code> and an optional <code>uuid</code>.
          *
@@ -1335,6 +1341,49 @@ public class NodeState extends ItemState {
                 return new UUIDReference(NodeState.this,
                         idFactory.createNodeId(uuid), isf, nodeName);
             }
+        }
+
+        /**
+         * Returns the matching <code>LinkNode</code> from a list or a single
+         * <code>LinkNode</code>.
+         *
+         * @param listOrLinkNode List of <code>LinkNode</code>s or a single
+         *                       <code>LinkNode</code>.
+         * @param nodeState      the <code>NodeState</code> which is the value
+         *                       of on of the <code>LinkNode</code>s.
+         * @return the matching <code>LinkNode</code>.
+         * @throws NoSuchItemStateException if none of the <code>LinkNode</code>s
+         *                                  matches.
+         */
+        private LinkedEntries.LinkNode getLinkNode(Object listOrLinkNode,
+                                                   NodeState nodeState)
+                throws NoSuchItemStateException {
+            if (listOrLinkNode instanceof List) {
+                // has same name sibling
+                for (Iterator it = ((List) listOrLinkNode).iterator(); it.hasNext();) {
+                    LinkedEntries.LinkNode n = (LinkedEntries.LinkNode) it.next();
+                    ChildNodeEntry cne = n.getChildNodeEntry();
+                    // only check available child node entries
+                    try {
+                        if (cne.isAvailable() && cne.getNodeState() == nodeState) {
+                            return n;
+                        }
+                    } catch (ItemStateException e) {
+                        log.warn("error retrieving a child node state", e);
+                    }
+                }
+            } else {
+                // single child node with this name
+                ChildNodeEntry cne = ((LinkedEntries.LinkNode) listOrLinkNode).getChildNodeEntry();
+                try {
+                    if (cne.isAvailable() && cne.getNodeState() == nodeState) {
+                        return (LinkedEntries.LinkNode) listOrLinkNode;
+                    }
+                } catch (ItemStateException e) {
+                    log.warn("error retrieving a child node state", e);
+                }
+            }
+            throw new NoSuchItemStateException(nodeState.getName().toString());
         }
 
         //--------------------------------------< unmodifiable Collection view >
@@ -1423,7 +1472,7 @@ public class NodeState extends ItemState {
      * An implementation of a linked list which provides access to the internal
      * LinkNode which links the entries of the list.
      */
-    private static class LinkedEntries extends AbstractLinkedList {
+    private static final class LinkedEntries extends AbstractLinkedList {
 
         /**
          * Adds a child node entry to this list.
@@ -1473,9 +1522,47 @@ public class NodeState extends ItemState {
         }
 
         /**
+         * Returns an iterator over all
+         * @return
+         */
+        Iterator linkNodeIterator() {
+            return new Iterator() {
+
+                private LinkNode next = ((LinkNode) header).getNextLinkNode();
+
+                private int expectedModCount = modCount;
+
+                public void remove() {
+                    throw new UnsupportedOperationException("remove");
+                }
+
+                public boolean hasNext() {
+                    if (expectedModCount != modCount) {
+                        throw new ConcurrentModificationException();
+                    }
+                    return next != header;
+                }
+
+                public Object next() {
+                    if (expectedModCount != modCount) {
+                        throw new ConcurrentModificationException();
+                    }
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
+                    }
+                    LinkNode n = next;
+                    next = next.getNextLinkNode();
+                    return n;
+                }
+            };
+        }
+
+        //-----------------------------------------------------------------------
+
+        /**
          * Extends the <code>AbstractLinkedList.Node</code>.
          */
-        private class LinkNode extends AbstractLinkedList.Node {
+        private final class LinkNode extends AbstractLinkedList.Node {
 
             protected LinkNode() {
                 super();
@@ -1498,7 +1585,13 @@ public class NodeState extends ItemState {
             public void remove() {
                 removeNode(this);
             }
+
+            /**
+             * @return the next LinkNode.
+             */
+            public LinkNode getNextLinkNode() {
+                return (LinkNode) super.getNextNode();
+            }
         }
     }
-
 }
