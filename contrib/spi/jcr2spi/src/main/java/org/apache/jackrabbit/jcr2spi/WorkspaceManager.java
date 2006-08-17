@@ -27,7 +27,6 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.WorkspaceItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -116,7 +115,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final RepositoryService service;
     private final SessionInfo sessionInfo;
 
-    // TODO: TO-BE-FIXED. Major refactoring of caching mechanism with change to SPI ids
     private final WorkspaceItemStateManager cache;
 
     private final NamespaceRegistryImpl nsRegistry;
@@ -136,20 +134,16 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private Set listeners = new HashSet();
 
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo) throws RepositoryException {
-        try {
-            this.service = service;
-            this.sessionInfo = sessionInfo;
+        this.service = service;
+        this.sessionInfo = sessionInfo;
 
-            ItemStateFactory isf = createItemStateFactory();
-            cache = new WorkspaceItemStateManager(isf, service.getIdFactory());
-            addEventListener(cache);
+        ItemStateFactory isf = createItemStateFactory();
+        cache = new WorkspaceItemStateManager(isf, service.getIdFactory());
+        addEventListener(cache);
 
-            nsRegistry = createNamespaceRegistry();
-            ntRegistry = createNodeTypeRegistry(nsRegistry);
-            externalChangeListener = createChangeListener();
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        }
+        nsRegistry = createNamespaceRegistry();
+        ntRegistry = createNodeTypeRegistry(nsRegistry);
+        externalChangeListener = createChangeListener();
     }
 
     public NamespaceRegistryImpl getNamespaceRegistryImpl() {
@@ -327,21 +321,23 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     /**
      * @inheritDoc
-     * @see ItemStateManager#getNodeReferences(NodeId)
+     * @see ItemStateManager#getReferingStates(NodeState)
+     * @param nodeState
      */
-    public NodeReferences getNodeReferences(NodeId id) throws NoSuchItemStateException, ItemStateException {
+    public Collection getReferingStates(NodeState nodeState) throws ItemStateException {
         synchronized (cache) {
-            return cache.getNodeReferences(id);
+            return cache.getReferingStates(nodeState);
         }
     }
 
     /**
      * @inheritDoc
-     * @see ItemStateManager#hasNodeReferences(NodeId)
+     * @see ItemStateManager#hasReferingStates(NodeState)
+     * @param nodeState
      */
-    public boolean hasNodeReferences(NodeId id) {
+    public boolean hasReferingStates(NodeState nodeState) {
         synchronized (cache) {
-            return cache.hasNodeReferences(id);
+            return cache.hasReferingStates(nodeState);
         }
     }
 
@@ -428,7 +424,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     //---------------------------------------------------------< XML import >---
-    public void importXml(NodeId parentId, InputStream xmlStream, int uuidBehaviour) throws RepositoryException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, ItemExistsException, VersionException {
+    public void importXml(NodeState parentState, InputStream xmlStream, int uuidBehaviour) throws RepositoryException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, ItemExistsException, VersionException {
+        // TODO check retrieval of nodeId
+        NodeId parentId = parentState.getNodeId();
         service.importXml(sessionInfo, parentId, xmlStream, uuidBehaviour);
     }
 
@@ -671,20 +669,32 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
 
         public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-            NodeId nId = operation.getNodeId();
-            NodeId[] versionIds = operation.getVersionIds();
-            NodeId[] vIds = new NodeId[versionIds.length];
-            for (int i = 0; i < vIds.length; i++) {
-                vIds[i] = versionIds[i];
+            NodeState nState = operation.getNodeState();
+            NodeState[] versionStates = operation.getVersionStates();
+            if (versionStates == null || versionStates.length == 0) {
+                throw new IllegalArgumentException("Restore must specify at least a singe version.");
             }
 
-            if (nId == null) {
+            NodeId[] vIds = new NodeId[versionStates.length];
+            for (int i = 0; i < vIds.length; i++) {
+                vIds[i] = versionStates[i].getNodeId();
+            }
+
+            if (nState == null) {
                 events = service.restore(sessionInfo, vIds, operation.removeExisting());
             } else {
                 if (vIds.length > 1) {
                     throw new IllegalArgumentException("Restore from a single node must specify but one single Version.");
                 }
-                events = service.restore(sessionInfo, nId, vIds[0], operation.removeExisting());
+
+                NodeId targetId;
+                Path relPath = operation.getRelativePath();
+                if (relPath != null) {
+                    targetId = getIdFactory().createNodeId(nState.getNodeId(), relPath);
+                } else {
+                    targetId = nState.getNodeId();
+                }
+                events = service.restore(sessionInfo, targetId, vIds[0], operation.removeExisting());
             }
         }
 

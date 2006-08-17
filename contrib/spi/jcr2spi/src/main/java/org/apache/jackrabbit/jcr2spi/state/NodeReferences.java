@@ -16,35 +16,25 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.spi.NodeId;
-
-import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * <code>NodeReferences</code>...
  */
-public interface NodeReferences {
+interface NodeReferences {
 
-    // TODO: probably not needed with spi -> remove
-    // DIFF JR: return NodeId instead of NodeReferenceId
     /**
-     * Returns the identifier of this node references object.
+     * Returns a flag indicating whether the <code>Node</code> identified by this
+     * <code>NodeReferences</code> object is referenced by any Property.
      *
-     * @return the id of this node references object.
+     * @return <code>true</code> if this object will return a non-empty iterator
+     * upon calls to {@link #iterator()}, <code>false</code> otherwise.
      */
-    public NodeId getId();
+    public boolean isEmpty();
 
     /**
-     * Returns a flag indicating whether this object holds any references
-     *
-     * @return <code>true</code> if this object holds references,
-     *         <code>false</code> otherwise
+     * @return an iterator over the <code>PropertyId</code>s refering to the
+     * node state identified by this <code>NodeReference</code>.
      */
-    public boolean hasReferences();
-
-    /**
-     * @return the collection of states referring to the node identified by this
-     * <code>NodeReference</code>.
-     */
-    public Collection getReferences();
+    public Iterator iterator();
 }

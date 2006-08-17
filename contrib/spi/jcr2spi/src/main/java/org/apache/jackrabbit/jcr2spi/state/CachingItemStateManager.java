@@ -20,12 +20,18 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.collections.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * <code>CachingItemStateManager</code> implements an {@link ItemStateManager}
@@ -118,21 +124,31 @@ public class CachingItemStateManager implements ItemStateManager {
 
     /**
      * @inheritDoc
-     * @see ItemStateManager#getNodeReferences(NodeId)
+     * @see ItemStateManager#getReferingStates(NodeState)
+     * @param nodeState
      */
-    public NodeReferences getNodeReferences(NodeId id)
-            throws NoSuchItemStateException, ItemStateException {
-        // TODO: implement
-        return null;
+    public Collection getReferingStates(NodeState nodeState) throws ItemStateException {
+        if (hasReferingStates(nodeState)) {
+            Set refStates = new HashSet();
+            Iterator it =  nodeState.getNodeReferences().iterator();
+            while (it.hasNext()) {
+                PropertyId pId = (PropertyId) it.next();
+                refStates.add(getItemState(pId));
+            }
+            return Collections.unmodifiableCollection(refStates);
+        } else {
+            return Collections.EMPTY_SET;
+        }
     }
 
     /**
      * @inheritDoc
-     * @see ItemStateManager#hasNodeReferences(NodeId)
+     * @see ItemStateManager#hasReferingStates(NodeState)
+     * @param nodeState
      */
-    public boolean hasNodeReferences(NodeId id) {
-        // TODO: caching implement
-        return false;
+    public boolean hasReferingStates(NodeState nodeState) {
+        NodeReferences nr = nodeState.getNodeReferences();
+        return nr != null && !nr.isEmpty();
     }
 
     //------------------------------< internal >--------------------------------

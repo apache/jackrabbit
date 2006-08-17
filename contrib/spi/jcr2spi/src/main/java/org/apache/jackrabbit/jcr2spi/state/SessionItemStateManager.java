@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.ItemId;
@@ -83,6 +82,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.io.InputStream;
 import java.io.IOException;
 
@@ -218,20 +218,26 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * {@inheritDoc}
-     * @see ItemStateManager#getNodeReferences(NodeId)
+     * Since node references cannot be managed within the transient space,
+     * this call is delegated to the workspace itemstate manager.
+     *
+     * @see ItemStateManager#getReferingStates(NodeState)
+     * @param nodeState
      */
-    public NodeReferences getNodeReferences(NodeId id)
-            throws NoSuchItemStateException, ItemStateException {
-
-        return workspaceItemStateMgr.getNodeReferences(id);
+    public Collection getReferingStates(NodeState nodeState) throws ItemStateException {
+        return workspaceItemStateMgr.getReferingStates(nodeState);
     }
 
     /**
      * {@inheritDoc}
-     * @see ItemStateManager#hasNodeReferences(NodeId)
+     * Since node references cannot be managed within the transient space,
+     * this call is delegated to the workspace itemstate manager.
+     * 
+     * @see ItemStateManager#hasReferingStates(NodeState)
+     * @param nodeState
      */
-    public boolean hasNodeReferences(NodeId id) {
-        return workspaceItemStateMgr.hasNodeReferences(id);
+    public boolean hasReferingStates(NodeState nodeState) {
+        return workspaceItemStateMgr.hasReferingStates(nodeState);
     }
 
     //------------------------------------------< UpdatableItemStateManager >---

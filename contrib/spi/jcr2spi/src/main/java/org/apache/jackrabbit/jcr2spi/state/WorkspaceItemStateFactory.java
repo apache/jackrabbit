@@ -33,6 +33,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Collections;
+import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * <code>WorkspaceItemStateFactory</code>...
@@ -133,6 +138,13 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
                 state.addPropertyName(pId.getQName());
             }
 
+            // If the uuid is not null, the state could include mix:referenceable.
+            // Therefore build a NodeReference instance and add it to the state.
+            if (uuid != null) {
+                PropertyId[] references = info.getReferences();
+                state.addNodeReferences(new NodeReferencesImpl(info.getId(), references));
+            }
+
             // copied from local-state-mgr TODO... check
             // register as listener
             // TODO check if needed
@@ -230,6 +242,68 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             return state;
         } catch (IOException e) {
             throw new ItemStateException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * <code>NodeReferences</code> represents the references (i.e. properties of
+     * type <code>REFERENCE</code>) to a particular node (denoted by its uuid).
+     */
+    private class NodeReferencesImpl implements NodeReferences {
+
+        /**
+         * Identifier of this <code>NodeReferences</code> instance. Since the
+         * id of target state consists of a UUID and contains not relative
+         * path, the id will be stable and can be stored.
+         */
+        private NodeId nodeId;
+
+        /**
+         * Private constructor
+         *
+         * @param nodeId
+         * @param referenceIds
+         */
+        private NodeReferencesImpl(NodeId nodeId, PropertyId[] referenceIds) {
+            this.nodeId = nodeId;
+
+            // TODO: modify in order to make usage of the references returned
+            // with NodeInfo that was just retrieved and implement a notification
+            // mechanism that updates this NodeReference object if references
+            // are modified.
+        }
+
+        //-------------------------------------------------< NodeReferences >---
+        /**
+         * @see NodeReferences#isEmpty()
+         */
+        public boolean isEmpty() {
+            try {
+                NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
+                return info.getReferences().length > 0;
+            } catch (RepositoryException e) {
+                log.error("Internal error.",e);
+                return false;
+            }
+        }
+
+        /**
+         * @see NodeReferences#iterator()
+         */
+        public Iterator iterator() {
+            try {
+                NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
+                if (info.getReferences().length > 0) {
+                    Set referenceIds = new HashSet();
+                    referenceIds.addAll(Arrays.asList(info.getReferences()));
+                    return Collections.unmodifiableSet(referenceIds).iterator();
+                } else {
+                    return Collections.EMPTY_SET.iterator();
+                }
+            } catch (RepositoryException e) {
+                log.error("Internal error.",e);
+                return Collections.EMPTY_SET.iterator();
+            }
         }
     }
 }

@@ -162,10 +162,8 @@ public class SessionImpl implements Session, ManagerProvider {
         validator = new ItemStateValidator(workspace.getNodeTypeRegistry(), this);
 
         // build the state mananger
-        // DIFF JACKRABBIT: itemStateMgr = createSessionItemStateManager(wsp.getSessionItemStateManager());
         itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager(), nsMappings);
 
-        // DIFF JACKRABBIT: itemManager = createItemManager(itemStateMgr, hierMgr);
         itemManager = createItemManager(getHierarchyManager());
     }
 

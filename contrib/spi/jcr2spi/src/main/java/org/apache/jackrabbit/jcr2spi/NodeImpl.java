@@ -32,7 +32,6 @@ import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.NodeReferences;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
@@ -573,10 +572,8 @@ public class NodeImpl extends ItemImpl implements Node {
         checkStatus();
         try {
             ItemStateManager itemStateMgr = session.getItemStateManager();
-            if (itemStateMgr.hasNodeReferences(getNodeId())) {
-                NodeReferences refs = itemStateMgr.getNodeReferences(getNodeId());
-                // refs.getReferences() returns a list of Property states
-                Collection refStates = refs.getReferences();
+            if (itemStateMgr.hasReferingStates(getNodeState())) {
+                Collection refStates = itemStateMgr.getReferingStates(getNodeState());
                 return new LazyItemIterator(itemMgr, refStates);
             } else {
                 // there are no references, return empty iterator
@@ -849,7 +846,7 @@ public class NodeImpl extends ItemImpl implements Node {
             NodeState versionState = ((NodeImpl)version).getNodeState();
             session.getVersionManager().resolveMergeConflict(getNodeState(), versionState, done);
         } else {
-            throw new RepositoryException("Incompatible Version object :" + version);
+            throw new RepositoryException("Incompatible Version object: " + version.getPath());
         }
     }
 
@@ -1002,11 +999,8 @@ public class NodeImpl extends ItemImpl implements Node {
     public void restore(Version version, boolean removeExisting) throws VersionException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
         checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         checkSessionHasPendingChanges();
-        checkIsWritable();
-        checkIsVersionable();
-        checkIsLocked();
 
-        restore(getNodeId(), version, removeExisting);
+        restore(this, null, version, removeExisting);
     }
 
     /**
@@ -1015,44 +1009,58 @@ public class NodeImpl extends ItemImpl implements Node {
     public void restore(Version version, String relPath, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
         checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         checkSessionHasPendingChanges();
+
         // additional checks are performed with subsequest calls.
         if (hasNode(relPath)) {
-            // node at 'relPath' exists -> call restore on that node
+            // node at 'relPath' exists -> call restore on the target Node
             getNode(relPath).restore(version, removeExisting);
         } else {
             // node at 'relPath' does not yet exist -> build the NodeId
             Path nPath = getQPath(relPath);
             Path parentPath = nPath.getAncestor(1);
-            NodeId nId;
             if (itemMgr.itemExists(parentPath)) {
-                // If the would-be parent of the location relPath is actually a
-                // property, or if a node type restriction would be violated,
-                // then a ConstraintViolationException is thrown.
                 Item parent = itemMgr.getItem(parentPath);
                 if (parent.isNode()) {
                     try {
                         Path relQPath = parentPath.computeRelativePath(nPath);
-                        NodeId parentId = ((NodeImpl)parent).getNodeId();
-                        nId = session.getIdFactory().createNodeId(parentId, relQPath);
+                        NodeImpl parentNode = ((NodeImpl)parent);
+                        // call the restore
+                        restore(parentNode, relQPath, version, removeExisting);
                     } catch (MalformedPathException e) {
                         // should not occur
                         throw new RepositoryException(e);
                     }
                 } else {
+                    // the item at parentParentPath is Property
                     throw new ConstraintViolationException("Cannot restore to a parent presenting a property (relative path = '" + relPath + "'");
                 }
             } else {
                 // although the node itself must not exist, is direct ancestor must.
                 throw new PathNotFoundException("Cannot restore to relative path '" + relPath + ": Ancestor does not exist.");
             }
-            restore(nId, version, removeExisting);
         }
+    }
+
+    /**
+     * @see Node#restoreByLabel(String, boolean)
+     */
+    public void restoreByLabel(String versionLabel, boolean removeExisting) throws VersionException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
+        checkSessionHasPendingChanges();
+
+        // check for version-enabled and lock are performed with subsequent calls.
+        Version v = getVersionHistory().getVersionByLabel(versionLabel);
+        if (v == null) {
+            throw new VersionException("No version for label " + versionLabel + " found.");
+        }
+        restore(this, null, v, removeExisting);
     }
 
     /**
      * Common internal restore method for the various Node#restore calls.
      *
-     * @param nodeId
+     * @param targetNode
+     * @param relQPath
      * @param version
      * @param removeExisting
      * @throws PathNotFoundException
@@ -1064,27 +1072,43 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws InvalidItemStateException
      * @throws RepositoryException
      */
-    private void restore(NodeId nodeId, Version version, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        if (version instanceof VersionImpl) {
-            NodeId versionId = ((NodeImpl)version).getNodeId();
-            session.getVersionManager().restore(nodeId, versionId, removeExisting);
-        } else {
-            throw new RepositoryException("Unexpected error: Failed to retrieve a valid ID for the given version " + version.getPath());
-        }
-    }
+    private void restore(NodeImpl targetNode, Path relQPath, Version version, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+        targetNode.checkIsWritable();
+        targetNode.checkIsLocked();
 
-    /**
-     * @see Node#restoreByLabel(String, boolean)
-     */
-    public void restoreByLabel(String versionLabel, boolean removeExisting) throws VersionException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
-        checkSessionHasPendingChanges();
-        // check for version-enabled and lock are performed with subsequent calls.
-        Version v = getVersionHistory().getVersionByLabel(versionLabel);
-        if (v == null) {
-            throw new VersionException("No version for label " + versionLabel + " found.");
+
+        if (relQPath == null) {
+            /* restore target already exists. */
+            // target must be versionable
+            targetNode.checkIsVersionable();
+
+            VersionHistory vH = targetNode.getVersionHistory();
+            // version must be a version of the target node
+            if (!vH.isSame(version.getContainingHistory())) {
+                throw new VersionException("Version " + version + " does not correspond to the restore target.");
+            }
+            // version must not be the root version
+            if (vH.getRootVersion().isSame(version)) {
+                throw new VersionException("Attempt to restore root version.");
+            }
+        } else {
+            /* If no node exists at relPath then a VersionException is thrown if
+               the parent node is not checked out. */
+            if (!targetNode.isCheckedOut()) {
+                throw new VersionException("Parent " + targetNode.safeGetJCRPath()
+                    + " for non-existing restore target '"
+                    + LogUtil.safeGetJCRPath(relQPath, session.getNamespaceResolver())
+                    + "' must be checked out.");
+            }
+            // NOTE: check for nodetype constraint violation is left to the 'server'
         }
-        restore(getNodeId(), v, removeExisting);
+
+        if (version instanceof VersionImpl) {
+            NodeState versionState = ((NodeImpl)version).getNodeState();
+            session.getVersionManager().restore(targetNode.getNodeState(), relQPath, versionState, removeExisting);
+        } else {
+            throw new RepositoryException("Incompatible Version object: " + version.getPath());
+        }
     }
 
     /**
