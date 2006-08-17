@@ -44,8 +44,6 @@ import java.util.Map;
  * <p/>
  * Instances of <code>EffectiveNodeType</code> are immutable.
  */
-// DIFF JR: extract interface
-// DIFF JR: rearrangement of methods
 public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     private static Logger log = LoggerFactory.getLogger(EffectiveNodeTypeImpl.class);
 
@@ -75,8 +73,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         namedItemDefs = new HashMap();
         unnamedItemDefs = new ArrayList();
     }
-
-    // DIFF JR: remove create method that takes ntName instead of definition
 
     /**
      * Factory method: creates an effective node type

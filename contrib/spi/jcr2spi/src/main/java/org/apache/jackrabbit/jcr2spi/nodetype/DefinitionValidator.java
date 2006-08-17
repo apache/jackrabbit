@@ -41,7 +41,6 @@ import java.io.IOException;
 /**
  * <code>DefinitionValidator</code>...
  */
-// DIFF JR: class added (methods extracted from NodeTypeRegistry)
 class DefinitionValidator {
 
     private static Logger log = LoggerFactory.getLogger(DefinitionValidator.class);

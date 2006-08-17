@@ -62,17 +62,14 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
     private final Set nodeDefs;
 
     /**
-     * DIFF JACKRABBIT: persisting nodetypes is delegated to a separate object
+     * Object used to persist new nodetypes and modified nodetype definitions.
      */
     private final NodeTypeStorage storage;
 
     /**
-     * DIFF JACKRABBIT: validation is delegated to extra class
+     * Class used to validate NodeType definitions
      */
     private final DefinitionValidator validator;
-
-
-    // DIFF JR: checkAutoCreatePropHasDefault is set directely on calling validator.validate
 
     /**
      * Listeners (soft references)
@@ -194,7 +191,6 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
         return getEffectiveNodeType(ntNames, entCache, ntdMap);
     }
 
-    // DIFF JR: method private: EffectiveNodeTypeCache must not be exposed in interface
     /**
      *
      * @param ntName
@@ -233,7 +229,6 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry {
         }
     }
 
-    // DIFF JR: method private: EffectiveNodeTypeCache must not be exposed in interface
     /**
      * @param ntNames
      * @param anEntCache

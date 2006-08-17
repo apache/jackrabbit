@@ -53,7 +53,7 @@ public abstract class ValueConstraint {
 
     public static final ValueConstraint[] EMPTY_ARRAY = new ValueConstraint[0];
 
-    final String qualifiedDefinition;
+    private final String qualifiedDefinition;
 
     protected ValueConstraint(String qualifiedDefinition) {
         this.qualifiedDefinition = qualifiedDefinition;
@@ -67,6 +67,9 @@ public abstract class ValueConstraint {
      * <code>NameConstraint</code>, <code>PathConstraint</code> and
      * <code>ReferenceConstraint</code>) use the given <code>nsResolver</code>
      * to reflect the current mapping in the returned value.
+     * In other words: subclasses, that need to make a conversion to JCR value
+     * must overwrite this and return a value that has all qualified names
+     * and path elements resolved.
      *
      * @return the definition of this constraint.
      * @see #getQualifiedDefinition()
@@ -75,8 +78,9 @@ public abstract class ValueConstraint {
         return qualifiedDefinition;
     }
 
-    // DIFF JACKRABBIT: added method
     /**
+     * By default the qualified definition is the same as the JCR definition.
+     *
      * @return the qualified definition String
      * @see #getDefinition(NamespaceResolver)
      */
@@ -93,7 +97,7 @@ public abstract class ValueConstraint {
     abstract void check(QValue value) throws ConstraintViolationException, RepositoryException;
 
 
-    //-------------------------------------------< java.lang.Object overrides >
+    //-----------------------------------------< java.lang.Object overrides >---
     public boolean equals(Object other) {
         if (other == this) {
             return true;
@@ -114,8 +118,7 @@ public abstract class ValueConstraint {
         return qualifiedDefinition.hashCode();
     }
 
-    //--------------------------------------------------------------------------
-    // DIFF JACKRABBIT: method added
+    //-----------------------------------< static factory and check methods >---
     /**
      * Create a new <code>ValueConstraint</code> from the String representation.
      * Note, that the definition must be in the qualified format in case the type
@@ -177,7 +180,7 @@ public abstract class ValueConstraint {
                                          NamespaceResolver nsResolver)
             throws InvalidConstraintException {
         if (definition == null) {
-            throw new IllegalArgumentException("illegal definition (null)");
+            throw new IllegalArgumentException("Illegal definition (null) for ValueConstraint.");
         }
         switch (type) {
             case PropertyType.STRING:
@@ -206,12 +209,10 @@ public abstract class ValueConstraint {
                 return new ReferenceConstraint(definition, nsResolver);
 
             default:
-                throw new IllegalArgumentException("unknown/unsupported target type for constraint: "
-                        + PropertyType.nameFromValue(type));
+                throw new IllegalArgumentException("Unknown/unsupported target type for constraint: " + PropertyType.nameFromValue(type));
         }
     }
 
-    // DIFF JACKRABBIT: moved from EffectiveNodeType
     /**
      * Tests if the value constraints defined in the property definition
      * <code>pd</code> are satisfied by the the specified <code>values</code>.
@@ -265,6 +266,7 @@ public abstract class ValueConstraint {
     }
 }
 
+//---------------------------------------------< Subclass BooleanConstraint >---
 /**
  * <code>BooleanConstraint</code> ...
  */
@@ -287,19 +289,19 @@ class BooleanConstraint extends ValueConstraint {
         }
     }
 
-    private void check(boolean bool) throws ConstraintViolationException {
-        if (bool != reqBool) {
-            throw new ConstraintViolationException("'" + bool + "' does not satisfy the constraint '" + qualifiedDefinition + "'");
-        }
-    }
-
+    /**
+     * @see ValueConstraint#check(QValue)
+     */
     void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '"  + qualifiedDefinition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"  + getQualifiedDefinition() + "'");
         }
         switch (value.getType()) {
             case PropertyType.BOOLEAN:
-                check(Boolean.valueOf(value.getString()).booleanValue());
+                boolean b = Boolean.valueOf(value.getString()).booleanValue();
+                if (b != reqBool) {
+                    throw new ConstraintViolationException("'" + b + "' does not satisfy the constraint '" + getQualifiedDefinition() + "'");
+                }
                 return;
 
             default:
@@ -311,6 +313,7 @@ class BooleanConstraint extends ValueConstraint {
     }
 }
 
+//----------------------------------------------< Subclass StringConstraint >---
 /**
  * <code>StringConstraint</code> ...
  */
@@ -330,23 +333,20 @@ class StringConstraint extends ValueConstraint {
         }
     }
 
-    private void check(String text) throws ConstraintViolationException {
-        if (text == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + qualifiedDefinition + "'");
-        }
-        Matcher matcher = pattern.matcher(text);
-        if (!matcher.matches()) {
-            throw new ConstraintViolationException("'" + text  + "' does not satisfy the constraint '" + qualifiedDefinition + "'");
-        }
-    }
-
+    /**
+     * @see ValueConstraint#check(QValue)
+     */
     void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + qualifiedDefinition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
         }
         switch (value.getType()) {
             case PropertyType.STRING:
-                check(value.toString());
+                String text = value.toString();
+                Matcher matcher = pattern.matcher(text);
+                if (!matcher.matches()) {
+                    throw new ConstraintViolationException("'" + text  + "' does not satisfy the constraint '" + getQualifiedDefinition() + "'");
+                }
                 return;
 
             default:
@@ -357,6 +357,7 @@ class StringConstraint extends ValueConstraint {
     }
 }
 
+//---------------------------------------------< Subclass NumericConstraint >---
 /**
  * <code>NumericConstraint</code> ...
  */
@@ -422,35 +423,19 @@ class NumericConstraint extends ValueConstraint {
         }
     }
 
-    private void check(Double number) throws ConstraintViolationException {
-        if (number == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '"
-                    + qualifiedDefinition + "'");
-        }
-        check(number.doubleValue());
-    }
-
-    private void check(Long number) throws ConstraintViolationException {
-        if (number == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '"
-                    + qualifiedDefinition + "'");
-        }
-        check(number.doubleValue());
-    }
-
     private void check(double number) throws ConstraintViolationException {
         if (lowerLimit != null) {
             if (lowerInclusive) {
                 if (number < lowerLimit.doubleValue()) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                 }
             } else {
                 if (number <= lowerLimit.doubleValue()) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                 }
             }
         }
@@ -459,22 +444,25 @@ class NumericConstraint extends ValueConstraint {
                 if (number > upperLimit.doubleValue()) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                 }
             } else {
                 if (number >= upperLimit.doubleValue()) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                 }
             }
         }
     }
 
+    /**
+     * @see ValueConstraint#check(QValue)
+     */
     void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
             throw new ConstraintViolationException("null value does not satisfy the constraint '"
-                    + qualifiedDefinition + "'");
+                    + getQualifiedDefinition() + "'");
         }
         switch (value.getType()) {
             case PropertyType.LONG:
@@ -503,6 +491,7 @@ class NumericConstraint extends ValueConstraint {
     }
 }
 
+//------------------------------------------------< Subclass DateConstraint >---
 /**
  * <code>DateConstraint</code> ...
  */
@@ -576,20 +565,20 @@ class DateConstraint extends ValueConstraint {
 
     private void check(Calendar cal) throws ConstraintViolationException {
         if (cal == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + qualifiedDefinition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
         }
         if (lowerLimit != null) {
             if (lowerInclusive) {
                 if (cal.getTimeInMillis() < lowerLimit.getTimeInMillis()) {
                     throw new ConstraintViolationException(cal
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                 }
             } else {
                 if (cal.getTimeInMillis() <= lowerLimit.getTimeInMillis()) {
                     throw new ConstraintViolationException(cal
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                 }
             }
         }
@@ -598,21 +587,24 @@ class DateConstraint extends ValueConstraint {
                 if (cal.getTimeInMillis() > upperLimit.getTimeInMillis()) {
                     throw new ConstraintViolationException(cal
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                 }
             } else {
                 if (cal.getTimeInMillis() >= upperLimit.getTimeInMillis()) {
                     throw new ConstraintViolationException(cal
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                 }
             }
         }
     }
 
+    /**
+     * @see ValueConstraint#check(QValue)
+     */
     void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + qualifiedDefinition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
         }
         switch (value.getType()) {
             case PropertyType.DATE:
@@ -628,6 +620,7 @@ class DateConstraint extends ValueConstraint {
     }
 }
 
+//------------------------------------------------< Subclass PathConstraint >---
 /**
  * <code>PathConstraint</code> ...
  */
@@ -661,6 +654,12 @@ class PathConstraint extends ValueConstraint {
         }
     }
 
+    /**
+     * Uses {@link PathFormat#format(Path, NamespaceResolver)} to convert the
+     * qualified <code>Path</code> into a JCR path.
+     *
+     * @see ValueConstraint#getDefinition(NamespaceResolver)
+     */
     public String getDefinition(NamespaceResolver nsResolver) {
         try {
             String p = PathFormat.format(path, nsResolver);
@@ -673,7 +672,7 @@ class PathConstraint extends ValueConstraint {
             }
         } catch (NoPrefixDeclaredException npde) {
             // should never get here, return raw definition as fallback
-            return qualifiedDefinition;
+            return getQualifiedDefinition();
         }
     }
 
@@ -681,14 +680,18 @@ class PathConstraint extends ValueConstraint {
      * Returns the String representation of the path.
      *
      * @return String representation of the path.
+     * @see ValueConstraint#getQualifiedDefinition()
      */
     public String getQualifiedDefinition() {
         return path.toString();
     }
 
+    /**
+     * @see ValueConstraint#check(QValue)
+     */
     void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + qualifiedDefinition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
         }
         switch (value.getType()) {
             case PropertyType.PATH:
@@ -706,20 +709,20 @@ class PathConstraint extends ValueConstraint {
                         if (!p0.isAncestorOf(p1)) {
                             throw new ConstraintViolationException(p
                                 + " does not satisfy the constraint '"
-                                + qualifiedDefinition + "'");
+                                + getQualifiedDefinition() + "'");
                         }
                     } catch (MalformedPathException e) {
                         // can't compare relative with absolute path
                         throw new ConstraintViolationException(p
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                     }
                 } else {
                     // exact match required
                     if (!p0.equals(p1)) {
                         throw new ConstraintViolationException(p
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                     }
                 }
                 return;
@@ -733,11 +736,13 @@ class PathConstraint extends ValueConstraint {
     }
 }
 
+//------------------------------------------------< Subclass NameConstraint >---
 /**
  * <code>NameConstraint</code> ...
  */
 class NameConstraint extends ValueConstraint {
-    final QName name;
+
+    private final QName name;
 
     NameConstraint(String qualifiedDefinition) {
         super(qualifiedDefinition);
@@ -765,12 +770,18 @@ class NameConstraint extends ValueConstraint {
         }
     }
 
+    /**
+     * Uses {@link NameFormat#format(QName, NamespaceResolver)} to convert the
+     * qualified <code>QName</code> into a JCR name.
+     *
+     * @see ValueConstraint#getDefinition(NamespaceResolver)
+     */
     public String getDefinition(NamespaceResolver nsResolver) {
         try {
             return NameFormat.format(name, nsResolver);
         } catch (NoPrefixDeclaredException npde) {
             // should never get here, return raw definition as fallback
-            return qualifiedDefinition;
+            return getQualifiedDefinition();
         }
     }
 
@@ -778,14 +789,18 @@ class NameConstraint extends ValueConstraint {
      * Returns the String representation of the qualified name
      *
      * @return String representation of the qualified name
+     * @see ValueConstraint#getQualifiedDefinition()
      */
     public String getQualifiedDefinition() {
         return name.toString();
     }
 
+    /**
+     * @see ValueConstraint#check(QValue)
+     */
     void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + qualifiedDefinition + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
         }
         switch (value.getType()) {
             case PropertyType.NAME:
@@ -793,7 +808,7 @@ class NameConstraint extends ValueConstraint {
                 if (!name.equals(n)) {
                     throw new ConstraintViolationException(n
                             + " does not satisfy the constraint '"
-                            + qualifiedDefinition + "'");
+                            + getQualifiedDefinition() + "'");
                 }
                 return;
 
@@ -806,11 +821,13 @@ class NameConstraint extends ValueConstraint {
     }
 }
 
+//-------------------------------------------< Subclass ReferenceConstraint >---
 /**
  * <code>ReferenceConstraint</code> ...
  */
 class ReferenceConstraint extends ValueConstraint {
-    final QName ntName;
+
+    private final QName ntName;
 
     ReferenceConstraint(String qualifiedDefinition) {
         super(qualifiedDefinition);
@@ -837,12 +854,18 @@ class ReferenceConstraint extends ValueConstraint {
         }
     }
 
+    /**
+     * Uses {@link NameFormat#format(QName, NamespaceResolver)} to convert the
+     * qualified nodetype name into a JCR name.
+     *
+     * @see ValueConstraint#getDefinition(NamespaceResolver)
+     */
     public String getDefinition(NamespaceResolver nsResolver) {
         try {
             return NameFormat.format(ntName, nsResolver);
         } catch (NoPrefixDeclaredException npde) {
             // should never get here, return raw definition as fallback
-            return qualifiedDefinition;
+            return getQualifiedDefinition();
         }
     }
 
@@ -855,13 +878,16 @@ class ReferenceConstraint extends ValueConstraint {
         return ntName.toString();
     }
 
+    /**
+     * @see ValueConstraint#check(QValue)
+     */
     void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + qualifiedDefinition + "'");
+            throw new ConstraintViolationException("Null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
         }
         switch (value.getType()) {
             case PropertyType.REFERENCE:
-                // @todo check REFERENCE value constraint (requires a session)
+                // TODO check REFERENCE value constraint (requires a session)
                 log.warn("validation of REFERENCE constraint is not yet implemented");
                 return;
 
