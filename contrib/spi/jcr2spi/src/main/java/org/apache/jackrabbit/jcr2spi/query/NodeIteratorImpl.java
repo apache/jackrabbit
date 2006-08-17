@@ -33,7 +33,6 @@ import javax.jcr.Item;
 import java.util.NoSuchElementException;
 import java.util.Iterator;
 
-// DIFF JR: this class uses a different package than the jackrabbit original
 /**
  * Implements a {@link javax.jcr.NodeIterator} returned by
  * {@link javax.jcr.query.QueryResult#getNodes()}.
@@ -79,7 +78,6 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
      * @param queryInfo the query result.
      * @throws RepositoryException if an error occurs while creating a node iterator.
      */
-    // DIFF JR: use QueryInfo instead of UUID String[]
     public NodeIteratorImpl(ItemManager itemMgr, ItemStateManager itemStateMgr,
                             QueryInfo queryInfo) throws RepositoryException {
         this.itemMgr = itemMgr;
