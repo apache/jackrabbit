@@ -812,12 +812,31 @@ public class NodeState extends ItemState {
         }
     }
 
-    void addNodeReferences(NodeReferences references) {
-        this.references = references;
+    /**
+     * Return the <code>NodeReferences</code> present on this state or
+     * <code>null</code>.
+     *
+     * @return references
+     */
+    NodeReferences getNodeReferences() {
+        if (hasOverlayedState()) {
+            return ((NodeState)getOverlayedState()).references;
+        } else {
+            return references;
+        }
     }
 
-    NodeReferences getNodeReferences() {
-        return references;
+    /**
+     * Set the <code>NodeReferences</code> for this state.
+     *
+     * @param references
+     */
+    void setNodeReferences(NodeReferences references) {
+        if (isTransient()) {
+            // TODO: check again
+            throw new UnsupportedOperationException("Cannot set references to a transient node state.");
+        }
+        this.references = references;
     }
 
     /**
