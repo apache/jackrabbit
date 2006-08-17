@@ -114,7 +114,6 @@ public class NodeImpl extends ItemImpl implements Node {
         if (session.getNodeTypeManager().hasNodeType(nodeTypeName)) {
             primaryTypeName = nodeTypeName;
         } else {
-            // DIFF JR: jr defines nt:unstructured as fallback.
             // should not occur. Since nodetypes are defined by the 'server'
             // its not possible to determine a fallback nodetype that is
             // always available.
@@ -767,7 +766,6 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsVersionable();
         checkHasPendingChanges();
         checkIsLocked();
-        // DIFF JR
         if (isCheckedOut()) {
             session.getVersionManager().checkin(getNodeState());
         } else {
@@ -783,7 +781,6 @@ public class NodeImpl extends ItemImpl implements Node {
     public void checkout() throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
         checkIsVersionable();
         checkIsLocked();
-        // DIFF JR
         if (!isCheckedOut()) {
             session.getVersionManager().checkout(getNodeState());
         } else {
@@ -1166,12 +1163,10 @@ public class NodeImpl extends ItemImpl implements Node {
         checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
         checkStatus();
 
-        // DIFF JR: swich check
         if (isNew() || !isNodeType(QName.MIX_LOCKABLE)) {
             // a node that is new or not lockable never holds a lock
             return false;
         } else {
-            // DIFF JR: no separate LockManager.holdsLock
             LockManager lMgr = session.getLockManager();
             return (lMgr.isLocked(getNodeState()) && lMgr.getLock(getNodeState()).getNode().isSame(this));
         }
@@ -1378,7 +1373,6 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
-    // DIFF JR: instead of 'getORCreate' only create...
     /**
      * Create a new single valued property
      *
@@ -1408,7 +1402,6 @@ public class NodeImpl extends ItemImpl implements Node {
         return createProperty(qName, targetType, def, new QValue[] {qvs});
     }
 
-    // DIFF JR: instead of 'getORCreate' only create...
     /**
      * Create a new multivalue property
      *
