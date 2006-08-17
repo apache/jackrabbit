@@ -23,6 +23,7 @@ import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
@@ -128,13 +129,16 @@ public class SessionImporter implements Importer, SessionListener {
             }
             importTarget = (NodeState) itemState;
 
+            // check if import target is writable, not-locked and checked-out.
+            int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+            session.getValidator().checkIsWritable(importTarget, options);
+
             refTracker = new ReferenceChangeTracker();
             parents = new Stack();
             parents.push(importTarget);
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getNamespaceResolver()));
         }
-        // DIFF JR: remove check for overall writability on target-node.
     }
 
     //-----------------------------------------------------------< Importer >---
@@ -402,7 +406,7 @@ public class SessionImporter implements Importer, SessionListener {
                 if (conflicting.getStatus() == ItemState.STATUS_NEW) {
                     // assume this property has been imported as well;
                     // rename conflicting property
-                    // @todo use better reversible escaping scheme to create unique name
+                    // TODO: use better reversible escaping scheme to create unique name
                     QName newName = new QName(nodeInfo.getName().getNamespaceURI(), nodeInfo.getName().getLocalName() + "_");
                     if (parent.hasPropertyName(newName)) {
                         newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
