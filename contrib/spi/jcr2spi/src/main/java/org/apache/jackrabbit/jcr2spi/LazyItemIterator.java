@@ -142,8 +142,9 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
      * Always returns -1
      */
     public long getSize() {
-        // DIFF JR always return -1, since original list may contains items that
-        // are not accessible due to access constraints
+        // Always returns -1, since the original list may contains items that
+        // are not accessible due to access constraints. -1 seems preferable
+        // to returning a size that is not correct.
         return UNDEFINED_SIZE;
     }
 

@@ -106,7 +106,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     public String getPath() throws RepositoryException {
         checkStatus();
         try {
-            // DIFF JR: use nsResolver
             return PathFormat.format(getQPath(), session.getNamespaceResolver());
         } catch (NoPrefixDeclaredException npde) {
             // should never get here...
@@ -249,7 +248,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         checkStatus();
 
         if (keepChanges) {
-            /** todo FIXME should reset Item#status field to STATUS_NORMAL
+            /** TODO should reset Item#status field to STATUS_NORMAL
              * of all descendent non-transient instances; maybe also
              * have to reset stale ItemState instances */
             return;
@@ -472,7 +471,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     }
 
     //------------------------------------------------------< check methods >---
-    // DIFF TO JACKRABBIT: consistenly naming of 'checkMethods'
     /**
      * Performs a sanity check on this item and the associated session.
      *
@@ -590,7 +588,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
 
     /**
-     * DIFF JACKRABBIT
      * Failsafe conversion of internal <code>Path</code> to JCR path for use in
      * error messages etc.
      *

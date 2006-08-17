@@ -98,20 +98,4 @@ public class RepositoryImpl implements Repository {
     public Session login() throws LoginException, NoSuchWorkspaceException, RepositoryException {
 	return login(null, null);
     }
-
-
-    //--------------------------------------------< implementation specific >---
-    /*
-     * DIFF JACKRABBIT:
-     *
-     * - workspaces are not read from config any more.
-     * - therefore no workspace Infos
-     * - NamespaceRegistry/NodeTypeRegistry can only be loaded after login
-     *   since they also have to obey the access-control and transaction
-     *   mechanisms.
-     * - SharedItemStateManager retrieved by 'getWorkspaceStateManager(String)'
-     *   has not relevance any more (correct?)
-     * - only the UpdatableItemStateManager 'local' statemanager retrieved from
-     *   the workspace exists. it depends on the SessionInfo.
-     */
 }

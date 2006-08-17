@@ -494,7 +494,6 @@ public class PropertyImpl extends ItemImpl implements Property {
         return getPropertyState().getValues();
     }
 
-    // DIFF JR: extracted from JR setValue-methods
     /**
      *
      * @param value
@@ -523,7 +522,6 @@ public class PropertyImpl extends ItemImpl implements Property {
         setInternalValues(new QValue[]{qValue}, requiredType);
     }
 
-    // DIFF JACKRABBIT: protected void internalSetValue(QValue[] values, int type)
     /**
      *
      * @param qValues
@@ -535,7 +533,6 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check for null value
         if (qValues == null) {
             // setting a property to null removes it automatically
-            // DIFF JR: ((NodeImpl)getParent()).removeChildProperty
             remove();
             return;
         }
@@ -548,9 +545,9 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
-     * DIFF JACKRABBIT (not present in JR)
+     * Private helper to access the <code>PropertyState</code> directly
      *
-     * @return
+     * @return state for this Property
      */
     private PropertyState getPropertyState() {
         return (PropertyState) getItemState();
