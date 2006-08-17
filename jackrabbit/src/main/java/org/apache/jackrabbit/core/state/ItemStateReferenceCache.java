@@ -37,7 +37,7 @@ import java.io.PrintStream;
  * of the primary cache.</li>
  * <li>an <code>ItemStateCache</code> implementing a custom eviction policy and
  * serving as the secondary (or auxiliary) cache; entries that are automatically
- * flusehd from this secondary cache through its eviction policy (LRU, etc.)
+ * flushed from this secondary cache through its eviction policy (LRU, etc.)
  * will be indirectly flushed from the primary (reference) cache by the garbage
  * collector if they are thus rendered weakly reachable.
  * </li>
