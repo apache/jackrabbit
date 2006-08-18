@@ -25,7 +25,7 @@ import org.apache.jackrabbit.spi.IdFactory;
  * <code>PathElementReference</code> implements a {@link ChildNodeEntry} based
  * on a {@link Path.PathElement}.
  */
-public class PathElementReference extends ChildNodeReference implements ChildNodeEntry {
+class PathElementReference extends ChildNodeReference implements ChildNodeEntry {
 
     /**
      * IdFactory to create an ItemId based on the parent NodeId
@@ -41,8 +41,8 @@ public class PathElementReference extends ChildNodeReference implements ChildNod
      * @param isf       the item state factory to create the node state.
      * @param idFactory the <code>IdFactory</code> to create new ItemIds
      */
-    public PathElementReference(NodeState parent, QName name,
-                                ItemStateFactory isf, IdFactory idFactory) {
+    PathElementReference(NodeState parent, QName name,
+                         ItemStateFactory isf, IdFactory idFactory) {
         super(parent, name, isf);
         this.idFactory = idFactory;
     }
@@ -55,8 +55,8 @@ public class PathElementReference extends ChildNodeReference implements ChildNod
      * @param isf    the item state factory to re-create the node state.
      * @param idFactory the <code>IdFactory</code> to create new ItemIds
      */
-    public PathElementReference(NodeState child, ItemStateFactory isf,
-                                IdFactory idFactory) {
+    PathElementReference(NodeState child, ItemStateFactory isf,
+                         IdFactory idFactory) {
         super(child, isf);
         this.idFactory = idFactory;
     }

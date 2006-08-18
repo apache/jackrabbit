@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.IdFactory;
 
 /**
  * <code>ChildNodeReference</code> implements common functionality for child
@@ -38,14 +39,33 @@ abstract class ChildNodeReference extends ChildItemReference implements ChildNod
     }
 
     /**
+     * Creates a new <code>ChildNodeEntry</code> for an already initialized
+     * child node state. The child node must already be attached to its parent.
+     *
+     * @param child     the child node state.
+     * @param isf       the item state factory to re-create node states.
+     * @param idFactory the <code>IdFactory</code> to create new ItemIds
+     */
+    public static ChildNodeEntry create(NodeState child, ItemStateFactory isf,
+                                        IdFactory idFactory) {
+        ChildNodeEntry cne;
+        if (child.getUUID() == null) {
+            cne = new PathElementReference(child, isf, idFactory);
+        } else {
+            cne = new UUIDReference(child, isf);
+        }
+        return cne;
+    }
+
+    /**
      * Creates a new <code>ChildNodeReference</code> with the given parent
      * <code>NodeState</code> and an already initialized child node state.
      *
      * @param child  the child node state.
      * @param isf    the item state factory to re-create the node state.
      */
-    public ChildNodeReference(NodeState child, ItemStateFactory isf) {
-        super(child.getParent(), child, null, isf); // TODO: get name from child instead of null
+    protected ChildNodeReference(NodeState child, ItemStateFactory isf) {
+        super(child.getParent(), child, child.getName(), isf);
     }
 
     /**

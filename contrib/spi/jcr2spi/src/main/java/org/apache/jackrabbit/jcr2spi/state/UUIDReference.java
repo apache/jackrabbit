@@ -42,7 +42,7 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
      * @throws IllegalArgumentException if <code>childId</code> has a relative
      *                                  path component.
      */
-    public UUIDReference(NodeState parent, NodeId childId, ItemStateFactory isf, QName name) {
+    UUIDReference(NodeState parent, NodeId childId, ItemStateFactory isf, QName name) {
         super(parent, name, isf);
         if (childId.getRelativePath() == null) {
             throw new IllegalArgumentException("childId must not contain a relative path");
@@ -59,7 +59,7 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
      * @throws IllegalArgumentException if the id of <code>child</code> has a
      *                                  relative path component.
      */
-    public UUIDReference(NodeState child, ItemStateFactory isf) {
+    UUIDReference(NodeState child, ItemStateFactory isf) {
         super(child, isf);
         this.childId = child.getNodeId();
         if (childId.getRelativePath() == null) {

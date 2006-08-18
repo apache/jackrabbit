@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.commons.collections.list.AbstractLinkedList;
 import org.apache.commons.collections.iterators.UnmodifiableIterator;
-import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.name.Path;
@@ -109,14 +108,15 @@ public class NodeState extends ItemState {
     private HashMap properties = new HashMap();
 
     /**
+     * Map of properties which are deleted and have been re-created as transient
+     * property with the same name.
+     */
+    private HashMap propertiesInAttic = new HashMap();
+
+    /**
      * NodeReferences for this node state.
      */
     private NodeReferences references;
-
-    /**
-     * Listeners (weak references)
-     */
-    private final transient Collection listeners = new WeakIdentityCollection(3);
 
     /**
      * The <code>ItemStateFactory</code> which is used to create new
@@ -178,11 +178,12 @@ public class NodeState extends ItemState {
             NodeState nodeState = (NodeState) state;
             name = nodeState.name;
             uuid = nodeState.uuid;
-            parent = nodeState.parent; // TODO: parent from wrong ism layer
+            //parent = nodeState.parent; // TODO: parent from wrong ism layer
             nodeTypeName = nodeState.nodeTypeName;
             mixinTypeNames = nodeState.mixinTypeNames;
             def = nodeState.def;
             // re-create property references
+            propertiesInAttic.clear();
             properties.clear(); // TODO: any more cleanup work to do? try some kind of merging?
             Iterator it = nodeState.getPropertyNames().iterator();
             while (it.hasNext()) {
@@ -482,9 +483,7 @@ public class NodeState extends ItemState {
      */
     synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
                                                   String uuid) {
-        ChildNodeEntry entry = childNodeEntries.add(nodeName, uuid);
-        notifyNodeAdded(entry);
-        return entry;
+        return childNodeEntries.add(nodeName, uuid);
     }
 
     /**
@@ -502,14 +501,22 @@ public class NodeState extends ItemState {
         if (child.getParent() != this) {
             throw new IllegalArgumentException("This NodeState is not the parent of child");
         }
-        ChildNodeEntry cne;
-        if (uuid != null) {
-            cne = new UUIDReference(child, isf);
-        } else {
-            cne = new PathElementReference(child, isf, idFactory);
-        }
+        ChildNodeEntry cne = ChildNodeReference.create(child, isf, idFactory);
         childNodeEntries.add(cne);
         markModified();
+    }
+
+    /**
+     * Renames this node to <code>newName</code>.
+     *
+     * @param newName the new name for this node state.
+     * @throws IllegalStateException if this is the root node.
+     */
+    private synchronized void rename(QName newName) {
+        if (parent == null) {
+            throw new IllegalStateException("root node cannot be renamed");
+        }
+        name = newName;
     }
 
     /**
@@ -556,9 +563,14 @@ public class NodeState extends ItemState {
             if (propState.isValid()) {
                 propState.remove();
             } else {
-                // already removed
+                // remove invalid property state from properties map
+                it.remove();
             }
         }
+        // move all properties from attic back to properties map
+        properties.putAll(propertiesInAttic);
+        propertiesInAttic.clear();
+
         // then remove child node entries
         for (Iterator it = childNodeEntries.iterator(); it.hasNext(); ) {
             NodeState nodeState = ((ChildNodeEntry) it.next()).getNodeState();
@@ -636,8 +648,24 @@ public class NodeState extends ItemState {
             throw new IllegalArgumentException("This NodeState is not the parent of propState");
         }
         QName propertyName = propState.getQName();
-        if (properties.containsKey(propertyName)) {
-            throw new ItemExistsException(propertyName.toString());
+        // check for an existing property
+        PropertyReference ref = (PropertyReference) properties.get(propertyName);
+        if (ref != null) {
+            PropertyState existingState = null;
+            try {
+                existingState = ref.getPropertyState();
+            } catch (ItemStateException e) {
+                // probably does not exist anymore, remove from properties map
+                properties.remove(propertyName);
+            }
+            if (existingState != null) {
+                if (existingState.getStatus() == STATUS_EXISTING_REMOVED) {
+                    // move to attic
+                    propertiesInAttic.put(propertyName, ref);
+                } else {
+                    throw new ItemExistsException(propertyName.toString());
+                }
+            }
         }
         properties.put(propertyName, new PropertyReference(propState, isf, idFactory));
         markModified();
@@ -771,13 +799,22 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * Reorders the child node <code>insertNode</code> before the child node
+     * <code>beforeNode</code>.
      *
-     * @param insertNode
-     * @param beforeNode
+     * @param insertNode the child node to reorder.
+     * @param beforeNode the child node where to insert the node before. If
+     *                   <code>null</code> the child node <code>insertNode</code>
+     *                   is moved to the end of the child node entries.
+     * @throws NoSuchItemStateException if <code>insertNode</code> or
+     *                                  <code>beforeNode</code> is not a child
+     *                                  node of this <code>NodeState</code>.
      */
     synchronized void reorderChildNodeEntries(NodeState insertNode, NodeState beforeNode)
         throws NoSuchItemStateException {
         childNodeEntries.reorder(insertNode, beforeNode);
+        // mark this state as modified
+        markModified();
     }
 
     /**
@@ -790,23 +827,15 @@ public class NodeState extends ItemState {
      * @throws RepositoryException if the given child state is not a child
      * of this node state.
      */
-    // TODO: review. move with SPI Ids
     synchronized void moveChildNodeEntry(NodeState newParent, NodeState childState, QName newName)
         throws RepositoryException {
-        // rename only
         ChildNodeEntry oldEntry = childNodeEntries.remove(childState);
         if (oldEntry != null) {
-            if (newParent == this) {
-                ChildNodeEntry newEntry = childNodeEntries.add(name, childState.getUUID());
-                notifyNodeAdded(newEntry);
-                notifyNodeRemoved(oldEntry);
-            } else {
-                notifyNodeRemoved(oldEntry);
-                // re-parent target node
-                childState.setParent(newParent);
-                // add child node entry to new parent
-                newParent.addChildNodeEntry(newName, childState.getUUID());
-            }
+            childState.rename(newName);
+            // re-parent target node
+            childState.setParent(newParent);
+            // add child node entry to new parent
+            newParent.childNodeEntries.add(childState);
         } else {
             throw new RepositoryException("Unexpected error: Child state to be renamed does not exist.");
         }
@@ -852,90 +881,6 @@ public class NodeState extends ItemState {
     int getChildNodeIndex(QName name, ChildNodeEntry cne) {
         List sns = childNodeEntries.get(name);
         return sns.indexOf(cne) + 1;
-    }
-
-    //---------------------------------------------------< Listener support >---
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * If the listener passed is at the same time a <code>NodeStateListener</code>
-     * we add it to our list of specialized listeners.
-     */
-    public void addListener(ItemStateListener listener) {
-        if (listener instanceof NodeStateListener) {
-            synchronized (listeners) {
-                if (listeners.contains(listener)) {
-                    log.debug("listener already registered: " + listener);
-                    // no need to add to call ItemState.addListener()
-                    return;
-                } else {
-                    listeners.add(listener);
-                }
-            }
-        }
-        super.addListener(listener);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * If the listener passed is at the same time a <code>NodeStateListener</code>
-     * we remove it from our list of specialized listeners.
-     */
-    public void removeListener(ItemStateListener listener) {
-        if (listener instanceof NodeStateListener) {
-            synchronized (listeners) {
-                listeners.remove(listener);
-            }
-        }
-        super.removeListener(listener);
-    }
-
-    //----------------------------------------------< Listener notification >---
-    /**
-     * Notify the listeners that a child node entry has been added
-     */
-    private void notifyNodeAdded(ChildNodeEntry added) {
-        synchronized (listeners) {
-            Iterator iter = listeners.iterator();
-            while (iter.hasNext()) {
-                NodeStateListener l = (NodeStateListener) iter.next();
-                if (l != null) {
-                    l.nodeAdded(this, added.getName(), added.getIndex(), added.getId());
-                }
-            }
-        }
-    }
-
-    /**
-     * Notify the listeners that the child node entries have been replaced
-     */
-    private void notifyNodesReplaced() {
-        synchronized (listeners) {
-            Iterator iter = listeners.iterator();
-            while (iter.hasNext()) {
-                NodeStateListener l = (NodeStateListener) iter.next();
-                if (l != null) {
-                    l.nodesReplaced(this);
-                }
-            }
-        }
-    }
-
-    /**
-     * Notify the listeners that a child node entry has been removed
-     */
-    private void notifyNodeRemoved(ChildNodeEntry removed) {
-        synchronized (listeners) {
-            Iterator iter = listeners.iterator();
-            while (iter.hasNext()) {
-                NodeStateListener l = (NodeStateListener) iter.next();
-                if (l != null) {
-                    l.nodeRemoved(this, removed.getName(),
-                            removed.getIndex(), removed.getId());
-                }
-            }
-        }
     }
 
     //------------------------------------------------------< inner classes >---
@@ -1155,6 +1100,19 @@ public class NodeState extends ItemState {
             } else {
                 nameMap.put(nodeName, ln);
             }
+        }
+
+        /**
+         * Adds a <code>childNode</code> to the end of the list.
+         *
+         * @param childNode the <code>NodeState</code> to add.
+         * @return the <code>ChildNodeEntry</code> which was created for
+         *         <code>childNode</code>.
+         */
+        ChildNodeEntry add(NodeState childNode) {
+            ChildNodeEntry cne = ChildNodeReference.create(childNode, isf, idFactory);
+            add(cne);
+            return cne;
         }
 
         /**
