@@ -26,7 +26,7 @@ import java.lang.ref.WeakReference;
  * @see ChildNodeReference
  * @see PropertyReference
  */
-abstract class ChildItemReference {
+public abstract class ChildItemReference {
 
     /**
      * Cached weak reference to the target NodeState.

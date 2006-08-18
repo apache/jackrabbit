@@ -39,14 +39,11 @@ public class PathResolver {
      *
      * @param start   the starting point.
      * @param relPath the path to resolve.
-     * @throws IllegalArgumentException if relPath is absolute or not normalized
-     *                                  or starts with a parent ('..') path
-     *                                  element.
+     * @throws IllegalArgumentException if not normalized or starts with a
+     *                                  parent ('..') path element.
      */
     private PathResolver(ItemState start, Path relPath) {
-        if (relPath.isAbsolute()
-                || !relPath.isNormalized()
-                || relPath.getElement(0).denotesParent()) {
+        if (!relPath.isNormalized() || relPath.getElement(0).denotesParent()) {
             throw new IllegalArgumentException("path must be relative and must " +
                     "not contain parent path elements");
         }
@@ -110,6 +107,15 @@ public class PathResolver {
         NodeState state = (NodeState) start;
         for (int i = 0; i < relPath.getLength(); i++) {
             Path.PathElement elem = relPath.getElement(i);
+            // check for root element
+            if (elem.denotesRoot()) {
+                if (start.getParent() != null) {
+                    throw new NoSuchItemStateException(relPath.toString());
+                } else {
+                    continue;
+                }
+            }
+
             // first try to resolve node
             if (state.hasChildNodeEntry(elem.getName(), elem.getNormalizedIndex())) {
                 state = state.getChildNodeEntry(elem.getName(),

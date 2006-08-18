@@ -56,7 +56,7 @@ public class NodeState extends ItemState {
     /**
      * A current element Path instance.
      */
-    private static final Path CURRENT_PATH;
+    public static final Path CURRENT_PATH;
 
     static {
         try {
@@ -166,8 +166,8 @@ public class NodeState extends ItemState {
                         int initialStatus, boolean isTransient,
                         ItemStateFactory isf, IdFactory idFactory) {
         super(overlayedState, parent, initialStatus, isTransient, idFactory);
-        pull();
         this.isf = isf;
+        pull();
     }
 
     /**
@@ -190,7 +190,7 @@ public class NodeState extends ItemState {
                 addPropertyName((QName) it.next());
             }
             // re-create child node entries
-            childNodeEntries.clear(); // TODO: any mre cleanup work to do? try some kind of merging?
+            childNodeEntries.removeAll(); // TODO: any mre cleanup work to do? try some kind of merging?
             it = nodeState.getChildNodeEntries().iterator();
             while (it.hasNext()) {
                 ChildNodeEntry cne = (ChildNodeEntry) it.next();
@@ -268,7 +268,7 @@ public class NodeState extends ItemState {
             }
         } else {
             // root node
-            return idFactory.createNodeId((String) null, CURRENT_PATH);
+            return idFactory.createNodeId((String) null, Path.ROOT);
         }
         // TODO: replace with ItemStateException instead of error.
         throw new InternalError("Unable to retrieve NodeId for NodeState");
