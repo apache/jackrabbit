@@ -75,6 +75,9 @@ import java.util.List;
  */
 public class ItemManagerImpl implements Dumpable, ItemManager {
 
+    // TODO: needs to be fixed, either by modifying interface or impl. items can be created from item states obtained from WorkspaceManager.
+    // -->> see LockManagerImpl
+
     private static Logger log = LoggerFactory.getLogger(ItemManagerImpl.class);
 
     private final SessionImpl session;
