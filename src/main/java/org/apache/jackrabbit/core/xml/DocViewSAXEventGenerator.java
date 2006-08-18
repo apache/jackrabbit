@@ -189,8 +189,6 @@ public class DocViewSAXEventGenerator extends AbstractSAXEventGenerator {
             // (already processed in leavingProperties(NodeImpl, int)
             return;
         }
-        // encode node name to make sure it's a valid xml name
-        name = ISO9075.encode(name);
         // element name
         String elemName;
         if (node.getDepth() == 0) {
