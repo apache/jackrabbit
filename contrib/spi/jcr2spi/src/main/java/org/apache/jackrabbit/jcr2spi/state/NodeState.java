@@ -590,6 +590,101 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * Reverts all property and child node states that belong to this
+     * <code>NodeState</code> and finally reverts this <code>NodeState</code>.
+     *
+     * @inheritDoc
+     * @see ItemState#revert(Set)
+     */
+    public void revert(Set affectedItemStates) {
+        if (overlayedState == null) {
+            throw new IllegalStateException("revert cannot be called on workspace state");
+        }
+        // copy to new list, when a property is reverted it may call this node
+        // state to remove itself from properties.
+        List props = new ArrayList(properties.values());
+        for (Iterator it = props.iterator(); it.hasNext(); ) {
+            PropertyReference ref = (PropertyReference) it.next();
+            if (ref.isResolved()) {
+                try {
+                    PropertyState propState = ref.getPropertyState();
+                    propState.revert(affectedItemStates);
+                } catch (ItemStateException e) {
+                    // should not happen because PropertyReference is resolved
+                    log.warn("Unable to get PropertyState from resolved PropertyReference");
+                }
+            } else {
+                // not touched or accessed before
+            }
+        }
+
+        // revert property states in attic
+        props.clear();
+        props.addAll(propertiesInAttic.values());
+        for (Iterator it = props.iterator(); it.hasNext(); ) {
+            PropertyReference ref = (PropertyReference) it.next();
+            try {
+                PropertyState propState = ref.getPropertyState();
+                propState.revert(affectedItemStates);
+            } catch (ItemStateException e) {
+                // probably stale destroyed property
+                // cleaned up when propertiesInAttic is cleared
+            }
+        }
+        propertiesInAttic.clear();
+
+        // now revert child node states
+        List children = new ArrayList(childNodeEntries);
+        for (Iterator it = children.iterator(); it.hasNext(); ) {
+            ChildNodeReference ref = (ChildNodeReference) it.next();
+            if (ref.isResolved()) {
+                try {
+                    NodeState nodeState = ref.getNodeState();
+                    nodeState.revert(affectedItemStates);
+                } catch (ItemStateException e) {
+                    // should not happen because ChildNodeReference is resolved
+                    log.warn("Unable to get NodeState from resolved ChildNodeReference");
+                }
+            } else {
+                // not touched or accessed before
+            }
+        }
+
+        // now revert this node state
+        switch (status) {
+            case STATUS_EXISTING:
+                // nothing to do
+                break;
+            case STATUS_EXISTING_MODIFIED:
+            case STATUS_EXISTING_REMOVED:
+            case STATUS_STALE_MODIFIED:
+                // revert state from overlayed
+                pull();
+                setStatus(STATUS_EXISTING);
+                affectedItemStates.add(this);
+                break;
+            case STATUS_NEW:
+                // set removed
+                setStatus(STATUS_REMOVED);
+                // remove from parent
+                parent.childNodeStateRemoved(this);
+                affectedItemStates.add(this);
+                break;
+            case STATUS_REMOVED:
+                // shouldn't happen actually, because a 'removed' state is not
+                // accessible anymore
+                log.warn("trying to revert an already removed node state");
+                parent.childNodeStateRemoved(this);
+                break;
+            case STATUS_STALE_DESTROYED:
+                // overlayed state does not exist anymore
+                parent.childNodeStateRemoved(this);
+                affectedItemStates.add(this);
+                break;
+        }
+    }
+
+    /**
      * Determines if there is a property entry with the specified
      * <code>QName</code>.
      *

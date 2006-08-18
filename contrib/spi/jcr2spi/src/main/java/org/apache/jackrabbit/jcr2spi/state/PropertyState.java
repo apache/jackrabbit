@@ -32,6 +32,8 @@ import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
+
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
  */
@@ -105,6 +107,47 @@ public class PropertyState extends ItemState {
             setStatus(STATUS_EXISTING_REMOVED);
         }
         parent.propertyStateRemoved(this);
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemState#revert(Set)
+     */
+    public void revert(Set affectedItemStates) {
+        if (overlayedState == null) {
+            throw new IllegalStateException("revert cannot be called on workspace state");
+        }
+        switch (status) {
+            case STATUS_EXISTING:
+                // nothing to do
+                break;
+            case STATUS_EXISTING_MODIFIED:
+            case STATUS_EXISTING_REMOVED:
+            case STATUS_STALE_MODIFIED:
+                // revert state from overlayed
+                pull();
+                setStatus(STATUS_EXISTING);
+                affectedItemStates.add(this);
+                break;
+            case STATUS_NEW:
+                // set removed
+                setStatus(STATUS_REMOVED);
+                // and remove from parent
+                parent.propertyStateRemoved(this);
+                affectedItemStates.add(this);
+                break;
+            case STATUS_REMOVED:
+                // shouldn't happen actually, because a 'removed' state is not
+                // accessible anymore
+                log.warn("trying to revert an already removed property state");
+                parent.propertyStateRemoved(this);
+                break;
+            case STATUS_STALE_DESTROYED:
+                // overlayed does not exist anymore
+                parent.propertyStateRemoved(this);
+                affectedItemStates.add(this);
+                break;
+        }
     }
 
     /**
