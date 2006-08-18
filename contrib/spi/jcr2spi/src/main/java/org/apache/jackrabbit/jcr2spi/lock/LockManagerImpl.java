@@ -84,6 +84,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         Node lhNode;
         // NOTE: Node must be retrieved from the given NodeState and not from
         // the overlayed workspace nodestate. See below.
+        // TODO: don't rely on state being obtained from SessionISM. see ItemManagerImpl
         Item item = itemManager.getItem(nodeState);
         if (item.isNode()) {
             lhNode = (Node) item;
@@ -365,7 +366,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
             // Lock has never been access -> build the lock object
             // retrieve lock holding node. note that this may fail if the session
             // does not have permission to see this node.
+            // TODO: TO_BE_FIXED. not correct to build Item from state obtained from WorkspaceISM. see ItemManagerImpl
             Item lockHoldingNode = itemManager.getItem(lockHoldingState);
+
             // TODO: we don;t know if lock is session scoped -> set flag to false
             // TODO: ev. add 'isSessionScoped' to RepositoryService lock-call.
             LockImpl l = new LockImpl(lockHoldingState, (Node)lockHoldingNode, false);
@@ -543,7 +546,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
                     unlocked();
                     break;
                 }
-                // TODO: JSR 283 defines that Lock-Owner is reset upon moved lt
             }
         }
 
