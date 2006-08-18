@@ -112,11 +112,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private final ItemStateValidator validator;
 
     /**
-     * The root node state or <code>null</code> if it hasn't been retrieved yet.
-     */
-    private NodeState rootNodeState;
-
-    /**
      * Creates a new <code>SessionItemStateManager</code> instance.
      *
      * @param workspaceItemStateMgr
@@ -154,8 +149,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @see ItemStateManager#getRootState()
      */
     public NodeState getRootState() throws ItemStateException {
-        // TODO
-        return null;
+        // always retrieve from transientStateMgr
+        return transientStateMgr.getRootState();
     }
 
     /**
@@ -165,29 +160,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        // first check if the specified item has been transiently removed
-        if (transientStateMgr.getAttic().hasItemState(id)) {
-            /**
-             * check if there's new transient state for the specified item
-             * (e.g. if a property with name 'x' has been removed and a new
-             * property with same name has been created);
-             * this will throw a NoSuchItemStateException if there's no new
-             * transient state
-             */
-            return transientStateMgr.getItemState(id);
+        ItemState itemState = transientStateMgr.getItemState(id);
+        // check status of ItemState. Transient ISM also returns removed ItemStates
+        if (itemState.isValid()) {
+            return itemState;
+        } else {
+            throw new NoSuchItemStateException(id.toString());
         }
-
-        // check if there's transient state for the specified item
-        if (transientStateMgr.hasItemState(id)) {
-            return transientStateMgr.getItemState(id);
-        }
-
-        // check if there's persistent state for the specified item
-        if (workspaceItemStateMgr.hasItemState(id)) {
-            return workspaceItemStateMgr.getItemState(id);
-        }
-
-        throw new NoSuchItemStateException(id.toString());
     }
 
     /**
@@ -195,21 +174,19 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @see ItemStateManager#hasItemState(ItemId)
      */
     public boolean hasItemState(ItemId id) {
-        // first check if the specified item has been transiently removed
-        if (transientStateMgr.getAttic().hasItemState(id)) {
-            /**
-             * check if there's new transient state for the specified item
-             * (e.g. if a property with name 'x' has been removed and a new
-             * property with same name has been created);
-             */
-            return transientStateMgr.hasItemState(id);
-        }
-        // check if there's transient state for the specified item
+        // first check if the specified item exists at all in the transient ISM
         if (transientStateMgr.hasItemState(id)) {
-            return true;
+            // retrieve item and check state
+            try {
+                ItemState itemState = transientStateMgr.getItemState(id);
+                if (itemState.isValid()) {
+                    return true;
+                }
+            } catch (ItemStateException e) {
+                // has been removed in the meantime
+            }
         }
-        // check if there's persistent state for the specified item
-        return workspaceItemStateMgr.hasItemState(id);
+        return false;
     }
 
     /**
@@ -267,8 +244,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      *         <code>false</code> otherwise.
      */
     public boolean hasPendingChanges() {
-        // DIFF JACKRABBIT: return transientStateMgr.hasAnyItemStates();
-        return transientStateMgr.getEntriesCount() > 0;
+        return transientStateMgr.hasPendingChanges();
     }
 
     /**
@@ -469,8 +445,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @return an iterator over descendant transient item state instances
      */
     private Iterator getDescendantTransientItemStates(NodeState parent) {
-        // DIFF JACKRABBIT: if (!transientStateMgr.hasAnyItemStates()) {
-        if (transientStateMgr.getEntriesCount() == 0) {
+        if (!transientStateMgr.hasPendingChanges()) {
             return Collections.EMPTY_LIST.iterator();
         }
 
@@ -481,7 +456,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // the depth is used as array index
         List[] la = new List[10];
         try {
-            Iterator iter = transientStateMgr.getEntries();
+            Iterator iter = transientStateMgr.getModifiedOrAddedItemStates();
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 // determine relative depth: > 0 means it's a descendant
@@ -560,7 +535,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     private Iterator getDescendantTransientItemStatesInAttic(NodeState parent) {
         // DIFF JACKRABBIT: if (!transientStateMgr.hasAnyItemStatesInAttic()) {
-        if (!transientStateMgr.hasEntriesInAttic()) {
+        if (!transientStateMgr.hasDeletedItemStates()) {
             return Collections.EMPTY_LIST.iterator();
         }
 
@@ -575,7 +550,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // the depth is used as array index
         List[] la = new List[10];
         try {
-            Iterator iter = transientStateMgr.getEntriesInAttic();
+            Iterator iter = transientStateMgr.getDeletedItemStates();
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 // determine relative depth: > 0 means it's a descendant
