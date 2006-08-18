@@ -114,7 +114,7 @@ public class PropertyState extends ItemState {
         synchronized (state) {
             PropertyState propState = (PropertyState) state;
             name = propState.name;
-            parent = propState.parent;
+            //parent = propState.parent; // TODO: parent from wrong layer
             type = propState.type;
             def = propState.def;
             values = propState.values;
