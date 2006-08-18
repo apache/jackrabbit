@@ -25,9 +25,6 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -75,11 +72,6 @@ public class NodeState extends ItemState {
     private QName nodeTypeName;
 
     /**
-     * the names of this node's mixin types
-     */
-    private QName[] mixinTypeNames = new QName[0];
-
-    /**
      * The UUID of this node state or <code>null</code> if this node state
      * cannot be identified with a uuid.
      */
@@ -93,7 +85,12 @@ public class NodeState extends ItemState {
     /**
      * Definition of this node state
      */
-    private QNodeDefinition def;
+    private QNodeDefinition definition;
+
+    /**
+     * the names of this node's mixin types
+     */
+    private QName[] mixinTypeNames = new QName[0];
 
     /**
      * insertion-ordered collection of ChildNodeEntry objects
@@ -132,21 +129,23 @@ public class NodeState extends ItemState {
      *                      this node state cannot be identified with a UUID.
      * @param parent        the parent of this NodeState
      * @param nodeTypeName  node type of this node
+     * @param definition
      * @param initialStatus the initial status of the node state object
      * @param isTransient   flag indicating whether this state is transient or
      *                      not.
      * @param isf           the item state factory responsible for creating node
      *                      states.
      * @param idFactory     the <code>IdFactory</code> to create new id
-     *                      instance.
      */
     protected NodeState(QName name, String uuid, NodeState parent,
-                        QName nodeTypeName, int initialStatus, boolean isTransient,
+                        QName nodeTypeName, QNodeDefinition definition,
+                        int initialStatus, boolean isTransient,
                         ItemStateFactory isf, IdFactory idFactory) {
         super(parent, initialStatus, isTransient, idFactory);
         this.name = name;
         this.uuid = uuid;
         this.nodeTypeName = nodeTypeName;
+        this.definition = definition;
         this.isf = isf;
     }
 
@@ -181,7 +180,7 @@ public class NodeState extends ItemState {
             //parent = nodeState.parent; // TODO: parent from wrong ism layer
             nodeTypeName = nodeState.nodeTypeName;
             mixinTypeNames = nodeState.mixinTypeNames;
-            def = nodeState.def;
+            definition = nodeState.definition;
             // re-create property references
             propertiesInAttic.clear();
             properties.clear(); // TODO: any more cleanup work to do? try some kind of merging?
@@ -224,18 +223,6 @@ public class NodeState extends ItemState {
      */
     public final boolean isNode() {
         return true;
-    }
-
-    /**
-     * Sets the the parent <code>NodeState</code>.
-     *
-     * @param parent the parent <code>NodeState</code> or <code>null</code>
-     * if either this node state should represent the root node or this node
-     * state should be 'free floating', i.e. detached from the repository's
-     * hierarchy.
-     */
-    private void setParent(NodeState parent) {
-        this.parent = parent;
     }
 
     /**
@@ -284,16 +271,6 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Set the node type name. Needed for deserialization and should therefore
-     * not change the internal status.
-     *
-     * @param nodeTypeName node type name
-     */
-    synchronized void setNodeTypeName(QName nodeTypeName) {
-        this.nodeTypeName = nodeTypeName;
-    }
-
-    /**
      * Returns the names of this node's mixin types.
      *
      * @return a set of the names of this node's mixin types.
@@ -332,55 +309,13 @@ public class NodeState extends ItemState {
 
     /**
      * Returns the {@link QNodeDefinition definition} defined for this
-     * node state or <code>null</code> if the definition has not been
-     * set before (i.e. the corresponding item has not been accessed before).
+     * node state. Note, that the definition has been set upon creation or
+     * upon move.
      *
      * @return definition of this state
-     * @see #getDefinition(NodeTypeRegistry) for the corresponding method
-     * that never returns <code>null</code>.
      */
     public QNodeDefinition getDefinition() {
-        return def;
-    }
-
-    /**
-     * Returns the definition applicable to this node state. Since the definition
-     * is not defined upon state creation this state may have to retrieve
-     * the definition from the given <code>NodeTypeRegistry</code> first.
-     *
-     * @param ntRegistry
-     * @return the definition of this state
-     * @see #getDefinition()
-     */
-    public QNodeDefinition getDefinition(NodeTypeRegistry ntRegistry)
-        throws RepositoryException {
-        // make sure the state has the definition set now
-        if (def == null) {
-            NodeState parentState = getParent();
-            if (parentState == null) {
-                // special case for root state
-                def = ntRegistry.getRootNodeDef();
-            } else {
-                try {
-                    EffectiveNodeType ent = ntRegistry.getEffectiveNodeType(parentState.getNodeTypeNames());
-                    def = ent.getApplicableNodeDefinition(getName(), getNodeTypeName());
-                } catch (NodeTypeConflictException e) {
-                    String msg = "internal error: failed to build effective node type.";
-                    log.debug(msg);
-                    throw new RepositoryException(msg, e);
-                }
-            }
-        }
-        return def;
-    }
-
-    /**
-     * Sets the id of the definition applicable to this node state.
-     *
-     * @param def the definition
-     */
-    void setDefinition(QNodeDefinition def) {
-        this.def = def;
+        return definition;
     }
 
     /**
@@ -454,7 +389,7 @@ public class NodeState extends ItemState {
      * @see #addChildNodeEntry
      */
     public synchronized Collection getChildNodeEntries() {
-        // NOTE: List representation of 'ChildNodeEntries' is already unmodifiable
+        // NOTE: 'childNodeEntries' are already unmodifiable
         return childNodeEntries;
     }
 
@@ -913,7 +848,9 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Renames a new <code>ChildNodeEntry</code>.
+     * Moves a <code>ChildNodeEntry</code> to a new parent. If the new parent
+     * is this <code>NodeState</code>, the child state is renamed and moved
+     * to the end of the child entries collection.
      *
      * @param newParent
      * @param childState
@@ -922,13 +859,15 @@ public class NodeState extends ItemState {
      * @throws RepositoryException if the given child state is not a child
      * of this node state.
      */
-    synchronized void moveChildNodeEntry(NodeState newParent, NodeState childState, QName newName)
+    synchronized void moveChildNodeEntry(NodeState newParent, NodeState childState, QName newName, QNodeDefinition newDefinition)
         throws RepositoryException {
         ChildNodeEntry oldEntry = childNodeEntries.remove(childState);
         if (oldEntry != null) {
             childState.rename(newName);
             // re-parent target node
-            childState.setParent(newParent);
+            childState.parent = newParent;
+            // set definition according to new definition required by the new parent
+            childState.definition = newDefinition;
             // add child node entry to new parent
             newParent.childNodeEntries.add(childState);
         } else {

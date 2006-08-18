@@ -45,9 +45,7 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.nodetype.NodeDefinition;
-import java.util.Set;
 import java.util.Iterator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -122,8 +120,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public VersionIterator getAllVersions() throws RepositoryException {
         Iterator childIter = vhState.getChildNodeEntries().iterator();
-        Set versionStates = new HashSet();
-
+        List versionStates = new ArrayList();
         // all child-nodes except from jcr:versionLabels point to Versions.
         while (childIter.hasNext()) {
             ChildNodeEntry entry = (ChildNodeEntry) childIter.next();

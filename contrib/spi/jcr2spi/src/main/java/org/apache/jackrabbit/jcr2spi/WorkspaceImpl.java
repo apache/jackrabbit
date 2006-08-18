@@ -107,7 +107,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         this.name = name;
         this.session = session;
 
-        wspManager = this.createManager(service, sessionInfo);
+        wspManager = createManager(service, sessionInfo);
     }
 
     //----------------------------------------------------------< Workspace >---

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import javax.jcr.PropertyType;
 import javax.jcr.ValueFormatException;
-import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
@@ -26,9 +25,6 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.value.QValue;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,11 +53,6 @@ public class PropertyState extends ItemState {
     private int type;
 
     /**
-     * Flag indicating if this is a multivalue property
-     */
-    private boolean multiValued;
-
-    /**
      * Property definition
      */
     private QPropertyDefinition def;
@@ -70,9 +61,11 @@ public class PropertyState extends ItemState {
      * Constructs a new property state that is initially connected to an
      * overlayed state.
      *
-     * @param overlayedState the backing property state being overlayed
-     * @param initialStatus  the initial status of the property state object
-     * @param isTransient    flag indicating whether this state is transient or not
+     * @param overlayedState
+     * @param parent
+     * @param initialStatus
+     * @param isTransient
+     * @param idFactory
      */
     protected PropertyState(PropertyState overlayedState, NodeState parent,
                             int initialStatus, boolean isTransient, IdFactory idFactory) {
@@ -83,18 +76,21 @@ public class PropertyState extends ItemState {
     /**
      * Create a new <code>PropertyState</code>
      *
-     * @param name          the name of the property
-     * @param initialStatus the initial status of the property state object
-     * @param isTransient   flag indicating whether this state is transient or
-     *                      not
+     * @param name
+     * @param parent
+     * @param definition
+     * @param initialStatus
+     * @param isTransient
+     * @param idFactory
      */
-    protected PropertyState(QName name, NodeState parent, int initialStatus,
+    protected PropertyState(QName name, NodeState parent, QPropertyDefinition definition, int initialStatus,
                             boolean isTransient, IdFactory idFactory) {
         super(parent, initialStatus, isTransient, idFactory);
         this.name = name;
+        this.def = definition;
+
         type = PropertyType.UNDEFINED;
         values = QValue.EMPTY_ARRAY;
-        multiValued = false;
     }
 
     /**
@@ -161,7 +157,6 @@ public class PropertyState extends ItemState {
             type = propState.type;
             def = propState.def;
             values = propState.values;
-            multiValued = propState.multiValued;
         }
     }
 
@@ -231,69 +226,18 @@ public class PropertyState extends ItemState {
      * @return true if this property is multi-valued, otherwise false.
      */
     public boolean isMultiValued() {
-        return multiValued;
+        return def.isMultiple();
     }
-
-    /**
-     * Sets the flag indicating whether this property is multi-valued.
-     *
-     * @param multiValued flag indicating whether this property is multi-valued
-     */
-    void setMultiValued(boolean multiValued) {
-        this.multiValued = multiValued;
-    }
-
 
     /**
      * Returns the {@link QPropertyDefinition definition} defined for this
-     * property state or <code>null</code> if the definition has not been
-     * set before (i.e. the corresponding item has not been accessed before).
+     * property state. Note that the definition has been set upon creation of
+     * this <code>PropertyState</code>.
      *
      * @return definition of this state
-     * @see #getDefinition(NodeTypeRegistry) for the corresponding method
-     * that never returns <code>null</code>.
      */
     public QPropertyDefinition getDefinition() {
         return def;
-    }
-
-    /**
-     * Returns the definition applicable to this property state. Since the definition
-     * is not defined upon state creation this state may have to retrieve
-     * the definition from the given <code>NodeTypeRegistry</code> first.
-     *
-     * @param ntRegistry
-     * @return definition of this state
-     * @see #getDefinition()
-     */
-    public QPropertyDefinition getDefinition(NodeTypeRegistry ntRegistry)
-        throws RepositoryException {
-        if (def == null) {
-            try {
-                NodeState parentState = getParent();
-                if (parentState == null) {
-                    String msg = "Internal error: cannot determine definition for orphaned state.";
-                    log.debug(msg);
-                    throw new RepositoryException(msg);
-                }
-                EffectiveNodeType ent = ntRegistry.getEffectiveNodeType(parentState.getNodeTypeNames());
-                setDefinition(ent.getApplicablePropertyDefinition(getQName(), getType(), isMultiValued()));
-            } catch (NodeTypeConflictException e) {
-                String msg = "internal error: failed to build effective node type.";
-                log.debug(msg);
-                throw new RepositoryException(msg, e);
-            }
-        }
-        return def;
-    }
-
-    /**
-     * Sets the id of the definition applicable to this property state.
-     *
-     * @param def the id of the definition
-     */
-    void setDefinition(QPropertyDefinition def) {
-        this.def = def;
     }
 
     /**

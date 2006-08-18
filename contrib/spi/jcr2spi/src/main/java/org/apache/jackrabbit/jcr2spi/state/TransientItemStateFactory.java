@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 
 /**
  * <code>TransientItemStateFactory</code> extends the item state factory and
@@ -33,11 +35,13 @@ public interface TransientItemStateFactory extends ItemStateFactory {
      *               <code>null</code> if the created <code>NodeState</code>
      *               cannot be identified by a UUID.
      * @param parent the parent of the <code>NodeState</code> to create.
+     * @param nodeTypeName name of the primary nodetype
+     * @param definition the definition for this new NodeState
      * @return the created <code>NodeState</code>.
      */
-    public NodeState createNewNodeState(QName name,
-                                        String uuid,
-                                        NodeState parent);
+    public NodeState createNewNodeState(QName name, String uuid,
+                                        NodeState parent, QName nodeTypeName,
+                                        QNodeDefinition definition);
 
     /**
      * Creates a transient <code>PropertyState</code> with the given
@@ -45,8 +49,10 @@ public interface TransientItemStateFactory extends ItemStateFactory {
      *
      * @param name   the name of the <code>PropertyState</code> to create.
      * @param parent the parent of the <code>PropertyState</code> to create.
+     * @param definition definition for this new property state.
      * @return the created <code>PropertyState</code>.
      */
     public PropertyState createNewPropertyState(QName name,
-                                                NodeState parent);
+                                                NodeState parent,
+                                                QPropertyDefinition definition);
 }

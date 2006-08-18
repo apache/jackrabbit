@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.security.SecurityConstants;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
@@ -766,11 +765,6 @@ public class SessionImpl implements Session, ManagerProvider {
 
     NodeTypeManagerImpl getNodeTypeManager() {
         return ntManager;
-    }
-
-    // TODO public for SessionImport only. review
-    public NodeTypeRegistry getNodeTypeRegistry() {
-        return workspace.getNodeTypeRegistry();
     }
 
     //--------------------------------------------------------------------------

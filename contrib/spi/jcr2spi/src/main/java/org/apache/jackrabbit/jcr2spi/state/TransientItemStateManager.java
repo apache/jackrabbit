@@ -22,6 +22,8 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -38,8 +40,8 @@ import java.util.Collection;
  * still valid. This item state manager also provides methods to create new
  * item states. While all other modifications can be invoked on the item state
  * instances itself, creating a new node state is done using
- * {@link #createNodeState(QName, String, QName, NodeState)} and
- * {@link #createPropertyState(NodeState, QName)}.
+ * {@link #createNewNodeState(QName,String,QName,NodeState)} and
+ * {@link #createNewPropertyState(NodeState, QName)}.
  */
 public class TransientItemStateManager extends CachingItemStateManager
         implements ItemStateLifeCycleListener {
@@ -220,15 +222,14 @@ public class TransientItemStateManager extends CachingItemStateManager
      *                     <code>null</code> if the created <code>NodeState</code>
      *                     cannot be identified by a UUID.
      * @param nodeTypeName name of the node type of the new node state.
+     * @param definition   The qualified definition for the new node state.
      * @param parent       the parent of the new node state.
      * @return a new transient {@link NodeState}.
      */
-    public NodeState createNodeState(QName nodeName,
-                                     String uuid,
-                                     QName nodeTypeName,
-                                     NodeState parent) {
-        NodeState nodeState = isf.createNewNodeState(nodeName, uuid, parent);
-        nodeState.setNodeTypeName(nodeTypeName);
+    NodeState createNewNodeState(QName nodeName, String uuid, QName nodeTypeName,
+                                 QNodeDefinition definition, NodeState parent) {
+        NodeState nodeState = isf.createNewNodeState(nodeName, uuid, parent, nodeTypeName, definition);
+
         parent.addChildNodeState(nodeState, uuid);
         changeLog.added(nodeState);
         nodeState.addListener(this);
@@ -239,15 +240,17 @@ public class TransientItemStateManager extends CachingItemStateManager
      * Creates a new transient property state for a given <code>parent</code>
      * node state.
      *
-     * @param parent   the node state where to the new property is added.
      * @param propName the name of the property state to create.
+     * @param parent   the node state where to the new property is added.
+     * @param definition
      * @return the created property state.
      * @throws ItemExistsException if <code>parent</code> already has a property
      *                             with the given name.
      */
-    public PropertyState createPropertyState(NodeState parent, QName propName)
+    PropertyState createNewPropertyState(QName propName, NodeState parent, QPropertyDefinition definition)
             throws ItemExistsException {
-        PropertyState propState = isf.createNewPropertyState(propName, parent);
+        PropertyState propState = isf.createNewPropertyState(propName, parent, definition);
+
         parent.addPropertyState(propState);
         changeLog.added(propState);
         propState.addListener(this);
@@ -559,11 +562,13 @@ public class TransientItemStateManager extends CachingItemStateManager
 
         /**
          * @inheritDoc
-         * @see TransientItemStateFactory#createNewNodeState(QName, String, NodeState)
+         * @see TransientItemStateFactory#createNewNodeState(QName, String, NodeState, QName, QNodeDefinition)
          */
-        public NodeState createNewNodeState(QName name, String uuid, NodeState parent) {
-            NodeState nodeState = new NodeState(name, uuid, parent, null,
-                    ItemState.STATUS_NEW, true, this, idFactory);
+        public NodeState createNewNodeState(QName name, String uuid,
+                                            NodeState parent, QName nodetypeName,
+                                            QNodeDefinition definition) {
+            NodeState nodeState = new NodeState(name, uuid, parent, nodetypeName,
+                definition, ItemState.STATUS_NEW, true, this, idFactory);
             // get a notification when this item state is saved or invalidated
             nodeState.addListener(listener);
             // notify listener that a node state has been created
@@ -573,11 +578,11 @@ public class TransientItemStateManager extends CachingItemStateManager
 
         /**
          * @inheritDoc
-         * @see TransientItemStateFactory#createNewPropertyState(QName, NodeState)
+         * @see TransientItemStateFactory#createNewPropertyState(QName, NodeState, QPropertyDefinition)
          */
-        public PropertyState createNewPropertyState(QName name, NodeState parent) {
+        public PropertyState createNewPropertyState(QName name, NodeState parent, QPropertyDefinition definition) {
             PropertyState propState = new PropertyState(name, parent,
-                    ItemState.STATUS_NEW, true, idFactory);
+                definition, ItemState.STATUS_NEW, true, idFactory);
             // get a notification when this item state is saved or invalidated
             propState.addListener(listener);
             // notify listener that a property state has been created
@@ -587,7 +592,7 @@ public class TransientItemStateManager extends CachingItemStateManager
 
         /**
          * @inheritDoc
-         * @see TransientItemStateFactory#createNodeState(NodeId, ItemStateManager)
+         * @see ItemStateFactory#createNodeState(NodeId, ItemStateManager)
          */
         public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
                 throws NoSuchItemStateException, ItemStateException {
@@ -606,7 +611,7 @@ public class TransientItemStateManager extends CachingItemStateManager
 
         /**
          * @inheritDoc
-         * @see TransientItemStateFactory#createNodeState(NodeId, NodeState)
+         * @see ItemStateFactory#createNodeState(NodeId, NodeState)
          */
         public NodeState createNodeState(NodeId nodeId, NodeState parentState)
                 throws NoSuchItemStateException, ItemStateException {
@@ -620,24 +625,7 @@ public class TransientItemStateManager extends CachingItemStateManager
 
         /**
          * @inheritDoc
-         * @see TransientItemStateFactory#createPropertyState(PropertyId, ItemStateManager)
-         */
-        public PropertyState createPropertyState(PropertyId propertyId,
-                                                 ItemStateManager ism)
-                throws NoSuchItemStateException, ItemStateException {
-            // retrieve state to overlay
-            PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
-            NodeId parentId = overlayedState.getParent().getNodeId();
-            NodeState parentState = (NodeState) ism.getItemState(parentId);
-            PropertyState propState = new PropertyState(overlayedState, parentState,
-                    ItemState.STATUS_EXISTING, true, idFactory);
-            propState.addListener(listener);
-            return propState;
-        }
-
-        /**
-         * @inheritDoc
-         * @see TransientItemStateFactory#createPropertyState(PropertyId, NodeState)
+         * @see ItemStateFactory#createPropertyState(PropertyId, NodeState)
          */
         public PropertyState createPropertyState(PropertyId propertyId,
                                                  NodeState parentState)
