@@ -25,12 +25,18 @@ import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.HashSet;
@@ -48,10 +54,12 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
 
     private final RepositoryService service;
     private final SessionInfo sessionInfo;
+    private final WorkspaceManager wspManager;
 
-    public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo) {
+    public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo, WorkspaceManager wspManager) {
         this.service = service;
         this.sessionInfo = sessionInfo;
+        this.wspManager = wspManager;
     }
 
     /**
@@ -108,17 +116,24 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
     private NodeState createNodeState(NodeInfo info, NodeState parent)
             throws NoSuchItemStateException, ItemStateException {
         try {
-            QName ntName = info.getNodetype();
+            // retrieve definition
+            QNodeDefinition definition;
+            if (parent == null) {
+                // special case for root state
+                definition = wspManager.getNodeTypeRegistry().getRootNodeDef();
+            } else {
+                EffectiveNodeType ent = wspManager.getNodeTypeRegistry().getEffectiveNodeType(parent.getNodeTypeNames());
+                definition = ent.getApplicableNodeDefinition(info.getQName(), info.getNodetype());
+            }
 
             // build the node state
-            // NOTE: unable to retrieve definitionId -> needs to be retrieved
-            // by the itemManager upon Node creation.
             String uuid = null;
             if (info.getId().getRelativePath() == null) {
                 uuid = info.getId().getUUID();
             }
-            NodeState state = new NodeState(info.getQName(), uuid, parent, ntName,
-                    ItemState.STATUS_EXISTING, false, this, service.getIdFactory());
+            NodeState state = new NodeState(info.getQName(), uuid, parent, info.getNodetype(),
+                definition, ItemState.STATUS_EXISTING, false, this, service.getIdFactory());
+
             // set mixin nodetypes
             state.setMixinTypeNames(info.getMixins());
 
@@ -152,27 +167,18 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             return state;
         } catch (PathNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
-        } catch (RepositoryException e) {
-            throw new ItemStateException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Creates the property with information retrieved from the
-     * <code>RepositoryService</code>.
-     *
-     * @inheritDoc
-     * @see ItemStateFactory#createPropertyState(PropertyId, ItemStateManager)
-     */
-    public PropertyState createPropertyState(PropertyId propertyId,
-                                             ItemStateManager ism)
-            throws NoSuchItemStateException, ItemStateException {
-        try {
-            PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
-            NodeState parent = (NodeState) ism.getItemState(info.getParentId());
-            return createPropertyState(info, parent);
-        } catch (PathNotFoundException e) {
-            throw new NoSuchItemStateException(e.getMessage(), e);
+        } catch (NodeTypeConflictException e) {
+            String msg = "internal error: failed to retrieve node definition.";
+            log.debug(msg);
+            throw new ItemStateException(msg, e);
+        } catch (ConstraintViolationException e) {
+            String msg = "internal error: failed to retrieve node definition.";
+            log.debug(msg);
+            throw new ItemStateException(msg, e);
+        } catch (NoSuchNodeTypeException e) {
+            String msg = "internal error: failed to retrieve node definition.";
+            log.debug(msg);
+            throw new ItemStateException(msg, e);
         } catch (RepositoryException e) {
             throw new ItemStateException(e.getMessage(), e);
         }
@@ -212,12 +218,14 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
                                               NodeState parent)
             throws ItemStateException {
         try {
+
+            // retrieve property definition
+            EffectiveNodeType ent = wspManager.getNodeTypeRegistry().getEffectiveNodeType(parent.getNodeTypeNames());
+            QPropertyDefinition def = ent.getApplicablePropertyDefinition(info.getQName(), info.getType(), info.isMultiValued());
+
             // build the PropertyState
-            // NOTE: unable to retrieve definitionId -> needs to be retrieved
-            // by the itemManager upon Property creation.
             PropertyState state = new PropertyState(info.getQName(), parent,
-                    ItemState.STATUS_EXISTING, false, service.getIdFactory());
-            state.setMultiValued(info.isMultiValued());
+                def, ItemState.STATUS_EXISTING, false, service.getIdFactory());
             state.setType(info.getType());
             QValue[] qValues;
             if (info.getType() == PropertyType.BINARY) {
@@ -242,6 +250,18 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             return state;
         } catch (IOException e) {
             throw new ItemStateException(e.getMessage(), e);
+        } catch (NodeTypeConflictException e) {
+            String msg = "internal error: failed to retrieve property definition.";
+            log.debug(msg);
+            throw new ItemStateException(msg, e);
+        } catch (ConstraintViolationException e) {
+            String msg = "internal error: failed to retrieve property definition.";
+            log.debug(msg);
+            throw new ItemStateException(msg, e);
+        } catch (NoSuchNodeTypeException e) {
+            String msg = "internal error: failed to retrieve property definition.";
+            log.debug(msg);
+            throw new ItemStateException(msg, e);
         }
     }
 

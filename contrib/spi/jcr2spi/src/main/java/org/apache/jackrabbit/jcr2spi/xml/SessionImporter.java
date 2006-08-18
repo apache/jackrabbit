@@ -179,7 +179,7 @@ public class SessionImporter implements Importer, SessionListener {
                // should not occur. existance has been checked before
                throw new RepositoryException(e);
            }
-           QNodeDefinition def = existing.getDefinition(session.getNodeTypeRegistry());
+           QNodeDefinition def = existing.getDefinition();
            if (!def.allowsSameNameSiblings()) {
                // existing doesn't allow same-name siblings, check for conflicts
                EffectiveNodeType entExisting = session.getValidator().getEffectiveNodeType(existing);
@@ -488,7 +488,7 @@ public class SessionImporter implements Importer, SessionListener {
             // a property with that name already exists...
             try {
                 PropertyState existing = parentState.getPropertyState(propName);
-                def = existing.getDefinition(session.getNodeTypeRegistry());
+                def = existing.getDefinition();
                 if (def.isProtected()) {
                     // skip protected property
                     log.debug("skipping protected property " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), session.getHierarchyManager()));

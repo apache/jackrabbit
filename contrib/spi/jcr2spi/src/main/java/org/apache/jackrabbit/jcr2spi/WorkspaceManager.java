@@ -137,7 +137,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         this.service = service;
         this.sessionInfo = sessionInfo;
 
-        ItemStateFactory isf = createItemStateFactory();
+        ItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, this);
         cache = new WorkspaceItemStateManager(isf, service.getIdFactory());
         addEventListener(cache);
 
@@ -240,10 +240,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     //--------------------------------------------------------------------------
-    private ItemStateFactory createItemStateFactory() {
-        return new WorkspaceItemStateFactory(service, sessionInfo);
-    }
-
     private NamespaceRegistryImpl createNamespaceRegistry() throws RepositoryException {
         return new NamespaceRegistryImpl(this, service.getRegisteredNamespaces(sessionInfo));
     }
@@ -626,9 +622,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
 
         public void visit(SetPropertyValue operation) throws RepositoryException {
-            PropertyId id = operation.getPropertyState().getPropertyId();
+            PropertyState pState = operation.getPropertyState();
+            PropertyId id = pState.getPropertyId();
             int type = operation.getPropertyType();
-            if (operation.isMultiValued()) {
+            if (pState.isMultiValued()) {
                 QValue[] values = operation.getValues();
                 if (type == PropertyType.BINARY) {
                     InputStream[] ins = new InputStream[values.length];

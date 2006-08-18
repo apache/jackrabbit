@@ -37,13 +37,11 @@ public class SetPropertyValue extends AbstractOperation {
     private final PropertyState propertyState;
     private final QValue[] values;
     private final int propertyType;
-    private final boolean isMultiValued;
 
-    private SetPropertyValue(PropertyState propertyState, int propertyType, QValue[] values, boolean isMultiValued) {
+    private SetPropertyValue(PropertyState propertyState, int propertyType, QValue[] values) {
         this.propertyState = propertyState;
         this.propertyType = propertyType;
         this.values = values;
-        this.isMultiValued = isMultiValued;
         
         addAffectedItemState(propertyState);
     }
@@ -70,14 +68,10 @@ public class SetPropertyValue extends AbstractOperation {
         return values;
     }
 
-    public boolean isMultiValued() {
-        return isMultiValued;
-    }
-
     //------------------------------------------------------------< Factory >---
     public static Operation create(PropertyState propState, QValue[] iva,
                                    int valueType) {
-        SetPropertyValue sv = new SetPropertyValue(propState, valueType, iva, propState.isMultiValued());
+        SetPropertyValue sv = new SetPropertyValue(propState, valueType, iva);
         return sv;
     }
 }

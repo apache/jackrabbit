@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ChildItemReference;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -33,8 +31,8 @@ import javax.jcr.version.VersionIterator;
 import javax.jcr.version.Version;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates
@@ -89,29 +87,16 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
         // reset
         next = null;
         while (next == null && pos < stateList.size()) {
-            // TODO: make sure only ItemStates or ChildItemReferences are used, not both!
-            // TODO: check constructors of LazyItemIterator
-            Object refOrState = stateList.get(pos);
+            ItemState state = (ItemState) stateList.get(pos);
             try {
-                ItemState state;
-                if (refOrState instanceof ChildItemReference) {
-                    state = ((ChildItemReference) refOrState).resolve();
-                } else {
-                    state = (ItemState) refOrState;
-                }
                 next = itemMgr.getItem(state);
             } catch (ItemNotFoundException e) {
-                log.debug("ignoring nonexistent item " + refOrState);
+                log.debug("ignoring nonexistent item " + state);
                 // remove invalid id
                 stateList.remove(pos);
                 // try next
             } catch (RepositoryException e) {
-                log.error("failed to fetch item " + refOrState + ", skipping...", e);
-                // remove invalid id
-                stateList.remove(pos);
-                // try next
-            } catch (ItemStateException e) {
-                log.debug("ignoring nonexistent item " + refOrState);
+                log.error("failed to fetch item " + state + ", skipping...", e);
                 // remove invalid id
                 stateList.remove(pos);
                 // try next

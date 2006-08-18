@@ -46,6 +46,9 @@ import javax.jcr.nodetype.PropertyDefinition;
 import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * There's one <code>ItemManagerImpl</code> instance per <code>Session</code>
@@ -215,7 +218,17 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         session.checkIsAlive();
         checkAccess(parentState, true);
 
-        return new LazyItemIterator(this, parentState.getChildNodeEntries());
+        Collection nodeEntries = parentState.getChildNodeEntries();
+        List childStates = new ArrayList(nodeEntries.size());
+        for (Iterator it = nodeEntries.iterator(); it.hasNext();) {
+            try {
+                childStates.add(((ChildNodeEntry) it.next()).getNodeState());
+            } catch (ItemStateException e) {
+                // should not occur
+                throw new RepositoryException(e);
+            }
+        }
+        return new LazyItemIterator(this, childStates);
     }
 
     /**
@@ -252,7 +265,17 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         session.checkIsAlive();
         checkAccess(parentState, true);
 
-        return new LazyItemIterator(this, parentState.getPropertyEntries());
+        Collection propEntries = parentState.getPropertyEntries();
+        List childStates = new ArrayList(propEntries.size());
+        for (Iterator it = propEntries.iterator(); it.hasNext();) {
+            try {
+                childStates.add(((ChildPropertyEntry)it.next()).getPropertyState());
+            } catch (ItemStateException e) {
+                // should not occur
+                throw new RepositoryException(e);
+            }
+        }
+        return new LazyItemIterator(this, childStates);
     }
 
     //----------------------------------------------< ItemLifeCycleListener >---
@@ -361,7 +384,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      */
     private NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
         // 1. get definition of the specified node
-        QNodeDefinition qnd = state.getDefinition(session.getNodeTypeRegistry());
+        QNodeDefinition qnd = state.getDefinition();
         NodeDefinition def = session.getNodeTypeManager().getNodeDefinition(qnd);
 
         // 2. create instance
@@ -391,7 +414,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     private PropertyImpl createPropertyInstance(PropertyState state)
             throws RepositoryException {
         // 1. get definition for the specified property
-        QPropertyDefinition qpd = state.getDefinition(session.getNodeTypeRegistry());
+        QPropertyDefinition qpd = state.getDefinition();
         PropertyDefinition def = session.getNodeTypeManager().getPropertyDefinition(qpd);
 
         // 2. create instance

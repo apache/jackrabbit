@@ -140,7 +140,7 @@ public class ItemStateValidator {
         EffectiveNodeType entPrimary = ntReg.getEffectiveNodeType(nodeState.getNodeTypeName());
         // effective node type (primary type incl. mixins)
         EffectiveNodeType entPrimaryAndMixins = getEffectiveNodeType(nodeState);
-        QNodeDefinition def = nodeState.getDefinition(ntReg);
+        QNodeDefinition def = nodeState.getDefinition();
 
         // check if primary type satisfies the 'required node types' constraint
         QName[] requiredPrimaryTypes = def.getRequiredPrimaryTypes();
@@ -418,7 +418,7 @@ public class ItemStateValidator {
         VersionException, LockException, ItemNotFoundException,
         ItemExistsException, PathNotFoundException, RepositoryException {
 
-        QPropertyDefinition def = propState.getDefinition(ntReg);
+        QPropertyDefinition def = propState.getDefinition();
         checkWriteProperty(propState.getParent(), propState.getQName(), def, options);
     }
 
@@ -688,9 +688,9 @@ public class ItemStateValidator {
         throws ConstraintViolationException, RepositoryException {
         QItemDefinition def;
         if (itemState.isNode()) {
-            def = ((NodeState)itemState).getDefinition(ntReg);
+            def = ((NodeState)itemState).getDefinition();
         } else {
-            def = ((PropertyState)itemState).getDefinition(ntReg);
+            def = ((PropertyState)itemState).getDefinition();
         }
         checkProtection(def);
     }
@@ -719,9 +719,9 @@ public class ItemStateValidator {
         throws ConstraintViolationException, RepositoryException {
         QItemDefinition definition;
         if (itemState.isNode()) {
-            definition = ((NodeState)itemState).getDefinition(ntReg);
+            definition = ((NodeState)itemState).getDefinition();
         } else {
-            definition = ((PropertyState)itemState).getDefinition(ntReg);
+            definition = ((PropertyState)itemState).getDefinition();
         }
         checkProtection(definition);
         if (definition.isMandatory()) {
@@ -778,7 +778,7 @@ public class ItemStateValidator {
                 ChildNodeEntry cne = parentState.getChildNodeEntry(nodeName, Path.INDEX_DEFAULT);
                 // cne must not be null, since existence has been checked before
                 NodeState conflictingState = cne.getNodeState();
-                QNodeDefinition conflictDef = conflictingState.getDefinition(ntReg);
+                QNodeDefinition conflictDef = conflictingState.getDefinition();
                 QNodeDefinition newDef = getApplicableNodeDefinition(nodeName, nodeTypeName, parentState);
 
                 // check same-name sibling setting of both target and existing node

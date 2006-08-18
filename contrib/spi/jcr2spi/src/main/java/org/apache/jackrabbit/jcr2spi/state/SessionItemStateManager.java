@@ -203,7 +203,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * {@inheritDoc}
      * Since node references cannot be managed within the transient space,
      * this call is delegated to the workspace itemstate manager.
-     * 
+     *
      * @see ItemStateManager#hasReferingStates(NodeState)
      * @param nodeState
      */
@@ -855,13 +855,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             | ItemStateValidator.CHECK_CONSTRAINTS);
         // retrieve applicable definition at the new place
         // TODO: improve. definition has already retrieve within the checkAddNode...
+        // TODO: improve. if move is simple rename, the definition must not be calculated again.
         QNodeDefinition newDefinition = validator.getApplicableNodeDefinition(operation.getDestinationName(), srcState.getNodeTypeName(), destParent);
 
         // perform the move (modifying states)
-        srcParent.moveChildNodeEntry(destParent, srcState, operation.getDestinationName());
-
-        // change definition of target node
-        srcState.setDefinition(newDefinition);
+        srcParent.moveChildNodeEntry(destParent, srcState, operation.getDestinationName(), newDefinition);
 
         // remember operation
         transientStateMgr.addOperation(operation);
@@ -1087,12 +1085,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         validator.validate(propertyType, values, pDef);
 
         // create property state
-        PropertyState propState = transientStateMgr.createPropertyState(parent, propertyName);
-        propState.setDefinition(pDef);
+        PropertyState propState = transientStateMgr.createNewPropertyState(propertyName, parent, pDef);
 
         // NOTE: callers must make sure, the property type is not 'undefined'
         propState.setType(propertyType);
-        propState.setMultiValued(pDef.isMultiple());
         propState.setValues(values);
     }
 
@@ -1120,8 +1116,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             }
         }
 
-        NodeState nodeState = transientStateMgr.createNodeState(nodeName, uuid, nodeTypeName, parent);
-        nodeState.setDefinition(definition);
+        NodeState nodeState = transientStateMgr.createNewNodeState(nodeName, uuid, nodeTypeName, definition, parent);
 
         EffectiveNodeType ent = validator.getEffectiveNodeType(nodeState);
         // add 'auto-create' properties defined in node type
@@ -1140,7 +1135,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         QNodeDefinition[] nda = ent.getAutoCreateNodeDefs();
         for (int i = 0; i < nda.length; i++) {
             QNodeDefinition nd = nda[i];
-            // execute 'addNode' without validation and adding operation.
+            // execute 'addNode' without adding the operation.
             int opt = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_COLLISION;
             addNodeState(nodeState, nd.getQName(), nd.getDefaultPrimaryType(), null, nd, opt);
         }
