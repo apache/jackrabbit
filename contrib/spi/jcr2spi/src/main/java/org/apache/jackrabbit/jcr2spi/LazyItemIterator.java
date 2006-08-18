@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ChildItemReference;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -87,16 +89,29 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
         // reset
         next = null;
         while (next == null && pos < stateList.size()) {
-            ItemState state = (ItemState) stateList.get(pos);
+            // TODO: make sure only ItemStates or ChildItemReferences are used, not both!
+            // TODO: check constructors of LazyItemIterator
+            Object refOrState = stateList.get(pos);
             try {
+                ItemState state;
+                if (refOrState instanceof ChildItemReference) {
+                    state = ((ChildItemReference) refOrState).resolve();
+                } else {
+                    state = (ItemState) refOrState;
+                }
                 next = itemMgr.getItem(state);
             } catch (ItemNotFoundException e) {
-                log.debug("ignoring nonexistent item " + state);
+                log.debug("ignoring nonexistent item " + refOrState);
                 // remove invalid id
                 stateList.remove(pos);
                 // try next
             } catch (RepositoryException e) {
-                log.error("failed to fetch item " + state + ", skipping...", e);
+                log.error("failed to fetch item " + refOrState + ", skipping...", e);
+                // remove invalid id
+                stateList.remove(pos);
+                // try next
+            } catch (ItemStateException e) {
+                log.debug("ignoring nonexistent item " + refOrState);
                 // remove invalid id
                 stateList.remove(pos);
                 // try next

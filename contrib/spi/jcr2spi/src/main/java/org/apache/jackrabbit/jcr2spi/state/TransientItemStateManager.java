@@ -593,8 +593,11 @@ public class TransientItemStateManager extends CachingItemStateManager
                 throws NoSuchItemStateException, ItemStateException {
             // retrieve state to overlay
             NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
-            NodeId parentId = overlayedState.getParent().getNodeId();
-            NodeState parentState = (NodeState) ism.getItemState(parentId);
+            NodeState overlayedParent = overlayedState.getParent();
+            NodeState parentState = null;
+            if (overlayedParent != null) {
+                parentState = (NodeState) ism.getItemState(overlayedParent.getId());
+            }
             NodeState nodeState = new NodeState(overlayedState, parentState,
                     ItemState.STATUS_EXISTING, true, this, idFactory);
             nodeState.addListener(listener);
