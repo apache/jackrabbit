@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * <code>ItemState</code> represents the state of an <code>Item</code>.
@@ -475,6 +476,15 @@ public abstract class ItemState implements ItemStateListener {
     public abstract void remove() throws ItemStateException;
 
     /**
+     * Reverts this item state to its initial status and adds itself to the Set
+     * of <code>affectedItemStates</code> if it reverted itself.
+     *
+     * @param affectedItemStates the set of affected item states that reverted
+     *                           themselfes.
+     */
+    public abstract void revert(Set affectedItemStates);
+
+    /**
      * Add an <code>ItemStateListener</code>
      *
      * @param listener the new listener to be informed on modifications
@@ -503,8 +513,8 @@ public abstract class ItemState implements ItemStateListener {
      */
     public void stateCreated(ItemState created) {
         // underlying state has been permanently created
-        setStatus(STATUS_EXISTING); // TODO: shouldn't the status change happen after pull?
         pull();
+        setStatus(STATUS_EXISTING);
     }
 
     /**

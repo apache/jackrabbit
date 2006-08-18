@@ -101,7 +101,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     /**
      * State manager for the transient items
      */
-    // DIFF JACKRABBIT: private final TransientItemStateManager transientStateMgr;
     private final TransientItemStateManager transientStateMgr;
 
     /**
@@ -122,7 +121,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                                    ItemStateValidator validator,
                                    NamespaceResolver nsResolver) {
         this.workspaceItemStateMgr = workspaceItemStateMgr;
-        // DIFF JACKRABBIT: this.transientStateMgr = new TransientItemStateManager();
         this.transientStateMgr = new TransientItemStateManager(idFactory, workspaceItemStateMgr);
         // DIFF JR: validator added
         this.validator = validator;
@@ -303,99 +301,16 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      *                            to be canceled as well in another sub-tree.
      */
     public void undo(ItemState itemState) throws ItemStateException {
-        if (itemState.getParent() == null) {
-            // optimization for root
-            transientStateMgr.disposeAllItemStates();
-            return;
-        }
+        // TODO: check if self contained
 
-        // list of transient items that should be discarded
+        Set affectedItemStates = new HashSet();
+        itemState.revert(affectedItemStates);
+
         ChangeLog changeLog = new ChangeLog();
-
-        // check status of current item's state
-        if (itemState.isTransient()) {
-            switch (itemState.getStatus()) {
-                // safety... should have been checked befoe
-                case ItemState.STATUS_NEW:
-                    throw new ItemStateException("Unexpected state: cannot start undo from a new item state.");
-
-                case ItemState.STATUS_STALE_MODIFIED:
-                case ItemState.STATUS_STALE_DESTROYED:
-                case ItemState.STATUS_EXISTING_MODIFIED:
-                    // add this item's state to the list
-                    changeLog.modified(itemState);
-                    break;
-                default:
-                    log.debug("unexpected state status (" + itemState.getStatus() + ")");
-                    // ignore
-                    break;
-            }
-        }
-
-        if (itemState.isNode()) {
-            NodeState nodeState = (NodeState)itemState;
-            // build list of 'new', 'modified' or 'stale' descendants
-            Iterator iter = getDescendantTransientItemStates(nodeState);
-            while (iter.hasNext()) {
-                ItemState childState = (ItemState) iter.next();
-                switch (childState.getStatus()) {
-                    case ItemState.STATUS_STALE_MODIFIED:
-                    case ItemState.STATUS_STALE_DESTROYED:
-                    case ItemState.STATUS_NEW:
-                    case ItemState.STATUS_EXISTING_MODIFIED:
-                        // add new or modified state to the list
-                        changeLog.modified(childState);
-                        break;
-
-                    default:
-                        log.debug("unexpected state status (" + childState.getStatus() + ")");
-                        // ignore
-                        break;
-                }
-            }
-
-            // build list of deleted states
-            Iterator atticIter = getDescendantTransientItemStatesInAttic(nodeState);
-            while (atticIter.hasNext()) {
-                ItemState transientState = (ItemState) atticIter.next();
-                changeLog.deleted(transientState);
-            }
-        }
-
-        /**
-         * build set of item id's which are within the scope of
-         * (i.e. affected by) this cancel operation
-         */
-        Set affectedStates = new HashSet();
-        Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
-        while (it.hasNext()) {
-            affectedStates.add(it.next());
-        }
-        collectOperations(affectedStates, changeLog);
-
-        // process list of 'new', 'modified' or 'stale' transient states
-        Iterator transIter = changeLog.modifiedStates();
-        while (transIter.hasNext()) {
-            // dispose the transient state, it is no longer used;
-            // this will indirectly (through stateDiscarded listener method)
-            // either restore or permanently invalidate the wrapping Item instances
-            ItemState transientState = (ItemState) transIter.next();
-            transientStateMgr.disposeItemState(transientState);
-        }
-        // process list of deleted states
-        Iterator remIter = changeLog.deletedStates();
-        while (remIter.hasNext()) {
-            ItemState rmState = (ItemState) remIter.next();
-            // dispose the transient state; this will indirectly (through
-            // stateDiscarded listener method) resurrect the wrapping Item instances
-            transientStateMgr.disposeItemStateInAttic(rmState);
-        }
+        collectOperations(affectedItemStates, changeLog);
 
         // remove all canceled operations
-        Iterator opIter = changeLog.getOperations();
-        while (opIter.hasNext()) {
-            transientStateMgr.removeOperation((Operation) opIter.next());
-        }
+        transientStateMgr.disposeOperations(changeLog.getOperations());
     }
 
     /**
@@ -534,7 +449,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @return an iterator over descendant transient item state instances in the attic
      */
     private Iterator getDescendantTransientItemStatesInAttic(NodeState parent) {
-        // DIFF JACKRABBIT: if (!transientStateMgr.hasAnyItemStatesInAttic()) {
         if (!transientStateMgr.hasDeletedItemStates()) {
             return Collections.EMPTY_LIST.iterator();
         }
