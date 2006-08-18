@@ -1451,6 +1451,11 @@ public class NodeState extends ItemState {
      */
     private static final class LinkedEntries extends AbstractLinkedList {
 
+        LinkedEntries() {
+            super();
+            init();
+        }
+
         /**
          * Adds a child node entry to this list.
          *
