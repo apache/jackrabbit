@@ -180,23 +180,23 @@ public class TransientItemStateManager extends CachingItemStateManager
     }
 
     /**
-     * @return the number of entries
+     * @return <code>true</code> if this transient ISM has pending changes.
      */
-    public int getEntriesCount() {
-        return changeLog.addedStates.size() + changeLog.modifiedStates.size();
+    public boolean hasPendingChanges() {
+        return !changeLog.isEmpty();
     }
 
     /**
-     * @return <code>true</code> if there are any entries in attic.
+     * @return <code>true</code> if there are any deleted item states.
      */
-    public boolean hasEntriesInAttic() {
-        return changeLog.deletedStates.size() > 0;
+    public boolean hasDeletedItemStates() {
+        return !changeLog.deletedStates.isEmpty();
     }
 
     /**
-     * @return an iterator over all entries
+     * @return an iterator over all modified or added item states.
      */
-    public Iterator getEntries() {
+    public Iterator getModifiedOrAddedItemStates() {
         IteratorChain it = new IteratorChain();
         it.addIterator(changeLog.modifiedStates());
         it.addIterator(changeLog.addedStates());
@@ -204,9 +204,9 @@ public class TransientItemStateManager extends CachingItemStateManager
     }
 
     /**
-     * @return an iterator over all entries in attic
+     * @return an iterator over all deleted item states.
      */
-    public Iterator getEntriesInAttic() {
+    public Iterator getDeletedItemStates() {
         return changeLog.deletedStates();
     }
 
@@ -268,21 +268,6 @@ public class TransientItemStateManager extends CachingItemStateManager
             changeLog.modifiedStates.remove(state);
         }
         state.onDisposed();
-    }
-
-    /**
-     * A state has been deleted. If the state is not a new state
-     * (not in the collection of added ones), then remove
-     * it from the modified states collection.
-     * The state is added to the deleted states collection in any case.
-     *
-     * @param state state that has been deleted
-     */
-    public void moveItemStateToAttic(ItemState state) {
-        if (changeLog.addedStates.remove(state)) {
-            changeLog.modifiedStates.remove(state);
-        }
-        changeLog.deleted(state);
     }
 
     /**
