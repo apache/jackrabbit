@@ -42,4 +42,14 @@ public interface ChildPropertyEntry {
      * <code>PropertyState</code>.
      */
     public PropertyState getPropertyState() throws NoSuchItemStateException, ItemStateException;
+
+    /**
+     * Returns <code>true</code> if the referenced <code>PropertyState</code> is
+     * available. That is, the referenced <code>PropertyState</code> is already
+     * cached and ready to be returned by {@link #getPropertyState()}.
+     *
+     * @return <code>true</code> if the <code>PropertyState</code> is available;
+     *         otherwise <code>false</code>.
+     */
+    public boolean isAvailable();
 }

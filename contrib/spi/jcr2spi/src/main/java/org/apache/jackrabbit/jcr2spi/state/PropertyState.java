@@ -147,6 +147,21 @@ public class PropertyState extends ItemState {
     }
 
     /**
+     * @inheritDoc
+     * @see ItemState#collectTransientStates(Set)
+     */
+    public void collectTransientStates(Set transientStates) {
+        switch (status) {
+            case STATUS_EXISTING_MODIFIED:
+            case STATUS_EXISTING_REMOVED:
+            case STATUS_NEW:
+            case STATUS_STALE_DESTROYED:
+            case STATUS_STALE_MODIFIED:
+                transientStates.add(this);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     protected synchronized void copy(ItemState state) {

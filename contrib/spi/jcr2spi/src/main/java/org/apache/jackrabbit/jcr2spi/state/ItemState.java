@@ -485,6 +485,19 @@ public abstract class ItemState implements ItemStateListener {
     public abstract void revert(Set affectedItemStates);
 
     /**
+     * Checks if this <code>ItemState</code> is transiently modified or new and
+     * adds itself to the <code>Set</code> of <code>transientStates</code> if
+     * that is the case. It this <code>ItemState</code> has children it will
+     * call the method {@link #collectTransientStates(java.util.Set)} on those
+     * <code>ItemState</code>s.
+     *
+     * @param transientStates the <code>Set</code> of transient <code>ItemState</code>,
+     *                        collected while the <code>ItemState</code>
+     *                        hierarchy is traversed.
+     */
+    public abstract void collectTransientStates(Set transientStates);
+
+    /**
      * Add an <code>ItemStateListener</code>
      *
      * @param listener the new listener to be informed on modifications
