@@ -325,7 +325,7 @@ public class NodeState extends ItemState {
      *         <code>false</code> otherwise.
      */
     public boolean hasChildNodeEntries() {
-        return !childNodeEntries.isEmpty();
+        return containsValidChildNodeEntry(childNodeEntries);
     }
 
     /**
@@ -337,7 +337,7 @@ public class NodeState extends ItemState {
      *         the specified <code>name</code>.
      */
     public synchronized boolean hasChildNodeEntry(QName name) {
-        return !childNodeEntries.get(name).isEmpty();
+        return containsValidChildNodeEntry(childNodeEntries.get(name));
     }
 
     /**
@@ -620,6 +620,45 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * @inheritDoc
+     * @see ItemState#collectTransientStates(Set)
+     */
+    public void collectTransientStates(Set transientStates) {
+        switch (status) {
+            case STATUS_EXISTING_MODIFIED:
+            case STATUS_EXISTING_REMOVED:
+            case STATUS_NEW:
+            case STATUS_STALE_DESTROYED:
+            case STATUS_STALE_MODIFIED:
+                transientStates.add(this);
+        }
+        // call available property states
+        for (Iterator it = properties.values().iterator(); it.hasNext(); ) {
+            PropertyReference ref = (PropertyReference) it.next();
+            if (ref.isAvailable()) {
+                try {
+                    ref.getPropertyState().collectTransientStates(transientStates);
+                } catch (ItemStateException e) {
+                    // should not happen because ref is available
+                }
+            }
+        }
+        // add all properties in attic
+        transientStates.addAll(propertiesInAttic.values());
+        // call available child node states
+        for (Iterator it = childNodeEntries.iterator(); it.hasNext(); ) {
+            ChildNodeEntry cne = (ChildNodeEntry) it.next();
+            if (cne.isAvailable()) {
+                try {
+                    cne.getNodeState().collectTransientStates(transientStates);
+                } catch (ItemStateException e) {
+                    // should not happen because cne is available
+                }
+            }
+        }
+    }
+
+    /**
      * Determines if there is a property entry with the specified
      * <code>QName</code>.
      *
@@ -628,7 +667,18 @@ public class NodeState extends ItemState {
      *         <code>QName</code>.
      */
     public synchronized boolean hasPropertyName(QName propName) {
-        return properties.containsKey(propName);
+        PropertyReference ref = (PropertyReference) properties.get(propName);
+        if (ref.isResolved()) {
+            try {
+                return ref.getPropertyState().isValid();
+            } catch (ItemStateException e) {
+                // probably deleted in the meantime
+                return false;
+            }
+        } else {
+            // then it must be valid
+            return true;
+        }
     }
 
     /**
@@ -639,7 +689,17 @@ public class NodeState extends ItemState {
      * @see #addPropertyName
      */
     public synchronized Collection getPropertyNames() {
-        return Collections.unmodifiableSet(properties.keySet());
+        Collection names;
+        if (status == STATUS_EXISTING_MODIFIED) {
+            names = new ArrayList();
+            for (Iterator it = getPropertyEntries().iterator(); it.hasNext(); ) {
+                names.add(((ChildPropertyEntry) it.next()).getName());
+            }
+        } else {
+            // this node state is unmodified, return all
+            names = properties.keySet();
+        }
+        return Collections.unmodifiableCollection(names);
     }
 
     /**
@@ -649,7 +709,30 @@ public class NodeState extends ItemState {
      * @see #addPropertyName
      */
     public synchronized Collection getPropertyEntries() {
-        return Collections.unmodifiableCollection(properties.values());
+        Collection props;
+        if (status == STATUS_EXISTING_MODIFIED) {
+            // filter out removed properties
+            props = new ArrayList();
+            for (Iterator it = properties.values().iterator(); it.hasNext(); ) {
+                ChildPropertyEntry propEntry = (ChildPropertyEntry) it.next();
+                if (propEntry.isAvailable()) {
+                    try {
+                        if (propEntry.getPropertyState().isValid()) {
+                            props.add(propEntry);
+                        }
+                    } catch (ItemStateException e) {
+                        // removed in the meantime -> ignore
+                    }
+                } else {
+                    // never been accessed before, assume valid
+                    props.add(propEntry);
+                }
+            }
+        } else {
+            // no need to filter out properties, there are no removed properties
+            props = properties.values();
+        }
+        return Collections.unmodifiableCollection(props);
     }
 
     /**
@@ -730,6 +813,26 @@ public class NodeState extends ItemState {
      *                                  property state.
      */
     public synchronized PropertyState getPropertyState(QName propertyName)
+            throws NoSuchItemStateException, ItemStateException {
+        PropertyState propState = getAnyPropertyState(propertyName);
+        if (propState.isValid()) {
+            return propState;
+        } else {
+            throw new NoSuchItemStateException(idFactory.createPropertyId(getNodeId(), propertyName).toString());
+        }
+    }
+
+    /**
+     * Returns the property state with the given name and also takes removed
+     * property states into account.
+     *
+     * @param propertyName the name of the property state to return.
+     * @throws NoSuchItemStateException if there is no property state with the
+     *                                  given name.
+     * @throws ItemStateException       if an error occurs while retrieving the
+     *                                  property state.
+     */
+    public synchronized PropertyState getAnyPropertyState(QName propertyName)
             throws NoSuchItemStateException, ItemStateException {
         PropertyReference propRef = (PropertyReference) properties.get(propertyName);
         if (propRef == null) {
@@ -873,6 +976,9 @@ public class NodeState extends ItemState {
         } else {
             throw new RepositoryException("Unexpected error: Child state to be renamed does not exist.");
         }
+        // mark both this and newParent modified
+        markModified();
+        newParent.markModified();
     }
 
     /**
@@ -913,8 +1019,57 @@ public class NodeState extends ItemState {
      *         found in this <code>NodeState</code>.
      */
     int getChildNodeIndex(QName name, ChildNodeEntry cne) {
+        if (!this.getDefinition().allowsSameNameSiblings()) {
+            return Path.INDEX_DEFAULT;
+        }
         List sns = childNodeEntries.get(name);
-        return sns.indexOf(cne) + 1;
+        // index is one based
+        int index = 1;
+        for (Iterator it = sns.iterator(); it.hasNext(); ) {
+            ChildNodeEntry e = (ChildNodeEntry) it.next();
+            if (e == cne) {
+                return index;
+            }
+            // skip removed entries
+            try {
+                if (e.isAvailable() && e.getNodeState().isValid()) {
+                    index++;
+                }
+            } catch (ItemStateException ex) {
+                // probably removed or stale
+            }
+        }
+        // not found
+        return 0;
+    }
+
+    //-------------------------------< internal >-------------------------------
+
+    /**
+     * Returns <code>true</code> if the collection of child node
+     * <code>entries</code> contains at least one valid <code>ChildNodeEntry</code>.
+     *
+     * @param entries the collection to check.
+     * @return <code>true</code> if one of the entries is valid; otherwise
+     *         <code>false</code>.
+     */
+    private static boolean containsValidChildNodeEntry(Collection entries) {
+        for (Iterator it = entries.iterator(); it.hasNext(); ) {
+            ChildNodeEntry cne = (ChildNodeEntry) it.next();
+            if (cne.isAvailable()) {
+                try {
+                    if (cne.getNodeState().isValid()) {
+                        return true;
+                    }
+                } catch (ItemStateException e) {
+                    // probably removed in the meantime, check next
+                }
+            } else {
+                // then it has never been accessed and must exist
+                return true;
+            }
+        }
+        return false;
     }
 
     //------------------------------------------------------< inner classes >---
@@ -986,7 +1141,8 @@ public class NodeState extends ItemState {
 
         /**
          * Returns a <code>List</code> of <code>ChildNodeEntry</code>s for the
-         * given <code>nodeName</code>.
+         * given <code>nodeName</code>. This method does <b>not</b> filter out
+         * removed <code>ChildNodeEntry</code>s!
          *
          * @param nodeName the child node name.
          * @return same name sibling nodes with the given <code>nodeName</code>.
@@ -1037,7 +1193,8 @@ public class NodeState extends ItemState {
 
         /**
          * Returns the <code>ChildNodeEntry</code> with the given
-         * <code>nodeName</code> and <code>index</code>.
+         * <code>nodeName</code> and <code>index</code>. This method ignores
+         * <code>ChildNodeEntry</code>s which are marked removed!
          *
          * @param nodeName name of the child node entry.
          * @param index    the index of the child node entry.
@@ -1056,8 +1213,27 @@ public class NodeState extends ItemState {
             if (obj instanceof List) {
                 // map entry is a list of siblings
                 List siblings = (List) obj;
-                if (index <= siblings.size()) {
-                    return ((LinkedEntries.LinkNode) siblings.get(index - 1)).getChildNodeEntry();
+                // filter out removed states
+                for (Iterator it = siblings.iterator(); it.hasNext(); ) {
+                    ChildNodeEntry cne = ((LinkedEntries.LinkNode) it.next()).getChildNodeEntry();
+                    if (cne.isAvailable()) {
+                        try {
+                            if (cne.getNodeState().isValid()) {
+                                index--;
+                            } else {
+                                // child node removed
+                            }
+                        } catch (ItemStateException e) {
+                            // should never happen, cne.isAvailable() returned true
+                        }
+                    } else {
+                        // then this child node entry has never been accessed
+                        // before and is assumed valid
+                        index--;
+                    }
+                    if (index == 0) {
+                        return cne;
+                    }
                 }
             } else {
                 // map entry is a single child node entry

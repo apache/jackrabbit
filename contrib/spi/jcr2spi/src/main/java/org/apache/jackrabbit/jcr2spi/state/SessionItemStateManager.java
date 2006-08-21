@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
-import org.apache.jackrabbit.jcr2spi.ZombieHierarchyManager;
 import org.apache.jackrabbit.jcr2spi.HierarchyManagerImpl;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
@@ -75,7 +74,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.lock.LockException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -346,172 +344,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // make sure all entries are removed
         refTracker.clear();
     }
+
     //-------------------------------------------< Transient state handling >---
-    /**
-     * Returns an iterator over those transient item state instances that are
-     * direct or indirect descendents of the item state with the given
-     * <code>parentId</code>. The transient item state instance with the given
-     * <code>parentId</code> itself (if there is such) will not be included.
-     * <p/>
-     * The instances are returned in depth-first tree traversal order.
-     *
-     * @param parent the common parent state of the transient item state
-     * instances to be returned.
-     * @return an iterator over descendant transient item state instances
-     */
-    private Iterator getDescendantTransientItemStates(NodeState parent) {
-        if (!transientStateMgr.hasPendingChanges()) {
-            return Collections.EMPTY_LIST.iterator();
-        }
-
-        // build ordered collection of descendant transient states
-        // sorted by decreasing relative depth
-
-        // use an array of lists to group the descendants by relative depth;
-        // the depth is used as array index
-        List[] la = new List[10];
-        try {
-            Iterator iter = transientStateMgr.getModifiedOrAddedItemStates();
-            while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
-                // determine relative depth: > 0 means it's a descendant
-                int depth;
-                try {
-                    depth = hierMgr.getRelativeDepth(parent, state);
-                } catch (ItemNotFoundException infe) {
-                    /**
-                     * one of the parents of the specified item has been
-                     * removed externally; as we don't know its path,
-                     * we can't determine if it is a descendant;
-                     * InvalidItemStateException should only be thrown if
-                     * a descendant is affected;
-                     * => throw InvalidItemStateException for now
-                     * todo FIXME
-                     */
-                    // unable to determine relative depth, assume that the item
-                    // (or any of its ancestors) has been removed externally
-                    String msg = state.getId()
-                            + ": the item seems to have been removed externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
-                }
-
-                if (depth < 1) {
-                    // not a descendant
-                    continue;
-                }
-
-                // ensure capacity
-                if (depth > la.length) {
-                    List old[] = la;
-                    la = new List[depth + 10];
-                    System.arraycopy(old, 0, la, 0, old.length);
-                }
-
-                List list = la[depth - 1];
-                if (list == null) {
-                    list = new ArrayList();
-                    la[depth - 1] = list;
-                }
-                list.add(state);
-            }
-        } catch (RepositoryException re) {
-            log.warn("inconsistent hierarchy state", re);
-        }
-        // create an iterator over the collected descendants
-        // in decreasing depth order
-        IteratorChain resultIter = new IteratorChain();
-        for (int i = la.length - 1; i >= 0; i--) {
-            List list = la[i];
-            if (list != null) {
-                resultIter.addIterator(list.iterator());
-            }
-        }
-        /**
-         * if the resulting iterator chain is empty return
-         * EMPTY_LIST.iterator() instead because older versions
-         * of IteratorChain (pre Commons Collections 3.1)
-         * would throw UnsupportedOperationException in this
-         * situation
-         */
-        if (resultIter.getIterators().isEmpty()) {
-            return Collections.EMPTY_LIST.iterator();
-        }
-        return resultIter;
-    }
-
-    /**
-     * Same as <code>{@link #getDescendantTransientItemStates(NodeState)}</code>
-     * except that item state instances in the attic are returned.
-     *
-     * @param parent the common parent of the transient item state
-     * instances to be returned.
-     * @return an iterator over descendant transient item state instances in the attic
-     */
-    private Iterator getDescendantTransientItemStatesInAttic(NodeState parent) {
-        if (!transientStateMgr.hasDeletedItemStates()) {
-            return Collections.EMPTY_LIST.iterator();
-        }
-
-        // build ordered collection of descendant transient states in attic
-        // sorted by decreasing relative depth
-
-        // use a special attic-aware hierarchy manager
-        ZombieHierarchyManager zombieHierMgr =
-                new ZombieHierarchyManager(this, transientStateMgr.getAttic(), nsResolver);
-
-        // use an array of lists to group the descendants by relative depth;
-        // the depth is used as array index
-        List[] la = new List[10];
-        try {
-            Iterator iter = transientStateMgr.getDeletedItemStates();
-            while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
-                // determine relative depth: > 0 means it's a descendant
-                int depth = zombieHierMgr.getRelativeDepth(parent, state);
-                if (depth < 1) {
-                    // not a descendant
-                    continue;
-                }
-
-                // ensure capacity
-                if (depth > la.length) {
-                    List old[] = la;
-                    la = new List[depth + 10];
-                    System.arraycopy(old, 0, la, 0, old.length);
-                }
-
-                List list = la[depth - 1];
-                if (list == null) {
-                    list = new ArrayList();
-                    la[depth - 1] = list;
-                }
-                list.add(state);
-            }
-        } catch (RepositoryException re) {
-            log.warn("inconsistent hierarchy state", re);
-        }
-        // create an iterator over the collected descendants
-        // in decreasing depth order
-        IteratorChain resultIter = new IteratorChain();
-        for (int i = la.length - 1; i >= 0; i--) {
-            List list = la[i];
-            if (list != null) {
-                resultIter.addIterator(list.iterator());
-            }
-        }
-        /**
-         * if the resulting iterator chain is empty return
-         * EMPTY_LIST.iterator() instead because older versions
-         * of IteratorChain (pre Commons Collections 3.1)
-         * would throw UnsupportedOperationException in this
-         * situation
-         */
-        if (resultIter.getIterators().isEmpty()) {
-            return Collections.EMPTY_LIST.iterator();
-        }
-        return resultIter;
-    }
 
     /**
      *
@@ -521,173 +355,113 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @throws ItemStateException
      */
     private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException {
-
         ChangeLog changeLog = new ChangeLog();
-        if (itemState.getParent() == null) {
-            // root state -> get all item states
-            for (Iterator it = transientStateMgr.addedStates(); it.hasNext(); ) {
-                changeLog.added((ItemState) it.next());
-            }
-            for (Iterator it = transientStateMgr.modifiedStates(); it.hasNext(); ) {
-                changeLog.modified((ItemState) it.next());
-            }
-            for (Iterator it = transientStateMgr.deletedStates(); it.hasNext(); ) {
-                changeLog.deleted((ItemState) it.next());
-            }
-            for (Iterator it = transientStateMgr.getOperations(); it.hasNext(); ) {
-                changeLog.addOperation((Operation) it.next());
-            }
-        } else {
-            // build changelog for affected and decendant states only
-            collectTransientStates(itemState, changeLog);
-            collectRemovedStates(itemState, changeLog);
 
-            /**
-             * build set of item id's which are within the scope of
-             * (i.e. affected by) this save operation
-             */
-            Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
-            Set affectedStates = new HashSet();
-            while (it.hasNext()) {
-                affectedStates.add(it.next());
-            }
+        // build changelog for affected and decendant states only
+        collectTransientStates(itemState, changeLog);
 
-            checkIsSelfContained(affectedStates, changeLog);
-            collectOperations(affectedStates, changeLog);
+        /**
+         * build set of item id's which are within the scope of
+         * (i.e. affected by) this save operation
+         */
+        Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
+        Set affectedStates = new HashSet();
+        while (it.hasNext()) {
+            affectedStates.add(it.next());
         }
+
+        checkIsSelfContained(affectedStates, changeLog);
+        collectOperations(affectedStates, changeLog);
+
         return changeLog;
-    }
-
-    /**
-     * DIFF JACKRABBIT: copied and adapted from ItemImpl.getRemovedStates()
-     * <p/>
-     * Builds a list of transient descendant item states in the attic
-     * (i.e. those marked as 'removed') that are within the scope of
-     * <code>root</code>.
-     *
-     * @throws StaleItemStateException
-     */
-    private void collectRemovedStates(ItemState root, ChangeLog changeLog)
-        throws StaleItemStateException {
-        ItemState transientState;
-        if (root.isNode()) {
-            Iterator iter = getDescendantTransientItemStatesInAttic((NodeState)root);
-            while (iter.hasNext()) {
-                transientState = (ItemState) iter.next();
-                // check if stale
-                if (transientState.getStatus() == ItemState.STATUS_STALE_MODIFIED) {
-                    String msg = transientState.getId()
-                        + ": the item cannot be removed because it has been modified externally.";
-                    log.debug(msg);
-                    throw new StaleItemStateException(msg);
-                }
-                if (transientState.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
-                    String msg = transientState.getId()
-                        + ": the item cannot be removed because it has already been deleted externally.";
-                    log.debug(msg);
-                    throw new StaleItemStateException(msg);
-                }
-                changeLog.deleted(transientState);
-            }
-        }
     }
 
     /**
      * DIFF JACKRABBIT: copied and adapted from ItemImpl.getTransientStates()
      * <p/>
-     * Builds a list of transient (i.e. new or modified) item states that are
-     * within the scope of <code>state</code>.
+     * Builds a <code>ChangeLog</code> of transient (i.e. new, modified or
+     * deleted) item states that are within the scope of <code>state</code>.
      *
-     * @throws StaleItemStateException
-     * @throws ItemStateException
+     * @throws StaleItemStateException if a stale <code>ItemState</code> is
+     *                                 encountered while traversing the state
+     *                                 hierarchy. The <code>changeLog</code>
+     *                                 might have been populated with some
+     *                                 transient item states. A client should
+     *                                 therefore not reuse the <code>changeLog</code>
+     *                                 if such an exception is thrown.
+     * @throws ItemStateException if <code>state</code> is a new item state.
      */
     private void collectTransientStates(ItemState state, ChangeLog changeLog)
             throws StaleItemStateException, ItemStateException {
-        // list of transient states that should be persisted
-        ItemState transientState;
-
         // fail-fast test: check status of this item's state
         if (state.isTransient()) {
             switch (state.getStatus()) {
-                case ItemState.STATUS_EXISTING_MODIFIED:
-                    // add this item's state to the list
-                    changeLog.modified(state);
-                    break;
-
                 case ItemState.STATUS_NEW:
                     {
                         String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": cannot save a new item.";
                         log.debug(msg);
                         throw new ItemStateException(msg);
                     }
-
                 case ItemState.STATUS_STALE_MODIFIED:
                     {
                         String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been modified externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
-
                 case ItemState.STATUS_STALE_DESTROYED:
                     {
                         String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been deleted externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
-
                 case ItemState.STATUS_UNDEFINED:
                     {
                         String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved; it seems to have been removed externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
-
-                default:
-                    log.debug("unexpected state status (" + state.getStatus() + ")");
-                    // ignore
-                    break;
             }
         }
 
-        if (state.isNode()) {
-            // build list of 'new' or 'modified' descendants
-            Iterator iter = getDescendantTransientItemStates((NodeState) state);
-            while (iter.hasNext()) {
-                transientState = (ItemState) iter.next();
-                // fail-fast test: check status of transient state
-                switch (transientState.getStatus()) {
-                    case ItemState.STATUS_NEW:
-                    case ItemState.STATUS_EXISTING_MODIFIED:
-                        // add modified state to the list
-                        changeLog.modified(transientState);
-                        break;
+        // Set of transient states that should be persisted
+        Set transientStates = new HashSet();
+        state.collectTransientStates(transientStates);
 
-                    case ItemState.STATUS_STALE_MODIFIED:
-                        {
-                            String msg = transientState.getId() + ": the item cannot be saved because it has been modified externally.";
-                            log.debug(msg);
-                            throw new StaleItemStateException(msg);
-                        }
-
-                    case ItemState.STATUS_STALE_DESTROYED:
-                        {
-                            String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
-                            log.debug(msg);
-                            throw new StaleItemStateException(msg);
-                        }
-
-                    case ItemState.STATUS_UNDEFINED:
-                        {
-                            String msg = transientState.getId() + ": the item cannot be saved; it seems to have been removed externally.";
-                            log.debug(msg);
-                            throw new StaleItemStateException(msg);
-                        }
-
-                    default:
-                        log.debug("unexpected state status (" + transientState.getStatus() + ")");
-                        // ignore
-                        break;
-                }
+        for (Iterator it = transientStates.iterator(); it.hasNext();) {
+            ItemState transientState = (ItemState) it.next();
+            // fail-fast test: check status of transient state
+            switch (transientState.getStatus()) {
+                case ItemState.STATUS_NEW:
+                    changeLog.added(transientState);
+                    break;
+                case ItemState.STATUS_EXISTING_MODIFIED:
+                    changeLog.modified(transientState);
+                    break;
+                case ItemState.STATUS_EXISTING_REMOVED:
+                    changeLog.deleted(transientState);
+                    break;
+                case ItemState.STATUS_STALE_MODIFIED:
+                    {
+                        String msg = transientState.getId() + ": the item cannot be saved because it has been modified externally.";
+                        log.debug(msg);
+                        throw new StaleItemStateException(msg);
+                    }
+                case ItemState.STATUS_STALE_DESTROYED:
+                    {
+                        String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
+                        log.debug(msg);
+                        throw new StaleItemStateException(msg);
+                    }
+                case ItemState.STATUS_UNDEFINED:
+                    {
+                        String msg = transientState.getId() + ": the item cannot be saved; it seems to have been removed externally.";
+                        log.debug(msg);
+                        throw new StaleItemStateException(msg);
+                    }
+                default:
+                    log.debug("unexpected state status (" + transientState.getStatus() + ")");
+                    // ignore
+                    break;
             }
         }
     }

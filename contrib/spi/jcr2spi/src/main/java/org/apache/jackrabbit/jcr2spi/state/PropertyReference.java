@@ -89,4 +89,12 @@ class PropertyReference extends ChildItemReference implements ChildPropertyEntry
     public PropertyState getPropertyState() throws NoSuchItemStateException, ItemStateException {
         return (PropertyState) resolve();
     }
+
+    /**
+     * @inheritDoc
+     * @see ChildPropertyEntry#isAvailable()
+     */
+    public boolean isAvailable() {
+        return isResolved();
+    }
 }
