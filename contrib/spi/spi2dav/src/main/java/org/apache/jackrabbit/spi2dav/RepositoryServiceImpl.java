@@ -142,6 +142,7 @@ import javax.jcr.Credentials;
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -216,6 +217,10 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
         UsernamePasswordCredentials creds;
         if (credentials == null) {
             creds = new UsernamePasswordCredentials(null, null);
+        } else if (credentials instanceof SimpleCredentials) {
+            SimpleCredentials sCred = (SimpleCredentials) credentials;
+            creds = new UsernamePasswordCredentials(sCred.getUserID(), 
+                    String.valueOf(sCred.getPassword()));
         } else {
             // TODO properly build http client credentials
             creds = new UsernamePasswordCredentials(credentials.toString());
