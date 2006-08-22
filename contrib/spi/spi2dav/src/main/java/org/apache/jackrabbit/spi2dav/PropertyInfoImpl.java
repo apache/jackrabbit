@@ -85,7 +85,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
             } else {
                 values = new String[jcrValues.length];
                 for (int i = 0; i < jcrValues.length; i++) {
-                    values[i] = ValueFormat.getQValue(jcrValues[i], nsResolver);
+                    values[i] = ValueFormat.getQValue(jcrValues[i], nsResolver).getString();
                 }
             }
         }
