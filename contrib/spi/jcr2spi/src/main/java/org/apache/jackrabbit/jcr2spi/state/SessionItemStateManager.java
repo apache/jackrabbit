@@ -265,25 +265,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             workspaceItemStateMgr.execute(changeLog);
         }
 
-        // dispose the transient states marked 'new' or 'modified'
-        Iterator it = new IteratorChain(changeLog.addedStates(), changeLog.modifiedStates());
-        while (it.hasNext()) {
-            ItemState transientState = (ItemState) it.next();
-            // dispose the transient state, it is no longer used
-            transientStateMgr.disposeItemState(transientState);
-        }
-
-        // dispose the transient states marked 'removed'.
-        // item states in attic are removed after store, because
-        // the observation mechanism needs to build paths of removed
-        // items in update().
-        it = changeLog.deletedStates();
-        while (it.hasNext()) {
-            ItemState transientState = (ItemState) it.next();
-            // dispose the transient state, it is no longer used
-            transientStateMgr.disposeItemStateInAttic(transientState);
-        }
-
         // remove operations just processed
         transientStateMgr.disposeOperations(changeLog.getOperations());
     }
@@ -299,12 +280,15 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      *                            to be canceled as well in another sub-tree.
      */
     public void undo(ItemState itemState) throws ItemStateException {
-        // TODO: check if self contained
+        // check if self contained
+        ChangeLog changeLog = new ChangeLog();
+        collectTransientStates(itemState, changeLog, false);
+        changeLog.checkIsSelfContained();
 
+        // now do it for real
         Set affectedItemStates = new HashSet();
         itemState.revert(affectedItemStates);
 
-        ChangeLog changeLog = new ChangeLog();
         collectOperations(affectedItemStates, changeLog);
 
         // remove all canceled operations
@@ -358,10 +342,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         ChangeLog changeLog = new ChangeLog();
 
         // build changelog for affected and decendant states only
-        collectTransientStates(itemState, changeLog);
+        collectTransientStates(itemState, changeLog, true);
 
         /**
-         * build set of item id's which are within the scope of
+         * build set of item states which are within the scope of
          * (i.e. affected by) this save operation
          */
         Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
@@ -370,7 +354,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             affectedStates.add(it.next());
         }
 
-        checkIsSelfContained(affectedStates, changeLog);
+        changeLog.checkIsSelfContained();
         collectOperations(affectedStates, changeLog);
 
         return changeLog;
@@ -391,7 +375,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      *                                 if such an exception is thrown.
      * @throws ItemStateException if <code>state</code> is a new item state.
      */
-    private void collectTransientStates(ItemState state, ChangeLog changeLog)
+    private void collectTransientStates(ItemState state, ChangeLog changeLog, boolean throwOnStale)
             throws StaleItemStateException, ItemStateException {
         // fail-fast test: check status of this item's state
         if (state.isTransient()) {
@@ -402,24 +386,28 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                         log.debug(msg);
                         throw new ItemStateException(msg);
                     }
-                case ItemState.STATUS_STALE_MODIFIED:
-                    {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been modified externally.";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
-                    }
-                case ItemState.STATUS_STALE_DESTROYED:
-                    {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been deleted externally.";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
-                    }
-                case ItemState.STATUS_UNDEFINED:
-                    {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved; it seems to have been removed externally.";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
-                    }
+            }
+            if (throwOnStale) {
+                switch (state.getStatus()) {
+                    case ItemState.STATUS_STALE_MODIFIED:
+                        {
+                            String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been modified externally.";
+                            log.debug(msg);
+                            throw new StaleItemStateException(msg);
+                        }
+                    case ItemState.STATUS_STALE_DESTROYED:
+                        {
+                            String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been deleted externally.";
+                            log.debug(msg);
+                            throw new StaleItemStateException(msg);
+                        }
+                    case ItemState.STATUS_UNDEFINED:
+                        {
+                            String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved; it seems to have been removed externally.";
+                            log.debug(msg);
+                            throw new StaleItemStateException(msg);
+                        }
+                }
             }
         }
 
@@ -441,19 +429,21 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                     changeLog.deleted(transientState);
                     break;
                 case ItemState.STATUS_STALE_MODIFIED:
-                    {
+                    if (throwOnStale) {
                         String msg = transientState.getId() + ": the item cannot be saved because it has been modified externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
+                    } else {
+                        changeLog.modified(transientState);
                     }
                 case ItemState.STATUS_STALE_DESTROYED:
-                    {
+                    if (throwOnStale) {
                         String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
                 case ItemState.STATUS_UNDEFINED:
-                    {
+                    if (throwOnStale) {
                         String msg = transientState.getId() + ": the item cannot be saved; it seems to have been removed externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
@@ -488,71 +478,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
     }
 
-    /**
-     * Make sure that this save operation is totally 'self-contained'
-     * and independant; items within the scope of this update operation
-     * must not have 'external' dependencies;
-     * (e.g. moving a node requires that the target node including both
-     * old and new parents are saved)
-     *
-     * @param affectedStates
-     * @param changeLog
-     */
-    private void checkIsSelfContained(Set affectedStates, ChangeLog changeLog) throws ItemStateException {
-        Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
-        while (it.hasNext()) {
-            ItemState transientState = (ItemState) it.next();
-            if (transientState.isNode()) {
-                NodeState nodeState = (NodeState) transientState;
-                Set dependentStates = new HashSet();
-                if (nodeState.hasOverlayedState()) {
-                    NodeState oldParentState = nodeState.getOverlayedState().getParent();
-                    NodeState newParentState = nodeState.getParent();
-                    if (oldParentState != null) {
-                        if (newParentState == null) {
-                            // node has been removed, add old parent
-                            // to dependencies
-                            dependentStates.add(oldParentState);
-                        } else {
-                            if (!oldParentState.equals(newParentState)) {
-                                // node has been moved, add old and new parent
-                                // to dependencies
-                                dependentStates.add(oldParentState);
-                                dependentStates.add(newParentState);
-                            }
-                        }
-                    }
-                }
-                // removed child node entries
-                Iterator cneIt = nodeState.getRemovedChildNodeEntries().iterator();
-                while (cneIt.hasNext()) {
-                    ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
-                    dependentStates.add(cne.getNodeState());
-                }
-                // added child node entries
-                cneIt = nodeState.getAddedChildNodeEntries().iterator();
-                while (cneIt.hasNext()) {
-                    ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
-                    dependentStates.add(cne.getNodeState());
-                }
-
-                // now walk through dependencies and check whether they
-                // are within the scope of this save operation
-                Iterator depIt = dependentStates.iterator();
-                while (depIt.hasNext()) {
-                    NodeState dependantState = (NodeState) depIt.next();
-                    if (!affectedStates.contains(dependantState)) {
-                        // need to save the parent as well
-                        String msg = LogUtil.safeGetJCRPath(dependantState, nsResolver, hierMgr) + " needs to be saved as well.";
-                        log.debug(msg);
-                        throw new ItemStateException(msg);
-                    }
-                }
-            }
-        }
-    }
-
     //--------------------------------------------------------------------------
+
     /**
      * @inheritDoc
      */
