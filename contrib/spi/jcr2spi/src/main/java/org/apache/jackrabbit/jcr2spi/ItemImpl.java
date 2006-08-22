@@ -63,12 +63,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemImpl.class);
 
-    protected static final int STATUS_NORMAL = 0;
-    protected static final int STATUS_MODIFIED = 1;
-    protected static final int STATUS_DESTROYED = 2;
-    protected static final int STATUS_INVALIDATED = 3;
-
-    private int status;
     private ItemState state;
 
     // protected fields for VersionImpl and VersionHistoryImpl
@@ -86,7 +80,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
         this.itemMgr = itemManager;
         this.state = state;
-        status = STATUS_NORMAL;
 
         if (listeners != null) {
             for (int i = 0; i < listeners.length; i++) {
@@ -172,22 +165,14 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * @see javax.jcr.Item#isNew()
      */
     public boolean isNew() {
-        // short-cut: read-only implementations always return false.
-        if (!isSupportedOption(Repository.LEVEL_2_SUPPORTED)) {
-            return false;
-        }
-        return state.isTransient() && state.getOverlayedState() == null;
+        return state.getStatus() == ItemState.STATUS_NEW;
     }
 
     /**
      * @see javax.jcr.Item#isModified()
      */
     public boolean isModified() {
-        // short-cut: read-only implementations always return false.
-        if (!isSupportedOption(Repository.LEVEL_2_SUPPORTED)) {
-            return false;
-        }
-        return state.isTransient() && state.getOverlayedState() != null;
+        return state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED;
     }
 
     /**
@@ -199,15 +184,17 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         }
         if (otherItem instanceof ItemImpl) {
             ItemImpl other = (ItemImpl) otherItem;
+            if (this.state == other.state) {
+                return true;
+            }
             // 2 items may only be the same if the were accessed from Sessions
             // bound to the same workspace
             String otherWspName = other.session.getWorkspace().getName();
             if (session.getWorkspace().getName().equals(otherWspName)) {
                 // in addition they must provide the same id irrespective of
                 // any transient modifications.
-                // TODO: TO_BE_FIXED check if this is sufficient check (SPI-id)
-                ItemId thisId = (state.hasOverlayedState()) ? state.getOverlayedState().getId() : state.getId();
-                ItemId otherId = (other.getItemState().hasOverlayedState()) ? other.getItemState().getOverlayedState().getId() : other.getItemState().getId();
+                ItemId thisId = state.getOverlayedState().getId();
+                ItemId otherId = other.state.getOverlayedState().getId();
                 return thisId.equals(otherId);
             }
         }
@@ -294,7 +281,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * {@inheritDoc}
      */
     public void stateCreated(ItemState created) {
-        status = STATUS_NORMAL;
     }
 
     /**
@@ -303,8 +289,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     public void stateDestroyed(ItemState destroyed) {
         // underlying state has been permanently destroyed
 
-        // set state of this instance to 'destroyed'
-        status = STATUS_DESTROYED;
         // dispose state
         if (state == destroyed) {
             state.removeListener(this);
@@ -321,7 +305,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
-        status = STATUS_MODIFIED;
     }
 
     /**
@@ -374,8 +357,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                      * permanently invalidated
                      */
                     notifyDestroyed();
-                    // now set state of this instance to 'destroyed'
-                    status = STATUS_DESTROYED;
                     // finally dispose state
                     state.removeListener(this);
                     state = null;
@@ -390,8 +371,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
                      * permanently invalidated
                      */
                     notifyDestroyed();
-                    // now set state of this instance to 'destroyed'
-                    status = STATUS_DESTROYED;
                     // finally dispose state
                     state.removeListener(this);
                     state = null;
@@ -404,8 +383,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
          * invalidated
          */
         notifyInvalidated();
-        // now render this instance 'invalid'
-        status = STATUS_INVALIDATED;
     }
 
     //----------------------------------------------------------< LiveCycle >---
@@ -480,14 +457,8 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         // check session status
         session.checkIsAlive();
         // check status of this item for read operation
-        switch (status) {
-            case STATUS_NORMAL:
-            case STATUS_MODIFIED:
-                return;
-
-            case STATUS_DESTROYED:
-            case STATUS_INVALIDATED:
-                throw new InvalidItemStateException("Item '" + getPath() + "' doesn't exist anymore");
+        if (state == null || !state.isValid()) {
+            throw new InvalidItemStateException("Item '" + getPath() + "' doesn't exist anymore");
         }
     }
 
