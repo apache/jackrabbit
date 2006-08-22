@@ -668,6 +668,9 @@ public class NodeState extends ItemState {
      */
     public synchronized boolean hasPropertyName(QName propName) {
         PropertyReference ref = (PropertyReference) properties.get(propName);
+        if (ref == null) {
+            return false;
+        }
         if (ref.isResolved()) {
             try {
                 return ref.getPropertyState().isValid();
