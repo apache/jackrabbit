@@ -359,12 +359,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         new Batch(sessionInfo).execute(changes);
     }
 
-    public void store(ItemState state) throws IllegalStateException {
-    }
-
-    public void destroy(ItemState state) throws IllegalStateException {
-    }
-
     public void dispose() {
         if (externalChangeListener != null) {
             try {
