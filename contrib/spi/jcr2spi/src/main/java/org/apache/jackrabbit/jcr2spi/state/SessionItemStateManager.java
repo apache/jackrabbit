@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.HierarchyManagerImpl;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
@@ -338,24 +337,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @throws ItemStateException
      */
     private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException {
-        ChangeLog changeLog = new ChangeLog();
-
         // build changelog for affected and decendant states only
+        ChangeLog changeLog = new ChangeLog();
         collectTransientStates(itemState, changeLog, true);
-
-        /**
-         * build set of item states which are within the scope of
-         * (i.e. affected by) this save operation
-         */
-        Iterator it = new IteratorChain(changeLog.modifiedStates(), changeLog.deletedStates());
-        Set affectedStates = new HashSet();
-        while (it.hasNext()) {
-            affectedStates.add(it.next());
-        }
 
         changeLog.checkIsSelfContained();
         changeLog.collectOperations(transientStateMgr.getOperations());
-
         return changeLog;
     }
 
