@@ -80,7 +80,7 @@ public class SimpleSelectionTest extends AbstractQueryTest {
         Query query = session.getWorkspace().getQueryManager().createQuery(propQuery, Query.XPATH);
         QueryResult result = query.execute();
 
-        assertEquals("Should have only 1 result", 1, result.getRows().getSize());
+        assertEquals("Should have only 1 result", 1, getSize(result.getRows()));
         assertTrue("Should contain the searched property",
                 Arrays.asList(result.getColumnNames()).contains(jcrPrimaryType));
     }
