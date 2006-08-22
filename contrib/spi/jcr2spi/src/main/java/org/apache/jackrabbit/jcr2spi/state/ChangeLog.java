@@ -17,10 +17,12 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.commons.collections.iterators.IteratorChain;
 
 import java.util.Iterator;
 import java.util.Set;
 import java.util.LinkedHashSet;
+import java.util.HashSet;
 
 /**
  * Registers changes made to states and references and consolidates
@@ -161,6 +163,71 @@ public class ChangeLog {
      */
     public Iterator modifiedRefs() {
         return modifiedRefs.iterator();
+    }
+
+    /**
+     * Make sure that this ChangeLog is totally 'self-contained'
+     * and independant; items within the scope of this update operation
+     * must not have 'external' dependencies;
+     * (e.g. moving a node requires that the target node including both
+     * old and new parents are saved)
+     */
+    public void checkIsSelfContained()
+            throws ItemStateException {
+        Set affectedStates = new HashSet();
+        affectedStates.addAll(modifiedStates);
+        affectedStates.addAll(deletedStates);
+        Iterator it = new IteratorChain(modifiedStates(), deletedStates());
+        while (it.hasNext()) {
+            ItemState transientState = (ItemState) it.next();
+            if (transientState.isNode()) {
+                NodeState nodeState = (NodeState) transientState;
+                Set dependentStates = new HashSet();
+                if (nodeState.hasOverlayedState()) {
+                    // TODO: oldParentState is overlayed state from workspace. do not use!
+                    NodeState oldParentState = nodeState.getOverlayedState().getParent();
+                    NodeState newParentState = nodeState.getParent();
+                    if (oldParentState != null) {
+                        if (newParentState == null) {
+                            // node has been removed, add old parent
+                            // to dependencies
+                            dependentStates.add(oldParentState);
+                        } else {
+                            if (!oldParentState.equals(newParentState)) {
+                                // node has been moved, add old and new parent
+                                // to dependencies
+                                dependentStates.add(oldParentState);
+                                dependentStates.add(newParentState);
+                            }
+                        }
+                    }
+                }
+                // removed child node entries
+                Iterator cneIt = nodeState.getRemovedChildNodeEntries().iterator();
+                while (cneIt.hasNext()) {
+                    ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
+                    dependentStates.add(cne.getNodeState());
+                }
+                // added child node entries
+                cneIt = nodeState.getAddedChildNodeEntries().iterator();
+                while (cneIt.hasNext()) {
+                    ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
+                    dependentStates.add(cne.getNodeState());
+                }
+
+                // now walk through dependencies and check whether they
+                // are within the scope of this save operation
+                Iterator depIt = dependentStates.iterator();
+                while (depIt.hasNext()) {
+                    NodeState dependantState = (NodeState) depIt.next();
+                    if (!affectedStates.contains(dependantState)) {
+                        // need to save the parent as well
+                        String msg = dependantState.getNodeId().toString() + " needs to be saved as well.";
+                        throw new ItemStateException(msg);
+                    }
+                }
+            }
+        }
     }
 
     //-----------------------------< Inform ChangeLog about Success/Failure >---

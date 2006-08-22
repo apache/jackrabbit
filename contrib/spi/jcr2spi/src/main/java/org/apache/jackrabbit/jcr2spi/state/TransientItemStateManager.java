@@ -40,8 +40,8 @@ import java.util.Collection;
  * still valid. This item state manager also provides methods to create new
  * item states. While all other modifications can be invoked on the item state
  * instances itself, creating a new node state is done using
- * {@link #createNewNodeState(QName,String,QName,NodeState)} and
- * {@link #createNewPropertyState(NodeState, QName)}.
+ * {@link #createNewNodeState(QName, String, QName, QNodeDefinition, NodeState)}
+ * and {@link #createNewPropertyState(QName, NodeState, QPropertyDefinition)}.
  */
 public class TransientItemStateManager extends CachingItemStateManager
         implements ItemStateLifeCycleListener {
@@ -68,12 +68,6 @@ public class TransientItemStateManager extends CachingItemStateManager
      * instances.
      */
     private final TransientISFactory isf;
-
-    /**
-     * ItemStateManager view of the states in the attic; lazily instantiated
-     * in {@link #getAttic()}
-     */
-    private AtticItemStateManager attic;
 
     /**
      * The root node state or <code>null</code> if it hasn't been retrieved yet.
@@ -258,35 +252,6 @@ public class TransientItemStateManager extends CachingItemStateManager
     }
 
     /**
-     * Disposes a single item <code>state</code>. The state is discarded removed
-     * from the map of added or modified states and disconnected from the
-     * underlying state. This method does not take states into account that are
-     * marked as deleted.
-     *
-     * @param state the item state to dispose.
-     */
-    public void disposeItemState(ItemState state) {
-        state.discard();
-        if (changeLog.addedStates.remove(state)) {
-            changeLog.modifiedStates.remove(state);
-        }
-        state.onDisposed();
-    }
-
-    /**
-     * Disposes a single item <code>state</code> that is marked as deleted. The
-     * state is discarded removed from the map of removed states and
-     * disconnected from the underlying state.
-     *
-     * @param state the item state to dispose.
-     */
-    public void disposeItemStateInAttic(ItemState state) {
-        state.discard();
-        changeLog.deletedStates.remove(state);
-        state.onDisposed();
-    }
-
-    /**
      * Disposes all transient item states in the cache and in the attic.
      */
     public void disposeAllItemStates() {
@@ -300,19 +265,6 @@ public class TransientItemStateManager extends CachingItemStateManager
             state.onDisposed();
         }
         changeLog.reset();
-    }
-
-    /**
-     * Return the attic item state provider that holds all items
-     * moved into the attic.
-     *
-     * @return attic
-     */
-    public ItemStateManager getAttic() {
-        if (attic == null) {
-            attic = new AtticItemStateManager();
-        }
-        return attic;
     }
 
     /**
@@ -450,93 +402,6 @@ public class TransientItemStateManager extends CachingItemStateManager
                 break;
             default:
                 log.warn("ItemState has invalid status: " + state.getStatus());
-        }
-    }
-
-    //--------------------------------------------------------< inner classes >
-
-    /**
-     * ItemStateManager view of the states in the attic
-     *
-     * @see TransientItemStateManager#getAttic()
-     */
-    private class AtticItemStateManager implements ItemStateManager {
-
-        AtticItemStateManager() {
-        }
-
-        /**
-         * Since the root node may never be removed, this method always returns
-         * <code>null</code>.
-         *
-         * @return <code>null</code> since the root node cannot be removed.
-         * @throws ItemStateException
-         * @see ItemStateManager#getRootState()
-         */
-        public NodeState getRootState() throws ItemStateException {
-            return null;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public ItemState getItemState(ItemId id)
-                throws NoSuchItemStateException, ItemStateException {
-
-            // TODO: too expensive. rather lookup item and check state
-            ItemState state = null;
-            for (Iterator it = changeLog.deletedStates(); it.hasNext(); ) {
-                ItemState s = (ItemState) it.next();
-                if (s.getId().equals(id)) {
-                    state = s;
-                }
-            }
-            if (state != null) {
-                return state;
-            } else {
-                throw new NoSuchItemStateException(id.toString());
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public boolean hasItemState(ItemId id) {
-            // TODO: too expensive. rather lookup item and check state
-            for (Iterator it = changeLog.deletedStates(); it.hasNext(); ) {
-                ItemState s = (ItemState) it.next();
-                if (s.getId().equals(id)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /**
-         * Always throws <code>UnsupportedOperationException</code>. Within the
-         * transient space node references cannot be managed.
-         *
-         * @param nodeState
-         * @throws UnsupportedOperationException
-         * @see ItemStateManager#getReferingStates(NodeState)
-         */
-        public Collection getReferingStates(NodeState nodeState)
-                throws NoSuchItemStateException, ItemStateException {
-            // n/a
-            throw new UnsupportedOperationException("getNodeReferences() not implemented");
-        }
-
-        /**
-         * Always throws <code>UnsupportedOperationException</code>. Within the
-         * transient space node references cannot be managed.
-         *
-         * @param nodeState
-         * @throws UnsupportedOperationException
-         * @see ItemStateManager#hasReferingStates(NodeState)
-         */
-        public boolean hasReferingStates(NodeState nodeState) {
-            // n/a
-            throw new UnsupportedOperationException("getNodeReferences() not implemented");
         }
     }
 
