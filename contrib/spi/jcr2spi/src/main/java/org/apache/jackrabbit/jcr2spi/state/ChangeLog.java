@@ -230,7 +230,32 @@ public class ChangeLog {
         }
     }
 
+    /**
+     * Populates this <code>ChangeLog</code> with operations that are within the
+     * scope of this change set.
+     *
+     * @param operations an Iterator of <code>Operation</code>s which are the
+     *                   candidates to be included in this <code>ChangeLog</code>.
+     */
+    public void collectOperations(Iterator operations) {
+        Set affectedStates = new HashSet();
+        affectedStates.addAll(deletedStates);
+        affectedStates.addAll(modifiedStates);
+        while (operations.hasNext()) {
+            Operation op = (Operation) operations.next();
+            Iterator states = op.getAffectedItemStates().iterator();
+            while (states.hasNext()) {
+                ItemState state = (ItemState) states.next();
+                if (affectedStates.contains(state)) {
+                    addOperation(op);
+                    break;
+                }
+            }
+        }
+    }
+
     //-----------------------------< Inform ChangeLog about Success/Failure >---
+
     /**
      * Push all states contained in the various maps of
      * items we have.

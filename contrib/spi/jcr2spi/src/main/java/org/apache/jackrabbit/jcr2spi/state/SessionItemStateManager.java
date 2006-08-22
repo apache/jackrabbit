@@ -284,12 +284,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         ChangeLog changeLog = new ChangeLog();
         collectTransientStates(itemState, changeLog, false);
         changeLog.checkIsSelfContained();
+        changeLog.collectOperations(transientStateMgr.getOperations());
 
         // now do it for real
         Set affectedItemStates = new HashSet();
         itemState.revert(affectedItemStates);
-
-        collectOperations(affectedItemStates, changeLog);
 
         // remove all canceled operations
         transientStateMgr.disposeOperations(changeLog.getOperations());
@@ -355,7 +354,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
 
         changeLog.checkIsSelfContained();
-        collectOperations(affectedStates, changeLog);
+        changeLog.collectOperations(transientStateMgr.getOperations());
 
         return changeLog;
     }
@@ -452,28 +451,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                     log.debug("unexpected state status (" + transientState.getStatus() + ")");
                     // ignore
                     break;
-            }
-        }
-    }
-
-    /**
-     * Retuns a list of operations that are in the scope the the change set
-     * defined by the affected <code>ItemState</code>s.
-     *
-     * @param affectedStates
-     * @param changeLog
-     */
-    private void collectOperations(Set affectedStates, ChangeLog changeLog) {
-        Iterator opsIter = transientStateMgr.getOperations();
-        while (opsIter.hasNext()) {
-            Operation op = (Operation) opsIter.next();
-            Iterator states = op.getAffectedItemStates().iterator();
-            while (states.hasNext()) {
-                ItemState state = (ItemState) states.next();
-                if (affectedStates.contains(state)) {
-                    changeLog.addOperation(op);
-                    break;
-                }
             }
         }
     }
