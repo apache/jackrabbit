@@ -16,14 +16,12 @@
  */
 package org.apache.jackrabbit.spi;
 
-import javax.security.auth.Subject;
-
 /**
  * <code>SessionInfo</code>...
  */
 public interface SessionInfo {
 
-    public Subject getSubject();
+    public String getUserID();
 
     public String getWorkspaceName();
 

@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 
 import org.apache.jackrabbit.spi.SessionInfo;
 import javax.jcr.Credentials;
-import javax.security.auth.Subject;
+import javax.jcr.SimpleCredentials;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,23 +32,23 @@ public class SessionInfoImpl implements SessionInfo {
 
     private static Logger log = LoggerFactory.getLogger(SessionInfoImpl.class);
 
-    private final Subject subject;
+    private final Credentials credentials;
     private final String workspaceName;
     private String batchId;
 
     private final Set lockTokens = new HashSet();
 
     SessionInfoImpl(Credentials creds, String workspaceName) {
-        Set publicCreds = new HashSet();
-        if (creds != null) {
-            publicCreds.add(creds);
-        }
-        this.subject = new Subject(false, new HashSet(), publicCreds, new HashSet());
+        this.credentials = creds;
         this.workspaceName = workspaceName;
     }
 
-    public Subject getSubject() {
-        return subject;
+    public String getUserID() {
+        if (credentials instanceof SimpleCredentials) {
+            return ((SimpleCredentials) credentials).getUserID();
+        } else {
+            return null;
+        }
     }
 
     public String getWorkspaceName() {
@@ -73,5 +73,9 @@ public class SessionInfoImpl implements SessionInfo {
 
     public void setBatchId(String id) {
         batchId = id;
+    }
+
+    Credentials getCredentials() {
+        return credentials;
     }
 }

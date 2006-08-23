@@ -81,7 +81,6 @@ import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
-import javax.security.auth.Subject;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
@@ -92,8 +91,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.AccessControlException;
-import java.security.Principal;
-import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -119,7 +116,6 @@ public class SessionImpl implements Session, ManagerProvider {
     private final WorkspaceImpl workspace;
 
     private final String userId;
-    private final Subject subject;
 
     private final LocalNamespaceMappings nsMappings;
     private final NodeTypeManagerImpl ntManager;
@@ -134,18 +130,7 @@ public class SessionImpl implements Session, ManagerProvider {
 
         alive = true;
         this.repository = repository;
-        this.subject = sessionInfo.getSubject();
-
-        // DIFF JACKRABBIT don't expect principals
-        // TODO: not totally correct to use the first principles name as UserId
-        Set principals = sessionInfo.getSubject().getPrincipals();
-        if (!principals.isEmpty()) {
-            // use 1st principal in case there are more that one
-            Principal principal = (Principal) principals.iterator().next();
-            userId = principal.getName();
-        } else {
-            userId = null;
-        }
+        userId = sessionInfo.getUserID();
 
         workspace = createWorkspaceInstance(config.getRepositoryService(), sessionInfo);
         valueFactory = config.getValueFactory();
@@ -214,9 +199,9 @@ public class SessionImpl implements Session, ManagerProvider {
         }
 
         // set IMPERSONATOR_ATTRIBUTE attribute of given credentials
-        // with subject of current session
+        // with current session
         SimpleCredentials creds = (SimpleCredentials) credentials;
-        creds.setAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE, subject);
+        creds.setAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE, this);
 
         try {
             return repository.login(credentials, getWorkspace().getName());
