@@ -131,17 +131,15 @@ public class NodeState extends ItemState {
      * @param nodeTypeName  node type of this node
      * @param definition
      * @param initialStatus the initial status of the node state object
-     * @param isTransient   flag indicating whether this state is transient or
-     *                      not.
      * @param isf           the item state factory responsible for creating node
      *                      states.
      * @param idFactory     the <code>IdFactory</code> to create new id
      */
     protected NodeState(QName name, String uuid, NodeState parent,
                         QName nodeTypeName, QNodeDefinition definition,
-                        int initialStatus, boolean isTransient,
-                        ItemStateFactory isf, IdFactory idFactory) {
-        super(parent, initialStatus, isTransient, idFactory);
+                        int initialStatus, ItemStateFactory isf,
+                        IdFactory idFactory) {
+        super(parent, initialStatus, idFactory);
         this.name = name;
         this.uuid = uuid;
         this.nodeTypeName = nodeTypeName;
@@ -156,15 +154,13 @@ public class NodeState extends ItemState {
      * @param overlayedState the backing node state being overlayed
      * @param parent         the parent of this NodeState
      * @param initialStatus  the initial status of the node state object
-     * @param isTransient    flag indicating whether this state is transient or
-     *                       not
      * @param idFactory      the <code>IdFactory</code> to create new id
      *                       instance.
      */
     protected NodeState(NodeState overlayedState, NodeState parent,
-                        int initialStatus, boolean isTransient,
-                        ItemStateFactory isf, IdFactory idFactory) {
-        super(overlayedState, parent, initialStatus, isTransient, idFactory);
+                        int initialStatus, ItemStateFactory isf,
+                        IdFactory idFactory) {
+        super(overlayedState, parent, initialStatus, idFactory);
         this.isf = isf;
         pull();
     }
@@ -1004,8 +1000,7 @@ public class NodeState extends ItemState {
      * @param references
      */
     void setNodeReferences(NodeReferences references) {
-        if (isTransient()) {
-            // TODO: check again
+        if (getOverlayedState() != null) {
             throw new UnsupportedOperationException("Cannot set references to a transient node state.");
         }
         this.references = references;

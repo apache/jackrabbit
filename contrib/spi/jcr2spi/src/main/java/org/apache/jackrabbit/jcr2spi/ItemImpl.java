@@ -242,18 +242,17 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         }
 
         // check status of this item's state
-        if (isTransient()) {
-            switch (state.getStatus()) {
-                case ItemState.STATUS_NEW:
-                    String msg = "Cannot refresh a new item (" + safeGetJCRPath() + ").";
-                    log.debug(msg);
-                    throw new RepositoryException(msg);
-                case ItemState.STATUS_STALE_DESTROYED:
-                    msg = "Cannot refresh on a deleted item (" + safeGetJCRPath() + ").";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
-            }
+        switch (state.getStatus()) {
+            case ItemState.STATUS_NEW:
+                String msg = "Cannot refresh a new item (" + safeGetJCRPath() + ").";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            case ItemState.STATUS_STALE_DESTROYED:
+                msg = "Cannot refresh on a deleted item (" + safeGetJCRPath() + ").";
+                log.debug(msg);
+                throw new InvalidItemStateException(msg);
         }
+
         // reset all transient modifications from this item and its decendants.
         try {
             session.getSessionItemStateManager().undo(state);
@@ -507,15 +506,6 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     ItemState getItemState() {
         return state;
     }
-
-    /**
-     *
-     * @return
-     */
-    boolean isTransient() {
-        return state.isTransient();
-    }
-
 
     /**
      * Failsafe conversion of internal <code>Path</code> to JCR path for use in
