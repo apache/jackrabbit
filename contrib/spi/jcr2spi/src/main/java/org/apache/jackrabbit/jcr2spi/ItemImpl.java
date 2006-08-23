@@ -23,7 +23,7 @@ import org.apache.jackrabbit.jcr2spi.state.StaleItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateListener;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
@@ -59,7 +59,7 @@ import java.util.Collections;
  * <code>ItemImpl</code>...
  * TODO: remove status in ItemImpl and ask item state for status!
  */
-public abstract class ItemImpl implements Item, ItemStateListener {
+public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemImpl.class);
 
@@ -276,7 +276,7 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         session.getSessionItemStateManager().execute(rm);
     }
 
-    //--------------------------------------------------< ItemStateListener >---
+    //-----------------------------------------< ItemStateLifeCycleListener >---
     /**
      * {@inheritDoc}
      */
@@ -307,82 +307,41 @@ public abstract class ItemImpl implements Item, ItemStateListener {
     public void stateModified(ItemState modified) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDiscarded(ItemState discarded) {
-        /**
-         * the state of this item has been discarded, probably as a result
-         * of calling Node.revert() or ItemImpl.setRemoved()
-         */
-        if (isTransient()) {
-            switch (state.getStatus()) {
-                /**
-                 * persistent item that has been transiently removed
-                 */
-                case ItemState.STATUS_EXISTING_REMOVED:
-                    /**
-                     * persistent item that has been transiently modified
-                     */
-                case ItemState.STATUS_EXISTING_MODIFIED:
-                    /**
-                     * persistent item that has been transiently modified or removed
-                     * and the underlying persistent state has been externally
-                     * modified since the transient modification/removal.
-                     */
-                case ItemState.STATUS_STALE_MODIFIED:
-                    ItemState persistentState = state.getOverlayedState();
-                    /**
-                     * the state is a transient wrapper for the underlying
-                     * persistent state, therefore restore the
-                     * persistent state and resurrect this item instance
-                     * if necessary
-                     */
-                    // DIFF JACKRABBIT: this is now done in stateUncovering()
-//                    state.removeListener(this);
-//                    persistentState.addListener(this);
-//                    itemStateMgr.disconnectTransientItemState(state);
-//                    state = persistentState;
-
-                    return;
-
-                    /**
-                     * persistent item that has been transiently modified or removed
-                     * and the underlying persistent state has been externally
-                     * destroyed since the transient modification/removal.
-                     */
-                case ItemState.STATUS_STALE_DESTROYED:
-                    /**
-                     * first notify the listeners that this instance has been
-                     * permanently invalidated
-                     */
-                    notifyDestroyed();
-                    // finally dispose state
-                    state.removeListener(this);
-                    state = null;
-                    return;
-
-                    /**
-                     * new item that has been transiently added
-                     */
-                case ItemState.STATUS_NEW:
-                    /**
-                     * first notify the listeners that this instance has been
-                     * permanently invalidated
-                     */
-                    notifyDestroyed();
-                    // finally dispose state
-                    state.removeListener(this);
-                    state = null;
-                    return;
-            }
+    public void statusChanged(ItemState state, int previousStatus) {
+        // TODO: remove this ItemImpl as listener from ItemState when it is destroyed?
+        switch (state.getStatus()) {
+            case ItemState.STATUS_EXISTING:
+                // this item was modified and is now reverted or has been saved
+                // -> nothing to do
+                break;
+            case ItemState.STATUS_EXISTING_MODIFIED:
+                // item was modified and is not existing-modified
+                // -> nothing to do
+                break;
+            case ItemState.STATUS_EXISTING_REMOVED:
+                // item is transiently removed
+                // notify listeners of this item that this item has been destroyed
+                notifyDestroyed();
+                break;
+            case ItemState.STATUS_NEW:
+                // should never happen. an item cannot change its state to new
+                log.warn("invalid state change to STATUS_NEW");
+                break;
+            case ItemState.STATUS_REMOVED:
+                // item has been removed permanently
+                notifyDestroyed();
+                break;
+            case ItemState.STATUS_STALE_DESTROYED:
+                // item has been removed permanently while there were transient
+                // changes pending
+                notifyDestroyed();
+                break;
+            case ItemState.STATUS_STALE_MODIFIED:
+                // item has been modified externaly while there were transient
+                // changes pending
+                // -> nothing to do
+                break;
         }
-
-        /**
-         * first notify the listeners that this instance has been
-         * invalidated
-         */
-        notifyInvalidated();
     }
 
     //----------------------------------------------------------< LiveCycle >---

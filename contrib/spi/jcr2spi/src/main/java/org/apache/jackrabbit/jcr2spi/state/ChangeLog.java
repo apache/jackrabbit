@@ -284,20 +284,19 @@ public class ChangeLog {
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             state.setStatus(ItemState.STATUS_EXISTING);
-            state.notifyStateUpdated();
+            state.notifyStateUpdated();  // TODO: is this needed anymore?
         }
         iter = deletedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
-            state.setStatus(ItemState.STATUS_EXISTING_REMOVED);
-            state.notifyStateDestroyed();
-            state.discard();
+            state.setStatus(ItemState.STATUS_REMOVED);
+            state.notifyStateDestroyed();  // TODO: is this needed anymore?
         }
         iter = addedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             state.setStatus(ItemState.STATUS_EXISTING);
-            state.notifyStateCreated();
+            state.notifyStateCreated();  // TODO: is this needed anymore?
         }
     }
 
@@ -312,60 +311,6 @@ public class ChangeLog {
         modifiedRefs.clear();
         // also clear all operations
         operations.clear();
-    }
-
-    /**
-     * Disconnect all states in the change log from their overlaid
-     * states.
-     */
-    public void disconnect() {
-        Iterator iter = modifiedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).disconnect();
-        }
-        iter = deletedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).disconnect();
-        }
-        iter = addedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).disconnect();
-        }
-    }
-
-    /**
-     * Undo changes made to items in the change log. Discards
-     * added items, refreshes modified and resurrects deleted
-     * items.
-     *
-     * @param parent parent manager that will hold current data
-     */
-    public void undo(ItemStateManager parent) {
-        Iterator iter = modifiedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            try {
-                state.connect(parent.getItemState(state.getId()));
-                state.pull();
-            } catch (ItemStateException e) {
-                state.discard();
-            }
-        }
-        iter = deletedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            try {
-                state.connect(parent.getItemState(state.getId()));
-                state.pull();
-            } catch (ItemStateException e) {
-                state.discard();
-            }
-        }
-        iter = addedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).discard();
-        }
-        reset();
     }
 
     //-------------------------------------------------------------< Object >---

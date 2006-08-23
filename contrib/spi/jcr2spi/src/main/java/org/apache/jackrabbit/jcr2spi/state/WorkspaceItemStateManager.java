@@ -76,12 +76,12 @@ public class WorkspaceItemStateManager
                     if (state != null) {
                         // TODO: item already exists ???
                         // invalidate
-                        state.discard();
+                        state.refresh();
                     }
                     parent = (NodeState) lookup(parentId);
                     if (parent != null) {
                         // discard and let wsp manager reload state when accessed next time
-                        parent.discard();
+                        parent.refresh();
                     }
                     break;
                 case Event.NODE_REMOVED:
@@ -98,7 +98,7 @@ public class WorkspaceItemStateManager
                             // do not invalidate here
                         } else {
                             // discard and let wsp manager reload state when accessed next time
-                            parent.discard();
+                            parent.refresh();
                         }
                     }
                     break;
@@ -106,7 +106,7 @@ public class WorkspaceItemStateManager
                     state = lookup(itemId);
                     // discard and let wsp manager reload state when accessed next time
                     if (state != null) {
-                        state.discard();
+                        state.refresh();
                     }
             }
         }

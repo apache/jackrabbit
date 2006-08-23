@@ -47,13 +47,4 @@ public interface ItemStateListener {
      * @param destroyed the <code>ItemState</code> that has been 'destroyed'
      */
     void stateDestroyed(ItemState destroyed);
-
-    /**
-     * Called when an <code>ItemState</code> has been discarded (i.e. it has
-     * been rendered 'invalid').
-     *
-     * @param discarded the <code>ItemState</code> that has been discarded
-     * @see ItemState#discard
-     */
-    void stateDiscarded(ItemState discarded);
 }

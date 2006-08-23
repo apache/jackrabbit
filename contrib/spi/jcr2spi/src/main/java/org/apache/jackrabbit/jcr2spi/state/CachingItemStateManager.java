@@ -270,8 +270,5 @@ public class CachingItemStateManager implements ItemStateManager {
 
         public void stateDestroyed(ItemState destroyed) {
         }
-
-        public void stateDiscarded(ItemState discarded) {
-        }
     }
 }

@@ -252,18 +252,10 @@ public class TransientItemStateManager extends CachingItemStateManager
     }
 
     /**
-     * Disposes all transient item states in the cache and in the attic.
+     * Disposes this transient item state manager. Clears all references to
+     * transiently modified item states.
      */
-    public void disposeAllItemStates() {
-        IteratorChain it = new IteratorChain();
-        it.addIterator(changeLog.modifiedStates());
-        it.addIterator(changeLog.addedStates());
-        it.addIterator(changeLog.deletedStates());
-        while (it.hasNext()) {
-            ItemState state = (ItemState) it.next();
-            state.discard();
-            state.onDisposed();
-        }
+    public void dispose() {
         changeLog.reset();
     }
 
@@ -334,14 +326,6 @@ public class TransientItemStateManager extends CachingItemStateManager
 
     /**
      * @inheritDoc
-     * @see ItemStateListener#stateDiscarded(ItemState)
-     */
-    public void stateDiscarded(ItemState discarded) {
-        // TODO: remove from modified (and deleted?) set of change log
-    }
-
-    /**
-     * @inheritDoc
      * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
      */
     public void statusChanged(ItemState state, int previousStatus) {
@@ -395,10 +379,6 @@ public class TransientItemStateManager extends CachingItemStateManager
             case ItemState.STATUS_NEW:
                 // new state has been created
                 changeLog.added(state);
-                break;
-            case ItemState.STATUS_UNDEFINED:
-                // should never happen
-                log.warn("ItemState changed status to 'undefined'");
                 break;
             default:
                 log.warn("ItemState has invalid status: " + state.getStatus());
