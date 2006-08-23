@@ -228,7 +228,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     public void dispose() {
         // discard all transient changes
-        transientStateMgr.disposeAllItemStates();
+        transientStateMgr.dispose();
         // dispose our (i.e. 'local') state manager
         workspaceItemStateMgr.dispose();
     }
@@ -387,12 +387,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                             log.debug(msg);
                             throw new StaleItemStateException(msg);
                         }
-                    case ItemState.STATUS_UNDEFINED:
-                        {
-                            String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved; it seems to have been removed externally.";
-                            log.debug(msg);
-                            throw new StaleItemStateException(msg);
-                        }
                 }
             }
         }
@@ -425,12 +419,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 case ItemState.STATUS_STALE_DESTROYED:
                     if (throwOnStale) {
                         String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
-                    }
-                case ItemState.STATUS_UNDEFINED:
-                    if (throwOnStale) {
-                        String msg = transientState.getId() + ": the item cannot be saved; it seems to have been removed externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }

@@ -37,10 +37,6 @@ public abstract class ItemState implements ItemStateListener {
 
      //----------------< flags defining the current status of this instance >---
     /**
-     * the status is undefined
-     */
-    public static final int STATUS_UNDEFINED = 0;
-    /**
      * 'existing', i.e. persistent state
      */
     public static final int STATUS_EXISTING = 1;
@@ -73,7 +69,7 @@ public abstract class ItemState implements ItemStateListener {
     /**
      * the internal status of this item state
      */
-    protected int status = STATUS_UNDEFINED;
+    protected int status;
 
     /**
      * Flag indicating whether this state is transient
@@ -158,14 +154,14 @@ public abstract class ItemState implements ItemStateListener {
      * Copy state information from another state into this state
      * @param state source state information
      */
-    abstract void copy(ItemState state);
+    abstract void copyFrom(ItemState state);
 
     /**
      * Pull state information from overlayed state.
      */
     void pull() {
         if (overlayedState != null) {
-            copy(overlayedState);
+            copyFrom(overlayedState);
         }
     }
 
@@ -174,21 +170,7 @@ public abstract class ItemState implements ItemStateListener {
      */
     void push() {
         if (overlayedState != null) {
-            overlayedState.copy(this);
-        }
-    }
-
-    /**
-     * Called by <code>TransientItemStateManager</code> and
-     * <code>LocalItemStateManager</code> when this item state has been disposed.
-     */
-    void onDisposed() {
-        disconnect();
-        overlayedState = null;
-        setStatus(STATUS_UNDEFINED);
-        // prepare this instance so it can be gc'ed
-        synchronized (listeners) {
-            listeners.clear();
+            overlayedState.copyFrom(this);
         }
     }
 
@@ -227,34 +209,12 @@ public abstract class ItemState implements ItemStateListener {
         }
     }
 
-
     /**
-     * Discards this instance, i.e. renders it 'invalid'.
+     * Refreshes this item state
      */
-    protected void discard() {
-        if (status != STATUS_UNDEFINED) {
-            // notify listeners
-            notifyStateDiscarded();
-            // reset status
-            setStatus(STATUS_UNDEFINED);
-        }
-    }
-
-    /**
-     * Notify the listeners that the persistent state this object is
-     * representing has been discarded.
-     */
-    protected void notifyStateDiscarded() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateDiscarded(this);
-            }
-        }
+    protected void refresh() {
+        // TODO: how is this done? where is the new state retrieved from???
+        // TODO: pass in as argument?
     }
 
     /**
@@ -345,7 +305,6 @@ public abstract class ItemState implements ItemStateListener {
                 // is stale anyway.
                 break;
             case STATUS_EXISTING_REMOVED:
-            case STATUS_UNDEFINED:
             default:
                 String msg = "Cannot mark item state with status " + status + " modified.";
                 throw new IllegalStateException(msg);
@@ -431,7 +390,6 @@ public abstract class ItemState implements ItemStateListener {
             case STATUS_EXISTING_MODIFIED:
             case STATUS_STALE_MODIFIED:
             case STATUS_STALE_DESTROYED:
-            case STATUS_UNDEFINED:
                 status = newStatus;
                 break;
             default:
@@ -557,13 +515,5 @@ public abstract class ItemState implements ItemStateListener {
                 notifyStateUpdated();
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDiscarded(ItemState discarded) {
-        // underlying persistent state has been discarded, discard this instance too
-        discard();
     }
 }

@@ -172,7 +172,7 @@ public class NodeState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    protected synchronized void copy(ItemState state) {
+    protected synchronized void copyFrom(ItemState state) {
         synchronized (state) {
             NodeState nodeState = (NodeState) state;
             name = nodeState.name;
