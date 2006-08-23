@@ -143,6 +143,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.LoginException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -231,10 +232,9 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
     }
 
     private HttpClient getClient(SessionInfo sessionInfo) {
-        Iterator allCreds = sessionInfo.getSubject().getPublicCredentials(Credentials.class).iterator();
         Credentials credentials = null;
-        if (allCreds.hasNext()) {
-            credentials = (Credentials) allCreds.next();
+        if (sessionInfo instanceof SessionInfoImpl) {
+            credentials = ((SessionInfoImpl) sessionInfo).getCredentials();
         }
         return getClient(credentials);
     }
@@ -372,9 +372,16 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
     }
 
     /**
+     * TODO: handle impersonation
      * @see RepositoryService#login(Credentials, String)
      */
-    public SessionInfo login(Credentials credentials, String workspaceName) throws RepositoryException {
+    public SessionInfo login(Credentials credentials, String workspaceName)
+            throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        if (credentials == null) {
+            // no credentials provided, use JAAS
+            throw new RepositoryException("JAAS authentication not implemented");
+        }
+
         // interested in workspace href property only, which allows to retrieve the
         // name of the workspace in case 'workspaceName' is 'null'.
         DavPropertyNameSet nameSet = new DavPropertyNameSet();

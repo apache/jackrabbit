@@ -36,6 +36,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.Node;
+import javax.jcr.LoginException;
 import java.util.Properties;
 import java.io.InputStream;
 
@@ -61,13 +62,24 @@ public interface RepositoryService {
     public Properties getRepositoryDescriptors() throws RepositoryException;
 
     //------------------------------------------------------< Initial login >---
+
     /**
+     * Authenticates the user using the supplied <code>credentials</code>. If
+     * <code>credentials</code> is <code>null</code> an implementation will use
+     * the current security context to obtain the {@link
+     * javax.security.auth.Subject}. If <code>credentials</code> is
+     * <code>null</code> and there is no <code>Subject</code> present in the
+     * current security context a <code>RepositoryException</code> is thrown.
      *
-     * @param credentials
-     * @return
-     * @throws RepositoryException
+     * @param credentials the credentials of the user.
+     * @return a <code>SessionInfo</code> if authentication was successful.
+     * @throws LoginException           if authentication of the user fails.
+     * @throws NoSuchWorkspaceException if the specified <code>workspaceName</code>
+     *                                  is not recognized.
+     * @throws RepositoryException      if an error occurs.
      */
-    public SessionInfo login(Credentials credentials, String workspaceName) throws RepositoryException;
+    public SessionInfo login(Credentials credentials, String workspaceName)
+            throws LoginException, NoSuchWorkspaceException, RepositoryException;
 
     //--------------------------------------------------------------------------
     /**
