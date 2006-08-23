@@ -72,11 +72,6 @@ public abstract class ItemState implements ItemStateListener {
     protected int status;
 
     /**
-     * Flag indicating whether this state is transient
-     */
-    private final boolean isTransient;
-
-    /**
      * Listeners (weak references)
      */
     private final transient Collection listeners = new WeakIdentityCollection(5);
@@ -103,10 +98,8 @@ public abstract class ItemState implements ItemStateListener {
      *
      * @param parent
      * @param initialStatus the initial status of the item state object
-     * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected ItemState(NodeState parent, int initialStatus, boolean isTransient,
-                        IdFactory idFactory) {
+    protected ItemState(NodeState parent, int initialStatus, IdFactory idFactory) {
         switch (initialStatus) {
             case STATUS_EXISTING:
             case STATUS_NEW:
@@ -119,7 +112,6 @@ public abstract class ItemState implements ItemStateListener {
         }
         this.parent = parent;
         overlayedState = null;
-        this.isTransient = isTransient;
         this.idFactory = idFactory;
     }
 
@@ -129,10 +121,9 @@ public abstract class ItemState implements ItemStateListener {
      *
      * @param overlayedState the backing item state being overlayed
      * @param initialStatus the initial status of the new <code>ItemState</code> instance
-     * @param isTransient   flag indicating whether this state is transient or not
      */
-    protected ItemState(ItemState overlayedState, NodeState parent, int initialStatus,
-                        boolean isTransient, IdFactory idFactory) {
+    protected ItemState(ItemState overlayedState, NodeState parent,
+                        int initialStatus, IdFactory idFactory) {
         switch (initialStatus) {
             case STATUS_EXISTING:
             case STATUS_EXISTING_MODIFIED:
@@ -144,7 +135,6 @@ public abstract class ItemState implements ItemStateListener {
                 log.debug(msg);
                 throw new IllegalArgumentException(msg);
         }
-        this.isTransient = isTransient;
         this.parent = parent;
         this.idFactory = idFactory;
         connect(overlayedState);
@@ -329,14 +319,13 @@ public abstract class ItemState implements ItemStateListener {
 
     /**
      * Returns <code>true</code> if this item state represents new or modified
-     * state (i.e. the result of copy-on-write) or <code>false</code> if it
-     * represents existing, unmodified state.
+     * state or <code>false</code> if it represents existing, unmodified state.
      *
      * @return <code>true</code> if this item state is modified or new,
      *         otherwise <code>false</code>
      */
     public boolean isTransient() {
-        return isTransient;
+        return status == STATUS_EXISTING_MODIFIED || status == STATUS_NEW;
     }
 
     /**
@@ -493,10 +482,10 @@ public abstract class ItemState implements ItemStateListener {
      */
     public void stateDestroyed(ItemState destroyed) {
         // underlying state has been permanently destroyed
-        if (isTransient) {
+        if (isTransient()) {
             setStatus(STATUS_STALE_DESTROYED);
         } else {
-            setStatus(STATUS_EXISTING_REMOVED);
+            setStatus(STATUS_REMOVED);
             notifyStateDestroyed();
         }
     }
@@ -506,7 +495,7 @@ public abstract class ItemState implements ItemStateListener {
      */
     public void stateModified(ItemState modified) {
         // underlying state has been modified
-        if (isTransient) {
+        if (isTransient()) {
             setStatus(STATUS_STALE_MODIFIED);
         } else {
             synchronized (this) {

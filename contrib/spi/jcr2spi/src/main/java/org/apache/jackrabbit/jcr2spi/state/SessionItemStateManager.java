@@ -364,30 +364,28 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private void collectTransientStates(ItemState state, ChangeLog changeLog, boolean throwOnStale)
             throws StaleItemStateException, ItemStateException {
         // fail-fast test: check status of this item's state
-        if (state.isTransient()) {
-            switch (state.getStatus()) {
-                case ItemState.STATUS_NEW:
-                    {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": cannot save a new item.";
-                        log.debug(msg);
-                        throw new ItemStateException(msg);
-                    }
-            }
-            if (throwOnStale) {
-                switch (state.getStatus()) {
-                    case ItemState.STATUS_STALE_MODIFIED:
-                        {
-                            String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been modified externally.";
-                            log.debug(msg);
-                            throw new StaleItemStateException(msg);
-                        }
-                    case ItemState.STATUS_STALE_DESTROYED:
-                        {
-                            String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been deleted externally.";
-                            log.debug(msg);
-                            throw new StaleItemStateException(msg);
-                        }
+        switch (state.getStatus()) {
+            case ItemState.STATUS_NEW:
+                {
+                    String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": cannot save a new item.";
+                    log.debug(msg);
+                    throw new ItemStateException(msg);
                 }
+        }
+        if (throwOnStale) {
+            switch (state.getStatus()) {
+                case ItemState.STATUS_STALE_MODIFIED:
+                    {
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been modified externally.";
+                        log.debug(msg);
+                        throw new StaleItemStateException(msg);
+                    }
+                case ItemState.STATUS_STALE_DESTROYED:
+                    {
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been deleted externally.";
+                        log.debug(msg);
+                        throw new StaleItemStateException(msg);
+                    }
             }
         }
 

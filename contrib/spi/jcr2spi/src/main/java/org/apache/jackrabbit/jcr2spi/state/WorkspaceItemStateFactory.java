@@ -132,7 +132,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
                 uuid = info.getId().getUUID();
             }
             NodeState state = new NodeState(info.getQName(), uuid, parent, info.getNodetype(),
-                definition, ItemState.STATUS_EXISTING, false, this, service.getIdFactory());
+                definition, ItemState.STATUS_EXISTING, this, service.getIdFactory());
 
             // set mixin nodetypes
             state.setMixinTypeNames(info.getMixins());
@@ -225,7 +225,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
 
             // build the PropertyState
             PropertyState state = new PropertyState(info.getQName(), parent,
-                def, ItemState.STATUS_EXISTING, false, service.getIdFactory());
+                def, ItemState.STATUS_EXISTING, service.getIdFactory());
             state.setType(info.getType());
             QValue[] qValues;
             if (info.getType() == PropertyType.BINARY) {

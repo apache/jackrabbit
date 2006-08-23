@@ -64,12 +64,11 @@ public class PropertyState extends ItemState {
      * @param overlayedState
      * @param parent
      * @param initialStatus
-     * @param isTransient
      * @param idFactory
      */
     protected PropertyState(PropertyState overlayedState, NodeState parent,
-                            int initialStatus, boolean isTransient, IdFactory idFactory) {
-        super(overlayedState, parent, initialStatus, isTransient, idFactory);
+                            int initialStatus, IdFactory idFactory) {
+        super(overlayedState, parent, initialStatus, idFactory);
         pull();
     }
 
@@ -80,12 +79,11 @@ public class PropertyState extends ItemState {
      * @param parent
      * @param definition
      * @param initialStatus
-     * @param isTransient
      * @param idFactory
      */
-    protected PropertyState(QName name, NodeState parent, QPropertyDefinition definition, int initialStatus,
-                            boolean isTransient, IdFactory idFactory) {
-        super(parent, initialStatus, isTransient, idFactory);
+    protected PropertyState(QName name, NodeState parent, QPropertyDefinition definition,
+                            int initialStatus, IdFactory idFactory) {
+        super(parent, initialStatus, idFactory);
         this.name = name;
         this.def = definition;
 

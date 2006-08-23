@@ -413,7 +413,7 @@ public class TransientItemStateManager extends CachingItemStateManager
                                             NodeState parent, QName nodetypeName,
                                             QNodeDefinition definition) {
             NodeState nodeState = new NodeState(name, uuid, parent, nodetypeName,
-                definition, ItemState.STATUS_NEW, true, this, idFactory);
+                definition, ItemState.STATUS_NEW, this, idFactory);
             // get a notification when this item state is saved or invalidated
             nodeState.addListener(listener);
             // notify listener that a node state has been created
@@ -427,7 +427,7 @@ public class TransientItemStateManager extends CachingItemStateManager
          */
         public PropertyState createNewPropertyState(QName name, NodeState parent, QPropertyDefinition definition) {
             PropertyState propState = new PropertyState(name, parent,
-                definition, ItemState.STATUS_NEW, true, idFactory);
+                definition, ItemState.STATUS_NEW, idFactory);
             // get a notification when this item state is saved or invalidated
             propState.addListener(listener);
             // notify listener that a property state has been created
@@ -449,7 +449,7 @@ public class TransientItemStateManager extends CachingItemStateManager
                 parentState = (NodeState) ism.getItemState(overlayedParent.getId());
             }
             NodeState nodeState = new NodeState(overlayedState, parentState,
-                    ItemState.STATUS_EXISTING, true, this, idFactory);
+                    ItemState.STATUS_EXISTING, this, idFactory);
             nodeState.addListener(listener);
             return nodeState;
         }
@@ -463,7 +463,7 @@ public class TransientItemStateManager extends CachingItemStateManager
             // retrieve state to overlay
             NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
             NodeState nodeState = new NodeState(overlayedState, parentState,
-                    ItemState.STATUS_EXISTING, true, this, idFactory);
+                    ItemState.STATUS_EXISTING, this, idFactory);
             nodeState.addListener(listener);
             return nodeState;
         }
@@ -478,7 +478,7 @@ public class TransientItemStateManager extends CachingItemStateManager
             // retrieve state to overlay
             PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
             PropertyState propState = new PropertyState(overlayedState, parentState,
-                    ItemState.STATUS_EXISTING, true, idFactory);
+                    ItemState.STATUS_EXISTING, idFactory);
             propState.addListener(listener);
             return propState;
         }
