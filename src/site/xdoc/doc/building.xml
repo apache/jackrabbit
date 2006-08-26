@@ -22,10 +22,12 @@
   <body>
     <section name="Building Jackrabbit">
       <p>
-        As the Jackrabbit project has yet to make its first binary releases,
-        you need to build Jackrabbit from sources to install it. The
-        <a href="http://maven.apache.org/maven-1.x/">Maven</a> build environment
-        makes it very easy to build Jackrabbit.
+        The easiest way to use Jackrabbit is to
+        <a href="../downloads.cgi">download</a> a binary release, but if you
+        want to access the latest development version, you need to get the
+        Jackrabbit sources and build them using the
+        <a href="http://maven.apache.org/maven-1.x/">Maven 1.x</a> build
+        environment.
       </p>
       <p>
         The first step in building Jackrabbit is to check out the Jackrabbit
