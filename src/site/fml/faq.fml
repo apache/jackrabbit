@@ -64,7 +64,7 @@
         <p>
           The Apache Jackrabbit is a fully featured content repository that
           implements all of the JCR API. The Jackrabbit project was started
-          when the <a href="http://www.day.com/">Day Software</a>, the JSR-170
+          when <a href="http://www.day.com/">Day Software</a>, the JSR-170
           specification lead, licensed their initial implementation of the
           JCR reference implementation. Since then the Jackrabbit codebase
           has been used for the official reference implementation (RI) and 
@@ -105,6 +105,8 @@
       </answer>
     </faq>
 
+<!-- The following issue is no longer relevant, commenting it out. -jukka -->
+<!--
     <faq id="build-java5">
       <question>
         Why does the Maven build fail with the message
@@ -131,6 +133,7 @@
         </p>
       </answer>
     </faq>
+-->
 
     <faq id="build-connect">
       <question>
