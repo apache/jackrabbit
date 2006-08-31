@@ -30,7 +30,7 @@ import java.util.Iterator;
  * persistent states from other clients.
  */
 public class LocalItemStateManager
-        implements UpdatableItemStateManager, ItemStateListener {
+        implements UpdatableItemStateManager, NodeStateListener {
 
     /**
      * cache of weak references to ItemState objects issued by this
@@ -59,6 +59,11 @@ public class LocalItemStateManager
     private final ChangeLog changeLog = new ChangeLog();
 
     /**
+     * State change dispatcher.
+     */
+    private final transient StateChangeDispatcher dispatcher = new StateChangeDispatcher();
+
+    /**
      * Creates a new <code>LocalItemStateManager</code> instance.
      * @param sharedStateMgr shared state manager
      * @param factory event state collection factory
@@ -68,6 +73,8 @@ public class LocalItemStateManager
         cache = new ItemStateReferenceCache();
         this.sharedStateMgr = sharedStateMgr;
         this.factory = factory;
+
+        sharedStateMgr.addListener(this);
     }
 
     /**
@@ -90,8 +97,8 @@ public class LocalItemStateManager
         // put it in cache
         cache.cache(state);
 
-        // register as listener
-        state.addListener(this);
+        // set parent container
+        state.setContainer(this);
         return state;
     }
 
@@ -115,8 +122,8 @@ public class LocalItemStateManager
         // put it in cache
         cache.cache(state);
 
-        // register as listener
-        state.addListener(this);
+        // set parent container
+        state.setContainer(this);
         return state;
     }
 
@@ -231,6 +238,7 @@ public class LocalItemStateManager
         NodeState state = new NodeState(id, nodeTypeName, parentId,
                 ItemState.STATUS_NEW, false);
         changeLog.added(state);
+        state.setContainer(this);
         return state;
     }
 
@@ -245,6 +253,7 @@ public class LocalItemStateManager
         PropertyState state = new PropertyState(
                 new PropertyId(parentId, propName), ItemState.STATUS_NEW, false);
         changeLog.added(state);
+        state.setContainer(this);
         return state;
     }
 
@@ -321,16 +330,14 @@ public class LocalItemStateManager
      * {@inheritDoc}
      */
     public void dispose() {
+        sharedStateMgr.removeListener(this);
+
         // this LocalItemStateManager instance is no longer needed;
         // cached item states can now be safely discarded
         Iterator iter = cache.values().iterator();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
-            // we're no longer interested in status changes of this item state
-            state.removeListener(this);
-            // discard item state; any remaining listeners will be informed
-            // about this status change
-            state.discard();
+            dispatcher.notifyStateDiscarded(state);
             // let the item state know that it has been disposed
             state.onDisposed();
         }
@@ -338,34 +345,157 @@ public class LocalItemStateManager
         cache.evictAll();
     }
 
+    /**
+     * Add an <code>ItemStateListener</code>
+     * @param listener the new listener to be informed on modifications
+     */
+    public void addListener(ItemStateListener listener) {
+        dispatcher.addListener(listener);
+    }
+
+    /**
+     * Remove an <code>ItemStateListener</code>
+     * @param listener an existing listener
+     */
+    public void removeListener(ItemStateListener listener) {
+        dispatcher.removeListener(listener);
+    }
+
     //----------------------------------------------------< ItemStateListener >
+
     /**
      * {@inheritDoc}
+     * <p/>
+     * Notification handler gets called for both local states that this state manager
+     * has created, as well as states that were created by the shared state manager
+     * we're listening to.
      */
     public void stateCreated(ItemState created) {
+        ItemState local = null;
+        if (created.getContainer() != this) {
+            // shared state was created
+            try {
+                local = changeLog.get(created.getId());
+                if (local != null) {
+                    // underlying state has been permanently created
+                    local.pull();
+                    local.setStatus(ItemState.STATUS_EXISTING);
+                    cache.cache(local);
+                }
+            } catch (NoSuchItemStateException e) {
+                /* ignore */
+            }
+        } else {
+            // local state was created
+            local = created;
+        }
+        if (local != null) {
+            dispatcher.notifyStateCreated(created);
+        }
     }
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * Notification handler gets called for both local states that this state manager
+     * has created, as well as states that were created by the shared state manager
+     * we're listening to.
      */
     public void stateModified(ItemState modified) {
+        ItemState local = null;
+        if (modified.getContainer() != this) {
+            // shared state was modified
+            local = cache.retrieve(modified.getId());
+            if (local != null && local.isConnected()) {
+                // this instance represents existing state, update it
+                local.pull();
+            }
+        } else {
+            // local state was modified
+            local = modified;
+        }
+        if (local != null) {
+            dispatcher.notifyStateModified(local);
+        }
     }
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * Notification handler gets called for both local states that this state manager
+     * has created, as well as states that were created by the shared state manager
+     * we're listening to.
      */
     public void stateDestroyed(ItemState destroyed) {
-        destroyed.removeListener(this);
-
+        ItemState local = null;
+        if (destroyed.getContainer() != this) {
+            // shared state was destroyed
+            local = cache.retrieve(destroyed.getId());
+            if (local != null && local.isConnected()) {
+                local.setStatus(ItemState.STATUS_EXISTING_REMOVED);
+            }
+        } else {
+            // local state was destroyed
+            local = destroyed;
+        }
         cache.evict(destroyed.getId());
+        if (local != null) {
+            dispatcher.notifyStateDestroyed(local);
+        }
     }
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * Notification handler gets called for both local states that this state manager
+     * has created, as well as states that were created by the shared state manager
+     * we're listening to.
      */
     public void stateDiscarded(ItemState discarded) {
-        discarded.removeListener(this);
-
+        ItemState local = null;
+        if (discarded.getContainer() != this) {
+            // shared state was discarded
+            local = cache.retrieve(discarded.getId());
+            if (local != null && local.isConnected()) {
+                local.setStatus(ItemState.STATUS_UNDEFINED);
+            }
+        } else {
+            // local state was discarded
+            local = discarded;
+        }
         cache.evict(discarded.getId());
+        if (local != null) {
+            dispatcher.notifyStateDiscarded(local);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
+     * concerned must be a local state.
+     */
+    public void nodeAdded(NodeState state, QName name, int index, NodeId id) {
+        dispatcher.notifyNodeAdded(state, name, index, id);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
+     * concerned must be a local state.
+     */
+    public void nodesReplaced(NodeState state) {
+        dispatcher.notifyNodesReplaced(state);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
+     * concerned must be a local state.
+     */
+    public void nodeRemoved(NodeState state, QName name, int index, NodeId id) {
+        dispatcher.notifyNodeRemoved(state, name, index, id);
     }
 }

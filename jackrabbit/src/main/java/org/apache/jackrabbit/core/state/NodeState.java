@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,9 +101,9 @@ public class NodeState extends ItemState {
     private boolean sharedPropertyNames = false;
 
     /**
-     * Listeners (weak references)
+     * Listener.
      */
-    private final transient Collection listeners = new WeakIdentityCollection(3);
+    private transient NodeStateListener listener;
 
     /**
      * Constructs a new node state that is initially connected to an overlayed
@@ -736,40 +735,21 @@ public class NodeState extends ItemState {
     }
 
     //--------------------------------------------------< ItemState overrides >
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * If the listener passed is at the same time a <code>NodeStateListener</code>
-     * we add it to our list of specialized listeners.
-     */
-    public void addListener(ItemStateListener listener) {
-        if (listener instanceof NodeStateListener) {
-            synchronized (listeners) {
-                if (listeners.contains(listener)) {
-                    log.debug("listener already registered: " + listener);
-                    // no need to add to call ItemState.addListener()
-                    return;
-                } else {
-                    listeners.add(listener);
-                }
-            }
-        }
-        super.addListener(listener);
-    }
 
     /**
      * {@inheritDoc}
      * <p/>
      * If the listener passed is at the same time a <code>NodeStateListener</code>
-     * we remove it from our list of specialized listeners.
+     * we remember it as well.
      */
-    public void removeListener(ItemStateListener listener) {
+    public void setContainer(ItemStateListener listener) {
         if (listener instanceof NodeStateListener) {
-            synchronized (listeners) {
-                listeners.remove(listener);
+            if (this.listener != null) {
+                throw new IllegalStateException("State already connected to a listener: " + this.listener);
             }
+            this.listener = (NodeStateListener) listener;
         }
-        super.removeListener(listener);
+        super.setContainer(listener);
     }
 
     //-------------------------------------------------< misc. helper methods >
@@ -804,15 +784,8 @@ public class NodeState extends ItemState {
      * Notify the listeners that a child node entry has been added
      */
     protected void notifyNodeAdded(ChildNodeEntry added) {
-        synchronized (listeners) {
-            Iterator iter = listeners.iterator();
-            while (iter.hasNext()) {
-                NodeStateListener l = (NodeStateListener) iter.next();
-                if (l != null) {
-                    l.nodeAdded(this, added.getName(),
-                            added.getIndex(), added.getId());
-                }
-            }
+        if (listener != null) {
+            listener.nodeAdded(this, added.getName(), added.getIndex(), added.getId());
         }
     }
 
@@ -820,14 +793,8 @@ public class NodeState extends ItemState {
      * Notify the listeners that the child node entries have been replaced
      */
     protected void notifyNodesReplaced() {
-        synchronized (listeners) {
-            Iterator iter = listeners.iterator();
-            while (iter.hasNext()) {
-                NodeStateListener l = (NodeStateListener) iter.next();
-                if (l != null) {
-                    l.nodesReplaced(this);
-                }
-            }
+        if (listener != null) {
+            listener.nodesReplaced(this);
         }
     }
 
@@ -835,15 +802,8 @@ public class NodeState extends ItemState {
      * Notify the listeners that a child node entry has been removed
      */
     protected void notifyNodeRemoved(ChildNodeEntry removed) {
-        synchronized (listeners) {
-            Iterator iter = listeners.iterator();
-            while (iter.hasNext()) {
-                NodeStateListener l = (NodeStateListener) iter.next();
-                if (l != null) {
-                    l.nodeRemoved(this, removed.getName(),
-                            removed.getIndex(), removed.getId());
-                }
-            }
+        if (listener != null) {
+            listener.nodeRemoved(this, removed.getName(), removed.getIndex(), removed.getId());
         }
     }
 

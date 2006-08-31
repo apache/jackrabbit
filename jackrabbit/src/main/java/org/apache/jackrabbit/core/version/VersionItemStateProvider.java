@@ -73,7 +73,11 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
         this.vMgr = vMgr;
         this.stateMgr = stateMgr;
         this.historyRootId = vMgr.getHistoryRootId();
+
+        stateMgr.addListener(this);
     }
+
+    //------------------------------------------< VirtualItemStateProvider >---
 
     /**
      * @inheritDoc
@@ -117,9 +121,6 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
         if (item == null) {
             item = stateMgr.getItemState(id);
             items.put(id, item);
-
-            // attach us as listener
-            item.addListener(this);
         }
         return item;
     }
@@ -152,6 +153,22 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     public boolean hasNodeReferences(NodeReferencesId id) {
         return stateMgr.hasNodeReferences(id);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void addListener(ItemStateListener listener) {
+        stateMgr.addListener(listener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void removeListener(ItemStateListener listener) {
+        stateMgr.removeListener(listener);
+    }
+
+    //-------------------------------------------------< ItemStateListener >---
 
     /**
      * @inheritDoc

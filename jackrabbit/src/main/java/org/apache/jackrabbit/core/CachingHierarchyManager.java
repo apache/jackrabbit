@@ -282,7 +282,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
-        stateModified((NodeState) modified);
+        if (modified.isNode()) {
+            stateModified((NodeState) modified);
+        }
     }
 
     /**
@@ -324,7 +326,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
-        destroyed.removeListener(this);
         remove(destroyed.getId());
     }
 
@@ -332,7 +333,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
-        discarded.removeListener(this);
         if (discarded.isTransient() && !discarded.hasOverlayedState()) {
             // a new node has been discarded -> remove from cache
             remove(discarded.getId());
@@ -340,36 +340,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             evict(discarded.getId());
         } else {
             remove(discarded.getId());
-        }
-    }
-
-    /**
-     * Called when an <code>ItemState</code> has been overlaid by some
-     * other state that now takes its identity. This notification is sent
-     * on the state being overlaid.
-     *
-     * @param overlayer the <code>ItemState</code> that overlays this state
-     */
-    public void stateOverlaid(ItemState overlayer) {
-        if (overlayer.isNode()) {
-            overlayer.getOverlayedState().removeListener(this);
-            overlayer.addListener(this);
-        }
-    }
-
-    /**
-     * Called when an <code>ItemState</code> no longer overlayes some other
-     * item state. This notification is sent on the state overlaying another
-     * state.
-     *
-     * @param overlayer the <code>ItemState</code> that overlaid another
-     *                  item state. To get the overlaid state, invoke
-     *                  {@link ItemState#getOverlayedState()}
-     */
-    public void stateUncovered(ItemState overlayer) {
-        if (overlayer.isNode()) {
-            overlayer.removeListener(this);
-            overlayer.getOverlayedState().addListener(this);
         }
     }
 
@@ -507,8 +477,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             LRUEntry entry = new LRUEntry(id, element);
             element.set(entry);
             idCache.put(id, entry);
-
-            state.addListener(this);
         }
     }
 

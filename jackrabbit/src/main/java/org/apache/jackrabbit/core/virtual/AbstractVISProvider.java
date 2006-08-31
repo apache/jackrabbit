@@ -35,12 +35,14 @@ import org.apache.jackrabbit.core.state.ItemStateReferenceMap;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Collection;
 
 /**
  * This Class implements a virtual item state provider, in order to expose the
@@ -71,6 +73,11 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * the cache node states. key=ItemId, value=ItemState
      */
     private ItemStateReferenceMap nodes = new ItemStateReferenceMap();
+
+    /**
+     * Listeners (weak references)
+     */
+    private final transient Collection listeners = new WeakIdentityCollection(5);
 
     /**
      * Creates an abstract virtual item state provider
@@ -288,6 +295,25 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public void addListener(ItemStateListener listener) {
+        synchronized (listeners) {
+            assert (!listeners.contains(listener));
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void removeListener(ItemStateListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    /**
      * returns the node type manager
      *
      * @return the node type manager
@@ -396,19 +422,36 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * {@inheritDoc}
      */
     public void stateCreated(ItemState created) {
+        ItemStateListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].stateCreated(created);
+            }
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
+        ItemStateListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].stateModified(modified);
+            }
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
-        destroyed.removeListener(this);
         if (destroyed.isNode() && destroyed.getId().equals(rootNodeId)) {
             try {
                 root = createRootNodeState();
@@ -417,13 +460,22 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
             }
         }
         evict((NodeId) destroyed.getId());
+
+        ItemStateListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].stateDestroyed(destroyed);
+            }
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
-        discarded.removeListener(this);
         if (discarded.isNode() && discarded.getId().equals(rootNodeId)) {
             try {
                 root = createRootNodeState();
@@ -432,5 +484,15 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
             }
         }
         evict((NodeId) discarded.getId());
+
+        ItemStateListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] != null) {
+                la[i].stateDiscarded(discarded);
+            }
+        }
     }
 }

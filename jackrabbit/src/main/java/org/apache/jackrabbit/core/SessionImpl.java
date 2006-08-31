@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
@@ -258,7 +259,7 @@ public class SessionImpl implements Session, Dumpable {
      *
      * @return session item state manager
      */
-    protected SessionItemStateManager createSessionItemStateManager(UpdatableItemStateManager manager) {
+    protected SessionItemStateManager createSessionItemStateManager(LocalItemStateManager manager) {
         return new SessionItemStateManager(rep.getRootNodeId(),
                 manager, getNamespaceResolver());
     }

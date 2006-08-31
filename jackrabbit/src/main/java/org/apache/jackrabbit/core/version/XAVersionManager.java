@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
@@ -298,6 +299,22 @@ public class XAVersionManager extends AbstractVersionManager
             return changeLog.get(id) != null;
         }
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Not needed.
+     */
+    public void addListener(ItemStateListener listener) {
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Not needed.
+     */
+    public void removeListener(ItemStateListener listener) {
     }
 
     //-----------------------------------------------< AbstractVersionManager >
