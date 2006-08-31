@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.RepositoryException;
@@ -82,4 +83,17 @@ public interface VirtualItemStateProvider extends ItemStateManager {
      */
     boolean setNodeReferences(NodeReferences refs);
 
+
+    /**
+     * Add an <code>ItemStateListener</code>
+     * @param listener the new listener to be informed on modifications
+     */
+    public void addListener(ItemStateListener listener);
+
+    /**
+     * Remove an <code>ItemStateListener</code>
+     *
+     * @param listener an existing listener
+     */
+    public void removeListener(ItemStateListener listener);
 }

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,12 +25,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Collection;
 
 /**
  * <code>ItemState</code> represents the state of an <code>Item</code>.
  */
-public abstract class ItemState implements ItemStateListener, Serializable {
+public abstract class ItemState implements Serializable {
 
     /** Serialization UID of this class. */
     static final long serialVersionUID = -1473610775880779769L;
@@ -87,9 +85,9 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     private final boolean isTransient;
 
     /**
-     * Listeners (weak references)
+     * Parent container.
      */
-    private final transient Collection listeners = new WeakIdentityCollection(5);
+    private transient ItemStateListener container;
 
     /**
      * the backing persistent item state (may be null)
@@ -173,10 +171,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * <code>LocalItemStateManager</code> when this item state has been disposed.
      */
     void onDisposed() {
-        // prepare this instance so it can be gc'ed
-        synchronized (listeners) {
-            listeners.clear();
-        }
         disconnect();
         overlayedState = null;
         status = STATUS_UNDEFINED;
@@ -192,7 +186,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
             }
         }
         this.overlayedState = overlayedState;
-        this.overlayedState.addListener(this);
     }
 
     /**
@@ -203,7 +196,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
         if (this.overlayedState == null) {
             throw new IllegalStateException("Item state cannot be reconnected because there's no underlying state to reconnect to: " + this);
         }
-        this.overlayedState.addListener(this);
     }
 
     /**
@@ -211,77 +203,51 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      */
     protected void disconnect() {
         if (overlayedState != null) {
-            // de-register listener on overlayed state...
-            overlayedState.removeListener(this);
             overlayedState = null;
         }
     }
 
     /**
-     * Notify the listeners that the persistent state this object is
-     * representing has been discarded.
+     * Return a flag indicating whether this state is connected to some other state.
+     * @return <code>true</code> if this state is connected, <code>false</code> otherwise.
+     */
+    protected boolean isConnected() {
+        return overlayedState != null;
+    }
+
+    /**
+     * Notify the parent container about changes to this state.
      */
     protected void notifyStateDiscarded() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateDiscarded(this);
-            }
+        if (container != null) {
+            container.stateDiscarded(this);
         }
     }
 
     /**
-     * Notify the listeners that the persistent state this object is
-     * representing has been created.
+     * Notify the parent container about changes to this state.
      */
     protected void notifyStateCreated() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateCreated(this);
-            }
+        if (container != null) {
+            container.stateCreated(this);
         }
     }
 
     /**
-     * Notify the listeners that the persistent state this object is
-     * representing has been updated.
+     * Notify the parent container about changes to this state.
      */
     public void notifyStateUpdated() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateModified(this);
-            }
+        if (container != null) {
+            container.stateModified(this);
         }
     }
 
     /**
-     * Notify the listeners that the persistent state this object is
-     * representing has been destroyed.
+     * Notify the parent container about changes to this state.
      */
     protected void notifyStateDestroyed() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateDestroyed(this);
-            }
+        if (container != null) {
+            container.stateDestroyed(this);
         }
     }
 
@@ -427,26 +393,23 @@ public abstract class ItemState implements ItemStateListener, Serializable {
     }
 
     /**
-     * Add an <code>ItemStateListener</code>
-     *
-     * @param listener the new listener to be informed on modifications
+     * Set the parent container that will receive notifications about changes to this state.
+     * @param container container to be informed on modifications
      */
-    public void addListener(ItemStateListener listener) {
-        synchronized (listeners) {
-            assert (!listeners.contains(listener));
-            listeners.add(listener);
+    public void setContainer(ItemStateListener container) {
+        if (this.container != null) {
+            throw new IllegalStateException("State already connected to a container: " + this.container);
         }
+        this.container = container;
     }
 
     /**
-     * Remove an <code>ItemStateListener</code>
-     *
-     * @param listener an existing listener
+     * Return the parent container that will receive notifications about changes to this state. Returns
+     * <code>null</code> if none has been yet assigned.
+     * @return container or <code>null</code>
      */
-    public void removeListener(ItemStateListener listener) {
-        synchronized (listeners) {
-            listeners.remove(listener);
-        }
+    public ItemStateListener getContainer() {
+        return container;
     }
 
     /**
@@ -455,53 +418,6 @@ public abstract class ItemState implements ItemStateListener, Serializable {
      * @return the approximate memory consumption of this state.
      */
     public abstract long calculateMemoryFootprint();
-
-    //----------------------------------------------------< ItemStateListener >
-    /**
-     * {@inheritDoc}
-     */
-    public void stateCreated(ItemState created) {
-        // underlying state has been permanently created
-        status = STATUS_EXISTING;
-        pull();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDestroyed(ItemState destroyed) {
-        // underlying state has been permanently destroyed
-        if (isTransient) {
-            status = STATUS_STALE_DESTROYED;
-        } else {
-            status = STATUS_EXISTING_REMOVED;
-            notifyStateDestroyed();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateModified(ItemState modified) {
-        // underlying state has been modified
-        if (isTransient) {
-            status = STATUS_STALE_MODIFIED;
-        } else {
-            synchronized (this) {
-                // this instance represents existing state, update it
-                pull();
-                notifyStateUpdated();
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDiscarded(ItemState discarded) {
-        // underlying persistent state has been discarded, discard this instance too
-        discard();
-    }
 
     //-------------------------------------------------< Serializable support >
     private void writeObject(ObjectOutputStream out) throws IOException {

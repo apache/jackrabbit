@@ -156,6 +156,11 @@ public class SharedItemStateManager
     private boolean noLockHack = false;
 
     /**
+     * State change dispatcher.
+     */
+    private final transient StateChangeDispatcher dispatcher = new StateChangeDispatcher();
+
+    /**
      * Read-/Write-Lock to synchronize access on this item state manager.
      */
     private final ReadWriteLock rwLock =
@@ -340,34 +345,57 @@ public class SharedItemStateManager
     }
 
     //----------------------------------------------------< ItemStateListener >
+
     /**
      * {@inheritDoc}
+     * <p/>
+     * Notifications are received for items that this manager created itself or items that are
+     * managed by one of the virtual providers.
      */
     public void stateCreated(ItemState created) {
-        cache.cache(created);
+        if (created.getContainer() == this) {
+            // shared state was created
+            cache.cache(created);
+        }
+        dispatcher.notifyStateCreated(created);
     }
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * Notifications are received for items that this manager created itself or items that are
+     * managed by one of the virtual providers.
      */
     public void stateModified(ItemState modified) {
-        // not interested
+        dispatcher.notifyStateModified(modified);
     }
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * Notifications are received for items that this manager created itself or items that are
+     * managed by one of the virtual providers.
      */
     public void stateDestroyed(ItemState destroyed) {
-        destroyed.removeListener(this);
-        cache.evict(destroyed.getId());
+        if (destroyed.getContainer() == this) {
+            // shared state was destroyed
+            cache.evict(destroyed.getId());
+        }
+        dispatcher.notifyStateDestroyed(destroyed);
     }
 
     /**
      * {@inheritDoc}
+     * <p/>
+     * Notifications are received for items that this manager created itself or items that are
+     * managed by one of the virtual providers.
      */
     public void stateDiscarded(ItemState discarded) {
-        discarded.removeListener(this);
-        cache.evict(discarded.getId());
+        if (discarded.getContainer() == this) {
+            // shared state was discarded
+            cache.evict(discarded.getId());
+        }
+        dispatcher.notifyStateDiscarded(discarded);
     }
 
     //-------------------------------------------------------------< Dumpable >
@@ -405,6 +433,8 @@ public class SharedItemStateManager
         System.arraycopy(virtualProviders, 0, provs, 0, virtualProviders.length);
         provs[virtualProviders.length] = prov;
         virtualProviders = provs;
+
+        prov.addListener(this);
     }
 
     /**
@@ -717,7 +747,24 @@ public class SharedItemStateManager
         beginUpdate(local, factory, null).end();
     }
 
+    /**
+     * Add an <code>ItemStateListener</code>
+     * @param listener the new listener to be informed on modifications
+     */
+    public void addListener(ItemStateListener listener) {
+        dispatcher.addListener(listener);
+    }
+
+    /**
+     * Remove an <code>ItemStateListener</code>
+     * @param listener an existing listener
+     */
+    public void removeListener(ItemStateListener listener) {
+        dispatcher.removeListener(listener);
+    }
+
     //-------------------------------------------------------< implementation >
+
     /**
      * Create a new node state instance
      *
@@ -733,7 +780,7 @@ public class SharedItemStateManager
         state.setNodeTypeName(nodeTypeName);
         state.setParentId(parentId);
         state.setStatus(ItemState.STATUS_NEW);
-        state.addListener(this);
+        state.setContainer(this);
 
         return state;
     }
@@ -810,8 +857,8 @@ public class SharedItemStateManager
                 state.setStatus(ItemState.STATUS_EXISTING);
                 // put it in cache
                 cache.cache(state);
-                // register as listener
-                state.addListener(this);
+                // set parent container
+                state.setContainer(this);
             }
             return state;
         }
@@ -863,7 +910,7 @@ public class SharedItemStateManager
     private PropertyState createInstance(QName propName, NodeId parentId) {
         PropertyState state = persistMgr.createNew(new PropertyId(parentId, propName));
         state.setStatus(ItemState.STATUS_NEW);
-        state.addListener(this);
+        state.setContainer(this);
 
         return state;
     }

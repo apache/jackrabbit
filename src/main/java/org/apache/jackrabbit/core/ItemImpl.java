@@ -141,9 +141,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             }
         }
         notifyCreated();
-
-        // add this item as listener to events of the underlying state object
-        this.state.addListener(this);
     }
 
     /**
@@ -893,110 +890,108 @@ public abstract class ItemImpl implements Item, ItemStateListener {
      * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
-        // underlying state has been permanently destroyed
-
-        // set state of this instance to 'destroyed'
-        status = STATUS_DESTROYED;
-        // dispose state
         if (state == destroyed) {
-            state.removeListener(this);
-            state = null;
+            // set state of this instance to 'destroyed'
+            status = STATUS_DESTROYED;
+            // dispose state
+            if (state == destroyed) {
+                state = null;
+            }
+            /**
+             * notify the listeners that this instance has been
+             * permanently invalidated
+             */
+            notifyDestroyed();
         }
-        /**
-         * notify the listeners that this instance has been
-         * permanently invalidated
-         */
-        notifyDestroyed();
     }
 
     /**
      * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
-        status = STATUS_MODIFIED;
+        if (state == modified) {
+            status = STATUS_MODIFIED;
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
-        /**
-         * the state of this item has been discarded, probably as a result
-         * of calling Item.refresh(false) or ItemImpl.setRemoved()
-         */
-        if (isTransient()) {
-            switch (state.getStatus()) {
-                /**
-                 * persistent item that has been transiently removed
-                 */
-                case ItemState.STATUS_EXISTING_REMOVED:
+        if (state == discarded) {
+            /**
+             * the state of this item has been discarded, probably as a result
+             * of calling Item.refresh(false) or ItemImpl.setRemoved()
+             */
+            if (isTransient()) {
+                switch (state.getStatus()) {
                     /**
-                     * persistent item that has been transiently modified
+                     * persistent item that has been transiently removed
                      */
-                case ItemState.STATUS_EXISTING_MODIFIED:
-                    /**
-                     * persistent item that has been transiently modified or removed
-                     * and the underlying persistent state has been externally
-                     * modified since the transient modification/removal.
-                     */
-                case ItemState.STATUS_STALE_MODIFIED:
-                    ItemState persistentState = state.getOverlayedState();
-                    /**
-                     * the state is a transient wrapper for the underlying
-                     * persistent state, therefore restore the
-                     * persistent state and resurrect this item instance
-                     * if necessary
-                     */
-                    state.removeListener(this);
-                    persistentState.addListener(this);
-                    stateMgr.disconnectTransientItemState(state);
-                    state = persistentState;
+                    case ItemState.STATUS_EXISTING_REMOVED:
+                        /**
+                         * persistent item that has been transiently modified
+                         */
+                    case ItemState.STATUS_EXISTING_MODIFIED:
+                        /**
+                         * persistent item that has been transiently modified or removed
+                         * and the underlying persistent state has been externally
+                         * modified since the transient modification/removal.
+                         */
+                    case ItemState.STATUS_STALE_MODIFIED:
+                        ItemState persistentState = state.getOverlayedState();
+                        /**
+                         * the state is a transient wrapper for the underlying
+                         * persistent state, therefore restore the
+                         * persistent state and resurrect this item instance
+                         * if necessary
+                         */
+                        stateMgr.disconnectTransientItemState(state);
+                        state = persistentState;
 
-                    return;
+                        return;
 
-                    /**
-                     * persistent item that has been transiently modified or removed
-                     * and the underlying persistent state has been externally
-                     * destroyed since the transient modification/removal.
-                     */
-                case ItemState.STATUS_STALE_DESTROYED:
-                    /**
-                     * first notify the listeners that this instance has been
-                     * permanently invalidated
-                     */
-                    notifyDestroyed();
-                    // now set state of this instance to 'destroyed'
-                    status = STATUS_DESTROYED;
-                    // finally dispose state
-                    state.removeListener(this);
-                    state = null;
-                    return;
+                        /**
+                         * persistent item that has been transiently modified or removed
+                         * and the underlying persistent state has been externally
+                         * destroyed since the transient modification/removal.
+                         */
+                    case ItemState.STATUS_STALE_DESTROYED:
+                        /**
+                         * first notify the listeners that this instance has been
+                         * permanently invalidated
+                         */
+                        notifyDestroyed();
+                        // now set state of this instance to 'destroyed'
+                        status = STATUS_DESTROYED;
+                        state = null;
+                        return;
 
-                    /**
-                     * new item that has been transiently added
-                     */
-                case ItemState.STATUS_NEW:
-                    /**
-                     * first notify the listeners that this instance has been
-                     * permanently invalidated
-                     */
-                    notifyDestroyed();
-                    // now set state of this instance to 'destroyed'
-                    status = STATUS_DESTROYED;
-                    // finally dispose state
-                    state.removeListener(this);
-                    state = null;
-                    return;
+                        /**
+                         * new item that has been transiently added
+                         */
+                    case ItemState.STATUS_NEW:
+                        /**
+                         * first notify the listeners that this instance has been
+                         * permanently invalidated
+                         */
+                        notifyDestroyed();
+                        // now set state of this instance to 'destroyed'
+                        status = STATUS_DESTROYED;
+                        // finally dispose state
+                        state = null;
+                        return;
+                }
             }
-        }
 
-        /**
-         * first notify the listeners that this instance has been
-         * invalidated
-         */
-        notifyInvalidated();
-        // now render this instance 'invalid'
-        status = STATUS_INVALIDATED;
+            /**
+             * first notify the listeners that this instance has been
+             * invalidated
+             */
+            notifyInvalidated();
+            // now render this instance 'invalid'
+            status = STATUS_INVALIDATED;
+        }
     }
 
     //-----------------------------------------------------------------< Item >

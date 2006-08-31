@@ -65,7 +65,7 @@ public class VirtualNodeState extends NodeState {
             throws RepositoryException {
         super(id, nodeTypeName, parentId, ItemState.STATUS_EXISTING, false);
         this.stateMgr = stateMgr;
-        addListener(stateMgr);
+        setContainer(stateMgr);
         // add default properties
         setPropertyValue(QName.JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
         setMixinNodeTypes(mixins);

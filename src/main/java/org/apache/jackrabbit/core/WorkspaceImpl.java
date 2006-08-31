@@ -95,7 +95,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
      * (i.e. that is isolated from transient changes made through
      * the session).
      */
-    protected final HierarchyManagerImpl hierMgr;
+    protected final CachingHierarchyManager hierMgr;
 
     /**
      * The <code>ObservationManager</code> instance for this session.
@@ -133,6 +133,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
         this.stateMgr = createItemStateManager(stateMgr);
         this.hierMgr = new CachingHierarchyManager(rep.getRootNodeId(),
                 this.stateMgr, session.getNamespaceResolver());
+        this.stateMgr.addListener(hierMgr);
         this.session = session;
     }
 

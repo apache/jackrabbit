@@ -35,6 +35,8 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PersistenceManager;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.ItemStateListener;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -58,7 +60,7 @@ import java.util.List;
 /**
  * This Class implements a VersionManager.
  */
-public class VersionManagerImpl extends AbstractVersionManager {
+public class VersionManagerImpl extends AbstractVersionManager implements ItemStateListener {
 
     /**
      * the default logger
@@ -153,7 +155,10 @@ public class VersionManagerImpl extends AbstractVersionManager {
             }
             sharedStateMgr =
                     new VersionItemStateManager(pMgr, rootId, ntReg);
+
             stateMgr = new LocalItemStateManager(sharedStateMgr, escFactory);
+            stateMgr.addListener(this);
+
             NodeState nodeState = (NodeState) stateMgr.getItemState(rootId);
             historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, QName.JCR_VERSIONSTORAGE);
 
@@ -443,6 +448,39 @@ public class VersionManagerImpl extends AbstractVersionManager {
     SharedItemStateManager getSharedStateMgr() {
         return sharedStateMgr;
     }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Not used.
+     */
+    public void stateCreated(ItemState created) {}
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Not used.
+     */
+    public void stateModified(ItemState modified) {}
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Remove item from cache on removal.
+     */
+    public void stateDestroyed(ItemState destroyed) {
+        // evict removed item from cache
+        aquireReadLock();
+        versionItems.remove(destroyed.getId());
+        releaseReadLock();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Not used.
+     */
+    public void stateDiscarded(ItemState discarded) {}
 
     //--------------------------------------------------------< inner classes >
     /**
