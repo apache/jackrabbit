@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.search.Hits;
@@ -290,8 +289,7 @@ public class SearchIndex extends AbstractQueryHandler {
         checkOpen();
         index.update(new AbstractIteratorDecorator(remove) {
             public Object next() {
-                NodeId id = (NodeId) super.next();
-                return new Term(FieldNames.UUID, id.getUUID().toString());
+                return ((NodeId) super.next()).getUUID();
             }
         }, new AbstractIteratorDecorator(add) {
             public Object next() {
