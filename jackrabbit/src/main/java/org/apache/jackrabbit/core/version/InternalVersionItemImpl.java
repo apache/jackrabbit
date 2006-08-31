@@ -23,7 +23,7 @@ import org.apache.jackrabbit.core.state.ItemState;
 /**
  * Implements a <code>InternalVersionItem</code>.
  */
-abstract class InternalVersionItemImpl implements InternalVersionItem, ItemStateListener {
+abstract class InternalVersionItemImpl implements InternalVersionItem {
 
     /**
      * the underlying persistance node
@@ -43,10 +43,6 @@ abstract class InternalVersionItemImpl implements InternalVersionItem, ItemState
     protected InternalVersionItemImpl(AbstractVersionManager vMgr, NodeStateEx node) {
         this.vMgr = vMgr;
         this.node = node;
-        // register as listener. this is not the best solution since this item
-        // could be discarded by the GC and then later be recreated. this will
-        // unnecessarily increase the number of listeners.
-        node.getState().addListener(this);
     }
 
     /**
@@ -71,41 +67,4 @@ abstract class InternalVersionItemImpl implements InternalVersionItem, ItemState
      * @return the parent version item or <code>null</code>.
      */
     public abstract InternalVersionItem getParent();
-
-    //-----------------------------------------------------< ItemStateListener >
-    // handle notifications from underlying item states. currently, we only need
-    // to care about removals, since the versioning items do not cache their
-    // values
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateCreated(ItemState item) {
-        // ignore
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateModified(ItemState item) {
-        // ignore
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDestroyed(ItemState item) {
-        vMgr.itemDiscarded(this);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDiscarded(ItemState item) {
-        // ignore
-    }
-
-
-
-
 }

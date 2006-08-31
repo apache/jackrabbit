@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
@@ -37,24 +38,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Collection;
 
 /**
- * <code>SessionItemStateManager</code> ...
+ * Item state manager that handles both transient and persistent items.
  */
 public class SessionItemStateManager
-        implements UpdatableItemStateManager, Dumpable {
+        implements UpdatableItemStateManager, Dumpable, NodeStateListener {
 
     private static Logger log = LoggerFactory.getLogger(SessionItemStateManager.class);
 
     /**
      * State manager that allows updates
      */
-    private final UpdatableItemStateManager persistentStateMgr;
-
-    /**
-     * State manager for the transient items
-     */
-    private final TransientItemStateManager transientStateMgr;
+    private final UpdatableItemStateManager stateMgr;
 
     /**
      * Hierarchy manager
@@ -62,21 +59,46 @@ public class SessionItemStateManager
     private CachingHierarchyManager hierMgr;
 
     /**
+     * map of those states that have been removed transiently
+     */
+    private final ItemStateStore atticStore;
+
+    /**
+     * map of new or modified transient states
+     */
+    private final ItemStateStore transientStore;
+
+    /**
+     * ItemStateManager view of the states in the attic; lazily instantiated
+     * in {@link #getAttic()}
+     */
+    private AtticItemStateManager attic;
+
+    /**
+     * State change dispatcher.
+     */
+    private final transient StateChangeDispatcher dispatcher = new StateChangeDispatcher();
+
+    /**
      * Creates a new <code>SessionItemStateManager</code> instance.
      *
      * @param rootNodeId
-     * @param persistentStateMgr
+     * @param stateMgr
      * @param nsResolver
      */
     public SessionItemStateManager(NodeId rootNodeId,
-                                   UpdatableItemStateManager persistentStateMgr,
+                                   LocalItemStateManager stateMgr,
                                    NamespaceResolver nsResolver) {
 
-        this.persistentStateMgr = persistentStateMgr;
-        // create transient item state manager
-        transientStateMgr = new TransientItemStateManager();
+        this.stateMgr = stateMgr;
+        stateMgr.addListener(this);
+
         // create hierarchy manager that uses both transient and persistent state
         hierMgr = new CachingHierarchyManager(rootNodeId, this, nsResolver);
+        addListener(hierMgr);
+
+        transientStore = new ItemStateMap();
+        atticStore = new ItemStateMap();
     }
 
     /**
@@ -95,7 +117,19 @@ public class SessionItemStateManager
     public void dump(PrintStream ps) {
         ps.println("SessionItemStateManager (" + this + ")");
         ps.println();
-        transientStateMgr.dump(ps);
+        ps.print("[transient] ");
+        if (transientStore instanceof Dumpable) {
+            ((Dumpable) transientStore).dump(ps);
+        } else {
+            ps.println(transientStore.toString());
+        }
+        ps.println();
+        ps.print("[attic]     ");
+        if (atticStore instanceof Dumpable) {
+            ((Dumpable) atticStore).dump(ps);
+        } else {
+            ps.println(atticStore.toString());
+        }
         ps.println();
     }
 
@@ -107,7 +141,7 @@ public class SessionItemStateManager
             throws NoSuchItemStateException, ItemStateException {
 
         // first check if the specified item has been transiently removed
-        if (transientStateMgr.getAttic().hasItemState(id)) {
+        if (atticStore.contains(id)) {
             /**
              * check if there's new transient state for the specified item
              * (e.g. if a property with name 'x' has been removed and a new
@@ -115,17 +149,17 @@ public class SessionItemStateManager
              * this will throw a NoSuchItemStateException if there's no new
              * transient state
              */
-            return transientStateMgr.getItemState(id);
+            return getTransientItemState(id);
         }
 
         // check if there's transient state for the specified item
-        if (transientStateMgr.hasItemState(id)) {
-            return transientStateMgr.getItemState(id);
+        if (transientStore.contains(id)) {
+            return getTransientItemState(id);
         }
 
         // check if there's persistent state for the specified item
-        if (persistentStateMgr.hasItemState(id)) {
-            return persistentStateMgr.getItemState(id);
+        if (stateMgr.hasItemState(id)) {
+            return stateMgr.getItemState(id);
         }
 
         throw new NoSuchItemStateException(id.toString());
@@ -136,20 +170,20 @@ public class SessionItemStateManager
      */
     public boolean hasItemState(ItemId id) {
         // first check if the specified item has been transiently removed
-        if (transientStateMgr.getAttic().hasItemState(id)) {
+        if (atticStore.contains(id)) {
             /**
              * check if there's new transient state for the specified item
              * (e.g. if a property with name 'x' has been removed and a new
              * property with same name has been created);
              */
-            return transientStateMgr.hasItemState(id);
+            return transientStore.contains(id);
         }
         // check if there's transient state for the specified item
-        if (transientStateMgr.hasItemState(id)) {
+        if (transientStore.contains(id)) {
             return true;
         }
         // check if there's persistent state for the specified item
-        return persistentStateMgr.hasItemState(id);
+        return stateMgr.hasItemState(id);
     }
 
     /**
@@ -158,14 +192,14 @@ public class SessionItemStateManager
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        return persistentStateMgr.getNodeReferences(id);
+        return stateMgr.getNodeReferences(id);
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean hasNodeReferences(NodeReferencesId id) {
-        return persistentStateMgr.hasNodeReferences(id);
+        return stateMgr.hasNodeReferences(id);
     }
 
     //--------------------------------------------< UpdatableItemStateManager >
@@ -173,14 +207,14 @@ public class SessionItemStateManager
      * {@inheritDoc}
      */
     public void edit() throws IllegalStateException {
-        persistentStateMgr.edit();
+        stateMgr.edit();
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean inEditMode() {
-        return persistentStateMgr.inEditMode();
+        return stateMgr.inEditMode();
     }
 
     /**
@@ -189,7 +223,7 @@ public class SessionItemStateManager
     public NodeState createNew(NodeId id, QName nodeTypeName,
                                NodeId parentId)
             throws IllegalStateException {
-        return persistentStateMgr.createNew(id, nodeTypeName, parentId);
+        return stateMgr.createNew(id, nodeTypeName, parentId);
     }
 
     /**
@@ -211,7 +245,7 @@ public class SessionItemStateManager
      */
     public PropertyState createNew(QName propName, NodeId parentId)
             throws IllegalStateException {
-        return persistentStateMgr.createNew(propName, parentId);
+        return stateMgr.createNew(propName, parentId);
     }
 
     /**
@@ -232,21 +266,21 @@ public class SessionItemStateManager
      * {@inheritDoc}
      */
     public void store(ItemState state) throws IllegalStateException {
-        persistentStateMgr.store(state);
+        stateMgr.store(state);
     }
 
     /**
      * {@inheritDoc}
      */
     public void destroy(ItemState state) throws IllegalStateException {
-        persistentStateMgr.destroy(state);
+        stateMgr.destroy(state);
     }
 
     /**
      * {@inheritDoc}
      */
     public void cancel() throws IllegalStateException {
-        persistentStateMgr.cancel();
+        stateMgr.cancel();
     }
 
     /**
@@ -255,7 +289,7 @@ public class SessionItemStateManager
     public void update()
             throws ReferentialIntegrityException, StaleItemStateException,
             ItemStateException, IllegalStateException {
-        persistentStateMgr.update();
+        stateMgr.update();
     }
 
     /**
@@ -263,9 +297,9 @@ public class SessionItemStateManager
      */
     public void dispose() {
         // discard all transient changes
-        transientStateMgr.disposeAllItemStates();
+        disposeAllTransientItemStates();
         // dispose our (i.e. 'local') state manager
-        persistentStateMgr.dispose();
+        stateMgr.dispose();
     }
 
     //< more methods for listing and retrieving transient ItemState instances >
@@ -278,7 +312,13 @@ public class SessionItemStateManager
      */
     public ItemState getTransientItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
-        return transientStateMgr.getItemState(id);
+
+        ItemState state = transientStore.get(id);
+        if (state != null) {
+            return state;
+        } else {
+            throw new NoSuchItemStateException(id.toString());
+        }
     }
 
     /**
@@ -286,7 +326,7 @@ public class SessionItemStateManager
      *         <code>false</code> otherwise.
      */
     public boolean hasAnyTransientItemStates() {
-        return transientStateMgr.hasAnyItemStates();
+        return !transientStore.isEmpty();
     }
 
     /**
@@ -306,7 +346,7 @@ public class SessionItemStateManager
      */
     public Iterator getDescendantTransientItemStates(NodeId parentId)
             throws InvalidItemStateException, RepositoryException {
-        if (!transientStateMgr.hasAnyItemStates()) {
+        if (transientStore.isEmpty()) {
             return Collections.EMPTY_LIST.iterator();
         }
 
@@ -317,7 +357,7 @@ public class SessionItemStateManager
         // the depth is used as array index
         List[] la = new List[10];
         try {
-            Iterator iter = transientStateMgr.getEntries();
+            Iterator iter = transientStore.values().iterator();
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 // determine relative depth: > 0 means it's a descendant
@@ -395,7 +435,7 @@ public class SessionItemStateManager
      * @return an iterator over descendant transient item state instances in the attic
      */
     public Iterator getDescendantTransientItemStatesInAttic(NodeId parentId) {
-        if (!transientStateMgr.hasAnyItemStatesInAttic()) {
+        if (atticStore.isEmpty()) {
             return Collections.EMPTY_LIST.iterator();
         }
 
@@ -406,14 +446,14 @@ public class SessionItemStateManager
         ZombieHierarchyManager zombieHierMgr =
                 new ZombieHierarchyManager(hierMgr.getRootNodeId(),
                         this,
-                        transientStateMgr.getAttic(),
+                        getAttic(),
                         hierMgr.getNamespaceResolver());
 
         // use an array of lists to group the descendants by relative depth;
         // the depth is used as array index
         List[] la = new List[10];
         try {
-            Iterator iter = transientStateMgr.getEntriesInAttic();
+            Iterator iter = atticStore.values().iterator();
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 // determine relative depth: > 0 means it's a descendant
@@ -471,7 +511,7 @@ public class SessionItemStateManager
      *         <code>false</code> otherwise
      */
     public boolean isItemStateInAttic(ItemId id) {
-        return transientStateMgr.getAttic().hasItemState(id);
+        return atticStore.contains(id);
     }
 
     //------< methods for creating & discarding transient ItemState instances >
@@ -485,7 +525,22 @@ public class SessionItemStateManager
      */
     public NodeState createTransientNodeState(NodeId id, QName nodeTypeName, NodeId parentId, int initialStatus)
             throws ItemStateException {
-        return transientStateMgr.createNodeState(id, nodeTypeName, parentId, initialStatus);
+
+        // check map; synchronized to ensure an entry is not created twice.
+        synchronized (transientStore) {
+            if (transientStore.contains(id)) {
+                String msg = "there's already a node state instance with id " + id;
+                log.debug(msg);
+                throw new ItemStateException(msg);
+            }
+
+            NodeState state = new NodeState(id, nodeTypeName, parentId,
+                    initialStatus, true);
+            // put transient state in the map
+            transientStore.put(state);
+            state.setContainer(this);
+            return state;
+        }
     }
 
     /**
@@ -497,9 +552,22 @@ public class SessionItemStateManager
     public NodeState createTransientNodeState(NodeState overlayedState, int initialStatus)
             throws ItemStateException {
 
-        NodeState state = transientStateMgr.createNodeState(overlayedState, initialStatus);
-        hierMgr.stateOverlaid(state);
-        return state;
+        ItemId id = overlayedState.getNodeId();
+
+        // check map; synchronized to ensure an entry is not created twice.
+        synchronized (transientStore) {
+            if (transientStore.contains(id)) {
+                String msg = "there's already a node state instance with id " + id;
+                log.debug(msg);
+                throw new ItemStateException(msg);
+            }
+
+            NodeState state = new NodeState(overlayedState, initialStatus, true);
+            // put transient state in the map
+            transientStore.put(state);
+            state.setContainer(this);
+            return state;
+        }
     }
 
     /**
@@ -511,7 +579,23 @@ public class SessionItemStateManager
      */
     public PropertyState createTransientPropertyState(NodeId parentId, QName propName, int initialStatus)
             throws ItemStateException {
-        return transientStateMgr.createPropertyState(parentId, propName, initialStatus);
+
+        PropertyId id = new PropertyId(parentId, propName);
+
+        // check map; synchronized to ensure an entry is not created twice.
+        synchronized (transientStore) {
+            if (transientStore.contains(id)) {
+                String msg = "there's already a property state instance with id " + id;
+                log.debug(msg);
+                throw new ItemStateException(msg);
+            }
+
+            PropertyState state = new PropertyState(id, initialStatus, true);
+            // put transient state in the map
+            transientStore.put(state);
+            state.setContainer(this);
+            return state;
+        }
     }
 
     /**
@@ -523,9 +607,22 @@ public class SessionItemStateManager
     public PropertyState createTransientPropertyState(PropertyState overlayedState, int initialStatus)
             throws ItemStateException {
 
-        PropertyState state = transientStateMgr.createPropertyState(overlayedState, initialStatus);
-        hierMgr.stateOverlaid(state);
-        return state;
+        PropertyId id = overlayedState.getPropertyId();
+
+        // check map; synchronized to ensure an entry is not created twice.
+        synchronized (transientStore) {
+            if (transientStore.contains(id)) {
+                String msg = "there's already a property state instance with id " + id;
+                log.debug(msg);
+                throw new ItemStateException(msg);
+            }
+
+            PropertyState state = new PropertyState(overlayedState, initialStatus, true);
+            // put transient state in the map
+            transientStore.put(state);
+            state.setContainer(this);
+            return state;
+        }
     }
 
     /**
@@ -536,7 +633,6 @@ public class SessionItemStateManager
      *              be disconnected
      */
     public void disconnectTransientItemState(ItemState state) {
-        hierMgr.stateUncovered(state);
         state.disconnect();
     }
 
@@ -549,7 +645,13 @@ public class SessionItemStateManager
      * @see ItemState#discard()
      */
     public void disposeTransientItemState(ItemState state) {
-        transientStateMgr.disposeItemState(state);
+        // discard item state, this will invalidate the wrapping Item
+        // instance of the transient state
+        state.discard();
+        // remove from map
+        transientStore.remove(state.getId());
+        // give the instance a chance to prepare to get gc'ed
+        state.onDisposed();
     }
 
     /**
@@ -560,7 +662,10 @@ public class SessionItemStateManager
      *              be moved to the attic
      */
     public void moveTransientItemStateToAttic(ItemState state) {
-        transientStateMgr.moveItemStateToAttic(state);
+        // remove from map
+        transientStore.remove(state.getId());
+        // add to attic
+        atticStore.put(state);
     }
 
     /**
@@ -571,13 +676,229 @@ public class SessionItemStateManager
      *              be disposed @see ItemState#discard()
      */
     public void disposeTransientItemStateInAttic(ItemState state) {
-        transientStateMgr.disposeItemStateInAttic(state);
+        // discard item state, this will invalidate the wrapping Item
+        // instance of the transient state
+        state.discard();
+        // remove from attic
+        atticStore.remove(state.getId());
+        // give the instance a chance to prepare to get gc'ed
+        state.onDisposed();
     }
 
     /**
      * Disposes all transient item states in the cache and in the attic.
      */
     public void disposeAllTransientItemStates() {
-        transientStateMgr.disposeAllItemStates();
+        // dispose item states in transient map & attic
+        // (use temp collection to avoid ConcurrentModificationException)
+        Collection tmp = new ArrayList(transientStore.values());
+        Iterator iter = tmp.iterator();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            disposeTransientItemState(state);
+        }
+        tmp = new ArrayList(atticStore.values());
+        iter = tmp.iterator();
+        while (iter.hasNext()) {
+            ItemState state = (ItemState) iter.next();
+            disposeTransientItemStateInAttic(state);
+        }
+    }
+
+    /**
+     * Add an <code>ItemStateListener</code>
+     * @param listener the new listener to be informed on modifications
+     */
+    public void addListener(ItemStateListener listener) {
+        dispatcher.addListener(listener);
+    }
+
+    /**
+     * Remove an <code>ItemStateListener</code>
+     * @param listener an existing listener
+     */
+    public void removeListener(ItemStateListener listener) {
+        dispatcher.removeListener(listener);
+    }
+
+    /**
+     * Return the attic item state provider that holds all items
+     * moved into the attic.
+     *
+     * @return attic
+     */
+    ItemStateManager getAttic() {
+        if (attic == null) {
+            attic = new AtticItemStateManager();
+        }
+        return attic;
+    }
+
+    //----------------------------------------------------< ItemStateListener >
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Notification handler gets called for both transient states that this state manager
+     * has created, as well as states that were created by the local state manager
+     * we're listening to.
+     */
+    public void stateCreated(ItemState created) {
+        ItemState visibleState = created;
+        if (created.getContainer() != this) {
+            // local state was created
+            ItemState transientState = transientStore.get(created.getId());
+            if (transientState != null) {
+                // underlying state has been permanently created
+                transientState.pull();
+                transientState.setStatus(ItemState.STATUS_EXISTING);
+                visibleState = transientState;
+            }
+        }
+        dispatcher.notifyStateCreated(visibleState);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Notification handler gets called for both transient states that this state manager
+     * has created, as well as states that were created by the local state manager
+     * we're listening to.
+     */
+    public void stateModified(ItemState modified) {
+        ItemState visibleState = modified;
+        if (modified.getContainer() != this) {
+            // local state was modified
+            ItemState transientState = transientStore.get(modified.getId());
+            if (transientState != null) {
+                transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
+                visibleState = transientState;
+            }
+        }
+        dispatcher.notifyStateModified(visibleState);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Notification handler gets called for both transient states that this state manager
+     * has created, as well as states that were created by the local state manager
+     * we're listening to.
+     */
+    public void stateDestroyed(ItemState destroyed) {
+        ItemState visibleState = destroyed;
+        if (destroyed.getContainer() != this) {
+            // local state was destroyed
+            ItemState transientState = transientStore.get(destroyed.getId());
+            if (transientState != null) {
+                transientState.setStatus(ItemState.STATUS_STALE_DESTROYED);
+                visibleState = transientState;
+            }
+        }
+        dispatcher.notifyStateDestroyed(visibleState);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Notification handler gets called for both transient states that this state manager
+     * has created, as well as states that were created by the local state manager
+     * we're listening to.
+     */
+    public void stateDiscarded(ItemState discarded) {
+        ItemState visibleState = discarded;
+        if (discarded.getContainer() != this) {
+            // local state was discarded
+            ItemState transientState = transientStore.get(discarded.getId());
+            if (transientState != null) {
+                transientState.setStatus(ItemState.STATUS_UNDEFINED);
+                visibleState = transientState;
+            }
+        }
+        dispatcher.notifyStateDiscarded(visibleState);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Pass notification to listeners if a transient state was modified
+     * or if the local state is not overlayed.
+     */
+    public void nodeAdded(NodeState state, QName name, int index, NodeId id) {
+        if (state.getContainer() == this || !transientStore.contains(state.getId())) {
+            dispatcher.notifyNodeAdded(state, name, index, id);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Pass notification to listeners if a transient state was modified
+     * or if the local state is not overlayed.
+     */
+    public void nodesReplaced(NodeState state) {
+        if (state.getContainer() == this || !transientStore.contains(state.getId())) {
+            dispatcher.notifyNodesReplaced(state);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Pass notification to listeners if a transient state was modified
+     * or if the local state is not overlayed.
+     */
+    public void nodeRemoved(NodeState state, QName name, int index, NodeId id) {
+        if (state.getContainer() == this || !transientStore.contains(state.getId())) {
+            dispatcher.notifyNodeRemoved(state, name, index, id);
+        }
+    }
+
+    //--------------------------------------------------------< inner classes >
+
+    /**
+     * ItemStateManager view of the states in the attic
+     *
+     * @see SessionItemStateManager#getAttic
+     */
+    private class AtticItemStateManager implements ItemStateManager {
+
+        /**
+         * {@inheritDoc}
+         */
+        public ItemState getItemState(ItemId id)
+                throws NoSuchItemStateException, ItemStateException {
+
+            ItemState state = atticStore.get(id);
+            if (state != null) {
+                return state;
+            } else {
+                throw new NoSuchItemStateException(id.toString());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean hasItemState(ItemId id) {
+            return atticStore.contains(id);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public NodeReferences getNodeReferences(NodeReferencesId id)
+                throws NoSuchItemStateException, ItemStateException {
+            // n/a
+            throw new ItemStateException("getNodeReferences() not implemented");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean hasNodeReferences(NodeReferencesId id) {
+            // n/a
+            return false;
+        }
     }
 }

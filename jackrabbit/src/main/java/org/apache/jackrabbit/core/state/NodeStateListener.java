@@ -22,8 +22,6 @@ import org.apache.jackrabbit.core.NodeId;
 /**
  * Extends the <code>ItemStateListener</code> allowing a client to be
  * additionally informed about changes on a <code>NodeState</code>.
- *
- * @see NodeState#addListener
  */
 public interface NodeStateListener extends ItemStateListener {
 

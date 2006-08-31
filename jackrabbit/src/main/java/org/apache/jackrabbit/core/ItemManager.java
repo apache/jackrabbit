@@ -28,6 +28,8 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
@@ -74,7 +76,7 @@ import java.util.Map;
  * If the parent <code>Session</code> is an <code>XASession</code>, there is
  * one <code>ItemManager</code> instance per started global transaction.
  */
-public class ItemManager implements ItemLifeCycleListener, Dumpable {
+public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemManager.class);
 
@@ -100,7 +102,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
      * @param rootNodeDef       the definition of the root node
      * @param rootNodeId        the id of the root node
      */
-    protected ItemManager(ItemStateManager itemStateProvider, HierarchyManager hierMgr,
+    protected ItemManager(SessionItemStateManager itemStateProvider, HierarchyManager hierMgr,
                           SessionImpl session, NodeDefinition rootNodeDef,
                           NodeId rootNodeId) {
         this.itemStateProvider = itemStateProvider;
@@ -111,6 +113,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
 
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        itemStateProvider.addListener(this);
     }
 
     /**
@@ -689,6 +692,48 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable {
                 ps.print("          ");
             }
             ps.println(id + "\t" + item.safeGetJCRPath() + " (" + item + ")");
+        }
+    }
+
+    //----------------------------------------------------< ItemStateListener >
+
+    /**
+     * {@inheritDoc}
+     */
+    public void stateCreated(ItemState created) {
+        ItemImpl item = retrieveItem(created.getId());
+        if (item != null) {
+            item.stateCreated(created);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void stateModified(ItemState modified) {
+        ItemImpl item = retrieveItem(modified.getId());
+        if (item != null) {
+            item.stateModified(modified);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void stateDestroyed(ItemState destroyed) {
+        ItemImpl item = retrieveItem(destroyed.getId());
+        if (item != null) {
+            item.stateDestroyed(destroyed);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void stateDiscarded(ItemState discarded) {
+        ItemImpl item = retrieveItem(discarded.getId());
+        if (item != null) {
+            item.stateDiscarded(discarded);
         }
     }
 }

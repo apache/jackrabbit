@@ -281,10 +281,6 @@ public class NodeImpl extends ItemImpl implements Node {
                 // make transient (copy-on-write)
                 NodeState transientState =
                         stateMgr.createTransientNodeState((NodeState) state, ItemState.STATUS_EXISTING_MODIFIED);
-                // remove listener on persistent state
-                state.removeListener(this);
-                // add listener on transient state
-                transientState.addListener(this);
                 // replace persistent with transient state
                 state = transientState;
             } catch (ItemStateException ise) {
@@ -972,10 +968,6 @@ public class NodeImpl extends ItemImpl implements Node {
             stateMgr.store(persistentState);
         }
 
-        // remove listener from transient state
-        transientState.removeListener(this);
-        // add listener to persistent state
-        persistentState.addListener(this);
         // tell state manager to disconnect item state
         stateMgr.disconnectTransientItemState(transientState);
         // swap transient state with persistent state
