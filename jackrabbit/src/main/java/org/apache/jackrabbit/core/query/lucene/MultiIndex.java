@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.uuid.Constants;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
@@ -189,6 +190,11 @@ public class MultiIndex {
     private long currentTransactionId = -1;
 
     /**
+     * Flag indicating whether re-indexing is running.
+     */
+    private boolean reindexing = false;
+
+    /**
      * Creates a new MultiIndex.
      *
      * @param indexDir the base file system
@@ -267,11 +273,13 @@ public class MultiIndex {
 
             // do an initial index if there are no indexes at all
             if (indexNames.size() == 0) {
+                reindexing = true;
                 // traverse and index workspace
                 executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
                 NodeState rootState = (NodeState) stateMgr.getItemState(rootId);
                 createIndex(rootState, stateMgr);
                 executeAndLog(new Commit(getTransactionId()));
+                reindexing = false;
             }
         } catch (ItemStateException e) {
             throw new IOException("Error indexing root node: " + e.getMessage());
@@ -283,7 +291,7 @@ public class MultiIndex {
         flushTask = new TimerTask() {
             public void run() {
                 checkFlush();
-    }
+            }
         };
         FLUSH_TIMER.schedule(flushTask, 0, 1000);
     }
@@ -291,7 +299,7 @@ public class MultiIndex {
     /**
      * Atomically updates the index by removing some documents and adding others.
      *
-     * @param remove Iterator of <code>Term</code>s that identify documents to
+     * @param remove Iterator of <code>UUID</code>s that identify documents to
      *               remove
      * @param add    Iterator of <code>Document</code>s to add. Calls to
      *               <code>next()</code> on this iterator may return
@@ -308,8 +316,7 @@ public class MultiIndex {
 
             boolean flush = false;
             while (remove.hasNext()) {
-                String uuid = ((Term) remove.next()).text();
-                executeAndLog(new DeleteNode(transactionId, uuid));
+                executeAndLog(new DeleteNode(transactionId, (UUID) remove.next()));
             }
             while (add.hasNext()) {
                 Document doc = (Document) add.next();
@@ -350,33 +357,34 @@ public class MultiIndex {
     }
 
     /**
-     * Deletes the first document that matches the <code>idTerm</code>.
+     * Deletes the first document that matches the <code>uuid</code>.
      *
-     * @param idTerm document that match this term will be deleted.
+     * @param uuid document that match this <code>uuid</code> will be deleted.
      * @throws IOException if an error occurs while deleting the document.
      */
-    void removeDocument(Term idTerm) throws IOException {
-        List remove = Arrays.asList(new Term[]{idTerm});
+    void removeDocument(UUID uuid) throws IOException {
+        List remove = Arrays.asList(new UUID[]{uuid});
         update(remove.iterator(), EmptyIterator.INSTANCE);
     }
 
     /**
-     * Deletes all documents that match the <code>idTerm</code>.
+     * Deletes all documents that match the <code>uuid</code>.
      *
-     * @param idTerm documents that match this term will be deleted.
+     * @param uuid documents that match this <code>uuid</code> will be deleted.
      * @return the number of deleted documents.
      * @throws IOException if an error occurs while deleting documents.
      */
-    synchronized int removeAllDocuments(Term idTerm) throws IOException {
+    synchronized int removeAllDocuments(UUID uuid) throws IOException {
         synchronized (updateMonitor) {
             updateInProgress = true;
         }
         int num;
         try {
+            Term idTerm = new Term(FieldNames.UUID, uuid.toString());
             executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
             num = volatileIndex.removeDocument(idTerm);
             if (num > 0) {
-                redoLog.append(new DeleteNode(getTransactionId(), idTerm.text()));
+                redoLog.append(new DeleteNode(getTransactionId(), uuid));
             }
             for (int i = 0; i < indexes.size(); i++) {
                 PersistentIndex index = (PersistentIndex) indexes.get(i);
@@ -384,7 +392,7 @@ public class MultiIndex {
                 if (indexNames.contains(index.getName())) {
                     int removed = index.removeDocument(idTerm);
                     if (removed > 0) {
-                        redoLog.append(new DeleteNode(getTransactionId(), idTerm.text()));
+                        redoLog.append(new DeleteNode(getTransactionId(), uuid));
                     }
                     num += removed;
                 }
@@ -490,6 +498,26 @@ public class MultiIndex {
     }
 
     /**
+     * Returns <code>true</code> if this multi index has an index segment with
+     * the given name. This method even returns <code>true</code> if an index
+     * segments has not yet been loaded / initialized but exists on disk.
+     *
+     * @param indexName the name of the index segment.
+     * @return <code>true</code> if it exists; otherwise <code>false</code>.
+     */
+    synchronized boolean hasIndex(String indexName) {
+        // check existing
+        for (Iterator it = indexes.iterator(); it.hasNext();) {
+            PersistentIndex idx = (PersistentIndex) it.next();
+            if (idx.getName().equals(indexName)) {
+                return true;
+            }
+        }
+        // check if it exists on disk
+        return new File(indexDir, indexName).exists();
+    }
+
+    /**
      * Replaces the indexes with names <code>obsoleteIndexes</code> with
      * <code>index</code>. Documents that must be deleted in <code>index</code>
      * can be identified with <code>Term</code>s in <code>deleted</code>.
@@ -510,7 +538,10 @@ public class MultiIndex {
             updateInProgress = true;
         }
         try {
-            executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
+            // if we are reindexing there is already an active transaction
+            if (!reindexing) {
+                executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
+            }
             // delete obsolete indexes
             Set names = new HashSet(Arrays.asList(obsoleteIndexes));
             for (Iterator it = names.iterator(); it.hasNext();) {
@@ -521,6 +552,10 @@ public class MultiIndex {
                 }
             }
 
+            // Index merger does not log an action when it creates the target
+            // index of the merge. We have to do this here.
+            executeAndLog(new CreateIndex(getTransactionId(), index.getName(), false));
+
             executeAndLog(new AddIndex(getTransactionId(), index.getName()));
 
             // delete documents in index
@@ -530,7 +565,14 @@ public class MultiIndex {
             }
             index.commit();
 
-            executeAndLog(new Commit(getTransactionId()));
+            if (reindexing) {
+                // do some cleanup right away when reindexing
+                attemptDelete();
+            } else {
+                // only commit if we are not reindexing
+                // when reindexing the final commit is done at the very end
+                executeAndLog(new Commit(getTransactionId()));
+            }
         } finally {
             synchronized (updateMonitor) {
                 updateInProgress = false;
@@ -767,7 +809,11 @@ public class MultiIndex {
             throws IOException {
         a.execute(this);
         redoLog.append(a);
-        if (a.getType() == Action.TYPE_COMMIT) {
+        // please note that flushing the redo log is only required on
+        // commit, but we also want to keep track of new indexes for sure.
+        // otherwise it might happen that unused index folders are orphaned
+        // after a crash.
+        if (a.getType() == Action.TYPE_COMMIT || a.getType() == Action.TYPE_ADD_INDEX) {
             redoLog.flush();
         }
         return a;
@@ -840,7 +886,7 @@ public class MultiIndex {
         if (excludedIDs.contains(id)) {
             return;
         }
-        executeAndLog(new AddNode(getTransactionId(), id.getUUID().toString()));
+        executeAndLog(new AddNode(getTransactionId(), id.getUUID()));
         checkVolatileCommit();
         List children = node.getChildNodeEntries();
         for (Iterator it = children.iterator(); it.hasNext();) {
@@ -1242,7 +1288,7 @@ public class MultiIndex {
         /**
          * The uuid of the node to add.
          */
-        private final String uuid;
+        private final UUID uuid;
 
         /**
          * The document to add to the index, or <code>null</code> if not available.
@@ -1255,7 +1301,7 @@ public class MultiIndex {
          * @param transactionId the id of the transaction that executes this action.
          * @param uuid the uuid of the node to add.
          */
-        AddNode(long transactionId, String uuid) {
+        AddNode(long transactionId, UUID uuid) {
             super(transactionId, Action.TYPE_ADD_NODE);
             this.uuid = uuid;
         }
@@ -1267,7 +1313,7 @@ public class MultiIndex {
          * @param doc the document to add.
          */
         AddNode(long transactionId, Document doc) {
-            this(transactionId, doc.get(FieldNames.UUID));
+            this(transactionId, UUID.fromString(doc.get(FieldNames.UUID)));
             this.doc = doc;
         }
 
@@ -1288,7 +1334,7 @@ public class MultiIndex {
             if (arguments.length() != Constants.UUID_FORMATTED_LENGTH) {
                 throw new IllegalArgumentException("arguments is not a uuid");
             }
-            return new AddNode(transactionId, arguments);
+            return new AddNode(transactionId, UUID.fromString(arguments));
         }
 
         /**
@@ -1299,7 +1345,7 @@ public class MultiIndex {
         public void execute(MultiIndex index) throws IOException {
             if (doc == null) {
                 try {
-                    doc = index.createDocument(NodeId.valueOf(uuid));
+                    doc = index.createDocument(new NodeId(uuid));
                 } catch (RepositoryException e) {
                     // node does not exist anymore
                     log.debug(e.getMessage());
@@ -1429,8 +1475,10 @@ public class MultiIndex {
          * @inheritDoc
          */
         public void undo(MultiIndex index) throws IOException {
-            PersistentIndex idx = index.getOrCreateIndex(indexName, false);
-            index.deleteIndex(idx);
+            if (index.hasIndex(indexName)) {
+                PersistentIndex idx = index.getOrCreateIndex(indexName, false);
+                index.deleteIndex(idx);
+            }
         }
 
         /**
@@ -1539,7 +1587,7 @@ public class MultiIndex {
         /**
          * The uuid of the node to remove.
          */
-        private final String uuid;
+        private final UUID uuid;
 
         /**
          * Creates a new DeleteNode action.
@@ -1547,7 +1595,7 @@ public class MultiIndex {
          * @param transactionId the id of the transaction that executes this action.
          * @param uuid the uuid of the node to delete.
          */
-        DeleteNode(long transactionId, String uuid) {
+        DeleteNode(long transactionId, UUID uuid) {
             super(transactionId, Action.TYPE_DELETE_NODE);
             this.uuid = uuid;
         }
@@ -1567,7 +1615,7 @@ public class MultiIndex {
             if (arguments.length() != Constants.UUID_FORMATTED_LENGTH) {
                 throw new IllegalArgumentException("arguments is not a uuid");
             }
-            return new DeleteNode(transactionId, arguments);
+            return new DeleteNode(transactionId, UUID.fromString(arguments));
         }
 
         /**
@@ -1576,7 +1624,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public void execute(MultiIndex index) throws IOException {
-            Term idTerm = new Term(FieldNames.UUID, uuid);
+            Term idTerm = new Term(FieldNames.UUID, uuid.toString());
             // if the document cannot be deleted from the volatile index
             // delete it from one of the persistent indexes.
             int num = index.volatileIndex.removeDocument(idTerm);

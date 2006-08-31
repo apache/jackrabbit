@@ -20,8 +20,8 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.document.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,8 +161,8 @@ class ConsistencyCheck {
                     continue;
                 }
                 Document d = reader.document(i);
-                String uuid = d.get(FieldNames.UUID);
-                if (stateMgr.hasItemState(NodeId.valueOf(uuid))) {
+                UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
+                if (stateMgr.hasItemState(new NodeId(uuid))) {
                     Document old = (Document) documents.put(uuid, d);
                     if (old != null) {
                         multipleEntries.add(uuid);
@@ -177,19 +177,23 @@ class ConsistencyCheck {
 
         // create multiple entries errors
         for (Iterator it = multipleEntries.iterator(); it.hasNext();) {
-            errors.add(new MultipleEntries((String) it.next()));
+            errors.add(new MultipleEntries((UUID) it.next()));
         }
 
         // run through documents
         for (Iterator it = documents.values().iterator(); it.hasNext();) {
             Document d = (Document) it.next();
-            String uuid = d.get(FieldNames.UUID);
-            String parentUUID = d.get(FieldNames.PARENT);
-            if (documents.containsKey(parentUUID) || parentUUID.length() == 0) {
+            UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
+            String parentUUIDString = d.get(FieldNames.PARENT);
+            UUID parentUUID = null;
+            if (parentUUIDString.length() > 0) {
+                parentUUID = UUID.fromString(parentUUIDString);
+            }
+            if (parentUUID == null || documents.containsKey(parentUUID)) {
                 continue;
             }
             // parent is missing
-            NodeId parentId = NodeId.valueOf(parentUUID);
+            NodeId parentId = new NodeId(parentUUID);
             if (stateMgr.hasItemState(parentId)) {
                 errors.add(new MissingAncestor(uuid, parentUUID));
             } else {
@@ -241,9 +245,9 @@ class ConsistencyCheck {
      */
     private class MissingAncestor extends ConsistencyCheckError {
 
-        private final String parentUUID;
+        private final UUID parentUUID;
 
-        private MissingAncestor(String uuid, String parentUUID) {
+        private MissingAncestor(UUID uuid, UUID parentUUID) {
             super("Parent of " + uuid + " missing in index. Parent: " + parentUUID, uuid);
             this.parentUUID = parentUUID;
         }
@@ -261,15 +265,15 @@ class ConsistencyCheck {
          * @throws IOException if an error occurs while repairing.
          */
         public void repair() throws IOException {
-            String pUUID = parentUUID;
-            while (pUUID != null && !documents.containsKey(pUUID)) {
+            NodeId parentId = new NodeId(parentUUID);
+            while (parentId != null && !documents.containsKey(parentId.getUUID())) {
                 try {
-                    NodeState n = (NodeState) stateMgr.getItemState(NodeId.valueOf(pUUID));
+                    NodeState n = (NodeState) stateMgr.getItemState(parentId);
                     log.info("Reparing missing node " + getPath(n));
                     Document d = index.createDocument(n);
                     index.addDocument(d);
-                    documents.put(n.getNodeId().toString(), d);
-                    pUUID = n.getParentId().toString();
+                    documents.put(n.getNodeId().getUUID(), d);
+                    parentId = n.getParentId();
                 } catch (ItemStateException e) {
                     throw new IOException(e.toString());
                 } catch (RepositoryException e) {
@@ -284,7 +288,7 @@ class ConsistencyCheck {
      */
     private class UnknownParent extends ConsistencyCheckError {
 
-        private UnknownParent(String uuid, String parentUUID) {
+        private UnknownParent(UUID uuid, UUID parentUUID) {
             super("Node " + uuid + " has unknown parent: " + parentUUID, uuid);
         }
 
@@ -309,7 +313,7 @@ class ConsistencyCheck {
      */
     private class MultipleEntries extends ConsistencyCheckError {
 
-        MultipleEntries(String uuid) {
+        MultipleEntries(UUID uuid) {
             super("Multiple entries found for node " + uuid, uuid);
         }
 
@@ -328,15 +332,14 @@ class ConsistencyCheck {
          */
         public void repair() throws IOException {
             // first remove all occurrences
-            Term id = new Term(FieldNames.UUID, uuid);
-            index.removeAllDocuments(id);
+            index.removeAllDocuments(uuid);
             // then re-index the node
             try {
-                NodeState node = (NodeState) stateMgr.getItemState(NodeId.valueOf(uuid));
+                NodeState node = (NodeState) stateMgr.getItemState(new NodeId(uuid));
                 log.info("Re-indexing duplicate node occurrences in index: " + getPath(node));
                 Document d = index.createDocument(node);
                 index.addDocument(d);
-                documents.put(node.getNodeId().toString(), d);
+                documents.put(node.getNodeId().getUUID(), d);
             } catch (ItemStateException e) {
                 throw new IOException(e.toString());
             } catch (RepositoryException e) {
@@ -350,7 +353,7 @@ class ConsistencyCheck {
      */
     private class NodeDeleted extends ConsistencyCheckError {
 
-        NodeDeleted(String uuid) {
+        NodeDeleted(UUID uuid) {
             super("Node " + uuid + " does not longer exist.", uuid);
         }
 
@@ -368,7 +371,7 @@ class ConsistencyCheck {
          */
         public void repair() throws IOException {
             log.info("Removing deleted node from index: " + uuid);
-            index.removeDocument(new Term(FieldNames.UUID, uuid));
+            index.removeDocument(uuid);
         }
     }
 }
