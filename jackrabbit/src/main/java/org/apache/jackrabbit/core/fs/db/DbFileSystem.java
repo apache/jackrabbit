@@ -47,7 +47,7 @@ import java.sql.SQLException;
  * <pre>
  *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;
  *       &lt;param name="driver" value="com.mysql.jdbc.Driver"/&gt;
- *       &lt;param name="url" value="jdbc:mysql:///test"/&gt;
+ *       &lt;param name="url" value="jdbc:mysql:///test?autoReconnect=true"/&gt;
  *       &lt;param name="schema" value="mysql"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
  *   &lt;/FileSystem&gt;
