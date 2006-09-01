@@ -55,7 +55,7 @@ import org.apache.jackrabbit.core.state.util.Serializer;
  * <pre>
  *   &lt;PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager"&gt;
  *       &lt;param name="driver" value="com.mysql.jdbc.Driver"/&gt;
- *       &lt;param name="url" value="jdbc:mysql:///test"/&gt;
+ *       &lt;param name="url" value="jdbc:mysql:///test?autoReconnect=true"/&gt;
  *       &lt;param name="schema" value="mysql"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
  *       &lt;param name="externalBLOBs" value="false"/&gt;
