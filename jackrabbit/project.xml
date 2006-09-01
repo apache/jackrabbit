@@ -134,7 +134,6 @@ indexing, etc.
             <email/>
             <organization>Day Software</organization>
             <roles>
-                <role>Chair</role>
                 <role>Documentation</role>
             </roles>
             <timezone>-8</timezone>
@@ -305,6 +304,7 @@ indexing, etc.
             <email>jz@yukatan.fi</email>
             <organization>Yukatan</organization>
             <roles>
+                <role>Chair</role>
                 <role>Java Developer</role>
             </roles>
             <timezone>+2</timezone>
