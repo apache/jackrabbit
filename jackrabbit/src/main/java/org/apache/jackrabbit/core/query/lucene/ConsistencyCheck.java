@@ -28,8 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -66,9 +64,9 @@ class ConsistencyCheck {
     private final MultiIndex index;
 
     /**
-     * All the documents within the index.
+     * All the document UUIDs within the index.
      */
-    private Map documents;
+    private Set documentUUIDs;
 
     /**
      * List of all errors.
@@ -152,19 +150,22 @@ class ConsistencyCheck {
     private void run() throws IOException {
         // UUIDs of multiple nodes in the index
         Set multipleEntries = new HashSet();
-        // collect all documents
-        documents = new HashMap();
+        // collect all documents UUIDs
+        documentUUIDs = new HashSet();
         IndexReader reader = index.getIndexReader();
         try {
             for (int i = 0; i < reader.maxDoc(); i++) {
+                if (i > 0 && i % (reader.maxDoc() / 5) == 0) {
+                    long progress = Math.round((100.0 * (float) i) / ((float) reader.maxDoc() * 2f));
+                    log.info("progress: " + progress + "%");
+                }
                 if (reader.isDeleted(i)) {
                     continue;
                 }
                 Document d = reader.document(i);
                 UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
                 if (stateMgr.hasItemState(new NodeId(uuid))) {
-                    Document old = (Document) documents.put(uuid, d);
-                    if (old != null) {
+                    if (!documentUUIDs.add(uuid)) {
                         multipleEntries.add(uuid);
                     }
                 } else {
@@ -180,25 +181,37 @@ class ConsistencyCheck {
             errors.add(new MultipleEntries((UUID) it.next()));
         }
 
-        // run through documents
-        for (Iterator it = documents.values().iterator(); it.hasNext();) {
-            Document d = (Document) it.next();
-            UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
-            String parentUUIDString = d.get(FieldNames.PARENT);
-            UUID parentUUID = null;
-            if (parentUUIDString.length() > 0) {
-                parentUUID = UUID.fromString(parentUUIDString);
+        reader = index.getIndexReader();
+        try {
+            // run through documents again and check parent
+            for (int i = 0; i < reader.maxDoc(); i++) {
+                if (i > 0 && i % (reader.maxDoc() / 5) == 0) {
+                    long progress = Math.round((100.0 * (float) i) / ((float) reader.maxDoc() * 2f));
+                    log.info("progress: " + (progress + 50) + "%");
+                }
+                if (reader.isDeleted(i)) {
+                    continue;
+                }
+                Document d = reader.document(i);
+                UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
+                String parentUUIDString = d.get(FieldNames.PARENT);
+                UUID parentUUID = null;
+                if (parentUUIDString.length() > 0) {
+                    parentUUID = UUID.fromString(parentUUIDString);
+                }
+                if (parentUUID == null || documentUUIDs.contains(parentUUID)) {
+                    continue;
+                }
+                // parent is missing
+                NodeId parentId = new NodeId(parentUUID);
+                if (stateMgr.hasItemState(parentId)) {
+                    errors.add(new MissingAncestor(uuid, parentUUID));
+                } else {
+                    errors.add(new UnknownParent(uuid, parentUUID));
+                }
             }
-            if (parentUUID == null || documents.containsKey(parentUUID)) {
-                continue;
-            }
-            // parent is missing
-            NodeId parentId = new NodeId(parentUUID);
-            if (stateMgr.hasItemState(parentId)) {
-                errors.add(new MissingAncestor(uuid, parentUUID));
-            } else {
-                errors.add(new UnknownParent(uuid, parentUUID));
-            }
+        } finally {
+            reader.close();
         }
     }
 
@@ -266,13 +279,13 @@ class ConsistencyCheck {
          */
         public void repair() throws IOException {
             NodeId parentId = new NodeId(parentUUID);
-            while (parentId != null && !documents.containsKey(parentId.getUUID())) {
+            while (parentId != null && !documentUUIDs.contains(parentId.getUUID())) {
                 try {
                     NodeState n = (NodeState) stateMgr.getItemState(parentId);
                     log.info("Reparing missing node " + getPath(n));
                     Document d = index.createDocument(n);
                     index.addDocument(d);
-                    documents.put(n.getNodeId().getUUID(), d);
+                    documentUUIDs.add(n.getNodeId().getUUID());
                     parentId = n.getParentId();
                 } catch (ItemStateException e) {
                     throw new IOException(e.toString());
@@ -339,7 +352,7 @@ class ConsistencyCheck {
                 log.info("Re-indexing duplicate node occurrences in index: " + getPath(node));
                 Document d = index.createDocument(node);
                 index.addDocument(d);
-                documents.put(node.getNodeId().getUUID(), d);
+                documentUUIDs.add(node.getNodeId().getUUID());
             } catch (ItemStateException e) {
                 throw new IOException(e.toString());
             } catch (RepositoryException e) {
