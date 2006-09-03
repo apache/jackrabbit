@@ -234,7 +234,7 @@ class BufferedStringValue implements TextValue {
                 // NAME and PATH require special treatment because
                 // they depend on the current namespace context
                 // of the xml document
-                
+
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
                 InternalValue ival =

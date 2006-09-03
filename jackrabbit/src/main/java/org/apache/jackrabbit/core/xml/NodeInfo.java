@@ -26,7 +26,7 @@ import org.apache.jackrabbit.name.QName;
  * <p>
  * An instance of this class is simply a container for the node name,
  * node identifier, and the node type information. See the {@link PropInfo}
- * class for the related carrier of property information. 
+ * class for the related carrier of property information.
  */
 public class NodeInfo {
 
@@ -77,7 +77,7 @@ public class NodeInfo {
 
     /**
      * Returns the name of the primary type of the node being imported.
-     * 
+     *
      * @return primary type name
      */
     public QName getNodeTypeName() {
@@ -86,7 +86,7 @@ public class NodeInfo {
 
     /**
      * Returns the names of the mixin types of the node being imported.
-     * 
+     *
      * @return mixin type names
      */
     public QName[] getMixinNames() {
@@ -95,7 +95,7 @@ public class NodeInfo {
 
     /**
      * Returns the identifier of the node being imported.
-     * 
+     *
      * @return node identifier
      */
     public NodeId getId() {

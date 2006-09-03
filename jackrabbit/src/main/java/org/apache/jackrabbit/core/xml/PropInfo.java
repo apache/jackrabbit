@@ -17,14 +17,11 @@
 package org.apache.jackrabbit.core.xml;
 
 import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -117,7 +114,9 @@ public class PropInfo {
         }
     }
 
-    public void apply(NodeImpl node, NamespaceResolver resolver, ReferenceChangeTracker refTracker) throws RepositoryException, ConstraintViolationException, ValueFormatException, VersionException, LockException, ItemNotFoundException {
+    public void apply(
+            NodeImpl node, NamespaceResolver resolver,
+            ReferenceChangeTracker refTracker) throws RepositoryException {
         // find applicable definition
         PropDef def = getApplicablePropertyDef(node.getEffectiveNodeType());
         if (def.isProtected()) {
@@ -125,14 +124,14 @@ public class PropInfo {
             log.debug("skipping protected property " + name);
             return;
         }
-        
+
         // convert serialized values to Value objects
         Value[] va = new Value[values.length];
         int targetType = getTargetType(def);
         for (int i = 0; i < values.length; i++) {
             va[i] = values[i].getValue(targetType, resolver);
         }
-        
+
         // multi- or single-valued property?
         if (va.length == 1) {
             // could be single- or multi-valued (n == 1)
@@ -156,7 +155,10 @@ public class PropInfo {
         }
     }
 
-    public void apply(NodeState node, BatchedItemOperations itemOps, NodeTypeRegistry ntReg, ReferenceChangeTracker refTracker) throws ItemNotFoundException, RepositoryException, ItemExistsException, ConstraintViolationException, ValueFormatException {
+    public void apply(
+            NodeState node, BatchedItemOperations itemOps,
+            NodeTypeRegistry ntReg, ReferenceChangeTracker refTracker)
+            throws RepositoryException {
         PropertyState prop = null;
         PropDef def = null;
 
@@ -185,7 +187,7 @@ public class PropInfo {
                 log.debug("skipping protected property " + name);
                 return;
             }
-            
+
             // create new property
             prop = itemOps.createPropertyState(node, name, type, def);
         }
