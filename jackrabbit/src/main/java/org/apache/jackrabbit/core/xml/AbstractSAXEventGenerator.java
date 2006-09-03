@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.xml;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
@@ -73,7 +74,7 @@ abstract class AbstractSAXEventGenerator {
     protected final Node startNode;
     protected final boolean skipBinary;
     protected final boolean noRecurse;
-    
+
     /**
      * the set of namespace declarations that have already been serialized
      */
@@ -218,18 +219,18 @@ abstract class AbstractSAXEventGenerator {
             throws RepositoryException {
         String[] prefixes = session.getNamespacePrefixes();
         NamespaceStack newNamespaces = null;
-        
+
         for (int i = 0; i < prefixes.length; i++) {
             String prefix = prefixes[i];
-            
+
             if (prefix.length() > 0
                     && !QName.NS_XML_PREFIX.equals(prefix)) {
                 String uri = session.getNamespaceURI(prefix);
-                
+
                 // get the matching namespace from previous declarations
                 String mappedToNs = this.namespaces.getNamespaceURI(prefix);
-            
-                if (! uri.equals(mappedToNs)) {
+
+                if (!uri.equals(mappedToNs)) {
                     // when not the same, add a declaration
                     attributes.addAttribute(
                         QName.NS_XMLNS_URI,
@@ -237,17 +238,16 @@ abstract class AbstractSAXEventGenerator {
                         QName.NS_XMLNS_PREFIX + ":" + prefix,
                         "CDATA",
                         uri);
-                    
+
                     if (newNamespaces == null) {
                         // replace current namespace stack when needed
                         newNamespaces = new NamespaceStack(this.namespaces);
                         this.namespaces = newNamespaces;
                     }
-                    
+
                     // remember the new declaration
                     newNamespaces.setNamespacePrefix(prefix, uri);
                 }
-                
             }
         }
     }
@@ -308,17 +308,15 @@ abstract class AbstractSAXEventGenerator {
             while (nodeIter.hasNext()) {
                 // recurse
                 Node childNode = nodeIter.nextNode();
-                
                 // remember the current namespace declarations
                 NamespaceStack previousNamespaces = this.namespaces;
-                
+
                 process(childNode, level + 1);
-                
-                // restore the effective namespace declarations 
+
+                // restore the effective namespace declarations
                 // (from before visiting the child node)
                 this.namespaces = previousNamespaces;
             }
-            
         }
 
         // leaving node
@@ -392,59 +390,60 @@ abstract class AbstractSAXEventGenerator {
     protected abstract void leaving(Property prop, int level)
             throws RepositoryException, SAXException;
 
-
-    
     /**
-     * Implements a simple stack of namespace
-     * declarations.
+     * Implements a simple stack of namespace declarations.
      */
-    
-    private static class NamespaceStack extends HashMap {
-      
+    private static class NamespaceStack {
+
         /**
          * Parent stack (may be <code>null</code>)
          */
         private final NamespaceStack parent;
-              
+
+        /**
+         * Local namespace declarations.
+         */
+        private final Map namespaces;
+
         /**
          * Instantiate a new stack
+         *
          * @param parent parent stack (may be <code>null</code> for the initial stack)
          */
         public NamespaceStack(NamespaceStack parent) {
             this.parent = parent;
+            this.namespaces = new HashMap();
         }
-      
+
         /**
          * Obtain namespace URI for a prefix
+         *
          * @param prefix prefix
          * @return namespace URI (or <code>null</code> when unknown)
          */
         public String getNamespaceURI(String prefix) {
-          
-            String namespace = (String)super.get(prefix);
-    
+            String namespace = (String) namespaces.get(prefix);
             if (namespace != null) {
                 // found in this element, return right away
                 return namespace;
-            }
-            else {
+            } else if (parent != null) {
                 // ask parent, when present
-                if (this.parent == null) {
-                    return null;
-                }
-                else {
-                    return this.parent.getNamespaceURI(prefix);
-                }
-              }
+                return parent.getNamespaceURI(prefix);
+            } else {
+                return null;
+            }
         }
-      
+
         /**
          * Add a new prefix mapping
+         *
          * @param prefix namespace prefix
          * @param uri namespace URI
          */
         public void setNamespacePrefix(String prefix, String uri) {
-            super.put(prefix, uri);
+            namespaces.put(prefix, uri);
         }
+
     }
+
 }
