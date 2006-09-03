@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import java.util.HashMap;
+
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.SessionNamespaceResolver;
@@ -71,6 +73,11 @@ abstract class AbstractSAXEventGenerator {
     protected final Node startNode;
     protected final boolean skipBinary;
     protected final boolean noRecurse;
+    
+    /**
+     * the set of namespace declarations that have already been serialized
+     */
+    protected NamespaceStack namespaces;
 
     /**
      * The jcr:primaryType property name (allowed for session-local prefix mappings)
@@ -119,6 +126,8 @@ abstract class AbstractSAXEventGenerator {
         this.contentHandler = contentHandler;
         this.skipBinary = skipBinary;
         this.noRecurse = noRecurse;
+        // start with an empty set of known prefixes
+        this.namespaces = new NamespaceStack(null);
 
         // resolve the names of some wellknown properties
         // allowing for session-local prefix mappings
@@ -196,7 +205,8 @@ abstract class AbstractSAXEventGenerator {
 
     /**
      * Adds explicit <code>xmlns:prefix="uri"</code> attributes to the
-     * XML top-level element. The effect is the same as setting the
+     * XML element as required (e.g., normally just on the root
+     * element). The effect is the same as setting the
      * "<code>http://xml.org/sax/features/namespace-prefixes</code>"
      * property on an SAX parser.
      *
@@ -206,18 +216,38 @@ abstract class AbstractSAXEventGenerator {
      */
     protected void addNamespacePrefixes(int level, AttributesImpl attributes)
             throws RepositoryException {
-        if (level == 0) {
-            String[] prefixes = session.getNamespacePrefixes();
-            for (int i = 0; i < prefixes.length; i++) {
-                if (prefixes[i].length() > 0
-                        && !QName.NS_XML_PREFIX.equals(prefixes[i])) {
+        String[] prefixes = session.getNamespacePrefixes();
+        NamespaceStack newNamespaces = null;
+        
+        for (int i = 0; i < prefixes.length; i++) {
+            String prefix = prefixes[i];
+            
+            if (prefix.length() > 0
+                    && !QName.NS_XML_PREFIX.equals(prefix)) {
+                String uri = session.getNamespaceURI(prefix);
+                
+                // get the matching namespace from previous declarations
+                String mappedToNs = this.namespaces.getNamespaceURI(prefix);
+            
+                if (! uri.equals(mappedToNs)) {
+                    // when not the same, add a declaration
                     attributes.addAttribute(
-                            QName.NS_XMLNS_URI,
-                            prefixes[i],
-                            QName.NS_XMLNS_PREFIX + ":" + prefixes[i],
-                            "CDATA",
-                            session.getNamespaceURI(prefixes[i]));
+                        QName.NS_XMLNS_URI,
+                        prefix,
+                        QName.NS_XMLNS_PREFIX + ":" + prefix,
+                        "CDATA",
+                        uri);
+                    
+                    if (newNamespaces == null) {
+                        // replace current namespace stack when needed
+                        newNamespaces = new NamespaceStack(this.namespaces);
+                        this.namespaces = newNamespaces;
+                    }
+                    
+                    // remember the new declaration
+                    newNamespaces.setNamespacePrefix(prefix, uri);
                 }
+                
             }
         }
     }
@@ -276,10 +306,19 @@ abstract class AbstractSAXEventGenerator {
             // child nodes
             NodeIterator nodeIter = node.getNodes();
             while (nodeIter.hasNext()) {
-                Node childNode = nodeIter.nextNode();
                 // recurse
+                Node childNode = nodeIter.nextNode();
+                
+                // remember the current namespace declarations
+                NamespaceStack previousNamespaces = this.namespaces;
+                
                 process(childNode, level + 1);
+                
+                // restore the effective namespace declarations 
+                // (from before visiting the child node)
+                this.namespaces = previousNamespaces;
             }
+            
         }
 
         // leaving node
@@ -353,4 +392,59 @@ abstract class AbstractSAXEventGenerator {
     protected abstract void leaving(Property prop, int level)
             throws RepositoryException, SAXException;
 
+
+    
+    /**
+     * Implements a simple stack of namespace
+     * declarations.
+     */
+    
+    private static class NamespaceStack extends HashMap {
+      
+        /**
+         * Parent stack (may be <code>null</code>)
+         */
+        private final NamespaceStack parent;
+              
+        /**
+         * Instantiate a new stack
+         * @param parent parent stack (may be <code>null</code> for the initial stack)
+         */
+        public NamespaceStack(NamespaceStack parent) {
+            this.parent = parent;
+        }
+      
+        /**
+         * Obtain namespace URI for a prefix
+         * @param prefix prefix
+         * @return namespace URI (or <code>null</code> when unknown)
+         */
+        public String getNamespaceURI(String prefix) {
+          
+            String namespace = (String)super.get(prefix);
+    
+            if (namespace != null) {
+                // found in this element, return right away
+                return namespace;
+            }
+            else {
+                // ask parent, when present
+                if (this.parent == null) {
+                    return null;
+                }
+                else {
+                    return this.parent.getNamespaceURI(prefix);
+                }
+              }
+        }
+      
+        /**
+         * Add a new prefix mapping
+         * @param prefix namespace prefix
+         * @param uri namespace URI
+         */
+        public void setNamespacePrefix(String prefix, String uri) {
+            super.put(prefix, uri);
+        }
+    }
 }
