@@ -28,6 +28,16 @@ import java.util.Properties;
  */
 public class BeanConfig {
 
+    /** The default class loader used by all instances of this class */
+    private static ClassLoader DEFAULT_CLASS_LOADER =
+        BeanConfig.class.getClassLoader();
+    
+    /**
+     * The current class loader used by this instance to create instances of
+     * configured classes.
+     */
+    private ClassLoader classLoader = getDefaultClassLoader();
+    
     /**
      * The class name of the configured bean.
      */
@@ -87,7 +97,9 @@ public class BeanConfig {
      */
     public Object newInstance() throws ConfigurationException {
         try {
-            Object object = Class.forName(getClassName()).newInstance();
+            Class objectClass =
+                Class.forName(getClassName(), true, getClassLoader());
+            Object object = objectClass.newInstance();
             BeanMap map = new BeanMap(object);
             Iterator iterator = map.keyIterator();
             while (iterator.hasNext()) {
@@ -113,4 +125,66 @@ public class BeanConfig {
         }
     }
 
+    //---------- Configurable class loader support ----------------------------
+    
+    /**
+     * Returns the current <code>ClassLoader</code> used to instantiate objects
+     * in the {@link #newInstance()} method.
+     * 
+     * @see #newInstance()
+     * @see #setClassLoader(ClassLoader)
+     * @see #getDefaultClassLoader()
+     * @see #setDefaultClassLoader(ClassLoader)
+     */
+    public ClassLoader getClassLoader() {
+        return classLoader;
+    }
+    
+    /**
+     * Sets the <code>ClassLoader</code> used to instantiate objects in the
+     * {@link #newInstance()} method.
+     * 
+     * @param classLoader The class loader to set on this instance. If this is
+     *      <code>null</code> the system class loader will be used, which may
+     *      lead to unexpected class loading failures.
+     *      
+     * @see #newInstance()
+     * @see #getClassLoader()
+     * @see #getDefaultClassLoader()
+     * @see #setDefaultClassLoader(ClassLoader)
+     */
+    public void setClassLoader(ClassLoader classLoader) {
+        this.classLoader = classLoader;
+    }
+    
+    /**
+     * Returns the current <code>ClassLoader</code> used for new instances of
+     * this class as the loader used to instantiate objects in the
+     * {@link #newInstance()} method.
+     * 
+     * @see #newInstance()
+     * @see #getClassLoader()
+     * @see #setClassLoader(ClassLoader)
+     * @see #setDefaultClassLoader(ClassLoader)
+     */
+    public static ClassLoader getDefaultClassLoader() {
+        return DEFAULT_CLASS_LOADER;
+    }
+    
+    /**
+     * Sets the <code>ClassLoader</code> used for new instances of this class as
+     * the loader to instantiate objects in the {@link #newInstance()} method.
+     * 
+     * @param classLoader The class loader to set as the default class loader.
+     *      If this is <code>null</code> the system class loader will be used,
+     *      which may lead to unexpected class loading failures. 
+     *      
+     * @see #newInstance()
+     * @see #getClassLoader()
+     * @see #setClassLoader(ClassLoader)
+     * @see #getDefaultClassLoader()
+     */
+    public static void setDefaultClassLoader(ClassLoader classLoader) {
+        DEFAULT_CLASS_LOADER = classLoader;
+    }
 }
