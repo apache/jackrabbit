@@ -94,8 +94,8 @@
     </dependencies>	
 	  
     <build>
-	<sourceDirectory>src/java</sourceDirectory>
-	<unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+	<sourceDirectory>src/main/java</sourceDirectory>
+	<unitTestSourceDirectory>src/test/java</unitTestSourceDirectory>
         <resources>
             <resource>
                 <targetPath>META-INF</targetPath>
@@ -104,12 +104,6 @@
                     <include>README.txt</include>
                 </includes>
             </resource>
-			<resource>
-			    <directory>applications/test</directory>
-			    <includes>
-					<include>*.xml</include>
-			    </includes>
-			</resource>
         </resources>
 	<unitTest>
 	    <includes>
