@@ -19,8 +19,6 @@ package org.apache.jackrabbit.core.observation;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,19 +29,16 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * The class <code>ObservationManagerFactory</code> creates new
- * <code>ObservationManager</code> instances for sessions. It also
- * creates new {@link EventStateCollection}s that can be dispatched
- * to registered {@link javax.jcr.observation.EventListener}s.
+ * Dispatcher for dispatching events to listeners within a single workspace.
  */
-public final class ObservationManagerFactory extends EventDispatcher
+public final class ObservationDispatcher extends EventDispatcher
         implements Runnable {
 
     /**
      * Logger instance for this class
      */
     private static final Logger log
-            = LoggerFactory.getLogger(ObservationManagerFactory.class);
+            = LoggerFactory.getLogger(ObservationDispatcher.class);
 
     /**
      * Dummy DispatchAction indicating the notification thread to end
@@ -87,10 +82,10 @@ public final class ObservationManagerFactory extends EventDispatcher
     private Thread notificationThread;
 
     /**
-     * Creates a new <code>ObservationManagerFactory</code> instance
+     * Creates a new <code>ObservationDispatcher</code> instance
      * and starts the notification thread deamon.
      */
-    public ObservationManagerFactory() {
+    public ObservationDispatcher() {
         notificationThread = new Thread(this, "ObservationManager");
         notificationThread.setDaemon(true);
         notificationThread.start();
@@ -132,19 +127,6 @@ public final class ObservationManagerFactory extends EventDispatcher
             }
             return synchronousReadOnlyConsumers;
         }
-    }
-
-    /**
-     * Creates a new <code>session</code> local <code>ObservationManager</code>
-     * with an associated <code>NamespaceResolver</code>.
-     *
-     * @param session the session.
-     * @param itemMgr the <code>ItemManager</code> of the <code>session</code>.
-     * @return an <code>ObservationManager</code>.
-     */
-    public ObservationManagerImpl createObservationManager(SessionImpl session,
-                                                           ItemManager itemMgr) {
-        return new ObservationManagerImpl(this, session, itemMgr);
     }
 
     /**
