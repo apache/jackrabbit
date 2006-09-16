@@ -48,6 +48,14 @@ public final class JCAManagedConnectionFactory
     private String configFile;
 
     /**
+     * Flag indicating whether the session should be bound to the
+     * transaction lyfecyle.
+     * In other words, if this flag is true the handle
+     * will be closed when the transaction ends.
+     */
+    private Boolean bindSessionToTrasaction = Boolean.TRUE;
+
+    /**
      * Repository.
      */
     private transient RepositoryImpl repository;
@@ -282,5 +290,13 @@ public final class JCAManagedConnectionFactory
         JCARepositoryManager mgr = JCARepositoryManager.getInstance();
         mgr.autoShutdownRepository(homeDir, configFile);
 	}
+
+    public Boolean getBindSessionToTrasaction() {
+        return bindSessionToTrasaction;
+    }
+
+    public void setBindSessionToTrasaction(Boolean bindSessionToTrasaction) {
+        this.bindSessionToTrasaction = bindSessionToTrasaction;
+    }
 
 }

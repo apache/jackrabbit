@@ -57,6 +57,11 @@ public final class JCAManagedConnection
     private final XASession session;
 
     /**
+     * XAResource instance.
+     */
+    private final XAResource xaResource;
+
+    /**
      * Listeners.
      */
     private final LinkedList listeners;
@@ -80,6 +85,11 @@ public final class JCAManagedConnection
         this.session = session;
         this.listeners = new LinkedList();
         this.handles = new LinkedList();
+        if (this.mcf.getBindSessionToTrasaction().booleanValue()) {
+            this.xaResource =  new TransactionBoundXAResource(this, session.getXAResource());
+        } else {
+            this.xaResource = session.getXAResource();
+        }
     }
 
     /**
@@ -173,7 +183,7 @@ public final class JCAManagedConnection
      */
     public XAResource getXAResource()
             throws ResourceException {
-        return session.getXAResource();
+        return this.xaResource;
     }
 
     /**
@@ -385,7 +395,7 @@ public final class JCAManagedConnection
     /**
      * Release handles.
      */
-    private void closeHandles() {
+    void closeHandles() {
         synchronized (handles) {
             JCASessionHandle[] handlesArray = new JCASessionHandle[handles
                     .size()];
