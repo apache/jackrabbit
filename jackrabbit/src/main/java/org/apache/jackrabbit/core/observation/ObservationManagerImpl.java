@@ -53,9 +53,9 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
     private final ItemManager itemMgr;
 
     /**
-     * The <code>ObservationManagerFactory</code>
+     * The <code>ObservationDispatcher</code>
      */
-    private final ObservationManagerFactory obsMgrFactory;
+    private final ObservationDispatcher dispatcher;
 
     static {
         // preload EventListenerIteratorImpl to prevent classloader issues during shutdown
@@ -65,6 +65,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
     /**
      * Creates an <code>ObservationManager</code> instance.
      *
+     * @param dispatcher observation dispatcher
      * @param session the <code>Session</code> this ObservationManager
      *                belongs to.
      * @param itemMgr {@link org.apache.jackrabbit.core.ItemManager} of the passed
@@ -72,7 +73,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      * @throws NullPointerException if <code>session</code> or <code>itemMgr</code>
      *                              is <code>null</code>.
      */
-    ObservationManagerImpl(ObservationManagerFactory obsMgrFactory,
+    public ObservationManagerImpl(ObservationDispatcher dispatcher,
                            SessionImpl session,
                            ItemManager itemMgr) throws NullPointerException {
         if (session == null) {
@@ -82,7 +83,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
             throw new NullPointerException("itemMgr");
         }
 
-        this.obsMgrFactory = obsMgrFactory;
+        this.dispatcher = dispatcher;
         this.session = session;
         this.itemMgr = itemMgr;
     }
@@ -136,9 +137,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
                 nodeTypes,
                 noLocal);
 
-        EventConsumer consumer =
-                new EventConsumer(session, listener, filter);
-        obsMgrFactory.addConsumer(consumer);
+        dispatcher.addConsumer(new EventConsumer(session, listener, filter));
     }
 
     /**
@@ -146,9 +145,8 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      */
     public void removeEventListener(EventListener listener)
             throws RepositoryException {
-        EventConsumer consumer =
-                new EventConsumer(session, listener, EventFilter.BLOCK_ALL);
-        obsMgrFactory.removeConsumer(consumer);
+        dispatcher.removeConsumer(
+                new EventConsumer(session, listener, EventFilter.BLOCK_ALL));
 
     }
 
@@ -157,9 +155,10 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      */
     public EventListenerIterator getRegisteredEventListeners()
             throws RepositoryException {
-        return new EventListenerIteratorImpl(session,
-                obsMgrFactory.getSynchronousConsumers(),
-                obsMgrFactory.getAsynchronousConsumers());
+        return new EventListenerIteratorImpl(
+                session,
+                dispatcher.getSynchronousConsumers(),
+                dispatcher.getAsynchronousConsumers());
     }
 
     /**
@@ -188,6 +187,6 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      * which is attached to this <code>ObservationManager</code> instance.
      */
     public EventStateCollection createEventStateCollection() {
-        return new EventStateCollection(obsMgrFactory, session, null);
+        return new EventStateCollection(dispatcher, session, null);
     }
 }

@@ -42,24 +42,24 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
     private final HashSet dispatchers = new HashSet();
 
     /**
-     * Adds a new observation factory to the set of dispatchers
+     * Adds a new observation dispatcher to the set of dispatchers
      *
-     * @param disp
+     * @param dispatcher observation dispatcher
      */
-    public void addDispatcher(ObservationManagerFactory disp) {
+    public void addDispatcher(ObservationDispatcher dispatcher) {
         synchronized (dispatchers) {
-            dispatchers.add(disp);
+            dispatchers.add(dispatcher);
         }
     }
 
     /**
-     * Removes a observation factory from the set of dispatchers
+     * Removes a observation dispatcher from the set of dispatchers
      *
-     * @param disp
+     * @param dispatcher observation dispatcher
      */
-    public void removeDispatcher(ObservationManagerFactory disp) {
+    public void removeDispatcher(ObservationDispatcher dispatcher) {
         synchronized (dispatchers) {
-            dispatchers.remove(disp);
+            dispatchers.remove(dispatcher);
         }
     }
 
@@ -68,6 +68,7 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * given as argument.
      *
      * @param session event source
+     * @param pathPrefix event path prefix
      * @return new <code>EventStateCollection</code> instance
      */
     public EventStateCollection createEventStateCollection(SessionImpl session,
@@ -103,16 +104,17 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * {@link EventStateCollection} is created for every dispatcher, fille with
      * the given event list and then dispatched.
      *
-     * @param eventList
-     * @param session
+     * @param eventList list of events
+     * @param session current session
+     * @param pathPrefix event path prefix
      */
     public void dispatch(List eventList, SessionImpl session, Path pathPrefix) {
-        ObservationManagerFactory[] disp;
+        ObservationDispatcher[] disp;
         synchronized (dispatchers) {
-            disp = (ObservationManagerFactory[]) dispatchers.toArray(
-                    new ObservationManagerFactory[dispatchers.size()]);
+            disp = (ObservationDispatcher[]) dispatchers.toArray(
+                    new ObservationDispatcher[dispatchers.size()]);
         }
-        for (int i=0; i< disp.length; i++) {
+        for (int i = 0; i < disp.length; i++) {
             EventStateCollection events =
                     new EventStateCollection(disp[i], session, pathPrefix);
             try {
