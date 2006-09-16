@@ -133,7 +133,7 @@
     </dependency>
     <!-- Runtime dependencies -->
     <dependency>
-      <groupId>jsr170</groupId>
+      <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
       <version>1.0</version>
     </dependency>
