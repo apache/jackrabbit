@@ -238,8 +238,8 @@ public final class JCAManagedConnectionFactory
      * Return true if equals.
      */
     private boolean equals(JCAManagedConnectionFactory o) {
-        return equals(homeDir, o.homeDir) &&
-               equals(configFile, o.configFile);
+        return equals(homeDir, o.homeDir)
+            && equals(configFile, o.configFile);
     }
 
     /**
@@ -283,13 +283,13 @@ public final class JCAManagedConnectionFactory
         }
     }
 
-	/**
-	 * Shutdown the repository.
-	 */
-	protected void finalize() {
+    /**
+     * Shutdown the repository.
+     */
+    protected void finalize() {
         JCARepositoryManager mgr = JCARepositoryManager.getInstance();
         mgr.autoShutdownRepository(homeDir, configFile);
-	}
+    }
 
     public Boolean getBindSessionToTrasaction() {
         return bindSessionToTrasaction;

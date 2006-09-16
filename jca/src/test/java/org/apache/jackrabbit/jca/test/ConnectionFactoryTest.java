@@ -36,8 +36,7 @@ public final class ConnectionFactoryTest
     /**
      * Test the connection factory allocation.
      */
-    public void testAllocation()
-            throws Exception {
+    public void testAllocation() throws Exception {
 
         // Create the connection factory
         Object cf = mcf.createConnectionFactory();
@@ -56,8 +55,7 @@ public final class ConnectionFactoryTest
     /**
      * Test the connection matching.
      */
-    public void testMatching()
-            throws Exception {
+    public void testMatching() throws Exception {
 
         // Create connection request infos
         JCAConnectionRequestInfo cri1 = new JCAConnectionRequestInfo(JCR_SUPERUSER, JCR_WORKSPACE);
@@ -77,7 +75,7 @@ public final class ConnectionFactoryTest
         HashSet connectionSet = new HashSet();
         connectionSet.add(mc1);
         connectionSet.add(mc2);
-        
+
         // Match the first connection
         JCAConnectionRequestInfo cri3 = new JCAConnectionRequestInfo(cri1);
         assertTrue((cri1 != cri3) && cri1.equals(cri3));
@@ -94,15 +92,15 @@ public final class ConnectionFactoryTest
     /**
      * Test if the connection factory is serializable.
      */
-    public void testSerializable()
-            throws Exception {
+    public void testSerializable() throws Exception {
 
         // Create the connection factory
         Object cf = mcf.createConnectionFactory();
-        
+
         // Check if serializable and referenceable
         assertTrue(cf != null);
         assertTrue(cf instanceof Serializable);
         assertTrue(cf instanceof Referenceable);
     }
+
 }

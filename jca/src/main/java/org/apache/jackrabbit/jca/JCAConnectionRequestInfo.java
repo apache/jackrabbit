@@ -26,9 +26,8 @@ import java.util.Map;
  * This class encapsulates the credentials for creating a
  * session from the repository.
  */
-public final class JCAConnectionRequestInfo
-        implements ConnectionRequestInfo {
-    
+public final class JCAConnectionRequestInfo implements ConnectionRequestInfo {
+
     /**
      * Credentials.
      */
@@ -94,8 +93,8 @@ public final class JCAConnectionRequestInfo
      * Return true if equals.
      */
     private boolean equals(JCAConnectionRequestInfo o) {
-        return equals(workspace, o.workspace) &&
-                equals(creds, o.creds);
+        return equals(workspace, o.workspace)
+            && equals(creds, o.creds);
     }
 
     /**

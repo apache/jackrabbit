@@ -31,27 +31,27 @@ import java.util.Map;
  * This class implements the repository manager.
  */
 public final class JCARepositoryManager {
-	
+
     /** The config file prefix that signifies the file is to be loaded from the classpath. */
     public static final String CLASSPATH_CONFIG_PREFIX = "classpath:";
 
     /**
      * Instance of manager.
      */
-    private final static JCARepositoryManager INSTANCE =
+    private static final JCARepositoryManager INSTANCE =
             new JCARepositoryManager();
 
     /**
      * References.
      */
     private final Map references;
-    
+
     /**
-     * Flag indicating that the life cycle 
+     * Flag indicating that the life cycle
      * of the resource is not managed by the
-     * application server 
+     * application server
      */
-    private boolean autoShutdown = true ;
+    private boolean autoShutdown = true;
 
     /**
      * Construct the manager.
@@ -67,7 +67,7 @@ public final class JCARepositoryManager {
      * @param configFile The path to the repository configuration file. If the file is located on
      *                   the classpath, the path should be prepended with
      *                   JCARepositoryManager.CLASSPATH_CONFIG_PREFIX.
-     *
+     * @return repository instance
      */
     public RepositoryImpl createRepository(String homeDir, String configFile)
             throws RepositoryException {
@@ -79,19 +79,18 @@ public final class JCARepositoryManager {
      * Shutdown all the repositories.
      */
     public void shutdown() {
-    	Collection references = this.references.values() ;
-    	Iterator iter = references.iterator() ;
-    	while (iter.hasNext()) {
-			Reference ref = (Reference) iter.next();
-			ref.shutdown();	
-		}
+        Collection references = this.references.values();
+        Iterator iter = references.iterator();
+        while (iter.hasNext()) {
+            Reference ref = (Reference) iter.next();
+            ref.shutdown();
+        }
         this.references.clear();
     }
-    
 
     /**
      * Return the reference.
-     * 
+     *
      * @param homeDir   The location of the repository.
      * @param configFile The path to the repository configuration file.
      */
@@ -125,7 +124,7 @@ public final class JCARepositoryManager {
 
         /**
          * Configuration file.
-         * 
+         *
          * Configuration files located on the classpath begin with
          * JCARepositoryManager.CLASSPATH_CONFIG_PREFIX.
          */
@@ -158,7 +157,7 @@ public final class JCARepositoryManager {
                     if (cl == null) {
                         cl = this.getClass().getClassLoader();
                     }
-                    
+
                     InputStream configInputStream = cl.getResourceAsStream(
                         configFile.substring(CLASSPATH_CONFIG_PREFIX.length()));
                     config = RepositoryConfig.create(configInputStream, homeDir);
@@ -175,7 +174,7 @@ public final class JCARepositoryManager {
          * Shutdown the repository.
          */
         public void shutdown() {
-	        repository.shutdown();
+            repository.shutdown();
         }
 
         /**
@@ -204,8 +203,8 @@ public final class JCARepositoryManager {
          * Return true if equals.
          */
         private boolean equals(Reference o) {
-            return equals(homeDir, o.homeDir) &&
-                   equals(configFile, o.configFile);
+            return equals(homeDir, o.homeDir)
+                && equals(configFile, o.configFile);
         }
 
         /**
@@ -222,26 +221,27 @@ public final class JCARepositoryManager {
         }
     }
 
-	public boolean isAutoShutdown() {
-		return autoShutdown;
-	}
+    public boolean isAutoShutdown() {
+        return autoShutdown;
+    }
 
-	public void setAutoShutdown(boolean autoShutdown) {
-		this.autoShutdown = autoShutdown;
-	}
+    public void setAutoShutdown(boolean autoShutdown) {
+        this.autoShutdown = autoShutdown;
+    }
 
-	/**
-	 * Try to shutdown the repository only if
-	 * {@link JCARepositoryManager#autoShutdown} is true.
+    /**
+     * Try to shutdown the repository only if
+     * {@link JCARepositoryManager#autoShutdown} is true.
      *
      * @param homeDir   The location of the repository.
      * @param configFile The path to the repository configuration file.
-      */
-	public void autoShutdownRepository(String homeDir, String configFile) {
-		if (this.isAutoShutdown()) {
-		    Reference ref = getReference(homeDir, configFile);
-		    ref.shutdown();
-		}
-	}
+     */
+    public void autoShutdownRepository(String homeDir, String configFile) {
+        if (this.isAutoShutdown()) {
+            Reference ref = getReference(homeDir, configFile);
+            ref.shutdown();
+        }
+    }
+
 }
 
