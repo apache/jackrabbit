@@ -48,7 +48,7 @@ public class TransactionBoundXAResource implements XAResource {
                 this.connection.closeHandles();
             }
             // reuse the XAResource
-            this.ending = false ;
+            this.ending = false;
         }
     }
 

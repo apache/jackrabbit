@@ -25,9 +25,8 @@ import javax.resource.spi.ManagedConnectionFactory;
 /**
  * This class implements the default connection manager.
  */
-public final class JCAConnectionManager
-        implements ConnectionManager {
-    
+public final class JCAConnectionManager implements ConnectionManager {
+
     /**
      * The method allocateConnection gets called by the resource adapter's
      * connection factory instance.

@@ -10,35 +10,35 @@ import javax.transaction.xa.XAResource;
 
 
 /**
- * JCR ResourceAdapter. 
+ * JCR ResourceAdapter.
  */
 public class JCAResourceAdapter implements ResourceAdapter {
-	private final XAResource[] xaResources = new XAResource[0];
 
-	/**
-	 * Notify the RepositoryManager that the lifecycle is managed by
-	 * the container
-	 */
-	public void start(BootstrapContext ctx) throws ResourceAdapterInternalException {
-		JCARepositoryManager.getInstance().setAutoShutdown(false);
-	}
+    private final XAResource[] xaResources = new XAResource[0];
 
-	/**
-	 * Shutdown jackrabbit repositories
-	 */
-	public void stop() {
-		JCARepositoryManager.getInstance().shutdown();
-	}
+    /**
+     * Notify the RepositoryManager that the lifecycle is managed by
+     * the container
+     */
+    public void start(BootstrapContext ctx) throws ResourceAdapterInternalException {
+        JCARepositoryManager.getInstance().setAutoShutdown(false);
+    }
 
-	public void endpointActivation(MessageEndpointFactory mef, ActivationSpec as) throws ResourceException {
-	}
+    /**
+     * Shutdown jackrabbit repositories
+     */
+    public void stop() {
+        JCARepositoryManager.getInstance().shutdown();
+    }
 
-	public void endpointDeactivation(MessageEndpointFactory mef, ActivationSpec as) {
-	}
+    public void endpointActivation(MessageEndpointFactory mef, ActivationSpec as) throws ResourceException {
+    }
 
-	public XAResource[] getXAResources(ActivationSpec[] as) throws ResourceException {
-		return xaResources;
-	}
+    public void endpointDeactivation(MessageEndpointFactory mef, ActivationSpec as) {
+    }
 
+    public XAResource[] getXAResources(ActivationSpec[] as) throws ResourceException {
+        return xaResources;
+    }
 
 }

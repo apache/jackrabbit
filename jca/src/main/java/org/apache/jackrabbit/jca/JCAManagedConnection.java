@@ -40,7 +40,7 @@ import java.util.LinkedList;
  */
 public final class JCAManagedConnection
         implements ManagedConnection, ManagedConnectionMetaData {
-    
+
     /**
      * Managed connection factory.
      */
@@ -322,6 +322,8 @@ public final class JCAManagedConnection
                     case ConnectionEvent.LOCAL_TRANSACTION_STARTED:
                         listener.localTransactionStarted(event);
                         break;
+                    default:
+                        // Unknown event, skip
                 }
             }
         }

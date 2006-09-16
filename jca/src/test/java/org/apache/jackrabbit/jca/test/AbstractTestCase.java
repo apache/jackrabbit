@@ -31,32 +31,30 @@ public abstract class AbstractTestCase
     /**
      * Repository home directory.
      */
-    public final static String JCR_HOME_DIR =
-            "applications/test";
+    public static final String JCR_HOME_DIR = "applications/test";
 
     /**
      * Repository configuration file.
      */
-    public final static String JCR_CONFIG_FILE =
-            "applications/test/repository.xml";
+    public static final String JCR_CONFIG_FILE =
+        "applications/test/repository.xml";
 
     /**
      * Default credentials.
      */
-    public final static Credentials JCR_SUPERUSER =
+    public static final Credentials JCR_SUPERUSER =
             new SimpleCredentials("superuser", new char[0]);
 
     /**
      * Anonymous credentials.
      */
-    public final static Credentials JCR_ANONUSER =
+    public static final Credentials JCR_ANONUSER =
             new SimpleCredentials("anonymous", new char[0]);
 
     /**
      * Repository workspace.
      */
-    public final static String JCR_WORKSPACE =
-            "default";
+    public static final String JCR_WORKSPACE = "default";
 
     /**
      * Managed connection factory.
@@ -66,11 +64,11 @@ public abstract class AbstractTestCase
     /**
      * Setup the test.
      */
-    protected void setUp()
-            throws Exception {
+    protected void setUp() {
         // Construct the managed connection factory
         this.mcf = new JCAManagedConnectionFactory();
         this.mcf.setHomeDir(JCR_HOME_DIR);
         this.mcf.setConfigFile(JCR_CONFIG_FILE);
     }
+
 }
