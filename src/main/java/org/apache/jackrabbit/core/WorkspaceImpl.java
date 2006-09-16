@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
-import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
+import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -532,18 +532,22 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the observation manager of this session. The observation manager
+     * is lazily created if it does not exist yet.
+     *
+     * @return the observation manager of this session
+     * @throws RepositoryException if a repository error occurs
      */
     public ObservationManager getObservationManager()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+            throws RepositoryException {
         // check state of this instance
         sanityCheck();
 
         if (obsMgr == null) {
             try {
-                ObservationManagerFactory factory =
-                        rep.getObservationManagerFactory(wspConfig.getName());
-                obsMgr = factory.createObservationManager(session, session.getItemManager());
+                obsMgr = new ObservationManagerImpl(
+                        rep.getObservationDispatcher(wspConfig.getName()),
+                        session, session.getItemManager());
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate observation manager";

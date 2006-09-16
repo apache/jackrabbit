@@ -37,7 +37,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
-import org.apache.jackrabbit.core.observation.ObservationManagerFactory;
+import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PMContext;
@@ -712,12 +712,12 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         return getWorkspaceInfo(workspaceName).getItemStateProvider();
     }
 
-    ObservationManagerFactory getObservationManagerFactory(String workspaceName)
+    ObservationDispatcher getObservationDispatcher(String workspaceName)
             throws NoSuchWorkspaceException {
         // check sanity of this instance
         sanityCheck();
 
-        return getWorkspaceInfo(workspaceName).getObservationManagerFactory();
+        return getWorkspaceInfo(workspaceName).getObservationDispatcher();
     }
 
     /**
@@ -1292,9 +1292,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         private SharedItemStateManager itemStateMgr;
 
         /**
-         * observation manager factory (instantiated on init)
+         * observation dispatcher (instantiated on init)
          */
-        private ObservationManagerFactory obsMgrFactory;
+        private ObservationDispatcher dispatcher;
 
         /**
          * system session (lazily instantiated)
@@ -1453,17 +1453,17 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         }
 
         /**
-         * Returns the observation manager factory for this workspace
+         * Returns the observation dispatcher for this workspace
          *
-         * @return the observation manager factory for this workspace
+         * @return the observation dispatcher for this workspace
          */
-        ObservationManagerFactory getObservationManagerFactory() {
+        ObservationDispatcher getObservationDispatcher() {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
                         + "' not initialized");
             }
 
-            return obsMgrFactory;
+            return dispatcher;
         }
 
         /**
@@ -1623,10 +1623,10 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     throw new RepositoryException(msg, ise);
                 }
 
-                obsMgrFactory = new ObservationManagerFactory();
+                dispatcher = new ObservationDispatcher();
 
                 // register the observation factory of that workspace
-                delegatingDispatcher.addDispatcher(obsMgrFactory);
+                delegatingDispatcher.addDispatcher(dispatcher);
 
                 initialized = true;
 
@@ -1691,11 +1691,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 log.info("shutting down workspace '" + getName() + "'...");
 
                 // deregister the observation factory of that workspace
-                delegatingDispatcher.removeDispatcher(obsMgrFactory);
+                delegatingDispatcher.removeDispatcher(dispatcher);
 
                 // dispose observation manager factory
-                obsMgrFactory.dispose();
-                obsMgrFactory = null;
+                dispatcher.dispose();
+                dispatcher = null;
 
                 // shutdown search managers
                 if (searchMgr != null) {
