@@ -209,7 +209,7 @@ A resource adapter for Jackrabbit as specified by JCA 1.0 and 1.5.
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
-      <version>10.1.1.0</version>
+      <version>10.1.3.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
