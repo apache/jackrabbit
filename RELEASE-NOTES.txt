@@ -1,0 +1,135 @@
+Release Notes -- Apache Jackrabbit -- Version 1.1
+
+
+Introduction
+------------
+
+The Apache Jackrabbit project is an effort to build and maintain
+an open source implementation of the Content Repository for Java
+Technology API (JCR) specified in the Java Specification Request 170
+(JSR-170). The project also produces a various tools and components
+related to the JCR API.
+
+Apache Jackrabbit 1.1 is an incremental release that fixes
+a number of issues and introduces some new features. The most
+notable changes in this release include the  See the
+included change history for details.
+
+See the Apache Jackrabbit website at http://jackrabbit.apache.org/
+for more information.
+
+
+Release Contents
+----------------
+
+The main contents of this release are the Apache Jackrabbit core
+content repository implementation and the related general-purpose
+JCR utilities:
+
+     jackrabbit-core-1.1-src.jar
+
+     jackrabbit-core-1.1.jar
+     jackrabbit-jcr-commons-1.1.jar
+
+This release contains also additional components that offer extra
+functionality for use with either Apache Jackrabbit core or any
+JCR compliant content repository. These modules should be considered
+beta quality:
+
+ * RMI network layer for the JCR API.
+
+     jackrabbit-jcr-rmi-1.1-src.jar
+     jackrabbit-jcr-rmi-1.1.jar
+
+ * Deployable Jackrabbit installation with WebDAV support for JCR.
+
+     jackrabbit-jcr-server-1.1-src.jar
+
+     jackrabbit-jcr-webdav-1.1.jar
+     jackrabbit-jcr-client-1.1.jar
+     jackrabbit-jcr-server-1.1.jar
+     jackrabbit-server-1.1.war
+
+ * J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
+
+     jackrabbit-jca-1.1-src.jar
+     jackrabbit-jca-1.1.rar
+
+ * Text indexing filters for Jackrabbit. Includes example filters
+   for Adobe PDF and MS Excel, PowerPoint, and Word.
+
+     jackrabbit-index-filters-1.1-src.jar
+     jackrabbit-index-filters-1.1.jar
+
+All components are released as a source jar file and one or more compiled
+binary files. All files contain a README.txt file with more information.
+Note that external runtime dependencies are only included for the war
+and rar archives. Other dependencies can be downloaded either manually
+or automatically using the Maven build system.
+
+Each release file is accompanied by SHA1 and MD5 checksums and a PGP
+signature. The public key used for the signatures can be found
+in the KEYS file located in the parent directory.
+
+
+Upgrading from 1.0
+------------------
+
+Apache Jackrabbit 1.1 is fully compatible with the 1.0 release. An
+Apache Jackrabbit 1.0 installation can be upgraded by replacing
+the relevant jar files with the new versions. No changes to repository
+contents are needed.
+
+
+Known Issues
+------------
+
+The known issues in this release are listed below:
+
+
+See the issue tracker at http://issues.apache.org/jira/browse/JCR for
+more details.
+
+Change History
+--------------
+
+Changes since 1.0.1:
+
+
+Changes since 1.0:
+
+  [JCR-443] Deadlock when concurrently committing and reading versioning ...
+  [JCR-439] Workspace.clone() fails the second time, if cloning referenceables
+  [JCR-437] Restoring a node which has OPV=Version children fails if they ...
+  [JCR-434] ArrayIndexOutOfBoundsException in NodeTypeDefDiff
+  [JCR-430] Memory leak when using transactions
+  [JCR-429] Session scoped lock not always removed on Session.logout()
+  [JCR-428] BLOBFileValue() might be discarded to early
+  [JCR-426] WorkspaceInfo.dispose() does not deregister from obs dispatcher
+  [JCR-424] PropertyState binary type desirialsation only returns half ...
+  [JCR-423] Node.restore() fails for existing non-versioned OPV=Version ...
+  [JCR-422] charset in Content-Type header shouldn't be in quotes
+  [JCR-421] PROPPATCH does not send multistatus after revision 397835
+  [JCR-420] NullPointerException when deleting a property of type REFERENCE
+  [JCR-411] Binding repository to a nameserver with RegistryHelper causes ...
+  [JCR-408] RowIterator view of result for query '//*' only returns ...
+  [JCR-405] PROPPATCH doesn't respect document order
+  [JCR-400] PROPPATCH error marshalling when the resource can't be ...
+  [JCR-396] RMI published Repository using the jcr-rmi library gets lost ...
+  [JCR-395] Using transactions leads to memory leak
+  [JCR-393] WebDAV Library: VersionControlledResource constant lists ...
+  [JCR-391] WebDAV method invocation trying to create a new resource ...
+  [JCR-386] Query dump failed with deep query tree
+  [JCR-383] Default namespaces in JackrabbitNodeTypeManager.registerNodetypes
+  [JCR-382] Setting WebDAV property without value causes NPE in ...
+  [JCR-381] Repository does not start if text filter dependencies are missing
+  [JCR-374] Missing 'node removed' event when removing a version
+  [JCR-371] ItemStateException on concurrently committing transactions of ...
+  [JCR-369] IllegalNameException when importing document view with two mixins
+  [JCR-362] restore sometime throws error about missing tmp files
+  [JCR-336] Concurrent locking operations fail
+  [JCR-335] Deadlock caused by versioning operations within transaction
+  [JCR-285] Line-separator differences cause PredefinedNodeTypeTest to ...
+  [JCR-264] TextFilters get called three times within checkin() method
+  [JCR-140] Versioning might no be thread safe
+  [JCR-50]  Persistence data of versioning not cleaned up correctly
