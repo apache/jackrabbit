@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
+import EDU.oswego.cs.dl.util.concurrent.WriterPreferenceReadWriteLock;
+
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.config.FileSystemConfig;
@@ -180,6 +182,17 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * the lock that guards instantiation of multiple repositories.
      */
     private FileLock repLock;
+
+    /**
+     * Shutdown lock for guaranteeing that no new sessions are started during
+     * repository shutdown and that a repository shutdown is not initiated
+     * during a login. Each session login acquires a read lock while the
+     * repository shutdown requires a write lock. This guarantees that there
+     * can be multiple concurrent logins when the repository is not shutting
+     * down, but that only a single shutdown and no concurrent logins can
+     * happen simultaneously.
+     */
+    private final ReadWriteLock shutdownLock = new WriterPreferenceReadWriteLock();
 
     /**
      * private constructor
@@ -847,16 +860,34 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     }
 
     //-------------------------------------------------< JackrabbitRepository >
+
     /**
-     * Shuts down this repository.
+     * Shuts down this repository. The shutdown is guarded by a shutdown lock
+     * that prevents any new sessions from being started simultaneously.
      */
-    public synchronized void shutdown() {
-        // check status of this instance
-        if (disposed) {
-            // there's nothing to do here because the repository has already been shut down
-            return;
+    public void shutdown() {
+        try {
+            shutdownLock.writeLock().acquire();
+        } catch (InterruptedException e) {
+            // TODO: Should this be a checked exception?
+            throw new RuntimeException("Shutdown lock could not be acquired", e);
         }
 
+        try {
+            // check status of this instance
+            if (!disposed) {
+                doShutdown();
+            }
+        } finally {
+            shutdownLock.writeLock().release();
+        }
+    }
+
+    /**
+     * Private method that performs the actual shutdown after the shutdown
+     * lock has been acquired by the {@link #shutdown()} method.
+     */
+    private synchronized void doShutdown() {
         log.info("Shutting down repository...");
 
         // close active user sessions
@@ -1071,18 +1102,24 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      */
     public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        // check sanity of this instance
-        sanityCheck();
-
-        if (workspaceName == null) {
-            workspaceName = repConfig.getDefaultWorkspaceName();
+        try {
+            shutdownLock.readLock().acquire();
+        } catch (InterruptedException e) {
+            throw new RepositoryException("Login lock could not be acquired", e);
         }
 
-        // check if workspace exists (will throw NoSuchWorkspaceException if not)
-        getWorkspaceInfo(workspaceName);
+        try {
+            // check sanity of this instance
+            sanityCheck();
 
-        if (credentials == null) {
-            try {
+            if (workspaceName == null) {
+                workspaceName = repConfig.getDefaultWorkspaceName();
+            }
+
+            // check if workspace exists (will throw NoSuchWorkspaceException if not)
+            getWorkspaceInfo(workspaceName);
+
+            if (credentials == null) {
                 // null credentials, obtain the identity of the already-authenticated
                 // subject from access control context
                 AccessControlContext acc = AccessController.getContext();
@@ -1090,18 +1127,9 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 if (subject != null) {
                     return createSession(subject, workspaceName);
                 }
-            } catch (SecurityException se) {
-                throw new LoginException(
-                        "Unable to access authentication information", se);
-            } catch (AccessDeniedException ade) {
-                // authenticated subject is not authorized for the specified workspace
-                throw new LoginException("Workspace access denied", ade);
             }
-        }
-
-        // login either using JAAS or our own LoginModule
-        AuthContext authCtx;
-        try {
+            // login either using JAAS or our own LoginModule
+            AuthContext authCtx;
             LoginModuleConfig lmc = repConfig.getLoginModuleConfig();
             if (lmc == null) {
                 authCtx = new AuthContext.JAAS(repConfig.getAppName(), credentials);
@@ -1110,16 +1138,19 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                         lmc.getLoginModule(), lmc.getParameters(), credentials);
             }
             authCtx.login();
+
+            // create session
+            return createSession(authCtx, workspaceName);
+        } catch (SecurityException se) {
+            throw new LoginException(
+                    "Unable to access authentication information", se);
         } catch (javax.security.auth.login.LoginException le) {
             throw new LoginException(le.getMessage(), le);
-        }
-
-        // create session
-        try {
-            return createSession(authCtx, workspaceName);
         } catch (AccessDeniedException ade) {
             // authenticated subject is not authorized for the specified workspace
-            throw new LoginException(ade.getMessage());
+            throw new LoginException("Workspace access denied", ade);
+        } finally {
+            shutdownLock.readLock().release();
         }
     }
 
