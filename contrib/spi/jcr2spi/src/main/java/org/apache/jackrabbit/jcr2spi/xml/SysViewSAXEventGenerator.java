@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.value.ValueHelper;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -86,6 +86,7 @@ public class SysViewSAXEventGenerator extends AbstractSAXEventGenerator {
     protected void entering(Node node, int level)
             throws RepositoryException, SAXException {
         AttributesImpl attrs = new AttributesImpl();
+        addNamespacePrefixes(level, attrs);
         // name attribute
         String nodeName;
         if (node.getDepth() == 0) {
