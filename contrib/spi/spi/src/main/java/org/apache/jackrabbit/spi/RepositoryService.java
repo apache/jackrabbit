@@ -244,7 +244,7 @@ public interface RepositoryService {
 
     /**
      * @param sessionInfo
-     * @param srcWorkspaceId
+     * @param srcWorkspaceName
      * @param srcNodeId
      * @param destParentNodeId
      * @param destName
@@ -260,13 +260,13 @@ public interface RepositoryService {
      * @see javax.jcr.Workspace#copy(String, String)
      * @see javax.jcr.Workspace#copy(String, String, String)
      */
-    public EventIterator copy(SessionInfo sessionInfo, String srcWorkspaceId, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
+    public EventIterator copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
 
     //------------------------------------------------------< Update, Clone >---
     /**
      * @param sessionInfo
      * @param nodeId
-     * @param srcWorkspaceId
+     * @param srcWorkspaceName
      * @throws javax.jcr.NoSuchWorkspaceException
      * @throws javax.jcr.AccessDeniedException
      * @throws javax.jcr.lock.LockException
@@ -274,11 +274,11 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#update(String)
      */
-    public EventIterator update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceId) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException;
+    public EventIterator update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * @param sessionInfo
-     * @param srcWorkspaceId
+     * @param srcWorkspaceName
      * @param srcNodeId
      * @param destParentNodeId
      * @param destName
@@ -294,7 +294,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#clone(String, String, String, boolean)
      */
-    public EventIterator clone(SessionInfo sessionInfo, String srcWorkspaceId, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
+    public EventIterator clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
 
     //------------------------------------------------------------< Locking >---
 
@@ -410,7 +410,7 @@ public interface RepositoryService {
     /**
      * @param sessionInfo
      * @param nodeId
-     * @param srcWorkspaceId
+     * @param srcWorkspaceName
      * @param bestEffort
      * @throws javax.jcr.NoSuchWorkspaceException
      * @throws javax.jcr.AccessDeniedException
@@ -420,7 +420,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#merge(String, boolean)
      */
-    public EventIterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceId, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+    public EventIterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * @param sessionInfo

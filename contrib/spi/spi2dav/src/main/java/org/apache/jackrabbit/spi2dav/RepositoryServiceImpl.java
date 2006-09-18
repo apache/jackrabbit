@@ -256,8 +256,8 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
         return rootUri;
     }
 
-    private String getItemUri(String workspaceId, ItemId itemId, SessionInfo sessionInfo) throws RepositoryException {
-        String uri = getWorkspaceUri(workspaceId);
+    private String getItemUri(String workspaceName, ItemId itemId, SessionInfo sessionInfo) throws RepositoryException {
+        String uri = getWorkspaceUri(workspaceName);
         String uuid = itemId.getUUID();
         if (uuid != null) {
             if (uriCache.containsKey(uuid)) {
@@ -803,10 +803,10 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
     /**
      * @see RepositoryService#copy(SessionInfo, String, NodeId, NodeId, QName)
      */
-    public EventIterator copy(SessionInfo sessionInfo, String srcWorkspaceId, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+    public EventIterator copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         CopyMethod method = null;
         try {
-            String uri = getItemUri(srcWorkspaceId, srcNodeId, sessionInfo);
+            String uri = getItemUri(srcWorkspaceName, srcNodeId, sessionInfo);
             String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
             method = new CopyMethod(uri, destUri, true, false);
             initMethod(method, sessionInfo, true);
@@ -830,9 +830,9 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
     /**
      * @see RepositoryService#update(SessionInfo, NodeId, String)
      */
-    public EventIterator update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceId) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
+    public EventIterator update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
-        String workspUri = getWorkspaceUri(srcWorkspaceId);
+        String workspUri = getWorkspaceUri(srcWorkspaceName);
 
         return update(uri, new String[] {workspUri}, UpdateInfo.UPDATE_BY_WORKSPACE, false, sessionInfo);
     }
@@ -840,7 +840,7 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
     /**
      * @see RepositoryService#clone(SessionInfo, String, NodeId, NodeId, QName, boolean)
      */
-    public EventIterator clone(SessionInfo sessionInfo, String srcWorkspaceId, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+    public EventIterator clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         // TODO: missing implementation
         return null;
     }
@@ -1089,10 +1089,10 @@ public class RepositoryServiceImpl extends AbstractNamespaceResolver implements 
     /**
      * @see RepositoryService#merge(SessionInfo, NodeId, String, boolean)
      */
-    public EventIterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceId, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+    public EventIterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
         MergeMethod method = null;
         try {
-            String wspHref = getWorkspaceUri(srcWorkspaceId);
+            String wspHref = getWorkspaceUri(srcWorkspaceName);
             Element mElem = MergeInfo.createMergeElement(new String[] {wspHref}, bestEffort, false, domFactory);
             MergeInfo mInfo = new MergeInfo(mElem);
 
