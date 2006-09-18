@@ -4,7 +4,7 @@
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-jca</artifactId>
     <name>Jackrabbit JCA</name>
-    <currentVersion>1.1-SNAPSHOT</currentVersion>   
+    <currentVersion>1.1-rc1</currentVersion>   
     <organization>
 	<name>The Apache Software Foundation</name>
 	<url>http://www.apache.org/</url>

@@ -24,7 +24,7 @@
     <artifactId>server</artifactId>
     
     <name>Jackrabbit-Server</name>
-    <currentVersion>1.1-SNAPSHOT</currentVersion>
+    <currentVersion>1.1-rc1</currentVersion>
     <inceptionYear>2005</inceptionYear>
     <package>org.apache.jackrabbit.*</package>
     <description>
