@@ -69,8 +69,6 @@ A: originally we planned to use jackrabbit/core for the jcr2spi implementation.
    however, we realized that its not feasible to plug different implementations
    of the crucial interfaces in the core. Therefore we decided to copy over
    the code and modify it according to the needs of the SPI.
-   we tried to keep track of modifications by adding a lot of //DIFF comments,
-   indicating areas, where the original jackrabbit code has been modified.
 
 
 Some questions arising from issues still being discussed:
