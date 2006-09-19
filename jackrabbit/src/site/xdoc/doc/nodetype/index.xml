@@ -265,7 +265,7 @@ public class CustomNodeTypeExample {
         CompactNodeTypeDefReader cndReader = new CompactNodeTypeDefReader(fileReader, cndFileName);
 
         // Get the List of NodeTypeDef objects
-        List ntdList = cndReader.getNodeTypeDefs;
+        List ntdList = cndReader.getNodeTypeDefs();
 
         // Get the NodeTypeManager from the Workspace.
         // Note that it must be cast from the generic JCR NodeTypeManager to the
