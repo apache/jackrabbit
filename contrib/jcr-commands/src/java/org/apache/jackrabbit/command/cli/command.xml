@@ -173,6 +173,14 @@
 		<command name="registerNamespace"
 			className="org.apache.jackrabbit.command.namespace.RegisterNamespace"/>
 
+		<chain name="registerNodeType">
+			<command name="readFile"
+				className="org.apache.jackrabbit.command.fs.FileToInputStream"
+				destKey="cndStream"/>
+			<command name="register"
+				className="org.apache.jackrabbit.command.ext.RegisterNodeType"/>
+		</chain>
+		
 		<command name="removeItem"
 			className="org.apache.jackrabbit.command.core.RemoveItem"/>
 						

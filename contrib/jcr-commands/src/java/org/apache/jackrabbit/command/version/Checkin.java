@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.command.version;
 
+import javax.jcr.version.Version;
+
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
 import org.apache.commons.logging.Log;
@@ -32,6 +34,9 @@ public class Checkin implements Command {
     // ---------------------------- < keys >
     /** node path */
     private String pathKey = "path";
+    
+    /** target version number **/
+    private String targetVersion = "version";
 
     /**
      * {@inheritDoc}
@@ -41,7 +46,8 @@ public class Checkin implements Command {
         if (log.isDebugEnabled()) {
             log.debug("cheking in node at " + path);
         }
-        CommandHelper.getNode(ctx, path).checkin();
+        Version v = CommandHelper.getNode(ctx, path).checkin();
+        ctx.put(this.targetVersion, v.getName()) ;
         return false;
     }
 
@@ -59,4 +65,12 @@ public class Checkin implements Command {
     public void setPathKey(String pathKey) {
         this.pathKey = pathKey;
     }
+
+	public String getTargetVersion() {
+		return targetVersion;
+	}
+
+	public void setTargetVersion(String targetVersion) {
+		this.targetVersion = targetVersion;
+	}
 }

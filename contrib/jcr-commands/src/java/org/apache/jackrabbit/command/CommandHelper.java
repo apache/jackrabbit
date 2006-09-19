@@ -41,16 +41,16 @@ public final class CommandHelper {
         .getBundle(CommandHelper.class.getPackage().getName() + ".resources");
 
     /** Current node key */
-    private static final String CURRENT_NODE_KEY = "jcr.current";
+    public static final String CURRENT_NODE_KEY = "jcr.current";
 
     /** repository key */
-    private static final String REPOSITORY_KEY = "jcr.repository";
+    public static final String REPOSITORY_KEY = "jcr.repository";
 
     /** session key */
-    private static final String SESSION_KEY = "jcr.session";
+    public static final String SESSION_KEY = "jcr.session";
 
     /** session key */
-    private static final String OUTPUT_KEY = "jcr.output";
+    public static final String OUTPUT_KEY = "jcr.output";
 
     /**
      * should never get called
