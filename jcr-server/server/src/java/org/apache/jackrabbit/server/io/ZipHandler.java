@@ -227,6 +227,7 @@ public class ZipHandler extends DefaultHandler {
         log.debug("entry: " + entry.getName() + " size: " + entry.getSize());
         if (entry.isDirectory()) {
             IOUtil.mkDirs(node, makeValidJCRPath(entry.getName(), false), getCollectionNodeType());
+            success = true;
         } else {
             // import zip entry as file
             BoundedInputStream bin = new BoundedInputStream(zin);
