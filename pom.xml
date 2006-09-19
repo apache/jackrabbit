@@ -293,6 +293,15 @@
       </roles>
       <timezone />
     </developer>
+    <developer>
+      <name>Julian Reschke</name>
+      <email>julian.reschke@greenbytes.de</email>
+      <organization>greenbytes GmbH</organization>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
   </developers>
   <contributors>
     <contributor>
@@ -392,15 +401,6 @@
     <contributor>
       <name>Nicolas Toper</name>
       <organization>Google Summer of Code 2006</organization>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </contributor>
-    <contributor>
-      <name>Julian Reschke</name>
-      <email>julian.reschke@greenbytes.de</email>
-      <organization>greenbytes GmbH</organization>
       <roles>
         <role>Java Developer</role>
       </roles>
