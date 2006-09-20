@@ -37,7 +37,13 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
  * DAV:supported-method-set
  * DAV:supported-live-property-set
  * DAV:supported-report-set
- * DAV:workspace
+ * </pre>
+ *
+ * Some additional resource properties are defined by the various advanced
+ * version features:
+ * <pre>
+ * DAV:workspace (workspace feature)
+ * DAV:version-controlled-configuration (baseline)
  * </pre>
  */
 public interface DeltaVConstants {
@@ -133,10 +139,34 @@ public interface DeltaVConstants {
 
     /**
      * Protected "workspace" property indicating the workspace of a resource.
+     * This property is required for all resources if (but only if) the workspace
+     * feature is supported.
+     * <p/>
+     * Note that the DAV:activity-version-set represents a
+     * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}.
+     * It is defined to have the following format:
+     * <pre>
+     * &lt;!ELEMENT workspace (href)&gt;
+     * </pre>
      *
-     * @see #WORKSPACE
+     * @see WorkspaceResource
      */
     public static final DavPropertyName WORKSPACE = DavPropertyName.create("workspace", NAMESPACE);
+
+    /**
+     * The Baseline feature introduces the computed DAV:version-controlled-configuration
+     * property for all resources that are member of a version-controlled
+     * configuration. This may be the case if the resource is a collection under
+     * baseline control or is a member of a collection under baseline control.
+     * <p/>
+     * Note that the DAV:activity-version-set represents a
+     * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}.
+     * It is defined to have the following format:
+     * <pre>
+     * &lt;!ELEMENT version-controlled-configuration (href)&gt;
+     * </pre>
+     */
+    public static final DavPropertyName VERSION_CONTROLLED_CONFIGURATION = DavPropertyName.create("version-controlled-configuration", NAMESPACE);
 
 
     //---< XML Element, Attribute Names >---------------------------------------

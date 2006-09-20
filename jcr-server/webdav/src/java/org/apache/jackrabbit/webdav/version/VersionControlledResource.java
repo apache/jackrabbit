@@ -52,6 +52,21 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * <li>DAV:unreserved (activity)</li>
  * <li>DAV:activity-set (activity)</li>
  * </ul>
+ *
+ * If the Version-Controlled-Collection feature is supported (see section 14
+ * of RFC 3253) the following computed property is required:
+ * <ul>
+ * <li>DAV:eclipsed-set</li>
+ * </ul>
+ *
+ * If the Baseline feature is supported (see section 12 of RFC 3253), a version-
+ * controlled resource may represent a 'configuration' rather than a single
+ * resource. In this case the RFC defines the following required properties:
+ * <ul>
+ * <li>DAV:baseline-controlled-collection</li>
+ * <li>DAV:subbaseline-set (if the configuration resource is checked-out)</li>
+ * </ul>
+ *
  * <p/>
  * In addition a version-controlled resource must support the following METHODS:
  * <ul>
@@ -192,6 +207,94 @@ public interface VersionControlledResource extends VersionableResource {
      * @see #merge(MergeInfo)
      */
     public static final DavPropertyName AUTO_MERGE_SET = DavPropertyName.create("auto-merge-set", DeltaVConstants.NAMESPACE);
+
+    /**
+     * DAV:unreserved is a property for a checked-out resource, if the server
+     * supports the activity feature.<br>
+     * It indicates whether the DAV:activity-set of another checked-out resource
+     * associated with the version history of this version-controlled resource
+     * can have an activity that is in the DAV:activity-set property of this
+     * checked-out resource.
+     * <br>
+     * A result of the requirement that an activity must form a single line of
+     * descent through a given version history is that if multiple checked-out
+     * resources for a given version history are checked out unreserved into a
+     * single activity, only the first CHECKIN will succeed. Before another of
+     * these checked-out resources can be checked in, the user will first have
+     * to merge into that checked-out resource the latest version selected by
+     * that activity from that version history, and then modify the
+     * DAV:predecessor-set of that checked-out resource to identify that version.
+     * <p/>
+     * This property is defined to have the following format:
+     * <pre>
+     * &lt;!ELEMENT unreserved (#PCDATA)&gt;
+     * PCDATA value: boolean
+     * </pre>
+     * @see VersionResource#ACTIVITY_SET
+     */
+    public static final DavPropertyName UNRESERVED = DavPropertyName.create("activity-set", DeltaVConstants.NAMESPACE);
+
+    /**
+     * DAV:activity-set is a property for a checked-out resource, if the
+     * server supports the activity feature.<br>
+     * This property determines the DAV:activity-set property of the version that
+     * results from checking in this resource.
+     *
+     * @see VersionResource#ACTIVITY_SET
+     */
+    public static final DavPropertyName ACTIVITY_SET = DavPropertyName.create("activity-set", DeltaVConstants.NAMESPACE);
+
+    /**
+     * If the 'Version-Controlled-Collection Feature' is supported the
+     * DAV:eclipsed-set property present on a collection identifies all
+     * internal members that are not version-controlled and hide a vc internal
+     * member with the same name.
+     * <p/>
+     * This property is defined to have the following format:
+     * <pre>
+     * &lt;!ELEMENT eclipsed-set (binding-name*)&gt;
+     * &lt;!ELEMENT binding-name (#PCDATA)&gt;
+     * PCDATA value: URL segment
+     * </pre>
+     *
+     * @see VersionResource#VERSION_CONTROLLED_BINDING_SET
+     */
+    public static final DavPropertyName ECLIPSED_SET = DavPropertyName.create("eclipsed-set", DeltaVConstants.NAMESPACE);
+
+    /**
+     * If the 'Baseline' feature is supported, DAV:baseline-controlled-collection
+     * is a required property of any version-controlled resource, that represents
+     * a 'configuration'. It identifies the collection that contains the
+     * version-controlled resources whose versions are tracked by this
+     * configuration.<p/>
+     *
+     * This property is defined to have the following format:
+     * <pre>
+     * &lt;!ELEMENT baseline-controlled-collection (href)&gt;
+     * </pre>
+     * Note that the DAV:baseline-controlled-collection represents a
+     * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}
+     *
+     * @see DeltaVConstants#VERSION_CONTROLLED_CONFIGURATION for the corresponding
+     * property, that is required for all resources that are contained in this
+     * version-controlled-configuration.
+     */
+    public static final DavPropertyName BASELINE_CONTROLLED_COLLECTION = DavPropertyName.create("baseline-controlled-collection", DeltaVConstants.NAMESPACE);
+
+    /**
+     * This property is mandatory for all checked-out version-controlled-configuration
+     * resources. It determines the DAV:subbaseline-set property of the baseline
+     * that results from checking in this resource.<p/>
+     *
+     * This property is defined to have the following format:
+     * <pre>
+     * &lt;!ELEMENT subbaseline-set (href*)&gt;
+     * </pre>
+     * Note that the DAV:baseline-controlled-collection represents a
+     * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}
+     * @see BaselineResource#SUBBASELINE_SET
+     */
+    public static final DavPropertyName SUBBASELINE_SET = DavPropertyName.create("subbaseline-set", DeltaVConstants.NAMESPACE);
 
     /**
      * Perform a checkin on the version controlled resource.
