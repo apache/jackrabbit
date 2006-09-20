@@ -495,7 +495,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * @return the primary path to this <code>Item</code>
      */
     Path getQPath() throws RepositoryException {
-        return session.getHierarchyManager().getQPath(state);
+        return state.getQPath();
     }
 
     /**
@@ -514,6 +514,6 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * @return JCR path
      */
     String safeGetJCRPath() {
-        return LogUtil.safeGetJCRPath(getItemState(), session.getNamespaceResolver(), session.getHierarchyManager());
+        return LogUtil.safeGetJCRPath(getItemState(), session.getNamespaceResolver());
     }
 }

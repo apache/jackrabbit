@@ -186,14 +186,14 @@ public class SessionImporter implements Importer, SessionListener {
                if (def.isProtected() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                    // skip protected node
                    parents.push(null); // push null onto stack for skipped node
-                   log.debug("skipping protected node " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), session.getHierarchyManager()));
+                   log.debug("skipping protected node " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
                    return;
                }
                if (def.isAutoCreated() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                    // this node has already been auto-created, no need to create it
                    nodeState = existing;
                } else {
-                   throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), session.getHierarchyManager()));
+                   throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
                }
            }
        }
@@ -337,8 +337,8 @@ public class SessionImporter implements Importer, SessionListener {
 
             case ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING:
                 // make sure conflicting node is not importTarget or an ancestor thereof
-                Path p0 = session.getHierarchyManager().getQPath(importTarget);
-                Path p1 = session.getHierarchyManager().getQPath(conflicting);
+                Path p0 = importTarget.getQPath();
+                Path p1 = conflicting.getQPath();
                 try {
                     if (p1.equals(p0) || p1.isAncestorOf(p0)) {
                         msg = "cannot remove ancestor node";
@@ -491,7 +491,7 @@ public class SessionImporter implements Importer, SessionListener {
                 def = existing.getDefinition();
                 if (def.isProtected()) {
                     // skip protected property
-                    log.debug("skipping protected property " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), session.getHierarchyManager()));
+                    log.debug("skipping protected property " + LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
                     return;
                 }
                 if (def.isAutoCreated()
@@ -500,7 +500,7 @@ public class SessionImporter implements Importer, SessionListener {
                     // this property has already been auto-created, no need to create it
                     propState = existing;
                 } else {
-                    throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver(), session.getHierarchyManager()));
+                    throw new ItemExistsException(LogUtil.safeGetJCRPath(existing, session.getNamespaceResolver()));
                 }
             } catch (ItemStateException e) {
                 // should not occur. existance has been checked before

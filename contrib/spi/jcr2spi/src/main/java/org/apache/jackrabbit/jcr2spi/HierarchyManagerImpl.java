@@ -19,15 +19,12 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -52,58 +49,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         this.nsResolver = nsResolver;
     }
 
-    //-------------------------------------------------------< overridables >---
-
-    // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
-    /**
-     *
-     * @param state
-     * @return
-     */
-    protected NodeState getParentState(ItemState state) {
-        return state.getParent();
-    }
-
-    // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
-    /**
-     * Returns the <code>ChildNodeEntry</code> of <code>parent</code> with the
-     * specified <code>uuid</code> or <code>null</code> if there's no such entry.
-     * <p/>
-     * Low-level hook provided for specialized derived classes.
-     *
-     * @param parent node state
-     * @param state  child state
-     * @return the <code>ChildNodeEntry</code> of <code>parent</code> with
-     *         the specified <code>uuid</code> or <code>null</code> if there's
-     *         no such entry.
-     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, NodeState)
-     */
-    protected ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                               NodeState state) {
-        return parent.getChildNodeEntry(state);
-    }
-
-    // TODO: review the overridables as soon as status of ZombiHierarchyManager is clear
-    /**
-     * Returns the <code>ChildNodeEntry</code> of <code>parent</code> with the
-     * specified <code>name</code> and <code>index</code> or <code>null</code>
-     * if there's no such entry.
-     * <p/>
-     * Low-level hook provided for specialized derived classes.
-     *
-     * @param parent node state
-     * @param name   name of child node entry
-     * @param index  index of child node entry
-     * @return the <code>ChildNodeEntry</code> of <code>parent</code> with
-     *         the specified <code>name</code> and <code>index</code> or
-     *         <code>null</code> if there's no such entry.
-     * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, QName, int)
-     */
-    protected ChildNodeEntry getChildNodeEntry(NodeState parent,
-                                               QName name,
-                                               int index) {
-        return parent.getChildNodeEntry(name, index);
-    }
+    //------------------------------------------------------------< private >---
 
     /**
      * Resolve a path into an item state. Recursively invoked method that may be
@@ -115,7 +61,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @param next  next path element index to resolve
      * @return the state of the item denoted by <code>path</code>
      */
-    protected ItemState resolvePath(Path path, ItemState state, int next)
+    private ItemState resolvePath(Path path, ItemState state, int next)
         throws PathNotFoundException, RepositoryException {
 
         Path.PathElement[] elements = path.getElements();
@@ -132,7 +78,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
         if (parentState.hasChildNodeEntry(name, index)) {
             // child node
-            ChildNodeEntry nodeEntry = getChildNodeEntry(parentState, name, index);
+            ChildNodeEntry nodeEntry = parentState.getChildNodeEntry(name, index);
             try {
                 childState = nodeEntry.getNodeState();
             } catch (ItemStateException e) {
@@ -159,50 +105,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throw new PathNotFoundException(LogUtil.safeGetJCRPath(path, nsResolver));
         }
         return resolvePath(path, childState, next + 1);
-    }
-
-    /**
-     * Adds the path element of an item id to the path currently being built.
-     * Recursively invoked method that may be overridden by some subclass to
-     * either return cached responses or add response to cache. On exit,
-     * <code>builder</code> contains the path of <code>state</code>.
-     *
-     * @param builder builder currently being used
-     * @param state   item to find path of
-     */
-    protected void buildPath(Path.PathBuilder builder, ItemState state)
-            throws ItemStateException, RepositoryException {
-        NodeState parentState = state.getParent();
-        // shortcut for root state
-        if (parentState == null) {
-            builder.addRoot();
-            return;
-        }
-
-        // recursively build path of parent
-        buildPath(builder, parentState);
-
-        if (state.isNode()) {
-            NodeState nodeState = (NodeState) state;
-            ChildNodeEntry entry = getChildNodeEntry(parentState, nodeState);
-            if (entry == null) {
-                String msg = "Failed to build path of " + state + ": "
-                        + LogUtil.safeGetJCRPath(parentState, nsResolver, this) + " has such child entry.";
-                log.debug(msg);
-                throw new ItemNotFoundException(msg);
-            }
-            // add to path
-            if (entry.getIndex() == Path.INDEX_DEFAULT) {
-                builder.addLast(entry.getName());
-            } else {
-                builder.addLast(entry.getName(), entry.getIndex());
-            }
-        } else {
-            PropertyState propState = (PropertyState) state;
-            QName name = propState.getQName();
-            // add to path
-            builder.addLast(name);
-        }
     }
 
     //---------------------------------------------------< HierarchyManager >---
@@ -232,43 +134,15 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * @see HierarchyManager#getQPath(ItemState)
-     */
-    public Path getQPath(ItemState itemState) throws ItemNotFoundException, RepositoryException {
-        // shortcut for root state
-        if (itemState.getParent() == null) {
-            return Path.ROOT;
-        }
-
-        // build path otherwise
-        try {
-            Path.PathBuilder builder = new Path.PathBuilder();
-            buildPath(builder, itemState);
-            return builder.getPath();
-        } catch (NoSuchItemStateException e) {
-            String msg = "Failed to build path of " + itemState;
-            log.debug(msg);
-            throw new ItemNotFoundException(msg, e);
-        } catch (ItemStateException e) {
-            String msg = "Failed to build path of " + itemState;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        } catch (MalformedPathException e) {
-            String msg = "Failed to build path of " + itemState;
-            throw new RepositoryException(msg, e);
-        }
-    }
-
-    /**
      * @see HierarchyManager#getDepth(ItemState)
      */
     public int getDepth(ItemState itemState) throws ItemNotFoundException, RepositoryException {
         int depth = Path.ROOT_DEPTH;
-        NodeState parentState = getParentState(itemState);
+        NodeState parentState = itemState.getParent();
         while (parentState != null) {
             depth++;
             itemState = parentState;
-            parentState = getParentState(itemState);
+            parentState = itemState.getParent();
         }
         return depth;
     }

@@ -40,16 +40,6 @@ public interface HierarchyManager {
     ItemState getItemState(Path qPath) throws PathNotFoundException, RepositoryException;
 
     /**
-     * Returns the path to the item represented by the given state object.
-     *
-     * @param itemState
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
-     */
-    Path getQPath(ItemState itemState) throws ItemNotFoundException, RepositoryException;
-
-    /**
      * Returns the depth of the specified item which is equivalent to
      * <code>getQPath(id).getAncestorCount()</code>. The depth reflects the
      * absolute hierarchy level.

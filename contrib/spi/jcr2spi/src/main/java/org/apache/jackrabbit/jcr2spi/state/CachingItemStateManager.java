@@ -95,7 +95,7 @@ public class CachingItemStateManager implements ItemStateManager {
 
     public NodeState getRootState() throws ItemStateException {
         if (root == null) {
-            root = isf.createNodeState(idFactory.createNodeId((String) null, Path.ROOT), this);
+            root = isf.createRootState(this);
             root.addListener(lifeCycleListener);
         }
         return root;
@@ -183,8 +183,7 @@ public class CachingItemStateManager implements ItemStateManager {
         String uuid = id.getUUID();
         Path relPath = id.getRelativePath();
 
-        // start with root node if no uuid part in id
-        NodeState nodeState = getRootState();
+        NodeState nodeState;
         // resolve uuid part
         if (uuid != null) {
             nodeState = (NodeState) uuid2NodeState.get(uuid);
@@ -195,6 +194,9 @@ public class CachingItemStateManager implements ItemStateManager {
                 nodeState.addListener(lifeCycleListener);
                 uuid2NodeState.put(uuid, nodeState);
             }
+        } else {
+            // start with root node if no uuid part in id
+            nodeState = getRootState();
         }
 
         ItemState s = nodeState;

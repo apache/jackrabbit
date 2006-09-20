@@ -354,7 +354,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
             } else {
                 ps.print("- ");
             }
-            ps.println(state + "\t" + LogUtil.safeGetJCRPath(state, session.getNamespaceResolver(), hierMgr) + " (" + item + ")");
+            ps.println(state + "\t" + LogUtil.safeGetJCRPath(state, session.getNamespaceResolver()) + " (" + item + ")");
         }
     }
 

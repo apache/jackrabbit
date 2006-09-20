@@ -367,7 +367,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         switch (state.getStatus()) {
             case ItemState.STATUS_NEW:
                 {
-                    String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": cannot save a new item.";
+                    String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": cannot save a new item.";
                     log.debug(msg);
                     throw new ItemStateException(msg);
                 }
@@ -376,13 +376,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             switch (state.getStatus()) {
                 case ItemState.STATUS_STALE_MODIFIED:
                     {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been modified externally.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": the item cannot be saved because it has been modified externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
                 case ItemState.STATUS_STALE_DESTROYED:
                     {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver, hierMgr) + ": the item cannot be saved because it has been deleted externally.";
+                        String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": the item cannot be saved because it has been deleted externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }

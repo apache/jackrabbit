@@ -26,6 +26,8 @@ import org.apache.jackrabbit.spi.PropertyId;
  */
 public interface ItemStateFactory {
 
+    public NodeState createRootState(ItemStateManager ism) throws ItemStateException;
+
     /**
      * Creates the child <code>NodeState</code> with the given
      * <code>nodeId</code>.
