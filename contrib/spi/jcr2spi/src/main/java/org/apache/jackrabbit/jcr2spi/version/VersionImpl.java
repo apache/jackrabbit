@@ -100,7 +100,7 @@ public class VersionImpl extends NodeImpl implements Version {
             // in the same workspace, a simple comparision of the UUIDs is sufficient
             VersionImpl other = ((VersionImpl) otherItem);
             try {
-                return other.getUUID().equals(other.getUUID());
+                return getUUID().equals(other.getUUID());
             } catch (RepositoryException e) {
                 // should never occur
                 log.error("Internal error while retrieve UUID of version.", e);
