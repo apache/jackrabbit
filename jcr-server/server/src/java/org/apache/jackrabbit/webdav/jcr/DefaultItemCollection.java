@@ -115,21 +115,46 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
      */
     public String getComplianceClass() {
-        StringBuffer sb = new StringBuffer(super.getComplianceClass());
-        sb.append(", ").append(OrderingResource.COMPLIANCE_CLASS);
-        return sb.toString();
+        String cc = super.getComplianceClass();
+        if (isOrderable()) {
+            StringBuffer sb = new StringBuffer(cc);
+            sb.append(", ").append(OrderingResource.COMPLIANCE_CLASS);
+            return sb.toString();
+        } else {
+            return cc;
+        }
+    }
+
+    public long getModificationTime() {
+        // retrieve mod-time from jcr:lastmodified property if existing
+        if (exists()) {
+            try {
+                if (((Node)item).hasProperty(JcrConstants.JCR_LASTMODIFIED)) {
+                    return ((Node)item).getProperty(JcrConstants.JCR_LASTMODIFIED).getLong();
+                }
+            } catch (RepositoryException e) {
+                log.warn("Error while accessing jcr:lastModified property");
+            }
+        }
+        // fallback: return 'now'
+        return new Date().getTime();
     }
 
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
     public String getSupportedMethods() {
-        StringBuffer sb = new StringBuffer(super.getSupportedMethods());
-        // Ordering
+        String ms = super.getSupportedMethods();
         if (isOrderable()) {
-           sb.append(", ").append(OrderingResource.METHODS);
+            StringBuffer sb = new StringBuffer(ms);
+            // Ordering
+            if (isOrderable()) {
+                sb.append(", ").append(OrderingResource.METHODS);
+            }
+            return sb.toString();
+        } else {
+            return ms;
         }
-        return sb.toString();
     }
 
     /**
@@ -803,14 +828,6 @@ public class DefaultItemCollection extends AbstractItemResource
             // resource is serialized as system-view (xml)
             properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, "text/xml"));
             Node n = (Node)item;
-            // overwrite the default modificationtime if possible
-            try {
-                if (n.hasProperty(JcrConstants.JCR_LASTMODIFIED)) {
-                    setModificationTime(n.getProperty(JcrConstants.JCR_LASTMODIFIED).getLong());
-                }
-            } catch (RepositoryException e) {
-                log.warn("Error while accessing jcr:lastModified property");
-            }
             // overwrite the default creation date if possible
             try {
                 if (n.hasProperty(JcrConstants.JCR_CREATED)) {

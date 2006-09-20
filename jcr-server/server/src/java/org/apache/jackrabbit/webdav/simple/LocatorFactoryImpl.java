@@ -38,17 +38,26 @@ public class LocatorFactoryImpl implements DavLocatorFactory {
     }
 
     public DavResourceLocator createResourceLocator(String prefix, String href) {
-        String rPrefix = prefix + repositoryPrefix;
-        String escPath = href;
-        // remove the configured repository prefix from the path
-        if (escPath != null && escPath.startsWith(repositoryPrefix)) {
-            escPath = escPath.substring(repositoryPrefix.length());
+        // build prefix string and remove all prefixes from the given href.
+        StringBuffer b = new StringBuffer("");
+        if (prefix != null && prefix.length() > 0) {
+            b.append(prefix);
+            if (href.startsWith(prefix)) {
+                href = href.substring(prefix.length());
+            }
         }
+        if (repositoryPrefix != null && repositoryPrefix.length() > 0 && !prefix.endsWith(repositoryPrefix)) {
+            b.append(repositoryPrefix);
+            if (href.startsWith(repositoryPrefix)) {
+                href = href.substring(repositoryPrefix.length());
+            }
+        }
+
         // special treatment for root item, that has no name but '/' path.
-        if (escPath == null || "".equals(escPath)) {
-            escPath = "/";
+        if (href == null || "".equals(href)) {
+            href = "/";
         }
-        return new Locator(rPrefix, Text.unescape(escPath), this);
+        return new Locator(b.toString(), Text.unescape(href), this);
     }
 
     public DavResourceLocator createResourceLocator(String prefix, String workspacePath, String resourcePath) {

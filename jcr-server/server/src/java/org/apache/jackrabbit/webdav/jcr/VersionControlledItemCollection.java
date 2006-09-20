@@ -26,7 +26,6 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -51,9 +50,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.Workspace;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
@@ -231,7 +227,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         }
     }
 
-    //--------------------------------< VersionControlledResource interface >---
+    //--------------------------------------< VersionableResource interface >---
     /**
      * Adds version control to this resource. If the resource is already under
      * version control, this method has no effect.
@@ -254,6 +250,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         } // else: is already version controlled -> ignore
     }
 
+    //--------------------------------< VersionControlledResource interface >---
     /**
      * Calls {@link javax.jcr.Node#checkin()} on the underlying repository node.
      *
@@ -316,7 +313,6 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * <li>{@link Node#restore(javax.jcr.version.Version, boolean)}</li>
      * <li>{@link Node#restore(javax.jcr.version.Version, String, boolean)}</li>
      * <li>{@link Node#restoreByLabel(String, boolean)}</li>
-     * <li>{@link Workspace#restore(javax.jcr.version.Version[], boolean)}</li>
      * <li>{@link Node#update(String)}</li>
      * </ul>
      * </p>
@@ -349,35 +345,30 @@ public class VersionControlledItemCollection extends DefaultItemCollection
 
             // perform the update/restore according to the update info
             if (updateInfo.getVersionHref() != null) {
-                VersionHistory vh = node.getVersionHistory();
                 String[] hrefs = updateInfo.getVersionHref();
-                Version[] versions = new Version[hrefs.length];
-                for (int  i = 0; i < hrefs.length; i++) {
-                    String itemPath = getLocatorFromHref(hrefs[i]).getRepositoryPath();
-                    versions[i] = vh.getVersion(getItemName(itemPath));
+                if (hrefs.length != 1) {
+                    throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Invalid update request body missing version href or containing multiple version hrefs.");
                 }
-                if (versions.length == 1) {
-                    String relPath = DomUtil.getChildText(udElem, XML_RELPATH, NAMESPACE);
-                    if (relPath == null) {
-                        node.restore(versions[0], removeExisting);
-                    } else {
-                        node.restore(versions[0], relPath, removeExisting);
-                    }
+
+                String versionPath = getLocatorFromHref(hrefs[0]).getRepositoryPath();
+                String versionName = getItemName(versionPath);
+
+                String relPath = DomUtil.getChildText(udElem, XML_RELPATH, NAMESPACE);
+                if (relPath == null) {
+                    // restore version by name
+                    node.restore(versionName, removeExisting);
                 } else {
-                    getRepositorySession().getWorkspace().restore(versions, removeExisting);
+                    Version v = node.getVersionHistory().getVersion(versionName);
+                    node.restore(v, relPath, removeExisting);
                 }
+
             } else if (updateInfo.getLabelName() != null) {
                 String[] labels = updateInfo.getLabelName();
-                if (labels.length == 1) {
-                    node.restoreByLabel(labels[0], removeExisting);
-                } else {
-                    Version[] vs = new Version[labels.length];
-                    VersionHistory vh = node.getVersionHistory();
-                    for (int  i = 0; i < labels.length; i++) {
-                        vs[i] = vh.getVersionByLabel(labels[i]);
-                    }
-                    getRepositorySession().getWorkspace().restore(vs, removeExisting);
+                if (labels.length != 1) {
+                    throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Invalid update request body: Multiple labels specified.");
                 }
+                node.restoreByLabel(labels[0], removeExisting);
+
             } else if (updateInfo.getWorkspaceHref() != null) {
                 String workspaceName = getLocatorFromHref(updateInfo.getWorkspaceHref()).getWorkspaceName();
                 node.update(workspaceName);
@@ -610,67 +601,5 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         DavLocatorFactory f = getLocator().getFactory();
         String prefix = getLocator().getPrefix();
         return f.createResourceLocator(prefix, href);
-    }
-
-    /**
-     * Register the specified event listener with the observation manager present
-     * the repository session.
-     *
-     * @param listener
-     * @param nodePath
-     * @throws javax.jcr.RepositoryException
-     */
-    private void registerEventListener(EventListener listener, String nodePath) throws RepositoryException {
-        getRepositorySession().getWorkspace().getObservationManager().addEventListener(listener, EListener.ALL_EVENTS, nodePath, true, null, null, false);
-    }
-
-    /**
-     * Unregister the specified event listener with the observation manager present
-     * the repository session.
-     *
-     * @param listener
-     * @throws javax.jcr.RepositoryException
-     */
-    private void unregisterEventListener(EventListener listener) throws RepositoryException {
-        getRepositorySession().getWorkspace().getObservationManager().removeEventListener(listener);
-    }
-
-    //------------------------------------------------------< inner classes >---
-    /**
-     * Simple EventListener that creates a new {@link org.apache.jackrabbit.webdav.MultiStatusResponse} object
-     * for each event and adds it to the specified {@link org.apache.jackrabbit.webdav.MultiStatus}.
-     */
-    private class EListener implements EventListener {
-
-        private static final int ALL_EVENTS = Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
-
-        private final DavPropertyNameSet propNameSet;
-        private MultiStatus ms;
-
-        private EListener(DavPropertyNameSet propNameSet, MultiStatus ms) {
-            this.propNameSet = propNameSet;
-            this.ms = ms;
-        }
-
-        /**
-         * @see EventListener#onEvent(javax.jcr.observation.EventIterator)
-         */
-        public void onEvent(EventIterator events) {
-            while (events.hasNext()) {
-                try {
-                    Event e = events.nextEvent();
-                    DavResourceLocator loc = getLocatorFromItemPath(e.getPath());
-                    DavResource res = createResourceFromLocator(loc);
-                    ms.addResponse(new MultiStatusResponse(res, propNameSet));
-
-                } catch (DavException e) {
-                    // should not occur
-                    log.error("Error while building MultiStatusResponse from Event: " + e.getMessage());
-                } catch (RepositoryException e) {
-                    // should not occur
-                    log.error("Error while building MultiStatusResponse from Event: " + e.getMessage());
-                }
-            }
-        }
     }
 }

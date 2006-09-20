@@ -27,9 +27,13 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.jcr.search.SearchResourceImpl;
 import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
+import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.LocateByUuidReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockDiscovery;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
@@ -37,12 +41,6 @@ import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.SupportedLock;
 import org.apache.jackrabbit.webdav.lock.Type;
-import org.apache.jackrabbit.webdav.observation.EventDiscovery;
-import org.apache.jackrabbit.webdav.observation.ObservationResource;
-import org.apache.jackrabbit.webdav.observation.Subscription;
-import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
-import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
-import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
@@ -74,7 +72,9 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import java.io.IOException;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -84,20 +84,30 @@ import java.util.List;
  * <code>AbstractResource</code> provides functionality common to all
  * resources.
  */
-abstract class AbstractResource implements DavResource, ObservationResource,
-        TransactionResource, DeltaVResource, SearchResource {
+abstract class AbstractResource implements DavResource, TransactionResource,
+    DeltaVResource, SearchResource {
 
     private static Logger log = LoggerFactory.getLogger(AbstractResource.class);
+
+    private static final String COMPLIANCE_CLASSES =
+        DavCompliance.concatComplianceClasses(new String[] {
+        DavCompliance._1_,
+        DavCompliance._2_,
+        DavCompliance.VERSION_CONTROL,
+        DavCompliance.VERSION_HISTORY,
+        DavCompliance.CHECKOUT_IN_PLACE,
+        DavCompliance.LABEL,
+        DavCompliance.MERGE,
+        DavCompliance.UPDATE,
+        DavCompliance.WORKSPACE
+    });
 
     private final DavResourceLocator locator;
     private final JcrDavSession session;
     private final DavResourceFactory factory;
 
-    private SubscriptionManager subsMgr;
     private TxLockManagerImpl txMgr;
     private String transactionId;
-
-    private long modificationTime = IOUtil.UNDEFINED_TIME;
 
     protected boolean initedProps;
     protected DavPropertySet properties = new DavPropertySet();
@@ -118,6 +128,23 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         this.locator = locator;
         this.session = session;
         this.factory = factory;
+    }
+
+    /**
+     * Returns a string listing the compliance classes for this resource as it
+     * is required for the DAV response header. This includes DAV 1, 2 which
+     * is supported by all derived classes as well as a subset of the
+     * classes defined by DeltaV: version-control, version-history, checkout-in-place,
+     * label, merge, update and workspace.<br>
+     * Those compliance classes are added as required by RFC3253 since all
+     * all resources in the jcr-server support at least the reporting and some
+     * basic versioning functionality.
+     *
+     * @return string listing the compliance classes.
+     * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
+     */
+    public String getComplianceClass() {
+        return COMPLIANCE_CLASSES;
     }
 
     /**
@@ -146,65 +173,6 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      */
     public String getHref() {
         return locator.getHref(isCollection());
-    }
-
-    /**
-     * @see org.apache.jackrabbit.webdav.DavResource#getModificationTime()
-     */
-    public long getModificationTime() {
-        return modificationTime;
-    }
-
-    /**
-     * Set the modificationTime field and adds the {@link DavPropertyName#GETLASTMODIFIED}
-     * property to the set of properties.
-     *
-     * @param modificationTime
-     */
-    void setModificationTime(long modificationTime) {
-        if (modificationTime > IOUtil.UNDEFINED_TIME) {
-            this.modificationTime = modificationTime;
-            String lastModified = IOUtil.getLastModified(modificationTime);
-            properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, lastModified));
-        }
-    }
-
-    /**
-     * Spools the properties of this resource to the context. Note that subclasses
-     * are in charge of spooling the data to the output stream provided by the
-     * context.
-     *
-     * @see DavResource#spool(OutputContext)
-     */
-    public void spool(OutputContext outputContext) throws IOException {
-        if (!initedProps) {
-            initProperties();
-        }
-        // export properties
-        outputContext.setModificationTime(getModificationTime());
-        DavProperty etag = getProperty(DavPropertyName.GETETAG);
-        if (etag != null) {
-            outputContext.setETag(String.valueOf(etag.getValue()));
-        }
-        DavProperty contentType = getProperty(DavPropertyName.GETCONTENTTYPE);
-        if (contentType != null) {
-            outputContext.setContentType(String.valueOf(contentType.getValue()));
-        }
-        DavProperty contentLength = getProperty(DavPropertyName.GETCONTENTLENGTH);
-        if (contentLength != null) {
-            try {
-                long length = Long.parseLong(contentLength.getValue() + "");
-                if (length > 0) {
-                    outputContext.setContentLength(length);
-                }
-            } catch (NumberFormatException e) {
-                log.error("Could not build content length from property value '" + contentLength.getValue() + "'");
-            }
-        }
-        DavProperty contentLanguage = getProperty(DavPropertyName.GETCONTENTLANGUAGE);
-        if (contentLanguage != null) {
-            outputContext.setContentLanguage(contentLanguage.getValue().toString());
-        }
     }
 
     /**
@@ -436,39 +404,6 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         return session;
     }
 
-    //--------------------------------------< ObservationResource interface >---
-    /**
-     * @see ObservationResource#init(SubscriptionManager)
-     */
-    public void init(SubscriptionManager subsMgr) {
-        this.subsMgr = subsMgr;
-    }
-
-    /**
-     * @see ObservationResource#subscribe(org.apache.jackrabbit.webdav.observation.SubscriptionInfo, String)
-     * @see SubscriptionManager#subscribe(org.apache.jackrabbit.webdav.observation.SubscriptionInfo, String, org.apache.jackrabbit.webdav.observation.ObservationResource)
-     */
-    public Subscription subscribe(SubscriptionInfo info, String subscriptionId)
-            throws DavException {
-        return subsMgr.subscribe(info, subscriptionId, this);
-    }
-
-    /**
-     * @see ObservationResource#unsubscribe(String)
-     * @see SubscriptionManager#unsubscribe(String, org.apache.jackrabbit.webdav.observation.ObservationResource)
-     */
-    public void unsubscribe(String subscriptionId) throws DavException {
-        subsMgr.unsubscribe(subscriptionId, this);
-    }
-
-    /**
-     * @see ObservationResource#poll(String)
-     * @see SubscriptionManager#poll(String, org.apache.jackrabbit.webdav.observation.ObservationResource)
-     */
-    public EventDiscovery poll(String subscriptionId) throws DavException {
-        return subsMgr.poll(subscriptionId, this);
-    }
-
     //--------------------------------------< TransactionResource interface >---
     /**
      * @see TransactionResource#init(TxLockManager, String)
@@ -623,6 +558,7 @@ abstract class AbstractResource implements DavResource, ObservationResource,
     public MultiStatus search(SearchInfo sInfo) throws DavException {
         return new SearchResourceImpl(getLocator(), session).search(sInfo);
     }
+    
     //--------------------------------------------------------------------------
     /**
      * Fill the set of default properties
@@ -643,7 +579,9 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         // todo: add etag
 
         // default last modified
-        setModificationTime(new Date().getTime());
+        String lastModified = IOUtil.getLastModified(getModificationTime());
+        properties.add(new DefaultDavProperty(DavPropertyName.GETLASTMODIFIED, lastModified));
+
         // default creation time
         properties.add(new DefaultDavProperty(DavPropertyName.CREATIONDATE, DavConstants.creationDateFormat.format(new Date(0))));
 
@@ -653,10 +591,6 @@ abstract class AbstractResource implements DavResource, ObservationResource,
         // set current lock information. If no lock is applied to this resource,
         // an empty lockdiscovery will be returned in the response.
         properties.add(new LockDiscovery(getLocks()));
-
-        // observation resource
-        SubscriptionDiscovery subsDiscovery = subsMgr.getSubscriptionDiscovery(this);
-        properties.add(subsDiscovery);
 
         properties.add(new SupportedMethodSetProperty(getSupportedMethods().split(",\\s")));
 
@@ -741,7 +675,23 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      *
      * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
      */
-    abstract protected void initSupportedReports();
+    /**
+     * Define the set of reports supported by this resource.
+     *
+     * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
+     * @see AbstractResource#initSupportedReports()
+     */
+    protected void initSupportedReports() {
+        if (exists()) {
+            supportedReports = new SupportedReportSetProperty(new ReportType[] {
+                ReportType.EXPAND_PROPERTY,
+                NodeTypesReport.NODETYPES_REPORT,
+                LocateByUuidReport.LOCATE_BY_UUID_REPORT,
+                RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT,
+                RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT
+            });
+        }
+    }
 
     /**
      * Retrieve the href of the workspace the current session belongs to.
@@ -749,4 +699,67 @@ abstract class AbstractResource implements DavResource, ObservationResource,
      * @return href of the workspace
      */
     abstract protected String getWorkspaceHref();
+
+    //--------------------------------------------------------------------------
+    /**
+     * Register the specified event listener with the observation manager present
+     * the repository session.
+     *
+     * @param listener
+     * @param nodePath
+     * @throws javax.jcr.RepositoryException
+     */
+    void registerEventListener(EventListener listener, String nodePath) throws RepositoryException {
+        getRepositorySession().getWorkspace().getObservationManager().addEventListener(listener, EListener.ALL_EVENTS, nodePath, true, null, null, false);
+    }
+
+    /**
+     * Unregister the specified event listener with the observation manager present
+     * the repository session.
+     *
+     * @param listener
+     * @throws javax.jcr.RepositoryException
+     */
+    void unregisterEventListener(EventListener listener) throws RepositoryException {
+        getRepositorySession().getWorkspace().getObservationManager().removeEventListener(listener);
+    }
+
+    //------------------------------------------------------< inner classes >---
+    /**
+     * Simple EventListener that creates a new {@link org.apache.jackrabbit.webdav.MultiStatusResponse} object
+     * for each event and adds it to the specified {@link org.apache.jackrabbit.webdav.MultiStatus}.
+     */
+    class EListener implements EventListener {
+
+        private static final int ALL_EVENTS = Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
+
+        private final DavPropertyNameSet propNameSet;
+        private MultiStatus ms;
+
+        EListener(DavPropertyNameSet propNameSet, MultiStatus ms) {
+            this.propNameSet = propNameSet;
+            this.ms = ms;
+        }
+
+        /**
+         * @see EventListener#onEvent(javax.jcr.observation.EventIterator)
+         */
+        public void onEvent(EventIterator events) {
+            while (events.hasNext()) {
+                try {
+                    Event e = events.nextEvent();
+                    DavResourceLocator loc = getLocatorFromItemPath(e.getPath());
+                    DavResource res = createResourceFromLocator(loc);
+                    ms.addResponse(new MultiStatusResponse(res, propNameSet));
+
+                } catch (DavException e) {
+                    // should not occur
+                    log.error("Error while building MultiStatusResponse from Event: " + e.getMessage());
+                } catch (RepositoryException e) {
+                    // should not occur
+                    log.error("Error while building MultiStatusResponse from Event: " + e.getMessage());
+                }
+            }
+        }
+    }
 }
