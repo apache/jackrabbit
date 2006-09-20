@@ -131,7 +131,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         this.ioManager = config.getIOManager();
         this.propManager = config.getPropertyManager();
 
-        if (locator != null && locator.getResourcePath() != null) {
+        if (locator != null && locator.getRepositoryPath() != null) {
             try {
                 Item item = getJcrSession().getItem(locator.getRepositoryPath());
                 if (item != null && item.isNode()) {
