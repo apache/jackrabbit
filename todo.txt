@@ -3,8 +3,11 @@ todo webdav/version
 -------------------------------------------------------------------
 
 - review: compliance to deltaV
-- reflecting feature-sets
-- baseline/activity: missing support in library
+- reconsider feature-sets (see also JCR-394)
+- CHECKOUT may contain request body (working-resource, activity, checkout-in-place)
+- CHECKIN may contain request body (working-resource, checkout-in-place)
+- VERSION-CONTROL may contain request body (workspace f.)
+- BASELINE/ACTIVITY: missing support in library
 
 -------------------------------------------------------------------
 todo webdav/ordering
@@ -19,7 +22,8 @@ todo webdav/search
 -------------------------------------------------------------------
 
 - SearchResource should extend DavResource
-- library misses support for the basic query
+- library misses support for the DAV:basicsearch
+
 
 -------------------------------------------------------------------
 todo webdav/transaction
