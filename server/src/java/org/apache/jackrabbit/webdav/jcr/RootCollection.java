@@ -23,28 +23,26 @@ import org.apache.jackrabbit.webdav.DavResourceIterator;
 import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.io.InputContext;
-import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
-import org.apache.jackrabbit.webdav.version.report.ReportType;
-import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
+import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Date;
+import java.io.IOException;
 
 /**
  * <code>RootCollection</code> represent the WebDAV root resource that does not
  * represent any repository item. A call to getMembers() returns a
- * <code>DavResourceIterator</code> containing only <code>RootItemCollection</code>
- * resources, thus revealing the names of the accessable workspaces.
+ * <code>DavResourceIterator</code> containing only workspace resources
+ * resources, thus revealing the names of the accessable JCR workspaces.
  */
-public class RootCollection extends AbstractResource implements DavResource {
+public class RootCollection extends AbstractResource {
 
     private static Logger log = LoggerFactory.getLogger(RootCollection.class);
 
@@ -57,22 +55,10 @@ public class RootCollection extends AbstractResource implements DavResource {
     protected RootCollection(DavResourceLocator locator, JcrDavSession session,
                              DavResourceFactory factory) {
         super(locator, session, factory);
-        setModificationTime(new Date().getTime());
 
         // initialize the supported locks and reports
         initLockSupport();
         initSupportedReports();
-    }
-
-    /**
-     * Returns a string listing the complieance classes for this resource as it
-     * is required for the DAV response header.
-     *
-     * @return string listing the compliance classes.
-     * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
-     */
-    public String getComplianceClass() {
-        return DavResource.COMPLIANCE_CLASS;
     }
 
     /**
@@ -84,6 +70,8 @@ public class RootCollection extends AbstractResource implements DavResource {
      */
     public String getSupportedMethods() {
         StringBuffer sb = new StringBuffer(DavResource.METHODS);
+        sb.append(DeltaVResource.METHODS_INCL_MKWORKSPACE);
+        sb.append(SearchResource.METHODS);
         return sb.toString();
     }
 
@@ -118,6 +106,26 @@ public class RootCollection extends AbstractResource implements DavResource {
     }
 
     /**
+     * Always returns 'now'
+     *
+     * @return
+     */
+    public long getModificationTime() {
+        return new Date().getTime();
+    }
+
+    /**
+     * Sets content lengths to '0' and retrieves the modification time.
+     *
+     * @param outputContext
+     * @throws IOException
+     */
+    public void spool(OutputContext outputContext) throws IOException {
+        outputContext.setContentLength(0);
+        outputContext.setModificationTime(getModificationTime());
+    }
+
+    /**
      * Always returns <code>null</code>
      *
      * @return <code>null</code> for the root resource is not internal member
@@ -138,8 +146,7 @@ public class RootCollection extends AbstractResource implements DavResource {
 
     /**
      * Returns an iterator over the member resources, which are all
-     * <code>RootItemCollection</code> resources, revealing
-     * the names of all available workspaces.
+     * workspace resources available.
      *
      * @return members of this collection
      * @see org.apache.jackrabbit.webdav.DavResource#getMembers()
@@ -149,7 +156,8 @@ public class RootCollection extends AbstractResource implements DavResource {
         try {
             String[] wsNames = getRepositorySession().getWorkspace().getAccessibleWorkspaceNames();
             for (int i = 0; i < wsNames.length; i++) {
-                DavResourceLocator childLoc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), "/"+wsNames[i], ItemResourceConstants.ROOT_ITEM_PATH);
+                String wspPath = "/"+wsNames[i];
+                DavResourceLocator childLoc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), wspPath, wspPath);
                 memberList.add(createResourceFromLocator(childLoc));
             }
         } catch (RepositoryException e) {
@@ -178,32 +186,14 @@ public class RootCollection extends AbstractResource implements DavResource {
     }
 
     /**
-     * @see AbstractResource#initSupportedReports()
-     */
-    protected void initSupportedReports() {
-        supportedReports = new SupportedReportSetProperty(new ReportType[] {
-            ReportType.EXPAND_PROPERTY,
-            NodeTypesReport.NODETYPES_REPORT,
-            RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT,
-            RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT
-        });
-    }
-
-    /**
      * Since the root resource does not represent a repository item and therefore
-     * is not member of a workspace resource, the workspace href is calculated
-     * from the workspace name retrieved from the underlying repository session.
+     * is not member of a workspace resource, this method always returns
+     * <code>null</code>.
      *
-     * @return workspace href build from workspace name.
+     * @return <code>null</code>
      * @see AbstractResource#getWorkspaceHref()
      */
     protected String getWorkspaceHref() {
-        Session session = getRepositorySession();
-        if (session != null) {
-            String workspaceName = session.getWorkspace().getName();
-            DavResourceLocator loc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), "/"+workspaceName, ItemResourceConstants.ROOT_ITEM_PATH);
-            return loc.getHref(true);
-        }
         return null;
     }
 }

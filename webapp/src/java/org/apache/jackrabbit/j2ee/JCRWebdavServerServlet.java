@@ -137,12 +137,14 @@ public class JCRWebdavServerServlet extends AbstractWebdavServlet implements Dav
         // this may occur if the session was retrieved from the cache.
         try {
             Session repositorySesssion = JcrDavSession.getRepositorySession(request.getDavSession());
+            String reqWspName = resource.getLocator().getWorkspaceName();
             String wsName = repositorySesssion.getWorkspace().getName();
-            if (!resource.getLocator().isSameWorkspace(wsName)) {
+            //  compare workspace names if the req. resource is not the root-collection.
+            if (reqWspName != null && !reqWspName.equals(wsName)) {
                 return false;
             }
         } catch (DavException e) {
-            log.error(e.toString());
+            log.error("Internal error: " + e.toString());
             return false;
         }
 
