@@ -32,6 +32,7 @@ import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.WebdavRequestImpl;
 import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.WebdavResponseImpl;
+import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.InputContextImpl;
 import org.apache.jackrabbit.webdav.io.OutputContext;
@@ -64,6 +65,7 @@ import org.apache.jackrabbit.webdav.version.UpdateInfo;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.version.VersionResource;
 import org.apache.jackrabbit.webdav.version.VersionableResource;
+import org.apache.jackrabbit.webdav.version.ActivityResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.slf4j.Logger;
@@ -300,6 +302,12 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 break;
             case DavMethods.DAV_MKWORKSPACE:
                 doMkWorkspace(request, response, resource);
+                break;
+            case DavMethods.DAV_MKACTIVITY:
+                doMkActivity(request, response, resource);
+                break;
+            case DavMethods.DAV_BASELINE_CONTROL:
+                doBaselineControl(request, response, resource);
                 break;
             case DavMethods.DAV_ACL:
                 doAcl(request, response, resource);
@@ -1005,6 +1013,82 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
         ((DeltaVResource) parentResource).addWorkspace(resource);
         response.setStatus(DavServletResponse.SC_CREATED);
+    }
+
+    /**
+     * The MKACTIVITY method
+     *
+     * @param request
+     * @param response
+     * @param resource
+     * @throws DavException
+     * @throws IOException
+     */
+    protected void doMkActivity(WebdavRequest request, WebdavResponse response,
+                                DavResource resource) throws DavException, IOException {
+        if (resource.exists()) {
+            log.warn("Unable to create activity: A resource already exists at the request-URL " + request.getRequestURL());
+            response.sendError(DavServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        DavResource parentResource = resource.getCollection();
+        if (parentResource == null || !parentResource.exists() || !parentResource.isCollection()) {
+            // parent does not exist or is not a collection
+            response.sendError(DavServletResponse.SC_CONFLICT);
+            return;
+        }
+        // TODO: improve. see http://issues.apache.org/jira/browse/JCR-394
+        if (parentResource.getComplianceClass().indexOf(DavCompliance.ACTIVITY) < 0) {
+            response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+            return;
+        }
+
+        if (!(resource instanceof ActivityResource)) {
+            log.error("Unable to create activity: ActivityResource expected");
+            response.sendError(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return;
+        }
+
+        // try to add the new activity resource
+        parentResource.addMember(resource, getInputContext(request, request.getInputStream()));
+
+        // Note: mandatory cache control header has already been set upon response creation.
+        response.setStatus(DavServletResponse.SC_CREATED);
+    }
+
+    /**
+     * The BASELINECONTROL method
+     *
+     * @param request
+     * @param response
+     * @param resource
+     * @throws DavException
+     * @throws IOException
+     */
+    protected void doBaselineControl(WebdavRequest request, WebdavResponse response,
+                                     DavResource resource)
+        throws DavException, IOException {
+
+        if (!resource.exists()) {
+            log.warn("Unable to add baseline control. Resource does not exist " + resource.getHref());
+            response.sendError(DavServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        // TODO: improve. see http://issues.apache.org/jira/browse/JCR-394
+        if (!(resource instanceof VersionControlledResource) || !resource.isCollection()) {
+            log.warn("BaselineControl is not supported by resource " + resource.getHref());
+            response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+            return;
+        }
+
+        // TODO : missing method on VersionControlledResource
+        throw new DavException(DavServletResponse.SC_NOT_IMPLEMENTED);
+        /*
+        ((VersionControlledResource) resource).addBaselineControl(request.getRequestDocument());
+        // Note: mandatory cache control header has already been set upon response creation.
+        response.setStatus(DavServletResponse.SC_OK);
+        */
     }
 
     /**
