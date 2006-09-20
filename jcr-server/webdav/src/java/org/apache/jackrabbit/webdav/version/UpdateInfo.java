@@ -99,11 +99,13 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
         }
 
         boolean done = false;
-        ElementIterator it = DomUtil.getChildren(updateElement, XML_VERSION, NAMESPACE);
-        while (it.hasNext()) {
+        if (DomUtil.hasChildElement(updateElement, XML_VERSION, NAMESPACE)) {
+            Element vEl = DomUtil.getChildElement(updateElement, XML_VERSION, NAMESPACE);
+            ElementIterator hrefs = DomUtil.getChildren(vEl, DavConstants.XML_HREF, DavConstants.NAMESPACE);
             List hrefList = new ArrayList();
-            Element el = it.nextElement();
-            hrefList.add(DomUtil.getChildText(el, DavConstants.XML_HREF, DavConstants.NAMESPACE));
+            while (hrefs.hasNext()) {
+                hrefList.add(DomUtil.getText(hrefs.nextElement()));
+            }
             source = (String[])hrefList.toArray(new String[hrefList.size()]);
             done = true;
         }
