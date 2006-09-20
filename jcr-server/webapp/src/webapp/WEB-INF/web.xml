@@ -118,25 +118,6 @@
         </init-param>
 
         <!--
-        <init-param>
-            <param-name>missing-auth-mapping</param-name>
-            <param-value>anonymous:anonymous</param-value>
-            <description>
-                Defines how a missing authorization header should be handled.
-                1) If this init-param is missing, a 401 response is generated.
-                   This is suiteable for clients (eg. webdav clients) for which
-                   sending a proper authorization header is not possible if the
-                   server never sent a 401.
-                2) If this init-param is present with an empty value,
-                   null-credentials are returned, thus forcing an null login
-                   on the repository.
-                3) If this init-param has a 'user:password' value, the respective
-                   simple credentials are generated.
-            </description>
-        </init-param>
-        -->
-
-        <!--
             JNDI environment variables for creating the initial context
             (all init parameters starting with java.naming.* will be added to the initial context environment).
         -->
@@ -181,6 +162,24 @@
             </description>
         </init-param>
         <!--
+         <init-param>
+             <param-name>missing-auth-mapping</param-name>
+             <param-value>anonymous:anonymous</param-value>
+             <description>
+                 Defines how a missing authorization header should be handled.
+                 1) If this init-param is missing, a 401 response is generated.
+                    This is suiteable for clients (eg. webdav clients) for which
+                    sending a proper authorization header is not possible if the
+                    server never sent a 401.
+                 2) If this init-param is present with an empty value,
+                    null-credentials are returned, thus forcing an null login
+                    on the repository.
+                 3) If this init-param has a 'user:password' value, the respective
+                    simple credentials are generated.
+             </description>
+         </init-param>
+         -->
+        <!--
             Optional parameter to define the value of the 'WWW-Authenticate' header
         -->
         <!--
@@ -217,6 +216,25 @@
         </description>
         <servlet-class>org.apache.jackrabbit.j2ee.JCRWebdavServerServlet</servlet-class>
         <!--
+         <init-param>
+             <param-name>missing-auth-mapping</param-name>
+             <param-value>anonymous:anonymous</param-value>
+             <description>
+                 Defines how a missing authorization header should be handled.
+                 1) If this init-param is missing, a 401 response is generated.
+                    This is suiteable for clients (eg. webdav clients) for which
+                    sending a proper authorization header is not possible if the
+                    server never sent a 401.
+                 2) If this init-param is present with an empty value,
+                    null-credentials are returned, thus forcing an null login
+                    on the repository.
+                 3) If this init-param has a 'user:password' value, the respective
+                    simple credentials are generated.
+             </description>
+         </init-param>
+         -->
+
+        <!--
             Optional parameter to define the value of the 'WWW-Authenticate' header
         -->
         <!--
@@ -228,6 +246,7 @@
             </description>
         </init-param>
         -->
+
         <init-param>
             <param-name>resource-path-prefix</param-name>
             <param-value>/server</param-value>
