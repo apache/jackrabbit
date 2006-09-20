@@ -169,7 +169,7 @@ public class MergeInfo implements DeltaVConstants, XmlSerializable {
         Element mergeElem = DomUtil.createElement(factory, XML_MERGE, NAMESPACE);
         Element source = DomUtil.addChildElement(mergeElem, DavConstants.XML_SOURCE, DavConstants.NAMESPACE);
         for (int i = 0; i < mergeSource.length; i++) {
-            DomUtil.addChildElement(source, DavConstants.XML_HREF, DavConstants.NAMESPACE, mergeSource[i]);
+            source.appendChild(DomUtil.hrefToXml(mergeSource[i], factory));
         }
         if (isNoAutoMerge) {
             DomUtil.addChildElement(mergeElem, XML_N0_AUTO_MERGE, NAMESPACE);
