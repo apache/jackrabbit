@@ -103,7 +103,7 @@ public class VersionImpl extends NodeImpl implements Version {
                 return getUUID().equals(other.getUUID());
             } catch (RepositoryException e) {
                 // should never occur
-                log.error("Internal error while retrieve UUID of version.", e);
+                log.error("Internal error while retrieving UUID of version.", e);
             }
         }
         return false;
