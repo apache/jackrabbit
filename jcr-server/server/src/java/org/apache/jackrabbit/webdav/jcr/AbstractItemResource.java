@@ -22,20 +22,24 @@ import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavCompliance;
+import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.jackrabbit.webdav.observation.ObservationResource;
+import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
+import org.apache.jackrabbit.webdav.observation.Subscription;
+import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
+import org.apache.jackrabbit.webdav.observation.EventDiscovery;
+import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
 import org.apache.jackrabbit.webdav.jcr.nodetype.ItemDefinitionImpl;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.webdav.jcr.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.webdav.jcr.version.report.LocateByUuidReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.security.CurrentUserPrivilegeSetProperty;
 import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.transaction.TxLockEntry;
-import org.apache.jackrabbit.webdav.version.report.ReportType;
-import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,16 +52,18 @@ import javax.jcr.Workspace;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.IOException;
 
 /**
  * <code>AbstractItemResource</code> covers common functionality for the various
  * resources, that represent a repository item.
  */
 abstract class AbstractItemResource extends AbstractResource implements
-    ItemResourceConstants {
+    ObservationResource, ItemResourceConstants {
 
     private static Logger log = LoggerFactory.getLogger(AbstractItemResource.class);
 
+    private SubscriptionManager subsMgr;
     protected final Item item;
 
     /**
@@ -71,7 +77,7 @@ abstract class AbstractItemResource extends AbstractResource implements
         super(locator, session, factory);
         this.item = item;
 
-	// initialize the supported locks and reports
+        // initialize the supported locks and reports
         initLockSupport();
         initSupportedReports();
     }
@@ -81,7 +87,8 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
      */
     public String getComplianceClass() {
-        return ItemResourceConstants.COMPLIANCE_CLASS;
+        String cc = super.getComplianceClass() + "," + DavCompliance.OBSERVATION;
+        return cc;
     }
 
     /**
@@ -117,6 +124,44 @@ abstract class AbstractItemResource extends AbstractResource implements
     }
 
     /**
+     * Spools the properties of this resource to the context. Note that subclasses
+     * are in charge of spooling the data to the output stream provided by the
+     * context.
+     *
+     * @see DavResource#spool(OutputContext)
+     */
+    public void spool(OutputContext outputContext) throws IOException {
+        if (!initedProps) {
+            initProperties();
+        }
+        // export properties
+        outputContext.setModificationTime(getModificationTime());
+        DavProperty etag = getProperty(DavPropertyName.GETETAG);
+        if (etag != null) {
+            outputContext.setETag(String.valueOf(etag.getValue()));
+        }
+        DavProperty contentType = getProperty(DavPropertyName.GETCONTENTTYPE);
+        if (contentType != null) {
+            outputContext.setContentType(String.valueOf(contentType.getValue()));
+        }
+        DavProperty contentLength = getProperty(DavPropertyName.GETCONTENTLENGTH);
+        if (contentLength != null) {
+            try {
+                long length = Long.parseLong(contentLength.getValue() + "");
+                if (length > 0) {
+                    outputContext.setContentLength(length);
+                }
+            } catch (NumberFormatException e) {
+                log.error("Could not build content length from property value '" + contentLength.getValue() + "'");
+            }
+        }
+        DavProperty contentLanguage = getProperty(DavPropertyName.GETCONTENTLANGUAGE);
+        if (contentLanguage != null) {
+            outputContext.setContentLanguage(contentLanguage.getValue().toString());
+        }
+    }
+
+    /**
      * Returns the resource representing the parent item of the repository item
      * represented by this resource. If this resoure represents the root item
      * a {@link RootCollection} is returned.
@@ -129,13 +174,8 @@ abstract class AbstractItemResource extends AbstractResource implements
     public DavResource getCollection() {
         DavResource collection = null;
 
-        String resourcePath = getResourcePath();
-        // No special treatment for the root-item needed, because this is
-        // covered by the RootItemCollection itself.
-        String parentResourcePath = Text.getRelativeParent(resourcePath, 1);
-        String parentWorkspacePath = getLocator().getWorkspacePath();
-
-        DavResourceLocator parentLoc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), parentWorkspacePath, parentResourcePath);
+        String parentPath = Text.getRelativeParent(getResourcePath(), 1);
+        DavResourceLocator parentLoc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), getLocator().getWorkspacePath(), parentPath);
         try {
             collection = createResourceFromLocator(parentLoc);
         } catch (DavException e) {
@@ -223,6 +263,39 @@ abstract class AbstractItemResource extends AbstractResource implements
         }
     }
 
+    //--------------------------------------< ObservationResource interface >---
+    /**
+     * @see ObservationResource#init(SubscriptionManager)
+     */
+    public void init(SubscriptionManager subsMgr) {
+        this.subsMgr = subsMgr;
+    }
+
+    /**
+     * @see ObservationResource#subscribe(org.apache.jackrabbit.webdav.observation.SubscriptionInfo, String)
+     * @see SubscriptionManager#subscribe(org.apache.jackrabbit.webdav.observation.SubscriptionInfo, String, org.apache.jackrabbit.webdav.observation.ObservationResource)
+     */
+    public Subscription subscribe(SubscriptionInfo info, String subscriptionId)
+            throws DavException {
+        return subsMgr.subscribe(info, subscriptionId, this);
+    }
+
+    /**
+     * @see ObservationResource#unsubscribe(String)
+     * @see SubscriptionManager#unsubscribe(String, org.apache.jackrabbit.webdav.observation.ObservationResource)
+     */
+    public void unsubscribe(String subscriptionId) throws DavException {
+        subsMgr.unsubscribe(subscriptionId, this);
+    }
+
+    /**
+     * @see ObservationResource#poll(String)
+     * @see SubscriptionManager#poll(String, org.apache.jackrabbit.webdav.observation.ObservationResource)
+     */
+    public EventDiscovery poll(String subscriptionId) throws DavException {
+        return subsMgr.poll(subscriptionId, this);
+    }
+
     //--------------------------------------------------------------------------
     /**
      * Initialize the {@link org.apache.jackrabbit.webdav.lock.SupportedLock} property
@@ -237,24 +310,6 @@ abstract class AbstractItemResource extends AbstractResource implements
             // add supportedlock entries for local and eventually for global transaction locks
             supportedLock.addEntry(new TxLockEntry(true));
             supportedLock.addEntry(new TxLockEntry(false));
-        }
-    }
-
-    /**
-     * Define the set of reports supported by this resource.
-     *
-     * @see org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty
-     * @see AbstractResource#initSupportedReports()
-     */
-    protected void initSupportedReports() {
-        if (exists()) {
-            supportedReports = new SupportedReportSetProperty(new ReportType[] {
-                ReportType.EXPAND_PROPERTY,
-                NodeTypesReport.NODETYPES_REPORT,
-                LocateByUuidReport.LOCATE_BY_UUID_REPORT,
-                RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT,
-                RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT
-            });
         }
     }
 
@@ -285,7 +340,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                 // should not get here
                 log.error("Error while accessing jcr properties: " + e.getMessage());
             }
-            
+
             // transaction resource additional protected properties
             if (item.isNew()) {
                 properties.add(new DefaultDavProperty(JCR_ISNEW, null, true));
@@ -293,6 +348,10 @@ abstract class AbstractItemResource extends AbstractResource implements
                 properties.add(new DefaultDavProperty(JCR_ISMODIFIED, null, true));
             }
         }
+
+        // observation resource
+        SubscriptionDiscovery subsDiscovery = subsMgr.getSubscriptionDiscovery(this);
+        properties.add(subsDiscovery);
 
         // TODO complete set of properties defined by RFC 3744
         Privilege[] allPrivs = new Privilege[] {PRIVILEGE_JCR_READ,
@@ -325,12 +384,13 @@ abstract class AbstractItemResource extends AbstractResource implements
      */
     protected String getWorkspaceHref() {
         String workspaceHref = null;
-	DavResourceLocator locator = getLocator();
-        if (locator != null && locator.getWorkspaceName() != null) {
-            DavResourceLocator wspLocator = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), ItemResourceConstants.ROOT_ITEM_PATH);
+        DavResourceLocator locator = getLocator();
+        if (locator != null && locator.getWorkspacePath() != null) {
+            String wspPath = locator.getWorkspacePath();
+            DavResourceLocator wspLocator = locator.getFactory().createResourceLocator(locator.getPrefix(), wspPath, wspPath);
             workspaceHref = wspLocator.getHref(true);
         }
-	log.info(workspaceHref);
+        log.debug(workspaceHref);
         return workspaceHref;
     }
 

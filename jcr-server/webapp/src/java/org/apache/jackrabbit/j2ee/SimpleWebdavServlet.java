@@ -25,10 +25,10 @@ import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
-import org.apache.jackrabbit.webdav.jcr.DavLocatorFactoryImpl;
 import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
 import org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl;
+import org.apache.jackrabbit.webdav.simple.LocatorFactoryImplEx;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
 import org.apache.jackrabbit.webdav.simple.ResourceFactoryImpl;
 import org.slf4j.Logger;
@@ -204,7 +204,7 @@ public class SimpleWebdavServlet extends AbstractWebdavServlet {
      */
     public DavLocatorFactory getLocatorFactory() {
         if (locatorFactory == null) {
-            locatorFactory = new DavLocatorFactoryImpl(resourcePathPrefix);
+            locatorFactory = new LocatorFactoryImplEx(resourcePathPrefix);
         }
         return locatorFactory;
     }

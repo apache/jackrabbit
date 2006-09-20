@@ -58,6 +58,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Date;
 
 /**
  * <code>DefaultItemResource</code> represents JCR property item.
@@ -88,6 +89,16 @@ public class DefaultItemResource extends AbstractItemResource {
      */
     public boolean isCollection() {
         return false;
+    }
+
+    /**
+     * Always returns 'now'
+     *
+     * @return
+     * @see DavResource#getModificationTime() 
+     */
+    public long getModificationTime() {
+        return new Date().getTime();
     }
 
     /**
@@ -297,7 +308,7 @@ public class DefaultItemResource extends AbstractItemResource {
                     contentType = "text/xml";
                 }
                 properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, contentType));
-                
+
 
                 // add jcr-specific resource properties
                 properties.add(new DefaultDavProperty(JCR_TYPE, PropertyType.nameFromValue(type)));

@@ -88,8 +88,13 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
 
         DavResource resource;
         if (locator.isRootLocation()) {
+            // root
             resource = new RootCollection(locator, session, this);
+        } else if (locator.getResourcePath().equals(locator.getWorkspacePath())) {
+            // workspace resource
+            resource = new WorkspaceResourceImpl(locator, session, this);
         } else {
+            // resource corresponds to a repository item
             try {
                 resource = createResourceForItem(locator, session);
 
@@ -116,13 +121,17 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
                     resource = new DefaultItemResource(locator, session, this, null);
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to build resource from item '"+ locator.getResourcePath() + "'");
+                log.error("Failed to build resource from item '"+ locator.getRepositoryPath() + "'");
                 throw new JcrDavException(e);
             }
         }
 
-        ((TransactionResource)resource).init(txMgr, ((TransactionDavServletRequest)request).getTransactionId());
-        ((ObservationResource)resource).init(subsMgr);
+        if (request instanceof TransactionDavServletRequest && resource instanceof TransactionResource) {
+            ((TransactionResource)resource).init(txMgr, ((TransactionDavServletRequest)request).getTransactionId());
+        }
+        if (resource instanceof ObservationResource) {
+            ((ObservationResource)resource).init(subsMgr);
+        }
         return resource;
     }
 
@@ -139,14 +148,17 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
     public DavResource createResource(DavResourceLocator locator, DavSession session) throws DavException {
         JcrDavSession.checkImplementation(session);
         JcrDavSession sessionImpl = (JcrDavSession)session;
+
         DavResource resource;
-        try {
-            resource = createResourceForItem(locator, sessionImpl);
-        } catch (RepositoryException e) {
-            log.info("Creating resource for non-existing repository item ...");
-            if (locator.isRootLocation()) {
-                resource =  new RootCollection(locator, sessionImpl, this);
-            } else {
+        if (locator.isRootLocation()) {
+            resource =  new RootCollection(locator, sessionImpl, this);
+        } else if (locator.getResourcePath().equals(locator.getWorkspacePath())) {
+            resource = new WorkspaceResourceImpl(locator, sessionImpl, this);
+        } else {
+            try {
+                resource = createResourceForItem(locator, sessionImpl);
+            } catch (RepositoryException e) {
+                log.debug("Creating resource for non-existing repository item: " + locator.getRepositoryPath());
                 // todo: is this correct?
                 resource = new VersionControlledItemCollection(locator, sessionImpl, this, null);
             }
@@ -154,7 +166,9 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
 
         // todo: currently transactionId is set manually after creation > to be improved.
         resource.addLockManager(txMgr);
-        ((ObservationResource)resource).init(subsMgr);
+        if (resource instanceof ObservationResource) {
+            ((ObservationResource)resource).init(subsMgr);
+        }
         return resource;
     }
 
@@ -178,9 +192,7 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
                 resource = new VersionItemCollection(locator, sessionImpl, this, item);
             } else if (item instanceof VersionHistory) {
                 resource = new VersionHistoryItemCollection(locator, sessionImpl, this, item);
-            } else if (ItemResourceConstants.ROOT_ITEM_PATH.equals(item.getPath())) {
-                resource =  new RootItemCollection(locator, sessionImpl, this, item);
-            }  else{
+            } else{
                 resource = new VersionControlledItemCollection(locator, sessionImpl, this, item);
             }
         } else {

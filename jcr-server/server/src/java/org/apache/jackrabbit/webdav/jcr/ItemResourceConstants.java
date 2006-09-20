@@ -32,12 +32,7 @@ import javax.jcr.PropertyType;
  * representing repository items.
  */
 public interface ItemResourceConstants {
-
-    /**
-     * Complience classes common to all item resources.
-     */
-    public static final String COMPLIANCE_CLASS = DavResource.COMPLIANCE_CLASS + ", " +ObservationResource.COMPLIANCE_CLASS + ", " + DeltaVResource.COMPLIANCE_CLASS;
-
+    
     /**
      * Methods common to all item resources.
      */
@@ -47,6 +42,10 @@ public interface ItemResourceConstants {
      * The resource path of the root-item-resource.
      */
     public static final String ROOT_ITEM_PATH = "/";
+    /**
+     * Placeholder resource path for the JCR root node.
+     */
+    public static final String ROOT_ITEM_RESOURCEPATH = "/jcr:root";
 
     /**
      * The version storage item resource path.
