@@ -19,9 +19,14 @@ package org.apache.jackrabbit.jcr2spi.state;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
 import java.util.Collection;
 import java.util.Set;
 
@@ -316,6 +321,79 @@ public abstract class ItemState implements ItemStateListener {
      * @return the identifier of this item state..
      */
     public abstract ItemId getId();
+
+    /**
+     * Returns the qualified path of this item state.
+     *
+     * @return qualified path
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    public Path getQPath() throws ItemNotFoundException, RepositoryException {
+        // shortcut for root state
+        if (getParent() == null) {
+            return Path.ROOT;
+        }
+
+        // build path otherwise
+        try {
+            Path.PathBuilder builder = new Path.PathBuilder();
+            buildPath(builder, this);
+            return builder.getPath();
+        } catch (NoSuchItemStateException e) {
+            String msg = "Failed to build path of " + this;
+            log.debug(msg);
+            throw new ItemNotFoundException(msg, e);
+        } catch (ItemStateException e) {
+            String msg = "Failed to build path of " + this;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        } catch (MalformedPathException e) {
+            String msg = "Failed to build path of " + this;
+            throw new RepositoryException(msg, e);
+        }
+    }
+
+    /**
+     * Adds the path element of an item id to the path currently being built.
+     * On exit, <code>builder</code> contains the path of <code>state</code>.
+     *
+     * @param builder builder currently being used
+     * @param state   item to find path of
+     */
+    private void buildPath(Path.PathBuilder builder, ItemState state)
+            throws ItemStateException, RepositoryException {
+        NodeState parentState = state.getParent();
+        // shortcut for root state
+        if (parentState == null) {
+            builder.addRoot();
+            return;
+        }
+
+        // recursively build path of parent
+        buildPath(builder, parentState);
+
+        if (state.isNode()) {
+            NodeState nodeState = (NodeState) state;
+            ChildNodeEntry entry = parentState.getChildNodeEntry(nodeState);
+            if (entry == null) {
+                String msg = "Failed to build path of " + state + ": parent has no such child entry.";
+                log.debug(msg);
+                throw new ItemNotFoundException(msg);
+            }
+            // add to path
+            if (entry.getIndex() == Path.INDEX_DEFAULT) {
+                builder.addLast(entry.getName());
+            } else {
+                builder.addLast(entry.getName(), entry.getIndex());
+            }
+        } else {
+            PropertyState propState = (PropertyState) state;
+            QName name = propState.getQName();
+            // add to path
+            builder.addLast(name);
+        }
+    }
 
     /**
      * Returns <code>true</code> if this item state represents new or modified

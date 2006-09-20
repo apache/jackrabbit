@@ -21,7 +21,6 @@ import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.slf4j.LoggerFactory;
@@ -257,10 +256,10 @@ public class ItemStateValidator {
      *
      * @param itemState
      * @return JCR path
-     * @see LogUtil#safeGetJCRPath(ItemState, NamespaceResolver, HierarchyManager)
+     * @see LogUtil#safeGetJCRPath(ItemState,NamespaceResolver)
      */
     private String safeGetJCRPath(ItemState itemState) {
-        return LogUtil.safeGetJCRPath(itemState, mgrProvider.getNamespaceResolver(), mgrProvider.getHierarchyManager());
+        return LogUtil.safeGetJCRPath(itemState, mgrProvider.getNamespaceResolver());
     }
 
     /**

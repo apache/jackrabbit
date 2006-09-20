@@ -63,6 +63,18 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
     }
 
     /**
+     * @inheritDoc
+     * @see ItemStateFactory#createRootState(ItemStateManager)
+     */
+    public NodeState createRootState(ItemStateManager ism) throws ItemStateException {
+        try {
+            return createNodeState(service.getRootId(sessionInfo), ism);
+        } catch (RepositoryException e) {
+            throw new ItemStateException("Internal error while building root state.");
+        }
+    }
+
+    /**
      * Creates the node with information retrieved from the
      * <code>RepositoryService</code>.
      *

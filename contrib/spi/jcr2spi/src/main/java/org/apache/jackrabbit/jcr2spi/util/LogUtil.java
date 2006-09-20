@@ -24,7 +24,6 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.spi.ItemId;
 
@@ -61,13 +60,12 @@ public class LogUtil {
      *
      * @param itemState
      * @param nsResolver
-     * @param hierManager
      * @return JCR path
      */
-    public static String safeGetJCRPath(ItemState itemState, NamespaceResolver nsResolver,
-                                 HierarchyManager hierManager) {
+    public static String safeGetJCRPath(ItemState itemState, NamespaceResolver nsResolver
+    ) {
         try {
-            return safeGetJCRPath(hierManager.getQPath(itemState), nsResolver);
+            return safeGetJCRPath(itemState.getQPath(), nsResolver);
         } catch (RepositoryException e) {
             ItemId id = itemState.getId();
             log.error("failed to convert " + id + " to JCR path.");

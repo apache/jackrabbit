@@ -94,7 +94,7 @@ public class TransientItemStateManager extends CachingItemStateManager
      */
     public NodeState getRootState() throws ItemStateException {
         if (rootNodeState == null) {
-            rootNodeState = isf.createNodeState(parent.getRootState().getNodeId(), this);
+            rootNodeState = isf.createRootState(this);
             rootNodeState.addListener(this);
         }
         return rootNodeState;
@@ -433,6 +433,19 @@ public class TransientItemStateManager extends CachingItemStateManager
             // notify listener that a property state has been created
             listener.statusChanged(propState, ItemState.STATUS_NEW);
             return propState;
+        }
+
+        /**
+         * @inheritDoc
+         * @see ItemStateFactory#createRootState(ItemStateManager)
+         */
+        public NodeState createRootState(ItemStateManager ism) throws ItemStateException {
+            // retrieve state to overlay
+            NodeState overlayedState = (NodeState) parent.getRootState();
+            NodeState nodeState = new NodeState(overlayedState, null,
+                    ItemState.STATUS_EXISTING, this, idFactory);
+            nodeState.addListener(listener);
+            return nodeState;
         }
 
         /**
