@@ -56,8 +56,8 @@ public class LocateByHistoryReport implements Report, DeltaVConstants {
     private DavResource resource;
 
     /**
-     *
-     * @return
+     * Returns {@link ReportType#LOCATE_BY_HISTORY}.
+     * 
      * @see Report#getType()
      */
     public ReportType getType() {
