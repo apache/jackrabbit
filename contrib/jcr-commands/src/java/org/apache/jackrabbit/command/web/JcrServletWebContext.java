@@ -77,8 +77,8 @@ public class JcrServletWebContext extends ServletWebContext {
 		}
 
 		// lookup in the underlying map
-		if (super.get(key)!=null) {
-			return super.get(key) ;
+		if (super.get(key) != null) {
+			return super.get(key);
 		}
 
 		// lookup in request parameters
@@ -88,22 +88,21 @@ public class JcrServletWebContext extends ServletWebContext {
 		}
 
 		// lookup in request attributes
-		if (key instanceof String && this.getRequestScope().get(key) != null) {
+		if (this.getRequestScope().get(key) != null) {
 			return this.getRequestScope().get(key);
 		}
 
 		// lookup in session attributes
-		if (key instanceof String && this.getSessionScope().get(key) != null) {
+		if (this.getSessionScope().get(key) != null) {
 			return this.getSessionScope().get(key);
 		}
 
 		// lookup in application attributes
-		if (key instanceof String
-				&& this.getApplicationScope().get(key) != null) {
-			return this.getSessionScope().get(key);
+		if (this.getApplicationScope().get(key) != null) {
+			return this.getApplicationScope().get(key);
 		}
-		
-		return null ;
+
+		return null;
 
 	}
 }
