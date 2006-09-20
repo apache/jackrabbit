@@ -40,6 +40,14 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * <li>DAV:activity-set (activity)</li>
  * <li>all DeltaV-compliant resource properties.</li>
  * </ul>
+ *
+ * If the 'Version-Controlled-Collection Feature' is supported (see section 14
+ * of RFC 3253) the following protected property is defined for a version
+ * resource associated with a version-controlled collection.
+ * <ul>
+ * <li>DAV:version-controlled-binding-set</li>
+ * </ul>
+ *
  * <p/>
  * In addition a version resource must support the following METHODS:
  * <ul>
@@ -140,6 +148,43 @@ public interface VersionResource extends DeltaVResource {
      * has a successor.
      */
     public static final DavPropertyName CHECKIN_FORK = DavPropertyName.create("checkin-fork", DeltaVConstants.NAMESPACE);
+
+    /**
+     * DAV:activity-set is a required property for a version resource, if the
+     * server supports the activity feature.<br>
+     * It identifies the activities that determine to which logical changes this
+     * version contributes, and on which lines of descent this version appears.
+     * A server MAY restrict the DAV:activity-set to identify a single activity.
+     * A server MAY refuse to allow the value of the DAV:activity-set property
+     * of a version to be modified.
+     * <p/>
+     * The property is defined to have the following format:
+     * <pre>
+     * &lt;!ELEMENT activity-set (href*)&gt;
+     * </pre>
+     * Note that the DAV:activity-set represents a
+     * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}
+     */
+    public static final DavPropertyName ACTIVITY_SET = DavPropertyName.create("activity-set", DeltaVConstants.NAMESPACE);
+
+    /**
+     * If the 'Version-Controlled-Collection Feature' is supported the
+     * DAV:version-controlled-binding-set property identifies the name and the
+     * version history of all version-controlled internal members of the
+     * collection this version resource belongs to.
+     * <p/>
+     * This property is defined to have the following format:
+     * <pre>
+     * &lt;!ELEMENT version-controlled-binding-set (version-controlled-binding*)&gt;
+     * &lt;!ELEMENT version-controlled-binding (binding-name, version-history)&gt;
+     * &lt;!ELEMENT binding-name (#PCDATA)&gt;
+     * PCDATA value: URL segment
+     * &lt;!ELEMENT version-history (href)&gt;
+     * </pre>
+     *
+     * @see VersionControlledResource#ECLIPSED_SET
+     */
+    public static final DavPropertyName VERSION_CONTROLLED_BINDING_SET = DavPropertyName.create("version-controlled-binding-set", DeltaVConstants.NAMESPACE);
 
     /**
      * Modify the labels of this version resource. The modifications (SET, ADD or
