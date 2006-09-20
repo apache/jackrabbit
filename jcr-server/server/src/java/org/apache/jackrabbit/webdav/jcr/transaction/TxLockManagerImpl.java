@@ -532,7 +532,7 @@ public class TxLockManagerImpl implements TxLockManager {
         public void start(TransactionResource resource) throws DavException {
             try {
                 // make sure, the given resource represents an existing repository item
-                if (!getRepositorySession(resource).itemExists(getResourcePath())) {
+                if (!getRepositorySession(resource).itemExists(resource.getLocator().getRepositoryPath())) {
                     throw new DavException(DavServletResponse.SC_CONFLICT, "Unable to start local transaction: no repository item present at " + getResourcePath());
                 }
             } catch (RepositoryException e) {
