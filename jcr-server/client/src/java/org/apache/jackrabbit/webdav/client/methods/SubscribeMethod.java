@@ -90,9 +90,7 @@ public class SubscribeMethod extends DavMethodBase implements ObservationConstan
         }
         // always set depth header since value is boolean flag
         setRequestHeader(new DepthHeader(subscriptionInfo.isDeep()));
-
-        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
-       	setRequestBody(subscriptionInfo);
+        setRequestBody(subscriptionInfo);
     }
 
     public SubscriptionDiscovery getResponseAsSubscriptionDiscovery() throws IOException, DavException {
