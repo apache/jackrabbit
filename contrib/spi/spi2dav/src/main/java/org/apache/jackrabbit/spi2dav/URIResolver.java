@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.name.Path;
@@ -26,24 +24,13 @@ import org.apache.jackrabbit.spi.SessionInfo;
 import javax.jcr.RepositoryException;
 
 /**
- * <code>URIResolver</code> used to build HTTP compliant request URIs from
- * a given ItemId.
- * This includes:
- * <ul>
- * <li>converting qualified names consisting of {uri}localName to URI compliant jcr names</li>
- * <li>adding trailing base (repository) uri and workspace name in order to form the proper url</li>
- * </ul>
+ * <code>URIResolver</code> used to build ItemIds from URIs.
  */
-// todo: namespace resolver needed for the remapping. potential consistency problems with NamespaceRegistryImpl in jcr2spi layer?
-interface URIResolver extends NamespaceResolver {
+interface URIResolver {
 
     Path getQPath(String uri, SessionInfo sessionInfo) throws RepositoryException;
 
-    NodeId getNodeId(NodeId parentId, MultiStatusResponse response) throws RepositoryException;
-
     NodeId getNodeId(String uri, SessionInfo sessionInfo) throws RepositoryException;
-
-    PropertyId getPropertyId(NodeId parentId, MultiStatusResponse response) throws RepositoryException;
 
     PropertyId getPropertyId(String uri, SessionInfo sessionInfo) throws RepositoryException;
 }

@@ -16,22 +16,20 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.HrefProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -49,6 +47,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private static Logger log = LoggerFactory.getLogger(NodeInfoImpl.class);
 
     private final NodeId id;
+    private final QName qName;
 
     private QName primaryNodeTypeName = null;
     private QName[] mixinNodeTypeNames = new QName[0];
@@ -57,17 +56,43 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private final List nodeIds = new ArrayList();
     private final List propertyIds = new ArrayList();
 
-    public NodeInfoImpl(MultiStatusResponse response, List childItemResponses, URIResolver uriResolver, SessionInfo sessionInfo) throws RepositoryException, DavException {
-        super(response, uriResolver, sessionInfo);
+    public NodeInfoImpl(NodeId id, NodeId parentId, DavPropertySet propSet,
+                        NamespaceResolver nsResolver) throws RepositoryException {
+        super(parentId);
 
-        id = uriResolver.getNodeId(getParentId(), response);
-        DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
+        // set id
+        this.id = id;
+
+        // retrieve name
+        if (id.getRelativePath() == null) {
+            DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
+            if (nameProp != null && nameProp.getValue() != null) {
+                // not root node
+                // jcrName is transported from jackrabbit-webdav -> convert
+                // note, that unescaping is not required.
+                String jcrName = nameProp.getValue().toString();
+                try {
+                    qName = NameFormat.parse(jcrName, nsResolver);
+                } catch (NameException e) {
+                    throw new RepositoryException("Unable to build ItemInfo object, invalid name found: " + jcrName);
+                }
+            } else {
+                // root
+                qName = QName.ROOT;
+            }
+        } else {
+            Path.PathElement el = id.getRelativePath().getNameElement();
+            qName = (Path.CURRENT_ELEMENT == el) ? QName.ROOT : el.getName();
+        }
+
+
+        // retrieve properties
         try {
             if (propSet.contains(ItemResourceConstants.JCR_PRIMARYNODETYPE)) {
                 Iterator it = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_PRIMARYNODETYPE)).getNodeTypeNames().iterator();
                 if (it.hasNext()) {
                     String jcrName = it.next().toString();
-                    primaryNodeTypeName = NameFormat.parse(jcrName, uriResolver);
+                    primaryNodeTypeName = NameFormat.parse(jcrName, nsResolver);
                 } else {
                     throw new RepositoryException("Missing primary nodetype for node " + id + ".");
                 }
@@ -81,45 +106,25 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                 int i = 0;
                 while(it.hasNext()) {
                     String jcrName = it.next().toString();
-                    mixinNodeTypeNames[i] = NameFormat.parse(jcrName, uriResolver);
+                    mixinNodeTypeNames[i] = NameFormat.parse(jcrName, nsResolver);
                     i++;
                 }
             }
         } catch (NameException e) {
             throw new RepositoryException("Error while resolving nodetype names: " + e.getMessage());
         }
-
-        if (propSet.contains(ItemResourceConstants.JCR_REFERENCES)) {
-            HrefProperty refProp = new HrefProperty(propSet.get(ItemResourceConstants.JCR_REFERENCES));
-            Iterator hrefIter = refProp.getHrefs().iterator();
-            while(hrefIter.hasNext()) {
-                String propertyHref = hrefIter.next().toString();
-                PropertyId propertyId = uriResolver.getPropertyId(propertyHref, sessionInfo);
-                references.add(propertyId);
-            }
-        }
-
-        // build the child-item entries
-        Iterator it = childItemResponses.iterator();
-        while (it.hasNext()) {
-            MultiStatusResponse resp = (MultiStatusResponse)it.next();
-            DavPropertySet childProps = resp.getProperties(DavServletResponse.SC_OK);
-            if (childProps.contains(DavPropertyName.RESOURCETYPE) &&
-                childProps.get(DavPropertyName.RESOURCETYPE).getValue() != null) {
-                // any other resource type than default (empty) is represented by a node item
-                NodeId childId = uriResolver.getNodeId(id, resp);
-                nodeIds.add(childId);
-            } else {
-                PropertyId propertyId = uriResolver.getPropertyId(id, resp);
-                propertyIds.add(propertyId);
-            }
-        }
     }
 
+    //-----------------------------------------------------------< ItemInfo >---
     public boolean denotesNode() {
         return true;
     }
 
+    public QName getQName() {
+        return qName;
+    }
+
+    //-----------------------------------------------------------< NodeInfo >---
     public NodeId getId() {
         return id;
     }
@@ -142,5 +147,18 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
 
     public IdIterator getPropertyIds() {
         return new IteratorHelper(propertyIds);
+    }
+
+    //--------------------------------------------------------------------------
+    void addReference(PropertyId referenceId) {
+        references.add(referenceId);
+    }
+
+    void addChildId(ItemId childId) {
+        if (childId.denotesNode()) {
+           nodeIds.add(childId);
+        } else {
+           propertyIds.add(childId);
+        }
     }
 }
