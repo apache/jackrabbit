@@ -16,17 +16,16 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.value.ValueFormat;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
-import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -51,15 +50,15 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
     private boolean isMultiValued;
     private Object[] values;
 
-    public PropertyInfoImpl(MultiStatusResponse response, URIResolver uriResolver,
-                            NamespaceResolver nsResolver, SessionInfo sessionInfo,
-                            ValueFactory valueFactory)
+    public PropertyInfoImpl(PropertyId id, NodeId parentId, DavPropertySet propSet,
+                            NamespaceResolver nsResolver, ValueFactory valueFactory)
         throws RepositoryException, DavException {
-        super(response, uriResolver, sessionInfo);
 
-        id = uriResolver.getPropertyId(getParentId(), response);
+        super(parentId);
+        // set id
+        this.id = id;
 
-        DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
+        // retrieve properties
         String typeName = propSet.get(ItemResourceConstants.JCR_TYPE).getValue().toString();
         type = PropertyType.valueFromName(typeName);
 
@@ -91,10 +90,16 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
         }
     }
 
+    //-----------------------------------------------------------< ItemInfo >---
     public boolean denotesNode() {
         return false;
     }
 
+    public QName getQName() {
+        return id.getQName();
+    }
+
+    //-------------------------------------------------------< PropertyInfo >---
     public PropertyId getId() {
         return id;
     }

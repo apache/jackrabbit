@@ -16,22 +16,10 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.HrefProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.name.NameException;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.SessionInfo;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-
-import javax.jcr.RepositoryException;
 
 /**
  * <code>ItemInfoImpl</code>...
@@ -40,43 +28,14 @@ abstract class ItemInfoImpl implements ItemInfo {
 
     private static Logger log = LoggerFactory.getLogger(ItemInfoImpl.class);
 
-    private final QName name;
     private final NodeId parentId;
 
-    public ItemInfoImpl(MultiStatusResponse response, URIResolver uriResolver, SessionInfo sessionInfo) throws RepositoryException {
-
-        DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
-        DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
-	if (nameProp != null && nameProp.getValue() != null) {
-            // not root node
-            // TODO: jcrName is transported from jackrabbit-webdav impl
-            String jcrName = nameProp.getValue().toString();
-            try {
-                name = NameFormat.parse(jcrName, uriResolver);
-            } catch (NameException e) {
-                throw new RepositoryException("Unable to build ItemInfo object, invalid name found: " + jcrName);
-            }
-	} else {
-            // root
-            name = QName.ROOT;
-        }
-        // set the parent id unless its the root item
-        if (propSet.contains(ItemResourceConstants.JCR_PARENT)) {
-            HrefProperty parentProp = new HrefProperty(propSet.get(ItemResourceConstants.JCR_PARENT));
-            String parentHref = parentProp.getHrefs().get(0).toString();
-            parentId = uriResolver.getNodeId(parentHref, sessionInfo);
-        } else {
-            parentId = null;
-        }
+    public ItemInfoImpl(NodeId parentId) {
+        // set parentId
+        this.parentId = parentId;
     }
 
     public NodeId getParentId() {
         return parentId;
     }
-
-    public QName getQName() {
-        return name;
-    }
-
-    public abstract boolean denotesNode();
 }

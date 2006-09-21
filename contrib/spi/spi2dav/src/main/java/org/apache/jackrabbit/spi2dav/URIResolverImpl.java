@@ -1,0 +1,356 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.spi2dav;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NameException;
+import org.apache.jackrabbit.name.NoPrefixDeclaredException;
+import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
+import org.apache.jackrabbit.webdav.jcr.version.report.LocateByUuidReport;
+import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
+import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
+import org.apache.jackrabbit.webdav.client.methods.ReportMethod;
+import org.apache.jackrabbit.webdav.client.methods.DavMethod;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
+import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.version.report.ReportInfo;
+import org.apache.jackrabbit.BaseException;
+import org.apache.commons.httpclient.URI;
+import org.w3c.dom.Document;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.ItemNotFoundException;
+import java.io.IOException;
+import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * <code>URIResolverImpl</code>...
+ */
+class URIResolverImpl implements URIResolver {
+
+    private static Logger log = LoggerFactory.getLogger(URIResolverImpl.class);
+
+    private final URI repositoryUri;
+    private final RepositoryServiceImpl service;
+    private final NamespaceResolver nsResolver;
+    private final Document domFactory;
+
+    // TODO: to-be-fixed. uri/id-caches don't get updated
+    // for each workspace a separate idUri-cache is created
+    private final Map idURICaches = new HashMap();
+
+    URIResolverImpl(URI repositoryUri, RepositoryServiceImpl service,
+                    NamespaceResolver nsResolver, Document domFactory) {
+        this.repositoryUri = repositoryUri;
+        this.service = service;
+        this.nsResolver = nsResolver;
+        this.domFactory = domFactory;
+    }
+
+    private static void initMethod(DavMethod method, SessionInfo sessionInfo) {
+        if (sessionInfo instanceof SessionInfoImpl) {
+            String txId = ((SessionInfoImpl) sessionInfo).getBatchId();
+            if (txId != null) {
+                CodedUrlHeader ch = new CodedUrlHeader(TransactionConstants.HEADER_TRANSACTIONID, txId);
+                method.setRequestHeader(ch.getHeaderName(), ch.getHeaderValue());
+            }
+        }
+    }
+
+    private IdURICache getCache(String workspaceName) {
+        if (idURICaches.containsKey(workspaceName)) {
+            return (IdURICache) idURICaches.get(workspaceName);
+        } else {
+            IdURICache c = new IdURICache(getWorkspaceUri(workspaceName));
+            idURICaches.put(workspaceName, c);
+            return c;
+        }
+    }
+
+    String getRepositoryUri() {
+        return repositoryUri.getEscapedURI();
+    }
+
+    String getWorkspaceUri(String workspaceName) {
+        String workspaceUri = getRepositoryUri();
+        if (workspaceName != null) {
+            workspaceUri += Text.escape(workspaceName);
+        }
+        return workspaceUri;
+    }
+
+    String getRootItemUri(String workspaceName) {
+        return getWorkspaceUri(workspaceName) + Text.escapePath(ItemResourceConstants.ROOT_ITEM_RESOURCEPATH) + "/";
+    }
+
+    String getItemUri(ItemId itemId, String workspaceName,
+                      SessionInfo sessionInfo) throws RepositoryException {
+        IdURICache cache = getCache(workspaceName);
+        // check if uri is available from cache
+        if (cache.containsItemId(itemId)) {
+            return cache.getUri(itemId);
+        } else {
+            StringBuffer uriBuffer = new StringBuffer();
+
+            Path relativePath = itemId.getRelativePath();
+            String uuid = itemId.getUUID();
+
+            // resolver uuid part
+            if (uuid != null) {
+                ItemId uuidId = (relativePath == null) ? itemId : service.getIdFactory().createNodeId(uuid);
+                if (relativePath != null & cache.containsItemId(uuidId)) {
+                    // append uri of parent node, that is already cached
+                    uriBuffer.append(cache.getUri(uuidId));
+                } else {
+                    // request locate-by-uuid report to build the uri
+                    ReportInfo rInfo = new ReportInfo(LocateByUuidReport.LOCATE_BY_UUID_REPORT);
+                    rInfo.setContentElement(DomUtil.hrefToXml(uuid, domFactory));
+                    try {
+                        String wspUri = getWorkspaceUri(workspaceName);
+                        ReportMethod rm = new ReportMethod(wspUri, rInfo);
+                        initMethod(rm, sessionInfo);
+
+                        service.getClient(sessionInfo).executeMethod(rm);
+
+                        MultiStatus ms = rm.getResponseBodyAsMultiStatus();
+                        if (ms.getResponses().length == 1) {
+                            uriBuffer.append(ms.getResponses()[0].getHref());
+                            cache.add(ms.getResponses()[0].getHref(), uuidId);
+                        } else {
+                            throw new RepositoryException("Cannot identify item with uuid " + uuid);
+                        }
+
+                    } catch (IOException e) {
+                        throw new RepositoryException(e.getMessage());
+                    } catch (DavException e) {
+                        throw ExceptionConverter.generate(e);
+                    }
+                }
+            } else {
+                // start build uri from root-item
+                uriBuffer.append(getRootItemUri(workspaceName));
+            }
+            // resolve relative-path part unless it denotes the root-item
+            if (relativePath != null && !relativePath.denotesRoot()) {
+                try {
+                    String jcrPath = PathFormat.format(relativePath, nsResolver);
+                    // TODO: TOBEFIXED rootId is currently build from absolute path and not
+                    // from '.' as description in RS.getRootId defines. similarly
+                    // the PathResolver does not accept a non-normalized root-path.
+                    if (relativePath.isAbsolute()) {
+                        jcrPath = jcrPath.substring(1);
+                    }
+                    uriBuffer.append(Text.escapePath(jcrPath));
+                } catch (NoPrefixDeclaredException e) {
+                    throw new RepositoryException(e);
+                }
+            }
+            // add training / for nodes
+            if (itemId.denotesNode() && uriBuffer.charAt(uriBuffer.length()-1) != '/') {
+                uriBuffer.append('/');
+            }
+
+            String itemUri = uriBuffer.toString();
+            if (!cache.containsItemId(itemId)) {
+                cache.add(itemUri, itemId);
+            }
+            return itemUri;
+        }
+    }
+
+    NodeId buildNodeId(NodeId parentId, MultiStatusResponse response,
+                       String workspaceName) throws RepositoryException {
+        IdURICache cache = getCache(workspaceName);
+        if (cache.containsUri(response.getHref())) {
+            return (NodeId) cache.getItemId(response.getHref());
+        }
+
+        NodeId nodeId;
+        DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
+
+        if (propSet.contains(ItemResourceConstants.JCR_UUID)) {
+            String uuid = propSet.get(ItemResourceConstants.JCR_UUID).getValue().toString();
+            nodeId = service.getIdFactory().createNodeId(uuid);
+        } else {
+            DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
+            if (nameProp != null && nameProp.getValue() != null) {
+                // not root node. Note that 'unespacing' is not required since
+                // the jcr:name property does not provide the value in escaped form.
+                String jcrName = nameProp.getValue().toString();
+                int index = Path.INDEX_UNDEFINED;
+                DavProperty indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
+                if (indexProp != null && indexProp.getValue() != null) {
+                    index = Integer.parseInt(indexProp.getValue().toString());
+                }
+                try {
+                    QName qName = NameFormat.parse(jcrName, nsResolver);
+                    nodeId = service.getIdFactory().createNodeId(parentId, Path.create(qName, index));
+                } catch (NameException e) {
+                    throw new RepositoryException(e);
+                }
+            } else {
+                // TODO: TO_BE_FIXED.... special case: root node
+                return service.getIdFactory().createNodeId((String) null, Path.ROOT);
+            }
+        }
+
+        // cache
+        cache.add(response.getHref(), nodeId);
+        return nodeId;
+    }
+
+    PropertyId buildPropertyId(NodeId parentId, MultiStatusResponse response,
+                               String workspaceName) throws RepositoryException {
+        IdURICache cache = getCache(workspaceName);
+        if (cache.containsUri(response.getHref())) {
+            return (PropertyId) cache.getItemId(response.getHref());
+        } else {
+            try {
+                DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
+                QName name = NameFormat.parse(propSet.get(ItemResourceConstants.JCR_NAME).getValue().toString(), nsResolver);
+                PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, name);
+
+                cache.add(response.getHref(), propertyId);
+                return propertyId;
+            } catch (BaseException e) {
+                throw new RepositoryException(e);
+            }
+        }
+    }
+
+    //-------------------------------------------------------< URI resolver >---
+    /**
+     * @inheritDoc
+     */
+    public Path getQPath(String uri, SessionInfo sessionInfo) throws RepositoryException {
+        String repoUri = getRepositoryUri();
+        String wspUri = getWorkspaceUri(sessionInfo.getWorkspaceName());
+        String jcrPath;
+        if (uri.startsWith(wspUri)) {
+            jcrPath = uri.substring(wspUri.length());
+        } else if (uri.startsWith(repoUri)) {
+            jcrPath = uri.substring(repoUri.length());
+            // then cut workspace name
+            jcrPath = jcrPath.substring(jcrPath.indexOf('/', 1));
+        } else {
+            // todo: probably rather an error?
+            jcrPath = uri;
+        }
+        try {
+            return PathFormat.parse(jcrPath, nsResolver);
+        } catch (MalformedPathException e) {
+            throw new RepositoryException();
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public NodeId getNodeId(String uri, SessionInfo sessionInfo) throws RepositoryException {
+        IdURICache cache = getCache(sessionInfo.getWorkspaceName());
+        if (cache.containsUri(uri)) {
+            // id has been accessed before and is cached
+            return (NodeId) cache.getItemId(uri);
+        } else {
+            // retrieve parentId from cache or by recursive calls
+            NodeId parentId;
+            if (uri.equals(getRootItemUri(sessionInfo.getWorkspaceName()))) {
+                parentId = null;
+            } else {
+                String parentUri = Text.getRelativeParent(uri, 1, true);
+                if (!parentUri.endsWith("/")) {
+                    parentUri += "/";
+                }
+                parentId = getNodeId(parentUri, sessionInfo);
+            }
+
+            DavPropertyNameSet nameSet = new DavPropertyNameSet();
+            nameSet.add(ItemResourceConstants.JCR_UUID);
+            nameSet.add(ItemResourceConstants.JCR_NAME);
+            nameSet.add(ItemResourceConstants.JCR_INDEX);
+            DavMethodBase method = null;
+            try {
+                method = new PropFindMethod(uri, nameSet, DavConstants.DEPTH_0);
+                initMethod(method, sessionInfo);
+
+                service.getClient(sessionInfo).executeMethod(method);
+                MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+                if (responses.length != 1) {
+                    throw new ItemNotFoundException("Unable to retrieve the node with id " + uri);
+                }
+                return buildNodeId(parentId, responses[0], sessionInfo.getWorkspaceName());
+
+            } catch (IOException e) {
+                throw new RepositoryException(e);
+            } catch (DavException e) {
+                throw ExceptionConverter.generate(e);
+            } finally {
+                if (method != null) {
+                    method.releaseConnection();
+                }
+            }
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public PropertyId getPropertyId(String uri, SessionInfo sessionInfo) throws RepositoryException {
+        IdURICache cache = getCache(sessionInfo.getWorkspaceName());
+        if (cache.containsUri(uri)) {
+            return (PropertyId) cache.getItemId(uri);
+        } else {
+            // separate parent uri and property JCRName
+            String parentUri = Text.getRelativeParent(uri, 1, true);
+            // make sure propName is unescaped
+            String propName = Text.unescape(Text.getName(uri, true));
+            // retrieve parent node id
+            NodeId parentId = getNodeId(parentUri, sessionInfo);
+            // build property id
+            try {
+                PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, NameFormat.parse(propName, nsResolver));
+                cache.add(uri, propertyId);
+
+                return propertyId;
+            } catch (NameException e) {
+                throw new RepositoryException(e);
+            }
+        }
+    }
+}
