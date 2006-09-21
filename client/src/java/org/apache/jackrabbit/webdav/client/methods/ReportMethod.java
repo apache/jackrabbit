@@ -41,9 +41,7 @@ public class ReportMethod extends DavMethodBase {
         isDeep = reportInfo.getDepth() > DavConstants.DEPTH_0;
 
 	setRequestHeader(dh);
-
-        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
-       	setRequestBody(reportInfo);
+        setRequestBody(reportInfo);
     }
 
     //---------------------------------------------------------< HttpMethod >---

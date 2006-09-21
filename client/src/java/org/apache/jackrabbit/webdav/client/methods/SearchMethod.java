@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -40,7 +39,6 @@ public class SearchMethod extends DavMethodBase {
     public SearchMethod(String uri, String statement, String language, Namespace languageNamespace) throws IOException {
         super(uri);
         if (language != null && statement != null) {
-            setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");            
             // build the request body
             SearchInfo searchInfo = new SearchInfo(language, languageNamespace, statement);
             setRequestBody(searchInfo);
@@ -49,7 +47,6 @@ public class SearchMethod extends DavMethodBase {
 
     public SearchMethod(String uri, SearchInfo searchInfo) throws IOException {
         super(uri);
-        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
         setRequestBody(searchInfo);
     }
 

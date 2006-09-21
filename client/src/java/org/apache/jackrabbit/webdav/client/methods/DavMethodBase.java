@@ -18,6 +18,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpConnection;
 import org.apache.commons.httpclient.HttpMethodBase;
@@ -183,7 +184,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
         XMLSerializer serializer = new XMLSerializer(out, format);
         serializer.setNamespaces(true);
         serializer.asDOMSerializer().serialize(requestBody);
-        setRequestBody(out.toString());
+        setRequestEntity(new StringRequestEntity(out.toString(), "text/xml", "UTF-8"));
     }
 
     /**
