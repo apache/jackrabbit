@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
@@ -58,8 +57,6 @@ public class PropFindMethod extends DavMethodBase {
         DepthHeader dh = new DepthHeader(depth);
         setRequestHeader(dh.getHeaderName(), dh.getHeaderValue());
 
-        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
-        
         // build the request body
         try {
             // create the document and attach the root element

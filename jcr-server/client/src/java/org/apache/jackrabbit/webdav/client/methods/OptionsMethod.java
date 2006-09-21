@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.version.OptionsInfo;
@@ -52,7 +51,6 @@ public class OptionsMethod extends DavMethodBase {
     public OptionsMethod(String uri, OptionsInfo optionsInfo) throws IOException {
         super(uri);
         if (optionsInfo != null) {
-            setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
             setRequestBody(optionsInfo);
         }
     }

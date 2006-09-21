@@ -77,7 +77,6 @@ public class LockMethod extends DavMethodBase {
             setRequestHeader(th);
             DepthHeader dh = new DepthHeader(lockInfo.isDeep());
             setRequestHeader(dh);
-            setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
             setRequestBody(lockInfo);
             isRefresh = false;
         } else {

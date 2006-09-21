@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.ordering.OrderPatch;
@@ -43,7 +42,6 @@ public class OrderPatchMethod extends DavMethodBase {
      */
     public OrderPatchMethod(String uri, OrderPatch orderPatch) throws IOException {
         super(uri);
-        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
         setRequestBody(orderPatch);
     }
 
@@ -64,7 +62,6 @@ public class OrderPatchMethod extends DavMethodBase {
         String orderPosition = (first) ? OrderingConstants.XML_FIRST : OrderingConstants.XML_LAST;
         Position p = new Position(orderPosition);
         OrderPatch op = new OrderPatch(orderingType, new OrderPatch.Member(memberSegment, p));
-        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
         setRequestBody(op);
     }
 
@@ -86,7 +83,6 @@ public class OrderPatchMethod extends DavMethodBase {
         String orderPosition = (before) ? OrderingConstants.XML_BEFORE : OrderingConstants.XML_AFTER;
         Position p = new Position(orderPosition, targetMemberSegmet);
         OrderPatch op = new OrderPatch(orderingType, new OrderPatch.Member(memberSegment, p));
-        setRequestHeader(DavConstants.HEADER_CONTENT_TYPE, "text/xml; charset=UTF-8");
         setRequestBody(op);
     }
 
