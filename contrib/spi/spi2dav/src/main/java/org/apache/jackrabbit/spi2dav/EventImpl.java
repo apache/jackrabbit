@@ -47,7 +47,8 @@ public class EventImpl implements Event, ObservationConstants {
     private final ItemId itemId;
     private final Path qPath;
 
-    public EventImpl(Element eventElement, URIResolver uriResolver, SessionInfo sessionInfo) throws RepositoryException, DavException {
+    public EventImpl(Element eventElement, URIResolver uriResolver,
+                     SessionInfo sessionInfo) throws RepositoryException, DavException {
         this.eventElement = eventElement;
 
         Element typeEl = DomUtil.getChildElement(eventElement, XML_EVENTTYPE, NAMESPACE);
