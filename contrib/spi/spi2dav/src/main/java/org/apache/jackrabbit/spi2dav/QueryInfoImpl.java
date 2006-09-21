@@ -61,13 +61,11 @@ public class QueryInfoImpl implements QueryInfo {
 
     private final QName[] columnNames;
     private final NamespaceResolver nsResolver;
-    private final ValueFactory valueFactory;
 
     public QueryInfoImpl(MultiStatus ms, SessionInfo sessionInfo, URIResolver uriResolver,
                          NamespaceResolver nsResolver, ValueFactory valueFactory)
         throws RepositoryException {
         this.nsResolver = nsResolver;
-        this.valueFactory = valueFactory;
 
         String responseDescription = ms.getResponseDescription();
         if (responseDescription != null) {
