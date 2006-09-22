@@ -741,6 +741,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 Iterator it = batchImpl.methods();
                 while (it.hasNext()) {
                     DavMethod method = (DavMethod) it.next();
+                    initMethod(method, batchImpl.sessionInfo, true);
+
                     client.executeMethod(method);
                     if (!(success = method.succeeded())) {
                         throw method.getResponseException();
@@ -1463,24 +1465,27 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
+     * @throws UnsupportedRepositoryOperationException
      * @see RepositoryService#registerNodeTypes(SessionInfo, QNodeTypeDefinition[])
      */
     public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodetypeDefs) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO: missing implementation
+        throw new UnsupportedRepositoryOperationException("JSR170 does not defined methods to register nodetypes.");
     }
 
     /**
+     * @throws UnsupportedRepositoryOperationException
      * @see RepositoryService#reregisterNodeTypes(SessionInfo, QNodeTypeDefinition[])
      */
     public void reregisterNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodetypeDefs) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO: missing implementation
+        throw new UnsupportedRepositoryOperationException("JSR170 does not defined methods to reregister nodetypes.");
     }
 
     /**
+     * @throws UnsupportedRepositoryOperationException
      * @see RepositoryService#unregisterNodeTypes(SessionInfo, QName[])
      */
     public void unregisterNodeTypes(SessionInfo sessionInfo, QName[] nodetypeNames) throws NoSuchNodeTypeException, UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO: missing implementation
+        throw new UnsupportedRepositoryOperationException("JSR170 does not defined methods to unregister nodetypes.");
     }
 
     //------------------------------------------------< Inner Class 'Batch' >---
@@ -1580,7 +1585,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             try {
                 String uri = getItemUri(parentId, nodeName, sessionInfo);
                 MkColMethod method = new MkColMethod(uri);
-                initMethod(method, sessionInfo, true);
+
                 // build 'sys-view' for the node to create and append it as request body
                 if (nodetypeName != null || uuid != null) {
                     Document body = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
@@ -1677,7 +1682,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             try {
                 String uri = getItemUri(parentId, propertyName, sessionInfo);
                 PutMethod method = new PutMethod(uri);
-                initMethod(method, sessionInfo, true);
                 method.setRequestBody(vp);
 
                 methods.add(method);
@@ -1791,7 +1795,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             try {
                 String uri = getItemUri(propertyId, sessionInfo);
                 PropPatchMethod method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());
-                initMethod(method, sessionInfo, true);
 
                 methods.add(method);
             } catch (IOException e) {
@@ -1806,7 +1809,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             checkConsumed();
             String uri = getItemUri(itemId, sessionInfo);
             DeleteMethod method = new DeleteMethod(uri);
-            initMethod(method, sessionInfo, true);
 
             methods.add(method);
         }
@@ -1823,7 +1825,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
                 String uri = getItemUri(parentId, sessionInfo);
                 OrderPatchMethod method = new OrderPatchMethod(uri, srcSegment, targetSegment, true);
-                initMethod(method, sessionInfo, true);
 
                 methods.add(method);
             } catch (IOException e) {
@@ -1855,7 +1856,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
                 String uri = getItemUri(nodeId, sessionInfo);
                 PropPatchMethod method = new PropPatchMethod(uri, setProperties, removeProperties);
-                initMethod(method, sessionInfo, true);
 
                 methods.add(method);
             } catch (IOException e) {
@@ -1874,7 +1874,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String uri = getItemUri(srcNodeId, sessionInfo);
             String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
             MoveMethod method = new MoveMethod(uri, destUri, true);
-            initMethod(method, sessionInfo, true);
 
             methods.add(method);
         }
