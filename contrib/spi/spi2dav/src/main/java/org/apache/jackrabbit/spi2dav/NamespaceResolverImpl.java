@@ -27,9 +27,11 @@ import java.util.Properties;
 /**
  * <code>NamespaceResolverImpl</code>...
  */
-public class NamespaceResolverImpl extends AbstractNamespaceResolver {
+class NamespaceResolverImpl extends AbstractNamespaceResolver {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceResolverImpl.class);
+
+    // TODO: TO_BE_FIXED. missing notification and subsequent reloading of namespaces causes this resolver to throw NameException
 
     private Properties prefixToURI = new Properties();
     private Properties uriToPrefix = new Properties();
