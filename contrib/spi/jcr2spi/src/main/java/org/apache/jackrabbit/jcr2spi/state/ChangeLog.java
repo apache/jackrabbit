@@ -177,6 +177,7 @@ public class ChangeLog {
         Set affectedStates = new HashSet();
         affectedStates.addAll(modifiedStates);
         affectedStates.addAll(deletedStates);
+        affectedStates.addAll(addedStates);
         Iterator it = new IteratorChain(modifiedStates(), deletedStates());
         while (it.hasNext()) {
             ItemState transientState = (ItemState) it.next();
