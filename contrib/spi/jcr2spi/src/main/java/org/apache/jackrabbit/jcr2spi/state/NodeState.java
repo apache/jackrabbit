@@ -528,7 +528,9 @@ public class NodeState extends ItemState {
      * @see ItemState#revert(Set)
      */
     public void revert(Set affectedItemStates) {
-        if (overlayedState == null) {
+        // all states except for 'new' ones must have an overlayed state in order
+        // to be 'reverted'.
+        if (status != STATUS_NEW && overlayedState == null) {
             throw new IllegalStateException("revert cannot be called on workspace state");
         }
         // copy to new list, when a property is reverted it may call this node
