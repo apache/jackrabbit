@@ -457,6 +457,7 @@ public abstract class ItemState implements ItemStateListener {
             case STATUS_EXISTING_MODIFIED:
             case STATUS_STALE_MODIFIED:
             case STATUS_STALE_DESTROYED:
+            case STATUS_REMOVED:
                 status = newStatus;
                 break;
             default:
