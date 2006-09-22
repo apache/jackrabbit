@@ -416,7 +416,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         session.checkIsAlive();
         // check status of this item for read operation
         if (state == null || !state.isValid()) {
-            throw new InvalidItemStateException("Item '" + getPath() + "' doesn't exist anymore");
+            throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
         }
     }
 
