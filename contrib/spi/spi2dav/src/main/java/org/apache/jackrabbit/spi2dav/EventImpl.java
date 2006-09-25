@@ -56,8 +56,7 @@ public class EventImpl implements Event, ObservationConstants {
         if (et.length == 0 || et.length > 1) {
             throw new IllegalArgumentException("Ambigous event type definition: expected one single eventtype.");
         }
-        // TODO: server sends JCR-event types. we expect spi-types
-        type = SubscriptionImpl.getJcrEventType(et[0]);
+        type = getSpiEventType(SubscriptionImpl.getJcrEventType(et[0]));
 
         String href = DomUtil.getChildTextTrim(eventElement, DavConstants.XML_HREF, DavConstants.NAMESPACE);
         if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
@@ -86,8 +85,7 @@ public class EventImpl implements Event, ObservationConstants {
     }
 
     public String getUUID() {
-        // TODO not available from XML_EVENT element
-        return null;
+        return itemId.getUUID();
     }
 
     public QName getPrimaryNodeTypeName() {
@@ -102,5 +100,23 @@ public class EventImpl implements Event, ObservationConstants {
 
     public String getUserID() {
         return DomUtil.getChildTextTrim(eventElement, XML_EVENTUSERID, NAMESPACE);
+    }
+
+    //--------------------------------------------------------------------------
+    private static int getSpiEventType(int jcrEventType) {
+        switch (jcrEventType) {
+            case javax.jcr.observation.Event.NODE_ADDED:
+                return Event.NODE_ADDED;
+            case javax.jcr.observation.Event.NODE_REMOVED:
+                return Event.NODE_REMOVED;
+            case javax.jcr.observation.Event.PROPERTY_ADDED:
+                return Event.PROPERTY_ADDED;
+            case javax.jcr.observation.Event.PROPERTY_CHANGED:
+                return Event.PROPERTY_CHANGED;
+            case javax.jcr.observation.Event.PROPERTY_REMOVED:
+                return Event.PROPERTY_REMOVED;
+            default:
+                throw new IllegalArgumentException("Invalid event type: " + jcrEventType);
+        }
     }
 }
