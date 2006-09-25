@@ -38,6 +38,7 @@ import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
+import org.apache.jackrabbit.webdav.jcr.version.report.JcrPrivilegeReport;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
@@ -388,6 +389,11 @@ public class WorkspaceResourceImpl extends AbstractResource
         // lock not allowed
     }
 
+    protected void initSupportedReports() {
+        super.initSupportedReports();
+        supportedReports.addReportType(JcrPrivilegeReport.PRIVILEGES_REPORT);
+    }
+    
     protected String getWorkspaceHref() {
         return getHref();
     }
