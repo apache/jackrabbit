@@ -358,8 +358,6 @@ abstract class AbstractItemResource extends AbstractResource implements
                                                 PRIVILEGE_JCR_ADD_NODE,
                                                 PRIVILEGE_JCR_SET_PROPERTY,
                                                 PRIVILEGE_JCR_REMOVE};
-        // Add list of privileges granted to the current user. Note, that for
-        // this property it is not required that the item already exists.
         List currentPrivs = new ArrayList();
         for (int i = 0; i < allPrivs.length; i++) {
             try {
