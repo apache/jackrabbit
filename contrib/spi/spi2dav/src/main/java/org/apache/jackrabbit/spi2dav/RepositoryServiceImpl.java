@@ -80,11 +80,11 @@ import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.header.IfHeader;
-import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
 import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
+import org.apache.jackrabbit.webdav.jcr.version.report.JcrPrivilegeReport;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeConstants;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
@@ -315,6 +315,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return parentId;
     }
 
+    //--------------------------------------------------------------------------
+
+    private EventIterator retrieveEvents() {
+        // todo
+        return null;
+    }
+
+
     //--------------------------------------------------< RepositoryService >---
     /**
      * @see RepositoryService#getIdFactory()
@@ -441,13 +449,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#isGranted(SessionInfo, ItemId, String[] actions)
      */
     public boolean isGranted(SessionInfo sessionInfo, ItemId itemId, String[] actions) throws RepositoryException {
-        PropFindMethod method = null;
+        ReportMethod method = null;
         try {
-            DavPropertyNameSet propNameSet = new DavPropertyNameSet();
-            propNameSet.add(SecurityConstants.CURRENT_USER_PRIVILEGE_SET);
-
             String uri = getItemUri(itemId, sessionInfo);
-            method = new PropFindMethod(uri, propNameSet, DepthHeader.DEPTH_0);
+            ReportInfo reportInfo = new ReportInfo(JcrPrivilegeReport.PRIVILEGES_REPORT);
+            reportInfo.setContentElement(DomUtil.hrefToXml(uri, domFactory));
+
+            method = new ReportMethod(getWorkspaceUri(sessionInfo.getWorkspaceName()), reportInfo);
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
@@ -461,7 +469,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
             // build set of privileges from given actions. NOTE: since the actions
             // have no qualifying namespace, the {@link ItemResourceConstants#NAMESPACE}
-            // is used. // TODO check if correct.
+            // is used.
             Set requiredPrivileges = new HashSet();
             for (int i = 0; i < actions.length; i++) {
                requiredPrivileges.add(Privilege.getPrivilege(actions[i], ItemResourceConstants.NAMESPACE));
@@ -754,8 +762,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 // on the server.
                 batchImpl.end(client, success);
             }
-            // TODO retrieve events.
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -781,8 +788,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -808,8 +814,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -835,8 +840,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -924,8 +928,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             // TODO: ev. need to take care of 'timeout' ?
             // TODO: ev. evaluate lock response, if depth and type is according to request?
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -952,8 +955,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -988,8 +990,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             sessionInfo.removeLockToken(lockToken);
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1014,9 +1015,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // String vUri = method.getVersionUri();
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1041,8 +1040,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1095,8 +1093,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1124,8 +1121,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             method.checkSuccess();
 
             // TODO: need to evaluate response?
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1164,9 +1160,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: need to evaluate response?
-            // TODO: retrieve events
-            return null;
+            // TODO: ev. evaluate response
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1191,8 +1186,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1219,8 +1213,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: retrieve events
-            return null;
+            return retrieveEvents();
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1277,22 +1270,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      */
     public void addEventListener(SessionInfo sessionInfo, NodeId nodeId, EventListener listener, int eventTypes, boolean isDeep, String[] uuids, QName[] nodeTypeIds) throws RepositoryException {
         // build event types
-        // TODO: server expected JCR-event types... currently spi types are used
         List eTypes = new ArrayList();
         if ((eventTypes & Event.NODE_ADDED) == Event.NODE_ADDED) {
-            eTypes.add(SubscriptionImpl.getEventType(Event.NODE_ADDED));
+            eTypes.add(SubscriptionImpl.getEventType(javax.jcr.observation.Event.NODE_ADDED));
         }
         if ((eventTypes & Event.NODE_REMOVED) == Event.NODE_REMOVED) {
-            eTypes.add(SubscriptionImpl.getEventType(Event.NODE_REMOVED));
+            eTypes.add(SubscriptionImpl.getEventType(javax.jcr.observation.Event.NODE_REMOVED));
         }
         if ((eventTypes & Event.PROPERTY_ADDED) == Event.PROPERTY_ADDED) {
-            eTypes.add(SubscriptionImpl.getEventType(Event.PROPERTY_ADDED));
+            eTypes.add(SubscriptionImpl.getEventType(javax.jcr.observation.Event.PROPERTY_ADDED));
         }
         if ((eventTypes & Event.PROPERTY_REMOVED) == Event.PROPERTY_REMOVED) {
-            eTypes.add(SubscriptionImpl.getEventType(Event.PROPERTY_REMOVED));
+            eTypes.add(SubscriptionImpl.getEventType(javax.jcr.observation.Event.PROPERTY_REMOVED));
         }
         if ((eventTypes & Event.PROPERTY_CHANGED) == Event.PROPERTY_CHANGED) {
-            eTypes.add(SubscriptionImpl.getEventType(Event.PROPERTY_CHANGED));
+            eTypes.add(SubscriptionImpl.getEventType(javax.jcr.observation.Event.PROPERTY_CHANGED));
         }
         EventType[] etArr = (EventType[]) eTypes.toArray(new EventType[eTypes.size()]);
 
@@ -1608,8 +1600,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 }
 
                 methods.add(method);
-
-                // TODO: retrieve location header (in order to detect index) and update id-mapping
             } catch (IOException e) {
                 throw new RepositoryException(e);
             } catch (ParserConfigurationException e) {

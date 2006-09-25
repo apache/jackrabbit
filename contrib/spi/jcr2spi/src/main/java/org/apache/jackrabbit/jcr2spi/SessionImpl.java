@@ -375,33 +375,36 @@ public class SessionImpl implements Session, ManagerProvider {
         String[] actionsArr = actions.split(",");
 
         Path targetPath = getQPath(absPath);
+
         boolean isGranted;
+        // The given abs-path may point to a non-existing item
         if (itemExists(absPath)) {
             ItemState itemState = getHierarchyManager().getItemState(targetPath);
             isGranted = getAccessManager().isGranted(itemState, actionsArr);
         } else {
-            // The given abs-path may point to a non-existing item
-            Path parentPath = targetPath;
             NodeState parentState = null;
+            Path parentPath = targetPath;
             while (parentState == null) {
                 parentPath = parentPath.getAncestor(1);
                 if (itemManager.itemExists(parentPath)) {
                     ItemState itemState = getHierarchyManager().getItemState(parentPath);
                     if (itemState.isNode()) {
-                        parentState = itemState.getParent();
+                        parentState = (NodeState) itemState;
                     }
                 }
             }
+            // parentState is the nearest existing nodeState or the root state.
             try {
                 Path relPath = parentPath.computeRelativePath(targetPath);
                 isGranted = getAccessManager().isGranted(parentState, relPath, actionsArr);
-                if (!isGranted) {
-                    throw new AccessControlException(actions);
-                }
             } catch (MalformedPathException e) {
                 // should not occurs
                 throw new RepositoryException(e);
             }
+        }
+
+        if (!isGranted) {
+            throw new AccessControlException("Access control violation: path = " + absPath + ", actions = " + actions);
         }
     }
 
