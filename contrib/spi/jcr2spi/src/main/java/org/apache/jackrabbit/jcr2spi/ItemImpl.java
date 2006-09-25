@@ -57,7 +57,6 @@ import java.util.Collections;
 
 /**
  * <code>ItemImpl</code>...
- * TODO: remove status in ItemImpl and ask item state for status!
  */
 public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
 
