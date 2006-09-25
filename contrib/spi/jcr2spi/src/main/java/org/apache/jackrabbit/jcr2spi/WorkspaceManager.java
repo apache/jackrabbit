@@ -59,6 +59,7 @@ import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
@@ -275,10 +276,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 }
             };
             int allTypes = Event.NODE_ADDED | Event.NODE_REMOVED |
-                    Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
+                Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
             // register for all events
             service.addEventListener(sessionInfo, service.getRootId(sessionInfo),
-                    l, allTypes, true, null, null);
+                l, allTypes, true, null, null);
         }
         return l;
     }
@@ -370,35 +371,75 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
     }
     //------------------------------------------------------< AccessManager >---
-
     /**
      * @see AccessManager#isGranted(NodeState, Path, String[])
      */
     public boolean isGranted(NodeState parentState, Path relPath, String[] actions) throws ItemNotFoundException, RepositoryException {
-        // TODO: 'createNodeId' is basically wrong since isGranted is unspecific for any item.
-        ItemId id = getIdFactory().createNodeId(parentState.getNodeId(), relPath);
-        return service.isGranted(sessionInfo, id, actions);
+        // TODO: TOBEFIXED. 
+        ItemState wspState = parentState.getOverlayedState();
+        if (wspState == null) {
+            Path.PathBuilder pb = new Path.PathBuilder();
+            pb.addAll(relPath.getElements());
+            while (wspState == null) {
+                pb.addFirst(parentState.getName());
+
+                parentState = parentState.getParent();
+                wspState = parentState.getOverlayedState();
+            }
+            try {
+                relPath = pb.getPath();
+            } catch (MalformedPathException e) {
+                throw new RepositoryException(e);
+            }
+        }
+
+
+        if (wspState == null) {
+            // internal error. should never occur
+            throw new RepositoryException("Internal error: Unable to retrieve overlayed state in hierarchy.");
+        } else {
+            NodeId parentId = ((NodeState)parentState).getNodeId();
+            // TODO: 'createNodeId' is basically wrong since isGranted is unspecific for any item.
+            ItemId id = getIdFactory().createNodeId(parentId, relPath);
+            return service.isGranted(sessionInfo, id, actions);
+        }
     }
 
     /**
      * @see AccessManager#isGranted(ItemState, String[])
      */
     public boolean isGranted(ItemState itemState, String[] actions) throws ItemNotFoundException, RepositoryException {
-        return service.isGranted(sessionInfo, itemState.getId(), actions);
+        ItemState wspState = itemState.getOverlayedState();
+        // a 'new' state can always be read, written and removed
+        // TODO: correct?
+        if (wspState == null) {
+            return true;
+        }
+        return service.isGranted(sessionInfo, wspState.getId(), actions);
     }
 
     /**
      * @see AccessManager#canRead(ItemState)
      */
     public boolean canRead(ItemState itemState) throws ItemNotFoundException, RepositoryException {
-        return service.isGranted(sessionInfo, itemState.getId(), AccessManager.READ);
+        ItemState wspState = itemState.getOverlayedState();
+        // a 'new' state can always be read
+        if (wspState == null) {
+            return true;
+        }
+        return service.isGranted(sessionInfo, wspState.getId(), AccessManager.READ);
     }
 
     /**
      * @see AccessManager#canRemove(ItemState)
      */
     public boolean canRemove(ItemState itemState) throws ItemNotFoundException, RepositoryException {
-        return service.isGranted(sessionInfo, itemState.getId(), AccessManager.REMOVE);
+        ItemState wspState = itemState.getOverlayedState();
+        // a 'new' state can always be removed again
+        if (wspState == null) {
+            return true;
+        }
+        return service.isGranted(sessionInfo, wspState.getId(), AccessManager.REMOVE);
     }
 
     /**
@@ -416,7 +457,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     //---------------------------------------------------------< XML import >---
     public void importXml(NodeState parentState, InputStream xmlStream, int uuidBehaviour) throws RepositoryException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, ItemExistsException, VersionException {
-        // TODO check retrieval of nodeId
         NodeId parentId = parentState.getNodeId();
         service.importXml(sessionInfo, parentId, xmlStream, uuidBehaviour);
     }
