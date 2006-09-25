@@ -1019,9 +1019,6 @@ public class NodeState extends ItemState {
      *         found in this <code>NodeState</code>.
      */
     int getChildNodeIndex(QName name, ChildNodeEntry cne) {
-        if (!this.getDefinition().allowsSameNameSiblings()) {
-            return Path.INDEX_DEFAULT;
-        }
         List sns = childNodeEntries.get(name);
         // index is one based
         int index = 1;
@@ -1040,7 +1037,7 @@ public class NodeState extends ItemState {
             }
         }
         // not found
-        return 0;
+        return Path.INDEX_UNDEFINED;
     }
 
     //-------------------------------< internal >-------------------------------
