@@ -23,6 +23,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -210,8 +211,8 @@ class EventFilter {
         if (!match && isDeep) {
             try {
                 match = eventPath.isDescendantOf(path);
-            } catch (org.apache.jackrabbit.name.MalformedPathException e) {
-                e.printStackTrace();
+            } catch (MalformedPathException e) {
+                log.error("Internal error: " + e.getMessage());
             }
         }
 
