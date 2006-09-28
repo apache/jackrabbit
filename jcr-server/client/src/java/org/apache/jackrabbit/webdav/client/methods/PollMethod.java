@@ -103,12 +103,9 @@ public class PollMethod extends DavMethodBase implements ObservationConstants {
       * @return
       */
      private boolean buildDiscoveryFromRoot(Element root) {
-         if (DomUtil.matches(root, XML_PROP, DavConstants.NAMESPACE) &&
-             DomUtil.hasChildElement(root, XML_EVENTDISCOVERY, ObservationConstants.NAMESPACE)) {
-             Element ld = DomUtil.getChildElement(root, XML_EVENTDISCOVERY, ObservationConstants.NAMESPACE);
+         if (DomUtil.matches(root, XML_EVENTDISCOVERY, ObservationConstants.NAMESPACE)) {
              eventDiscovery = new EventDiscovery();
-
-             ElementIterator it = DomUtil.getChildren(ld, XML_SUBSCRIPTION, ObservationConstants.NAMESPACE);
+             ElementIterator it = DomUtil.getChildren(root, XML_EVENTBUNDLE, ObservationConstants.NAMESPACE);
              while (it.hasNext()) {
                  final Element ebElement = it.nextElement();
                  EventBundle eb = new EventBundle() {
@@ -120,7 +117,7 @@ public class PollMethod extends DavMethodBase implements ObservationConstants {
              }
              return true;
          } else {
-             log.debug("Missing DAV:prop response body in SUBSCRIBE method.");
+             log.debug("Missing 'eventdiscovery' response body in POLL method.");
          }
          return false;
      }
