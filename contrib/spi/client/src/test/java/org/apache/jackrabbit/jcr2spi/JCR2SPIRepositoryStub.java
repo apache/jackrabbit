@@ -41,6 +41,10 @@ public class JCR2SPIRepositoryStub extends RepositoryStub {
      * Property for the repository url
      */
     public static final String PROP_REPOSITORY_URL = "org.apache.jackrabbit.jcr2spi.repository.url";
+    /**
+     * Property for the default workspace name
+     */
+    public static final String PROP_WORKSPACE_NAME = "org.apache.jackrabbit.jcr2spi.workspace.name";
 
     static {
         PropertyConfigurator.configure(JCR2SPIRepositoryStub.class.getClassLoader().getResource("log4j.properties"));
@@ -74,6 +78,11 @@ public class JCR2SPIRepositoryStub extends RepositoryStub {
 
                     public ValueFactory getValueFactory() throws RepositoryException {
                         return vFactory;
+                    }
+
+                    public String getDefaultWorkspaceName() {
+                        String name = environment.getProperty(PROP_WORKSPACE_NAME);
+                        return name;
                     }
                 };
 
