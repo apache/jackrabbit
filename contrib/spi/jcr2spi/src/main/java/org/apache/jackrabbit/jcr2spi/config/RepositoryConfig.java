@@ -30,4 +30,6 @@ public interface RepositoryConfig {
     public RepositoryService getRepositoryService() throws RepositoryException;
 
     public ValueFactory getValueFactory() throws RepositoryException;
+
+    public String getDefaultWorkspaceName();
 }
