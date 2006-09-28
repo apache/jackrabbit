@@ -28,6 +28,7 @@ import org.apache.jackrabbit.webdav.header.TimeoutHeader;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
+import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpState;
@@ -35,7 +36,6 @@ import org.apache.commons.httpclient.HttpConnection;
 import org.w3c.dom.Element;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * <code>SubscribeMethod</code>...
@@ -164,7 +164,7 @@ public class SubscribeMethod extends DavMethodBase implements ObservationConstan
             Element sdElem = DomUtil.getChildElement(root, SUBSCRIPTIONDISCOVERY.getName(), SUBSCRIPTIONDISCOVERY.getNamespace());
 
             SubscriptionDiscovery sd = SubscriptionDiscovery.createFromXml(sdElem);
-            if (!((List)sd.getValue()).isEmpty()) {
+            if (((Subscription[])sd.getValue()).length > 0) {
                 subscriptionDiscovery = sd;
                 return true;
             } else {
