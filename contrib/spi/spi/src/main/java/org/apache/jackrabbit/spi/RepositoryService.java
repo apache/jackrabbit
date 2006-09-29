@@ -181,10 +181,11 @@ public interface RepositoryService {
      * on the underlaying persistence layer. All modification called on the
      * Batch must be executed at once or non must be executed.
      *
+     * @param itemId
      * @param sessionInfo
      * @return
      */
-    public Batch createBatch(SessionInfo sessionInfo) throws RepositoryException;
+    public Batch createBatch(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException;
 
     /**
      * Completes the this Batch or discard all the previous modifications.
@@ -486,9 +487,7 @@ public interface RepositoryService {
     /**
      * Registers a listener to receive events about changes that were applied
      * by other sessions. In contrast to {@link javax.jcr.observation.ObservationManager#addEventListener)}
-     * this method does not have a <code>noLocal</code> flag. Local changes
-     * are immediately reported and only remote changes are reported to the
-     * registered listener.
+     * this method does not have a <code>noLocal</code> flag.
      * </p>
      * The implementation must ensure that {@link EventIterator}s issued to
      * potential listeners and the ones returned by the individual methods

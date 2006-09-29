@@ -32,9 +32,8 @@ import java.util.Iterator;
 /**
  * <code>WorkspaceItemStateManager</code>
  */
-public class WorkspaceItemStateManager
-        extends CachingItemStateManager
-        implements InternalEventListener {
+public class WorkspaceItemStateManager extends CachingItemStateManager
+    implements InternalEventListener {
 
     public WorkspaceItemStateManager(ItemStateFactory isf, IdFactory idFactory) {
         super(isf, idFactory);
@@ -44,23 +43,23 @@ public class WorkspaceItemStateManager
 
     /**
      * Processes <code>events</code> and invalidates cached <code>ItemState</code>s
-     * accordingly.
+     * accordingly. Note that this performed for both local and non-local changes,
+     * since workspace operations are reported as local changes as well and
+     * might have invoked changes (autocreated items etc.).
+     *
      * @param events
      * @param isLocal
      */
     public void onEvent(EventIterator events, boolean isLocal) {
-        // if events origin from local changes then
-        // cache does not need invalidation
-        if (isLocal) {
-            return;
-        }
-
         // collect set of removed node ids
         Set removedNodeIds = new HashSet();
         List eventList = new ArrayList();
         while (events.hasNext()) {
             Event e = events.nextEvent();
             eventList.add(e);
+        }
+        if (eventList.isEmpty()) {
+            return;
         }
 
         for (Iterator it = eventList.iterator(); it.hasNext(); ) {
@@ -110,5 +109,15 @@ public class WorkspaceItemStateManager
                     }
             }
         }
+    }
+
+    public void onEvent(EventIterator events, ChangeLog changeLog) {
+        if (changeLog == null) {
+            throw new IllegalArgumentException("ChangeLog must not be null.");
+        }
+        // now we need to apply the transient changes in changeLog to
+        // the ItemStates in the workspace layer
+        changeLog.push();
+        changeLog.persisted();
     }
 }

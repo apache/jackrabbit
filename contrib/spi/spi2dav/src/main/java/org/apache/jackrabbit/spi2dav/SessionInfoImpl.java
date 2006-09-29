@@ -20,8 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import org.apache.jackrabbit.spi.SessionInfo;
-import javax.jcr.Credentials;
-import javax.jcr.SimpleCredentials;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,50 +31,61 @@ public class SessionInfoImpl implements SessionInfo {
 
     private static Logger log = LoggerFactory.getLogger(SessionInfoImpl.class);
 
-    private final Credentials credentials;
+    private final CredentialsWrapper credentials;
     private final String workspaceName;
-    private String batchId;
+    private final SubscriptionManager subscrMgr;
 
     private final Set lockTokens = new HashSet();
 
-    SessionInfoImpl(Credentials creds, String workspaceName) {
+    SessionInfoImpl(CredentialsWrapper creds, String workspaceName, SubscriptionManager subscrMgr) {
         this.credentials = creds;
         this.workspaceName = workspaceName;
+        this.subscrMgr = subscrMgr;
+        subscrMgr.setSessionInfo(this);
     }
 
+    //--------------------------------------------------------< SessionInfo >---
+    /**
+     * @inheritDoc
+     */
     public String getUserID() {
-        if (credentials instanceof SimpleCredentials) {
-            return ((SimpleCredentials) credentials).getUserID();
-        } else {
-            return null;
-        }
+        return credentials.getUserId();
     }
 
+    /**
+     * @inheritDoc
+     */
     public String getWorkspaceName() {
         return workspaceName;
     }
 
+    /**
+     * @inheritDoc
+     */
     public String[] getLockTokens() {
         return (String[]) lockTokens.toArray(new String[lockTokens.size()]);
     }
 
+    /**
+     * @inheritDoc
+     */
     public void addLockToken(String lockToken) {
         lockTokens.add(lockToken);
     }
 
+    /**
+     * @inheritDoc
+     */
     public void removeLockToken(String lockToken) {
         lockTokens.remove(lockToken);
     }
 
-    public String getBatchId() {
-        return batchId;
-    }
-
-    public void setBatchId(String id) {
-        batchId = id;
-    }
-
-    Credentials getCredentials() {
+    //--------------------------------------------------------------------------
+    CredentialsWrapper getCredentials() {
         return credentials;
+    }
+
+    SubscriptionManager getSubscriptionManager() {
+        return subscrMgr;
     }
 }

@@ -39,14 +39,11 @@ import org.apache.jackrabbit.webdav.jcr.version.report.LocateByUuidReport;
 import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.ReportMethod;
-import org.apache.jackrabbit.webdav.client.methods.DavMethod;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
-import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.BaseException;
@@ -81,16 +78,6 @@ class URIResolverImpl implements URIResolver {
         this.service = service;
         this.nsResolver = nsResolver;
         this.domFactory = domFactory;
-    }
-
-    private static void initMethod(DavMethod method, SessionInfo sessionInfo) {
-        if (sessionInfo instanceof SessionInfoImpl) {
-            String txId = ((SessionInfoImpl) sessionInfo).getBatchId();
-            if (txId != null) {
-                CodedUrlHeader ch = new CodedUrlHeader(TransactionConstants.HEADER_TRANSACTIONID, txId);
-                method.setRequestHeader(ch.getHeaderName(), ch.getHeaderValue());
-            }
-        }
     }
 
     private IdURICache getCache(String workspaceName) {
@@ -144,7 +131,6 @@ class URIResolverImpl implements URIResolver {
                     try {
                         String wspUri = getWorkspaceUri(workspaceName);
                         ReportMethod rm = new ReportMethod(wspUri, rInfo);
-                        initMethod(rm, sessionInfo);
 
                         service.getClient(sessionInfo).executeMethod(rm);
 
@@ -307,7 +293,6 @@ class URIResolverImpl implements URIResolver {
             DavMethodBase method = null;
             try {
                 method = new PropFindMethod(uri, nameSet, DavConstants.DEPTH_0);
-                initMethod(method, sessionInfo);
 
                 service.getClient(sessionInfo).executeMethod(method);
                 MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();

@@ -22,17 +22,22 @@ import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.EventIterator;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.ArrayList;
 
 /**
  * <code>org.apache.jackrabbit.spi2dav.IteratorHelper</code>...
  */
 public class IteratorHelper extends org.apache.jackrabbit.util.IteratorHelper
-    implements IdIterator, QNodeTypeDefinitionIterator {
+    implements IdIterator, QNodeTypeDefinitionIterator, EventIterator {
 
     private static Logger log = LoggerFactory.getLogger(IteratorHelper.class);
+
+    public static final IteratorHelper EMPTY = new IteratorHelper(new ArrayList(0));
 
     public IteratorHelper(Collection c) {
         super(c);
@@ -54,5 +59,12 @@ public class IteratorHelper extends org.apache.jackrabbit.util.IteratorHelper
      */
     public QNodeTypeDefinition nextDefinition() {
         return (QNodeTypeDefinition) next();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Event nextEvent() {
+        return (Event) next();
     }
 }

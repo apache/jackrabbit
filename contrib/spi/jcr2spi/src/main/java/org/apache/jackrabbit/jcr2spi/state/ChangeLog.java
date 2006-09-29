@@ -30,30 +30,39 @@ import java.util.HashSet;
  */
 public class ChangeLog {
 
+    private final ItemState target;
     /**
      * Added states
      */
-    protected final Set addedStates = new LinkedHashSet();
+    final Set addedStates = new LinkedHashSet();
 
     /**
      * Modified states
      */
-    protected final Set modifiedStates = new LinkedHashSet();
+    final Set modifiedStates = new LinkedHashSet();
 
     /**
      * Deleted states
      */
-    protected final Set deletedStates = new LinkedHashSet();
+    final Set deletedStates = new LinkedHashSet();
 
     /**
      * Modified references
      */
-    protected final Set modifiedRefs = new LinkedHashSet();
+    final Set modifiedRefs = new LinkedHashSet();
 
     /**
      * Type of operation this changelog is collection state modifications for.
      */  
     private Set operations = new LinkedHashSet();
+
+    /**
+     *
+     * @param target
+     */
+    ChangeLog(ItemState target) {
+        this.target = target;
+    }
 
     //-----------------------------------------------< Inform the ChangeLog >---
     /**
@@ -113,6 +122,14 @@ public class ChangeLog {
     }
 
     //----------------------< Retrieve information present in the ChangeLog >---
+    /**
+     *
+     * @return
+     */
+    public ItemState getTarget() {
+        return target;
+    }
+
     /**
      *
      * @return

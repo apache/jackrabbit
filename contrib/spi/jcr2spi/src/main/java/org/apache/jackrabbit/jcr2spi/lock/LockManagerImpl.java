@@ -26,6 +26,7 @@ import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
 import org.apache.jackrabbit.jcr2spi.operation.LockRefresh;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
@@ -547,6 +548,10 @@ public class LockManagerImpl implements LockManager, SessionListener {
                     break;
                 }
             }
+        }
+
+        public void onEvent(EventIterator events, ChangeLog changeLog) {
+            // nothing to do. we are not interested in transient modifications
         }
 
         //----------------------------------------------< LockTokenListener >---
