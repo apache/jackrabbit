@@ -18,7 +18,6 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpConnection;
 import org.apache.commons.httpclient.HttpMethodBase;
@@ -30,8 +29,6 @@ import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.header.Header;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -41,7 +38,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -55,6 +51,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
     static final DocumentBuilderFactory BUILDER_FACTORY = DomUtil.BUILDER_FACTORY;
 
     private boolean success;
+    private Document responseDocument;
     private MultiStatus multiStatus;
 
     public DavMethodBase(String uri) {
@@ -107,19 +104,27 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      * @see DavMethod#getResponseBodyAsDocument()
      */
     public Document getResponseBodyAsDocument() throws IOException {
-        InputStream in = getResponseBodyAsStream();
-        if (in == null) {
-            return null;
-        }
-        try {
-            DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
-            Document document = docBuilder.parse(in);
-            return document;
-        } catch (ParserConfigurationException e) {
-            throw new IOException(e.getMessage());
-        } catch (SAXException e) {
-            throw new IOException(e.getMessage());
-        }
+        if (responseDocument != null) {
+            // response has already been read
+            return responseDocument;
+        } else {
+            // read response and try to build a xml document
+            InputStream in = getResponseBodyAsStream();
+            if (in == null) {
+                return null;
+            }
+            try {
+                DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
+                responseDocument = docBuilder.parse(in);
+                return responseDocument;
+            } catch (ParserConfigurationException e) {
+                throw new IOException(e.getMessage());
+            } catch (SAXException e) {
+                throw new IOException(e.getMessage());
+            } finally {
+                in.close();
+            }
+        }     
     }
 
     /**
@@ -179,12 +184,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      * @throws IOException
      */
     public void setRequestBody(Document requestBody) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        OutputFormat format = new OutputFormat("xml", "UTF-8", false);
-        XMLSerializer serializer = new XMLSerializer(out, format);
-        serializer.setNamespaces(true);
-        serializer.asDOMSerializer().serialize(requestBody);
-        setRequestEntity(new StringRequestEntity(out.toString(), "text/xml", "UTF-8"));
+        setRequestEntity(new XmlRequestEntity(requestBody));
     }
 
     /**
