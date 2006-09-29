@@ -28,27 +28,33 @@ public interface Event {
     /**
      * An event of this type is generated when a node is added.
      */
-     public static final int NODE_ADDED = javax.jcr.observation.Event.NODE_ADDED;
+    public static final int NODE_ADDED = javax.jcr.observation.Event.NODE_ADDED;
 
     /**
      * An event of this type is generated when a node is removed.
      */
-     public static final int NODE_REMOVED = javax.jcr.observation.Event.NODE_REMOVED;
+    public static final int NODE_REMOVED = javax.jcr.observation.Event.NODE_REMOVED;
 
     /**
      * An event of this type is generated when a property is added.
      */
-     public static final int PROPERTY_ADDED = javax.jcr.observation.Event.PROPERTY_ADDED;
+    public static final int PROPERTY_ADDED = javax.jcr.observation.Event.PROPERTY_ADDED;
 
     /**
      * An event of this type is generated when a property is removed.
      */
-     public static final int PROPERTY_REMOVED = javax.jcr.observation.Event.PROPERTY_REMOVED;
+    public static final int PROPERTY_REMOVED = javax.jcr.observation.Event.PROPERTY_REMOVED;
 
     /**
      * An event of this type is generated when a property is changed.
      */
-     public static final int PROPERTY_CHANGED = javax.jcr.observation.Event.PROPERTY_CHANGED;
+    public static final int PROPERTY_CHANGED = javax.jcr.observation.Event.PROPERTY_CHANGED;
+
+    /**
+     * Constant for observation listener interested in all types of events.
+     */
+    public static final int ALL_TYPES = Event.NODE_ADDED | Event.NODE_REMOVED |
+    Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
 
     /**
      * Returns the type of this event: a constant defined by this interface.

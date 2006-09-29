@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.observation;
 
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NameFormat;
@@ -156,6 +157,9 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         while (events.hasNext()) {
             eventList.add(events.nextEvent());
         }
+        if (eventList.isEmpty()) {
+            return;
+        }
         eventList = Collections.unmodifiableList(eventList);
 
         // get active listeners
@@ -178,6 +182,17 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
                 }
             }
         }
+    }
+
+    /**
+     * Same as {@link #onEvent(EventIterator, boolean)} with the boolean flag
+     * set to <code>true</code>.
+     * 
+     * @param events
+     * @param changeLog
+     */
+    public void onEvent(EventIterator events, ChangeLog changeLog) {
+        onEvent(events, true);
     }
 
     //-------------------------< internal >-------------------------------------

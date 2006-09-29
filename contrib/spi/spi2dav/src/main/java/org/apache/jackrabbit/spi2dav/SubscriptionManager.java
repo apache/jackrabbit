@@ -14,25 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi.observation;
+package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
+import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.EventListener;
 
 /**
- * <code>InternalEventListener</code> is similar to {@link org.apache.jackrabbit.spi.EventListener}
- * but adds information about the location of the events. Whether they are local
- * or external.
+ * <code>SubscriptionManager</code>...
  */
-public interface InternalEventListener {
+interface SubscriptionManager {
 
-    /**
-     * Gets called when an event occurs.
-     *
-     * @param events the event set received.
-     * @param isLocal <code>true</code> if these are local changes.
-     */
-    public void onEvent(EventIterator events, boolean isLocal);
+    public void setSessionInfo(SessionInfo sessionInfo);
 
-    public void onEvent(EventIterator events, ChangeLog changeLog);
+        public boolean subscriptionExists(EventListener listener);
+
+        public String getSubscriptionId(EventListener listener);
+
+        public void addSubscription(String uri, String subscriptionId, EventListener listener);
+
+        public void removeSubscription(EventListener listener);
 }

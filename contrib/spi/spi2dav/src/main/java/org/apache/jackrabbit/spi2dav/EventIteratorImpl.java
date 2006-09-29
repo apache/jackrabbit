@@ -38,20 +38,19 @@ public class EventIteratorImpl implements EventIterator {
 
     private final SessionInfo sessionInfo;
     private final URIResolver uriResolver;
-    private final ElementIterator eventElementIterator;
+    private ElementIterator bundleIterator;
+    private ElementIterator eventElementIterator;
 
     private Event next;
     private long pos;
 
-    public EventIteratorImpl(Element eventBundleElement, URIResolver uriResolver, SessionInfo sessionInfo) {
-        if (!DomUtil.matches(eventBundleElement, ObservationConstants.XML_EVENTBUNDLE, ObservationConstants.NAMESPACE)) {
-            throw new IllegalArgumentException("eventbundle element expected.");
-        }
+    public EventIteratorImpl(Element eventDiscoveryElem, URIResolver uriResolver, SessionInfo sessionInfo) {
 
         this.sessionInfo = sessionInfo;
         this.uriResolver = uriResolver;
-        eventElementIterator = DomUtil.getChildren(eventBundleElement, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
-        retrieveNext();
+        bundleIterator = DomUtil.getChildren(eventDiscoveryElem, ObservationConstants.XML_EVENTBUNDLE, ObservationConstants.NAMESPACE);;
+        retrieveNextEventIterator();
+        retrieveNextEvent();
     }
 
     public Event nextEvent() {
@@ -59,14 +58,14 @@ public class EventIteratorImpl implements EventIterator {
             throw new NoSuchElementException();
         }
         Event event = next;
-        retrieveNext();
+        retrieveNextEvent();
         pos++;
         return event;
     }
 
     public void skip(long skipNum) {
         while (skipNum-- > 0) {
-            next();
+            nextEvent();
         }
     }
 
@@ -79,11 +78,11 @@ public class EventIteratorImpl implements EventIterator {
     }
 
     public void remove() {
-        eventElementIterator.remove();
+        throw new UnsupportedOperationException("Remove not implemented.");
     }
 
     public boolean hasNext() {
-        return eventElementIterator.hasNext();
+        return next != null;
     }
 
     public Object next() {
@@ -91,20 +90,31 @@ public class EventIteratorImpl implements EventIterator {
     }
 
     //------------------------------------------------------------< private >---
-    /**
-     *
-     */
-    private void retrieveNext() {
+    private void retrieveNextEvent() {
         next = null;
-        while (next == null && eventElementIterator.hasNext()) {
-            Element evElem = eventElementIterator.nextElement();
-            try {
-                next = new EventImpl(evElem, uriResolver, sessionInfo);
-            } catch (RepositoryException e) {
-                log.error("Unexpected error while creating event.", e);
-            } catch (DavException e) {
-                log.error("Unexpected error while creating event.", e);
+        if (eventElementIterator != null) {
+            while (next == null && eventElementIterator.hasNext()) {
+                Element evElem = eventElementIterator.nextElement();
+                try {
+                    next = new EventImpl(evElem, uriResolver, sessionInfo);
+                } catch (RepositoryException e) {
+                    log.error("Unexpected error while creating event.", e);
+                } catch (DavException e) {
+                    log.error("Unexpected error while creating event.", e);
+                }
             }
+
+            if (!eventElementIterator.hasNext()) {
+                retrieveNextEventIterator();
+            }
+        }
+    }
+
+    private void retrieveNextEventIterator() {
+        eventElementIterator = null;
+        if (bundleIterator.hasNext()) {
+            Element bundleElem = bundleIterator.nextElement();
+            eventElementIterator =  DomUtil.getChildren(bundleElem, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
         }
     }
 }

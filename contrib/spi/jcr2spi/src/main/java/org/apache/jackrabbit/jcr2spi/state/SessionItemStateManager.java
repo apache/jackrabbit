@@ -280,7 +280,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     public void undo(ItemState itemState) throws ItemStateException {
         // check if self contained
-        ChangeLog changeLog = new ChangeLog();
+        ChangeLog changeLog = new ChangeLog(itemState);
         collectTransientStates(itemState, changeLog, false);
         changeLog.checkIsSelfContained();
         changeLog.collectOperations(transientStateMgr.getOperations());
@@ -338,7 +338,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException {
         // build changelog for affected and decendant states only
-        ChangeLog changeLog = new ChangeLog();
+        ChangeLog changeLog = new ChangeLog(itemState);
         collectTransientStates(itemState, changeLog, true);
 
         changeLog.checkIsSelfContained();
