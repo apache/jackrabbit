@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.commons.collections.iterators.IteratorChain;
 
 import java.util.Iterator;
@@ -273,12 +274,25 @@ public class ChangeLog {
     }
 
     //-----------------------------< Inform ChangeLog about Success/Failure >---
+    /**
+     * ChangeLog has successfully been commited. The given <code>EventIterator</code>
+     * contains information about all modifications. This ChangeLog needs
+     * to notify all transient states involved.
+     *
+     * @param events
+     */
+    public void persist(EventIterator events) {
+        // TODO: events may reveal additional autocreated items and modifications
+        // applied while commiting the changelog (e.g. uuid or nodetype of new nodes).
+        push();
+        persisted();
+    }
 
     /**
      * Push all states contained in the various maps of
      * items we have.
      */
-    public void push() {
+    private void push() {
         Iterator iter = modifiedStates();
         while (iter.hasNext()) {
             ((ItemState) iter.next()).push();
@@ -297,7 +311,7 @@ public class ChangeLog {
      * After the states have actually been persisted, update their
      * internal states and notify listeners.
      */
-    public void persisted() {
+    private void persisted() {
         Iterator iter = modifiedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
