@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.commons.collections.iterators.IteratorChain;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -73,7 +72,109 @@ public class TransientItemStateManager extends CachingItemStateManager
         ((TransientISFactory) getTransientFactory()).setListener(this);
     }
 
-    //-----------------------< ItemStateManager >-------------------------------
+
+    private TransientItemStateFactory getTransientFactory() {
+        return (TransientItemStateFactory) getItemStateFactory();
+    }
+
+    /**
+     * @return the operations that have been recorded until now.
+     */
+    Iterator getOperations() {
+        return changeLog.getOperations();
+    }
+
+    /**
+     * Add the given operation to the list of operations to be recorded within
+     * this TransientItemStateManager.
+     *
+     * @param operation
+     */
+    void addOperation(Operation operation) {
+        changeLog.addOperation(operation);
+    }
+
+    /**
+     * Removes the <code>operation</code> from the list of operations.
+     * @param operation the Operation to remove.
+     * @return <code>true</code> if the operation was removed.
+     */
+    boolean removeOperation(Operation operation) {
+        return changeLog.removeOperation(operation);
+    }
+
+    /**
+     * @return <code>true</code> if this transient ISM has pending changes.
+     */
+    boolean hasPendingChanges() {
+        return !changeLog.isEmpty();
+    }
+
+    /**
+     * TODO: throw ItemExistsException? how to check?
+     * Creates a new transient {@link NodeState} that does not overlay any other
+     * {@link NodeState}.
+     *
+     * @param nodeName     the name of the <code>NodeState</code> to create.
+     * @param uuid         the uuid of the <code>NodeState</code> to create or
+     *                     <code>null</code> if the created <code>NodeState</code>
+     *                     cannot be identified by a UUID.
+     * @param nodeTypeName name of the node type of the new node state.
+     * @param definition   The qualified definition for the new node state.
+     * @param parent       the parent of the new node state.
+     * @return a new transient {@link NodeState}.
+     */
+    NodeState createNewNodeState(QName nodeName, String uuid, QName nodeTypeName,
+                                 QNodeDefinition definition, NodeState parent) {
+        NodeState nodeState = getTransientFactory().createNewNodeState(nodeName, uuid, parent, nodeTypeName, definition);
+
+        parent.addChildNodeState(nodeState, uuid);
+        changeLog.added(nodeState);
+        nodeState.addListener(this);
+        return nodeState;
+    }
+
+    /**
+     * Creates a new transient property state for a given <code>parent</code>
+     * node state.
+     *
+     * @param propName the name of the property state to create.
+     * @param parent   the node state where to the new property is added.
+     * @param definition
+     * @return the created property state.
+     * @throws ItemExistsException if <code>parent</code> already has a property
+     *                             with the given name.
+     */
+    PropertyState createNewPropertyState(QName propName, NodeState parent, QPropertyDefinition definition)
+            throws ItemExistsException {
+        PropertyState propState = getTransientFactory().createNewPropertyState(propName, parent, definition);
+
+        parent.addPropertyState(propState);
+        changeLog.added(propState);
+        propState.addListener(this);
+        return propState;
+    }
+
+    /**
+     * Disposes this transient item state manager. Clears all references to
+     * transiently modified item states.
+     */
+    void dispose() {
+        changeLog.reset();
+    }
+
+    /**
+     * Disposes a collection of {@link org.apache.jackrabbit.jcr2spi.operation.Operation}s.
+     *
+     * @param operations the operations.
+     */
+    void disposeOperations(Iterator operations) {
+        while (operations.hasNext()) {
+            changeLog.removeOperation((Operation) operations.next());
+        }
+    }
+
+    //---------------------------------------------------< ItemStateManager >---
     /**
      * Return the root node state.
      *
@@ -139,159 +240,7 @@ public class TransientItemStateManager extends CachingItemStateManager
         throw new UnsupportedOperationException("hasNodeReferences() not implemented");
     }
 
-    /**
-     * @return the operations that have been recorded until now.
-     */
-    public Iterator getOperations() {
-        return changeLog.getOperations();
-    }
-
-    /**
-     * Add the given operation to the list of operations to be recorded within
-     * this TransientItemStateManager.
-     *
-     * @param operation
-     */
-    void addOperation(Operation operation) {
-        changeLog.addOperation(operation);
-    }
-
-    /**
-     * Removes the <code>operation</code> from the list of operations.
-     * @param operation the Operation to remove.
-     * @return <code>true</code> if the operation was removed.
-     */
-    boolean removeOperation(Operation operation) {
-        return changeLog.removeOperation(operation);
-    }
-
-    /**
-     * @return <code>true</code> if this transient ISM has pending changes.
-     */
-    public boolean hasPendingChanges() {
-        return !changeLog.isEmpty();
-    }
-
-    /**
-     * @return <code>true</code> if there are any deleted item states.
-     */
-    public boolean hasDeletedItemStates() {
-        return !changeLog.deletedStates.isEmpty();
-    }
-
-    /**
-     * @return an iterator over all modified or added item states.
-     */
-    public Iterator getModifiedOrAddedItemStates() {
-        IteratorChain it = new IteratorChain();
-        it.addIterator(changeLog.modifiedStates());
-        it.addIterator(changeLog.addedStates());
-        return it;
-    }
-
-    /**
-     * @return an iterator over all deleted item states.
-     */
-    public Iterator getDeletedItemStates() {
-        return changeLog.deletedStates();
-    }
-
-    /**
-     * TODO: throw ItemExistsException? how to check?
-     * Creates a new transient {@link NodeState} that does not overlay any other
-     * {@link NodeState}.
-     *
-     * @param nodeName     the name of the <code>NodeState</code> to create.
-     * @param uuid         the uuid of the <code>NodeState</code> to create or
-     *                     <code>null</code> if the created <code>NodeState</code>
-     *                     cannot be identified by a UUID.
-     * @param nodeTypeName name of the node type of the new node state.
-     * @param definition   The qualified definition for the new node state.
-     * @param parent       the parent of the new node state.
-     * @return a new transient {@link NodeState}.
-     */
-    NodeState createNewNodeState(QName nodeName, String uuid, QName nodeTypeName,
-                                 QNodeDefinition definition, NodeState parent) {
-        NodeState nodeState = getTransientFactory().createNewNodeState(nodeName, uuid, parent, nodeTypeName, definition);
-
-        parent.addChildNodeState(nodeState, uuid);
-        changeLog.added(nodeState);
-        nodeState.addListener(this);
-        return nodeState;
-    }
-
-    /**
-     * Creates a new transient property state for a given <code>parent</code>
-     * node state.
-     *
-     * @param propName the name of the property state to create.
-     * @param parent   the node state where to the new property is added.
-     * @param definition
-     * @return the created property state.
-     * @throws ItemExistsException if <code>parent</code> already has a property
-     *                             with the given name.
-     */
-    PropertyState createNewPropertyState(QName propName, NodeState parent, QPropertyDefinition definition)
-            throws ItemExistsException {
-        PropertyState propState = getTransientFactory().createNewPropertyState(propName, parent, definition);
-
-        parent.addPropertyState(propState);
-        changeLog.added(propState);
-        propState.addListener(this);
-        return propState;
-    }
-
-    /**
-     * Disposes this transient item state manager. Clears all references to
-     * transiently modified item states.
-     */
-    public void dispose() {
-        changeLog.reset();
-    }
-
-    /**
-     * Disposes a collection of {@link org.apache.jackrabbit.jcr2spi.operation.Operation}s.
-     *
-     * @param operations the operations.
-     */
-    public void disposeOperations(Iterator operations) {
-        while (operations.hasNext()) {
-            changeLog.removeOperation((Operation) operations.next());
-        }
-    }
-
-    /**
-     * TODO: remove this method when not used anymore
-     * Return an iterator over all added states.
-     *
-     * @return iterator over all added states.
-     */
-    public Iterator addedStates() {
-        return changeLog.addedStates();
-    }
-
-    /**
-     * TODO: remove this method when not used anymore
-     * Return an iterator over all modified states.
-     *
-     * @return iterator over all modified states.
-     */
-    public Iterator modifiedStates() {
-        return changeLog.modifiedStates();
-    }
-
-    /**
-     * TODO: remove this method when not used anymore
-     * Return an iterator over all deleted states.
-     *
-     * @return iterator over all deleted states.
-     */
-    public Iterator deletedStates() {
-        return changeLog.deletedStates();
-    }
-
-    //-----------------------< ItemStateLifeCycleListener >---------------------
-
+    //-----------------------------------------< ItemStateLifeCycleListener >---
     /**
      * @inheritDoc
      * @see ItemStateListener#stateCreated(ItemState)
@@ -326,26 +275,31 @@ public class TransientItemStateManager extends CachingItemStateManager
         // go into the modified set of the change log, etc.
         switch (state.getStatus()) {
             case ItemState.STATUS_EXISTING:
-                if (previousStatus == ItemState.STATUS_EXISTING_MODIFIED) {
-                    // was modified and is now refreshed
-                    changeLog.modifiedStates.remove(state);
-                } else if (previousStatus == ItemState.STATUS_EXISTING_REMOVED) {
-                    // was removed and is now refreshed
-                    changeLog.deletedStates.remove(state);
-                } else if (previousStatus == ItemState.STATUS_STALE_MODIFIED) {
-                    // was modified and state and is now refreshed
-                    changeLog.modifiedStates.remove(state);
-                } else if (previousStatus == ItemState.STATUS_NEW) {
-                    // was new and has been saved now
-                    changeLog.addedStates.remove(state);
-                    // state needs to be connected to the overlayed-state now
-                    try {
-                        ItemState overlayedState = parent.getItemState(state.getId());
-                        state.connect(overlayedState);
-                    } catch (ItemStateException e) {
-                        // TODO, handle property
-                        log.error(e.getMessage());
-                    }
+                switch (previousStatus) {
+                    case ItemState.STATUS_EXISTING_MODIFIED:
+                        // was modified and is now refreshed
+                        changeLog.modifiedStates.remove(state);
+                        break;
+                    case ItemState.STATUS_EXISTING_REMOVED:
+                        // was removed and is now refreshed
+                        changeLog.deletedStates.remove(state);
+                        break;
+                    case ItemState.STATUS_STALE_MODIFIED:
+                        // was modified and state and is now refreshed
+                        changeLog.modifiedStates.remove(state);
+                        break;
+                    case ItemState.STATUS_NEW:
+                        // was new and has been saved now
+                        changeLog.addedStates.remove(state);
+                        // state needs to be connected to the overlayed-state now
+                        try {
+                            ItemState overlayedState = parent.getItemState(state.getId());
+                            state.connect(overlayedState);
+                        } catch (ItemStateException e) {
+                            // TODO, handle property
+                            log.error(e.getMessage());
+                        }
+                        break;
                 }
                 break;
             case ItemState.STATUS_EXISTING_MODIFIED:
@@ -381,9 +335,5 @@ public class TransientItemStateManager extends CachingItemStateManager
             default:
                 log.warn("ItemState has invalid status: " + state.getStatus());
         }
-    }
-
-    private TransientItemStateFactory getTransientFactory() {
-        return (TransientItemStateFactory) getItemStateFactory();
     }
 }
