@@ -113,14 +113,14 @@ public class SessionImpl implements Session, ManagerProvider {
     private final Map listeners = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     private final Repository repository;
+    private final RepositoryConfig config;
     private final WorkspaceImpl workspace;
 
-    private final String userId;
+    private final SessionInfo sessionInfo;
 
     private final LocalNamespaceMappings nsMappings;
     private final NodeTypeManagerImpl ntManager;
-    private final ValueFactory valueFactory;
-    
+
     private final SessionItemStateManager itemStateManager;
     private final ItemManager itemManager;
     private final ItemStateValidator validator;
@@ -130,10 +130,10 @@ public class SessionImpl implements Session, ManagerProvider {
 
         alive = true;
         this.repository = repository;
-        userId = sessionInfo.getUserID();
+        this.config = config;
+        this.sessionInfo = sessionInfo;
 
         workspace = createWorkspaceInstance(config.getRepositoryService(), sessionInfo);
-        valueFactory = config.getValueFactory();
 
         // build local name-mapping
         nsMappings = new LocalNamespaceMappings(workspace.getNamespaceRegistryImpl());
@@ -161,7 +161,7 @@ public class SessionImpl implements Session, ManagerProvider {
      * @see javax.jcr.Session#getUserID()
      */
     public String getUserID() {
-        return userId;
+        return sessionInfo.getUserID();
     }
 
     /**
@@ -363,7 +363,7 @@ public class SessionImpl implements Session, ManagerProvider {
         // must throw UnsupportedRepositoryOperationException if writing is
         // not supported
         checkSupportedOption(Repository.LEVEL_2_SUPPORTED);
-        return valueFactory;
+        return config.getValueFactory();
     }
 
     /**
@@ -758,8 +758,7 @@ public class SessionImpl implements Session, ManagerProvider {
     //--------------------------------------------------------------------------
     SessionImpl switchWorkspace(String workspaceName) throws AccessDeniedException,
         NoSuchWorkspaceException, RepositoryException {
-        Credentials creds = null; // TODO: missing impl.
-        return (SessionImpl) repository.login(creds, workspaceName);
+        return new SessionImpl(sessionInfo, repository, config);
     }
 
     /**
