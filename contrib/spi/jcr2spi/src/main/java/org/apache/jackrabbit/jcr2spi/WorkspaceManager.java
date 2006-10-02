@@ -141,9 +141,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         cache = createItemStateManager();
 
-        nsRegistry = createNamespaceRegistry();
-        ntRegistry = createNodeTypeRegistry(nsRegistry);
-        externalChangeListener = createChangeListener();
+        Properties repositoryDescriptors = service.getRepositoryDescriptors();
+
+        nsRegistry = createNamespaceRegistry(repositoryDescriptors);
+        ntRegistry = createNodeTypeRegistry(nsRegistry, repositoryDescriptors);
+        externalChangeListener = createChangeListener(repositoryDescriptors);
     }
 
     public NamespaceRegistryImpl getNamespaceRegistryImpl() {
@@ -247,11 +249,25 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         return ism;
     }
 
-    private NamespaceRegistryImpl createNamespaceRegistry() throws RepositoryException {
-        return new NamespaceRegistryImpl(this, service.getRegisteredNamespaces(sessionInfo));
+    /**
+     *
+     * @param descriptors
+     * @return
+     * @throws RepositoryException
+     */
+    private NamespaceRegistryImpl createNamespaceRegistry(Properties descriptors) throws RepositoryException {
+        boolean level2 = Boolean.valueOf(descriptors.getProperty(Repository.LEVEL_2_SUPPORTED)).booleanValue();
+        return new NamespaceRegistryImpl(this, service.getRegisteredNamespaces(sessionInfo), level2);
     }
 
-    private NodeTypeRegistry createNodeTypeRegistry(NamespaceRegistry nsRegistry) throws RepositoryException {
+    /**
+     *
+     * @param nsRegistry
+     * @param descriptors
+     * @return
+     * @throws RepositoryException
+     */
+    private NodeTypeRegistry createNodeTypeRegistry(NamespaceRegistry nsRegistry, Properties descriptors) throws RepositoryException {
         QNodeDefinition rootNodeDef = service.getNodeDefinition(sessionInfo, service.getRootId(sessionInfo));
         QNodeTypeDefinitionIterator it = service.getNodeTypeDefinitions(sessionInfo);
         List ntDefs = new ArrayList();
@@ -265,13 +281,13 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * Creates and registers an EventListener on the RepositoryService that
      * listens for external changes.
      *
+     * @param descriptors the repository descriptors
      * @return the listener or <code>null</code> if the underlying
      *         <code>RepositoryService</code> does not support observation.
      * @throws RepositoryException if an error occurs while registering the
      *                             event listener.
      */
-    private EventListener createChangeListener() throws RepositoryException {
-        Properties descriptors = service.getRepositoryDescriptors();
+    private EventListener createChangeListener(Properties descriptors) throws RepositoryException {
         String desc = descriptors.getProperty(Repository.OPTION_OBSERVATION_SUPPORTED);
         EventListener l = null;
         if (Boolean.valueOf(desc).booleanValue()) {
@@ -368,7 +384,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             try {
                 service.removeEventListener(sessionInfo, service.getRootId(sessionInfo), externalChangeListener);
             } catch (RepositoryException e) {
-                log.warn("exception while disposing workspace manager: " + e);
+                log.warn("Exception while disposing workspace manager: " + e);
             }
         }
     }
