@@ -917,7 +917,6 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            // DIFF JR: srcSession = rep.createSession(session.getSubject(), workspaceName);
             srcSession = session.switchWorkspace(workspaceName);
 
             // search nearest ancestor that is referenceable
@@ -1324,7 +1323,6 @@ public class NodeImpl extends ItemImpl implements Node {
         throws ItemExistsException, NoSuchNodeTypeException, VersionException,
         ConstraintViolationException, LockException, RepositoryException {
 
-        // DIFF JR: remove check that assert existing nt. this should be done within following statement
         QNodeDefinition definition = session.getValidator().getApplicableNodeDefinition(nodeName, nodeTypeName, getNodeState());
         if (nodeTypeName == null) {
             // use default node type
@@ -1485,7 +1483,6 @@ public class NodeImpl extends ItemImpl implements Node {
                 return false;
             }
             NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
-            // DIFF JR: replaced 'isDerivedFrom' by 'isNodeType'
             if (primaryType.isNodeType(mixinName)) {
                 log.error(mixin.getName() + ": already contained in primary node type");
                 return false;
