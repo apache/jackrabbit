@@ -115,9 +115,9 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
         if (changeLog == null) {
             throw new IllegalArgumentException("ChangeLog must not be null.");
         }
-        // now we need to apply the transient changes in changeLog to
-        // the ItemStates in the workspace layer
-        changeLog.push();
-        changeLog.persisted();
+        // apply the transient changes in changeLog to the ItemStates in the
+        // workspace layer and synchronize the changes recorded in the changelog
+        // with the events sent.
+        changeLog.persist(events);
     }
 }
