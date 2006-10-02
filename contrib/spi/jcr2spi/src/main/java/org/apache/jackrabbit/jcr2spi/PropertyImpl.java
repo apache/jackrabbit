@@ -536,9 +536,6 @@ public class PropertyImpl extends ItemImpl implements Property {
             remove();
             return;
         }
-
-        // DIFF JR: compaction of internalV-array has been performed before.
-
         // modify the state of this property
         Operation op = SetPropertyValue.create(getPropertyState(), qValues, valueType);
         session.getSessionItemStateManager().execute(op);
