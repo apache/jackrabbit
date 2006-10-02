@@ -166,7 +166,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            // DIFF JR: srcSession = rep.createSession(session.getSubject(), srcWorkspace);
             srcSession = session.switchWorkspace(srcWorkspace);
             WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
@@ -209,7 +208,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
-            // DIFF JR: srcSession = rep.createSession(session.getSubject(), srcWorkspace);
             srcSession = session.switchWorkspace(srcWorkspace);
             WorkspaceImpl srcWsp = (WorkspaceImpl) srcSession.getWorkspace();
 
