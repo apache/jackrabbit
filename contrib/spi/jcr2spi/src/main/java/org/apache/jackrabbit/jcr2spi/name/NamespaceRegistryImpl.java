@@ -70,11 +70,14 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     private final CachingNamespaceResolver resolver;
     private final NamespaceStorage storage;
 
-    public NamespaceRegistryImpl(NamespaceStorage storage, Properties nsValues) {
+    private final boolean level2Repository;
+
+    public NamespaceRegistryImpl(NamespaceStorage storage, Properties nsValues, boolean level2Repository) {
         super(true); // enable listener support
         resolver = new CachingNamespaceResolver(this, 1000);
         this.storage = storage;
-	load(nsValues);
+        this.level2Repository = level2Repository;
+        load(nsValues);
     }
 
     private void load(Properties nsValues) {
@@ -93,8 +96,9 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * @see NamespaceRegistry#registerNamespace(String, String)
      */
     public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO: UnsupportedRepositoryOperationException in Level1-Repository
-
+        if (!level2Repository) {
+            throw new UnsupportedRepositoryOperationException("Repository is Level1 only.");
+        }
         // perform basic validation checks
         if (prefix == null || uri == null) {
             throw new IllegalArgumentException("prefix/uri can not be null");
@@ -165,7 +169,10 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * @see NamespaceRegistry#unregisterNamespace(String)
      */
     public void unregisterNamespace(String prefix) throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO: UnsupportedRepositoryOperationException in Level1-Repository
+        if (!level2Repository) {
+            throw new UnsupportedRepositoryOperationException("Repository is Level1 only.");
+        }
+
         if (reservedPrefixes.contains(prefix)) {
             throw new NamespaceException("reserved prefix: " + prefix);
         }
