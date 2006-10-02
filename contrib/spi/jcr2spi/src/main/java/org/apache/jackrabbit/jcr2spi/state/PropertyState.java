@@ -95,7 +95,7 @@ public class PropertyState extends ItemState {
      * @inheritDoc
      */
     public void remove() {
-        if (status == STATUS_NEW) {
+        if (getStatus() == STATUS_NEW) {
             setStatus(STATUS_REMOVED);
         } else {
             setStatus(STATUS_EXISTING_REMOVED);
@@ -110,10 +110,10 @@ public class PropertyState extends ItemState {
     public void revert(Set affectedItemStates) {
         // all states except for 'new' ones must have an overlayed state in order
         // to be 'reverted'.
-        if (status != STATUS_NEW && overlayedState == null) {
+        if (getStatus() != STATUS_NEW && overlayedState == null) {
             throw new IllegalStateException("revert cannot be called on workspace state");
         }
-        switch (status) {
+        switch (getStatus()) {
             case STATUS_EXISTING:
                 // nothing to do
                 break;
@@ -151,13 +151,20 @@ public class PropertyState extends ItemState {
      * @see ItemState#collectTransientStates(Set)
      */
     public void collectTransientStates(Set transientStates) {
-        switch (status) {
+        switch (getStatus()) {
             case STATUS_EXISTING_MODIFIED:
             case STATUS_EXISTING_REMOVED:
             case STATUS_NEW:
             case STATUS_STALE_DESTROYED:
             case STATUS_STALE_MODIFIED:
                 transientStates.add(this);
+                break;
+            case STATUS_EXISTING:
+            case STATUS_REMOVED:
+                log.debug("Collecting transient states: Ignored PropertyState with status " + getStatus());
+                break;
+            default:
+                // should never occur. status is validated upon setStatus(int)
         }
     }
 

@@ -74,7 +74,7 @@ public abstract class ItemState implements ItemStateListener {
     /**
      * the internal status of this item state
      */
-    protected int status;
+    private int status;
 
     /**
      * Listeners (weak references)
@@ -147,6 +147,7 @@ public abstract class ItemState implements ItemStateListener {
 
     /**
      * Copy state information from another state into this state
+     * 
      * @param state source state information
      */
     abstract void copyFrom(ItemState state);
