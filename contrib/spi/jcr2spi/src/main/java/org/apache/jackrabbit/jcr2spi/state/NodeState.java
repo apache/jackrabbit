@@ -511,9 +511,9 @@ public class NodeState extends ItemState {
                 // already removed
             }
         }
-        if (status == STATUS_EXISTING || status == STATUS_EXISTING_MODIFIED) {
+        if (getStatus() == STATUS_EXISTING || getStatus() == STATUS_EXISTING_MODIFIED) {
             setStatus(STATUS_EXISTING_REMOVED);
-        } else if (status == STATUS_NEW) {
+        } else if (getStatus() == STATUS_NEW) {
             setStatus(STATUS_REMOVED);
         }
         // now inform parent
@@ -530,7 +530,7 @@ public class NodeState extends ItemState {
     public void revert(Set affectedItemStates) {
         // all states except for 'new' ones must have an overlayed state in order
         // to be 'reverted'.
-        if (status != STATUS_NEW && overlayedState == null) {
+        if (getStatus() != STATUS_NEW && overlayedState == null) {
             throw new IllegalStateException("revert cannot be called on workspace state");
         }
         // copy to new list, when a property is reverted it may call this node
@@ -584,7 +584,7 @@ public class NodeState extends ItemState {
         }
 
         // now revert this node state
-        switch (status) {
+        switch (getStatus()) {
             case STATUS_EXISTING:
                 // nothing to do
                 break;
@@ -622,7 +622,7 @@ public class NodeState extends ItemState {
      * @see ItemState#collectTransientStates(Set)
      */
     public void collectTransientStates(Set transientStates) {
-        switch (status) {
+        switch (getStatus()) {
             case STATUS_EXISTING_MODIFIED:
             case STATUS_EXISTING_REMOVED:
             case STATUS_NEW:
@@ -691,7 +691,7 @@ public class NodeState extends ItemState {
      */
     public synchronized Collection getPropertyNames() {
         Collection names;
-        if (status == STATUS_EXISTING_MODIFIED) {
+        if (getStatus() == STATUS_EXISTING_MODIFIED) {
             names = new ArrayList();
             for (Iterator it = getPropertyEntries().iterator(); it.hasNext(); ) {
                 names.add(((ChildPropertyEntry) it.next()).getName());
@@ -711,7 +711,7 @@ public class NodeState extends ItemState {
      */
     public synchronized Collection getPropertyEntries() {
         Collection props;
-        if (status == STATUS_EXISTING_MODIFIED) {
+        if (getStatus() == STATUS_EXISTING_MODIFIED) {
             // filter out removed properties
             props = new ArrayList();
             for (Iterator it = properties.values().iterator(); it.hasNext(); ) {
