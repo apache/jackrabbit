@@ -96,8 +96,10 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
                 href = href.substring(prefix.length());
             }
         }
-        if (pathPrefix != null && pathPrefix.length() > 0 && !prefix.endsWith(pathPrefix)) {
-            b.append(pathPrefix);
+        if (pathPrefix != null && pathPrefix.length() > 0) {
+            if (!b.toString().endsWith(pathPrefix)) {
+                b.append(pathPrefix);
+            }
             if (href.startsWith(pathPrefix)) {
                 href = href.substring(pathPrefix.length());
             }
