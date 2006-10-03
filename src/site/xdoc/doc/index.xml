@@ -23,14 +23,16 @@
 
 <section name="Getting Started">
 <p>
-Since Jackrabbit is not yet released, in order to get your hands on a running Jackrabbit instance
-you have to download and build it yourself. Directions for doing so can be found in the 
-<a href="building.html">Building Jackrabbit</a> section.
-Once Jackrabbit is up and running, you can take your <a href="firststeps.html">first hops</a>.
+You can get started with Apache Jackrabbit either
+by <a href="../downloads.cgi">downloading</a> the latest binary release or
+by <a href="building.html">building</a> the source code yourself.
+Once you have the binaries available, check the
+<a href="firststeps.html">first hops</a> section for simple examples
+to get you up to speed.
 </p>
 <p>
 If you have questions or comments about Jackrabbit, please send them
-to the <a href="../mail-lists.html">Jackrabbit developer mailing list</a>.
+to the <a href="../mail-lists.html">Jackrabbit mailing lists</a>.
 You are also welcome to file bug reports, improvement ideas, or other
 contributions to
 <a href="http://issues.apache.org/jira/browse/JCR">our issue tracker</a>.
@@ -40,7 +42,7 @@ The <a href="http://wiki.apache.org/jackrabbit/">Jackrabbit Wiki</a> contains
 a few <a href="http://wiki.apache.org/jackrabbit/ExamplesPage">examples</a>
 and <a href="http://wiki.apache.org/jackrabbit/ContribTips">tips</a>. There
 is also a <a href="http://wiki.apache.org/jackrabbit/QuestionsAndAnswers">questions and answers page</a>
-for asking questions about Jackrabbit.
+for questions about Jackrabbit.
 </p>
 </section>
 <section name="Content Repository for Java Technology API (JCR)">
