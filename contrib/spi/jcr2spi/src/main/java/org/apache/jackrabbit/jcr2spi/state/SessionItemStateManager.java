@@ -119,9 +119,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                                    NamespaceResolver nsResolver) {
         this.workspaceItemStateMgr = workspaceItemStateMgr;
         this.transientStateMgr = new TransientItemStateManager(idFactory, workspaceItemStateMgr);
-        // DIFF JR: validator added
         this.validator = validator;
-
         this.nsResolver = nsResolver;
 
         // create hierarchy manager
@@ -193,6 +191,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @param nodeState
      */
     public Collection getReferingStates(NodeState nodeState) throws ItemStateException {
+        // TODO: not correct. ItemManager later on expectes overlaying state
         return workspaceItemStateMgr.getReferingStates(nodeState);
     }
 
@@ -340,9 +339,9 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // build changelog for affected and decendant states only
         ChangeLog changeLog = new ChangeLog(itemState);
         collectTransientStates(itemState, changeLog, true);
+        changeLog.collectOperations(transientStateMgr.getOperations());
 
         changeLog.checkIsSelfContained();
-        changeLog.collectOperations(transientStateMgr.getOperations());
         return changeLog;
     }
 
@@ -470,20 +469,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     /**
      * @inheritDoc
      */
-    public void visit(Clone operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
-    }
-
-    /**
-     * @inheritDoc
-     */
     public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
 
         // retrieve states and assert they are modifiable
@@ -514,10 +499,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         // remember operation
         transientStateMgr.addOperation(operation);
-    }
-
-    public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
     }
 
     /**
@@ -664,44 +645,56 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         transientStateMgr.addOperation(operation);
     }
 
+    public void visit(Clone operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        throw new UnsupportedOperationException("Internal error: Clone cannot be handled by session ItemStateManager.");
+    }
+
+    public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        throw new UnsupportedOperationException("Internal error: Copy cannot be handled by session ItemStateManager.");
+    }
+
     public void visit(Checkout operation) throws RepositoryException, UnsupportedRepositoryOperationException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: Checkout cannot be handled by session ItemStateManager.");
     }
 
     public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: Checkin cannot be handled by session ItemStateManager.");
+    }
+
+    public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
+        throw new UnsupportedOperationException("Internal error: Update cannot be handled by session ItemStateManager.");
     }
 
     public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: Restore cannot be handled by session ItemStateManager.");
     }
 
     public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: Merge cannot be handled by session ItemStateManager.");
     }
 
     public void visit(ResolveMergeConflict operation) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: Update cannot be handled by session ItemStateManager.");
     }
 
     public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: Lock cannot be handled by session ItemStateManager.");
     }
 
     public void visit(LockRefresh operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: LockRefresh cannot be handled by session ItemStateManager.");
     }
 
     public void visit(LockRelease operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: LockRelease cannot be handled by session ItemStateManager.");
     }
 
     public void visit(AddLabel operation) throws VersionException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: AddLabel cannot be handled by session ItemStateManager.");
     }
 
     public void visit(RemoveLabel operation) throws VersionException, RepositoryException {
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: RemoveLabel cannot be handled by session ItemStateManager.");
     }
 
     //--------------------------------------------< Internal State Handling >---

@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.HashSet;
+import java.util.Collection;
 
 /**
  * Registers changes made to states and references and consolidates
@@ -54,7 +55,7 @@ public class ChangeLog {
 
     /**
      * Type of operation this changelog is collection state modifications for.
-     */  
+     */
     private Set operations = new LinkedHashSet();
 
     /**
@@ -196,55 +197,18 @@ public class ChangeLog {
         affectedStates.addAll(modifiedStates);
         affectedStates.addAll(deletedStates);
         affectedStates.addAll(addedStates);
-        Iterator it = new IteratorChain(modifiedStates(), deletedStates());
-        while (it.hasNext()) {
-            ItemState transientState = (ItemState) it.next();
-            if (transientState.isNode()) {
-                NodeState nodeState = (NodeState) transientState;
-                Set dependentStates = new HashSet();
-                if (nodeState.hasOverlayedState()) {
-                    // TODO: oldParentState is overlayed state from workspace. do not use!
-                    NodeState oldParentState = nodeState.getOverlayedState().getParent();
-                    NodeState newParentState = nodeState.getParent();
-                    if (oldParentState != null) {
-                        if (newParentState == null) {
-                            // node has been removed, add old parent
-                            // to dependencies
-                            dependentStates.add(oldParentState);
-                        } else {
-                            if (!oldParentState.equals(newParentState)) {
-                                // node has been moved, add old and new parent
-                                // to dependencies
-                                dependentStates.add(oldParentState);
-                                dependentStates.add(newParentState);
-                            }
-                        }
-                    }
-                }
-                // removed child node entries
-                Iterator cneIt = nodeState.getRemovedChildNodeEntries().iterator();
-                while (cneIt.hasNext()) {
-                    ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
-                    dependentStates.add(cne.getNodeState());
-                }
-                // added child node entries
-                cneIt = nodeState.getAddedChildNodeEntries().iterator();
-                while (cneIt.hasNext()) {
-                    ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
-                    dependentStates.add(cne.getNodeState());
-                }
 
-                // now walk through dependencies and check whether they
-                // are within the scope of this save operation
-                Iterator depIt = dependentStates.iterator();
-                while (depIt.hasNext()) {
-                    NodeState dependantState = (NodeState) depIt.next();
-                    if (!affectedStates.contains(dependantState)) {
-                        // need to save the parent as well
-                        String msg = dependantState.getNodeId().toString() + " needs to be saved as well.";
-                        throw new ItemStateException(msg);
-                    }
-                }
+        // check if the affected states listed by the operations are all
+        // listed in the modified,deleted or added states collected by this
+        // changelog.
+        Iterator it = getOperations();
+        while (it.hasNext()) {
+            Operation op = (Operation) it.next();
+            Collection opStates = op.getAffectedItemStates();
+            if (!affectedStates.containsAll(opStates)) {
+                // need to save the parent as well
+                String msg = "ChangeLog is not self contained.";
+                throw new ItemStateException(msg);
             }
         }
     }
