@@ -128,9 +128,11 @@ class URIResolverImpl implements URIResolver {
                     // request locate-by-uuid report to build the uri
                     ReportInfo rInfo = new ReportInfo(LocateByUuidReport.LOCATE_BY_UUID_REPORT);
                     rInfo.setContentElement(DomUtil.hrefToXml(uuid, domFactory));
+
+                    ReportMethod rm = null;
                     try {
                         String wspUri = getWorkspaceUri(workspaceName);
-                        ReportMethod rm = new ReportMethod(wspUri, rInfo);
+                        rm = new ReportMethod(wspUri, rInfo);
 
                         service.getClient(sessionInfo).executeMethod(rm);
 
@@ -139,13 +141,17 @@ class URIResolverImpl implements URIResolver {
                             uriBuffer.append(ms.getResponses()[0].getHref());
                             cache.add(ms.getResponses()[0].getHref(), uuidId);
                         } else {
-                            throw new RepositoryException("Cannot identify item with uuid " + uuid);
+                            throw new ItemNotFoundException("Cannot identify item with uuid " + uuid);
                         }
 
                     } catch (IOException e) {
                         throw new RepositoryException(e.getMessage());
                     } catch (DavException e) {
                         throw ExceptionConverter.generate(e);
+                    } finally {
+                        if (rm != null) {
+                            rm.releaseConnection();
+                        }
                     }
                 }
             } else {

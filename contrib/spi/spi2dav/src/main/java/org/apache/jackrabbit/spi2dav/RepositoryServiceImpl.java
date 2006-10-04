@@ -180,7 +180,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
     private static final SubscriptionInfo S_INFO = new SubscriptionInfo(ALL_EVENTS, true, DavConstants.INFINITE_TIMEOUT);
 
-    private static long POLL_INTERVAL = 30000;  // TODO: make configurable
+    private static long POLL_INTERVAL = 300000000;  // TODO: make configurable
 
     private final IdFactory idFactory;
     private final ValueFactory valueFactory;
@@ -604,7 +604,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getNodeInfo(SessionInfo, NodeId)
      */
-    public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws PathNotFoundException, RepositoryException {
+    public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException {
         // set of properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(ItemResourceConstants.JCR_NAME);
@@ -687,7 +687,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getPropertyInfo(SessionInfo, PropertyId)
      */
-    public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws PathNotFoundException, RepositoryException {
+    public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws ItemNotFoundException, RepositoryException {
         // set of Dav-properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(ItemResourceConstants.JCR_NAME);
@@ -762,6 +762,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
                     client.executeMethod(method);
                     method.checkSuccess();
+                    method.releaseConnection();
                 }
                 success = true;
             } finally {
@@ -1464,8 +1465,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         private EventIterator end(HttpClient client, boolean commit) throws RepositoryException {
             checkConsumed();
+
+            String uri = getItemUri(targetId, sessionInfo);
             try {
-                String uri = getItemUri(targetId, sessionInfo);
+                // first unsubscribe in order to retrieve the events
+                String subscrUri = (targetId.denotesNode() ? uri : getItemUri(((PropertyId) targetId).getParentId(), sessionInfo));
+                EventIterator events = poll(subscrUri, subscriptionId, sessionInfo);
+                unsubscribe(subscrUri, subscriptionId, sessionInfo);
+                return events;
+
+            } finally {
+                // make sure the lock initially created is removed again on the
+                // server.
                 UnLockMethod method = new UnLockMethod(uri, batchId);
                 // todo: check if 'initmethod' would work (ev. conflict with TxId header).
                 String[] locktokens = sessionInfo.getLockTokens();
@@ -1475,21 +1486,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 }
                 // in contrast to standard UNLOCK, the tx-unlock provides a
                 // request body.
-                method.setRequestBody(new TransactionInfo(commit));
-
-                client.executeMethod(method);
-                method.checkSuccess();
-
-                // retrieve events && unsubscribe
-                String subscrUri = (targetId.denotesNode() ? uri : getItemUri(((PropertyId) targetId).getParentId(), sessionInfo));
-                EventIterator events = poll(subscrUri, subscriptionId, sessionInfo);
-                unsubscribe(subscrUri, subscriptionId, sessionInfo);
-
-                return events;
-            } catch (IOException e) {
-                throw new RepositoryException(e);
-            } catch (DavException e) {
-                throw ExceptionConverter.generate(e);
+                try {
+                    method.setRequestBody(new TransactionInfo(commit));
+                    client.executeMethod(method);
+                    method.checkSuccess();
+                } catch (IOException e) {
+                    throw new RepositoryException(e);
+                } catch (DavException e) {
+                    throw ExceptionConverter.generate(e);
+                } finally {
+                    // release UNLOCK method
+                    method.releaseConnection();
+                }
             }
         }
 
