@@ -71,9 +71,12 @@ public class ReportType implements DeltaVConstants, XmlSerializable {
             Report report = (Report) reportClass.newInstance();
             report.init(resource, info);
             return report;
-        } catch (Exception e) {
+        } catch (IllegalAccessException e) {
             // should never occur
-            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to register Report.");
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to create new report (" + reportClass.getName() + ") from class: " + e.getMessage());
+        } catch (InstantiationException e) {
+            // should never occur
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to create new report (" + reportClass.getName() + ") from class: " + e.getMessage());
         }
     }
 
