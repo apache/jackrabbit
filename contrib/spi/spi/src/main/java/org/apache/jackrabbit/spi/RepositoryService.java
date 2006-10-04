@@ -152,6 +152,7 @@ public interface RepositoryService {
      * @param sessionInfo
      * @param nodeId
      * @return
+     * @throws javax.jcr.ItemNotFoundException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#getItem(String)
      * @see javax.jcr.Node#getNode(String)
@@ -163,17 +164,18 @@ public interface RepositoryService {
      * @see javax.jcr.Node#getVersionHistory()
      * @see javax.jcr.version.Version#getContainingHistory()
      */
-    public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws PathNotFoundException, RepositoryException;
+    public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * @param sessionInfo
      * @param propertyId
      * @return
+     * @throws javax.jcr.ItemNotFoundException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#getItem(String)
      * @see javax.jcr.Node#getProperty(String)
      */
-    public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws PathNotFoundException, RepositoryException;
+    public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws ItemNotFoundException, RepositoryException;
 
     //-----------------------------------------------< general modification >---
     /**
