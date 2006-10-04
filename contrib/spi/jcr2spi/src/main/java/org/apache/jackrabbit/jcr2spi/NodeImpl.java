@@ -1417,15 +1417,16 @@ public class NodeImpl extends ItemImpl implements Node {
         throws ConstraintViolationException, RepositoryException {
         QPropertyDefinition def = getApplicablePropertyDefinition(qName, type, true);
         int targetType = def.getRequiredType();
+        // make sure, the final type is not set to undefined        
         if (targetType == PropertyType.UNDEFINED) {
-            targetType = type;
+            if (type == PropertyType.UNDEFINED) {
+                targetType = (values.length > 0) ? values[0].getType() : PropertyType.STRING;
+            } else {
+                targetType = type;
+            }
         }
         Value[] targetValues = ValueHelper.convert(values, targetType, session.getValueFactory());
         QValue[] qvs = ValueFormat.getQValues(targetValues, session.getNamespaceResolver());
-        // make sure, the final type is not set to undefined
-        if (targetType == PropertyType.UNDEFINED) {
-            targetType = (qvs.length > 0) ? qvs[0].getType() : PropertyType.STRING;
-        }
         return createProperty(qName, targetType, def, qvs);
     }
 
