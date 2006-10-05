@@ -268,6 +268,7 @@ public class TransientItemStateManager extends CachingItemStateManager
      * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
      */
     public void statusChanged(ItemState state, int previousStatus) {
+        // TODO: cleanup operations as well.
         // TODO: depending on status of state adapt change log
         // e.g. a revert on states will reset the status from
         // 'existing modified' to 'existing'.
@@ -316,6 +317,7 @@ public class TransientItemStateManager extends CachingItemStateManager
                 if (previousStatus == ItemState.STATUS_NEW) {
                     // was new and now removed again
                     changeLog.addedStates.remove(state);
+                    // TODO remove the 'add' operation as well
                 } else if (previousStatus == ItemState.STATUS_EXISTING_REMOVED) {
                     // was removed and is now saved
                     changeLog.deletedStates.remove(state);

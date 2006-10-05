@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
@@ -26,7 +25,6 @@ import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.AccessDeniedException;
@@ -41,7 +39,6 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.value.QValue;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -176,42 +173,6 @@ public class ItemStateValidator {
                 throw new ConstraintViolationException(msg);
             }
         }
-    }
-
-    /**
-     * Checks whether the given property parameters are consistent and satisfy
-     * the constraints specified by the given definition. The following
-     * validations/checks are performed:
-     * <ul>
-     * <li>make sure the type is not undefined and matches the type of all
-     * values given</li>
-     * <li>make sure all values have the same type.</li>
-     * <li>check if the type of the property values does comply with the
-     * requiredType specified in the property's definition</li>
-     * <li>check if the property values satisfy the value constraints
-     * specified in the property's definition</li>
-     * </ul>
-     *
-     * @param propertyType
-     * @param values
-     * @param definition
-     * @throws ConstraintViolationException If any of the validations fails.
-     * @throws RepositoryException If another error occurs.
-     */
-    public void validate(int propertyType, QValue[] values, QPropertyDefinition definition)
-        throws ConstraintViolationException, RepositoryException {
-        if (propertyType == PropertyType.UNDEFINED) {
-            throw new RepositoryException("'Undefined' is not a valid property type for existing values.");
-        }
-        if (definition.getRequiredType() != PropertyType.UNDEFINED && definition.getRequiredType() != propertyType) {
-            throw new ConstraintViolationException("RequiredType constraint is not satisfied");
-        }
-        for (int i = 0; i < values.length; i++) {
-            if (propertyType != values[i].getType()) {
-                throw new ConstraintViolationException("Inconsistent value types: Required type = " + PropertyType.nameFromValue(propertyType) + "; Found value with type = " + PropertyType.nameFromValue(values[i].getType()));
-            }
-        }
-        ValueConstraint.checkValueConstraints(definition, values);
     }
 
     //-------------------------------------------------< misc. helper methods >

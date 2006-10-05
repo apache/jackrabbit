@@ -31,10 +31,12 @@ import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.name.QName;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.io.InputStream;
@@ -91,7 +93,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             NodeState parent = (parentId != null) ? (NodeState) ism.getItemState(parentId) : null;
 
             return createNodeState(info, parent);
-        } catch (PathNotFoundException e) {
+        } catch (ItemNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
         } catch (RepositoryException e) {
             throw new ItemStateException(e.getMessage(), e);
@@ -146,31 +148,33 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             NodeState state = new NodeState(info.getQName(), uuid, parent, info.getNodetype(),
                 definition, ItemState.STATUS_EXISTING, this, service.getIdFactory());
 
-            // set mixin nodetypes
-            state.setMixinTypeNames(info.getMixins());
-
-            // references to child items
+            // child node entries
+            Set childNodeEntries = new HashSet();
             for (IdIterator it = info.getNodeIds(); it.hasNext(); ) {
                 NodeInfo childInfo = service.getNodeInfo(sessionInfo, (NodeId) it.nextId());
                 String childUUID = null;
                 if (childInfo.getId().getRelativePath() == null) {
                     childUUID = childInfo.getId().getUUID();
                 }
-                state.addChildNodeEntry(childInfo.getQName(), childUUID);
+                childNodeEntries.add(new CNE(childInfo.getQName(), childUUID));
             }
 
-            // references to properties
+            // names of child property entries
+            Set propNames = new HashSet();
             for (IdIterator it = info.getPropertyIds(); it.hasNext(); ) {
                 PropertyId pId = (PropertyId) it.nextId();
-                state.addPropertyName(pId.getQName());
+                propNames.add(pId.getQName());
             }
 
             // If the uuid is not null, the state could include mix:referenceable.
             // Therefore build a NodeReference instance and add it to the state.
+            NodeReferences nodeRefs = null;
             if (uuid != null) {
                 PropertyId[] references = info.getReferences();
-                state.setNodeReferences(new NodeReferencesImpl(info.getId(), references));
+                nodeRefs = new NodeReferencesImpl(info.getId(), references);
             }
+
+            state.init(info.getMixins(), childNodeEntries, propNames, nodeRefs);
 
             // copied from local-state-mgr TODO... check
             // register as listener
@@ -238,7 +242,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             // build the PropertyState
             PropertyState state = new PropertyState(info.getQName(), parent,
                 def, ItemState.STATUS_EXISTING, service.getIdFactory());
-            state.setType(info.getType());
+
             QValue[] qValues;
             if (info.getType() == PropertyType.BINARY) {
                 InputStream[] ins = info.getValuesAsStream();
@@ -254,7 +258,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
                 }
             }
 
-            state.internalSetValues(qValues);
+            state.init(info.getType(), qValues);
 
             // register as listener
             // TODO check if needed
@@ -274,6 +278,43 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             String msg = "internal error: failed to retrieve property definition.";
             log.debug(msg);
             throw new ItemStateException(msg, e);
+        }
+    }
+
+
+    //------------------------------------------------------< ChildNodeEntry >---
+    private class CNE implements ChildNodeEntry {
+
+        private final QName name;
+        private final String uuid;
+
+        private CNE(QName name, String uuid) {
+            this.name = name;
+            this.uuid = uuid;
+        }
+
+        public NodeId getId() {
+            throw new UnsupportedOperationException();
+        }
+
+        public QName getName() {
+            return name;
+        }
+
+        public String getUUID() {
+            return uuid;
+        }
+
+        public int getIndex() {
+            throw new UnsupportedOperationException();
+        }
+
+        public NodeState getNodeState() throws NoSuchItemStateException, ItemStateException {
+            throw new UnsupportedOperationException();
+        }
+
+        public boolean isAvailable() {
+            throw new UnsupportedOperationException();
         }
     }
 
