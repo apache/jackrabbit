@@ -107,12 +107,14 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
                 hrefList.add(DomUtil.getText(hrefs.nextElement()));
             }
             source = (String[])hrefList.toArray(new String[hrefList.size()]);
+            type = UPDATE_BY_VERSION;
             done = true;
         }
 
         // alternatively 'DAV:label-name' elements may be present.
         if (!done && DomUtil.hasChildElement(updateElement, XML_LABEL_NAME, NAMESPACE)) {
             source = new String[] {DomUtil.getChildText(updateElement, XML_LABEL_NAME, NAMESPACE)};
+            type = UPDATE_BY_LABEL;
             done = true;
         }
 
@@ -121,6 +123,7 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
             Element wspElem = DomUtil.getChildElement(updateElement, XML_WORKSPACE, NAMESPACE);
             if (wspElem != null) {
                 source = new String[] {DomUtil.getChildTextTrim(wspElem, DavConstants.XML_HREF, DavConstants.NAMESPACE)};
+                type = UPDATE_BY_WORKSPACE;
             } else {
                 log.warn("DAV:update element must contain either DAV:version, DAV:label-name or DAV:workspace child element.");
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST);
@@ -228,7 +231,8 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
                 DomUtil.addChildElement(elem, XML_LABEL_NAME, NAMESPACE, updateSource[0]);
                 break;
             case UPDATE_BY_WORKSPACE:
-                DomUtil.addChildElement(elem, XML_WORKSPACE, NAMESPACE, updateSource[0]);
+                Element wspEl = DomUtil.addChildElement(elem, XML_WORKSPACE, NAMESPACE, updateSource[0]);
+                wspEl.appendChild(DomUtil.hrefToXml(updateSource[0], factory));
                 break;
             // no default.
             default:
