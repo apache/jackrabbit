@@ -319,7 +319,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 }
             }
             if (modified) {
-                setPropertyStateValue(propState, newVals, PropertyType.REFERENCE);
+                // TODO improve
+                int options = ItemStateValidator.CHECK_LOCK //| ItemStateValidator.CHECK_COLLISION
+                    | ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_CONSTRAINTS;
+                setPropertyStateValue(propState, newVals, PropertyType.REFERENCE, options);
             }
         }
         // make sure all entries are removed
@@ -527,7 +530,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         // mixin-names to be execute on the nodestate (and corresponding property state)
         if (mixinNames != null && mixinNames.length > 0) {
             // find out if any of the existing mixins is removed
-            List originalMixins = Arrays.asList(nState.getMixinTypeNames());
+            List originalMixins = new ArrayList();
+            originalMixins.addAll(Arrays.asList(nState.getMixinTypeNames()));
             originalMixins.removeAll(Arrays.asList(mixinNames));
             anyRemoved = originalMixins.size() > 0;
 
@@ -539,7 +543,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 // execute value of existing property
                 try {
                     PropertyState pState = nState.getPropertyState(QName.JCR_MIXINTYPES);
-                    setPropertyStateValue(pState, QValue.create(mixinNames), PropertyType.NAME);
+                    int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+                    setPropertyStateValue(pState, QValue.create(mixinNames), PropertyType.NAME, options);
                 } catch (ItemStateException e) {
                     // should not occur, since existance has been asserted before
                     throw new RepositoryException(e);
@@ -625,7 +630,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      */
     public void visit(SetPropertyValue operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         PropertyState pState = operation.getPropertyState();
-        setPropertyStateValue(pState, operation.getValues(), operation.getPropertyType());
+        // TODO improve
+        int options = ItemStateValidator.CHECK_LOCK //| ItemStateValidator.CHECK_COLLISION
+            | ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_CONSTRAINTS;
+        setPropertyStateValue(pState, operation.getValues(), operation.getPropertyType(), options);
         transientStateMgr.addOperation(operation);
     }
 
@@ -662,7 +670,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     }
 
     public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Update cannot be handled by session ItemStateManager.");
+        // TODO: TOBEFIXED. not correct.
+        workspaceItemStateMgr.execute(operation);
     }
 
     public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
@@ -724,16 +733,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         validator.checkAddProperty(parent, propertyName, pDef, options);
 
-        // make sure the arguements are consistent and do not violate the
-        // given property definition.
-        validator.validate(propertyType, values, pDef);
-
         // create property state
         PropertyState propState = transientStateMgr.createNewPropertyState(propertyName, parent, pDef);
 
         // NOTE: callers must make sure, the property type is not 'undefined'
-        propState.setType(propertyType);
-        propState.setValues(values);
+        propState.setValues(values, propertyType);
     }
 
     private void addNodeState(NodeState parent, QName nodeName, QName nodeTypeName, String uuid, QNodeDefinition definition, int options) throws RepositoryException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchNodeTypeException, ItemExistsException, VersionException {
@@ -817,15 +821,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @throws VersionException
      * @throws RepositoryException
      */
-    private void setPropertyStateValue(PropertyState propState, QValue[] iva, int valueType) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+    private void setPropertyStateValue(PropertyState propState, QValue[] iva,
+                                       int valueType, int options)
+        throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         // assert that the property can be modified.
-        // TODO improve
-        int options = ItemStateValidator.CHECK_LOCK //| ItemStateValidator.CHECK_COLLISION
-            | ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_CONSTRAINTS;
         validator.checkSetProperty(propState, options);
-
-        // make sure property is valid according to its definition
-        validator.validate(valueType, iva, propState.getDefinition());
 
         // free old values as necessary
         QValue[] oldValues = propState.getValues();
@@ -839,9 +839,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 }
             }
         }
-
-        propState.setValues(iva);
-        propState.setType(valueType);
+        propState.setValues(iva, valueType);
     }
 
     /**

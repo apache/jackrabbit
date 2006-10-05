@@ -165,6 +165,29 @@ public class NodeState extends ItemState {
         pull();
     }
 
+    void init(QName[] mixinTypeNames, Collection childEntries, Collection propertyNames, NodeReferences references) {
+        if (mixinTypeNames != null) {
+            this.mixinTypeNames = mixinTypeNames;
+        }
+        // re-create property references
+        propertiesInAttic.clear();
+        properties.clear(); // TODO: any more cleanup work to do? try some kind of merging?
+        Iterator it = propertyNames.iterator();
+        while (it.hasNext()) {
+            QName propName = (QName) it.next();
+            properties.put(propName, new PropertyReference(this, propName, isf, idFactory));
+        }
+        // re-create child node entries
+        childNodeEntries.removeAll(); // TODO: any mre cleanup work to do? try some kind of merging?
+        it = childEntries.iterator();
+        while (it.hasNext()) {
+            ChildNodeEntry cne = (ChildNodeEntry) it.next();
+            childNodeEntries.add(cne.getName(), cne.getUUID());
+        }
+        // set the node references
+        this.references = references;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -175,22 +198,9 @@ public class NodeState extends ItemState {
             uuid = nodeState.uuid;
             //parent = nodeState.parent; // TODO: parent from wrong ism layer
             nodeTypeName = nodeState.nodeTypeName;
-            mixinTypeNames = nodeState.mixinTypeNames;
             definition = nodeState.definition;
-            // re-create property references
-            propertiesInAttic.clear();
-            properties.clear(); // TODO: any more cleanup work to do? try some kind of merging?
-            Iterator it = nodeState.getPropertyNames().iterator();
-            while (it.hasNext()) {
-                addPropertyName((QName) it.next());
-            }
-            // re-create child node entries
-            childNodeEntries.removeAll(); // TODO: any mre cleanup work to do? try some kind of merging?
-            it = nodeState.getChildNodeEntries().iterator();
-            while (it.hasNext()) {
-                ChildNodeEntry cne = (ChildNodeEntry) it.next();
-                childNodeEntries.add(cne.getName(), cne.getUUID());
-            }
+
+            init(nodeState.getMixinTypeNames(), nodeState.getChildNodeEntries(), nodeState.getPropertyNames(), nodeState.getNodeReferences());
         }
     }
 
@@ -286,6 +296,7 @@ public class NodeState extends ItemState {
         } else {
             this.mixinTypeNames = new QName[0];
         }
+        markModified();
     }
 
     /**
@@ -371,7 +382,6 @@ public class NodeState extends ItemState {
      * @return the <code>ChildNodeEntry</code> with the specified
      *         <code>NodeState</code> or <code>null</code> if there's no
      *         matching entry.
-     * @see #addChildNodeEntry
      */
     public synchronized ChildNodeEntry getChildNodeEntry(NodeState nodeState) {
         return childNodeEntries.get(nodeState);
@@ -382,7 +392,6 @@ public class NodeState extends ItemState {
      * denoting the child nodes of this node.
      *
      * @return collection of <code>ChildNodeEntry</code> objects
-     * @see #addChildNodeEntry
      */
     public synchronized Collection getChildNodeEntries() {
         // NOTE: 'childNodeEntries' are already unmodifiable
@@ -395,26 +404,10 @@ public class NodeState extends ItemState {
      *
      * @param nodeName name of the child node entries that should be returned
      * @return list of <code>ChildNodeEntry</code> objects
-     * @see #addChildNodeEntry
      */
     public synchronized List getChildNodeEntries(QName nodeName) {
         // NOTE: SubList retrieved from 'ChildNodeEntries' is already unmodifiable
         return childNodeEntries.get(nodeName);
-    }
-
-    /**
-     * Adds a new <code>ChildNodeEntry</code>.
-     *
-     * @param nodeName <code>QName</code> object specifying the name of the new
-     *                 entry.
-     * @param uuid     the uuid the new entry is refering to or
-     *                 <code>null</code> if the child node state cannot be
-     *                 identified with a uuid.
-     * @return the newly added <code>ChildNodeEntry</code>
-     */
-    synchronized ChildNodeEntry addChildNodeEntry(QName nodeName,
-                                                  String uuid) {
-        return childNodeEntries.add(nodeName, uuid);
     }
 
     /**
@@ -734,15 +727,6 @@ public class NodeState extends ItemState {
             props = properties.values();
         }
         return Collections.unmodifiableCollection(props);
-    }
-
-    /**
-     * Adds a property name entry. This method will not create a property!
-     *
-     * @param propName <code>QName</code> object specifying the property name
-     */
-    synchronized void addPropertyName(QName propName) {
-        properties.put(propName, new PropertyReference(this, propName, isf, idFactory));
     }
 
     /**

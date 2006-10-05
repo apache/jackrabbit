@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.commons.collections.iterators.IteratorChain;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -108,10 +107,10 @@ public class ChangeLog {
      * @param state state that has been deleted
      */
     public void deleted(ItemState state) {
-        if (addedStates.remove(state)) {
+        if (!addedStates.remove(state)) {
             modifiedStates.remove(state);
             deletedStates.add(state);
-        }
+        }       
     }
 
     /**

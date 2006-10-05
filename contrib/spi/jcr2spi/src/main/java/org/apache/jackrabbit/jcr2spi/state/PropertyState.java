@@ -18,6 +18,8 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import javax.jcr.PropertyType;
 import javax.jcr.ValueFormatException;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
@@ -25,6 +27,7 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,6 +92,16 @@ public class PropertyState extends ItemState {
 
         type = PropertyType.UNDEFINED;
         values = QValue.EMPTY_ARRAY;
+    }
+
+    /**
+     *
+     * @param type
+     * @param values
+     */
+    void init(int type, QValue[] values) {
+        this.type = type;
+        this.values = (values == null) ? QValue.EMPTY_ARRAY : values;
     }
 
     /**
@@ -232,17 +245,6 @@ public class PropertyState extends ItemState {
     }
 
     /**
-     * Sets the type of the property value(s)
-     *
-     * @param type the type to be set
-     * @see PropertyType
-     */
-    void setType(int type) {
-        this.type = type;
-    }
-
-
-    /**
      * Returns true if this property is multi-valued, otherwise false.
      *
      * @return true if this property is multi-valued, otherwise false.
@@ -276,21 +278,13 @@ public class PropertyState extends ItemState {
      *
      * @param values the new values
      */
-    void setValues(QValue[] values) {
-        internalSetValues(values);
-        markModified();
-    }
-
-    /**
-     * TODO: rather separate PropertyState into interface and implementation
-     * TODO: and move internalSetValues to implementation only.
-     * Sets the value(s) of this property without marking this property state
-     * as modified.
-     *
-     * @param values the new values
-     */
-    void internalSetValues(QValue[] values) {
+    void setValues(QValue[] values, int type) throws RepositoryException {
+        // make sure the arguements are consistent and do not violate the
+        // given property definition.
+        validate(values, type, this.def);
         this.values = values;
+        this.type = type;
+        markModified();
     }
 
     /**
@@ -308,5 +302,41 @@ public class PropertyState extends ItemState {
         } else {
             return values[0];
         }
+    }
+
+    /**
+     * Checks whether the given property parameters are consistent and satisfy
+     * the constraints specified by the given definition. The following
+     * validations/checks are performed:
+     * <ul>
+     * <li>make sure the type is not undefined and matches the type of all
+     * values given</li>
+     * <li>make sure all values have the same type.</li>
+     * <li>check if the type of the property values does comply with the
+     * requiredType specified in the property's definition</li>
+     * <li>check if the property values satisfy the value constraints
+     * specified in the property's definition</li>
+     * </ul>
+     *
+     * @param values
+     * @param propertyType
+     * @param definition
+     * @throws ConstraintViolationException If any of the validations fails.
+     * @throws RepositoryException If another error occurs.
+     */
+    private static void validate(QValue[] values, int propertyType, QPropertyDefinition definition)
+        throws ConstraintViolationException, RepositoryException {
+        if (propertyType == PropertyType.UNDEFINED) {
+            throw new RepositoryException("'Undefined' is not a valid property type for existing values.");
+        }
+        if (definition.getRequiredType() != PropertyType.UNDEFINED && definition.getRequiredType() != propertyType) {
+            throw new ConstraintViolationException("RequiredType constraint is not satisfied");
+        }
+        for (int i = 0; i < values.length; i++) {
+            if (propertyType != values[i].getType()) {
+                throw new ConstraintViolationException("Inconsistent value types: Required type = " + PropertyType.nameFromValue(propertyType) + "; Found value with type = " + PropertyType.nameFromValue(values[i].getType()));
+            }
+        }
+        ValueConstraint.checkValueConstraints(definition, values);
     }
 }

@@ -38,10 +38,12 @@ public class SetMixin extends AbstractOperation {
         this.nodeState = nodeState;
         this.mixinNames = mixinNames;
 
-        // set affected states
+        // remember node state as affected state
         addAffectedItemState(nodeState);
-        // TODO: correct?
+        // add the jcr:mixinTypes property state as affected if it already exists
+        // and therefore gets modified by this operation.
         if (nodeState.hasPropertyName(QName.JCR_MIXINTYPES)) {
+
             try {
                 addAffectedItemState(nodeState.getPropertyState(QName.JCR_MIXINTYPES));
             } catch (ItemStateException e) {
