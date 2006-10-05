@@ -668,9 +668,11 @@ public class NodeImpl extends ItemImpl implements Node {
     public void addMixin(String mixinName) throws NoSuchNodeTypeException,
         VersionException, ConstraintViolationException, LockException, RepositoryException {
         checkIsWritable();
-        QName[] mixinQNames = new QName[] {getQName(mixinName)};
+        QName mixinQName = getQName(mixinName);
         try {
-            isValidMixin(mixinQNames);
+            if (!isValidMixin(mixinQName)) {
+                throw new ConstraintViolationException("Cannot add '" + mixinName + "' mixin type.");
+            }
         } catch (NodeTypeConflictException e) {
             throw new ConstraintViolationException(e.getMessage());
         }
@@ -678,11 +680,9 @@ public class NodeImpl extends ItemImpl implements Node {
         // merge existing mixins and new mixins to one Array without modifying
         // the node state.
         QName[] currentMixins = getNodeState().getMixinTypeNames();
-        QName[] allMixins = new QName[currentMixins.length + mixinQNames.length];
+        QName[] allMixins = new QName[currentMixins.length + 1];
         System.arraycopy(currentMixins, 0, allMixins, 0, currentMixins.length);
-        for (int i = 0; i < mixinQNames.length; i++) {
-            allMixins[currentMixins.length + i] = mixinQNames[i];
-        }
+        allMixins[currentMixins.length] = mixinQName;
         // perform the operation
         Operation op = SetMixin.create(getNodeState(), allMixins);
         session.getSessionItemStateManager().execute(op);
@@ -744,8 +744,8 @@ public class NodeImpl extends ItemImpl implements Node {
             // locks, versioning, acces restriction.
             session.getValidator().checkIsWritable(getNodeState(), ItemStateValidator.CHECK_ALL);
             // then make sure the new mixin would not conflict.
-            return isValidMixin(new QName[] {getQName(mixinName)});
-        } catch (RepositoryException e) {
+            return isValidMixin(getQName(mixinName));
+        } catch (NoSuchNodeTypeException e) {
             log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
             return false;
         } catch (NodeTypeConflictException e) {
@@ -1467,7 +1467,7 @@ public class NodeImpl extends ItemImpl implements Node {
         return qName;
     }
 
-    private boolean isValidMixin(QName[] mixinNames) throws RepositoryException, NodeTypeConflictException {
+    private boolean isValidMixin(QName mixinName) throws NoSuchNodeTypeException, NodeTypeConflictException {
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
 
         // get list of existing nodetypes
@@ -1476,30 +1476,27 @@ public class NodeImpl extends ItemImpl implements Node {
         EffectiveNodeType entExisting = session.getValidator().getEffectiveNodeType(existingNts);
 
         // first check characteristics of each mixin
-        for (int i = 0; i < mixinNames.length; i++) {
-            QName mixinName = mixinNames[i];
-            NodeType mixin = ntMgr.getNodeType(mixinName);
-            if (!mixin.isMixin()) {
-                log.error(mixin.getName() + ": not a mixin node type");
-                return false;
-            }
-            NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
-            if (primaryType.isNodeType(mixinName)) {
-                log.error(mixin.getName() + ": already contained in primary node type");
-                return false;
-            }
-            // check if adding new mixin conflicts with existing nodetypes
-            if (entExisting.includesNodeType(mixinName)) {
-                log.error(mixin.getName() + ": already contained in mixin types");
-                return false;
-            }
+        NodeType mixin = ntMgr.getNodeType(mixinName);
+        if (!mixin.isMixin()) {
+            log.error(mixin.getName() + ": not a mixin node type");
+            return false;
+        }
+        NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
+        if (primaryType.isNodeType(mixinName)) {
+            log.error(mixin.getName() + ": already contained in primary node type");
+            return false;
+        }
+        // check if adding new mixin conflicts with existing nodetypes
+        if (entExisting.includesNodeType(mixinName)) {
+            log.error(mixin.getName() + ": already contained in mixin types");
+            return false;
         }
 
         // second, build new effective node type for nts including the new mixin
         // types, detecting eventual incompatibilities
-        QName[] resultingNts = new QName[existingNts.length + mixinNames.length];
+        QName[] resultingNts = new QName[existingNts.length + 1];
         System.arraycopy(existingNts, 0, resultingNts, 0, existingNts.length);
-        System.arraycopy(mixinNames, 0, resultingNts, existingNts.length, mixinNames.length);
+        resultingNts[existingNts.length] = mixinName;
         session.getValidator().getEffectiveNodeType(resultingNts);
 
         // all validations succeeded: return true
