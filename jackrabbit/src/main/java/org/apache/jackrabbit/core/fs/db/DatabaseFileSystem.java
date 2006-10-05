@@ -1188,10 +1188,13 @@ public class DatabaseFileSystem implements FileSystem {
             try {
                 String sql = reader.readLine();
                 while (sql != null) {
-                    // replace prefix variable
-                    sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
-                    // execute sql stmt
-                    stmt.executeUpdate(sql);
+                    // Skip comments and empty lines
+                    if (!sql.startsWith("#") && sql.length() > 0) {
+                        // replace prefix variable
+                        sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
+                        // execute sql stmt
+                        stmt.executeUpdate(sql);
+                    }
                     // read next sql stmt
                     sql = reader.readLine();
                 }
