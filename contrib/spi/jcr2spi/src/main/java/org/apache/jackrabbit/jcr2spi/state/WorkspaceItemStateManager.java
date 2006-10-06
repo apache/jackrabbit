@@ -19,9 +19,10 @@ package org.apache.jackrabbit.jcr2spi.state;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -34,6 +35,8 @@ import java.util.Iterator;
  */
 public class WorkspaceItemStateManager extends CachingItemStateManager
     implements InternalEventListener {
+
+    private static Logger log = LoggerFactory.getLogger(WorkspaceItemStateManager.class);
 
     public WorkspaceItemStateManager(ItemStateFactory isf, IdFactory idFactory) {
         super(isf, idFactory);
@@ -51,73 +54,106 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
      * @param isLocal
      */
     public void onEvent(EventIterator events, boolean isLocal) {
-        // collect set of removed node ids
-        Set removedNodeIds = new HashSet();
-        List eventList = new ArrayList();
-        while (events.hasNext()) {
-            Event e = events.nextEvent();
-            eventList.add(e);
-        }
-        if (eventList.isEmpty()) {
-            return;
-        }
-
-        for (Iterator it = eventList.iterator(); it.hasNext(); ) {
-            Event e = (Event) it.next();
-            ItemId itemId = e.getItemId();
-            NodeId parentId = e.getParentId();
-            ItemState state;
-            NodeState parent;
-            switch (e.getType()) {
-                case Event.NODE_ADDED:
-                case Event.PROPERTY_ADDED:
-                    state = lookup(itemId);
-                    if (state != null) {
-                        // TODO: item already exists ???
-                        // invalidate
-                        state.refresh();
-                    }
-                    parent = (NodeState) lookup(parentId);
-                    if (parent != null) {
-                        // discard and let wsp manager reload state when accessed next time
-                        parent.refresh();
-                    }
-                    break;
-                case Event.NODE_REMOVED:
-                case Event.PROPERTY_REMOVED:
-                    state = lookup(itemId);
-                    if (state != null) {
-                        state.notifyStateDestroyed();
-                    }
-                    state = lookup(parentId);
-                    if (state != null) {
-                        parent = (NodeState) state;
-                        // check if removed as well
-                        if (removedNodeIds.contains(parent.getId())) {
-                            // do not invalidate here
-                        } else {
-                            // discard and let wsp manager reload state when accessed next time
-                            parent.refresh();
-                        }
-                    }
-                    break;
-                case Event.PROPERTY_CHANGED:
-                    state = lookup(itemId);
-                    // discard and let wsp manager reload state when accessed next time
-                    if (state != null) {
-                        state.refresh();
-                    }
-            }
-        }
+        onEvent(events, isLocal, null);
     }
 
     public void onEvent(EventIterator events, ChangeLog changeLog) {
         if (changeLog == null) {
             throw new IllegalArgumentException("ChangeLog must not be null.");
         }
-        // apply the transient changes in changeLog to the ItemStates in the
-        // workspace layer and synchronize the changes recorded in the changelog
-        // with the events sent.
-        changeLog.persist(events);
+        // inform all transient states, that they have been persisted and must
+        // connect to their workspace state (and eventually reload the data).
+        changeLog.persisted();
+
+        // inform all existing workspace states about the transient modifications
+        // that have been persisted now.
+        onEvent(events, true, changeLog);
+    }
+
+    private void onEvent(EventIterator events, boolean isLocal, ChangeLog changeLog) {
+        // collect set of removed node ids
+        Set removedNodeIds = new HashSet();
+        List addEventList = new ArrayList();
+        List eventList = new ArrayList();
+        while (events.hasNext()) {
+            Event event = events.nextEvent();
+            int type = event.getType();
+            if (type == Event.NODE_ADDED || event.getType() == Event.PROPERTY_ADDED) {
+                addEventList.add(event);
+            } else if (type == Event.NODE_REMOVED) {
+                // remember removed nodes separately for proper handling later on.
+                removedNodeIds.add(event.getItemId());
+                eventList.add(event);
+            } else {
+                eventList.add(event);
+            }
+        }
+        if (eventList.isEmpty() && addEventList.isEmpty()) {
+            return;
+        }
+
+        /* process remove and change events */
+        for (Iterator it = eventList.iterator(); it.hasNext(); ) {
+            Event event = (Event) it.next();
+            int type = event.getType();
+
+            ItemState state = lookup(event.getItemId());
+            NodeState parent = (event.getParentId() != null) ? (NodeState) lookup(event.getParentId()) : null;
+
+            if (type == Event.NODE_REMOVED || type == Event.PROPERTY_REMOVED) {
+                if (state != null) {
+                    state.refresh(event, changeLog);
+                }
+                if (parent != null) {
+                    // invalidate parent only if it has not been removed
+                    // with the same event bundle.
+                    if (!removedNodeIds.contains(event.getParentId())) {
+                        parent.refresh(event, changeLog);
+                    }
+                }
+            } else if (type == Event.PROPERTY_CHANGED) {
+                if (state != null) {
+                    try {
+                        // TODO: improve.
+                        /* retrieve property value and type from server even if
+                           changes were issued from this session (changelog).
+                           this is currently the only way to update the workspace
+                           state, which is not connected to its overlaying session-state.
+                        */
+                        PropertyState tmp = getItemStateFactory().createPropertyState((PropertyId) state.getId(), state.getParent());
+                        ((PropertyState) state).init(tmp.getType(), tmp.getValues());
+                        state.refresh(event, changeLog);
+                    } catch (ItemStateException e) {
+                        log.error("Unexpected error while updating modified property state.", e);
+                    }
+                }
+            } else {
+                // should never occur
+                throw new IllegalArgumentException("Invalid event type: " + event.getType());
+            }
+        }
+
+        /* Add events need to be processed hierarchically, since its not possible
+           to add a new child reference to a state that is not yet present in
+           the state manager.
+           The 'progress' flag is used to make sure, that during each loop at
+           least one event has been processed and removed from the iterator.
+           If this is not the case, there are not parent states present in the
+           state manager that need to be updated and the remaining events may
+           be ignored.
+         */
+        boolean progress = true;
+        while (!addEventList.isEmpty() && progress) {
+            progress = false;
+            for (Iterator it = addEventList.iterator(); it.hasNext();) {
+                Event event = (Event) it.next();
+                NodeState parent = (NodeState) lookup(event.getParentId());
+                if (parent != null) {
+                    parent.refresh(event, changeLog);
+                    it.remove();
+                    progress = true;
+                }
+            }
+        }
     }
 }

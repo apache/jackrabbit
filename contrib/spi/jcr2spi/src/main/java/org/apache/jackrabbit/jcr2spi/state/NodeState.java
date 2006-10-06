@@ -25,6 +25,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -191,16 +193,96 @@ public class NodeState extends ItemState {
     /**
      * {@inheritDoc}
      */
-    protected synchronized void copyFrom(ItemState state) {
-        synchronized (state) {
-            NodeState nodeState = (NodeState) state;
-            name = nodeState.name;
-            uuid = nodeState.uuid;
-            //parent = nodeState.parent; // TODO: parent from wrong ism layer
-            nodeTypeName = nodeState.nodeTypeName;
-            definition = nodeState.definition;
+    protected synchronized void pull() {
+        if (overlayedState != null) {
+            synchronized (overlayedState) {
+                NodeState nodeState = (NodeState) overlayedState;
+                name = nodeState.name;
+                uuid = nodeState.uuid;
+                nodeTypeName = nodeState.nodeTypeName;
+                definition = nodeState.definition;
 
-            init(nodeState.getMixinTypeNames(), nodeState.getChildNodeEntries(), nodeState.getPropertyNames(), nodeState.getNodeReferences());
+                init(nodeState.getMixinTypeNames(), nodeState.getChildNodeEntries(), nodeState.getPropertyNames(), nodeState.getNodeReferences());
+            }
+        }
+    }
+
+    protected synchronized void refresh(Event event, ChangeLog changeLog) {
+        NodeId id = getNodeId();
+        switch (event.getType()) {
+            case Event.NODE_ADDED:
+            case Event.PROPERTY_ADDED:
+                if (id.equals(event.getParentId())) {
+                    ItemId evId = event.getItemId();
+                    ItemState newState = null;
+
+                    if (evId.denotesNode()) {
+                        QName name = event.getQPath().getNameElement().getName();
+                        String uuid = (((NodeId)evId).getRelativePath() != null) ? null : ((NodeId)evId).getUUID();
+                        ChildNodeEntry cne = childNodeEntries.add(name, uuid);
+                        try {
+                            newState = cne.getNodeState();
+                        } catch (ItemStateException e) {
+                            log.error("Internal error", e);
+                        }
+                    } else {
+                        PropertyId pId = (PropertyId) event.getItemId();
+                        PropertyReference re = new PropertyReference(this, pId.getQName(), isf, idFactory);
+                        properties.put(pId.getQName(), re);
+                        try {
+                            newState = re.getPropertyState();
+                        } catch (ItemStateException e) {
+                            log.error("Internal error", e);
+                        }
+                    }
+
+                    // connect the transient state to this state and make
+                    // sure its data are updated
+                    if (newState != null && changeLog != null) {
+                        for (Iterator it = changeLog.addedStates(); it.hasNext();) {
+                            ItemState added = (ItemState) it.next();
+                            if (added.getId().equals(evId)) {
+                                added.connect(newState);
+                                added.pull();
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // ILLEGAL
+                    throw new IllegalArgumentException("Illegal event type " + event.getType() + " for NodeState.");
+                }
+                break;
+
+            case Event.NODE_REMOVED:
+                if (id.equals(event.getParentId())) {
+                    QName qName = event.getQPath().getNameElement().getName();
+                    int index = event.getQPath().getNameElement().getNormalizedIndex();
+                    childNodeEntries.remove(qName, index);
+                    setStatus(STATUS_MODIFIED);
+                } else if (id.equals(event.getItemId())) {
+                    setStatus(STATUS_REMOVED);
+                } else {
+                    // ILLEGAL
+                    throw new IllegalArgumentException("Illegal event type " + event.getType() + " for NodeState.");
+                }
+                break;
+
+            case Event.PROPERTY_REMOVED:
+                if (id.equals(event.getParentId())) {
+                    PropertyId pId = (PropertyId) event.getItemId();
+                    properties.remove(pId.getQName());
+                    setStatus(STATUS_MODIFIED);
+                } else {
+                    // ILLEGAL
+                    throw new IllegalArgumentException("Illegal event type " + event.getType() + " for NodeState.");
+                }
+                break;
+
+            case Event.PROPERTY_CHANGED:
+            default:
+                // ILLEGAL
+                throw new IllegalArgumentException("Illegal event type " + event.getType() + " for NodeState.");
         }
     }
 
@@ -680,7 +762,6 @@ public class NodeState extends ItemState {
      * <code>QNames</code> objects.
      *
      * @return set of <code>QNames</code> objects
-     * @see #addPropertyName
      */
     public synchronized Collection getPropertyNames() {
         Collection names;
@@ -700,7 +781,6 @@ public class NodeState extends ItemState {
      * Returns the complete collection of {@link ChildPropertyEntry}s.
      *
      * @return unmodifiable collection of <code>ChildPropertyEntry</code> objects
-     * @see #addPropertyName
      */
     public synchronized Collection getPropertyEntries() {
         Collection props;

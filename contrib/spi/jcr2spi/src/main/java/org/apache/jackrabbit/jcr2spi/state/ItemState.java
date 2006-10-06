@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.QName;
@@ -33,7 +34,7 @@ import java.util.Set;
 /**
  * <code>ItemState</code> represents the state of an <code>Item</code>.
  */
-public abstract class ItemState implements ItemStateListener {
+public abstract class ItemState implements ItemStateLifeCycleListener {
 
     /**
      * Logger instance
@@ -67,9 +68,18 @@ public abstract class ItemState implements ItemStateListener {
     public static final int STATUS_STALE_DESTROYED = 6;
 
     /**
-     * a new state was deleted and is now 'removed'
+     * a state is permanently modified either by saving transient changes or
+     * by wsp operations or be external modification
+     * TODO: improve. status only temporarily used to indicate to a SessionISM-state to pull changes
      */
-    public static final int STATUS_REMOVED = 7;
+    public static final int STATUS_MODIFIED = 7;
+
+    /**
+     * a new state was deleted and is now 'removed'
+     * or an existing item has been removed by a workspace operation or
+     * by an external modification.
+     */
+    public static final int STATUS_REMOVED = 8;
 
     /**
      * the internal status of this item state
@@ -146,29 +156,9 @@ public abstract class ItemState implements ItemStateListener {
     }
 
     /**
-     * Copy state information from another state into this state
-     * 
-     * @param state source state information
+     * Copy state information from overlayed state to this state
      */
-    abstract void copyFrom(ItemState state);
-
-    /**
-     * Pull state information from overlayed state.
-     */
-    void pull() {
-        if (overlayedState != null) {
-            copyFrom(overlayedState);
-        }
-    }
-
-    /**
-     * Push state information into overlayed state.
-     */
-    void push() {
-        if (overlayedState != null) {
-            overlayedState.copyFrom(this);
-        }
-    }
+    protected abstract void pull();
 
     /**
      * Connect this state to some underlying overlayed state.
@@ -183,95 +173,17 @@ public abstract class ItemState implements ItemStateListener {
         this.overlayedState.addListener(this);
     }
 
-    /**
-     * Reconnect this state to the overlayed state that it has been
-     * disconnected from earlier.
-     */
-    protected void reconnect() {
-        if (this.overlayedState == null) {
-            throw new IllegalStateException("Item state cannot be reconnected because there's no underlying state to reconnect to: " + this);
-        }
-        this.overlayedState.addListener(this);
-    }
 
-    /**
-     * Disconnect this state from the underlying overlayed state.
-     */
-    protected void disconnect() {
-        if (overlayedState != null) {
-            // de-register listener on overlayed state...
-            overlayedState.removeListener(this);
-            overlayedState = null;
-        }
-    }
-
-    /**
-     * Refreshes this item state
-     */
-    protected void refresh() {
-        // TODO: how is this done? where is the new state retrieved from???
-        // TODO: pass in as argument?
-    }
-
-    /**
-     * Notify the listeners that the persistent state this object is
-     * representing has been created.
-     */
-    protected void notifyStateCreated() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateCreated(this);
-            }
-        }
-    }
-
-    /**
-     * Notify the listeners that the persistent state this object is
-     * representing has been updated.
-     */
-    protected void notifyStateUpdated() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateModified(this);
-            }
-        }
-    }
-
-    /**
-     * Notify the listeners that the persistent state this object is
-     * representing has been destroyed.
-     */
-    protected void notifyStateDestroyed() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateDestroyed(this);
-            }
-        }
-    }
+    protected abstract void refresh(Event event, ChangeLog changeLog);
 
     /**
      * Notify the life cycle listeners that this state has changed its status.
      */
     private void notifyStatusChanged(int oldStatus) {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateListener[] la;
+        ItemStateLifeCycleListener[] la;
         synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+            la = (ItemStateLifeCycleListener[]) listeners.toArray(new ItemStateLifeCycleListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] instanceof ItemStateLifeCycleListener) {
@@ -284,6 +196,11 @@ public abstract class ItemState implements ItemStateListener {
      * Marks this item state as modified.
      */
     protected void markModified() {
+        // only transient states can be marked-modified
+        if (getStatus() != STATUS_NEW && overlayedState == null) {
+            throw new IllegalStateException("persisted cannot be called on workspace state");
+        }
+
         switch (status) {
             case STATUS_EXISTING:
                 setStatus(STATUS_EXISTING_MODIFIED);
@@ -296,17 +213,16 @@ public abstract class ItemState implements ItemStateListener {
                 break;
             case STATUS_STALE_DESTROYED:
             case STATUS_STALE_MODIFIED:
-                // should actually get here because item should check before
-                // it modifies an item state. do nothing because item state
-                // is stale anyway.
-                break;
+                // should actually not get here because item should check before
+                // it modifies an item state.
+                throw new IllegalStateException("Cannot mark stale state modified.");
+
             case STATUS_EXISTING_REMOVED:
             default:
                 String msg = "Cannot mark item state with status " + status + " modified.";
                 throw new IllegalStateException(msg);
         }
     }
-
 
     //--------------------< public READ methods and package private Setters >---
     /**
@@ -458,6 +374,7 @@ public abstract class ItemState implements ItemStateListener {
             case STATUS_EXISTING_MODIFIED:
             case STATUS_STALE_MODIFIED:
             case STATUS_STALE_DESTROYED:
+            case STATUS_MODIFIED:
             case STATUS_REMOVED:
                 status = newStatus;
                 break;
@@ -525,11 +442,11 @@ public abstract class ItemState implements ItemStateListener {
     public abstract void collectTransientStates(Set transientStates);
 
     /**
-     * Add an <code>ItemStateListener</code>
+     * Add an <code>ItemStateLifeCycleListener</code>
      *
      * @param listener the new listener to be informed on modifications
      */
-    public void addListener(ItemStateListener listener) {
+    public void addListener(ItemStateLifeCycleListener listener) {
         synchronized (listeners) {
             assert (!listeners.contains(listener));
             listeners.add(listener);
@@ -537,52 +454,65 @@ public abstract class ItemState implements ItemStateListener {
     }
 
     /**
-     * Remove an <code>ItemStateListener</code>
+     * Remove an <code>ItemStateLifeCycleListener</code>
      *
      * @param listener an existing listener
      */
-    public void removeListener(ItemStateListener listener) {
+    public void removeListener(ItemStateLifeCycleListener listener) {
         synchronized (listeners) {
             listeners.remove(listener);
         }
     }
 
-    //--------------------------------------------------< ItemStateListener >---
+    //-----------------------------------------< ItemStateLifeCycleListener >---
     /**
-     * {@inheritDoc}
+     *
+     * @param state
+     * @param previousStatus
      */
-    public void stateCreated(ItemState created) {
-        // underlying state has been permanently created
-        pull();
-        setStatus(STATUS_EXISTING);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDestroyed(ItemState destroyed) {
-        // underlying state has been permanently destroyed
-        if (isTransient()) {
-            setStatus(STATUS_STALE_DESTROYED);
-        } else {
-            setStatus(STATUS_REMOVED);
-            notifyStateDestroyed();
+    public void statusChanged(ItemState state, int previousStatus) {
+        // workspace-states never are listening to another state
+        if (getStatus() != STATUS_NEW && overlayedState == null) {
+            throw new IllegalStateException("statusChanged cannot be called on workspace state");
         }
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void stateModified(ItemState modified) {
-        // underlying state has been modified
-        if (isTransient()) {
-            setStatus(STATUS_STALE_MODIFIED);
-        } else {
-            synchronized (this) {
-                // this instance represents existing state, update it
-                pull();
-                notifyStateUpdated();
-            }
+        switch (state.getStatus()) {
+            case STATUS_EXISTING:
+                // nothing to do
+                break;
+            case STATUS_MODIFIED:
+                if (previousStatus == STATUS_EXISTING) {
+                    // change back
+                    state.status = STATUS_EXISTING;
+                    // underlying state has been modified
+                    if (isTransient()) {
+                        setStatus(STATUS_STALE_MODIFIED);
+                    } else {
+                        synchronized (this) {
+                            // this instance represents existing state, update it
+                            pull();
+                            setStatus(STATUS_EXISTING);
+                        }
+                    }
+                } else {
+                    // ILLEGAL
+                    throw new IllegalArgumentException();
+                }
+                break;
+            case STATUS_REMOVED:
+                if (isTransient()) {
+                    setStatus(STATUS_STALE_DESTROYED);
+                } else {
+                    setStatus(STATUS_REMOVED);
+                }
+                break;
+            case STATUS_STALE_MODIFIED:
+            case STATUS_STALE_DESTROYED:
+            case STATUS_EXISTING_REMOVED:
+            case STATUS_EXISTING_MODIFIED:
+            case STATUS_NEW:
+                log.error("Workspace state cannot have its state changed to " + state.getStatus());
+                break;
         }
     }
 }

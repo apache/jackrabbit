@@ -1467,17 +1467,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             checkConsumed();
 
             String uri = getItemUri(targetId, sessionInfo);
-            try {
-                // first unsubscribe in order to retrieve the events
-                String subscrUri = (targetId.denotesNode() ? uri : getItemUri(((PropertyId) targetId).getParentId(), sessionInfo));
-                EventIterator events = poll(subscrUri, subscriptionId, sessionInfo);
-                unsubscribe(subscrUri, subscriptionId, sessionInfo);
-                return events;
+            String subscrUri = (targetId.denotesNode() ? uri : getItemUri(((PropertyId) targetId).getParentId(), sessionInfo));
 
-            } finally {
+            UnLockMethod method = null;
+            try {
                 // make sure the lock initially created is removed again on the
-                // server.
-                UnLockMethod method = new UnLockMethod(uri, batchId);
+                // server, asking the server to persist the modifications
+                method = new UnLockMethod(uri, batchId);
                 // todo: check if 'initmethod' would work (ev. conflict with TxId header).
                 String[] locktokens = sessionInfo.getLockTokens();
                 if (locktokens != null && locktokens.length > 0) {
@@ -1486,18 +1482,24 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 }
                 // in contrast to standard UNLOCK, the tx-unlock provides a
                 // request body.
-                try {
-                    method.setRequestBody(new TransactionInfo(commit));
-                    client.executeMethod(method);
-                    method.checkSuccess();
-                } catch (IOException e) {
-                    throw new RepositoryException(e);
-                } catch (DavException e) {
-                    throw ExceptionConverter.generate(e);
-                } finally {
+                method.setRequestBody(new TransactionInfo(commit));
+                client.executeMethod(method);
+                method.checkSuccess();
+
+                // retrieve events
+                EventIterator events = poll(subscrUri, subscriptionId, sessionInfo);
+                return events;
+            } catch (IOException e) {
+                throw new RepositoryException(e);
+            } catch (DavException e) {
+                throw ExceptionConverter.generate(e);
+            } finally {
+                if (method != null) {
                     // release UNLOCK method
                     method.releaseConnection();
                 }
+                // unsubscribe
+                unsubscribe(subscrUri, subscriptionId, sessionInfo);
             }
         }
 

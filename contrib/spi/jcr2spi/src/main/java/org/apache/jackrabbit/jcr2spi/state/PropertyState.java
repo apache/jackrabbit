@@ -26,6 +26,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
 import org.slf4j.Logger;
@@ -178,20 +179,50 @@ public class PropertyState extends ItemState {
                 break;
             default:
                 // should never occur. status is validated upon setStatus(int)
+                log.error("Internal error: Invalid state " + getStatus());
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    protected synchronized void copyFrom(ItemState state) {
-        synchronized (state) {
-            PropertyState propState = (PropertyState) state;
-            name = propState.name;
-            //parent = propState.parent; // TODO: parent from wrong layer
-            type = propState.type;
-            def = propState.def;
-            values = propState.values;
+    protected synchronized void pull() {
+        if (overlayedState != null) {
+            synchronized (overlayedState) {
+                PropertyState propState = (PropertyState) overlayedState;
+                name = propState.name;
+                type = propState.type;
+                def = propState.def;
+                values = propState.values;
+            }
+        }
+    }
+
+    protected synchronized void refresh(Event event, ChangeLog changeLog) {
+        switch (event.getType()) {
+            case Event.PROPERTY_REMOVED:
+                if (event.getItemId().equals(getId())) {
+                    setStatus(STATUS_REMOVED);
+                } else {
+                    // ILLEGAL
+                    throw new IllegalArgumentException("EventId " + event.getItemId() + " does not match id of this property state.");
+                }
+                break;
+
+            case Event.PROPERTY_CHANGED:
+                if (event.getItemId().equals(getId())) {
+                    setStatus(STATUS_MODIFIED);
+                } else {
+                    // ILLEGAL
+                    throw new IllegalArgumentException("EventId " + event.getItemId() + " does not match id of this property state.");
+                }
+                break;
+
+            case Event.PROPERTY_ADDED:
+            case Event.NODE_ADDED:
+            case Event.NODE_REMOVED:
+            default:
+                throw new IllegalArgumentException("Event type " + event.getType() + " cannot be applied to a PropertyState");
         }
     }
 

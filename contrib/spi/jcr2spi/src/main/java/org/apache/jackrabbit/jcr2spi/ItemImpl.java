@@ -234,9 +234,6 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         checkStatus();
 
         if (keepChanges) {
-            /** TODO should reset Item#status field to STATUS_NORMAL
-             * of all descendent non-transient instances; maybe also
-             * have to reset stale ItemState instances */
             return;
         }
 
@@ -276,68 +273,48 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
 
     //-----------------------------------------< ItemStateLifeCycleListener >---
     /**
-     * {@inheritDoc}
+     *
+     * @param state
+     * @param previousStatus
      */
-    public void stateCreated(ItemState created) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDestroyed(ItemState destroyed) {
-        // underlying state has been permanently destroyed
-
-        // dispose state
-        if (state == destroyed) {
-            state.removeListener(this);
-            state = null;
-        }
-        /**
-         * notify the listeners that this instance has been
-         * permanently invalidated
-         */
-        notifyDestroyed();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateModified(ItemState modified) {
-    }
-
     public void statusChanged(ItemState state, int previousStatus) {
-        // TODO: remove this ItemImpl as listener from ItemState when it is destroyed?
+        // TODO: ev. assert that state is this.state?
+
         switch (state.getStatus()) {
+            /**
+             * Nothing to do for
+             * - ItemState.STATUS_EXISTING : modifications reverted or saved
+             * - ItemState.STATUS_EXISTING_MODIFIED : transient modification
+             * - ItemState.STATUS_STALE_MODIFIED : external modifications while transient changes pending
+             * - ItemState.MODIFIED : externaly modified -> marker for sessionISM states only
+             */
             case ItemState.STATUS_EXISTING:
-                // this item was modified and is now reverted or has been saved
-                // -> nothing to do
-                break;
             case ItemState.STATUS_EXISTING_MODIFIED:
-                // item was modified and is not existing-modified
-                // -> nothing to do
+            case ItemState.STATUS_STALE_MODIFIED:
+            case ItemState.STATUS_MODIFIED:
                 break;
+            /**
+             * Notify listeners that this item is transiently or permanently
+             * destroyed.
+             * - STATUS_EXISTING_REMOVED : transient removal
+             * - STATUS_REMOVED : permanent removal. item will never get back to life
+             * - STATUS_STALE_DESTROYED : permanent removal. item will never get back to life
+             */
             case ItemState.STATUS_EXISTING_REMOVED:
-                // item is transiently removed
-                // notify listeners of this item that this item has been destroyed
                 notifyDestroyed();
-                break;
-            case ItemState.STATUS_NEW:
-                // should never happen. an item cannot change its state to new
-                log.warn("invalid state change to STATUS_NEW");
                 break;
             case ItemState.STATUS_REMOVED:
-                // item has been removed permanently
-                notifyDestroyed();
-                break;
             case ItemState.STATUS_STALE_DESTROYED:
-                // item has been removed permanently while there were transient
-                // changes pending
+                state.removeListener(this);
+                this.state = null;
                 notifyDestroyed();
                 break;
-            case ItemState.STATUS_STALE_MODIFIED:
-                // item has been modified externaly while there were transient
-                // changes pending
-                // -> nothing to do
+            /**
+             * Invalid status. A state can never change its state to 'New'.
+             */
+            case ItemState.STATUS_NEW:
+                // should never happen.
+                log.error("invalid state change to STATUS_NEW");
                 break;
         }
     }

@@ -281,7 +281,7 @@ public class SessionImpl implements Session, ManagerProvider {
         } catch (NoSuchItemStateException e) {
             throw new ItemNotFoundException(id.toString());
         } catch (ItemStateException e) {
-            String msg = "failed to retrieve item state of item " + id;
+            String msg = "Failed to retrieve item state of item " + id;
             log.error(msg, e);
             throw new RepositoryException(msg, e);
         }

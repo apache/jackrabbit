@@ -247,13 +247,13 @@ public class CachingItemStateManager implements ItemStateManager {
         return state;
     }
 
-    //------------------------< ItemStateListener >-----------------------------
+    //-----------------------------------------< ItemStateLifeCycleListener >---
 
     private class ISLifeCycleListener implements ItemStateLifeCycleListener {
 
         public void statusChanged(ItemState state, int previousStatus) {
             if (state.getStatus() == ItemState.STATUS_REMOVED ||
-                    state.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
+                state.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
                 recentlyUsed.remove(state);
                 if (state.isNode()) {
                     NodeState nodeState = (NodeState) state;
@@ -262,15 +262,6 @@ public class CachingItemStateManager implements ItemStateManager {
                     }
                 }
             }
-        }
-
-        public void stateCreated(ItemState created) {
-        }
-
-        public void stateModified(ItemState modified) {
-        }
-
-        public void stateDestroyed(ItemState destroyed) {
         }
     }
 }
