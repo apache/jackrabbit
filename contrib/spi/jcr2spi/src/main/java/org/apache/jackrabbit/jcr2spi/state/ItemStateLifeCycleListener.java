@@ -20,7 +20,7 @@ package org.apache.jackrabbit.jcr2spi.state;
  * <code>ItemStateLifeCycleListener</code> allows an implementing class to get
  * notifications about the life cycle of an item state.
  */
-public interface ItemStateLifeCycleListener extends ItemStateListener {
+public interface ItemStateLifeCycleListener {
 
     /**
      * Called after an <code>ItemState</code> has changed its status. The new

@@ -265,6 +265,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         // remove operations just processed
         transientStateMgr.disposeOperations(changeLog.getOperations());
+        // now its save to clear the changeLog
+        changeLog.reset();
     }
 
     /**
@@ -303,7 +305,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         Iterator it = refTracker.getReferences();
         while (it.hasNext()) {
             PropertyState propState = (PropertyState) it.next();
-            // DIFF JR: remove check (already asserted on processReference)
             boolean modified = false;
             QValue[] values = propState.getValues();
             QValue[] newVals = new QValue[values.length];
@@ -349,8 +350,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     }
 
     /**
-     * DIFF JACKRABBIT: copied and adapted from ItemImpl.getTransientStates()
-     * <p/>
      * Builds a <code>ChangeLog</code> of transient (i.e. new, modified or
      * deleted) item states that are within the scope of <code>state</code>.
      *
@@ -670,8 +669,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     }
 
     public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
-        // TODO: TOBEFIXED. not correct.
-        workspaceItemStateMgr.execute(operation);
+        throw new UnsupportedOperationException("Internal error: Update cannot be handled by session ItemStateManager.");
     }
 
     public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
@@ -790,9 +788,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     }
 
     private void removeItemState(ItemState itemState, int options) throws RepositoryException {
-        // DIFF JR: check for both, node- and propertyState
         validator.checkRemoveItem(itemState, options);
-
         // recursively remove the complete tree including the given node state.
         boolean success = false;
         try {

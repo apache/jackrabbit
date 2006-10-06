@@ -22,6 +22,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.observation.EventType;
@@ -29,6 +30,7 @@ import org.apache.jackrabbit.webdav.observation.DefaultEventType;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionImpl;
+import org.apache.jackrabbit.util.Text;
 import org.w3c.dom.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +47,7 @@ public class EventImpl implements Event, ObservationConstants {
     private final Element eventElement;
     private final int type;
     private final ItemId itemId;
+    private final NodeId parentId;
     private final Path qPath;
 
     public EventImpl(Element eventElement, URIResolver uriResolver,
@@ -61,8 +64,11 @@ public class EventImpl implements Event, ObservationConstants {
         String href = DomUtil.getChildTextTrim(eventElement, DavConstants.XML_HREF, DavConstants.NAMESPACE);
         if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
             itemId = uriResolver.getNodeId(href, sessionInfo);
+            String parentHref = Text.getRelativeParent(href, 1, true);
+            parentId = uriResolver.getNodeId(parentHref, sessionInfo);
         } else {
             itemId = uriResolver.getPropertyId(href, sessionInfo);
+            parentId = ((PropertyId)itemId).getParentId();
         }
         qPath = uriResolver.getQPath(href, sessionInfo);
     }
@@ -80,8 +86,7 @@ public class EventImpl implements Event, ObservationConstants {
     }
 
     public NodeId getParentId() {
-        // TODO not available from XML_EVENT element
-        return null;
+        return parentId;
     }
 
     public String getUUID() {

@@ -864,8 +864,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure the specified workspace is visible for the current session.
         session.checkAccessibleWorkspace(srcWorkspaceName);
 
-        Operation op = Update.create(getNodeState(), srcWorkspaceName);
-        session.getSessionItemStateManager().execute(op);
+        Operation op = Update.create((NodeState) getNodeState().getOverlayedState(), srcWorkspaceName);
+        ((WorkspaceImpl)session.getWorkspace()).getUpdatableItemStateManager().execute(op);
     }
 
     /**
@@ -883,7 +883,6 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure the workspace exists and is accessible for this session.
         session.checkAccessibleWorkspace(srcWorkspace);
 
-        // TODO: improve... (and review return value of VM.merge)
         Collection failedIds = session.getVersionManager().merge(getNodeState(), srcWorkspace, bestEffort);
         if (failedIds.isEmpty()) {
             return IteratorHelper.EMPTY;

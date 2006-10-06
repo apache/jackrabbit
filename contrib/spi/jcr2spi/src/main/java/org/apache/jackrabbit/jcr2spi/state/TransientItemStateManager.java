@@ -243,32 +243,9 @@ public class TransientItemStateManager extends CachingItemStateManager
     //-----------------------------------------< ItemStateLifeCycleListener >---
     /**
      * @inheritDoc
-     * @see ItemStateListener#stateCreated(ItemState)
-     */
-    public void stateCreated(ItemState created) {
-    }
-
-    /**
-     * @inheritDoc
-     * @see ItemStateListener#stateModified(ItemState)
-     */
-    public void stateModified(ItemState modified) {
-    }
-
-    /**
-     * @inheritDoc
-     * @see ItemStateListener#stateDestroyed(ItemState)
-     */
-    public void stateDestroyed(ItemState destroyed) {
-        changeLog.deletedStates.remove(destroyed);
-    }
-
-    /**
-     * @inheritDoc
      * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
      */
     public void statusChanged(ItemState state, int previousStatus) {
-        // TODO: cleanup operations as well.
         // TODO: depending on status of state adapt change log
         // e.g. a revert on states will reset the status from
         // 'existing modified' to 'existing'.
@@ -292,14 +269,6 @@ public class TransientItemStateManager extends CachingItemStateManager
                     case ItemState.STATUS_NEW:
                         // was new and has been saved now
                         changeLog.addedStates.remove(state);
-                        // state needs to be connected to the overlayed-state now
-                        try {
-                            ItemState overlayedState = parent.getItemState(state.getId());
-                            state.connect(overlayedState);
-                        } catch (ItemStateException e) {
-                            // TODO, handle property
-                            log.error(e.getMessage());
-                        }
                         break;
                 }
                 break;
@@ -310,6 +279,7 @@ public class TransientItemStateManager extends CachingItemStateManager
                 // check if modified earlier
                 if (previousStatus == ItemState.STATUS_EXISTING_MODIFIED) {
                     changeLog.modifiedStates.remove(state);
+                    // todo: remove operation(s) as well
                 }
                 changeLog.deleted(state);
                 break;
@@ -317,7 +287,7 @@ public class TransientItemStateManager extends CachingItemStateManager
                 if (previousStatus == ItemState.STATUS_NEW) {
                     // was new and now removed again
                     changeLog.addedStates.remove(state);
-                    // TODO remove the 'add' operation as well
+                    // TODO: remove operation as well
                 } else if (previousStatus == ItemState.STATUS_EXISTING_REMOVED) {
                     // was removed and is now saved
                     changeLog.deletedStates.remove(state);
@@ -326,6 +296,7 @@ public class TransientItemStateManager extends CachingItemStateManager
             case ItemState.STATUS_STALE_DESTROYED:
                 // state is now stale. remove from modified
                 changeLog.modifiedStates.remove(state);
+                // TODO: remove operation as well
                 break;
             case ItemState.STATUS_STALE_MODIFIED:
                 // state is now stale. keep in modified. wait until refreshed
@@ -335,7 +306,7 @@ public class TransientItemStateManager extends CachingItemStateManager
                 changeLog.added(state);
                 break;
             default:
-                log.warn("ItemState has invalid status: " + state.getStatus());
+                log.error("ItemState has invalid status: " + state.getStatus());
         }
     }
 }

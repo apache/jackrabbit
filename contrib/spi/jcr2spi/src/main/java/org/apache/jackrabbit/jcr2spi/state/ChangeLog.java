@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.spi.EventIterator;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -238,60 +237,24 @@ public class ChangeLog {
 
     //-----------------------------< Inform ChangeLog about Success/Failure >---
     /**
-     * ChangeLog has successfully been commited. The given <code>EventIterator</code>
-     * contains information about all modifications. This ChangeLog needs
-     * to notify all transient states involved.
-     *
-     * @param events
-     */
-    public void persist(EventIterator events) {
-        // TODO: events may reveal additional autocreated items and modifications
-        // applied while commiting the changelog (e.g. uuid or nodetype of new nodes).
-        push();
-        persisted();
-    }
-
-    /**
-     * Push all states contained in the various maps of
-     * items we have.
-     */
-    private void push() {
-        Iterator iter = modifiedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).push();
-        }
-        iter = deletedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).push();
-        }
-        iter = addedStates();
-        while (iter.hasNext()) {
-            ((ItemState) iter.next()).push();
-        }
-    }
-
-    /**
      * After the states have actually been persisted, update their
      * internal states and notify listeners.
      */
-    private void persisted() {
+    public void persisted() {
         Iterator iter = modifiedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             state.setStatus(ItemState.STATUS_EXISTING);
-            state.notifyStateUpdated();  // TODO: is this needed anymore?
         }
         iter = deletedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             state.setStatus(ItemState.STATUS_REMOVED);
-            state.notifyStateDestroyed();  // TODO: is this needed anymore?
         }
         iter = addedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             state.setStatus(ItemState.STATUS_EXISTING);
-            state.notifyStateCreated();  // TODO: is this needed anymore?
         }
     }
 
