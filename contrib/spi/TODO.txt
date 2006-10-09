@@ -13,7 +13,6 @@ NOTE: This list only contains major open issues.
    > RegisterNodeType
    > ReregisterNodeTypes
    > UnregisterNodeType
-   > Subscribe/Unsubscribe und Event retrieval
    
    
 2) RepositoryService  (improve)
@@ -120,14 +119,10 @@ NOTE: This list only contains major open issues.
    Definition of XASessionInfo must be reviewed.
 
 
-11) SessionImpl.switchWorkspace(String) used to create session on other 
-    workspace for current subject. Missing implementation
+11) Extract interface for ItemState and derived classes
 
 
-12) Extract interface for ItemState and derived classes
-
-
-13) AccessManager.canRead() seems useless, since the jcr2spi client is only
+12) AccessManager.canRead() seems useless, since the jcr2spi client is only
     able to access Items it can read anyway. Remove method and calls to it?
 
 
