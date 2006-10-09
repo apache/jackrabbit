@@ -133,7 +133,7 @@ public class XMLTextFilter implements TextFilter {
 
         public void characters(char[] ch, int start, int length) {
             boolean space = false;
-            for (int i = start; i < length; i++) {
+            for (int i = start; i < start + length; i++) {
                 if (Character.isLetterOrDigit(ch[i])) {
                     if (space) {
                         buffer.append(' ');
