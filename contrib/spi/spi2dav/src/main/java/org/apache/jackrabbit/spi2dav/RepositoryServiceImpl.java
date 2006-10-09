@@ -373,10 +373,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     /**
      * TODO: handle impersonation
-     * @see RepositoryService#login(Credentials, String)
+     *
+     * @see RepositoryService#obtain(Credentials, String)
      */
-    public SessionInfo login(Credentials credentials, String workspaceName)
-            throws LoginException, NoSuchWorkspaceException, RepositoryException {
+    public SessionInfo obtain(Credentials credentials, String workspaceName) throws LoginException, NoSuchWorkspaceException, RepositoryException {
         // check if the workspace with the given name is accessible
         PropFindMethod method = null;
         try {
@@ -411,6 +411,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.releaseConnection();
             }
         }
+    }
+
+    public void dispose(SessionInfo sessionInfo) throws RepositoryException {
+        checkSessionInfo(sessionInfo);
+        SubscriptionManager sMgr = ((SessionInfoImpl)sessionInfo).getSubscriptionManager();
+        sMgr.dispose();
     }
 
     /**
@@ -844,6 +850,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
             method = new PropFindMethod(uri, nameSet, DEPTH_0);
+            initMethod(method, sessionInfo, true);
+
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
@@ -877,7 +885,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public EventIterator lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
-            LockMethod method = new LockMethod(uri, Scope.EXCLUSIVE, Type.WRITE, null, DavConstants.INFINITE_TIMEOUT, true);
+            LockMethod method = new LockMethod(uri, Scope.EXCLUSIVE, Type.WRITE,
+                sessionInfo.getUserID(), DavConstants.INFINITE_TIMEOUT, deep);
             EventIterator events = execute(method, sessionInfo);
 
             String lockToken = method.getLockToken();
@@ -1868,6 +1877,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 subscriptions.remove(listener);
                 currentSubscriptions = null;
                 if (subscriptions.isEmpty()) {
+                    stopPolling();
+                }
+            }
+        }
+
+        public void dispose() {
+            synchronized (subscriptionsLock) {
+                if (!subscriptions.isEmpty()) {
+                    subscriptions.clear();
+                    currentSubscriptions = null;
                     stopPolling();
                 }
             }

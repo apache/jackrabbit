@@ -109,7 +109,7 @@ public class ChangeLog {
         if (!addedStates.remove(state)) {
             modifiedStates.remove(state);
             deletedStates.add(state);
-        }       
+        }
     }
 
     /**
@@ -220,6 +220,7 @@ public class ChangeLog {
      */
     public void collectOperations(Iterator operations) {
         Set affectedStates = new HashSet();
+        affectedStates.addAll(addedStates);
         affectedStates.addAll(deletedStates);
         affectedStates.addAll(modifiedStates);
         while (operations.hasNext()) {
@@ -244,17 +245,17 @@ public class ChangeLog {
         Iterator iter = modifiedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
-            state.setStatus(ItemState.STATUS_EXISTING);
+            state.setStatus(Status.EXISTING);
         }
         iter = deletedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
-            state.setStatus(ItemState.STATUS_REMOVED);
+            state.setStatus(Status.REMOVED);
         }
         iter = addedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
-            state.setStatus(ItemState.STATUS_EXISTING);
+            state.setStatus(Status.EXISTING);
         }
     }
 

@@ -49,16 +49,16 @@ public class IdFactoryImpl implements IdFactory {
         }
     }
 
-    public NodeId createNodeId(NodeId parentId, Path relativePath) {
+    public NodeId createNodeId(NodeId parentId, Path path) {
         try {
-            return new NodeIdImpl(parentId, relativePath);
+            return new NodeIdImpl(parentId, path);
         } catch (MalformedPathException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
     }
 
-    public NodeId createNodeId(String uuid, Path relativePath) {
-        return new NodeIdImpl(uuid, relativePath);
+    public NodeId createNodeId(String uuid, Path path) {
+        return new NodeIdImpl(uuid, path);
     }
 
     public NodeId createNodeId(String uuid) {
@@ -69,16 +69,16 @@ public class IdFactoryImpl implements IdFactory {
     private abstract class ItemIdImpl implements ItemId {
 
         private final String uuid;
-        private final Path relativePath;
+        private final Path path;
 
         private int hashCode = 0;
 
-        private ItemIdImpl(String uuid, Path relativePath) {
-            if (uuid == null && relativePath == null) {
+        private ItemIdImpl(String uuid, Path path) {
+            if (uuid == null && path == null) {
                 throw new IllegalArgumentException("Only uuid or relative path might be null.");
             }
             this.uuid = uuid;
-            this.relativePath = relativePath;
+            this.path = path;
         }
 
         private ItemIdImpl(NodeId parentId, QName name) throws MalformedPathException {
@@ -86,11 +86,11 @@ public class IdFactoryImpl implements IdFactory {
                 throw new IllegalArgumentException("Invalid ItemIdImpl: parentId and name must not be null.");
             }
             this.uuid = parentId.getUUID();
-            Path parent = parentId.getRelativePath();
-            if (parent != null) {
-                this.relativePath = Path.create(parent, name, true);
+            Path parentPath = parentId.getPath();
+            if (parentPath != null) {
+                this.path = Path.create(parentPath, name, true);
             } else {
-                this.relativePath = Path.create(name, Path.INDEX_UNDEFINED);
+                this.path = Path.create(name, Path.INDEX_UNDEFINED);
             }
         }
 
@@ -100,8 +100,8 @@ public class IdFactoryImpl implements IdFactory {
             return uuid;
         }
 
-        public Path getRelativePath() {
-            return relativePath;
+        public Path getPath() {
+            return path;
         }
 
         /**
@@ -123,11 +123,11 @@ public class IdFactoryImpl implements IdFactory {
 
         boolean equals(ItemId other) {
             return (uuid == null) ? other.getUUID() == null : uuid.equals(other.getUUID())
-                && (relativePath == null) ? other.getRelativePath() == null : relativePath.equals(other.getRelativePath());
+                && (path == null) ? other.getPath() == null : path.equals(other.getPath());
         }
 
         /**
-         * Returns the hash code of the uuid and the relativePath. The computed hash code
+         * Returns the hash code of the uuid and the path. The computed hash code
          * is memorized for better performance.
          *
          * @return hash code
@@ -151,8 +151,8 @@ public class IdFactoryImpl implements IdFactory {
             if (uuid != null) {
                 b.append(uuid);
             }
-            if (relativePath != null) {
-                b.append(relativePath.toString());
+            if (path != null) {
+                b.append(path.toString());
             }
             return b.toString();
         }
@@ -164,12 +164,12 @@ public class IdFactoryImpl implements IdFactory {
             super(uuid, null);
         }
 
-        public NodeIdImpl(String uuid, Path relativePath) {
-            super(uuid, relativePath);
+        public NodeIdImpl(String uuid, Path path) {
+            super(uuid, path);
         }
 
-        public NodeIdImpl(NodeId parentId, Path relativePath) throws MalformedPathException {
-            super(parentId.getUUID(), (parentId.getRelativePath() != null) ? Path.create(parentId.getRelativePath(), relativePath, true) : relativePath);
+        public NodeIdImpl(NodeId parentId, Path path) throws MalformedPathException {
+            super(parentId.getUUID(), (parentId.getPath() != null) ? Path.create(parentId.getPath(), path, true) : path);
         }
 
         public boolean denotesNode() {
@@ -205,7 +205,7 @@ public class IdFactoryImpl implements IdFactory {
         }
 
         public QName getQName() {
-            return getRelativePath().getNameElement().getName();
+            return getPath().getNameElement().getName();
         }
 
         public boolean equals(Object obj) {

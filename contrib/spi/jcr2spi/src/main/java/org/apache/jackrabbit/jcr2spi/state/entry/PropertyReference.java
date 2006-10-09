@@ -14,21 +14,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi.state;
+package org.apache.jackrabbit.jcr2spi.state.entry;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 
 /**
  * <code>PropertyReference</code> implements a reference to a property state.
  */
-class PropertyReference extends ChildItemReference implements ChildPropertyEntry {
+public class PropertyReference extends ChildItemReference implements ChildPropertyEntry {
 
     /**
      * IdFactory to create an ItemId based on the parent NodeId
      */
     private final IdFactory idFactory;
+
+    /**
+     * Creates a new <code>ChildPropertyEntry</code>.
+     *
+     * @param parent
+     * @param name
+     * @param isf
+     * @param idFactory
+     * @return new <code>ChildPropertyEntry</code>
+     */
+    public static ChildPropertyEntry create(NodeState parent, QName name, ItemStateFactory isf, IdFactory idFactory) {
+        return new PropertyReference(parent, name, isf, idFactory);
+    }
+
+    /**
+     * Creates a new <code>ChildPropertyEntry</code> for an property state that
+     * already exists.
+     *
+     * @param propState
+     * @param isf
+     * @param idFactory
+     * @return new <code>ChildPropertyEntry</code>
+     */
+    public static ChildPropertyEntry create(PropertyState propState, ItemStateFactory isf, IdFactory idFactory) {
+        return new PropertyReference(propState, isf, idFactory);
+    }
 
     /**
      * Creates a new <code>PropertyReference</code>.
@@ -39,7 +71,7 @@ class PropertyReference extends ChildItemReference implements ChildPropertyEntry
      * @param isf       the item state factory to create the property state.
      * @param idFactory the id factory to create new ids.
      */
-    public PropertyReference(NodeState parent, QName name, ItemStateFactory isf, IdFactory idFactory) {
+    private PropertyReference(NodeState parent, QName name, ItemStateFactory isf, IdFactory idFactory) {
         super(parent, name, isf);
         this.idFactory = idFactory;
     }
@@ -52,7 +84,7 @@ class PropertyReference extends ChildItemReference implements ChildPropertyEntry
      * @param isf       the item state factory to re-create the property state.
      * @param idFactory the id factory to create new ids.
      */
-    public PropertyReference(PropertyState propState, ItemStateFactory isf, IdFactory idFactory) {
+    private PropertyReference(PropertyState propState, ItemStateFactory isf, IdFactory idFactory) {
         super(propState.getParent(), propState, propState.getQName(), isf);
         this.idFactory = idFactory;
     }

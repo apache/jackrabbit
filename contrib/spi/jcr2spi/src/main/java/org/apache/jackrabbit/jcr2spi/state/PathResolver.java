@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 
 /**
  * <code>PathResolver</code> resolves a relative Path starting at a given
@@ -32,7 +33,7 @@ public class PathResolver {
     /**
      * The path to resolve.
      */
-    private final Path relPath;
+    private final Path path;
 
     /**
      * Internal constructor.
@@ -48,47 +49,47 @@ public class PathResolver {
                     "not contain parent path elements");
         }
         this.start = start;
-        this.relPath = relPath;
+        this.path = relPath;
     }
 
     /**
      * Resolves the path starting at <code>start</code>.
      *
      * @param start   the starting point.
-     * @param relPath the path to resolve.
+     * @param path the path to resolve.
      * @return the resolved item state.
      * @throws NoSuchItemStateException the the referenced item state does not
      *                                  exist.
      * @throws ItemStateException       if an error occurs while retrieving the
      *                                  item state.
-     * @throws IllegalArgumentException if relPath is absolute or not normalized
+     * @throws IllegalArgumentException if path is absolute or not normalized
      *                                  or starts with a parent ('..') path
      *                                  element.
      */
-    public static ItemState resolve(ItemState start, Path relPath)
+    public static ItemState resolve(ItemState start, Path path)
             throws NoSuchItemStateException, ItemStateException {
-        return new PathResolver(start, relPath).resolve();
+        return new PathResolver(start, path).resolve();
     }
 
     /**
-     * Looks up the <code>ItemState</code> at <code>relPath</code> starting at
+     * Looks up the <code>ItemState</code> at <code>path</code> starting at
      * <code>start</code>.
      *
      * @param start   the starting point.
-     * @param relPath the path to resolve.
+     * @param path the path to resolve.
      * @return the resolved item state or <code>null</code> if the item is not
      *         available.
      * @throws NoSuchItemStateException the the referenced item state does not
      *                                  exist.
      * @throws ItemStateException       if an error occurs while retrieving the
      *                                  item state.
-     * @throws IllegalArgumentException if relPath is absolute or not normalized
+     * @throws IllegalArgumentException if path is absolute or not normalized
      *                                  or starts with a parent ('..') path
      *                                  element.
      */
-    public static ItemState lookup(ItemState start, Path relPath)
+    public static ItemState lookup(ItemState start, Path path)
             throws NoSuchItemStateException, ItemStateException {
-        return new PathResolver(start, relPath).lookup();
+        return new PathResolver(start, path).lookup();
     }
 
     /**
@@ -102,15 +103,15 @@ public class PathResolver {
     private ItemState resolve()
             throws NoSuchItemStateException, ItemStateException {
         if (!start.isNode()) {
-            throw new NoSuchItemStateException(relPath.toString());
+            throw new NoSuchItemStateException(path.toString());
         }
         NodeState state = (NodeState) start;
-        for (int i = 0; i < relPath.getLength(); i++) {
-            Path.PathElement elem = relPath.getElement(i);
+        for (int i = 0; i < path.getLength(); i++) {
+            Path.PathElement elem = path.getElement(i);
             // check for root element
             if (elem.denotesRoot()) {
                 if (start.getParent() != null) {
-                    throw new NoSuchItemStateException(relPath.toString());
+                    throw new NoSuchItemStateException(path.toString());
                 } else {
                     continue;
                 }
@@ -122,10 +123,10 @@ public class PathResolver {
                         elem.getNormalizedIndex()).getNodeState();
             } else if (elem.getIndex() == 0 // property must not have index
                     && state.hasPropertyName(elem.getName())
-                    && i == relPath.getLength() - 1) { // property must be final path element
+                    && i == path.getLength() - 1) { // property must be final path element
                 return state.getPropertyState(elem.getName());
             } else {
-                throw new NoSuchItemStateException(relPath.toString());
+                throw new NoSuchItemStateException(path.toString());
             }
         }
         return state;
@@ -144,11 +145,11 @@ public class PathResolver {
     private ItemState lookup()
             throws NoSuchItemStateException, ItemStateException {
         if (!start.isNode()) {
-            throw new NoSuchItemStateException(relPath.toString());
+            throw new NoSuchItemStateException(path.toString());
         }
         NodeState state = (NodeState) start;
-        for (int i = 0; i < relPath.getLength(); i++) {
-            Path.PathElement elem = relPath.getElement(i);
+        for (int i = 0; i < path.getLength(); i++) {
+            Path.PathElement elem = path.getElement(i);
             // first try to resolve node
             if (state.hasChildNodeEntry(elem.getName(), elem.getNormalizedIndex())) {
                 ChildNodeEntry cne = state.getChildNodeEntry(elem.getName(), elem.getNormalizedIndex());
@@ -159,11 +160,11 @@ public class PathResolver {
                 }
             } else if (elem.getIndex() == 0 // property must not have index
                     && state.hasPropertyName(elem.getName())
-                    && i == relPath.getLength() - 1) { // property must be final path element
+                    && i == path.getLength() - 1) { // property must be final path element
                 // TODO: check if available
                 return state.getPropertyState(elem.getName());
             } else {
-                throw new NoSuchItemStateException(relPath.toString());
+                throw new NoSuchItemStateException(path.toString());
             }
         }
         return state;

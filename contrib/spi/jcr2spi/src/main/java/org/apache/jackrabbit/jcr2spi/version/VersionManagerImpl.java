@@ -19,8 +19,8 @@ package org.apache.jackrabbit.jcr2spi.version;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
+import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Checkout;
@@ -82,7 +82,7 @@ public class VersionManagerImpl implements VersionManager {
      */
     public boolean isCheckedOut(NodeState nodeState) throws RepositoryException {
         // shortcut: if state is new, its ancestor must be checkout
-        if (nodeState.getStatus() == ItemState.STATUS_NEW) {
+        if (nodeState.getStatus() == Status.NEW) {
             return true;
         }
 
@@ -195,12 +195,6 @@ public class VersionManagerImpl implements VersionManager {
      * an overlayed state.
      */
     private NodeState getWorkspaceState(NodeState nodeState) {
-        if (nodeState.hasOverlayedState()) {
-            // nodestate has been obtained from  Session-ISM
-            return (NodeState) nodeState.getOverlayedState();
-        } else {
-            // nodestate has been obtained from Workspace-ISM already
-            return nodeState;
-        }
+        return (NodeState) nodeState.getWorkspaceState();
     }
 }

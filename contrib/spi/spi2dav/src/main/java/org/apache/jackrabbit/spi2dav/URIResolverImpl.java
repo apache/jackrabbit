@@ -115,13 +115,13 @@ class URIResolverImpl implements URIResolver {
         } else {
             StringBuffer uriBuffer = new StringBuffer();
 
-            Path relativePath = itemId.getRelativePath();
+            Path path = itemId.getPath();
             String uuid = itemId.getUUID();
 
             // resolver uuid part
             if (uuid != null) {
-                ItemId uuidId = (relativePath == null) ? itemId : service.getIdFactory().createNodeId(uuid);
-                if (relativePath != null & cache.containsItemId(uuidId)) {
+                ItemId uuidId = (path == null) ? itemId : service.getIdFactory().createNodeId(uuid);
+                if (path != null & cache.containsItemId(uuidId)) {
                     // append uri of parent node, that is already cached
                     uriBuffer.append(cache.getUri(uuidId));
                 } else {
@@ -159,13 +159,10 @@ class URIResolverImpl implements URIResolver {
                 uriBuffer.append(getRootItemUri(workspaceName));
             }
             // resolve relative-path part unless it denotes the root-item
-            if (relativePath != null && !relativePath.denotesRoot()) {
+            if (path != null && !path.denotesRoot()) {
                 try {
-                    String jcrPath = PathFormat.format(relativePath, nsResolver);
-                    // TODO: TOBEFIXED rootId is currently build from absolute path and not
-                    // from '.' as description in RS.getRootId defines. similarly
-                    // the PathResolver does not accept a non-normalized root-path.
-                    if (relativePath.isAbsolute()) {
+                    String jcrPath = PathFormat.format(path, nsResolver);
+                    if (path.isAbsolute()) {
                         jcrPath = jcrPath.substring(1);
                     }
                     uriBuffer.append(Text.escapePath(jcrPath));

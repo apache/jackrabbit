@@ -14,10 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi.state;
+package org.apache.jackrabbit.jcr2spi.state.entry;
 
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 
 /**
  * <code>UUIDReference</code> implements a {@link ChildNodeEntry} based on a
@@ -44,7 +49,7 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
      */
     UUIDReference(NodeState parent, NodeId childId, ItemStateFactory isf, QName name) {
         super(parent, name, isf);
-        if (childId.getRelativePath() != null) {
+        if (childId.getPath() != null) {
             throw new IllegalArgumentException("childId must not contain a relative path");
         }
         this.childId = childId;
@@ -62,7 +67,7 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
     UUIDReference(NodeState child, ItemStateFactory isf) {
         super(child, isf);
         this.childId = child.getNodeId();
-        if (childId.getRelativePath() == null) {
+        if (childId.getPath() == null) {
             throw new IllegalArgumentException("id of child must not contain a relative path");
         }
     }

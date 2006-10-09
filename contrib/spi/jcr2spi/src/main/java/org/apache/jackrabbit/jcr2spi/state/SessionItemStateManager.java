@@ -18,6 +18,8 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.HierarchyManagerImpl;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildPropertyEntry;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
@@ -366,7 +368,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             throws StaleItemStateException, ItemStateException {
         // fail-fast test: check status of this item's state
         switch (state.getStatus()) {
-            case ItemState.STATUS_NEW:
+            case Status.NEW:
                 {
                     String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": cannot save a new item.";
                     log.debug(msg);
@@ -375,13 +377,13 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
         if (throwOnStale) {
             switch (state.getStatus()) {
-                case ItemState.STATUS_STALE_MODIFIED:
+                case Status.STALE_MODIFIED:
                     {
                         String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": the item cannot be saved because it has been modified externally.";
                         log.debug(msg);
                         throw new StaleItemStateException(msg);
                     }
-                case ItemState.STATUS_STALE_DESTROYED:
+                case Status.STALE_DESTROYED:
                     {
                         String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": the item cannot be saved because it has been deleted externally.";
                         log.debug(msg);
@@ -398,16 +400,16 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             ItemState transientState = (ItemState) it.next();
             // fail-fast test: check status of transient state
             switch (transientState.getStatus()) {
-                case ItemState.STATUS_NEW:
+                case Status.NEW:
                     changeLog.added(transientState);
                     break;
-                case ItemState.STATUS_EXISTING_MODIFIED:
+                case Status.EXISTING_MODIFIED:
                     changeLog.modified(transientState);
                     break;
-                case ItemState.STATUS_EXISTING_REMOVED:
+                case Status.EXISTING_REMOVED:
                     changeLog.deleted(transientState);
                     break;
-                case ItemState.STATUS_STALE_MODIFIED:
+                case Status.STALE_MODIFIED:
                     if (throwOnStale) {
                         String msg = transientState.getId() + ": the item cannot be saved because it has been modified externally.";
                         log.debug(msg);
@@ -415,7 +417,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                     } else {
                         changeLog.modified(transientState);
                     }
-                case ItemState.STATUS_STALE_DESTROYED:
+                case Status.STALE_DESTROYED:
                     if (throwOnStale) {
                         String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
                         log.debug(msg);

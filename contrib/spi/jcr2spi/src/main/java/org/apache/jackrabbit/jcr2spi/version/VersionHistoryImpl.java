@@ -25,7 +25,7 @@ import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameException;

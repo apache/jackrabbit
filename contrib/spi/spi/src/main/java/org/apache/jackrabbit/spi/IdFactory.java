@@ -26,9 +26,9 @@ public interface IdFactory {
 
     public PropertyId createPropertyId(NodeId parentId, QName propertyName);
 
-    public NodeId createNodeId(NodeId parentId, Path relativePath);
+    public NodeId createNodeId(NodeId parentId, Path path);
 
-    public NodeId createNodeId(String uuid, Path relativePath);
+    public NodeId createNodeId(String uuid, Path path);
 
     public NodeId createNodeId(String uuid);
 }

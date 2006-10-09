@@ -33,7 +33,7 @@ import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
-import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
@@ -649,7 +649,7 @@ public class NodeImpl extends ItemImpl implements Node {
         QName[] mixinNames = getNodeState().getMixinTypeNames();
         NodeType[] nta = new NodeType[mixinNames.length];
         for (int i = 0; i < mixinNames.length; i++) {
-            nta[i++] = session.getNodeTypeManager().getNodeType(mixinNames[i]);
+            nta[i] = session.getNodeTypeManager().getNodeType(mixinNames[i]);
         }
         return nta;
     }
@@ -864,7 +864,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure the specified workspace is visible for the current session.
         session.checkAccessibleWorkspace(srcWorkspaceName);
 
-        Operation op = Update.create((NodeState) getNodeState().getOverlayedState(), srcWorkspaceName);
+        Operation op = Update.create((NodeState) getNodeState().getWorkspaceState(), srcWorkspaceName);
         ((WorkspaceImpl)session.getWorkspace()).getUpdatableItemStateManager().execute(op);
     }
 
@@ -1218,7 +1218,7 @@ public class NodeImpl extends ItemImpl implements Node {
             return QName.ROOT;
         }
 
-        return getNodeState().getName();
+        return getNodeState().getQName();
     }
 
 
@@ -1240,7 +1240,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private void checkHasPendingChanges() throws InvalidItemStateException, RepositoryException {
         if (hasPendingChanges()) {
-            String msg = "Unable to lock node. Node has pending changes: " + getPath();
+            String msg = "Node has pending changes: " + getPath();
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }

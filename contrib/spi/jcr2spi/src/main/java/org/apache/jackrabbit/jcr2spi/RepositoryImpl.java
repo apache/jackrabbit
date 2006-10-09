@@ -71,7 +71,7 @@ public class RepositoryImpl implements Repository {
      */
     public Session login(Credentials credentials, String workspaceName) throws LoginException, NoSuchWorkspaceException, RepositoryException {
         String wspName = (workspaceName == null) ? config.getDefaultWorkspaceName() : workspaceName;
-        SessionInfo info = config.getRepositoryService().login(credentials, wspName);
+        SessionInfo info = config.getRepositoryService().obtain(credentials, wspName);
         if (info instanceof XASessionInfo) {
             return new XASessionImpl((XASessionInfo) info, this, config);
         } else {

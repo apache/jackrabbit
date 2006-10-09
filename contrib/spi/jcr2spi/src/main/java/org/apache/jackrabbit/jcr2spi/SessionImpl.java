@@ -568,30 +568,10 @@ public class SessionImpl implements Session, ManagerProvider {
         // dispose item manager
         itemManager.dispose();
         // dispose workspace
-
-        // TODO
-        // wsp.dispose();
+        workspace.dispose();
 
         // invalidate session
         alive = false;
-        /*
-        // TODO
-        // logout JAAS subject
-        if (loginContext != null) {
-        try {
-        loginContext.logout();
-        } catch (javax.security.auth.login.LoginException le) {
-        log.warn("failed to logout current subject: " + le.getMessage());
-        }
-        loginContext = null;
-        }
-
-        try {
-        accessMgr.close();
-        } catch (Exception e) {
-        log.warn("error while closing AccessManager", e);
-        }
-        */
         // finally notify listeners that session has been closed
         notifyLoggedOut();
     }

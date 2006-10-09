@@ -23,6 +23,7 @@ import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,45 +42,13 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      */
     private static Logger log = LoggerFactory.getLogger(ItemState.class);
 
-     //----------------< flags defining the current status of this instance >---
     /**
-     * 'existing', i.e. persistent state
+     * Flag used to distinguish workspace states from session states. The first
+     * accepts call to {@link #refresh(Event, ChangeLog)}, while the latter
+     * will be able to handle the various methods related to transient
+     * modifications.
      */
-    public static final int STATUS_EXISTING = 1;
-    /**
-     * 'existing', i.e. persistent state that has been transiently modified (copy-on-write)
-     */
-    public static final int STATUS_EXISTING_MODIFIED = 2;
-    /**
-     * 'existing', i.e. persistent state that has been transiently removed (copy-on-write)
-     */
-    public static final int STATUS_EXISTING_REMOVED = 3;
-    /**
-     * 'new' state
-     */
-    public static final int STATUS_NEW = 4;
-    /**
-     * 'existing', i.e. persistent state that has been persistently modified by somebody else
-     */
-    public static final int STATUS_STALE_MODIFIED = 5;
-    /**
-     * 'existing', i.e. persistent state that has been destroyed by somebody else
-     */
-    public static final int STATUS_STALE_DESTROYED = 6;
-
-    /**
-     * a state is permanently modified either by saving transient changes or
-     * by wsp operations or be external modification
-     * TODO: improve. status only temporarily used to indicate to a SessionISM-state to pull changes
-     */
-    public static final int STATUS_MODIFIED = 7;
-
-    /**
-     * a new state was deleted and is now 'removed'
-     * or an existing item has been removed by a workspace operation or
-     * by an external modification.
-     */
-    public static final int STATUS_REMOVED = 8;
+    private final boolean isWorkspaceState;
 
     /**
      * the internal status of this item state
@@ -114,10 +83,11 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * @param parent
      * @param initialStatus the initial status of the item state object
      */
-    protected ItemState(NodeState parent, int initialStatus, IdFactory idFactory) {
+    protected ItemState(NodeState parent, int initialStatus, IdFactory idFactory,
+                        boolean isWorkspaceState) {
         switch (initialStatus) {
-            case STATUS_EXISTING:
-            case STATUS_NEW:
+            case Status.EXISTING:
+            case Status.NEW:
                 status = initialStatus;
                 break;
             default:
@@ -127,7 +97,9 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         }
         this.parent = parent;
         overlayedState = null;
+
         this.idFactory = idFactory;
+        this.isWorkspaceState = isWorkspaceState;
     }
 
     /**
@@ -140,9 +112,9 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     protected ItemState(ItemState overlayedState, NodeState parent,
                         int initialStatus, IdFactory idFactory) {
         switch (initialStatus) {
-            case STATUS_EXISTING:
-            case STATUS_EXISTING_MODIFIED:
-            case STATUS_EXISTING_REMOVED:
+            case Status.EXISTING:
+            case Status.EXISTING_MODIFIED:
+            case Status.EXISTING_REMOVED:
                 status = initialStatus;
                 break;
             default:
@@ -152,85 +124,39 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         }
         this.parent = parent;
         this.idFactory = idFactory;
+        this.isWorkspaceState = false;
+
         connect(overlayedState);
     }
 
+    //----------------------------------------------------------< ItemState >---
     /**
-     * Copy state information from overlayed state to this state
+     * Returns <code>true</code> if this item state is valid, that is its status
+     * is one of:
+     * <ul>
+     * <li>{@link Status#EXISTING}</li>
+     * <li>{@link Status#EXISTING_MODIFIED}</li>
+     * <li>{@link Status#NEW}</li>
+     * </ul>
+     * @return
      */
-    protected abstract void pull();
-
-    /**
-     * Connect this state to some underlying overlayed state.
-     */
-    protected void connect(ItemState overlayedState) {
-        if (this.overlayedState != null) {
-            if (this.overlayedState != overlayedState) {
-                throw new IllegalStateException("Item state already connected to another underlying state: " + this);
-            }
-        }
-        this.overlayedState = overlayedState;
-        this.overlayedState.addListener(this);
+    public boolean isValid() {
+        return status == Status.EXISTING || status == Status.EXISTING_MODIFIED || status == Status.NEW;
     }
 
-
-    protected abstract void refresh(Event event, ChangeLog changeLog);
-
-    /**
-     * Notify the life cycle listeners that this state has changed its status.
-     */
-    private void notifyStatusChanged(int oldStatus) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemStateLifeCycleListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateLifeCycleListener[]) listeners.toArray(new ItemStateLifeCycleListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] instanceof ItemStateLifeCycleListener) {
-                ((ItemStateLifeCycleListener) la[i]).statusChanged(this, oldStatus);
-            }
-        }
-    }
-
-    /**
-     * Marks this item state as modified.
-     */
-    protected void markModified() {
-        // only transient states can be marked-modified
-        if (getStatus() != STATUS_NEW && overlayedState == null) {
-            throw new IllegalStateException("persisted cannot be called on workspace state");
-        }
-
-        switch (status) {
-            case STATUS_EXISTING:
-                setStatus(STATUS_EXISTING_MODIFIED);
-                break;
-            case STATUS_EXISTING_MODIFIED:
-                // already modified, do nothing
-                break;
-            case STATUS_NEW:
-                // still new, do nothing
-                break;
-            case STATUS_STALE_DESTROYED:
-            case STATUS_STALE_MODIFIED:
-                // should actually not get here because item should check before
-                // it modifies an item state.
-                throw new IllegalStateException("Cannot mark stale state modified.");
-
-            case STATUS_EXISTING_REMOVED:
-            default:
-                String msg = "Cannot mark item state with status " + status + " modified.";
-                throw new IllegalStateException(msg);
-        }
-    }
-
-    //--------------------< public READ methods and package private Setters >---
     /**
      * Determines if this item state represents a node.
      *
      * @return true if this item state represents a node, otherwise false.
      */
     public abstract boolean isNode();
+
+    /**
+     * Returns the name of this state.
+     *
+     * @return name of this state
+     */
+    public abstract QName getQName();
 
     /**
      * Returns the identifier of this item state.
@@ -313,31 +239,6 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     }
 
     /**
-     * Returns <code>true</code> if this item state represents new or modified
-     * state or <code>false</code> if it represents existing, unmodified state.
-     *
-     * @return <code>true</code> if this item state is modified or new,
-     *         otherwise <code>false</code>
-     */
-    public boolean isTransient() {
-        return status == STATUS_EXISTING_MODIFIED || status == STATUS_NEW;
-    }
-
-    /**
-     * Returns <code>true</code> if this item state is valid, that is its status
-     * is one of:
-     * <ul>
-     * <li>{@link #STATUS_EXISTING}</li>
-     * <li>{@link #STATUS_EXISTING_MODIFIED}</li>
-     * <li>{@link #STATUS_NEW}</li>
-     * </ul>
-     * @return
-     */
-    public boolean isValid() {
-        return status == STATUS_EXISTING || status == STATUS_EXISTING_MODIFIED || status == STATUS_NEW;
-    }
-
-    /**
      * Returns the parent <code>NodeState</code> or <code>null</code>
      * if either this item state represents the root node or this item state is
      * 'free floating', i.e. not attached to the repository's hierarchy.
@@ -363,83 +264,65 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * @param newStatus the new status
      */
     void setStatus(int newStatus) {
-        if (status == newStatus) {
+        int oldStatus = status;
+        if (oldStatus == newStatus) {
             return;
         }
-        int oldStatus = status;
-        switch (newStatus) {
-            case STATUS_NEW:
-            case STATUS_EXISTING:
-            case STATUS_EXISTING_REMOVED:
-            case STATUS_EXISTING_MODIFIED:
-            case STATUS_STALE_MODIFIED:
-            case STATUS_STALE_DESTROYED:
-            case STATUS_MODIFIED:
-            case STATUS_REMOVED:
-                status = newStatus;
-                break;
-            default:
-                String msg = "illegal status: " + newStatus;
-                log.debug(msg);
-                throw new IllegalArgumentException(msg);
+
+        if (Status.isTerminalStatus(oldStatus)) {
+            throw new IllegalStateException("State is already in terminal status " + oldStatus);
         }
-        notifyStatusChanged(oldStatus);
+
+        if (isWorkspaceState()) {
+            switch (newStatus) {
+                case Status.EXISTING:
+                case Status.MODIFIED:
+                case Status.REMOVED:
+                    status = newStatus;
+                    break;
+
+                case Status.NEW:
+                case Status.EXISTING_REMOVED:
+                case Status.EXISTING_MODIFIED:
+                case Status.STALE_MODIFIED:
+                case Status.STALE_DESTROYED:
+                default:
+                    String msg = "Illegal status " + newStatus + " for 'workspace' state.";
+                    log.debug(msg);
+                    throw new IllegalArgumentException(msg);
+            }
+        } else {
+            switch (newStatus) {
+                case Status.NEW:
+                case Status.EXISTING:
+                case Status.EXISTING_REMOVED:
+                case Status.EXISTING_MODIFIED:
+                case Status.STALE_MODIFIED:
+                case Status.STALE_DESTROYED:
+                case Status.REMOVED:
+                    status = newStatus;
+                    break;
+
+                case Status.MODIFIED:
+                default:
+                    String msg = "Illegal status " + newStatus + " for 'session' state.";
+                    log.debug(msg);
+                    throw new IllegalArgumentException(msg);
+            }
+        }
+
+        // notifiy listeners about status change
+        // copy listeners to array to avoid ConcurrentModificationException
+        ItemStateLifeCycleListener[] la;
+        synchronized (listeners) {
+            la = (ItemStateLifeCycleListener[]) listeners.toArray(new ItemStateLifeCycleListener[listeners.size()]);
+        }
+        for (int i = 0; i < la.length; i++) {
+            if (la[i] instanceof ItemStateLifeCycleListener) {
+                ((ItemStateLifeCycleListener) la[i]).statusChanged(this, oldStatus);
+            }
+        }
     }
-
-    /**
-     * Determines if this item state is overlying persistent state.
-     *
-     * @return <code>true</code> if this item state is overlying persistent
-     *         state, otherwise <code>false</code>.
-     */
-    public boolean hasOverlayedState() {
-        return overlayedState != null;
-    }
-
-    /**
-     * Returns the persistent state backing <i>this</i> transient state or
-     * <code>null</code> if there is no persistent state (i.e.. <i>this</i>
-     * state is purely transient).
-     *
-     * @return the persistent item state or <code>null</code> if there is
-     *         no persistent state.
-     */
-    public ItemState getOverlayedState() {
-        return overlayedState;
-    }
-
-    /**
-     * Removes this item state. This will change the status of this property
-     * state to either {@link #STATUS_EXISTING_REMOVED} or {@link
-     * #STATUS_REMOVED} depending on the current status.
-     *
-     * @throws ItemStateException if an error occurs while removing this item
-     *                            state. e.g. this item state is not valid
-     *                            anymore.
-     */
-    public abstract void remove() throws ItemStateException;
-
-    /**
-     * Reverts this item state to its initial status and adds itself to the Set
-     * of <code>affectedItemStates</code> if it reverted itself.
-     *
-     * @param affectedItemStates the set of affected item states that reverted
-     *                           themselfes.
-     */
-    public abstract void revert(Set affectedItemStates);
-
-    /**
-     * Checks if this <code>ItemState</code> is transiently modified or new and
-     * adds itself to the <code>Set</code> of <code>transientStates</code> if
-     * that is the case. It this <code>ItemState</code> has children it will
-     * call the method {@link #collectTransientStates(java.util.Set)} on those
-     * <code>ItemState</code>s.
-     *
-     * @param transientStates the <code>Set</code> of transient <code>ItemState</code>,
-     *                        collected while the <code>ItemState</code>
-     *                        hierarchy is traversed.
-     */
-    public abstract void collectTransientStates(Set transientStates);
 
     /**
      * Add an <code>ItemStateLifeCycleListener</code>
@@ -464,6 +347,157 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         }
     }
 
+    //--------------------------------------------------------< State types >---
+    /**
+     * @return true if this state is a workspace state.
+     */
+    public boolean isWorkspaceState() {
+        return isWorkspaceState;
+    }
+
+    /**
+     * Returns <i>this</i>, if {@link #isWorkspaceState()} returns <code>true</code>.
+     * Otherwise this method returns the workspace state backing <i>this</i>
+     * 'session' state or <code>null</code> if this state is new.
+     *
+     * @return the workspace state or <code>null</code> if this state is new.
+     */
+    public ItemState getWorkspaceState() {
+        if (isWorkspaceState) {
+            return this;
+        } else {
+            return overlayedState;
+        }
+    }
+
+    /**
+     * @throws IllegalStateException if this state is a 'session' state.
+     */
+    public void checkIsWorkspaceState() {
+        if (!isWorkspaceState) {
+            throw new IllegalStateException("State " + this + " is not a 'workspace' state.");
+        }
+    }
+
+    /**
+     * @throws IllegalStateException if this state is a 'workspace' state.
+     */
+    public void checkIsSessionState() {
+        if (isWorkspaceState) {
+            throw new IllegalStateException("State " + this + " is not a 'session' state.");
+        }
+    }
+
+    //--------------------------------------------------< Workspace - State >---
+    /**
+     * Used on 'workspace' states in order to update the state according to
+     * the given event (and ev. changelog).
+     *
+     * @param event
+     * @param changeLog
+     * @throws IllegalStateException if this state is a 'session' state.
+     */
+    abstract void refresh(Event event, ChangeLog changeLog);
+
+
+    //----------------------------------------------------< Session - State >---
+    /**
+     * Copy all state information from overlayed state to this state
+     */
+    abstract void reset();
+
+    /**
+     * Merge the state information from the overlayed state into this state
+     */
+    abstract void merge();
+
+    /**
+     * Connect this state to some underlying overlayed state.
+     */
+    void connect(ItemState overlayedState) {
+        checkIsSessionState();
+        overlayedState.checkIsWorkspaceState();
+
+        if (this.overlayedState != null && this.overlayedState != overlayedState) {
+            throw new IllegalStateException("Item state already connected to another underlying state: " + this);
+        }
+        this.overlayedState = overlayedState;
+        this.overlayedState.addListener(this);
+    }
+
+    /**
+     * Returns <code>true</code> if this item state represents new or modified
+     * state or <code>false</code> if it represents existing, unmodified state.
+     *
+     * @return <code>true</code> if this item state is modified or new,
+     *         otherwise <code>false</code>
+     */
+    private boolean isTransient() {
+        checkIsSessionState();
+        return status == Status.EXISTING_MODIFIED || status == Status.NEW;
+    }
+
+    /**
+     * Removes this item state. This will change the status of this property
+     * state to either {@link Status#EXISTING_REMOVED} or {@link
+     * Status#REMOVED} depending on the current status.
+     *
+     * @throws ItemStateException if an error occurs while removing this item
+     *                            state. e.g. this item state is not valid
+     *                            anymore.
+     */
+    abstract void remove() throws ItemStateException;
+
+    /**
+     * Reverts this item state to its initial status and adds itself to the Set
+     * of <code>affectedItemStates</code> if it reverted itself.
+     *
+     * @param affectedItemStates the set of affected item states that reverted
+     *                           themselfes.
+     */
+    abstract void revert(Set affectedItemStates);
+
+    /**
+     * Checks if this <code>ItemState</code> is transiently modified or new and
+     * adds itself to the <code>Set</code> of <code>transientStates</code> if
+     * that is the case. It this <code>ItemState</code> has children it will
+     * call the method {@link #collectTransientStates(java.util.Set)} on those
+     * <code>ItemState</code>s.
+     *
+     * @param transientStates the <code>Set</code> of transient <code>ItemState</code>,
+     *                        collected while the <code>ItemState</code>
+     *                        hierarchy is traversed.
+     */
+    abstract void collectTransientStates(Set transientStates);
+
+    /**
+     * Marks this item state as modified.
+     */
+    void markModified() {
+        checkIsSessionState();
+
+        switch (status) {
+            case Status.EXISTING:
+                setStatus(Status.EXISTING_MODIFIED);
+                break;
+            case Status.EXISTING_MODIFIED:
+                // already modified, do nothing
+                break;
+            case Status.NEW:
+                // still new, do nothing
+                break;
+            case Status.STALE_DESTROYED:
+            case Status.STALE_MODIFIED:
+                // should actually not get here because item should check before
+                // it modifies an item state.
+                throw new IllegalStateException("Cannot mark stale state modified.");
+
+            case Status.EXISTING_REMOVED:
+            default:
+                String msg = "Cannot mark item state with status " + status + " modified.";
+                throw new IllegalStateException(msg);
+        }
+    }
     //-----------------------------------------< ItemStateLifeCycleListener >---
     /**
      *
@@ -472,26 +506,25 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      */
     public void statusChanged(ItemState state, int previousStatus) {
         // workspace-states never are listening to another state
-        if (getStatus() != STATUS_NEW && overlayedState == null) {
-            throw new IllegalStateException("statusChanged cannot be called on workspace state");
-        }
+        checkIsSessionState();
+        state.checkIsWorkspaceState();
 
         switch (state.getStatus()) {
-            case STATUS_EXISTING:
+            case Status.EXISTING:
                 // nothing to do
                 break;
-            case STATUS_MODIFIED:
-                if (previousStatus == STATUS_EXISTING) {
-                    // change back
-                    state.status = STATUS_EXISTING;
+            case Status.MODIFIED:
+                if (previousStatus == Status.EXISTING) {
+                    // change back // TODO: improve...
+                    state.status = Status.EXISTING;
                     // underlying state has been modified
                     if (isTransient()) {
-                        setStatus(STATUS_STALE_MODIFIED);
+                        setStatus(Status.STALE_MODIFIED);
                     } else {
                         synchronized (this) {
                             // this instance represents existing state, update it
-                            pull();
-                            setStatus(STATUS_EXISTING);
+                            merge();
+                            setStatus(Status.EXISTING);
                         }
                     }
                 } else {
@@ -499,18 +532,15 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                     throw new IllegalArgumentException();
                 }
                 break;
-            case STATUS_REMOVED:
+            case Status.REMOVED:
                 if (isTransient()) {
-                    setStatus(STATUS_STALE_DESTROYED);
+                    setStatus(Status.STALE_DESTROYED);
                 } else {
-                    setStatus(STATUS_REMOVED);
+                    setStatus(Status.REMOVED);
                 }
                 break;
-            case STATUS_STALE_MODIFIED:
-            case STATUS_STALE_DESTROYED:
-            case STATUS_EXISTING_REMOVED:
-            case STATUS_EXISTING_MODIFIED:
-            case STATUS_NEW:
+            default:
+                // Should never occur, since 'setStatus(int)' already validates
                 log.error("Workspace state cannot have its state changed to " + state.getStatus());
                 break;
         }

@@ -387,6 +387,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 log.warn("Exception while disposing workspace manager: " + e);
             }
         }
+        try {
+            service.dispose(sessionInfo);
+        } catch (RepositoryException e) {
+            log.warn("Exception while disposing session info: " + e);            
+        }
     }
     //------------------------------------------------------< AccessManager >---
     /**
@@ -394,15 +399,15 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      */
     public boolean isGranted(NodeState parentState, Path relPath, String[] actions) throws ItemNotFoundException, RepositoryException {
         // TODO: TOBEFIXED. 
-        ItemState wspState = parentState.getOverlayedState();
+        ItemState wspState = parentState.getWorkspaceState();
         if (wspState == null) {
             Path.PathBuilder pb = new Path.PathBuilder();
             pb.addAll(relPath.getElements());
             while (wspState == null) {
-                pb.addFirst(parentState.getName());
+                pb.addFirst(parentState.getQName());
 
                 parentState = parentState.getParent();
-                wspState = parentState.getOverlayedState();
+                wspState = parentState.getWorkspaceState();
             }
             try {
                 relPath = pb.getPath();
@@ -427,7 +432,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @see AccessManager#isGranted(ItemState, String[])
      */
     public boolean isGranted(ItemState itemState, String[] actions) throws ItemNotFoundException, RepositoryException {
-        ItemState wspState = itemState.getOverlayedState();
+        ItemState wspState = itemState.getWorkspaceState();
         // a 'new' state can always be read, written and removed
         // TODO: correct?
         if (wspState == null) {
@@ -440,7 +445,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @see AccessManager#canRead(ItemState)
      */
     public boolean canRead(ItemState itemState) throws ItemNotFoundException, RepositoryException {
-        ItemState wspState = itemState.getOverlayedState();
+        ItemState wspState = itemState.getWorkspaceState();
         // a 'new' state can always be read
         if (wspState == null) {
             return true;
@@ -452,7 +457,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @see AccessManager#canRemove(ItemState)
      */
     public boolean canRemove(ItemState itemState) throws ItemNotFoundException, RepositoryException {
-        ItemState wspState = itemState.getOverlayedState();
+        ItemState wspState = itemState.getWorkspaceState();
         // a 'new' state can always be removed again
         if (wspState == null) {
             return true;
@@ -587,7 +592,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
          */
         private void execute(ChangeLog changeLog) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
             try {
-                ItemState target = changeLog.getTarget().getOverlayedState();
+                ItemState target = changeLog.getTarget();
                 batch = service.createBatch(target.getId(), sessionInfo);
                 Iterator it = changeLog.getOperations();
                 while (it.hasNext()) {
