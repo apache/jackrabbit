@@ -37,6 +37,21 @@ public class ISO9075Test extends TestCase {
         assertEquals("My_x005f_x0020_x0020_Documents", ISO9075.encode("My_x0020 Documents"));
     }
 
+    public void testMatcherEscapes() {
+        assertEquals(
+                "StringWith$inside", ISO9075.decode("StringWith$inside"));
+        assertEquals(
+                "StringWith$inside", ISO9075.decode("StringWith_x0024_inside"));
+        assertEquals(
+                "StringWith_x0024_inside", ISO9075.encode("StringWith$inside"));
+        assertEquals(
+                "StringWith\\inside", ISO9075.decode("StringWith\\inside"));
+        assertEquals(
+                "StringWith\\inside", ISO9075.decode("StringWith_x005c_inside"));
+        assertEquals(
+                "StringWith_x005c_inside", ISO9075.encode("StringWith\\inside"));
+    }
+
     /**
      * This is a disabled brute force test. It tests permutations of characters:
      * <code>' ', '_', 'x', '0', '2', 'a', 'b', '{'</code>, encodes and decodes
