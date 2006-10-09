@@ -17,8 +17,17 @@
 package org.apache.jackrabbit.core.fs.db;
 
 import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.RepositoryException;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 /**
  * <code>OracleFileSystem</code> is a JDBC-based <code>FileSystem</code>
@@ -198,6 +207,63 @@ public class OracleFileSystem extends DbFileSystem {
             String msg = "failed to initialize file system";
             log.error(msg, e);
             throw new FileSystemException(msg, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overridden in order to support multiple oracle schemas. Note that
+     * schema names in Oracle correspond to the username of the connection.
+     * See http://issues.apache.org/jira/browse/JCR-582
+     *
+     * @throws Exception if an error occurs
+     */
+    protected void checkSchema() throws Exception {
+        DatabaseMetaData metaData = con.getMetaData();
+        String tableName = schemaObjectPrefix + "FSENTRY";
+        if (metaData.storesLowerCaseIdentifiers()) {
+            tableName = tableName.toLowerCase();
+        } else if (metaData.storesUpperCaseIdentifiers()) {
+            tableName = tableName.toUpperCase();
+        }
+        String userName = metaData.getUserName();
+
+        ResultSet rs = metaData.getTables(null, userName, tableName, null);
+        boolean schemaExists;
+        try {
+            schemaExists = rs.next();
+        } finally {
+            rs.close();
+        }
+
+        if (!schemaExists) {
+            // read ddl from resources
+            InputStream in = getClass().getResourceAsStream(schema + ".ddl");
+            if (in == null) {
+                String msg = "Configuration error: unknown schema '" + schema + "'";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            Statement stmt = con.createStatement();
+            try {
+                String sql = reader.readLine();
+                while (sql != null) {
+                    // Skip comments and empty lines
+                    if (!sql.startsWith("#") && sql.length() > 0) {
+                        // replace prefix variable
+                        sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
+                        // execute sql stmt
+                        stmt.executeUpdate(sql);
+                    }
+                    // read next sql stmt
+                    sql = reader.readLine();
+                }
+            } finally {
+                closeStream(in);
+                closeStatement(stmt);
+            }
         }
     }
 }

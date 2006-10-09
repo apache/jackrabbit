@@ -23,19 +23,25 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.util.Serializer;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.DatabaseMetaData;
+import java.sql.Statement;
 
 /**
  * <code>OraclePersistenceManager</code> is a JDBC-based
@@ -255,6 +261,65 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
                     freeTemporaryBlob(blob);
                 } catch (Exception e1) {
                 }
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overridden in order to support multiple oracle schemas. Note that
+     * schema names in Oracle correspond to the username of the connection.
+     * See http://issues.apache.org/jira/browse/JCR-582
+     *
+     * @throws Exception if an error occurs
+     */
+    protected void checkSchema() throws Exception {
+        DatabaseMetaData metaData = con.getMetaData();
+        String tableName = schemaObjectPrefix + "NODE";
+        if (metaData.storesLowerCaseIdentifiers()) {
+            tableName = tableName.toLowerCase();
+        } else if (metaData.storesUpperCaseIdentifiers()) {
+            tableName = tableName.toUpperCase();
+        }
+        String userName = metaData.getUserName();
+
+        ResultSet rs = metaData.getTables(null, userName, tableName, null);
+        boolean schemaExists;
+        try {
+            schemaExists = rs.next();
+        } finally {
+            rs.close();
+        }
+
+        if (!schemaExists) {
+            // read ddl from resources
+            InputStream in = getClass().getResourceAsStream(schema + ".ddl");
+            if (in == null) {
+                String msg = "Configuration error: unknown schema '" + schema + "'";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            Statement stmt = con.createStatement();
+            try {
+                String sql = reader.readLine();
+                while (sql != null) {
+                    // Skip comments and empty lines
+                    if (!sql.startsWith("#") && sql.length() > 0) {
+                        // replace prefix variable
+                        sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
+                        // execute sql stmt
+                        stmt.executeUpdate(sql);
+                    }
+                    // read next sql stmt
+                    sql = reader.readLine();
+                }
+                // commit the changes
+                con.commit();
+            } finally {
+                closeStream(in);
+                closeStatement(stmt);
             }
         }
     }
