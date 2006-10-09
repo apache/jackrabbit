@@ -20,26 +20,23 @@ import org.apache.jackrabbit.name.Path;
 
 /**
  * An <code>ItemId</code> identifies an item using a combination of UUID and
- * relative path. There are three basic forms of an ItemId. The following
+ * path. There are three basic forms of an ItemId. The following
  * table shows each of the allowed combinations where an <b>X</b> in
  * the column indicates that a value is set and a <b>-</b> indicates
  * that the value is <code>null</code>:
  * <table>
  * <tr><th>UUID</th><th>relative Path</th><th>Usage</th></tr>
- * <tr><td align="center"><b>X</b></td><td align="center"><b>-</b></td>
+ * <tr valign="top"><td align="center"><b>X</b></td><td align="center"><b>-</b></td>
  *   <td>The item can be identified with a UUID. In most cases such an item
  *   is also mix:referenceable but there is no restriction in that respect. An
  *   SPI implementation may also use a UUID to identify non-referenceable nodes.
  *   Whether a node is referenceable is purely governed by its node type or
  *   the assigned mixin types.</td></tr>
- * <tr><td align="center"><b>-</b></td><td align="center"><b>X</b></td>
+ * <tr valign="top"><td align="center"><b>-</b></td><td align="center"><b>X</b></td>
  *   <td>The item can not be identified with a UUID and none of its ancestors
- *   can be identified with a UUID. The item is identified by a relative path
- *   starting from the root node of the workspace as if calling
- *   {@link javax.jcr.Session#getRootNode() Session.getRootNode()}{@link
- *   javax.jcr.Node#getNode(String) .getNode(relPath)}.
+ *   can be identified with a UUID. The item is identified by an absolute path.
  *   </td></tr>
- * <tr><td align="center"><b>X</b></td><td align="center"><b>X</b></td>
+ * <tr valign="top"><td align="center"><b>X</b></td><td align="center"><b>X</b></td>
  *   <td>The item can not be identified with a UUID but one of its ancestors
  *   can. {@link #getUUID} returns the UUID of the nearest ancestor, which
  *   can be identified with a UUID. The relative path provides a navigation
@@ -64,8 +61,8 @@ public interface ItemId {
     public String getUUID();
 
     /**
-     * @return the relative path part of this item id. Returns <code>null</code>
+     * @return the path part of this item id. Returns <code>null</code>
      *         if this item can be identified solely with a UUID.
      */
-    public Path getRelativePath();
+    public Path getPath();
 }

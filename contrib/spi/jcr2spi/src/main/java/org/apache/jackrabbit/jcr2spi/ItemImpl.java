@@ -24,6 +24,7 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
+import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
@@ -32,7 +33,6 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.PathFormat;
-import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -164,14 +164,14 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * @see javax.jcr.Item#isNew()
      */
     public boolean isNew() {
-        return state.getStatus() == ItemState.STATUS_NEW;
+        return state.getStatus() == Status.NEW;
     }
 
     /**
      * @see javax.jcr.Item#isModified()
      */
     public boolean isModified() {
-        return state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED;
+        return state.getStatus() == Status.EXISTING_MODIFIED;
     }
 
     /**
@@ -192,9 +192,21 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             if (session.getWorkspace().getName().equals(otherWspName)) {
                 // in addition they must provide the same id irrespective of
                 // any transient modifications.
-                ItemId thisId = state.getOverlayedState().getId();
-                ItemId otherId = other.state.getOverlayedState().getId();
-                return thisId.equals(otherId);
+                ItemState wspState = state.getWorkspaceState();
+                ItemState otherWspState = other.state.getWorkspaceState();
+
+                if (wspState != null && otherWspState != null) {
+                    return wspState.getId().equals(otherWspState.getId());
+                }
+                /* else:
+                - if both wsp-states are null, the items are both transiently
+                  added and are only the same if they are obtained from the same
+                  session. in this case, their states must be the same object,
+                  which is covered above.
+                - either of the two items does not have a workspace state.
+                  therefore the items cannot be the same, since one has been
+                  transiently added in one but not the other session.
+                  */
             }
         }
         return false;
@@ -239,11 +251,11 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
 
         // check status of this item's state
         switch (state.getStatus()) {
-            case ItemState.STATUS_NEW:
+            case Status.NEW:
                 String msg = "Cannot refresh a new item (" + safeGetJCRPath() + ").";
                 log.debug(msg);
                 throw new RepositoryException(msg);
-            case ItemState.STATUS_STALE_DESTROYED:
+            case Status.STALE_DESTROYED:
                 msg = "Cannot refresh on a deleted item (" + safeGetJCRPath() + ").";
                 log.debug(msg);
                 throw new InvalidItemStateException(msg);
@@ -283,28 +295,28 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         switch (state.getStatus()) {
             /**
              * Nothing to do for
-             * - ItemState.STATUS_EXISTING : modifications reverted or saved
-             * - ItemState.STATUS_EXISTING_MODIFIED : transient modification
-             * - ItemState.STATUS_STALE_MODIFIED : external modifications while transient changes pending
-             * - ItemState.MODIFIED : externaly modified -> marker for sessionISM states only
+             * - Status#EXISTING : modifications reverted or saved
+             * - Status#EXISTING_MODIFIED : transient modification
+             * - Status#STALE_MODIFIED : external modifications while transient changes pending
+             * - Status#MODIFIED : externaly modified -> marker for sessionISM states only
              */
-            case ItemState.STATUS_EXISTING:
-            case ItemState.STATUS_EXISTING_MODIFIED:
-            case ItemState.STATUS_STALE_MODIFIED:
-            case ItemState.STATUS_MODIFIED:
+            case Status.EXISTING:
+            case Status.EXISTING_MODIFIED:
+            case Status.STALE_MODIFIED:
+            case Status.MODIFIED:
                 break;
             /**
              * Notify listeners that this item is transiently or permanently
              * destroyed.
-             * - STATUS_EXISTING_REMOVED : transient removal
-             * - STATUS_REMOVED : permanent removal. item will never get back to life
-             * - STATUS_STALE_DESTROYED : permanent removal. item will never get back to life
+             * - Status#EXISTING_REMOVED : transient removal
+             * - Status#REMOVED : permanent removal. item will never get back to life
+             * - Status#STALE_DESTROYED : permanent removal. item will never get back to life
              */
-            case ItemState.STATUS_EXISTING_REMOVED:
+            case Status.EXISTING_REMOVED:
                 notifyDestroyed();
                 break;
-            case ItemState.STATUS_REMOVED:
-            case ItemState.STATUS_STALE_DESTROYED:
+            case Status.REMOVED:
+            case Status.STALE_DESTROYED:
                 state.removeListener(this);
                 this.state = null;
                 notifyDestroyed();
@@ -312,7 +324,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             /**
              * Invalid status. A state can never change its state to 'New'.
              */
-            case ItemState.STATUS_NEW:
+            case Status.NEW:
                 // should never happen.
                 log.error("invalid state change to STATUS_NEW");
                 break;

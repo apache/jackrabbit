@@ -29,6 +29,7 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.name.QName;
@@ -142,18 +143,18 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
 
             // build the node state
             String uuid = null;
-            if (info.getId().getRelativePath() == null) {
+            if (info.getId().getPath() == null) {
                 uuid = info.getId().getUUID();
             }
             NodeState state = new NodeState(info.getQName(), uuid, parent, info.getNodetype(),
-                definition, ItemState.STATUS_EXISTING, this, service.getIdFactory());
+                definition, Status.EXISTING, this, service.getIdFactory(), true);
 
             // child node entries
             Set childNodeEntries = new HashSet();
             for (IdIterator it = info.getNodeIds(); it.hasNext(); ) {
                 NodeInfo childInfo = service.getNodeInfo(sessionInfo, (NodeId) it.nextId());
                 String childUUID = null;
-                if (childInfo.getId().getRelativePath() == null) {
+                if (childInfo.getId().getPath() == null) {
                     childUUID = childInfo.getId().getUUID();
                 }
                 childNodeEntries.add(new CNE(childInfo.getQName(), childUUID));
@@ -241,7 +242,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
 
             // build the PropertyState
             PropertyState state = new PropertyState(info.getQName(), parent,
-                def, ItemState.STATUS_EXISTING, service.getIdFactory());
+                def, Status.EXISTING, service.getIdFactory(), true);
 
             QValue[] qValues;
             if (info.getType() == PropertyType.BINARY) {

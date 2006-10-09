@@ -194,7 +194,7 @@ public class TransientItemStateManager extends CachingItemStateManager
     /**
      * Return an item state given its id. Please note that this implementation
      * also returns item states that are in removed state ({@link
-     * ItemState.STATUS_EXISTING_REMOVED} but not yet saved.
+     * Status#EXISTING_REMOVED} but not yet saved.
      *
      * @return item state.
      * @throws NoSuchItemStateException if there is no item state (not even a
@@ -252,56 +252,56 @@ public class TransientItemStateManager extends CachingItemStateManager
         // a state which changes from 'existing' to 'existing modified' will
         // go into the modified set of the change log, etc.
         switch (state.getStatus()) {
-            case ItemState.STATUS_EXISTING:
+            case Status.EXISTING:
                 switch (previousStatus) {
-                    case ItemState.STATUS_EXISTING_MODIFIED:
+                    case Status.EXISTING_MODIFIED:
                         // was modified and is now refreshed
                         changeLog.modifiedStates.remove(state);
                         break;
-                    case ItemState.STATUS_EXISTING_REMOVED:
+                    case Status.EXISTING_REMOVED:
                         // was removed and is now refreshed
                         changeLog.deletedStates.remove(state);
                         break;
-                    case ItemState.STATUS_STALE_MODIFIED:
+                    case Status.STALE_MODIFIED:
                         // was modified and state and is now refreshed
                         changeLog.modifiedStates.remove(state);
                         break;
-                    case ItemState.STATUS_NEW:
+                    case Status.NEW:
                         // was new and has been saved now
                         changeLog.addedStates.remove(state);
                         break;
                 }
                 break;
-            case ItemState.STATUS_EXISTING_MODIFIED:
+            case Status.EXISTING_MODIFIED:
                 changeLog.modified(state);
                 break;
-            case ItemState.STATUS_EXISTING_REMOVED:
+            case Status.EXISTING_REMOVED:
                 // check if modified earlier
-                if (previousStatus == ItemState.STATUS_EXISTING_MODIFIED) {
+                if (previousStatus == Status.EXISTING_MODIFIED) {
                     changeLog.modifiedStates.remove(state);
                     // todo: remove operation(s) as well
                 }
                 changeLog.deleted(state);
                 break;
-            case ItemState.STATUS_REMOVED:
-                if (previousStatus == ItemState.STATUS_NEW) {
+            case Status.REMOVED:
+                if (previousStatus == Status.NEW) {
                     // was new and now removed again
                     changeLog.addedStates.remove(state);
                     // TODO: remove operation as well
-                } else if (previousStatus == ItemState.STATUS_EXISTING_REMOVED) {
+                } else if (previousStatus == Status.EXISTING_REMOVED) {
                     // was removed and is now saved
                     changeLog.deletedStates.remove(state);
                 }
                 break;
-            case ItemState.STATUS_STALE_DESTROYED:
+            case Status.STALE_DESTROYED:
                 // state is now stale. remove from modified
                 changeLog.modifiedStates.remove(state);
                 // TODO: remove operation as well
                 break;
-            case ItemState.STATUS_STALE_MODIFIED:
+            case Status.STALE_MODIFIED:
                 // state is now stale. keep in modified. wait until refreshed
                 break;
-            case ItemState.STATUS_NEW:
+            case Status.NEW:
                 // new state has been created
                 changeLog.added(state);
                 break;

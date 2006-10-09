@@ -127,6 +127,10 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
                         log.error("Unexpected error while updating modified property state.", e);
                     }
                 }
+                // TODO: check again. parent must be notified if mixintypes or jcr:uuid prop is changed.
+                if (parent != null) {
+                    parent.refresh(event, changeLog);
+                }
             } else {
                 // should never occur
                 throw new IllegalArgumentException("Invalid event type: " + event.getType());

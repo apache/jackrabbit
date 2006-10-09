@@ -20,10 +20,11 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
+import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
@@ -403,7 +404,7 @@ public class SessionImporter implements Importer, SessionListener {
              */
             try {
                 PropertyState conflicting = parent.getPropertyState(nodeInfo.getName());
-                if (conflicting.getStatus() == ItemState.STATUS_NEW) {
+                if (conflicting.getStatus() == Status.NEW) {
                     // assume this property has been imported as well;
                     // rename conflicting property
                     // TODO: use better reversible escaping scheme to create unique name

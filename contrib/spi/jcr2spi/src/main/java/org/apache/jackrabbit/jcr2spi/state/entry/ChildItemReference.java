@@ -14,9 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi.state;
+package org.apache.jackrabbit.jcr2spi.state.entry;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 
 import java.lang.ref.WeakReference;
 
@@ -26,7 +31,7 @@ import java.lang.ref.WeakReference;
  * @see ChildNodeReference
  * @see PropertyReference
  */
-public abstract class ChildItemReference {
+abstract class ChildItemReference {
 
     /**
      * Cached weak reference to the target NodeState.

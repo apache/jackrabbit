@@ -19,8 +19,8 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.ChildNodeEntry;
-import org.apache.jackrabbit.jcr2spi.state.ChildPropertyEntry;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildPropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
@@ -74,9 +74,6 @@ import java.util.List;
  * one <code>ItemManagerImpl</code> instance per started global transaction.
  */
 public class ItemManagerImpl implements Dumpable, ItemManager {
-
-    // TODO: needs to be fixed, either by modifying interface or impl. items can be created from item states obtained from WorkspaceManager.
-    // -->> see LockManagerImpl
 
     private static Logger log = LoggerFactory.getLogger(ItemManagerImpl.class);
 
@@ -138,6 +135,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      * @see ItemManager#itemExists(ItemState)
      */
     public boolean itemExists(ItemState itemState) {
+        itemState.checkIsSessionState();
         try {
             // check sanity of session
             session.checkIsAlive();
@@ -171,6 +169,8 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
      * @see ItemManager#getItem(ItemState)
      */
     public Item getItem(ItemState itemState) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        itemState.checkIsSessionState();
+
         // first try to access item from cache
         Item item = retrieveItem(itemState);
         // not yet in cache, need to create instance
@@ -194,6 +194,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check sanity of session
         session.checkIsAlive();
+        parentState.checkIsSessionState();
         checkAccess(parentState, true);
 
         Iterator iter = parentState.getChildNodeEntries().iterator();
@@ -219,6 +220,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check sanity of session
         session.checkIsAlive();
+        parentState.checkIsSessionState();
         checkAccess(parentState, true);
 
         Collection nodeEntries = parentState.getChildNodeEntries();
@@ -241,6 +243,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check sanity of session
         session.checkIsAlive();
+        parentState.checkIsSessionState();
         checkAccess(parentState, true);
 
         Iterator iter = parentState.getPropertyEntries().iterator();
@@ -266,6 +269,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check sanity of session
         session.checkIsAlive();
+        parentState.checkIsSessionState();
         checkAccess(parentState, true);
 
         Collection propEntries = parentState.getPropertyEntries();

@@ -64,7 +64,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         this.id = id;
 
         // retrieve name
-        if (id.getRelativePath() == null) {
+        if (id.getPath() == null) {
             DavProperty nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
             if (nameProp != null && nameProp.getValue() != null) {
                 // not root node
@@ -81,8 +81,8 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                 qName = QName.ROOT;
             }
         } else {
-            Path.PathElement el = id.getRelativePath().getNameElement();
-            qName = (Path.CURRENT_ELEMENT == el) ? QName.ROOT : el.getName();
+            Path.PathElement el = id.getPath().getNameElement();
+            qName = (Path.ROOT_ELEMENT == el) ? QName.ROOT : el.getName();
         }
 
 

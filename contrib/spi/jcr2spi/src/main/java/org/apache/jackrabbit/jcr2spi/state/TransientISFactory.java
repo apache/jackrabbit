@@ -54,11 +54,11 @@ final class TransientISFactory implements TransientItemStateFactory {
                                         NodeState parent, QName nodetypeName,
                                         QNodeDefinition definition) {
         NodeState nodeState = new NodeState(name, uuid, parent, nodetypeName,
-            definition, ItemState.STATUS_NEW, this, idFactory);
+            definition, Status.NEW, this, idFactory, false);
         // get a notification when this item state is saved or invalidated
         nodeState.addListener(listener);
         // notify listener that a node state has been created
-        listener.statusChanged(nodeState, ItemState.STATUS_NEW);
+        listener.statusChanged(nodeState, Status.NEW);
         return nodeState;
     }
 
@@ -68,11 +68,11 @@ final class TransientISFactory implements TransientItemStateFactory {
      */
     public PropertyState createNewPropertyState(QName name, NodeState parent, QPropertyDefinition definition) {
         PropertyState propState = new PropertyState(name, parent,
-            definition, ItemState.STATUS_NEW, idFactory);
+            definition, Status.NEW, idFactory, false);
         // get a notification when this item state is saved or invalidated
         propState.addListener(listener);
         // notify listener that a property state has been created
-        listener.statusChanged(propState, ItemState.STATUS_NEW);
+        listener.statusChanged(propState, Status.NEW);
         return propState;
     }
 
@@ -85,7 +85,7 @@ final class TransientISFactory implements TransientItemStateFactory {
         // retrieve state to overlay
         NodeState overlayedState = (NodeState) parent.getRootState();
         NodeState nodeState = new NodeState(overlayedState, null,
-            ItemState.STATUS_EXISTING, this, idFactory);
+            Status.EXISTING, this, idFactory);
         nodeState.addListener(listener);
         return nodeState;
     }
@@ -104,7 +104,7 @@ final class TransientISFactory implements TransientItemStateFactory {
             parentState = (NodeState) ism.getItemState(overlayedParent.getId());
         }
         NodeState nodeState = new NodeState(overlayedState, parentState,
-            ItemState.STATUS_EXISTING, this, idFactory);
+            Status.EXISTING, this, idFactory);
         nodeState.addListener(listener);
         return nodeState;
     }
@@ -118,7 +118,7 @@ final class TransientISFactory implements TransientItemStateFactory {
         // retrieve state to overlay
         NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
         NodeState nodeState = new NodeState(overlayedState, parentState,
-            ItemState.STATUS_EXISTING, this, idFactory);
+            Status.EXISTING, this, idFactory);
         nodeState.addListener(listener);
         return nodeState;
     }
@@ -133,7 +133,7 @@ final class TransientISFactory implements TransientItemStateFactory {
         // retrieve state to overlay
         PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
         PropertyState propState = new PropertyState(overlayedState, parentState,
-            ItemState.STATUS_EXISTING, idFactory);
+            Status.EXISTING, idFactory);
         propState.addListener(listener);
         return propState;
     }

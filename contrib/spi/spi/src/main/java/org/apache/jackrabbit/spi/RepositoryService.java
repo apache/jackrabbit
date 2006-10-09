@@ -61,15 +61,12 @@ public interface RepositoryService {
      */
     public Properties getRepositoryDescriptors() throws RepositoryException;
 
-    //------------------------------------------------------< Initial login >---
-
+    //-----------------------------------< SessionInfo creation and release >---
     /**
-     * Authenticates the user using the supplied <code>credentials</code>. If
-     * <code>credentials</code> is <code>null</code> an implementation will use
-     * the current security context to obtain the {@link
-     * javax.security.auth.Subject}. If <code>credentials</code> is
-     * <code>null</code> and there is no <code>Subject</code> present in the
-     * current security context a <code>RepositoryException</code> is thrown.
+     * Returns a <code>SessionInfo</code> that will be used by other methods
+     * on the <code>RepositoryService</code>.
+     * An implementation may choose to authenticate the user using the supplied
+     * <code>credentials</code>.
      *
      * @param credentials the credentials of the user.
      * @return a <code>SessionInfo</code> if authentication was successful.
@@ -78,8 +75,16 @@ public interface RepositoryService {
      *                                  is not recognized.
      * @throws RepositoryException      if an error occurs.
      */
-    public SessionInfo login(Credentials credentials, String workspaceName)
+    public SessionInfo obtain(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException;
+
+    /**
+     * Indicates to the <code>RepositoryService</code>, that the given SessionInfo
+     * will not be used any more.
+     *
+     * @param sessionInfo
+     */
+    public void dispose(SessionInfo sessionInfo) throws RepositoryException;
 
     //--------------------------------------------------------------------------
     /**
@@ -110,10 +115,10 @@ public interface RepositoryService {
     /**
      * The <code>NodeId</code> of the root node may basically have two
      * characteristics. If the root node can be identified with a UUID the
-     * returned <code>NodeId</code> simply has a UUID part and the relative path
+     * returned <code>NodeId</code> simply has a UUID part and the path
      * part is <code>null</code>. If the root node cannot be identified with a
-     * UUID the UUID part is <code>null</code> and the relative path will be set
-     * to '.' (current element).
+     * UUID the UUID part is <code>null</code> and the path part will be set
+     * to "/".
      *
      * @param sessionInfo
      * @return

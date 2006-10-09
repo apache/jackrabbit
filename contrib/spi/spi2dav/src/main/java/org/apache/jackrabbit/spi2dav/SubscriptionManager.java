@@ -26,11 +26,13 @@ interface SubscriptionManager {
 
     public void setSessionInfo(SessionInfo sessionInfo);
 
-        public boolean subscriptionExists(EventListener listener);
+    public boolean subscriptionExists(EventListener listener);
 
-        public String getSubscriptionId(EventListener listener);
+    public String getSubscriptionId(EventListener listener);
 
-        public void addSubscription(String uri, String subscriptionId, EventListener listener);
+    public void addSubscription(String uri, String subscriptionId, EventListener listener);
 
-        public void removeSubscription(EventListener listener);
+    public void removeSubscription(EventListener listener);
+
+    public void dispose();
 }

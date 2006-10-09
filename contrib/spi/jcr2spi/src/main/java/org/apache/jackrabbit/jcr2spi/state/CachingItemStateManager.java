@@ -96,6 +96,9 @@ public class CachingItemStateManager implements ItemStateManager {
     public NodeState getRootState() throws ItemStateException {
         if (root == null) {
             root = isf.createRootState(this);
+            if (root.getUUID() != null) {
+                uuid2NodeState.put(root.getUUID(), root);
+            }
             root.addListener(lifeCycleListener);
         }
         return root;
@@ -181,7 +184,7 @@ public class CachingItemStateManager implements ItemStateManager {
      */
     private ItemState resolve(ItemId id) throws NoSuchItemStateException, ItemStateException {
         String uuid = id.getUUID();
-        Path relPath = id.getRelativePath();
+        Path path = id.getPath();
 
         NodeState nodeState;
         // resolve uuid part
@@ -189,7 +192,7 @@ public class CachingItemStateManager implements ItemStateManager {
             nodeState = (NodeState) uuid2NodeState.get(uuid);
             if (nodeState == null) {
                 // state identified by the uuid is not yet cached -> get from ISM
-                NodeId refId = (relPath == null) ? (NodeId) id : idFactory.createNodeId(uuid);
+                NodeId refId = (path == null) ? (NodeId) id : idFactory.createNodeId(uuid);
                 nodeState = isf.createNodeState(refId, this);
                 nodeState.addListener(lifeCycleListener);
                 uuid2NodeState.put(uuid, nodeState);
@@ -200,8 +203,8 @@ public class CachingItemStateManager implements ItemStateManager {
         }
 
         ItemState s = nodeState;
-        if (relPath != null) {
-            s = PathResolver.resolve(nodeState, relPath);
+        if (path != null) {
+            s = PathResolver.resolve(nodeState, path);
         }
         touch(s);
         return s;
@@ -235,9 +238,9 @@ public class CachingItemStateManager implements ItemStateManager {
         }
 
         // resolve relative path
-        if (id.getRelativePath() != null) {
+        if (id.getPath() != null) {
             try {
-                state = PathResolver.lookup(state, id.getRelativePath());
+                state = PathResolver.lookup(state, id.getPath());
             } catch (ItemStateException e) {
                 log.warn("exception while looking up state with id: " + id);
                 return null;
@@ -252,8 +255,8 @@ public class CachingItemStateManager implements ItemStateManager {
     private class ISLifeCycleListener implements ItemStateLifeCycleListener {
 
         public void statusChanged(ItemState state, int previousStatus) {
-            if (state.getStatus() == ItemState.STATUS_REMOVED ||
-                state.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
+            if (state.getStatus() == Status.REMOVED ||
+                state.getStatus() == Status.STALE_DESTROYED) {
                 recentlyUsed.remove(state);
                 if (state.isNode()) {
                     NodeState nodeState = (NodeState) state;

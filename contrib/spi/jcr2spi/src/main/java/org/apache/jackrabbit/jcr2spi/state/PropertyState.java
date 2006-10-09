@@ -73,7 +73,7 @@ public class PropertyState extends ItemState {
     protected PropertyState(PropertyState overlayedState, NodeState parent,
                             int initialStatus, IdFactory idFactory) {
         super(overlayedState, parent, initialStatus, idFactory);
-        pull();
+        reset();
     }
 
     /**
@@ -86,8 +86,8 @@ public class PropertyState extends ItemState {
      * @param idFactory
      */
     protected PropertyState(QName name, NodeState parent, QPropertyDefinition definition,
-                            int initialStatus, IdFactory idFactory) {
-        super(parent, initialStatus, idFactory);
+                            int initialStatus, IdFactory idFactory, boolean isWorkspaceState) {
+        super(parent, initialStatus, idFactory, isWorkspaceState);
         this.name = name;
         this.def = definition;
 
@@ -105,128 +105,7 @@ public class PropertyState extends ItemState {
         this.values = (values == null) ? QValue.EMPTY_ARRAY : values;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public void remove() {
-        if (getStatus() == STATUS_NEW) {
-            setStatus(STATUS_REMOVED);
-        } else {
-            setStatus(STATUS_EXISTING_REMOVED);
-        }
-        parent.propertyStateRemoved(this);
-    }
-
-    /**
-     * @inheritDoc
-     * @see ItemState#revert(Set)
-     */
-    public void revert(Set affectedItemStates) {
-        // all states except for 'new' ones must have an overlayed state in order
-        // to be 'reverted'.
-        if (getStatus() != STATUS_NEW && overlayedState == null) {
-            throw new IllegalStateException("revert cannot be called on workspace state");
-        }
-        switch (getStatus()) {
-            case STATUS_EXISTING:
-                // nothing to do
-                break;
-            case STATUS_EXISTING_MODIFIED:
-            case STATUS_EXISTING_REMOVED:
-            case STATUS_STALE_MODIFIED:
-                // revert state from overlayed
-                pull();
-                setStatus(STATUS_EXISTING);
-                affectedItemStates.add(this);
-                break;
-            case STATUS_NEW:
-                // set removed
-                setStatus(STATUS_REMOVED);
-                // and remove from parent
-                parent.propertyStateRemoved(this);
-                affectedItemStates.add(this);
-                break;
-            case STATUS_REMOVED:
-                // shouldn't happen actually, because a 'removed' state is not
-                // accessible anymore
-                log.warn("trying to revert an already removed property state");
-                parent.propertyStateRemoved(this);
-                break;
-            case STATUS_STALE_DESTROYED:
-                // overlayed does not exist anymore
-                parent.propertyStateRemoved(this);
-                affectedItemStates.add(this);
-                break;
-        }
-    }
-
-    /**
-     * @inheritDoc
-     * @see ItemState#collectTransientStates(Set)
-     */
-    public void collectTransientStates(Set transientStates) {
-        switch (getStatus()) {
-            case STATUS_EXISTING_MODIFIED:
-            case STATUS_EXISTING_REMOVED:
-            case STATUS_NEW:
-            case STATUS_STALE_DESTROYED:
-            case STATUS_STALE_MODIFIED:
-                transientStates.add(this);
-                break;
-            case STATUS_EXISTING:
-            case STATUS_REMOVED:
-                log.debug("Collecting transient states: Ignored PropertyState with status " + getStatus());
-                break;
-            default:
-                // should never occur. status is validated upon setStatus(int)
-                log.error("Internal error: Invalid state " + getStatus());
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected synchronized void pull() {
-        if (overlayedState != null) {
-            synchronized (overlayedState) {
-                PropertyState propState = (PropertyState) overlayedState;
-                name = propState.name;
-                type = propState.type;
-                def = propState.def;
-                values = propState.values;
-            }
-        }
-    }
-
-    protected synchronized void refresh(Event event, ChangeLog changeLog) {
-        switch (event.getType()) {
-            case Event.PROPERTY_REMOVED:
-                if (event.getItemId().equals(getId())) {
-                    setStatus(STATUS_REMOVED);
-                } else {
-                    // ILLEGAL
-                    throw new IllegalArgumentException("EventId " + event.getItemId() + " does not match id of this property state.");
-                }
-                break;
-
-            case Event.PROPERTY_CHANGED:
-                if (event.getItemId().equals(getId())) {
-                    setStatus(STATUS_MODIFIED);
-                } else {
-                    // ILLEGAL
-                    throw new IllegalArgumentException("EventId " + event.getItemId() + " does not match id of this property state.");
-                }
-                break;
-
-            case Event.PROPERTY_ADDED:
-            case Event.NODE_ADDED:
-            case Event.NODE_REMOVED:
-            default:
-                throw new IllegalArgumentException("Event type " + event.getType() + " cannot be applied to a PropertyState");
-        }
-    }
-
-    //--------------------< public READ methods and package private Setters >---
+    //----------------------------------------------------------< ItemState >---
     /**
      * Always returns false.
      *
@@ -238,12 +117,24 @@ public class PropertyState extends ItemState {
     }
 
     /**
+     * Returns the name of this property.
+     *
+     * @return the name of this property.
+     * @see ItemState#getQName()
+     */
+    public QName getQName() {
+        return name;
+    }
+
+    /**
      * {@inheritDoc}
+     * @see ItemState#getId()
      */
     public ItemId getId() {
         return getPropertyId();
     }
 
+    //------------------------------------------------------< PropertyState >---
     /**
      * Returns the identifier of this property.
      *
@@ -251,15 +142,6 @@ public class PropertyState extends ItemState {
      */
     public PropertyId getPropertyId() {
         return idFactory.createPropertyId(parent.getNodeId(), getQName());
-    }
-
-    /**
-     * Returns the name of this property.
-     *
-     * @return the name of this property.
-     */
-    public QName getQName() {
-        return name;
     }
 
     /**
@@ -305,20 +187,6 @@ public class PropertyState extends ItemState {
     }
 
     /**
-     * Sets the value(s) of this property.
-     *
-     * @param values the new values
-     */
-    void setValues(QValue[] values, int type) throws RepositoryException {
-        // make sure the arguements are consistent and do not violate the
-        // given property definition.
-        validate(values, type, this.def);
-        this.values = values;
-        this.type = type;
-        markModified();
-    }
-
-    /**
      * Convenience method for single valued property states.
      *
      * @return
@@ -333,6 +201,158 @@ public class PropertyState extends ItemState {
         } else {
             return values[0];
         }
+    }
+
+    //----------------------------------------------------< Workspace State >---
+    /**
+     * @see ItemState#refresh(Event, ChangeLog)
+     */
+    synchronized void refresh(Event event, ChangeLog changeLog) {
+        checkIsWorkspaceState();
+
+        switch (event.getType()) {
+            case Event.PROPERTY_REMOVED:
+                if (event.getItemId().equals(getId())) {
+                    setStatus(Status.REMOVED);
+                } else {
+                    // ILLEGAL
+                    throw new IllegalArgumentException("EventId " + event.getItemId() + " does not match id of this property state.");
+                }
+                break;
+
+            case Event.PROPERTY_CHANGED:
+                if (event.getItemId().equals(getId())) {
+                    setStatus(Status.MODIFIED);
+                } else {
+                    // ILLEGAL
+                    throw new IllegalArgumentException("EventId " + event.getItemId() + " does not match id of this property state.");
+                }
+                break;
+
+            case Event.PROPERTY_ADDED:
+            case Event.NODE_ADDED:
+            case Event.NODE_REMOVED:
+            default:
+                throw new IllegalArgumentException("Event type " + event.getType() + " cannot be applied to a PropertyState");
+        }
+    }
+
+    //----------------------------------------------------< Session - State >---
+    /**
+     * {@inheritDoc}
+     * @see ItemState#reset()
+     */
+    synchronized void reset() {
+        checkIsSessionState();
+        if (overlayedState != null) {
+            synchronized (overlayedState) {
+                PropertyState wspState = (PropertyState) overlayedState;
+                name = wspState.name;
+                type = wspState.type;
+                def = wspState.def;
+                values = wspState.values;
+            }
+        }
+    }
+
+    synchronized void merge() {
+        reset();
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemState#remove()
+     */
+    void remove() {
+        checkIsSessionState();
+
+        if (getStatus() == Status.NEW) {
+            setStatus(Status.REMOVED);
+        } else {
+            setStatus(Status.EXISTING_REMOVED);
+        }
+        parent.propertyStateRemoved(this);
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemState#revert(Set)
+     */
+    void revert(Set affectedItemStates) {
+        checkIsSessionState();
+
+        switch (getStatus()) {
+            case Status.EXISTING:
+                // nothing to do
+                break;
+            case Status.EXISTING_MODIFIED:
+            case Status.EXISTING_REMOVED:
+            case Status.STALE_MODIFIED:
+                // revert state from overlayed
+                reset();
+                setStatus(Status.EXISTING);
+                affectedItemStates.add(this);
+                break;
+            case Status.NEW:
+                // set removed
+                setStatus(Status.REMOVED);
+                // and remove from parent
+                parent.propertyStateRemoved(this);
+                affectedItemStates.add(this);
+                break;
+            case Status.REMOVED:
+                // shouldn't happen actually, because a 'removed' state is not
+                // accessible anymore
+                log.warn("trying to revert an already removed property state");
+                parent.propertyStateRemoved(this);
+                break;
+            case Status.STALE_DESTROYED:
+                // overlayed does not exist anymore
+                parent.propertyStateRemoved(this);
+                affectedItemStates.add(this);
+                break;
+        }
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemState#collectTransientStates(Set)
+     */
+    void collectTransientStates(Set transientStates) {
+        checkIsSessionState();
+
+        switch (getStatus()) {
+            case Status.EXISTING_MODIFIED:
+            case Status.EXISTING_REMOVED:
+            case Status.NEW:
+            case Status.STALE_DESTROYED:
+            case Status.STALE_MODIFIED:
+                transientStates.add(this);
+                break;
+            case Status.EXISTING:
+            case Status.REMOVED:
+                log.debug("Collecting transient states: Ignored PropertyState with status " + getStatus());
+                break;
+            default:
+                // should never occur. status is validated upon setStatus(int)
+                log.error("Internal error: Invalid state " + getStatus());
+        }
+    }
+
+    /**
+     * Sets the value(s) of this property.
+     *
+     * @param values the new values
+     */
+    void setValues(QValue[] values, int type) throws RepositoryException {
+        checkIsSessionState();
+
+        // make sure the arguements are consistent and do not violate the
+        // given property definition.
+        validate(values, type, this.def);
+        this.values = values;
+        this.type = type;
+        markModified();
     }
 
     /**
