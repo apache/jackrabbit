@@ -1207,8 +1207,9 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         // use temp array to avoid ConcurrentModificationException
         ArrayList list = new ArrayList(thisState.getChildNodeEntries());
-        for (Iterator iter = list.iterator(); iter.hasNext();) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+        // start from tail to avoid problems with same-name siblings
+        for (int i = list.size() - 1; i >= 0; i--) {
+            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
             NodeImpl node = (NodeImpl) itemMgr.getItem(entry.getId());
             // check if node has been defined by mixin type (or one of its supertypes)
             NodeTypeImpl declaringNT = (NodeTypeImpl) node.getDefinition().getDeclaringNodeType();
