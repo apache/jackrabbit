@@ -63,6 +63,7 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
         }
         // inform all transient states, that they have been persisted and must
         // connect to their workspace state (and eventually reload the data).
+        // TODO: TOBEFIXED. only used to set status to EXISTING in order (which is probably wrong)
         changeLog.persisted();
 
         // inform all existing workspace states about the transient modifications

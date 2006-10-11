@@ -67,4 +67,57 @@ public class Status {
         return status == REMOVED || status == STALE_DESTROYED;
     }
 
+    public static boolean isValidStatusChange(int oldStatus, int newStatus,
+                                              boolean isWorkspaceState) {
+        if (oldStatus == newStatus) {
+            return true;
+        }
+        boolean isValid = false;
+        if (isWorkspaceState) {
+            switch (newStatus) {
+                case EXISTING:
+                    isValid = (oldStatus == MODIFIED);
+                    break;
+                case MODIFIED:
+                    isValid = (oldStatus == EXISTING);
+                    break;
+                case REMOVED:
+                    isValid = (oldStatus == EXISTING);
+                    break;
+                // default: no other status possible : -> false
+            }
+        } else {
+            switch (newStatus) {
+               case EXISTING:
+                   switch (oldStatus) {
+                       case NEW: /* save */
+                       case EXISTING_MODIFIED: /* save, revert */
+                       case EXISTING_REMOVED:  /* revert */
+                       case STALE_MODIFIED:    /* revert */
+                           isValid = true;
+                           break;
+                       /* REMOVED, STALE_DESTROYED -> false */
+                   }
+                   break;
+               case EXISTING_MODIFIED:
+                   isValid = (oldStatus == EXISTING);
+                   break;
+               case EXISTING_REMOVED:
+                   isValid = (oldStatus == EXISTING || oldStatus == EXISTING_MODIFIED);
+                   break;
+               case STALE_MODIFIED:
+               case STALE_DESTROYED:
+                   isValid = (oldStatus == EXISTING_MODIFIED);
+                   break;
+               case REMOVED:
+                   isValid = (oldStatus == NEW || oldStatus == EXISTING || oldStatus == EXISTING_REMOVED);
+                   break;
+               /* default:
+                  NEW cannot change state to NEW -> false
+                  MODIFIED never applicable to session state -> false */
+
+            }
+        }
+        return isValid;
+    }
 }
