@@ -272,45 +272,11 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         if (Status.isTerminalStatus(oldStatus)) {
             throw new IllegalStateException("State is already in terminal status " + oldStatus);
         }
-
-        if (isWorkspaceState()) {
-            switch (newStatus) {
-                case Status.EXISTING:
-                case Status.MODIFIED:
-                case Status.REMOVED:
-                    status = newStatus;
-                    break;
-
-                case Status.NEW:
-                case Status.EXISTING_REMOVED:
-                case Status.EXISTING_MODIFIED:
-                case Status.STALE_MODIFIED:
-                case Status.STALE_DESTROYED:
-                default:
-                    String msg = "Illegal status " + newStatus + " for 'workspace' state.";
-                    log.debug(msg);
-                    throw new IllegalArgumentException(msg);
-            }
+        if (Status.isValidStatusChange(oldStatus, newStatus, isWorkspaceState)) {
+            status = newStatus;
         } else {
-            switch (newStatus) {
-                case Status.NEW:
-                case Status.EXISTING:
-                case Status.EXISTING_REMOVED:
-                case Status.EXISTING_MODIFIED:
-                case Status.STALE_MODIFIED:
-                case Status.STALE_DESTROYED:
-                case Status.REMOVED:
-                    status = newStatus;
-                    break;
-
-                case Status.MODIFIED:
-                default:
-                    String msg = "Illegal status " + newStatus + " for 'session' state.";
-                    log.debug(msg);
-                    throw new IllegalArgumentException(msg);
-            }
+            throw new IllegalArgumentException("Invalid new status " + newStatus + " for state with status " + oldStatus);
         }
-
         // notifiy listeners about status change
         // copy listeners to array to avoid ConcurrentModificationException
         ItemStateLifeCycleListener[] la;
@@ -321,6 +287,13 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
             if (la[i] instanceof ItemStateLifeCycleListener) {
                 ((ItemStateLifeCycleListener) la[i]).statusChanged(this, oldStatus);
             }
+        }
+        if (status == Status.MODIFIED) {
+            // change back tmp MODIFIED status, that is used only to have a marker
+            // to inform the overlaying state, that it needs to synchronize with
+            // its overlayed state again
+            // TODO: improve...
+            status = Status.EXISTING;
         }
     }
 
@@ -515,8 +488,6 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                 break;
             case Status.MODIFIED:
                 if (previousStatus == Status.EXISTING) {
-                    // change back // TODO: improve...
-                    state.status = Status.EXISTING;
                     // underlying state has been modified
                     if (isTransient()) {
                         setStatus(Status.STALE_MODIFIED);
@@ -527,9 +498,6 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                             setStatus(Status.EXISTING);
                         }
                     }
-                } else {
-                    // ILLEGAL
-                    throw new IllegalArgumentException();
                 }
                 break;
             case Status.REMOVED:
