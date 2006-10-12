@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.LinkedHashSet;
@@ -189,8 +190,7 @@ public class ChangeLog {
      * (e.g. moving a node requires that the target node including both
      * old and new parents are saved)
      */
-    public void checkIsSelfContained()
-            throws ItemStateException {
+    public void checkIsSelfContained() throws ConstraintViolationException {
         Set affectedStates = new HashSet();
         affectedStates.addAll(modifiedStates);
         affectedStates.addAll(deletedStates);
@@ -206,7 +206,7 @@ public class ChangeLog {
             if (!affectedStates.containsAll(opStates)) {
                 // need to save the parent as well
                 String msg = "ChangeLog is not self contained.";
-                throw new ItemStateException(msg);
+                throw new ConstraintViolationException(msg);
             }
         }
     }
