@@ -70,7 +70,7 @@ public class EventImpl implements Event, ObservationConstants {
             itemId = uriResolver.getPropertyId(href, sessionInfo);
             parentId = ((PropertyId)itemId).getParentId();
         }
-        qPath = uriResolver.getQPath(href, sessionInfo);
+        qPath = uriResolver.getQPath(Text.unescape(href), sessionInfo);
     }
 
     public int getType() {
