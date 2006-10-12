@@ -19,6 +19,8 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -85,7 +87,9 @@ public class Move extends AbstractOperation {
     }
 
     //------------------------------------------------------------< Factory >---
-    public static Operation create(Path srcPath, Path destPath, HierarchyManager hierMgr, NamespaceResolver nsResolver) throws RepositoryException , NoSuchNodeTypeException {
+    public static Operation create(Path srcPath, Path destPath,
+                                   HierarchyManager hierMgr, NamespaceResolver nsResolver)
+        throws ItemExistsException, NoSuchNodeTypeException, RepositoryException {
         // src must not be ancestor of destination
         try {
             if (srcPath.isAncestorOf(destPath)) {
@@ -117,7 +121,22 @@ public class Move extends AbstractOperation {
         NodeState srcState = getNodeState(srcPath, hierMgr, nsResolver);
         NodeState srcParentState = getNodeState(srcPath.getAncestor(1), hierMgr, nsResolver);
         NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr, nsResolver);
-        Move move = new Move(srcState, srcParentState, destParentState, destElement.getName());
+        QName destName = destElement.getName();
+
+        if (destParentState.hasPropertyName(destName)) {
+            throw new ItemExistsException("Move destination already exists (Property).");
+        } else if (destParentState.hasChildNodeEntry(destName)) {
+            ChildNodeEntry existing = destParentState.getChildNodeEntry(destName, Path.INDEX_DEFAULT);
+            try {
+                if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
+                    throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
+                }
+            } catch (ItemStateException e) {
+                throw new RepositoryException(e);
+            }
+        }
+
+        Move move = new Move(srcState, srcParentState, destParentState, destName);
         return move;
     }
 }
