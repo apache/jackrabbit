@@ -33,21 +33,7 @@ NOTE: This list only contains major open issues.
    > check consistency of throw clauses.
 
 
-4) Usage of SPI ids instead of JR-ids in jcr2spi  (missing)
-
-   a) using SPI NodeIds which don't have a mandatory UUID, requires fundamental
-   rework of the transient space (modified after jackrabbit code).
-   this mainly affects the following methods:
-      > remove
-      > move
-      > reorder
-      > refresh
-
-
-   In addition the code has been marked with // TODO: TO-BE-FIXED comments. 
-
-
-5) Locking: SessionScoped locks (missing)
+4) Locking: SessionScoped locks (missing)
    
    Up to now, the SPI does not provide the possibility to transport the lock
    scope. We would argue, that the 'server' does not have to care about the
@@ -71,7 +57,7 @@ NOTE: This list only contains major open issues.
                        zur zeit 'iss' auf false setzt.
 
 
-6) Locking: Handling of LockTokens  (problem)
+5) Locking: Handling of LockTokens  (problem)
 
    There are 2 methods in JSR 170 that deal with handling of LockTokens:
    Session.addLockToken, Session.removeLockToken. The spec defines, that
@@ -89,10 +75,11 @@ NOTE: This list only contains major open issues.
       the given locktoken is still hold by another Session object.
 
 
-7) Observation (missing)
+6) Observation (problem)
 
-   - RepositoryService: return value (events) von RS-calls
-   - RepositoryService: subscription/event-discovery completely missing
+   - distinction between local and external modifications
+   - proper order of events
+   - assertion that the same event doesn't get processed multiple times
 
    - EventImpl: with the current setup spi2dav connects to a default 
      jackrabbit jcr-server reflecting JCR calls. consequently event discovery
@@ -101,30 +88,34 @@ NOTE: This list only contains major open issues.
      retrieved from the information sent by jcr-server.
 
 
-8) AddNode (problem)
+7) AddNode (problem)
  
    In order to be able to return the created Node, it would be required to
    now its Id if the operation succeeded, since the Node name passed to the
    call may not identify the new Node in case of same-name-siblings.
 
 
-9) Merge (problem)
+8) Merge (problem)
    
    similar to 8)
    The call defines a NodeIterator as return value.
 
 
-10) Transactions (work in progress)
+9) Transactions (work in progress)
 
    Definition of XASessionInfo must be reviewed.
 
 
-11) Extract interface for ItemState and derived classes
+10) Extract interface for ItemState and derived classes
 
 
-12) AccessManager.canRead() seems useless, since the jcr2spi client is only
+11) AccessManager.canRead() seems useless, since the jcr2spi client is only
     able to access Items it can read anyway. Remove method and calls to it?
 
 
+12) Nodetypes, Namespaces (improve)
+    
+    Should the SPI define means for observation of nodetype/namespace
+    changes? 
 
 
