@@ -99,7 +99,10 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             ElementIterator it = DomUtil.getChildren(child, VALUECONSTRAINT_ELEMENT, null);
             while (it.hasNext()) {
                 int constType = (requiredType == PropertyType.REFERENCE) ?  PropertyType.NAME : requiredType;
-                String qValue = ValueFormat.getQValue(DomUtil.getText(it.nextElement()), constType, nsResolver).getString();
+                String qValue = DomUtil.getText(it.nextElement());
+                if (constType == PropertyType.NAME || constType == PropertyType.PATH) {
+                   qValue = ValueFormat.getQValue(qValue, constType, nsResolver).getString();
+                }
                 vc.add(qValue);
             }
             valueConstraints = (String[]) vc.toArray(new String[vc.size()]);
