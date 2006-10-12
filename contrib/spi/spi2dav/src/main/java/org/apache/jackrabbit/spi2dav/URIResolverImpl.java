@@ -103,7 +103,7 @@ class URIResolverImpl implements URIResolver {
     }
 
     String getRootItemUri(String workspaceName) {
-        return getWorkspaceUri(workspaceName) + Text.escapePath(ItemResourceConstants.ROOT_ITEM_RESOURCEPATH) + "/";
+        return getWorkspaceUri(workspaceName) + Text.escapePath(ItemResourceConstants.ROOT_ITEM_RESOURCEPATH);
     }
 
     String getItemUri(ItemId itemId, String workspaceName,
@@ -162,19 +162,14 @@ class URIResolverImpl implements URIResolver {
             if (path != null && !path.denotesRoot()) {
                 try {
                     String jcrPath = PathFormat.format(path, nsResolver);
-                    if (path.isAbsolute()) {
-                        jcrPath = jcrPath.substring(1);
+                    if (!path.isAbsolute()) {
+                        uriBuffer.append("/");
                     }
                     uriBuffer.append(Text.escapePath(jcrPath));
                 } catch (NoPrefixDeclaredException e) {
                     throw new RepositoryException(e);
                 }
             }
-            // add training / for nodes
-            if (itemId.denotesNode() && uriBuffer.charAt(uriBuffer.length()-1) != '/') {
-                uriBuffer.append('/');
-            }
-
             String itemUri = uriBuffer.toString();
             if (!cache.containsItemId(itemId)) {
                 cache.add(itemUri, itemId);
@@ -283,9 +278,6 @@ class URIResolverImpl implements URIResolver {
                 parentId = null;
             } else {
                 String parentUri = Text.getRelativeParent(uri, 1, true);
-                if (!parentUri.endsWith("/")) {
-                    parentUri += "/";
-                }
                 parentId = getNodeId(parentUri, sessionInfo);
             }
 

@@ -40,7 +40,7 @@ class IdURICache {
     }
 
     public ItemId getItemId(String uri) {
-        return (ItemId) uriToIdCache.get(uri);
+        return (ItemId) uriToIdCache.get(getCleanUri(uri));
     }
 
     public String getUri(ItemId itemId) {
@@ -48,7 +48,7 @@ class IdURICache {
     }
 
     public boolean containsUri(String uri) {
-        return uriToIdCache.containsKey(uri);
+        return uriToIdCache.containsKey(getCleanUri(uri));
     }
 
     public boolean containsItemId(ItemId itemId) {
@@ -59,18 +59,28 @@ class IdURICache {
         if (!uri.startsWith(workspaceUri)) {
             throw new IllegalArgumentException("Workspace missmatch.");
         }
-        uriToIdCache.put(uri, itemId);
-        idToUriCache.put(itemId, uri);
-        log.debug("Added: ItemId = " + itemId + " URI = " + uri);
+        String cleanUri = getCleanUri(uri);
+        uriToIdCache.put(cleanUri, itemId);
+        idToUriCache.put(itemId, cleanUri);
+        log.debug("Added: ItemId = " + itemId + " URI = " + cleanUri);
     }
 
     public void remove(String uri) {
-        Object itemId = uriToIdCache.remove(uri);
-        log.debug("Removed: ItemId = " + itemId + " URI = " + uri);
+        String cleanUri = getCleanUri(uri);
+        Object itemId = uriToIdCache.remove(cleanUri);
+        log.debug("Removed: ItemId = " + itemId + " URI = " + cleanUri);
     }
 
     public void remove(ItemId itemId) {
         Object uri = idToUriCache.remove(itemId);
         log.debug("Removed: ItemId = " + itemId + " URI = " + uri);
+    }
+
+    private static String getCleanUri(String uri) {
+        if (uri.endsWith("/")) {
+            return uri.substring(0, uri.length() - 1);
+        } else {
+            return uri;
+        }
     }
 }
