@@ -361,6 +361,12 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         }
     }
 
+    /**
+     * @return true, if this state is overlaying a workspace state.
+     */
+    public boolean hasOverlayedState() {
+        return overlayedState != null;
+    }
     //--------------------------------------------------< Workspace - State >---
     /**
      * Used on 'workspace' states in order to update the state according to

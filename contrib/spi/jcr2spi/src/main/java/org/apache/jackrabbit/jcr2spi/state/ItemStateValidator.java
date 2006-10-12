@@ -570,10 +570,6 @@ public class ItemStateValidator {
         // access rights
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             try {
-                // make sure current session is granted read access on parent node
-                if (!mgrProvider.getAccessManager().canRead(targetState)) {
-                    throw new PathNotFoundException(safeGetJCRPath(targetState));
-                }
                 // make sure current session is allowed to remove target node
                 if (!mgrProvider.getAccessManager().canRemove(targetState)) {
                     throw new AccessDeniedException(safeGetJCRPath(targetState)

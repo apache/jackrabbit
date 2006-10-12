@@ -571,8 +571,16 @@ public class NodeState extends ItemState {
 
                     if (evId.denotesNode()) {
                         QName name = event.getQPath().getNameElement().getName();
+                        int index = event.getQPath().getNameElement().getNormalizedIndex();
                         String uuid = (((NodeId)evId).getPath() != null) ? null : ((NodeId)evId).getUUID();
-                        ChildNodeEntry cne = childNodeEntries.add(name, uuid);
+
+                        // add new childNodeEntry if it has not been added by
+                        // some earlier 'add' event
+                        // TODO: TOBEFIXED for SNSs
+                        ChildNodeEntry cne = getChildNodeEntry(name, index);
+                        if (cne == null || ((uuid == null) ? cne.getUUID() != null : !uuid.equals(cne.getUUID()))) {
+                            cne = childNodeEntries.add(name, uuid);
+                        }
                         try {
                             newState = cne.getNodeState();
                         } catch (ItemStateException e) {
@@ -580,8 +588,15 @@ public class NodeState extends ItemState {
                         }
                     } else {
                         QName pName = ((PropertyId) event.getItemId()).getQName();
-                        ChildPropertyEntry re = PropertyReference.create(this, pName, isf, idFactory);
-                        properties.put(pName, re);
+                        // create a new property reference if it has not been
+                        // added by some earlier 'add' event
+                        ChildPropertyEntry re;
+                        if (hasPropertyName(pName)) {
+                            re = (ChildPropertyEntry) properties.get(pName);
+                        } else {
+                            re = PropertyReference.create(this, pName, isf, idFactory);
+                            properties.put(pName, re);
+                        }
                         try {
                             newState = re.getPropertyState();
                         } catch (ItemStateException e) {
@@ -596,6 +611,11 @@ public class NodeState extends ItemState {
                     if (newState != null && changeLog != null) {
                         for (Iterator it = changeLog.addedStates(); it.hasNext();) {
                             ItemState added = (ItemState) it.next();
+                            if (added.hasOverlayedState()) {
+                                // already connected
+                                continue;
+                            }
+                            // TODO: TOBEFIXED. may fail (produce wrong results) for SNSs, since currently events upon 'save' are not garantied to be 'local' changes only
                             if (added.getId().equals(evId)) {
                                 added.connect(newState);
                                 added.merge();

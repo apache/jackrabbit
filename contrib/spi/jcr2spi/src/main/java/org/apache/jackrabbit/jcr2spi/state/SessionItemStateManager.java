@@ -281,7 +281,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      *                            changes. That is, at least another item needs
      *                            to be canceled as well in another sub-tree.
      */
-    public void undo(ItemState itemState) throws ItemStateException {
+    public void undo(ItemState itemState) throws ItemStateException, ConstraintViolationException {
         // check if self contained
         ChangeLog changeLog = new ChangeLog(itemState);
         collectTransientStates(itemState, changeLog, false);
@@ -341,7 +341,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @throws StaleItemStateException
      * @throws ItemStateException
      */
-    private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException {
+    private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException, ConstraintViolationException {
         // build changelog for affected and decendant states only
         ChangeLog changeLog = new ChangeLog(itemState);
         collectTransientStates(itemState, changeLog, true);
@@ -493,6 +493,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             | ItemStateValidator.CHECK_LOCK
             | ItemStateValidator.CHECK_VERSIONING
             | ItemStateValidator.CHECK_CONSTRAINTS);
+        
         // retrieve applicable definition at the new place
         // TODO: improve. definition has already retrieve within the checkAddNode...
         // TODO: improve. if move is simple rename, the definition must not be calculated again.
