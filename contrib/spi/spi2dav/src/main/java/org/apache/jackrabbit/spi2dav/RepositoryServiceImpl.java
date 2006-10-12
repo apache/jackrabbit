@@ -189,7 +189,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private final NamespaceResolverImpl nsResolver;
     private final URIResolverImpl uriResolver;
 
-    private final HttpClient client;
+    private final HostConfiguration hostConfig;
+    private final HashMap clients = new HashMap();
 
     public RepositoryServiceImpl(String uri, IdFactory idFactory, ValueFactory valueFactory) throws RepositoryException {
         if (uri == null || "".equals(uri)) {
@@ -209,13 +210,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         try {
             URI repositoryUri = new URI((uri.endsWith("/")) ? uri : uri+"/", true);
-            HostConfiguration hostConfig = new HostConfiguration();
+            hostConfig = new HostConfiguration();
             hostConfig.setHost(repositoryUri);
-
-            client = new HttpClient(new MultiThreadedHttpConnectionManager());
-            client.setHostConfiguration(hostConfig);
-            // always send authentication not waiting for 401
-            client.getParams().setAuthenticationPreemptive(true);
 
             nsResolver = new NamespaceResolverImpl();
             uriResolver = new URIResolverImpl(repositoryUri, this, nsResolver, domFactory);
@@ -247,11 +243,29 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
+    private static boolean isSameResource(String requestURI, MultiStatusResponse response) {
+        String href = response.getHref();
+        if (href.endsWith("/")) {
+            href = href.substring(0, href.length() - 1);
+        }
+        return requestURI.equals(href);
+    }
+
     private HttpClient getClient(org.apache.commons.httpclient.Credentials credentials) {
-        // NOTE: null credentials only work if 'missing-auth-mapping' param is
-        // set on the server
-        client.getState().setCredentials(AuthScope.ANY, credentials);
-        return client;
+        if (clients.containsKey(credentials)) {
+            return (HttpClient) clients.get(credentials);
+        } else {
+            HttpClient client = new HttpClient(new MultiThreadedHttpConnectionManager());
+            client.setHostConfiguration(hostConfig);
+            // always send authentication not waiting for 401
+            client.getParams().setAuthenticationPreemptive(true);
+            // NOTE: null credentials only work if 'missing-auth-mapping' param is
+            // set on the server
+            client.getState().setCredentials(AuthScope.ANY, credentials);
+
+            clients.put(credentials, client);
+            return client;
+        }
     }
 
     HttpClient getClient(SessionInfo sessionInfo) throws RepositoryException {
@@ -266,7 +280,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private String getItemUri(NodeId parentId, QName childName, SessionInfo sessionInfo) throws RepositoryException {
         String parentUri = uriResolver.getItemUri(parentId, sessionInfo.getWorkspaceName(), sessionInfo);
         try {
-            return parentUri + NameFormat.format(childName, nsResolver);
+            return parentUri + "/" + NameFormat.format(childName, nsResolver);
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e);
         }
@@ -637,8 +651,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             MultiStatusResponse nodeResponse = null;
             List childResponses = new ArrayList();
             for (int i = 0; i < responses.length; i++) {
-                String respHref = responses[i].getHref();
-                if (uri.equals(respHref)) {
+                if (isSameResource(uri, responses[i])) {
                     nodeResponse = responses[i];
                 } else {
                     childResponses.add(responses[i]);
@@ -1538,29 +1551,31 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         public void addNode(NodeId parentId, QName nodeName, QName nodetypeName, String uuid) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, NoSuchNodeTypeException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             try {
-                String uri = getItemUri(parentId, nodeName, sessionInfo);
+                // TODO: TOBEFIXED. WebDAV does not allow MKCOL for existing resource -> problem with SNS
+                // use fake name instead (see also #importXML)
+                QName fakeName = new QName(QName.NS_DEFAULT_URI, UUID.randomUUID().toString());
+                String uri = getItemUri(parentId, fakeName, sessionInfo);
                 MkColMethod method = new MkColMethod(uri);
 
                 // build 'sys-view' for the node to create and append it as request body
-                if (nodetypeName != null || uuid != null) {
-                    Document body = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
-                    Element nodeElement = DomUtil.addChildElement(body, NODE_ELEMENT, SV_NAMESPACE);
-                    DomUtil.setAttribute(nodeElement, NAME_ATTRIBUTE, SV_NAMESPACE, Text.getName(uri, true));
+                Document body = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
+                Element nodeElement = DomUtil.addChildElement(body, NODE_ELEMENT, SV_NAMESPACE);
+                String nameAttr = NameFormat.format(nodeName, nsResolver);
+                DomUtil.setAttribute(nodeElement, NAME_ATTRIBUTE, SV_NAMESPACE, nameAttr);
 
-                    if (nodetypeName != null) {
-                        Element propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
-                        DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, NameFormat.format(QName.JCR_PRIMARYTYPE, nsResolver));
-                        DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.NAME));
-                        DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, NameFormat.format(nodetypeName, nsResolver));
-                    }
-                    if (uuid != null) {
-                        Element propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
-                        DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, NameFormat.format(QName.JCR_UUID, nsResolver));
-                        DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.STRING));
-                        DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, uuid);
-                    }
-                    method.setRequestBody(body);
+                // nodetype must never be null
+                Element propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
+                DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, NameFormat.format(QName.JCR_PRIMARYTYPE, nsResolver));
+                DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.NAME));
+                DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, NameFormat.format(nodetypeName, nsResolver));
+                // optional uuid
+                if (uuid != null) {
+                    propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
+                    DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, NameFormat.format(QName.JCR_UUID, nsResolver));
+                    DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.STRING));
+                    DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, uuid);
                 }
+                method.setRequestBody(body);
 
                 methods.add(method);
             } catch (IOException e) {
