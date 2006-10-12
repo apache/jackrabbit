@@ -116,7 +116,8 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public void setValue(Value value) throws ValueFormatException, VersionException, LockException, RepositoryException {
         checkIsWritable(false);
-        int reqType = getRequiredType(value.getType());
+        int valueType = (value != null) ? value.getType() : PropertyType.UNDEFINED;
+        int reqType = getRequiredType(valueType);
         setValue(value, reqType);
     }
 
