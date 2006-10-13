@@ -26,7 +26,7 @@
         <a href="../downloads.cgi">download</a> a binary release, but if you
         want to access the latest development version, you need to get the
         Jackrabbit sources and build them using the
-        <a href="http://maven.apache.org/maven-1.x/">Maven 1.x</a> build
+        <a href="http://maven.apache.org/maven-1.x/">Maven 1.0.2</a> build
         environment.
       </p>
       <p>
@@ -113,13 +113,14 @@
 
       <subsection name="Building the sources with Maven">
         <p>
-          Jackrabbit uses <a href="http://maven.apache.org/maven-1.x/">Maven</a>
-          version 1.x as the build system and the source tree is mostly
-          organized according to the Maven
-          <a href="http://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html">Standard Directory Layout</a>.
-          The Maven version 1.0.2 and Java Development Kit (JDK) version 1.4
-          are the standard build environment, but you should be quite fine also
-          with Maven 1.1 and Java 5.
+          Jackrabbit uses
+          <a href="http://maven.apache.org/maven-1.x/">Maven 1.0.2</a>
+          as the build system and the source tree is mostly organized according
+          to the Maven
+          <a href="http://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html"
+            >Standard Directory Layout</a>. The standard build environment
+          is Maven 1.0.2 with the Java Development Kit (JDK) 1.4, but the
+          build is known to work also with Java 5 and 6.
         </p>
         <p>
           See the Maven 1.x
@@ -147,9 +148,9 @@
             Executes the <code>jar</code> goal and installs the resulting jar
             packages into the local Maven repository. This operation is used
             when you want to make Jackrabbit available as a dependency for
-            other local Maven projects. The Maven groupId for Jackrabbit is
-            <code>org.apache.jackrabbit</code> and the artifactId is
-            <code>jackrabbit</code>.
+            other local Maven projects. The Maven groupId for Jackrabbit core
+            is <code>org.apache.jackrabbit</code> and the artifactId is
+            <code>jackrabbit-core</code>.
           </dd>
           <dt><code>maven clean</code></dt>
           <dd>
