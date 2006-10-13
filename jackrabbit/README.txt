@@ -69,9 +69,8 @@ Once you have a copy of the source code tree, you can use Apache Maven
 
    http://maven.apache.org/maven-1.x/
 
-to build the project. You should use Maven version 1.0.2 to build Jackrabbit.
-Maven 1.1 is also known to work, but Maven 2.0 is not supported. The minimal
-command to build and test all the Jackrabbit sources is:
+to build the project. You should use Maven 1.0.2 to build Jackrabbit.
+The minimal command to build and test all the Jackrabbit sources is:
 
    maven
 
@@ -82,19 +81,5 @@ For more instructions, please see the documentation at:
 Credits
 =======
 
-who                     what
---------------------    -----------------------------------------------
-Roy Fielding            incubation
-Stefan Guggisberg       core, data model, persistence, nodetypes, misc.
-David Nuescheler        architecture, api
-Dominique Pfister       transactions
-Peeter Piegaze          api
-Tim Reilly              mavenize
-Marcel Reutegger        observation, query
-Tobias Bocanegra        versioning
-
-
-Changes
-=======
-
-See <http://jackrabbit.apache.org/changelog-report.html>
+See http://jackrabbit.apache.org/team-list.html for the list of 
+Jackrabbit committers and main contributors.
