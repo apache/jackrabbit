@@ -32,6 +32,9 @@
                 <ant:include name="checkstyle.xml"/>
                 <ant:include name="checkstyle-suppressions.xml"/>
                 <ant:include name="derby.properties"/>
+                <ant:include name="modules/api/project.xml"/>
+                <ant:include name="modules/api/project.properties"/>
+                <ant:include name="modules/api/maven.xml"/>
                 <ant:include name="modules/commons/project.xml"/>
                 <ant:include name="modules/commons/project.properties"/>
                 <ant:include name="modules/commons/maven.xml"/>
@@ -47,9 +50,12 @@
         </ant:copy>
     </postGoal>
 
-    <!-- Copy the jackrabbit-commons jar to the binary release. -->
+    <!-- Copy the jackrabbit-api/commons jar to the binary release. -->
     <postGoal name="dist:prepare-bin-filesystem">
         <ant:copy todir="${maven.dist.bin.assembly.dir}">
+            <ant:fileset dir="${basedir}/modules/api/target">
+                <ant:include name="*.jar"/>
+            </ant:fileset>
             <ant:fileset dir="${basedir}/modules/commons/target">
                 <ant:include name="*.jar"/>
             </ant:fileset>
