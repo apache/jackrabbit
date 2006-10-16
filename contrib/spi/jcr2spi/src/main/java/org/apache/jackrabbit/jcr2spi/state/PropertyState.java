@@ -384,7 +384,7 @@ public class PropertyState extends ItemState {
             throw new ConstraintViolationException("RequiredType constraint is not satisfied");
         }
         for (int i = 0; i < values.length; i++) {
-            if (propertyType != values[i].getType()) {
+            if (values[i] != null && propertyType != values[i].getType()) {
                 throw new ConstraintViolationException("Inconsistent value types: Required type = " + PropertyType.nameFromValue(propertyType) + "; Found value with type = " + PropertyType.nameFromValue(values[i].getType()));
             }
         }
