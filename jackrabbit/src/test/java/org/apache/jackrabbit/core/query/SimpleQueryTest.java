@@ -480,4 +480,29 @@ public class SimpleQueryTest extends AbstractQueryTest {
         checkResult(result, new Node[]{foo, blu});
     }
 
+    public void testLogicalExpression() throws Exception {
+        Node foo = testRootNode.addNode("foo");
+        foo.setProperty("a", 1);
+        foo.setProperty("b", 2);
+        foo.setProperty("c", 3);
+        Node bar = testRootNode.addNode("bar");
+        bar.setProperty("a", 0);
+        bar.setProperty("b", 2);
+        bar.setProperty("c", 0);
+        Node bla = testRootNode.addNode("bla");
+        bla.setProperty("a", 1);
+        bla.setProperty("b", 0);
+        bla.setProperty("c", 3);
+        testRootNode.save();
+
+        String sql = "SELECT * FROM nt:unstructured WHERE a=1 and b=2 or c=3";
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        QueryResult result = q.execute();
+        checkResult(result, new Node[]{foo, bla});
+
+        String xpath = "//*[@a=1 and @b=2 or @c=3] ";
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        result = q.execute();
+        checkResult(result, new Node[]{foo, bla});
+    }
 }
