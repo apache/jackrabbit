@@ -206,7 +206,11 @@ public class PropertyImpl extends ItemImpl implements Property {
     public void setValue(InputStream value) throws ValueFormatException, VersionException, LockException, RepositoryException {
         checkIsWritable(false);
         int reqType = getRequiredType(PropertyType.BINARY);
-        setValue(session.getValueFactory().createValue(value), reqType);
+        if (value == null) {
+            setInternalValues(null, reqType);
+        } else {
+            setValue(session.getValueFactory().createValue(value), reqType);
+        }
     }
 
     /**
