@@ -402,17 +402,17 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 break;
             case JJTOREXPR:
                 NAryQueryNode parent = (NAryQueryNode) queryNode;
-                queryNode = new OrQueryNode(parent);
-                parent.addOperand(queryNode);
+                QueryNode orQueryNode = new OrQueryNode(parent);
+                parent.addOperand(orQueryNode);
                 // traverse
-                node.childrenAccept(this, queryNode);
+                node.childrenAccept(this, orQueryNode);
                 break;
             case JJTANDEXPR:
                 parent = (NAryQueryNode) queryNode;
-                queryNode = new AndQueryNode(parent);
-                parent.addOperand(queryNode);
+                QueryNode andQueryNode = new AndQueryNode(parent);
+                parent.addOperand(andQueryNode);
                 // traverse
-                node.childrenAccept(this, queryNode);
+                node.childrenAccept(this, andQueryNode);
                 break;
             case JJTCOMPARISONEXPR:
                 createExpression(node, (NAryQueryNode) queryNode);
