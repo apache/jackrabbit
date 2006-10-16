@@ -745,10 +745,13 @@ public class NodeImpl extends ItemImpl implements Node {
             session.getValidator().checkIsWritable(getNodeState(), ItemStateValidator.CHECK_ALL);
             // then make sure the new mixin would not conflict.
             return isValidMixin(getQName(mixinName));
-        } catch (NoSuchNodeTypeException e) {
+        } catch (NodeTypeConflictException e) {
             log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
             return false;
-        } catch (NodeTypeConflictException e) {
+        } catch (LockException e) {
+            log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
+            return false;
+        } catch (VersionException e) {
             log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
             return false;
         }
@@ -1419,7 +1422,19 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure, the final type is not set to undefined        
         if (targetType == PropertyType.UNDEFINED) {
             if (type == PropertyType.UNDEFINED) {
-                targetType = (values.length > 0) ? values[0].getType() : PropertyType.STRING;
+                // try to retrieve type from the values array
+                if (values.length > 0) {
+                    for (int i = 0; i < values.length; i++) {
+                        if (values[i] != null) {
+                            targetType = values[i].getType();
+                            break;
+                        }
+                    }
+                }
+                if (targetType == PropertyType.UNDEFINED) {
+                    // fallback
+                    targetType = PropertyType.STRING;
+                }
             } else {
                 targetType = type;
             }
