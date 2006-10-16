@@ -182,7 +182,10 @@ class URIResolverImpl implements URIResolver {
                        String workspaceName) throws RepositoryException {
         IdURICache cache = getCache(workspaceName);
         if (cache.containsUri(response.getHref())) {
-            return (NodeId) cache.getItemId(response.getHref());
+            ItemId id = cache.getItemId(response.getHref());
+            if (id.denotesNode()) {
+                return (NodeId) id;
+            }
         }
 
         NodeId nodeId;
@@ -223,18 +226,21 @@ class URIResolverImpl implements URIResolver {
                                String workspaceName) throws RepositoryException {
         IdURICache cache = getCache(workspaceName);
         if (cache.containsUri(response.getHref())) {
-            return (PropertyId) cache.getItemId(response.getHref());
-        } else {
-            try {
-                DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
-                QName name = NameFormat.parse(propSet.get(ItemResourceConstants.JCR_NAME).getValue().toString(), nsResolver);
-                PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, name);
-
-                cache.add(response.getHref(), propertyId);
-                return propertyId;
-            } catch (BaseException e) {
-                throw new RepositoryException(e);
+            ItemId id = cache.getItemId(response.getHref());
+            if (!id.denotesNode()) {
+                return (PropertyId) id;
             }
+        }
+
+        try {
+            DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
+            QName name = NameFormat.parse(propSet.get(ItemResourceConstants.JCR_NAME).getValue().toString(), nsResolver);
+            PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, name);
+
+            cache.add(response.getHref(), propertyId);
+            return propertyId;
+        } catch (BaseException e) {
+            throw new RepositoryException(e);
         }
     }
 
@@ -270,40 +276,43 @@ class URIResolverImpl implements URIResolver {
         IdURICache cache = getCache(sessionInfo.getWorkspaceName());
         if (cache.containsUri(uri)) {
             // id has been accessed before and is cached
-            return (NodeId) cache.getItemId(uri);
-        } else {
-            // retrieve parentId from cache or by recursive calls
-            NodeId parentId;
-            if (uri.equals(getRootItemUri(sessionInfo.getWorkspaceName()))) {
-                parentId = null;
-            } else {
-                String parentUri = Text.getRelativeParent(uri, 1, true);
-                parentId = getNodeId(parentUri, sessionInfo);
+            ItemId id = cache.getItemId(uri);
+            if (id.denotesNode()) {
+                return (NodeId) id;
             }
+        }
 
-            DavPropertyNameSet nameSet = new DavPropertyNameSet();
-            nameSet.add(ItemResourceConstants.JCR_UUID);
-            nameSet.add(ItemResourceConstants.JCR_NAME);
-            nameSet.add(ItemResourceConstants.JCR_INDEX);
-            DavMethodBase method = null;
-            try {
-                method = new PropFindMethod(uri, nameSet, DavConstants.DEPTH_0);
+        // retrieve parentId from cache or by recursive calls
+        NodeId parentId;
+        if (uri.equals(getRootItemUri(sessionInfo.getWorkspaceName()))) {
+            parentId = null;
+        } else {
+            String parentUri = Text.getRelativeParent(uri, 1, true);
+            parentId = getNodeId(parentUri, sessionInfo);
+        }
 
-                service.getClient(sessionInfo).executeMethod(method);
-                MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
-                if (responses.length != 1) {
-                    throw new ItemNotFoundException("Unable to retrieve the node with id " + uri);
-                }
-                return buildNodeId(parentId, responses[0], sessionInfo.getWorkspaceName());
+        DavPropertyNameSet nameSet = new DavPropertyNameSet();
+        nameSet.add(ItemResourceConstants.JCR_UUID);
+        nameSet.add(ItemResourceConstants.JCR_NAME);
+        nameSet.add(ItemResourceConstants.JCR_INDEX);
+        DavMethodBase method = null;
+        try {
+            method = new PropFindMethod(uri, nameSet, DavConstants.DEPTH_0);
 
-            } catch (IOException e) {
-                throw new RepositoryException(e);
-            } catch (DavException e) {
-                throw ExceptionConverter.generate(e);
-            } finally {
-                if (method != null) {
-                    method.releaseConnection();
-                }
+            service.getClient(sessionInfo).executeMethod(method);
+            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+            if (responses.length != 1) {
+                throw new ItemNotFoundException("Unable to retrieve the node with id " + uri);
+            }
+            return buildNodeId(parentId, responses[0], sessionInfo.getWorkspaceName());
+
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
             }
         }
     }
@@ -314,23 +323,26 @@ class URIResolverImpl implements URIResolver {
     public PropertyId getPropertyId(String uri, SessionInfo sessionInfo) throws RepositoryException {
         IdURICache cache = getCache(sessionInfo.getWorkspaceName());
         if (cache.containsUri(uri)) {
-            return (PropertyId) cache.getItemId(uri);
-        } else {
-            // separate parent uri and property JCRName
-            String parentUri = Text.getRelativeParent(uri, 1, true);
-            // make sure propName is unescaped
-            String propName = Text.unescape(Text.getName(uri, true));
-            // retrieve parent node id
-            NodeId parentId = getNodeId(parentUri, sessionInfo);
-            // build property id
-            try {
-                PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, NameFormat.parse(propName, nsResolver));
-                cache.add(uri, propertyId);
-
-                return propertyId;
-            } catch (NameException e) {
-                throw new RepositoryException(e);
+            ItemId id = cache.getItemId(uri);
+            if (!id.denotesNode()) {
+                return (PropertyId) id;
             }
+        }
+
+        // separate parent uri and property JCRName
+        String parentUri = Text.getRelativeParent(uri, 1, true);
+        // make sure propName is unescaped
+        String propName = Text.unescape(Text.getName(uri, true));
+        // retrieve parent node id
+        NodeId parentId = getNodeId(parentUri, sessionInfo);
+        // build property id
+        try {
+            PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, NameFormat.parse(propName, nsResolver));
+            cache.add(uri, propertyId);
+
+            return propertyId;
+        } catch (NameException e) {
+            throw new RepositoryException(e);
         }
     }
 }

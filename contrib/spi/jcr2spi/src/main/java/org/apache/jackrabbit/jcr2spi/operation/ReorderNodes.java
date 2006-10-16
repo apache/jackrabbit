@@ -41,10 +41,6 @@ public class ReorderNodes extends AbstractOperation {
         this.insert = insert;
         this.before = before;
         addAffectedItemState(parentState);
-        addAffectedItemState(insert);
-        if (before != null) {
-            addAffectedItemState(before);
-        }
     }
 
     //----------------------------------------------------------< Operation >---

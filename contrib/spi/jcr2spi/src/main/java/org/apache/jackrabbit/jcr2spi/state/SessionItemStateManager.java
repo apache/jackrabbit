@@ -476,9 +476,8 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
 
         // retrieve states and assert they are modifiable
-        NodeState srcState = operation.getNodeState();
+        NodeState srcState = operation.getSourceState();
         NodeState srcParent = operation.getSourceParentState();
-
         NodeState destParent = operation.getDestinationParentState();
 
         // state validation: move-Source can be removed from old/added to new parent
@@ -556,7 +555,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
                 QPropertyDefinition pd = ent.getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
                 QValue[] mixinValue = QValue.create(nState.getMixinTypeNames());
-                int options = 0; // nothing to check
+                int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
                 addPropertyState(nState, pd.getQName(), pd.getRequiredType(), mixinValue, pd, options);
             }
         } else {
@@ -568,7 +567,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             if (nState.hasPropertyName(QName.JCR_MIXINTYPES)) {
                 try {
                     PropertyState pState = nState.getPropertyState(QName.JCR_MIXINTYPES);
-                    int options = 0; // no checks required
+                    int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
                     removeItemState(pState, options);
                 } catch (ItemStateException e) {
                     // should not occur, since existance has been asserted before

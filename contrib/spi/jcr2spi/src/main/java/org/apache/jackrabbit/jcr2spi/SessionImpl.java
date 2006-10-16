@@ -49,6 +49,7 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.XASessionInfo;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -738,7 +739,14 @@ public class SessionImpl implements Session, ManagerProvider {
     //--------------------------------------------------------------------------
     SessionImpl switchWorkspace(String workspaceName) throws AccessDeniedException,
         NoSuchWorkspaceException, RepositoryException {
-        return new SessionImpl(sessionInfo, repository, config);
+        checkAccessibleWorkspace(workspaceName);
+        
+        SessionInfo info = config.getRepositoryService().obtain(sessionInfo, workspaceName);
+        if (info instanceof XASessionInfo) {
+            return new XASessionImpl((XASessionInfo) info, repository, config);
+        } else {
+            return new SessionImpl(info, repository, config);
+        }
     }
 
     /**

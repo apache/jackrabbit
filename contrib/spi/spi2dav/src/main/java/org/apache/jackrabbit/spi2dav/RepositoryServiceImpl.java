@@ -65,6 +65,7 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.ordering.OrderingConstants;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.observation.EventType;
 import org.apache.jackrabbit.webdav.observation.Filter;
@@ -390,15 +391,27 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      *
      * @see RepositoryService#obtain(Credentials, String)
      */
-    public SessionInfo obtain(Credentials credentials, String workspaceName) throws LoginException, NoSuchWorkspaceException, RepositoryException {
+    public SessionInfo obtain(Credentials credentials, String workspaceName)
+        throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        CredentialsWrapper dc = new CredentialsWrapper(credentials);
+        return obtain(dc, workspaceName);
+    }
+
+    public SessionInfo obtain(SessionInfo sessionInfo, String workspaceName)
+        throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        checkSessionInfo(sessionInfo);
+        return obtain(((SessionInfoImpl)sessionInfo).getCredentials(), workspaceName);
+    }
+
+    private SessionInfo obtain(CredentialsWrapper credentials, String workspaceName)
+        throws LoginException, NoSuchWorkspaceException, RepositoryException {
         // check if the workspace with the given name is accessible
         PropFindMethod method = null;
         try {
             DavPropertyNameSet nameSet = new DavPropertyNameSet();
             nameSet.add(DeltaVConstants.WORKSPACE);
             method = new PropFindMethod(uriResolver.getWorkspaceUri(workspaceName), nameSet, DavConstants.DEPTH_0);
-            CredentialsWrapper dc = new CredentialsWrapper(credentials);
-            getClient(dc.getCredentials()).executeMethod(method);
+            getClient(credentials.getCredentials()).executeMethod(method);
 
             MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
             if (responses.length != 1) {
@@ -412,7 +425,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 if (!wspName.equals(workspaceName)) {
                     throw new LoginException("Login failed: Invalid workspace name " + workspaceName);
                 }
-                return new SessionInfoImpl(dc, workspaceName, new SubscriptionMgrImpl());
+                return new SessionInfoImpl(credentials, workspaceName, new SubscriptionMgrImpl());
             } else {
                 throw new LoginException("Login failed: Unknown workspace '" + workspaceName+ " '.");
             }
@@ -1787,13 +1800,20 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         public void reorderNodes(NodeId parentId, NodeId srcNodeId, NodeId beforeNodeId) throws UnsupportedRepositoryOperationException, VersionException, ConstraintViolationException, ItemNotFoundException, LockException, AccessDeniedException, RepositoryException {
             checkConsumed();
             try {
+                String uri = getItemUri(parentId, sessionInfo);
                 String srcUri = getItemUri(srcNodeId, sessionInfo);
                 String srcSegment = Text.getName(srcUri, true);
-                String targetSegment = Text.getName(getItemUri(beforeNodeId, sessionInfo), true);
 
-                String uri = getItemUri(parentId, sessionInfo);
-                OrderPatchMethod method = new OrderPatchMethod(uri, srcSegment, targetSegment, true);
-
+                OrderPatchMethod method;
+                if (beforeNodeId == null) {
+                    // move src to the end
+                    method = new OrderPatchMethod(uri, OrderingConstants.ORDERING_TYPE_CUSTOM, srcSegment, false);
+                } else {
+                    // insert src before the targetSegment
+                    String beforeUri = getItemUri(beforeNodeId, sessionInfo);
+                    String targetSegment = Text.getName(beforeUri, true);
+                    method = new OrderPatchMethod(uri, OrderingConstants.ORDERING_TYPE_CUSTOM, srcSegment, targetSegment, true);
+                }
                 methods.add(method);
             } catch (IOException e) {
                 throw new RepositoryException(e);
