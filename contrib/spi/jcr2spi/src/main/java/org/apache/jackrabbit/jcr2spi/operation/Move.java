@@ -25,6 +25,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -44,12 +45,14 @@ public class Move extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(Move.class);
 
+    private final NodeId srcId;
     private final NodeState srcState;
     private final NodeState srcParentState;
     private final NodeState destParentState;
     private final QName destName;
 
     private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, QName destName) {
+        this.srcId = (NodeId) srcNodeState.getId();
         this.srcState = srcNodeState;
         this.srcParentState = srcParentState;
         this.destParentState = destParentState;
@@ -70,7 +73,11 @@ public class Move extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeState getNodeState() {
+    public NodeId getSourceId() {
+        return srcId;
+    }
+
+    public NodeState getSourceState() {
         return srcState;
     }
 

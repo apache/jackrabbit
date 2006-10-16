@@ -678,7 +678,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
 
         public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-            NodeId moveId = operation.getNodeState().getNodeId();
+            NodeId moveId = operation.getSourceId();
             NodeId destParentId = operation.getDestinationParentState().getNodeId();
             if (batch == null) {
                 events = service.move(sessionInfo, moveId, destParentId, operation.getDestinationName());
@@ -733,7 +733,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         public void visit(ReorderNodes operation) throws RepositoryException {
             NodeId parentId = operation.getParentState().getNodeId();
             NodeId insertId = operation.getInsertNode().getNodeId();
-            NodeId beforeId = operation.getBeforeNode().getNodeId();
+            NodeId beforeId = null;
+            if (operation.getBeforeNode() != null) {
+                beforeId = operation.getBeforeNode().getNodeId() ;
+            }
             batch.reorderNodes(parentId, insertId, beforeId);
         }
 

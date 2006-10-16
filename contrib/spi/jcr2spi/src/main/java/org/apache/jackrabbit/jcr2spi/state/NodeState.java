@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.Event;
@@ -56,22 +55,6 @@ import java.util.ConcurrentModificationException;
 public class NodeState extends ItemState {
 
     private static Logger log = LoggerFactory.getLogger(NodeState.class);
-
-    /**
-     * A current element Path instance.
-     */
-    public static final Path CURRENT_PATH;
-
-    static {
-        try {
-            Path.PathBuilder builder = new Path.PathBuilder();
-            builder.addFirst(Path.CURRENT_ELEMENT);
-            CURRENT_PATH = builder.getPath();
-        } catch (MalformedPathException e) {
-            // path is always valid
-            throw new InternalError("unable to create path from '.'");
-        }
-    }
 
     /**
      * the name of this node's primary type
@@ -565,71 +548,71 @@ public class NodeState extends ItemState {
         switch (event.getType()) {
             case Event.NODE_ADDED:
             case Event.PROPERTY_ADDED:
-                if (id.equals(event.getParentId())) {
-                    ItemId evId = event.getItemId();
-                    ItemState newState = null;
-
-                    if (evId.denotesNode()) {
-                        QName name = event.getQPath().getNameElement().getName();
-                        int index = event.getQPath().getNameElement().getNormalizedIndex();
-                        String uuid = (((NodeId)evId).getPath() != null) ? null : ((NodeId)evId).getUUID();
-
-                        // add new childNodeEntry if it has not been added by
-                        // some earlier 'add' event
-                        // TODO: TOBEFIXED for SNSs
-                        ChildNodeEntry cne = getChildNodeEntry(name, index);
-                        if (cne == null || ((uuid == null) ? cne.getUUID() != null : !uuid.equals(cne.getUUID()))) {
-                            cne = childNodeEntries.add(name, uuid);
-                        }
-                        try {
-                            newState = cne.getNodeState();
-                        } catch (ItemStateException e) {
-                            log.error("Internal error", e);
-                        }
-                    } else {
-                        QName pName = ((PropertyId) event.getItemId()).getQName();
-                        // create a new property reference if it has not been
-                        // added by some earlier 'add' event
-                        ChildPropertyEntry re;
-                        if (hasPropertyName(pName)) {
-                            re = (ChildPropertyEntry) properties.get(pName);
-                        } else {
-                            re = PropertyReference.create(this, pName, isf, idFactory);
-                            properties.put(pName, re);
-                        }
-                        try {
-                            newState = re.getPropertyState();
-                        } catch (ItemStateException e) {
-                            log.error("Internal error", e);
-                        }
-                        // make sure this state is up to date (uuid/mixins)
-                        refresh(pName, event.getType());
-                    }
-
-                    // connect the added state from the transient layer to the
-                    // new workspaceState and make sure its data are updated.
-                    if (newState != null && changeLog != null) {
-                        for (Iterator it = changeLog.addedStates(); it.hasNext();) {
-                            ItemState added = (ItemState) it.next();
-                            if (added.hasOverlayedState()) {
-                                // already connected
-                                continue;
-                            }
-                            // TODO: TOBEFIXED. may fail (produce wrong results) for SNSs, since currently events upon 'save' are not garantied to be 'local' changes only
-                            if (added.getId().equals(evId)) {
-                                added.connect(newState);
-                                added.merge();
-                                break;
-                            }
-                        }
-                    }
-                    // and let the transiently modified session state now, that
-                    // its workspace state has been touched.
-                    setStatus(Status.MODIFIED);
-                } else {
-                    // ILLEGAL
-                    throw new IllegalArgumentException("Illegal event type " + event.getType() + " for NodeState.");
+                if (!id.equals(event.getParentId())) {
+                    // TODO: TOBEFIXED. this should never occur and indicates severe consistency issue.
+                    throw new IllegalArgumentException("Event parent (" + event.getParentId() + ") does not match this state with id: " + id);
                 }
+                ItemId evId = event.getItemId();
+                ItemState newState = null;
+
+                if (evId.denotesNode()) {
+                    QName name = event.getQPath().getNameElement().getName();
+                    int index = event.getQPath().getNameElement().getNormalizedIndex();
+                    String uuid = (((NodeId)evId).getPath() != null) ? null : ((NodeId)evId).getUUID();
+
+                    // add new childNodeEntry if it has not been added by
+                    // some earlier 'add' event
+                    // TODO: TOBEFIXED for SNSs
+                    ChildNodeEntry cne = getChildNodeEntry(name, index);
+                    if (cne == null || ((uuid == null) ? cne.getUUID() != null : !uuid.equals(cne.getUUID()))) {
+                        cne = childNodeEntries.add(name, uuid);
+                    }
+                    try {
+                        newState = cne.getNodeState();
+                    } catch (ItemStateException e) {
+                        log.error("Internal error", e);
+                    }
+                } else {
+                    QName pName = ((PropertyId) event.getItemId()).getQName();
+                    // create a new property reference if it has not been
+                    // added by some earlier 'add' event
+                    ChildPropertyEntry re;
+                    if (hasPropertyName(pName)) {
+                        re = (ChildPropertyEntry) properties.get(pName);
+                    } else {
+                        re = PropertyReference.create(this, pName, isf, idFactory);
+                        properties.put(pName, re);
+                    }
+                    try {
+                        newState = re.getPropertyState();
+                    } catch (ItemStateException e) {
+                        log.error("Internal error", e);
+                    }
+                    // make sure this state is up to date (uuid/mixins)
+                    refresh(pName, event.getType());
+                }
+
+                // connect the added state from the transient layer to the
+                // new workspaceState and make sure its data are updated.
+                if (newState != null && changeLog != null) {
+                    for (Iterator it = changeLog.addedStates(); it.hasNext();) {
+                        ItemState added = (ItemState) it.next();
+                        if (added.hasOverlayedState()) {
+                            // already connected
+                            continue;
+                        }
+                        // TODO: TOBEFIXED. may fail (produce wrong results) for SNSs, since currently events upon 'save' are not garantied to be 'local' changes only
+                        // TODO: TOBEFIXED. equals to false if added-state is referenceable.
+                        if (added.getId().equals(evId)) {
+                            added.connect(newState);
+                            added.merge();
+                            break;
+                        }
+                    }
+                }
+                // and let the transiently modified session state now, that
+                // its workspace state has been touched.
+                setStatus(Status.MODIFIED);
                 break;
 
             case Event.NODE_REMOVED:
@@ -779,25 +762,29 @@ public class NodeState extends ItemState {
 
                 Collection wspEntries = wspState.getChildNodeEntries();
                 // remove child entries, that are 'REMOVED' in the wsp layer
+                Set toRemove = new HashSet();
                 for (Iterator it = getChildNodeEntries().iterator(); it.hasNext();) {
                     ChildNodeEntry cne = (ChildNodeEntry) it.next();
                     if (cne.isAvailable()) {
                         try {
                             NodeState ns = cne.getNodeState();
                             if (ns.getStatus() == Status.REMOVED) {
-                                childNodeEntries.remove(cne.getName(), cne.getIndex());
+                                toRemove.add(cne);
                             }
                         } catch (ItemStateException e) {
                             // should not occur
                             log.error("Internal error while merging item node states.", e);
                         }
                     } else if (wspState.getChildNodeEntries(cne.getName()).isEmpty()) {
-                        childNodeEntries.remove(cne.getName(), cne.getIndex());
+                        toRemove.add(cne);
                     } // TODO: clean up same-named siblings
+                }
+                for (Iterator it = toRemove.iterator(); it.hasNext();) {
+                    ChildNodeEntry cne = (ChildNodeEntry) it.next();
+                    childNodeEntries.remove(cne.getName(), cne.getIndex());
                 }
 
                 // add missing child entries
-
                 for (Iterator it = wspEntries.iterator(); it.hasNext();) {
                     ChildNodeEntry wspEntry = (ChildNodeEntry) it.next();
                     List namedEntries = getChildNodeEntries(wspEntry.getName());
@@ -1168,6 +1155,7 @@ public class NodeState extends ItemState {
         }
         // mark both this and newParent modified
         markModified();
+        childState.markModified();
         newParent.markModified();
     }
 

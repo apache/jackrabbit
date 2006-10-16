@@ -79,6 +79,20 @@ public interface RepositoryService {
             throws LoginException, NoSuchWorkspaceException, RepositoryException;
 
     /**
+     * Returns a new <code>SessionInfo</code> for the given workspace name that
+     * will be used by other methods on the <code>RepositoryService</code>.
+     *
+     * @param sessionInfo for another workspace
+     * @return a <code>SessionInfo</code> if authentication was successful.
+     * @throws LoginException           if authentication of the user fails.
+     * @throws NoSuchWorkspaceException if the specified <code>workspaceName</code>
+     *                                  is not recognized.
+     * @throws RepositoryException      if an error occurs.
+     */
+    public SessionInfo obtain(SessionInfo sessionInfo, String workspaceName)
+            throws LoginException, NoSuchWorkspaceException, RepositoryException;
+
+    /**
      * Indicates to the <code>RepositoryService</code>, that the given SessionInfo
      * will not be used any more.
      *
