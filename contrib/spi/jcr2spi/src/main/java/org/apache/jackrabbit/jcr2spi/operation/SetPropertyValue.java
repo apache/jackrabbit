@@ -28,6 +28,8 @@ import org.apache.jackrabbit.value.QValue;
 import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>SetPropertyValue</code>...
@@ -42,7 +44,7 @@ public class SetPropertyValue extends AbstractOperation {
         this.propertyState = propertyState;
         this.propertyType = propertyType;
         this.values = values;
-        
+
         addAffectedItemState(propertyState);
     }
 
@@ -69,9 +71,17 @@ public class SetPropertyValue extends AbstractOperation {
     }
 
     //------------------------------------------------------------< Factory >---
-    public static Operation create(PropertyState propState, QValue[] iva,
+    public static Operation create(PropertyState propState, QValue[] qValues,
                                    int valueType) {
-        SetPropertyValue sv = new SetPropertyValue(propState, valueType, iva);
+        // compact array (purge null entries)
+        List list = new ArrayList();
+        for (int i = 0; i < qValues.length; i++) {
+            if (qValues[i] != null) {
+                list.add(qValues[i]);
+            }
+        }
+        QValue[] cleanValues = (QValue[]) list.toArray(new QValue[list.size()]);
+        SetPropertyValue sv = new SetPropertyValue(propState, valueType, cleanValues);
         return sv;
     }
 }
