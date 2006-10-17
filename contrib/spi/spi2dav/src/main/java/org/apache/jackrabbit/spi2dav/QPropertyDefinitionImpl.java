@@ -23,6 +23,9 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.value.ValueFormat;
+import org.apache.jackrabbit.value.QValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -38,6 +41,11 @@ import java.io.InputStream;
 public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPropertyDefinition {
 
     /**
+     * Logger instance for this class
+     */
+    private static Logger log = LoggerFactory.getLogger(QPropertyDefinitionImpl.class);
+
+    /**
      * The required type.
      */
     private final int requiredType;
@@ -50,7 +58,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     /**
      * The default values.
      */
-    private final String[] defaultValues;
+    private final QValue[] defaultValues;
 
     /**
      * The 'multiple' flag
@@ -80,15 +88,15 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
 
         Element child = DomUtil.getChildElement(pdefElement, DEFAULTVALUES_ELEMENT, null);
         if (child == null) {
-            defaultValues = new String[0];
+            defaultValues = new QValue[0];
         } else {
             List vs = new ArrayList();
             ElementIterator it = DomUtil.getChildren(child, DEFAULTVALUE_ELEMENT, null);
             while (it.hasNext()) {
-                String qValue = ValueFormat.getQValue(DomUtil.getText(it.nextElement()), requiredType, nsResolver).getString();
+                QValue qValue = ValueFormat.getQValue(DomUtil.getText(it.nextElement()), requiredType, nsResolver);
                 vs.add(qValue);
             }
-            defaultValues = (String[]) vs.toArray(new String[vs.size()]);
+            defaultValues = (QValue[]) vs.toArray(new QValue[vs.size()]);
         }
 
         child = DomUtil.getChildElement(pdefElement, VALUECONSTRAINTS_ELEMENT, null);
@@ -128,12 +136,27 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
      * {@inheritDoc}
      */
     public String[] getDefaultValues() {
-        return defaultValues;
+        String[] strs = new String[defaultValues.length];
+        for (int i = 0; i < defaultValues.length; i++) {
+            try {
+                strs[i] = defaultValues[i].getString();
+            } catch (RepositoryException e) {
+                log.error("Internal error while retrieving default values.", e);
+            }
+        }
+        return strs;
     }
 
     public InputStream[] getDefaultValuesAsStream() {
-        // todo: implementation missing
-        return null;
+        InputStream[] ins = new InputStream[defaultValues.length];
+        for (int i = 0; i < defaultValues.length; i++) {
+            try {
+                ins[i] = defaultValues[i].getStream();
+            } catch (RepositoryException e) {
+                log.error("Internal error while retrieving default values.", e);
+            }
+        }
+        return ins;
     }
 
     /**
