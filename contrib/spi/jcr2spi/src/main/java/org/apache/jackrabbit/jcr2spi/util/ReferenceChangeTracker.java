@@ -88,8 +88,10 @@ public class ReferenceChangeTracker {
         if (oldReference.getType() == PropertyType.REFERENCE) {
             try {
                 String oldValue = oldReference.getString();
-                String newValue = uuidMap.get(oldValue).toString();
-                remapped = QValue.create(newValue, PropertyType.REFERENCE);
+                if (uuidMap.containsKey(oldValue)) {
+                    String newValue = uuidMap.get(oldValue).toString();
+                    remapped = QValue.create(newValue, PropertyType.REFERENCE);
+                }
             } catch (RepositoryException e) {
                 log.error("Unexpected error while creating internal value.", e);
             }
