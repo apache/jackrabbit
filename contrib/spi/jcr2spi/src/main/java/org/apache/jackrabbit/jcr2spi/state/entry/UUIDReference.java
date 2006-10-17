@@ -50,7 +50,7 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
     UUIDReference(NodeState parent, NodeId childId, ItemStateFactory isf, QName name) {
         super(parent, name, isf);
         if (childId.getPath() != null) {
-            throw new IllegalArgumentException("childId must not contain a relative path");
+            throw new IllegalArgumentException("Cannot build UUIDReference from childId '" + childId + "' containing a path.");
         }
         this.childId = childId;
     }
@@ -67,8 +67,8 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
     UUIDReference(NodeState child, ItemStateFactory isf) {
         super(child, isf);
         this.childId = child.getNodeId();
-        if (childId.getPath() == null) {
-            throw new IllegalArgumentException("id of child must not contain a relative path");
+        if (childId.getPath() != null) {
+            throw new IllegalArgumentException("Cannot build UUIDReference from childId '" + childId + "' containing a path.");
         }
     }
 
