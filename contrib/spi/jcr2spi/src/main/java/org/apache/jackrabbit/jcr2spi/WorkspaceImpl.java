@@ -136,7 +136,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         Path srcPath = session.getQPath(srcAbsPath);
         Path destPath = session.getQPath(destAbsPath);
 
-        Operation op = Copy.create(srcPath, destPath, this, this);
+        Operation op = Copy.create(srcPath, destPath, getName(), this, this);
         getUpdatableItemStateManager().execute(op);
     }
 
