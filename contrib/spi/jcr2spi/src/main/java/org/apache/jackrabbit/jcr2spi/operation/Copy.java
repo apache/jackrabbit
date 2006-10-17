@@ -49,14 +49,6 @@ public class Copy extends AbstractCopy  {
 
     //------------------------------------------------------------< Factory >---
     public static Operation create(Path srcPath, Path destPath,
-                                   ManagerProvider mgrProvider,
-                                   ManagerProvider destMgrProvider)
-        throws RepositoryException, ConstraintViolationException, AccessDeniedException,
-        ItemExistsException, VersionException {
-        return create(srcPath, destPath, null, mgrProvider, destMgrProvider);
-    }
-
-    public static Operation create(Path srcPath, Path destPath,
                                    String srcWorkspaceName,
                                    ManagerProvider srcMgrProvider,
                                    ManagerProvider destMgrProvider)
