@@ -35,6 +35,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
+import org.apache.jackrabbit.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,8 +56,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.WeakHashMap;
 
 /**
@@ -176,7 +175,7 @@ public class SearchManager implements SynchronousEventListener {
      * Task that checks if the query handler can be shut down because it
      * had been idle for {@link #idleTime} seconds.
      */
-    private final TimerTask idleChecker;
+    private final Timer.Task idleChecker;
 
     /**
      * Idle time in seconds. After the query handler had been idle for this
@@ -267,7 +266,7 @@ public class SearchManager implements SynchronousEventListener {
         // initialize query handler
         initializeQueryHandler();
 
-        idleChecker = new TimerTask() {
+        idleChecker = new Timer.Task() {
             public void run() {
                 if (lastAccess + (idleTime * 1000) < System.currentTimeMillis()) {
                     int inUse = activeQueries.size();
