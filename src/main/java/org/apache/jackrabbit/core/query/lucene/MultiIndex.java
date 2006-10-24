@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.uuid.Constants;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
@@ -36,8 +37,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
@@ -167,7 +166,7 @@ public class MultiIndex {
      * Task that is periodically called by {@link #FLUSH_TIMER} and checks
      * if index should be flushed.
      */
-    private final TimerTask flushTask;
+    private final Timer.Task flushTask;
 
     /**
      * The RedoLog of this <code>MultiIndex</code>.
@@ -288,7 +287,7 @@ public class MultiIndex {
         }
 
         lastFlushTime = System.currentTimeMillis();
-        flushTask = new TimerTask() {
+        flushTask = new Timer.Task() {
             public void run() {
                 checkFlush();
             }
