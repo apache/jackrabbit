@@ -72,6 +72,15 @@ public class DateValue extends BaseValue {
      * The result is <code>true</code> if and only if the argument is not
      * <code>null</code> and is a <code>DateValue</code> object that
      * represents the same value as this object.
+     * <p>
+     * The value comparison is performed using the ISO 8601 string
+     * representation of the dates, since the native Calendar.equals()
+     * method may produce false negatives (see JSR-598).
+     * <p>
+     * Note that the comparison still returns false when comparing the
+     * same time in different time zones, but that seems to be the intent
+     * of JSR 170. Compare the Value.getDate().getTime() values if you need
+     * an exact time comparison in UTC. 
      *
      * @param obj the reference object with which to compare.
      * @return <code>true</code> if this object is the same as the obj
@@ -86,7 +95,7 @@ public class DateValue extends BaseValue {
             if (date == other.date) {
                 return true;
             } else if (date != null && other.date != null) {
-                return date.equals(other.date);
+                return ISO8601.format(date).equals(ISO8601.format(other.date));
             }
         }
         return false;
