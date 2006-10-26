@@ -59,6 +59,8 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
     private final SessionInfo sessionInfo;
     private final WorkspaceManager wspManager;
 
+    private ItemStateCache cache;
+
     public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo, WorkspaceManager wspManager) {
         this.service = service;
         this.sessionInfo = sessionInfo;
@@ -93,7 +95,11 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             NodeId parentId = (info.getParentId() != null) ? info.getParentId() : null;
             NodeState parent = (parentId != null) ? (NodeState) ism.getItemState(parentId) : null;
 
-            return createNodeState(info, parent);
+            if (parent != null) {
+                return parent.getChildNodeEntry(info.getQName(), info.getIndex()).getNodeState();
+            } else {
+                return createNodeState(info, parent);
+            }
         } catch (ItemNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
         } catch (RepositoryException e) {
@@ -157,7 +163,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
                 if (childInfo.getId().getPath() == null) {
                     childUUID = childInfo.getId().getUUID();
                 }
-                childNodeEntries.add(new CNE(childInfo.getQName(), childUUID));
+                childNodeEntries.add(new CNE(childInfo.getQName(), childInfo.getIndex(), childUUID));
             }
 
             // names of child property entries
@@ -167,29 +173,24 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
                 propNames.add(pId.getQName());
             }
 
-            // If the uuid is not null, the state could include mix:referenceable.
-            // Therefore build a NodeReference instance and add it to the state.
-            NodeReferences nodeRefs = null;
-            if (uuid != null) {
-                PropertyId[] references = info.getReferences();
-                nodeRefs = new NodeReferencesImpl(info.getId(), references);
-            }
+            // Build node-references object even if the state is not refereceable yet.
+            PropertyId[] references = info.getReferences();
+            NodeReferences nodeRefs = new NodeReferencesImpl(state, references);
 
             state.init(info.getMixins(), childNodeEntries, propNames, nodeRefs);
 
-            // copied from local-state-mgr TODO... check
-            // register as listener
-            // TODO check if needed
-            //state.addListener(this);
+            state.addListener(cache);
+            cache.created(state);
+
             return state;
         } catch (PathNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
         } catch (NodeTypeConflictException e) {
-            String msg = "internal error: failed to retrieve node definition.";
+            String msg = "Internal error: failed to retrieve node definition.";
             log.debug(msg);
             throw new ItemStateException(msg, e);
         } catch (ConstraintViolationException e) {
-            String msg = "internal error: failed to retrieve node definition.";
+            String msg = "Internal error: failed to retrieve node definition.";
             log.debug(msg);
             throw new ItemStateException(msg, e);
         } catch (NoSuchNodeTypeException e) {
@@ -231,9 +232,8 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
      * @throws ItemStateException if an error occurs while retrieving the
      *                            <code>PropertyState</code>.
      */
-    private PropertyState createPropertyState(PropertyInfo info,
-                                              NodeState parent)
-            throws ItemStateException {
+    private PropertyState createPropertyState(PropertyInfo info, NodeState parent)
+        throws ItemStateException {
         try {
 
             // retrieve property definition
@@ -242,7 +242,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
 
             // build the PropertyState
             PropertyState state = new PropertyState(info.getQName(), parent,
-                def, Status.EXISTING, service.getIdFactory(), true);
+                def, Status.EXISTING, this, service.getIdFactory(), true);
 
             QValue[] qValues;
             if (info.getType() == PropertyType.BINARY) {
@@ -260,37 +260,42 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             }
 
             state.init(info.getType(), qValues);
+            state.addListener(cache);
+            cache.created(state);
 
-            // register as listener
-            // TODO check if needed
-            // state.addListener(this);
             return state;
         } catch (IOException e) {
             throw new ItemStateException(e.getMessage(), e);
         } catch (NodeTypeConflictException e) {
-            String msg = "internal error: failed to retrieve property definition.";
+            String msg = "internal error: failed to build property state.";
             log.debug(msg);
             throw new ItemStateException(msg, e);
-        } catch (ConstraintViolationException e) {
-            String msg = "internal error: failed to retrieve property definition.";
-            log.debug(msg);
-            throw new ItemStateException(msg, e);
-        } catch (NoSuchNodeTypeException e) {
-            String msg = "internal error: failed to retrieve property definition.";
+        } catch (RepositoryException e) {
+            String msg = "internal error: failed to build property state.";
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
     }
 
+    /**
+     *
+     * @param cache
+     * @see ItemStateFactory#setCache(ItemStateCache)
+     */
+    public void setCache(ItemStateCache cache) {
+        this.cache = cache;
+    }
 
     //------------------------------------------------------< ChildNodeEntry >---
     private class CNE implements ChildNodeEntry {
 
         private final QName name;
+        private final int index;
         private final String uuid;
 
-        private CNE(QName name, String uuid) {
+        private CNE(QName name, int index, String uuid) {
             this.name = name;
+            this.index = index;
             this.uuid = uuid;
         }
 
@@ -307,7 +312,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
         }
 
         public int getIndex() {
-            throw new UnsupportedOperationException();
+            return index;
         }
 
         public NodeState getNodeState() throws NoSuchItemStateException, ItemStateException {
@@ -325,21 +330,16 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
      */
     private class NodeReferencesImpl implements NodeReferences {
 
-        /**
-         * Identifier of this <code>NodeReferences</code> instance. Since the
-         * id of target state consists of a UUID and contains not relative
-         * path, the id will be stable and can be stored.
-         */
-        private NodeId nodeId;
+        private NodeState nodeState;
 
         /**
          * Private constructor
          *
-         * @param nodeId
+         * @param nodeState
          * @param referenceIds
          */
-        private NodeReferencesImpl(NodeId nodeId, PropertyId[] referenceIds) {
-            this.nodeId = nodeId;
+        private NodeReferencesImpl(NodeState nodeState, PropertyId[] referenceIds) {
+            this.nodeState = nodeState;
 
             // TODO: modify in order to make usage of the references returned
             // with NodeInfo that was just retrieved and implement a notification
@@ -352,8 +352,14 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
          * @see NodeReferences#isEmpty()
          */
         public boolean isEmpty() {
+            // shortcut
+            if (nodeState.getUUID() == null) {
+                return true;
+            }
+            // nodestate has a uuid and is potentially mix:referenceable
+            // => try to retrieve references
             try {
-                NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
+                NodeInfo info = service.getNodeInfo(sessionInfo, nodeState.getNodeId());
                 return info.getReferences().length > 0;
             } catch (RepositoryException e) {
                 log.error("Internal error.",e);
@@ -365,8 +371,14 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
          * @see NodeReferences#iterator()
          */
         public Iterator iterator() {
+            // shortcut
+            if (nodeState.getUUID() == null) {
+                return Collections.EMPTY_SET.iterator();
+            }
+            // nodestate has a uuid and is potentially mix:referenceable
+            // => try to retrieve references
             try {
-                NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
+                NodeInfo info = service.getNodeInfo(sessionInfo, nodeState.getNodeId());
                 if (info.getReferences().length > 0) {
                     Set referenceIds = new HashSet();
                     referenceIds.addAll(Arrays.asList(info.getReferences()));
@@ -375,7 +387,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
                     return Collections.EMPTY_SET.iterator();
                 }
             } catch (RepositoryException e) {
-                log.error("Internal error.",e);
+                log.error("Internal error.", e);
                 return Collections.EMPTY_SET.iterator();
             }
         }

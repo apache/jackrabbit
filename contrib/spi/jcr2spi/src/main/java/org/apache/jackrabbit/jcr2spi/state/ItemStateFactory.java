@@ -26,6 +26,12 @@ import org.apache.jackrabbit.spi.PropertyId;
  */
 public interface ItemStateFactory {
 
+    /**
+     *
+     * @param ism
+     * @return
+     * @throws ItemStateException
+     */
     public NodeState createRootState(ItemStateManager ism) throws ItemStateException;
 
     /**
@@ -71,4 +77,13 @@ public interface ItemStateFactory {
     public PropertyState createPropertyState(PropertyId propertyId,
                                              NodeState parent)
             throws NoSuchItemStateException, ItemStateException;
+
+
+    /**
+     * Set the cache used to retrieve item states that have already been
+     * built before.
+     *
+     * @param cache
+     */
+    public void setCache(ItemStateCache cache);
 }

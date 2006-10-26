@@ -18,17 +18,17 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * <code>WorkspaceItemStateManager</code>
@@ -54,91 +54,59 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
      * @param isLocal
      */
     public void onEvent(EventIterator events, boolean isLocal) {
-        onEvent(events, isLocal, null);
+        pushEvents(getEventCollection(events));
     }
 
+    /**
+     *
+     * @param events
+     * @param changeLog
+     */
     public void onEvent(EventIterator events, ChangeLog changeLog) {
         if (changeLog == null) {
             throw new IllegalArgumentException("ChangeLog must not be null.");
         }
-        // inform all transient states, that they have been persisted and must
-        // connect to their workspace state (and eventually reload the data).
-        // TODO: TOBEFIXED. only used to set status to EXISTING in order (which is probably wrong)
-        changeLog.persisted();
+        Collection evs = getEventCollection(events);
+        // TODO: make sure, that events only contain events related to the modifications submitted with the changelog.
 
-        // inform all existing workspace states about the transient modifications
-        // that have been persisted now.
-        onEvent(events, true, changeLog);
+        // inform the changelog target state about the transient modifications
+        // that have been persisted now: NEW-states will be connected to their
+        // overlayed state, EXISTING_REMOVED states will be definitely removed,
+        // EXISTING_MODIFIED states are merged with their workspace-state.
+        changeLog.getTarget().refresh(evs, changeLog);
+        // all events not covered by the changelog must not be handled on the
+        // session-states -> treat the same way as events returned by
+        // workspace operations.
+        pushEvents(evs);
     }
 
-    private void onEvent(EventIterator events, boolean isLocal, ChangeLog changeLog) {
-        // collect set of removed node ids
-        Set removedNodeIds = new HashSet();
-        List addEventList = new ArrayList();
-        List eventList = new ArrayList();
-        while (events.hasNext()) {
-            Event event = events.nextEvent();
-            int type = event.getType();
-            if (type == Event.NODE_ADDED || event.getType() == Event.PROPERTY_ADDED) {
-                addEventList.add(event);
-            } else if (type == Event.NODE_REMOVED) {
-                // remember removed nodes separately for proper handling later on.
-                removedNodeIds.add(event.getItemId());
-                eventList.add(event);
-            } else {
-                eventList.add(event);
-            }
-        }
-        if (eventList.isEmpty() && addEventList.isEmpty()) {
+    private void pushEvents(Collection events) {
+        if (events.isEmpty()) {
             return;
         }
+        // collect set of removed node ids
+        Set removedEvents = new HashSet();
+        // separately collect the add events
+        Set addEvents = new HashSet();
 
-        /* process remove and change events */
-        for (Iterator it = eventList.iterator(); it.hasNext(); ) {
+        for (Iterator it = events.iterator(); it.hasNext();) {
             Event event = (Event) it.next();
             int type = event.getType();
-
-            ItemState state = lookup(event.getItemId());
-            NodeState parent = (event.getParentId() != null) ? (NodeState) lookup(event.getParentId()) : null;
-
-            if (type == Event.NODE_REMOVED || type == Event.PROPERTY_REMOVED) {
-                if (state != null) {
-                    state.refresh(event, changeLog);
-                }
-                if (parent != null) {
-                    // invalidate parent only if it has not been removed
-                    // with the same event bundle.
-                    if (!removedNodeIds.contains(event.getParentId())) {
-                        parent.refresh(event, changeLog);
-                    }
-                }
-            } else if (type == Event.PROPERTY_CHANGED) {
-                if (state != null) {
-                    try {
-                        // TODO: improve.
-                        /* retrieve property value and type from server even if
-                           changes were issued from this session (changelog).
-                           this is currently the only way to update the workspace
-                           state, which is not connected to its overlaying session-state.
-                        */
-                        PropertyState tmp = getItemStateFactory().createPropertyState((PropertyId) state.getId(), state.getParent());
-                        ((PropertyState) state).init(tmp.getType(), tmp.getValues());
-                        state.refresh(event, changeLog);
-                    } catch (ItemStateException e) {
-                        log.error("Unexpected error while updating modified property state.", e);
-                    }
-                }
-                // TODO: check again. parent must be notified if mixintypes or jcr:uuid prop is changed.
-                if (parent != null) {
-                    parent.refresh(event, changeLog);
-                }
-            } else {
-                // should never occur
-                throw new IllegalArgumentException("Invalid event type: " + event.getType());
+            if (type == Event.NODE_REMOVED) {
+                // remember removed nodes separately for proper handling later on.
+                removedEvents.add(event.getItemId());
+            } else if (type == Event.NODE_ADDED || type == Event.PROPERTY_ADDED) {
+                addEvents.add(event);
+                it.remove();
             }
         }
 
-        /* Add events need to be processed hierarchically, since its not possible
+        /* Process ADD-events.
+           In case of persisting transients modifications, the event-set may
+           still contain events that are not covered by the changeLog such as
+           new version-history or other autocreated properties and nodes.
+
+           Add events need to be processed hierarchically, since its not possible
            to add a new child reference to a state that is not yet present in
            the state manager.
            The 'progress' flag is used to make sure, that during each loop at
@@ -148,17 +116,58 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
            be ignored.
          */
         boolean progress = true;
-        while (!addEventList.isEmpty() && progress) {
+        while (!addEvents.isEmpty() && progress) {
             progress = false;
-            for (Iterator it = addEventList.iterator(); it.hasNext();) {
-                Event event = (Event) it.next();
-                NodeState parent = (NodeState) lookup(event.getParentId());
+            for (Iterator it = addEvents.iterator(); it.hasNext();) {
+                Event ev = (Event) it.next();
+                NodeState parent = (ev.getParentId() != null) ? (NodeState) lookup(ev.getParentId()) : null;
                 if (parent != null) {
-                    parent.refresh(event, changeLog);
+                    parent.refresh(ev);
                     it.remove();
                     progress = true;
                 }
             }
         }
+
+        /* process all other events (removal, property changed) */
+        for (Iterator it = events.iterator(); it.hasNext(); ) {
+            Event event = (Event) it.next();
+            int type = event.getType();
+
+            ItemState state = lookup(event.getItemId());
+            NodeState parent = (event.getParentId() != null) ? (NodeState) lookup(event.getParentId()) : null;
+
+            if (type == Event.NODE_REMOVED || type == Event.PROPERTY_REMOVED) {
+                if (state != null) {
+                    state.refresh(event);
+                }
+                if (parent != null) {
+                    // invalidate parent only if it has not been removed
+                    // with the same event bundle.
+                    if (!removedEvents.contains(event.getParentId())) {
+                        parent.refresh(event);
+                    }
+                }
+            } else if (type == Event.PROPERTY_CHANGED) {
+                if (state != null) {
+                    state.refresh(event);
+                }
+                // TODO: check again. parent must be notified if mixintypes or jcr:uuid prop is changed.
+                if (parent != null) {
+                    parent.refresh(event);
+                }
+            } else {
+                // should never occur
+                throw new IllegalArgumentException("Invalid event type: " + event.getType());
+            }
+        }
+    }
+
+    private static Collection getEventCollection(EventIterator events) {
+        List evs = new ArrayList();
+        while (events.hasNext()) {
+           evs.add(events.nextEvent());
+        }
+        return evs;
     }
 }

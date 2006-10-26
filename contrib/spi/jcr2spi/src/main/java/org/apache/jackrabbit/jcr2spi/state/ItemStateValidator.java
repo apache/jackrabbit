@@ -92,6 +92,7 @@ public class ItemStateValidator {
      */
     public static final int CHECK_COLLISION = 32;
 
+    public static final int CHECK_NONE = 0;
     public static final int CHECK_ALL = CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_COLLISION | CHECK_REFERENCES;
 
     /**
@@ -769,16 +770,7 @@ public class ItemStateValidator {
         if (ent.includesNodeType(QName.MIX_REFERENCEABLE)) {
             ItemStateManager stateMgr = mgrProvider.getItemStateManager();
             if (stateMgr.hasReferingStates(targetState)) {
-                try {
-                    if (!stateMgr.getReferingStates(targetState).isEmpty()) {
-                        throw new ReferentialIntegrityException(safeGetJCRPath(targetState)
-                            + ": cannot remove node with references");
-                    }
-                } catch (ItemStateException ise) {
-                    String msg = "internal error: failed to check references on " + safeGetJCRPath(targetState);
-                    log.error(msg, ise);
-                    throw new RepositoryException(msg, ise);
-                }
+                throw new ReferentialIntegrityException(safeGetJCRPath(targetState) + ": cannot remove node with references");
             }
         }
     }

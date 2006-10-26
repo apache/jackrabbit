@@ -262,23 +262,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (value == null) {
             setInternalValues(null, reqType);
         } else {
-            if (reqType == PropertyType.REFERENCE) {
-                if (value instanceof NodeImpl) {
-                    NodeImpl targetNode = (NodeImpl)value;
-                    if (targetNode.isNodeType(QName.MIX_REFERENCEABLE)) {
-                        QValue qValue = QValue.create(targetNode.getUUID(), PropertyType.REFERENCE);
-                        setInternalValues(new QValue[]{qValue}, reqType);
-                    } else {
-                        throw new ValueFormatException("Target node must be of node type mix:referenceable");
-                    }
-                } else {
-                    String msg = "Incompatible Node object: " + value + "(" + safeGetJCRPath() + ")";
-                    log.debug(msg);
-                    throw new RepositoryException(msg);
-                }
-            } else {
-                throw new ValueFormatException("Property must be of type REFERENCE (" + safeGetJCRPath() + ")");
-            }
+            checkValidReference(value, reqType, this);
+            QValue qValue = QValue.create(((NodeImpl)value).getUUID(), PropertyType.REFERENCE);
+            setInternalValues(new QValue[]{qValue}, reqType);
         }
     }
 
@@ -477,7 +463,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     private QValue getQValue() throws ValueFormatException, RepositoryException {
         checkStatus();
-        if (isMultiple()) {
+        if (isMultiple()) {                                                            
             throw new ValueFormatException(safeGetJCRPath() + " is multi-valued and can therefore only be retrieved as an array of values");
         }
         // avoid unnecessary object creation if possible
@@ -553,5 +539,30 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     private PropertyState getPropertyState() {
         return (PropertyState) getItemState();
+    }
+
+    /**
+     * 
+     * @param value
+     * @param propertyType
+     * @param itemImpl
+     * @throws ValueFormatException
+     * @throws RepositoryException
+     */
+    static void checkValidReference(Node value, int propertyType, ItemImpl itemImpl) throws ValueFormatException, RepositoryException {
+        if (propertyType == PropertyType.REFERENCE) {
+            if (value instanceof NodeImpl) {
+                NodeImpl targetNode = (NodeImpl)value;
+                if (!targetNode.isNodeType(QName.MIX_REFERENCEABLE)) {
+                    throw new ValueFormatException("Target node must be of node type mix:referenceable");
+                }
+            } else {
+                String msg = "Incompatible Node object: " + value + "(" + itemImpl.safeGetJCRPath() + ")";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
+        } else {
+            throw new ValueFormatException("Property must be of type REFERENCE (" + itemImpl.safeGetJCRPath() + ")");
+        }
     }
 }

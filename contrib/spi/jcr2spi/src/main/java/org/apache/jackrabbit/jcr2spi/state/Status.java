@@ -62,9 +62,39 @@ public class Status {
      */
     public static final int REMOVED = 8;
 
-    
-    public static boolean isTerminalStatus(int status) {
+    /**
+     * Returns <code>true</code> if the given status is a terminal status, i.e.
+     * the given status one of:
+     * <ul>
+     * <li>{@link #REMOVED}</li>
+     * <li>{@link #STALE_DESTROYED}</li>
+     * </ul>
+     *
+     * @param status
+     * @return
+     */
+    public static boolean isTerminal(int status) {
         return status == REMOVED || status == STALE_DESTROYED;
+    }
+
+    /**
+     * Returns <code>true</code> if this item state is valid, that is its status
+     * is one of:
+     * <ul>
+     * <li>{@link #EXISTING}</li>
+     * <li>{@link #EXISTING_MODIFIED}</li>
+     * <li>{@link #NEW}</li>
+     * </ul>
+     *
+     * @param status
+     * @return
+     */
+    public static boolean isValid(int status) {
+        return status == EXISTING || status == EXISTING_MODIFIED || status == NEW;
+    }
+
+    public static boolean isStale(int status) {
+        return status == STALE_DESTROYED || status == STALE_MODIFIED;
     }
 
     public static boolean isValidStatusChange(int oldStatus, int newStatus,
@@ -112,10 +142,9 @@ public class Status {
                case REMOVED:
                    isValid = (oldStatus == NEW || oldStatus == EXISTING || oldStatus == EXISTING_REMOVED);
                    break;
-               /* default:
-                  NEW cannot change state to NEW -> false
-                  MODIFIED never applicable to session state -> false */
-
+                /* default:
+                   NEW cannot change state to NEW -> false
+                   MODIFIED never applicable to session state -> false */
             }
         }
         return isValid;

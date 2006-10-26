@@ -45,6 +45,7 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -311,6 +312,18 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             return vhState.getUUID().equals(other.vhState.getUUID());
         }
         return false;
+    }
+
+    //-----------------------------------------------------------< ItemImpl >---
+    /**
+     *
+     * @throws UnsupportedRepositoryOperationException
+     * @throws ConstraintViolationException
+     * @throws RepositoryException
+     */
+    protected void checkIsWritable() throws UnsupportedRepositoryOperationException, ConstraintViolationException, RepositoryException {
+        super.checkIsWritable();
+        throw new ConstraintViolationException("VersionHistory is protected");
     }
 
     //------------------------------------------------------------< private >---

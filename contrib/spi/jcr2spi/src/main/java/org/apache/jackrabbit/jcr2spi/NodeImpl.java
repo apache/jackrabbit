@@ -375,7 +375,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, String value, int type) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         // validation performed in subsequent method
         Value v = (value == null) ? null : session.getValueFactory().createValue(value, type);
-        return setProperty(name, v);
+        return setProperty(name, v, type);
     }
 
     /**
@@ -384,7 +384,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, InputStream value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         // validation performed in subsequent method
         Value v = (value == null ? null : session.getValueFactory().createValue(value));
-        return setProperty(name, v);
+        return setProperty(name, v, PropertyType.BINARY);
     }
 
     /**
@@ -392,7 +392,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, boolean value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         // validation performed in subsequent method
-        return setProperty(name, session.getValueFactory().createValue(value));
+        return setProperty(name, session.getValueFactory().createValue(value), PropertyType.BOOLEAN);
     }
 
     /**
@@ -400,7 +400,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, double value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         // validation performed in subsequent method
-        return setProperty(name, session.getValueFactory().createValue(value));
+        return setProperty(name, session.getValueFactory().createValue(value), PropertyType.DOUBLE);
     }
 
     /**
@@ -408,7 +408,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Property setProperty(String name, long value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         // validation performed in subsequent method
-        return setProperty(name, session.getValueFactory().createValue(value));
+        return setProperty(name, session.getValueFactory().createValue(value), PropertyType.LONG);
     }
 
     /**
@@ -417,16 +417,24 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, Calendar value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         // validation performed in subsequent method
         Value v = (value == null ? null : session.getValueFactory().createValue(value));
-        return setProperty(name, v);
+        return setProperty(name, v, PropertyType.DATE);
     }
 
     /**
      * @see Node#setProperty(String, Node)
      */
     public Property setProperty(String name, Node value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
-        // validation performed in subsequent method
-        Value v = (value == null ? null : session.getValueFactory().createValue(value));
-        return setProperty(name, v);
+        // duplicate check to make sure, writability is asserted before value
+        // validation below.
+        checkIsWritable();
+        Value v;
+        if (value == null) {
+            v = null;
+        } else {
+            PropertyImpl.checkValidReference(value, PropertyType.REFERENCE, this);
+            v = session.getValueFactory().createValue(value);
+        }
+        return setProperty(name, v, PropertyType.REFERENCE);
     }
 
     /**
@@ -536,11 +544,12 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
         checkStatus();
-        if (!isNodeType(QName.MIX_REFERENCEABLE)) {
+        String uuid = getNodeState().getUUID();
+        if (!isNodeType(QName.MIX_REFERENCEABLE) && uuid != null) {
             throw new UnsupportedRepositoryOperationException();
         }
         // Node is referenceable -> NodeId must contain a UUID part
-        return getNodeId().getUUID();
+        return uuid;
     }
 
     /**
@@ -574,12 +583,12 @@ public class NodeImpl extends ItemImpl implements Node {
         checkStatus();
         try {
             ItemStateManager itemStateMgr = session.getItemStateManager();
-            if (itemStateMgr.hasReferingStates(getNodeState())) {
-                Collection refStates = itemStateMgr.getReferingStates(getNodeState());
-                return new LazyItemIterator(itemMgr, refStates);
-            } else {
+            Collection refStates = itemStateMgr.getReferingStates(getNodeState());
+            if (refStates.isEmpty()) {
                 // there are no references, return empty iterator
                 return IteratorHelper.EMPTY;
+            } else {
+                return new LazyItemIterator(itemMgr, refStates);
             }
         } catch (ItemStateException e) {
             String msg = "Unable to retrieve REFERENCE properties that refer to " + safeGetJCRPath();
@@ -752,6 +761,9 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
             return false;
         } catch (VersionException e) {
+            log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
+            return false;
+        } catch (ConstraintViolationException e) {
             log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
             return false;
         }
@@ -991,7 +1003,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkSessionHasPendingChanges();
         // check for version-enabled and lock are performed with subsequent calls.
         Version v = getVersionHistory().getVersion(versionName);
-        restore(v, removeExisting);
+        restore(this, null, v, removeExisting);
     }
 
     /**
@@ -1074,10 +1086,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     private void restore(NodeImpl targetNode, Path relQPath, Version version, boolean removeExisting) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        targetNode.checkIsWritable();
-        targetNode.checkIsLocked();
-
-
         if (relQPath == null) {
             /* restore target already exists. */
             // target must be versionable
@@ -1092,6 +1100,8 @@ public class NodeImpl extends ItemImpl implements Node {
             if (vH.getRootVersion().isSame(version)) {
                 throw new VersionException("Attempt to restore root version.");
             }
+            targetNode.checkIsWritable();
+            targetNode.checkIsLocked();
         } else {
             /* If no node exists at relPath then a VersionException is thrown if
                the parent node is not checked out. */
@@ -1101,6 +1111,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     + LogUtil.safeGetJCRPath(relQPath, session.getNamespaceResolver())
                     + "' must be checked out.");
             }
+            targetNode.checkIsLocked();
             // NOTE: check for nodetype constraint violation is left to the 'server'
         }
 
@@ -1270,7 +1281,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!isNodeType(QName.MIX_LOCKABLE)) {
             String msg = "Unable to perform locking operation on non-lockable node: " + getPath();
             log.debug(msg);
-            throw new UnsupportedRepositoryOperationException(msg);
+            throw new LockException(msg);
         }
     }
 

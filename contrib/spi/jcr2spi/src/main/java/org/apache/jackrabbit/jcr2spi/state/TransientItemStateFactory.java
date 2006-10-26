@@ -55,4 +55,11 @@ public interface TransientItemStateFactory extends ItemStateFactory {
     public PropertyState createNewPropertyState(QName name,
                                                 NodeState parent,
                                                 QPropertyDefinition definition);
+
+    /**
+     * Set the listener that gets informed about NEW states.
+     *
+     * @param listener
+     */
+    public void setListener(ItemStateCreationListener listener);
 }

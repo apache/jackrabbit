@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.commons.collections.list.AbstractLinkedList;
 import org.apache.commons.collections.iterators.UnmodifiableIterator;
+import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.name.Path;
@@ -25,7 +26,6 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.entry.ChildPropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.entry.PropertyReference;
@@ -80,7 +80,7 @@ public class NodeState extends ItemState {
     /**
      * the names of this node's mixin types
      */
-    private QName[] mixinTypeNames = new QName[0];
+    private QName[] mixinTypeNames = QName.EMPTY_ARRAY;
 
     /**
      * insertion-ordered collection of ChildNodeEntry objects
@@ -106,12 +106,6 @@ public class NodeState extends ItemState {
     private NodeReferences references;
 
     /**
-     * The <code>ItemStateFactory</code> which is used to create new
-     * <code>ItemState</code> instances.
-     */
-    private final ItemStateFactory isf;
-
-    /**
      * Constructs a new node state that is not connected.
      *
      * @param name          the name of this NodeState
@@ -129,12 +123,12 @@ public class NodeState extends ItemState {
                         QName nodeTypeName, QNodeDefinition definition,
                         int initialStatus, ItemStateFactory isf,
                         IdFactory idFactory, boolean isWorkspaceState) {
-        super(parent, initialStatus, idFactory, isWorkspaceState);
+        super(parent, initialStatus, isf, idFactory, isWorkspaceState);
         this.name = name;
         this.uuid = uuid;
         this.nodeTypeName = nodeTypeName;
         this.definition = definition;
-        this.isf = isf;
+        assertAvailability();
     }
 
     /**
@@ -150,11 +144,28 @@ public class NodeState extends ItemState {
     protected NodeState(NodeState overlayedState, NodeState parent,
                         int initialStatus, ItemStateFactory isf,
                         IdFactory idFactory) {
-        super(overlayedState, parent, initialStatus, idFactory);
-        this.isf = isf;
-        reset();
+        super(overlayedState, parent, initialStatus, isf, idFactory);
+        if (overlayedState != null) {
+            synchronized (overlayedState) {
+                NodeState wspState = (NodeState) overlayedState;
+                name = wspState.name;
+                uuid = wspState.uuid;
+                nodeTypeName = wspState.nodeTypeName;
+                definition = wspState.definition;
+
+                init(wspState.getMixinTypeNames(), wspState.getChildNodeEntries(), wspState.getPropertyNames(), wspState.getNodeReferences());
+            }
+        }
+        assertAvailability();
     }
 
+    /**
+     *
+     * @param mixinTypeNames
+     * @param childEntries
+     * @param propertyNames
+     * @param references
+     */
     void init(QName[] mixinTypeNames, Collection childEntries, Collection propertyNames, NodeReferences references) {
         if (mixinTypeNames != null) {
             this.mixinTypeNames = mixinTypeNames;
@@ -165,17 +176,32 @@ public class NodeState extends ItemState {
         Iterator it = propertyNames.iterator();
         while (it.hasNext()) {
             QName propName = (QName) it.next();
-            properties.put(propName, PropertyReference.create(this, propName, isf, idFactory));
+            addPropertyEntry(PropertyReference.create(this, propName, isf, idFactory));
         }
         // re-create child node entries
         childNodeEntries.removeAll();
         it = childEntries.iterator();
         while (it.hasNext()) {
             ChildNodeEntry cne = (ChildNodeEntry) it.next();
-            childNodeEntries.add(cne.getName(), cne.getUUID());
+            childNodeEntries.add(cne.getName(), cne.getUUID(), cne.getIndex());
         }
         // set the node references
         this.references = references;
+    }
+
+    private void assertAvailability() {
+        // TODO: improve this.
+        if (uuid != null) {
+            // make sure this state is connected to its childNode-entry
+            ChildNodeEntry cne = parent.childNodeEntries.get(uuid);
+            if (!cne.isAvailable()) {
+                try {
+                    cne.getNodeState();
+                } catch (ItemStateException e) {
+                    // ignore
+                }
+            }
+        }
     }
 
     //----------------------------------------------------------< ItemState >---
@@ -211,6 +237,7 @@ public class NodeState extends ItemState {
      * @return the id of this node state.
      */
     public NodeId getNodeId() {
+        NodeState parent = getParent();
         if (uuid != null) {
             return idFactory.createNodeId(uuid);
         } else if (parent != null) {
@@ -238,8 +265,27 @@ public class NodeState extends ItemState {
      * @return the UUID of this node state or <code>null</code> if this
      * node cannot be identified with a UUID.
      */
-    public final String getUUID() {
+    public String getUUID() {
         return uuid;
+    }
+
+    /**
+     * Modify the uuid of this state and make sure, that the parent state
+     * contains a proper childNodeEntry for this state. If the given uuid is
+     * not different from the uuid of this state, the method returns silently
+     * without changing neither the parent nor this state.
+     *
+     * @param uuid
+     */
+    private void setUUID(String uuid) {
+        String oldUUID = this.uuid;
+        boolean mod = (oldUUID == null) ? uuid != null : !oldUUID.equals(uuid);
+        if (mod) {
+            this.uuid = uuid;
+            if (getParent() != null) {
+                getParent().childNodeEntries.replaceEntry(this);
+            }
+        }
     }
 
     /**
@@ -295,11 +341,7 @@ public class NodeState extends ItemState {
      * @return references
      */
     NodeReferences getNodeReferences() {
-        if (getStatus() == Status.NEW) {
-            return null;
-        } else {
-            return references;
-        }
+        return references;
     }
 
     /**
@@ -504,6 +546,46 @@ public class NodeState extends ItemState {
     }
 
     /**
+     *
+     * @param propEntry
+     */
+    private void addPropertyEntry(ChildPropertyEntry propEntry) {
+        QName propName = propEntry.getName();
+        properties.put(propName, propEntry);
+        try {
+            if (isWorkspaceState() && isUuidOrMixin(propName)) {
+                if (QName.JCR_UUID.equals(propName) && uuid == null) {
+                    PropertyState ps = propEntry.getPropertyState();
+                    setUUID(ps.getValue().getString());
+                } else if (QName.JCR_MIXINTYPES.equals(propName) && (mixinTypeNames == null || mixinTypeNames.length == 0)) {
+                    PropertyState ps = propEntry.getPropertyState();
+                    mixinTypeNames = getMixinNames(ps);
+                }
+            }
+        } catch (ItemStateException e) {
+            log.error("Internal Error", e);
+        } catch (RepositoryException e) {
+            log.error("Internal Error", e);
+        }
+    }
+
+    /**
+     *
+     * @param propName
+     */
+    private void removePropertyEntry(QName propName) {
+        if (properties.remove(propName) != null) {
+            if (isWorkspaceState()) {
+                if (QName.JCR_UUID.equals(propName)) {
+                    setUUID(null);
+                } else if (QName.JCR_MIXINTYPES.equals(propName)) {
+                    mixinTypeNames = QName.EMPTY_ARRAY;
+                }
+            }
+        }
+    }
+
+    /**
      * TODO: find a better way to provide the index of a child node entry
      * Returns the index of the given <code>ChildNodeEntry</code> and with
      * <code>name</code>.
@@ -538,77 +620,37 @@ public class NodeState extends ItemState {
     /**
      *
      * @param event
-     * @param changeLog
-     * @see ItemState#refresh(Event, ChangeLog)
+     * @see ItemState#refresh(Event)
      */
-    synchronized void refresh(Event event, ChangeLog changeLog) {
+    synchronized void refresh(Event event) {
         checkIsWorkspaceState();
 
         NodeId id = getNodeId();
+        QName name = event.getQPath().getNameElement().getName();
         switch (event.getType()) {
             case Event.NODE_ADDED:
+                int index = event.getQPath().getNameElement().getNormalizedIndex();
+                NodeId evId = (NodeId) event.getItemId();
+                String uuid = (evId.getPath() != null) ? null : evId.getUUID();
+
+                // add new childNodeEntry if it has not been added by
+                // some earlier 'add' event
+                // TODO: TOBEFIXED for SNSs
+                ChildNodeEntry cne = childNodeEntries.get(name, index);
+                if (cne == null || ((uuid == null) ? cne.getUUID() != null : !uuid.equals(cne.getUUID()))) {
+                    cne = childNodeEntries.add(name, uuid, index);
+                }
+                // and let the transiently modified session state now, that
+                // its workspace state has been touched.
+                setStatus(Status.MODIFIED);
+                break;
+
             case Event.PROPERTY_ADDED:
-                if (!id.equals(event.getParentId())) {
-                    // TODO: TOBEFIXED. this should never occur and indicates severe consistency issue.
-                    throw new IllegalArgumentException("Event parent (" + event.getParentId() + ") does not match this state with id: " + id);
-                }
-                ItemId evId = event.getItemId();
-                ItemState newState = null;
-
-                if (evId.denotesNode()) {
-                    QName name = event.getQPath().getNameElement().getName();
-                    int index = event.getQPath().getNameElement().getNormalizedIndex();
-                    String uuid = (((NodeId)evId).getPath() != null) ? null : ((NodeId)evId).getUUID();
-
-                    // add new childNodeEntry if it has not been added by
-                    // some earlier 'add' event
-                    // TODO: TOBEFIXED for SNSs
-                    ChildNodeEntry cne = getChildNodeEntry(name, index);
-                    if (cne == null || ((uuid == null) ? cne.getUUID() != null : !uuid.equals(cne.getUUID()))) {
-                        cne = childNodeEntries.add(name, uuid);
-                    }
-                    try {
-                        newState = cne.getNodeState();
-                    } catch (ItemStateException e) {
-                        log.error("Internal error", e);
-                    }
-                } else {
-                    QName pName = ((PropertyId) event.getItemId()).getQName();
-                    // create a new property reference if it has not been
-                    // added by some earlier 'add' event
-                    ChildPropertyEntry re;
-                    if (hasPropertyName(pName)) {
-                        re = (ChildPropertyEntry) properties.get(pName);
-                    } else {
-                        re = PropertyReference.create(this, pName, isf, idFactory);
-                        properties.put(pName, re);
-                    }
-                    try {
-                        newState = re.getPropertyState();
-                    } catch (ItemStateException e) {
-                        log.error("Internal error", e);
-                    }
-                    // make sure this state is up to date (uuid/mixins)
-                    refresh(pName, event.getType());
-                }
-
-                // connect the added state from the transient layer to the
-                // new workspaceState and make sure its data are updated.
-                if (newState != null && changeLog != null) {
-                    for (Iterator it = changeLog.addedStates(); it.hasNext();) {
-                        ItemState added = (ItemState) it.next();
-                        if (added.hasOverlayedState()) {
-                            // already connected
-                            continue;
-                        }
-                        // TODO: TOBEFIXED. may fail (produce wrong results) for SNSs, since currently events upon 'save' are not garantied to be 'local' changes only
-                        // TODO: TOBEFIXED. equals to false if added-state is referenceable.
-                        if (added.getId().equals(evId)) {
-                            added.connect(newState);
-                            added.merge();
-                            break;
-                        }
-                    }
+                // create a new property reference if it has not been
+                // added by some earlier 'add' event
+                if (!hasPropertyName(name)) {
+                    ChildPropertyEntry re = PropertyReference.create(this, name, isf, idFactory);
+                    addPropertyEntry(re);
                 }
                 // and let the transiently modified session state now, that
                 // its workspace state has been touched.
@@ -617,9 +659,8 @@ public class NodeState extends ItemState {
 
             case Event.NODE_REMOVED:
                 if (id.equals(event.getParentId())) {
-                    QName qName = event.getQPath().getNameElement().getName();
-                    int index = event.getQPath().getNameElement().getNormalizedIndex();
-                    childNodeEntries.remove(qName, index);
+                    index = event.getQPath().getNameElement().getNormalizedIndex();
+                    childNodeEntries.remove(name, index);
                     setStatus(Status.MODIFIED);
                 } else if (id.equals(event.getItemId())) {
                     setStatus(Status.REMOVED);
@@ -630,27 +671,19 @@ public class NodeState extends ItemState {
                 break;
 
             case Event.PROPERTY_REMOVED:
-                if (id.equals(event.getParentId())) {
-                    QName pName = ((PropertyId) event.getItemId()).getQName();
-                    properties.remove(pName);
-                    // make sure this state is up to date (uuid/mixins)
-                    refresh(pName, event.getType());
-                    setStatus(Status.MODIFIED);
-                } else {
-                    // ILLEGAL
-                    throw new IllegalArgumentException("Illegal event type " + event.getType() + " for NodeState.");
-                }
+                removePropertyEntry(name);
+                setStatus(Status.MODIFIED);
                 break;
 
             case Event.PROPERTY_CHANGED:
-                if (id.equals(event.getParentId())) {
-                    QName pName = ((PropertyId) event.getItemId()).getQName();
-                    if (refresh(pName, event.getType())) {
-                        setStatus(Status.MODIFIED);
+                if (QName.JCR_UUID.equals(name) || QName.JCR_MIXINTYPES.equals(name)) {
+                    try {
+                        PropertyState ps = getPropertyState(name);
+                        adjustNodeState(this, new PropertyState[] {ps});
+                    } catch (ItemStateException e) {
+                        // should never occur.
+                        log.error("Internal error while updating node state.", e);
                     }
-                } else {
-                    // ILLEGAL
-                    throw new IllegalArgumentException("Illegal event type " + event.getType() + " for NodeState.");
                 }
                 break;
             default:
@@ -659,43 +692,134 @@ public class NodeState extends ItemState {
         }
     }
 
+    //----------------------------------------------------< Session - State >---
     /**
-     * Returns true, if the uuid or the mixin types of this state have been
-     * modified.
-     *
-     * @param propertyName
-     * @param eventType
-     * @return
+     * {@inheritDoc}
+     * @see ItemState#refresh(Collection,ChangeLog)
      */
-    private boolean refresh(QName propertyName, int eventType) {
-        if (QName.JCR_UUID.equals(propertyName)) {
-            // TODO: to be fixed.
-        } else if (QName.JCR_MIXINTYPES.equals(propertyName)) {
-            if (eventType == Event.PROPERTY_REMOVED) {
-                mixinTypeNames = QName.EMPTY_ARRAY;
-            } else { // added or changed
-                try {
-                    PropertyState ps = getPropertyState(propertyName);
-                    QValue[] values = ps.getValues();
-                    QName[] newMixins = new QName[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        newMixins[i] = QName.valueOf(values[i].getString());
-                    }
-                    mixinTypeNames = newMixins;
-                } catch (ItemStateException e) {
-                    // should never occur.
-                    log.error("Internal error while updating mixin types.", e);
-                } catch (RepositoryException e) {
-                    // should never occur.
-                    log.error("Internal error while updating mixin types.", e);
+    void refresh(Collection events, ChangeLog changeLog) throws IllegalStateException {
+
+        // remember parent states that have need to adjust their uuid/mixintypes
+        // or that got a new child entry added or existing entries removed.
+        HashMap modParents = new HashMap();
+
+        // process deleted states from the changelog
+        for (Iterator it = changeLog.deletedStates(); it.hasNext();) {
+            ItemState state = (ItemState) it.next();
+            state.setStatus(Status.REMOVED);
+            state.overlayedState.setStatus(Status.REMOVED);
+
+            // adjust parent states unless the parent is removed as well
+            NodeState parent = state.getParent();
+            if (!changeLog.deletedStates.contains(parent)) {
+                NodeState overlayedParent = (NodeState) parent.overlayedState;
+                if (state.isNode()) {
+                    overlayedParent.childNodeEntries.remove((NodeState)state.overlayedState);
+                } else {
+                    overlayedParent.removePropertyEntry(state.overlayedState.getQName());
                 }
+                modifiedParent(parent, state, modParents);
             }
-            return true;
+            // don't remove processed state from changelog, but from event list
+            // state on changelog is used for check if parent is deleted as well.
+            removeEvent(events, state);
         }
-        return false;
+
+        // process added states from the changelog. since the changlog maintains
+        // LinkedHashSet for its entries, the iterator will not return a added
+        // entry before its NEW parent.
+        for (Iterator it = changeLog.addedStates(); it.hasNext();) {
+            ItemState addedState = (ItemState) it.next();
+            NodeState parent = addedState.getParent();
+            // TODO: only retrieve overlayed state, if necessary
+            try {
+                // adjust parent child-entries
+                NodeState overlayedParent = (NodeState) parent.overlayedState;
+                QName addedName = addedState.getQName();
+                if (addedState.isNode()) {
+                    int index = parent.getChildNodeEntry((NodeState) addedState).getIndex();
+                    ChildNodeEntry cne;
+                    if (overlayedParent.hasChildNodeEntry(addedName, index)) {
+                        cne = overlayedParent.getChildNodeEntry(addedName, index);
+                    } else {
+                        cne = overlayedParent.childNodeEntries.add(addedState.getQName(), null, index);
+                    }
+                    NodeState overlayed = cne.getNodeState();
+                    if (overlayed.getUUID() != null) {
+                        overlayedParent.childNodeEntries.replaceEntry(overlayed);
+                    }
+                    addedState.connect(overlayed);
+                } else {
+                    ChildPropertyEntry pe;
+                    if (overlayedParent.hasPropertyName(addedName)) {
+                        pe = (ChildPropertyEntry) overlayedParent.properties.get(addedName);
+                    } else {
+                        pe = PropertyReference.create(overlayedParent, addedName, overlayedParent.isf,  overlayedParent.idFactory);
+                        overlayedParent.addPropertyEntry(pe);
+                    }
+                    addedState.connect(pe.getPropertyState());
+                }
+
+                // make sure the new state gets updated (e.g. uuid created by server)
+                addedState.reset();
+                // and mark the added-state existing
+                addedState.setStatus(Status.EXISTING);
+                // if parent is modified -> remember for final status reset
+                if (parent.getStatus() == Status.EXISTING_MODIFIED) {
+                    modifiedParent(parent, addedState, modParents);
+                }
+
+                it.remove();
+                removeEvent(events, addedState);
+            } catch (ItemStateException e) {
+                log.error("Internal error.", e);
+            }
+        }
+
+        for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
+            ItemState modState = (ItemState) it.next();
+            if (modState.isNode()) {
+                continue;
+            }
+            // push changes down to overlayed state
+            int type = ((PropertyState) modState).getType();
+            QValue[] values = ((PropertyState) modState).getValues();
+            ((PropertyState) modState.overlayedState).init(type, values);
+
+            modState.setStatus(Status.EXISTING);
+            // if property state defines a modified jcr:mixinTypes
+            // the parent is listed as modified state and needs to be
+            // processed at the end.
+            if (isUuidOrMixin(modState.getQName())) {
+                modifiedParent(this, modState, modParents);
+            }
+            // remove the processed event from the set
+            it.remove();
+            removeEvent(events, modState);
+        }
+
+        /* process all parent states that need their uuid or mixin-types being
+           adjusted because that property has been added or modified */
+        for (Iterator it = modParents.keySet().iterator(); it.hasNext();) {
+            NodeState parent = (NodeState) it.next();
+            List l = (List) modParents.get(parent);
+            adjustNodeState(parent, (PropertyState[]) l.toArray(new PropertyState[l.size()]));
+        }
+
+        /* finally check if all entries in the changelog have been processed
+           and eventually force a reload in order not to have any states with
+           wrong transient status floating around. */
+        Iterator[] its = new Iterator[] {changeLog.addedStates(), changeLog.deletedStates(), changeLog.modifiedStates()};
+        IteratorChain chain = new IteratorChain(its);
+        while (chain.hasNext()) {
+            ItemState state = (ItemState) chain.next();
+            if (!(state.getStatus() == Status.EXISTING || state.getStatus() == Status.REMOVED)) {
+                // error: state has not been processed
+                // TODO: discard state and force reload of all data
+            }
+        }
     }
 
-    //----------------------------------------------------< Session - State >---
     /**
      * {@inheritDoc}
      * @see ItemState#reset()
@@ -707,95 +831,52 @@ public class NodeState extends ItemState {
             synchronized (overlayedState) {
                 NodeState wspState = (NodeState) overlayedState;
                 name = wspState.name;
-                uuid = wspState.uuid;
-                nodeTypeName = wspState.nodeTypeName;
-                definition = wspState.definition;
-
-                init(wspState.getMixinTypeNames(), wspState.getChildNodeEntries(), wspState.getPropertyNames(), wspState.getNodeReferences());
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see ItemState#merge()
-     */
-    synchronized void merge() {
-        checkIsSessionState();
-
-        if (overlayedState != null) {
-            synchronized (overlayedState) {
-                NodeState wspState = (NodeState) overlayedState;
-                name = wspState.name;
-                uuid = wspState.uuid;
+                setUUID(wspState.uuid);
                 nodeTypeName = wspState.nodeTypeName;
                 definition = wspState.definition;
 
                 mixinTypeNames = wspState.mixinTypeNames;
-                references = wspState.getNodeReferences();
 
-                // search for removed properties
-                Collection wspProps = wspState.getPropertyNames();
+                // remove all entries in the attic
+                propertiesInAttic.clear();
+
+                // merge prop-names
+                Collection wspPropNames = wspState.getPropertyNames();
+                for (Iterator it = wspPropNames.iterator(); it.hasNext();) {
+                    QName propName = (QName) it.next();
+                    if (!hasPropertyName(propName)) {
+                        addPropertyEntry(PropertyReference.create(this, propName, isf, idFactory));
+                    }
+                }
                 for (Iterator it = properties.keySet().iterator(); it.hasNext();) {
-                    ChildPropertyEntry pe = (ChildPropertyEntry) properties.get((QName) it.next());
-                    if (pe.isAvailable()) {
-                        try {
-                            PropertyState ps = getPropertyState(pe.getName());
-                            if (ps.getStatus() == Status.REMOVED || ps.getStatus() == Status.STALE_DESTROYED) {
-                                it.remove();
-                            }
-                        } catch (ItemStateException e) {
-                            log.error("Internal error while merging item node states.", e);
-                        }
-                    } else if (!wspProps.contains(pe.getName())) {
-                        // not available and not present in wsp-layer any more.
+                    // remove all prop-entries in the session state that are
+                    // not present in the wsp-state.
+                    if (!wspPropNames.contains(it.next())) {
                         it.remove();
                     }
                 }
-                // add missing property entries
-                for (Iterator it = wspProps.iterator(); it.hasNext();) {
-                    QName propName = (QName) it.next();
-                    if (!hasPropertyName(propName)) {
-                        properties.put(propName, PropertyReference.create(this, propName, isf, idFactory));
-                    } // else property is already listed
-                }
 
-                Collection wspEntries = wspState.getChildNodeEntries();
-                // remove child entries, that are 'REMOVED' in the wsp layer
-                Set toRemove = new HashSet();
+                // merge child node entries
+                for (Iterator it = wspState.getChildNodeEntries().iterator(); it.hasNext();) {
+                    ChildNodeEntry cne = (ChildNodeEntry) it.next();
+                    int index = cne.getIndex();
+                    if (!childNodeEntries.contains(cne.getName(), index, cne.getUUID())) {
+                        childNodeEntries.add(cne.getName(), cne.getUUID(), index);
+                    }
+                }
+                List toRemove = new ArrayList();
                 for (Iterator it = getChildNodeEntries().iterator(); it.hasNext();) {
                     ChildNodeEntry cne = (ChildNodeEntry) it.next();
-                    if (cne.isAvailable()) {
-                        try {
-                            NodeState ns = cne.getNodeState();
-                            if (ns.getStatus() == Status.REMOVED) {
-                                toRemove.add(cne);
-                            }
-                        } catch (ItemStateException e) {
-                            // should not occur
-                            log.error("Internal error while merging item node states.", e);
-                        }
-                    } else if (wspState.getChildNodeEntries(cne.getName()).isEmpty()) {
+                    if (!wspState.childNodeEntries.contains(cne.getName(), cne.getIndex(), cne.getUUID())) {
                         toRemove.add(cne);
-                    } // TODO: clean up same-named siblings
+                    }
                 }
                 for (Iterator it = toRemove.iterator(); it.hasNext();) {
                     ChildNodeEntry cne = (ChildNodeEntry) it.next();
                     childNodeEntries.remove(cne.getName(), cne.getIndex());
                 }
-
-                // add missing child entries
-                for (Iterator it = wspEntries.iterator(); it.hasNext();) {
-                    ChildNodeEntry wspEntry = (ChildNodeEntry) it.next();
-                    List namedEntries = getChildNodeEntries(wspEntry.getName());
-                    if (namedEntries.isEmpty()) {
-                        // simple case: no cne with the given name
-                        childNodeEntries.add(wspEntry.getName(), wspEntry.getUUID());
-                    } else {
-                        List wspCnes = wspState.getChildNodeEntries(wspEntry.getName());
-                        // TODO: compare sn-siblings an add missing ones
-                    }
-                }
+                // set the node references
+                references = wspState.references;
             }
         }
     }
@@ -839,7 +920,7 @@ public class NodeState extends ItemState {
             setStatus(Status.REMOVED);
         }
         // now inform parent
-        parent.childNodeStateRemoved(this);
+        getParent().childNodeStateRemoved(this);
     }
 
     /**
@@ -919,18 +1000,18 @@ public class NodeState extends ItemState {
                 // set removed
                 setStatus(Status.REMOVED);
                 // remove from parent
-                parent.childNodeStateRemoved(this);
+                getParent().childNodeStateRemoved(this);
                 affectedItemStates.add(this);
                 break;
             case Status.REMOVED:
                 // shouldn't happen actually, because a 'removed' state is not
                 // accessible anymore
                 log.warn("trying to revert an already removed node state");
-                parent.childNodeStateRemoved(this);
+                getParent().childNodeStateRemoved(this);
                 break;
             case Status.STALE_DESTROYED:
                 // overlayed state does not exist anymore
-                parent.childNodeStateRemoved(this);
+                getParent().childNodeStateRemoved(this);
                 affectedItemStates.add(this);
                 break;
         }
@@ -938,9 +1019,9 @@ public class NodeState extends ItemState {
 
     /**
      * @inheritDoc
-     * @see ItemState#collectTransientStates(Set)
+     * @see ItemState#collectTransientStates(Collection)
      */
-    void collectTransientStates(Set transientStates) {
+    void collectTransientStates(Collection transientStates) {
         checkIsSessionState();
 
         switch (getStatus()) {
@@ -978,38 +1059,20 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Sets the names of this node's mixin types.
-     *
-     * @param mixinTypeNames set of names of mixin types
-     */
-    synchronized void setMixinTypeNames(QName[] mixinTypeNames) {
-        checkIsSessionState();
-
-        if (mixinTypeNames != null) {
-            this.mixinTypeNames = mixinTypeNames;
-        } else {
-            this.mixinTypeNames = new QName[0];
-        }
-        markModified();
-    }
-
-    /**
      * Adds a child node state to this node state.
      *
      * @param child the node state to add.
-     * @param uuid  the uuid of the child node state or <code>null</code> if
-     *              <code>child</code> cannot be identified with a uuid.
      * @throws IllegalArgumentException if <code>this</code> is not the parent
      *                                  of <code>child</code>.
      */
-    synchronized void addChildNodeState(NodeState child, String uuid) {
+    synchronized void addChildNodeState(NodeState child) {
         checkIsSessionState();
-
         if (child.getParent() != this) {
             throw new IllegalArgumentException("This NodeState is not the parent of child");
         }
         ChildNodeEntry cne = ChildNodeReference.create(child, isf, idFactory);
         childNodeEntries.add(cne);
+
         markModified();
     }
 
@@ -1069,7 +1132,7 @@ public class NodeState extends ItemState {
                 existingState = ref.getPropertyState();
             } catch (ItemStateException e) {
                 // probably does not exist anymore, remove from properties map
-                properties.remove(propertyName);
+                removePropertyEntry(propertyName);
             }
             if (existingState != null) {
                 if (existingState.getStatus() == Status.EXISTING_REMOVED) {
@@ -1080,7 +1143,7 @@ public class NodeState extends ItemState {
                 }
             }
         }
-        properties.put(propertyName, PropertyReference.create(propState, isf, idFactory));
+        addPropertyEntry(PropertyReference.create(propState, isf, idFactory));
         markModified();
     }
 
@@ -1099,11 +1162,10 @@ public class NodeState extends ItemState {
         // remove property state from map of properties if it does not exist
         // anymore, otherwise leave the property state in the map
         if (propState.getStatus() == Status.REMOVED) {
-            properties.remove(propState.getQName());
+            removePropertyEntry(propState.getQName());
         }
         markModified();
     }
-
     /**
      * Reorders the child node <code>insertNode</code> before the child node
      * <code>beforeNode</code>.
@@ -1167,8 +1229,7 @@ public class NodeState extends ItemState {
      */
     private synchronized void rename(QName newName) {
         checkIsSessionState();
-
-        if (parent == null) {
+        if (getParent() == null) {
             throw new IllegalStateException("root node cannot be renamed");
         }
         name = newName;
@@ -1302,6 +1363,80 @@ public class NodeState extends ItemState {
         return false;
     }
 
+    /**
+     *
+     * @param ps
+     * @return
+     * @throws RepositoryException
+     */
+    private static QName[] getMixinNames(PropertyState ps) throws RepositoryException {
+        assert QName.JCR_MIXINTYPES.equals(ps.getQName());
+
+        QValue[] values = ps.getValues();
+        QName[] newMixins = new QName[values.length];
+        for (int i = 0; i < values.length; i++) {
+            newMixins[i] = QName.valueOf(values[i].getString());
+        }
+        return newMixins;
+    }
+
+    private static boolean isUuidOrMixin(QName propName) {
+        return QName.JCR_UUID.equals(propName) || QName.JCR_MIXINTYPES.equals(propName);
+    }
+
+    private static void modifiedParent(NodeState parent, ItemState child, Map modParents) {
+        List l;
+        if (modParents.containsKey(parent)) {
+            l = (List) modParents.get(parent);
+        } else {
+            l = new ArrayList(2);
+            modParents.put(parent, l);
+        }
+        if (child != null && !child.isNode() && isUuidOrMixin(child.getQName())) {
+            l.add(child);
+        }
+    }
+
+    /**
+     *
+     * @param parent
+     * @param props
+     */
+    private static void adjustNodeState(NodeState parent, PropertyState[] props) {
+        NodeState overlayed = (parent.isWorkspaceState()) ? parent : (NodeState) parent.overlayedState;
+        NodeState sState = (parent.isWorkspaceState()) ? (NodeState) overlayed.getSessionState() : parent;
+
+        if (overlayed != null) {
+            for (int i = 0; i < props.length; i++) {
+                try {
+                    if (QName.JCR_UUID.equals(props[i].getQName())) {
+                        String uuid = (props[i].getStatus() == Status.REMOVED) ? null : props[i].getValue().getString();
+                        sState.setUUID(uuid);
+                        overlayed.setUUID(uuid);
+                    } else if (QName.JCR_MIXINTYPES.equals(props[i].getQName())) {
+                        QName[] mixins = (props[i].getStatus() == Status.REMOVED) ? QName.EMPTY_ARRAY : getMixinNames(props[i]);
+
+                        sState.mixinTypeNames = mixins;
+                        overlayed.mixinTypeNames = mixins;
+                    } // else: ignore.
+                } catch (RepositoryException e) {
+                    // should never occur.
+                    log.error("Internal error while updating node state.", e);
+                }
+            }
+
+            // make sure all other modifications on the overlayed state are
+            // reflected on the session-state.
+            sState.reset();
+            // make sure, the session-state gets its status reset to Existing.
+            if (sState.getStatus() == Status.EXISTING_MODIFIED) {
+                sState.setStatus(Status.EXISTING);
+            }
+        } else {
+            // should never occur.
+            log.warn("Error while adjusting nodestate: Overlayed state is missing.");
+        }
+    }
     //------------------------------------------------------< inner classes >---
     /**
      * <code>ChildNodeEntries</code> represents an insertion-ordered
@@ -1326,6 +1461,61 @@ public class NodeState extends ItemState {
         private final Map nameMap = new HashMap();
 
         /**
+         *
+         * @param name
+         * @param index
+         * @param uuid
+         * @return
+         */
+        private boolean contains(QName name, int index, String uuid) {
+            if (!nameMap.containsKey(name)) {
+                // no matching child node entry
+                return false;
+            }
+            Object o = nameMap.get(name);
+            if (o instanceof List) {
+                // SNS
+                for (Iterator it = ((List) o).iterator(); it.hasNext(); ) {
+                    LinkedEntries.LinkNode n = (LinkedEntries.LinkNode) it.next();
+                    ChildNodeEntry cne = n.getChildNodeEntry();
+                    if (uuid == null) {
+                        if (cne.getIndex() == index) {
+                            return true;
+                        }
+                    } else if (uuid.equals(cne.getUUID())) {
+                        return true;
+                    }
+                }
+                // no matching entry found
+                return false;
+            } else {
+                // single child node with this name
+                ChildNodeEntry cne = ((LinkedEntries.LinkNode) o).getChildNodeEntry();
+                if (uuid == null) {
+                    return cne.getUUID() == null;
+                } else {
+                    return uuid.equals(cne.getUUID());
+                }
+            }
+        }
+
+        /**
+         * 
+         * @param uuid
+         * @return
+         */
+        private ChildNodeEntry get(String uuid) {
+            for (Iterator it = entries.iterator(); it.hasNext();) {
+                LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
+                ChildNodeEntry cne = ln.getChildNodeEntry();
+                if (cne.getUUID() == uuid) {
+                    return cne;
+                }
+            }
+            return null;
+        }
+
+        /**
          * Returns the <code>ChildNodeEntry</code> for the given
          * <code>nodeState</code>.
          *
@@ -1346,7 +1536,7 @@ public class NodeState extends ItemState {
                     ChildNodeEntry cne = n.getChildNodeEntry();
                     // only check available child node entries
                     try {
-                        if (cne.isAvailable() && cne.getNodeState() == nodeState) {
+                        if (cne.getNodeState() == nodeState) {
                             return cne;
                         }
                     } catch (ItemStateException e) {
@@ -1357,7 +1547,7 @@ public class NodeState extends ItemState {
                 // single child node with this name
                 ChildNodeEntry cne = ((LinkedEntries.LinkNode) o).getChildNodeEntry();
                 try {
-                    if (cne.isAvailable() && cne.getNodeState() == nodeState) {
+                    if (cne.getNodeState() == nodeState) {
                         return cne;
                     }
                 } catch (ItemStateException e) {
@@ -1415,8 +1605,7 @@ public class NodeState extends ItemState {
                 });
             } else {
                 // map entry is a single child node entry
-                return Collections.singletonList(
-                        ((LinkedEntries.LinkNode) obj).getChildNodeEntry());
+                return Collections.singletonList(((LinkedEntries.LinkNode) obj).getChildNodeEntry());
             }
         }
 
@@ -1483,31 +1672,35 @@ public class NodeState extends ItemState {
          * @return the created ChildNodeEntry.
          */
         ChildNodeEntry add(QName nodeName, String uuid) {
-            List siblings = null;
-            Object obj = nameMap.get(nodeName);
-            if (obj != null) {
-                if (obj instanceof List) {
-                    // map entry is a list of siblings
-                    siblings = (List) obj;
-                } else {
-                    // map entry is a single child node entry,
-                    // convert to siblings list
-                    siblings = new ArrayList();
-                    siblings.add(obj);
-                    nameMap.put(nodeName, siblings);
-                }
-            }
+            ChildNodeEntry cne = ChildNodeReference.create(NodeState.this, nodeName, uuid, isf, idFactory);
+            add(cne);
+            return cne;
+        }
 
-            ChildNodeEntry entry = ChildNodeReference.create(NodeState.this, nodeName, uuid, isf, idFactory);
-            LinkedEntries.LinkNode ln = entries.add(entry);
+        /**
+         * Insert a new childnode entry at the position indicated by index.
+         * @param nodeName
+         * @param uuid
+         * @param index
+         * @return
+         */
+        ChildNodeEntry add(QName nodeName, String uuid, int index) {
+            ChildNodeEntry cne = add(nodeName, uuid);
+            // TODO: in case of SNS, move new cne to the right position.
+            return cne;
+        }
 
-            if (siblings != null) {
-                siblings.add(ln);
-            } else {
-                nameMap.put(nodeName, ln);
-            }
-
-            return entry;
+        /**
+         * Adds a <code>childNode</code> to the end of the list.
+         *
+         * @param childState the <code>NodeState</code> to add.
+         * @return the <code>ChildNodeEntry</code> which was created for
+         *         <code>childNode</code>.
+         */
+        ChildNodeEntry add(NodeState childState) {
+            ChildNodeEntry cne = ChildNodeReference.create(childState, isf, idFactory);
+            add(cne);
+            return cne;
         }
 
         /**
@@ -1539,19 +1732,6 @@ public class NodeState extends ItemState {
             } else {
                 nameMap.put(nodeName, ln);
             }
-        }
-
-        /**
-         * Adds a <code>childNode</code> to the end of the list.
-         *
-         * @param childNode the <code>NodeState</code> to add.
-         * @return the <code>ChildNodeEntry</code> which was created for
-         *         <code>childNode</code>.
-         */
-        ChildNodeEntry add(NodeState childNode) {
-            ChildNodeEntry cne = ChildNodeReference.create(childNode, isf, idFactory);
-            add(cne);
-            return cne;
         }
 
         /**
@@ -1667,11 +1847,10 @@ public class NodeState extends ItemState {
          *
          * @param insertNode the node state to move.
          * @param beforeNode the node state where <code>insertNode</code> is
-         *                   reordered to.
+         * reordered to.
          * @throws NoSuchItemStateException if <code>insertNode</code> or
-         *                                  <code>beforeNode</code> does not
-         *                                  have a <code>ChildNodeEntry</code>
-         *                                  in this <code>ChildNodeEntries</code>.
+         * <code>beforeNode</code> does not have a <code>ChildNodeEntry</code>
+         * in this <code>ChildNodeEntries</code>.
          */
         public void reorder(NodeState insertNode, NodeState beforeNode)
                 throws NoSuchItemStateException {
@@ -1728,6 +1907,24 @@ public class NodeState extends ItemState {
 
             // reorder in linked list
             entries.reorderNode(insertLN, beforeLN);
+        }
+
+        /**
+         * If the given child state got a (new) uuid assigned or its removed,
+         * its childEntry must be adjusted.
+         *
+         * @param childState
+         */
+        private void replaceEntry(NodeState childState) {
+            // NOTE: test if child-state needs to get a new entry not checked here.
+            try {
+                Object replaceObj = nameMap.get(childState.getQName());
+                LinkedEntries.LinkNode ln = getLinkNode(replaceObj, childState);
+                ChildNodeEntry newCne = ChildNodeReference.create(childState, isf, idFactory);
+                entries.replaceNode(ln, newCne);
+            } catch (NoSuchItemStateException e) {
+                log.error("Internal error.", e);
+            }
         }
 
         /**
@@ -1893,6 +2090,17 @@ public class NodeState extends ItemState {
             } else {
                 addNode(insert, before);
             }
+        }
+
+        /**
+         * Replace the value of the given LinkNode with a new childNodeEntry
+         * value.
+         *
+         * @param node
+         * @param value
+         */
+        void replaceNode(LinkNode node, ChildNodeEntry value) {
+            updateNode(node, value);
         }
 
         /**
