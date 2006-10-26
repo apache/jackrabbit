@@ -336,6 +336,7 @@ public interface RepositoryService {
      * @param sessionInfo
      * @param nodeId
      * @param deep
+     * @param sessionScoped
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.lock.LockException
      * @throws javax.jcr.AccessDeniedException
@@ -343,7 +344,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#lock(boolean, boolean)
      */
-    public EventIterator lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
+    public EventIterator lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
 
     /**
      * Explicit refresh of an existing lock. Existing locks should be refreshed

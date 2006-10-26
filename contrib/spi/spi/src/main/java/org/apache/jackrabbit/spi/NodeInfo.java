@@ -31,6 +31,13 @@ public interface NodeInfo extends ItemInfo {
     public NodeId getId();
 
     /**
+     * Index of the node
+     * 
+     * @return
+     */
+    public int getIndex();
+
+    /**
      * @return QName representing the name of the primary nodetype
      */
     public QName getNodetype();
