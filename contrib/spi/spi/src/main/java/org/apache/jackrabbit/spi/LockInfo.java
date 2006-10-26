@@ -35,4 +35,6 @@ public interface LockInfo {
     public String getOwner();
 
     public boolean isDeep();
+
+    public boolean isSessionScoped();
 }
