@@ -16,107 +16,22 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.NodeId;
 
 import javax.jcr.NamespaceRegistry;
 import java.io.File;
 
 /**
- * A <code>PMContext</code> is used to provide context information for a
- * <code>PersistenceManager</code>.
- *
- * @see PersistenceManager#init(PMContext)
+ * Legacy class kept for backward compatibility reasons.
+ * @deprecated use {@link org.apache.jackrabbit.core.persistence.PMContext}
+ *             instead.
  */
-public class PMContext {
+public class PMContext extends org.apache.jackrabbit.core.persistence.PMContext {
 
-    /**
-     * the physcial home dir
-     */
-    private final File physicalHomeDir;
-
-    /**
-     * the virtual jackrabbit filesystem
-     */
-    private final FileSystem fs;
-
-    /**
-     * namespace registry
-     */
-    private final NamespaceRegistry nsReg;
-
-    /**
-     * node type registry
-     */
-    private final NodeTypeRegistry ntReg;
-
-    /**
-     * uuid of the root node
-     */
-    private final NodeId rootNodeId;
-
-    /**
-     * Creates a new <code>PMContext</code>.
-     *
-     * @param homeDir the physical home directory
-     * @param fs the virtual jackrabbit filesystem
-     * @param rootNodeId id of the root node
-     * @param nsReg        namespace registry
-     * @param ntReg        node type registry
-     */
-    public PMContext(File homeDir,
-                     FileSystem fs,
-                     NodeId rootNodeId,
-                     NamespaceRegistry nsReg,
-                     NodeTypeRegistry ntReg) {
-        this.physicalHomeDir = homeDir;
-        this.fs = fs;
-        this.rootNodeId = rootNodeId;
-        this.nsReg = nsReg;
-        this.ntReg = ntReg;
-    }
-
-
-    /**
-     * Returns the physical home directory for this persistence manager
-     * @return the physical home directory for this persistence manager
-     */
-    public File getHomeDir() {
-        return physicalHomeDir;
-    }
-
-    /**
-     * Returns the virtual filesystem for this persistence manager
-     * @return the virtual filesystem for this persistence manager
-     */
-    public FileSystem getFileSystem() {
-        return fs;
-    }
-
-    /**
-     * Returns the id of the root node
-     * @return the id of the root node
-     */
-    public NodeId getRootNodeId() {
-        return rootNodeId;
-    }
-
-    /**
-     * Returns the namespace registry
-     *
-     * @return the namespace registry
-     */
-    public NamespaceRegistry getNamespaceRegistry() {
-        return nsReg;
-    }
-
-    /**
-     * Returns the node type registry
-     *
-     * @return the node type registry
-     */
-    public NodeTypeRegistry getNodeTypeRegistry() {
-        return ntReg;
+    public PMContext(File homeDir, FileSystem fs, NodeId rootNodeId,
+                         NamespaceRegistry nsReg, NodeTypeRegistry ntReg) {
+        super(homeDir, fs, rootNodeId, nsReg, ntReg);
     }
 }
