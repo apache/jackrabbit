@@ -62,7 +62,7 @@ public class DB2FileSystem extends DbFileSystem {
         initialized = false;
     }
 
-    //-----------------------------------------------< DbFileSystem overrides >
+    //-----------------------------------------< DatabaseFileSystem overrides >
     /**
      * {@inheritDoc}
      * <p/>
