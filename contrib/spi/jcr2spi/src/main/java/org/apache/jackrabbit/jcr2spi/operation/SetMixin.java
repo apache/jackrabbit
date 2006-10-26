@@ -43,7 +43,6 @@ public class SetMixin extends AbstractOperation {
         // add the jcr:mixinTypes property state as affected if it already exists
         // and therefore gets modified by this operation.
         if (nodeState.hasPropertyName(QName.JCR_MIXINTYPES)) {
-
             try {
                 addAffectedItemState(nodeState.getPropertyState(QName.JCR_MIXINTYPES));
             } catch (ItemStateException e) {
