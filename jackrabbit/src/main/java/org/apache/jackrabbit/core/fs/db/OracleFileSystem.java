@@ -301,7 +301,7 @@ public class OracleFileSystem extends DbFileSystem {
     /**
      * {@inheritDoc}
      * <p/>
-     * Overridden because we need to use <code>oracle.sql.Blob</code>
+     * Overridden because we need to use <code>oracle.sql.BLOB</code>
      * and <code>PreparedStatement#setBlob</code> instead of just
      * <code>PreparedStatement#setBinaryStream</code>.
      */
