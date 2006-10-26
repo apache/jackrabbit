@@ -204,16 +204,16 @@
             class: FQN of class implementing the PersistenceManager interface
         -->
         <!--
-        <PersistenceManager class="org.apache.jackrabbit.core.state.xml.XMLPersistenceManager"/>
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.xml.XMLPersistenceManager"/>
         -->
         <!--
-        <PersistenceManager class="org.apache.jackrabbit.core.state.mem.InMemPersistenceManager">
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager">
             <param name="initialCapacity" value="100000"/>
             <param name="loadFactor" value="0.3"/>
             <param name="persistent" value="true"/>
         </PersistenceManager>
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager"/>
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager"/>
         <!--
             Search index and the file system it uses.
         -->
@@ -247,7 +247,7 @@
             a 'normal' persistence manager, but this could change in future
             implementations.
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager"/>
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager"/>
 
     </Versioning>
 </Repository>

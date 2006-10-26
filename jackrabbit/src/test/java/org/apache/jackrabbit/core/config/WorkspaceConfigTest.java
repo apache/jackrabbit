@@ -53,7 +53,7 @@ public class WorkspaceConfigTest extends TestCase {
 
         PersistenceManagerConfig pmc = config.getPersistenceManagerConfig();
         assertEquals(
-                "org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager",
+                "org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager",
                 pmc.getClassName());
         assertTrue(pmc.getParameters().isEmpty());
 
