@@ -16,66 +16,11 @@
  */
 package org.apache.jackrabbit.core.state.db;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-
 /**
- * Database persistence manager that uses JNDI to acquire the database
- * connection. The JNDI location of the {@link DataSource} to be used in
- * given as the <code>dataSourceLocation</code> configuration property.
- * See the {@link SimpleDbPersistenceManager} for more configuration
- * details.
- * <p>
- * <strong>WARNING:</strong> The acquired database connection is kept
- * for the entire lifetime of the persistence manager instance. The
- * configured data source should be prepared for this.
- */
-public class JNDIDatabasePersistenceManager extends DatabasePersistenceManager {
-
-    /**
-     * JNDI location of the data source used to acquire database connections.
-     */
-    private String dataSourceLocation;
-
-    //----------------------------------------------------< setters & getters >
-
-    /**
-     * Returns the JNDI location of the data source.
-     *
-     * @return data source location
-     */
-    public String getDataSourceLocation() {
-        return dataSourceLocation;
-    }
-
-    /**
-     * Sets the JNDI location of the data source.
-     *
-     * @param dataSourceLocation data source location
-     */
-    public void setDataSourceLocation(String dataSourceLocation) {
-        this.dataSourceLocation = dataSourceLocation;
-    }
-
-    //-------------------------------------------< DatabasePersistenceManager >
-
-    /**
-     * Returns a JDBC connection from a {@link DataSource} acquired from JNDI
-     * with the configured data source location.
-     *
-     * @return new database connection
-     * @throws NamingException if the given data source location does not exist
-     * @throws SQLException if a database access error occurs
-     * @see DatabasePersistenceManager#getConnection()
-     */
-    protected Connection getConnection() throws NamingException, SQLException {
-        InitialContext ic = new InitialContext();
-        DataSource dataSource = (DataSource) ic.lookup(dataSourceLocation);
-        return dataSource.getConnection();
-    }
-
+ * Legacy class kept for backward compatibility reasons.
+  * @deprecated use {@link org.apache.jackrabbit.core.persistence.db.JNDIDatabasePersistenceManager}
+  *             instead.
+  */
+public class JNDIDatabasePersistenceManager
+        extends org.apache.jackrabbit.core.persistence.db.JNDIDatabasePersistenceManager {
 }

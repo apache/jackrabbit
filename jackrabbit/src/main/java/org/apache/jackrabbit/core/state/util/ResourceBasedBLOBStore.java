@@ -16,21 +16,11 @@
  */
 package org.apache.jackrabbit.core.state.util;
 
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
-
 /**
- * <code>ResourceBasedBLOBStore</code> extends the <code>BLOBStore</code>
- * interface with the method {@link #getResource(String)}
+ * Legacy interface kept for backward compatibility reasons.
+ * @deprecated use {@link org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore}
+ *             instead.
  */
-public interface ResourceBasedBLOBStore extends BLOBStore {
-    /**
-     * Retrieves the BLOB data with the specified id as a permanent resource.
-     *
-     * @param blobId identifier of the BLOB data as returned by
-     *               {@link #createId(PropertyId, int)}
-     * @return a resource representing the BLOB data
-     * @throws Exception if an error occured
-     */
-    FileSystemResource getResource(String blobId) throws Exception;
+public interface ResourceBasedBLOBStore
+        extends org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore {
 }

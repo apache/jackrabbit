@@ -16,19 +16,17 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import junit.framework.TestCase;
+import org.xml.sax.InputSource;
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import junit.framework.TestCase;
-
-import org.xml.sax.InputSource;
 
 /**
  * Test cases for repository configuration handling.
@@ -191,7 +189,7 @@ public class RepositoryConfigTest extends TestCase {
         VersioningConfig vc = config.getVersioningConfig();
         assertEquals(new File(REPOSITORY_HOME, "version"), vc.getHomeDir());
         assertEquals(
-                "org.apache.jackrabbit.core.state.obj.ObjectPersistenceManager",
+                "org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager",
                 vc.getPersistenceManagerConfig().getClassName());
         assertTrue(vc.getPersistenceManagerConfig().getParameters().isEmpty());
     }
