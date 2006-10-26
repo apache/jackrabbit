@@ -97,7 +97,7 @@ public class PropertyReference extends ChildItemReference implements ChildProper
      */
     protected ItemState doResolve()
             throws NoSuchItemStateException, ItemStateException {
-        return isf.createPropertyState(getId(), getParent());
+        return isf.createPropertyState(getId(), parent);
     }
 
     //-------------------------------------------------< ChildPropertyEntry >---
