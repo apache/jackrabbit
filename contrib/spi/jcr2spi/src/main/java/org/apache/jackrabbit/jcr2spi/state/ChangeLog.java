@@ -238,28 +238,6 @@ public class ChangeLog {
 
     //-----------------------------< Inform ChangeLog about Success/Failure >---
     /**
-     * After the states have actually been persisted, update their
-     * internal states and notify listeners.
-     */
-    public void persisted() {
-        Iterator iter = modifiedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            state.setStatus(Status.EXISTING);
-        }
-        iter = deletedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            state.setStatus(Status.REMOVED);
-        }
-        iter = addedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
-            state.setStatus(Status.EXISTING);
-        }
-    }
-
-    /**
      * Reset this change log, removing all members inside the
      * maps we built.
      */

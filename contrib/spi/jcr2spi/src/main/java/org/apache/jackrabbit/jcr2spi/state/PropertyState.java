@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
@@ -44,7 +46,12 @@ public class PropertyState extends ItemState {
     /**
      * The name of this property state.
      */
-    private QName name;
+    private final QName name;
+
+    /**
+     * Property definition
+     */
+    private final QPropertyDefinition def;
 
     /**
      * The internal value(s)
@@ -57,11 +64,6 @@ public class PropertyState extends ItemState {
     private int type;
 
     /**
-     * Property definition
-     */
-    private QPropertyDefinition def;
-
-    /**
      * Constructs a new property state that is initially connected to an
      * overlayed state.
      *
@@ -71,8 +73,11 @@ public class PropertyState extends ItemState {
      * @param idFactory
      */
     protected PropertyState(PropertyState overlayedState, NodeState parent,
-                            int initialStatus, IdFactory idFactory) {
-        super(overlayedState, parent, initialStatus, idFactory);
+                            int initialStatus, ItemStateFactory isf, IdFactory idFactory) {
+        super(overlayedState, parent, initialStatus, isf, idFactory);
+        this.name = overlayedState.name;
+        this.def = overlayedState.def;
+
         reset();
     }
 
@@ -86,13 +91,12 @@ public class PropertyState extends ItemState {
      * @param idFactory
      */
     protected PropertyState(QName name, NodeState parent, QPropertyDefinition definition,
-                            int initialStatus, IdFactory idFactory, boolean isWorkspaceState) {
-        super(parent, initialStatus, idFactory, isWorkspaceState);
+                            int initialStatus, ItemStateFactory isf, IdFactory idFactory,
+                            boolean isWorkspaceState) {
+        super(parent, initialStatus, isf, idFactory, isWorkspaceState);
         this.name = name;
         this.def = definition;
-
-        type = PropertyType.UNDEFINED;
-        values = QValue.EMPTY_ARRAY;
+        init(PropertyType.UNDEFINED, QValue.EMPTY_ARRAY);
     }
 
     /**
@@ -101,6 +105,18 @@ public class PropertyState extends ItemState {
      * @param values
      */
     void init(int type, QValue[] values) {
+        // free old values as necessary
+        QValue[] oldValues = this.values;
+        if (oldValues != null) {
+            for (int i = 0; i < oldValues.length; i++) {
+                QValue old = oldValues[i];
+                if (old != null) {
+                    // make sure temporarily allocated data is discarded
+                    // before overwriting it (see QValue#discard())
+                    old.discard();
+                }
+            }
+        }
         this.type = type;
         this.values = (values == null) ? QValue.EMPTY_ARRAY : values;
     }
@@ -141,7 +157,7 @@ public class PropertyState extends ItemState {
      * @return the id of this property.
      */
     public PropertyId getPropertyId() {
-        return idFactory.createPropertyId(parent.getNodeId(), getQName());
+        return idFactory.createPropertyId(getParent().getNodeId(), getQName());
     }
 
     /**
@@ -205,27 +221,30 @@ public class PropertyState extends ItemState {
 
     //----------------------------------------------------< Workspace State >---
     /**
-     * @see ItemState#refresh(Event, ChangeLog)
+     * @see ItemState#refresh(Event)
      */
-    synchronized void refresh(Event event, ChangeLog changeLog) {
+    synchronized void refresh(Event event) {
         checkIsWorkspaceState();
 
         switch (event.getType()) {
             case Event.PROPERTY_REMOVED:
-                if (event.getItemId().equals(getId())) {
-                    setStatus(Status.REMOVED);
-                } else {
-                    // ILLEGAL
-                    throw new IllegalArgumentException("EventId " + event.getItemId() + " does not match id of this property state.");
-                }
+                setStatus(Status.REMOVED);
                 break;
 
             case Event.PROPERTY_CHANGED:
-                if (event.getItemId().equals(getId())) {
+                // TODO: improve.
+                /* retrieve property value and type from server even if
+                   changes were issued from this session (changelog).
+                   this is currently the only way to update the workspace
+                   state, which is not connected to its overlaying session-state.
+                */
+                try {
+                    PropertyState tmp = isf.createPropertyState(getPropertyId(), parent);
+                    init(tmp.getType(), tmp.getValues());
                     setStatus(Status.MODIFIED);
-                } else {
-                    // ILLEGAL
-                    throw new IllegalArgumentException("EventId " + event.getItemId() + " does not match id of this property state.");
+                } catch (ItemStateException e) {
+                    // TODO: rather throw?
+                    log.error("Internal Error", e);
                 }
                 break;
 
@@ -240,6 +259,29 @@ public class PropertyState extends ItemState {
     //----------------------------------------------------< Session - State >---
     /**
      * {@inheritDoc}
+     * @see ItemState#refresh(Collection,ChangeLog)
+     */
+    void refresh(Collection events, ChangeLog changeLog) throws IllegalStateException {
+        for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
+            ItemState modState = (ItemState) it.next();
+            if (modState == this) {
+                /*
+                NOTE: overlayedState must be existing, otherwise save was not
+                possible on prop. Similarly a property can only be the changelog
+                target, if it was modified. removal, add must be persisted on parent.
+                */
+                // push changes to overlayed state and reset status
+                ((PropertyState) overlayedState).init(getType(), getValues());
+                setStatus(Status.EXISTING);
+                // parent must not be informed, since all properties that
+                // affect the parent state (uuid, mixins) are protected.
+                removeEvent(events, modState);
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
      * @see ItemState#reset()
      */
     synchronized void reset() {
@@ -247,16 +289,9 @@ public class PropertyState extends ItemState {
         if (overlayedState != null) {
             synchronized (overlayedState) {
                 PropertyState wspState = (PropertyState) overlayedState;
-                name = wspState.name;
-                type = wspState.type;
-                def = wspState.def;
-                values = wspState.values;
+                init(wspState.type, wspState.values);
             }
         }
-    }
-
-    synchronized void merge() {
-        reset();
     }
 
     /**
@@ -265,13 +300,12 @@ public class PropertyState extends ItemState {
      */
     void remove() {
         checkIsSessionState();
-
         if (getStatus() == Status.NEW) {
             setStatus(Status.REMOVED);
         } else {
             setStatus(Status.EXISTING_REMOVED);
         }
-        parent.propertyStateRemoved(this);
+        getParent().propertyStateRemoved(this);
     }
 
     /**
@@ -297,18 +331,18 @@ public class PropertyState extends ItemState {
                 // set removed
                 setStatus(Status.REMOVED);
                 // and remove from parent
-                parent.propertyStateRemoved(this);
+                getParent().propertyStateRemoved(this);
                 affectedItemStates.add(this);
                 break;
             case Status.REMOVED:
                 // shouldn't happen actually, because a 'removed' state is not
                 // accessible anymore
                 log.warn("trying to revert an already removed property state");
-                parent.propertyStateRemoved(this);
+                getParent().propertyStateRemoved(this);
                 break;
             case Status.STALE_DESTROYED:
                 // overlayed does not exist anymore
-                parent.propertyStateRemoved(this);
+                getParent().propertyStateRemoved(this);
                 affectedItemStates.add(this);
                 break;
         }
@@ -316,9 +350,9 @@ public class PropertyState extends ItemState {
 
     /**
      * @inheritDoc
-     * @see ItemState#collectTransientStates(Set)
+     * @see ItemState#collectTransientStates(Collection)
      */
-    void collectTransientStates(Set transientStates) {
+    void collectTransientStates(Collection transientStates) {
         checkIsSessionState();
 
         switch (getStatus()) {
@@ -346,12 +380,11 @@ public class PropertyState extends ItemState {
      */
     void setValues(QValue[] values, int type) throws RepositoryException {
         checkIsSessionState();
-
         // make sure the arguements are consistent and do not violate the
         // given property definition.
         validate(values, type, this.def);
-        this.values = values;
-        this.type = type;
+        init(type, values);
+
         markModified();
     }
 

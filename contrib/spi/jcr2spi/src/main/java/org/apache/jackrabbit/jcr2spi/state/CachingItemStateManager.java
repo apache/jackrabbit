@@ -21,12 +21,9 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.commons.collections.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Collections;
@@ -51,14 +48,9 @@ public class CachingItemStateManager implements ItemStateManager {
     private final ItemStateFactory isf;
 
     /**
-     * Maps a String uuid to a {@link NodeState}.
+     * Cache
      */
-    private final Map uuid2NodeState;
-
-    /**
-     * Map of recently used <code>ItemState</code>.
-     */
-    private final Map recentlyUsed;
+    private final ItemStateCache cache;
 
     /**
      * The root node of the workspace or <code>null</code> if it has not been
@@ -72,12 +64,6 @@ public class CachingItemStateManager implements ItemStateManager {
     private final IdFactory idFactory;
 
     /**
-     * An {@link ItemStateLifeCycleListener} to maintain the LRU and UUID
-     * reference cache.
-     */
-    private final ItemStateLifeCycleListener lifeCycleListener;
-
-    /**
      * Creates a new <code>CachingItemStateManager</code>.
      *
      * @param isf       the item state factory to create item state instances.
@@ -86,9 +72,9 @@ public class CachingItemStateManager implements ItemStateManager {
     public CachingItemStateManager(ItemStateFactory isf, IdFactory idFactory) {
         this.isf = isf;
         this.idFactory = idFactory;
-        this.uuid2NodeState = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
-        this.recentlyUsed = new LRUMap(1000); // TODO: make configurable
-        this.lifeCycleListener = new ISLifeCycleListener();
+        this.cache = new ItemStateCache();
+
+        isf.setCache(cache);
     }
 
     //---------------------------------------------------< ItemStateManager >---
@@ -96,10 +82,6 @@ public class CachingItemStateManager implements ItemStateManager {
     public NodeState getRootState() throws ItemStateException {
         if (root == null) {
             root = isf.createRootState(this);
-            if (root.getUUID() != null) {
-                uuid2NodeState.put(root.getUUID(), root);
-            }
-            root.addListener(lifeCycleListener);
         }
         return root;
     }
@@ -131,16 +113,16 @@ public class CachingItemStateManager implements ItemStateManager {
      * @param nodeState
      */
     public Collection getReferingStates(NodeState nodeState) throws ItemStateException {
-        if (hasReferingStates(nodeState)) {
-            Set refStates = new HashSet();
-            Iterator it =  nodeState.getNodeReferences().iterator();
-            while (it.hasNext()) {
-                PropertyId pId = (PropertyId) it.next();
-                refStates.add(getItemState(pId));
-            }
-            return Collections.unmodifiableCollection(refStates);
-        } else {
+        Set refStates = new HashSet();
+        Iterator it =  nodeState.getNodeReferences().iterator();
+        while (it.hasNext()) {
+            PropertyId pId = (PropertyId) it.next();
+            refStates.add(getItemState(pId));
+        }
+        if (refStates.isEmpty()) {
             return Collections.EMPTY_SET;
+        } else {
+            return Collections.unmodifiableCollection(refStates);
         }
     }
 
@@ -151,7 +133,7 @@ public class CachingItemStateManager implements ItemStateManager {
      */
     public boolean hasReferingStates(NodeState nodeState) {
         NodeReferences nr = nodeState.getNodeReferences();
-        return nr != null && !nr.isEmpty();
+        return !nr.isEmpty();
     }
 
     //------------------------------< internal >--------------------------------
@@ -161,16 +143,6 @@ public class CachingItemStateManager implements ItemStateManager {
      */
     protected final ItemStateFactory getItemStateFactory() {
         return isf;
-    }
-
-    /**
-     * Called whenever an item state is accessed. Calling this method will update
-     * the LRU map which keeps track of most recently used item states.
-     *
-     * @param state the touched state.
-     */
-    protected void touch(ItemState state) {
-        recentlyUsed.put(state, state);
     }
 
     /**
@@ -189,13 +161,11 @@ public class CachingItemStateManager implements ItemStateManager {
         NodeState nodeState;
         // resolve uuid part
         if (uuid != null) {
-            nodeState = (NodeState) uuid2NodeState.get(uuid);
+            nodeState = cache.getNodeState(uuid);
             if (nodeState == null) {
-                // state identified by the uuid is not yet cached -> get from ISM
+                // state identified by the uuid is not yet cached -> get from ISF
                 NodeId refId = (path == null) ? (NodeId) id : idFactory.createNodeId(uuid);
                 nodeState = isf.createNodeState(refId, this);
-                nodeState.addListener(lifeCycleListener);
-                uuid2NodeState.put(uuid, nodeState);
             }
         } else {
             // start with root node if no uuid part in id
@@ -206,7 +176,6 @@ public class CachingItemStateManager implements ItemStateManager {
         if (path != null) {
             s = PathResolver.resolve(nodeState, path);
         }
-        touch(s);
         return s;
     }
 
@@ -222,7 +191,7 @@ public class CachingItemStateManager implements ItemStateManager {
         ItemState state;
         // resolve UUID
         if (id.getUUID() != null) {
-            state = (ItemState) uuid2NodeState.get(id.getUUID());
+            state = cache.getNodeState(id.getUUID());
             if (state == null) {
                 // not cached
                 return null;
@@ -248,23 +217,5 @@ public class CachingItemStateManager implements ItemStateManager {
         }
 
         return state;
-    }
-
-    //-----------------------------------------< ItemStateLifeCycleListener >---
-
-    private class ISLifeCycleListener implements ItemStateLifeCycleListener {
-
-        public void statusChanged(ItemState state, int previousStatus) {
-            if (state.getStatus() == Status.REMOVED ||
-                state.getStatus() == Status.STALE_DESTROYED) {
-                recentlyUsed.remove(state);
-                if (state.isNode()) {
-                    NodeState nodeState = (NodeState) state;
-                    if (nodeState.getUUID() != null) {
-                        uuid2NodeState.remove(nodeState.getUUID());
-                    }
-                }
-            }
-        }
     }
 }

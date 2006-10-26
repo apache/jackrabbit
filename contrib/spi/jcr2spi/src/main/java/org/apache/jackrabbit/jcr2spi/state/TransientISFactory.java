@@ -35,16 +35,14 @@ final class TransientISFactory implements TransientItemStateFactory {
     private final IdFactory idFactory;
     private final ItemStateManager parent;
 
-    private ItemStateLifeCycleListener listener;
+    private ItemStateCache cache;
+    private ItemStateCreationListener listener;
 
     TransientISFactory(IdFactory idFactory, ItemStateManager parent) {
         this.idFactory = idFactory;
         this.parent = parent;
     }
 
-    void setListener(ItemStateLifeCycleListener listener) {
-        this.listener = listener;
-    }
     //------------------------------------------< TransientItemStateFactory >---
     /**
      * @inheritDoc
@@ -55,10 +53,15 @@ final class TransientISFactory implements TransientItemStateFactory {
                                         QNodeDefinition definition) {
         NodeState nodeState = new NodeState(name, uuid, parent, nodetypeName,
             definition, Status.NEW, this, idFactory, false);
-        // get a notification when this item state is saved or invalidated
+
+        // notify listeners when this item state is saved or invalidated
+        nodeState.addListener(cache);
         nodeState.addListener(listener);
-        // notify listener that a node state has been created
-        listener.statusChanged(nodeState, Status.NEW);
+
+        // notify listeners that a node state has been created
+        cache.created(nodeState);
+        listener.created(nodeState);
+
         return nodeState;
     }
 
@@ -68,12 +71,25 @@ final class TransientISFactory implements TransientItemStateFactory {
      */
     public PropertyState createNewPropertyState(QName name, NodeState parent, QPropertyDefinition definition) {
         PropertyState propState = new PropertyState(name, parent,
-            definition, Status.NEW, idFactory, false);
+            definition, Status.NEW, this, idFactory, false);
+
         // get a notification when this item state is saved or invalidated
+        propState.addListener(cache);
         propState.addListener(listener);
-        // notify listener that a property state has been created
-        listener.statusChanged(propState, Status.NEW);
+
+        // notify listeners that a property state has been created
+        cache.created(propState);
+        listener.created(propState);
+
         return propState;
+    }
+
+    /**
+     * @inheritDoc
+     * @see TransientItemStateFactory#setListener(ItemStateCreationListener)
+     */
+    public void setListener(ItemStateCreationListener listener) {
+        this.listener = listener;
     }
 
     //---------------------------------------------------< ItemStateFactory >---
@@ -84,9 +100,10 @@ final class TransientISFactory implements TransientItemStateFactory {
     public NodeState createRootState(ItemStateManager ism) throws ItemStateException {
         // retrieve state to overlay
         NodeState overlayedState = (NodeState) parent.getRootState();
-        NodeState nodeState = new NodeState(overlayedState, null,
-            Status.EXISTING, this, idFactory);
-        nodeState.addListener(listener);
+        NodeState nodeState = new NodeState(overlayedState, null, Status.EXISTING, this, idFactory);
+
+        nodeState.addListener(cache);
+        cache.created(nodeState);
         return nodeState;
     }
 
@@ -96,16 +113,22 @@ final class TransientISFactory implements TransientItemStateFactory {
      */
     public NodeState createNodeState(NodeId nodeId, ItemStateManager ism)
         throws NoSuchItemStateException, ItemStateException {
-        // retrieve state to overlay
-        NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
-        NodeState overlayedParent = overlayedState.getParent();
-        NodeState parentState = null;
-        if (overlayedParent != null) {
-            parentState = (NodeState) ism.getItemState(overlayedParent.getId());
+
+        NodeState nodeState = cache.getNodeState(nodeId);
+        if (nodeState == null) {
+            // retrieve state to overlay
+            NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
+            NodeState overlayedParent = overlayedState.getParent();
+
+            NodeState parentState = null;
+            if (overlayedParent != null) {
+                parentState = (NodeState) ism.getItemState(overlayedParent.getId());
+            }
+
+            nodeState = new NodeState(overlayedState, parentState, Status.EXISTING, this, idFactory);
+            nodeState.addListener(cache);
+            cache.created(nodeState);
         }
-        NodeState nodeState = new NodeState(overlayedState, parentState,
-            Status.EXISTING, this, idFactory);
-        nodeState.addListener(listener);
         return nodeState;
     }
 
@@ -115,11 +138,16 @@ final class TransientISFactory implements TransientItemStateFactory {
      */
     public NodeState createNodeState(NodeId nodeId, NodeState parentState)
         throws NoSuchItemStateException, ItemStateException {
-        // retrieve state to overlay
-        NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
-        NodeState nodeState = new NodeState(overlayedState, parentState,
-            Status.EXISTING, this, idFactory);
-        nodeState.addListener(listener);
+
+        NodeState nodeState = cache.getNodeState(nodeId);
+        if (nodeState == null) {
+            // retrieve state to overlay
+            NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
+            nodeState = new NodeState(overlayedState, parentState, Status.EXISTING, this, idFactory);
+
+            nodeState.addListener(cache);
+            cache.created(nodeState);
+        }
         return nodeState;
     }
 
@@ -130,11 +158,24 @@ final class TransientISFactory implements TransientItemStateFactory {
     public PropertyState createPropertyState(PropertyId propertyId,
                                              NodeState parentState)
         throws NoSuchItemStateException, ItemStateException {
-        // retrieve state to overlay
-        PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
-        PropertyState propState = new PropertyState(overlayedState, parentState,
-            Status.EXISTING, idFactory);
-        propState.addListener(listener);
+
+        PropertyState propState = cache.getPropertyState(propertyId);
+        if (propState == null) {
+            // retrieve state to overlay
+            PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
+            propState = new PropertyState(overlayedState, parentState, Status.EXISTING, this, idFactory);
+
+            propState.addListener(cache);
+            cache.created(propState);
+        }
         return propState;
+    }
+
+    /**
+     * @inheritDoc
+     * @see ItemStateFactory#setCache(ItemStateCache)
+     */
+    public void setCache(ItemStateCache cache) {
+        this.cache = cache;
     }
 }

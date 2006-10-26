@@ -22,10 +22,13 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.value.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.ItemExistsException;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
 import java.util.Collection;
 
@@ -38,10 +41,10 @@ import java.util.Collection;
  * item states. While all other modifications can be invoked on the item state
  * instances itself, creating a new node state is done using
  * {@link #createNewNodeState(QName, String, QName, QNodeDefinition, NodeState)}
- * and {@link #createNewPropertyState(QName, NodeState, QPropertyDefinition)}.
+ * and {@link #createNewPropertyState(QName, NodeState, QPropertyDefinition, QValue[], int)}.
  */
 public class TransientItemStateManager extends CachingItemStateManager
-        implements ItemStateLifeCycleListener {
+    implements ItemStateCreationListener {
 
     /**
      * Logger instance for this class.
@@ -55,21 +58,19 @@ public class TransientItemStateManager extends CachingItemStateManager
     private final ChangeLog changeLog;
 
     /**
-     * The parent item state manager, which return item states that are then
-     * overlayed by transient item states created by this TransientItemStateManager.
-     */
-    private final ItemStateManager parent;
-
-    /**
      * The root node state or <code>null</code> if it hasn't been retrieved yet.
      */
     private NodeState rootNodeState;
 
+    /**
+     *
+     * @param idFactory
+     * @param parent
+     */
     TransientItemStateManager(IdFactory idFactory, ItemStateManager parent) {
         super(new TransientISFactory(idFactory, parent), idFactory);
-        this.parent = parent;
         this.changeLog = new ChangeLog(null);
-        ((TransientISFactory) getTransientFactory()).setListener(this);
+        getTransientFactory().setListener(this);
     }
 
 
@@ -128,9 +129,8 @@ public class TransientItemStateManager extends CachingItemStateManager
                                  QNodeDefinition definition, NodeState parent) {
         NodeState nodeState = getTransientFactory().createNewNodeState(nodeName, uuid, parent, nodeTypeName, definition);
 
-        parent.addChildNodeState(nodeState, uuid);
+        parent.addChildNodeState(nodeState);
         changeLog.added(nodeState);
-        nodeState.addListener(this);
         return nodeState;
     }
 
@@ -143,15 +143,20 @@ public class TransientItemStateManager extends CachingItemStateManager
      * @param definition
      * @return the created property state.
      * @throws ItemExistsException if <code>parent</code> already has a property
-     *                             with the given name.
+     * with the given name.
+     * @throws ConstraintViolationException
+     * @throws RepositoryException
      */
-    PropertyState createNewPropertyState(QName propName, NodeState parent, QPropertyDefinition definition)
-            throws ItemExistsException {
+    PropertyState createNewPropertyState(QName propName, NodeState parent,
+                                         QPropertyDefinition definition,
+                                         QValue[] values, int propertyType)
+        throws ItemExistsException, ConstraintViolationException, RepositoryException {
         PropertyState propState = getTransientFactory().createNewPropertyState(propName, parent, definition);
+        // NOTE: callers must make sure, the property type is not 'undefined'
+        propState.init(propertyType, values);
 
         parent.addPropertyState(propState);
         changeLog.added(propState);
-        propState.addListener(this);
         return propState;
     }
 
@@ -186,7 +191,6 @@ public class TransientItemStateManager extends CachingItemStateManager
     public NodeState getRootState() throws ItemStateException {
         if (rootNodeState == null) {
             rootNodeState = getItemStateFactory().createRootState(this);
-            rootNodeState.addListener(this);
         }
         return rootNodeState;
     }
@@ -246,6 +250,11 @@ public class TransientItemStateManager extends CachingItemStateManager
      * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
      */
     public void statusChanged(ItemState state, int previousStatus) {
+        if (!Status.isValidStatusChange(previousStatus, state.getStatus(), false)) {
+            log.error("ItemState has invalid status: " + state.getStatus());
+            return;
+        }
+
         // TODO: depending on status of state adapt change log
         // e.g. a revert on states will reset the status from
         // 'existing modified' to 'existing'.
@@ -301,12 +310,20 @@ public class TransientItemStateManager extends CachingItemStateManager
             case Status.STALE_MODIFIED:
                 // state is now stale. keep in modified. wait until refreshed
                 break;
-            case Status.NEW:
-                // new state has been created
-                changeLog.added(state);
-                break;
             default:
                 log.error("ItemState has invalid status: " + state.getStatus());
+        }
+    }
+
+    //-----------------------------------------< ItemStateCreationListener >---
+
+    /**
+     * @see ItemStateCreationListener#created(ItemState)
+     */
+    public void created(ItemState state) {
+        // new state has been created
+        if (state.getStatus() == Status.NEW) {
+            changeLog.added(state);
         }
     }
 }

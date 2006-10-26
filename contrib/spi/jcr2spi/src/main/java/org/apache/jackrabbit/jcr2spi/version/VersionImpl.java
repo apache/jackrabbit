@@ -31,7 +31,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.Node;
 import javax.jcr.Item;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Calendar;
 
 /**
@@ -108,6 +110,19 @@ public class VersionImpl extends NodeImpl implements Version {
         }
         return false;
     }
+
+    //-----------------------------------------------------------< ItemImpl >---
+    /**
+     *
+     * @throws UnsupportedRepositoryOperationException
+     * @throws ConstraintViolationException
+     * @throws RepositoryException
+     */
+    protected void checkIsWritable() throws UnsupportedRepositoryOperationException, ConstraintViolationException, RepositoryException {
+        super.checkIsWritable();
+        throw new ConstraintViolationException("Version is protected");
+    }
+
     //------------------------------------------------------------< private >---
     /**
      *

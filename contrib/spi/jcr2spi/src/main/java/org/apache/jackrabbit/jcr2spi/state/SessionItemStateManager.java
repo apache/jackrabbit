@@ -18,8 +18,6 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.HierarchyManagerImpl;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildPropertyEntry;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
@@ -56,6 +54,7 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.value.QValue;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
@@ -74,14 +73,13 @@ import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.lock.LockException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.io.InputStream;
 import java.io.IOException;
 
@@ -126,7 +124,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         // create hierarchy manager
         hierMgr = new HierarchyManagerImpl(this, nsResolver);
-
     }
 
     /**
@@ -193,8 +190,33 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @param nodeState
      */
     public Collection getReferingStates(NodeState nodeState) throws ItemStateException {
-        // TODO: not correct. ItemManager later on expectes overlaying state
-        return workspaceItemStateMgr.getReferingStates(nodeState);
+        NodeState wspState = (NodeState) nodeState.getWorkspaceState();
+        if (wspState == null) {
+            // new state => unable to determine references
+            return Collections.EMPTY_SET;
+        }
+
+        Collection rs = workspaceItemStateMgr.getReferingStates(wspState);
+        if (rs.isEmpty()) {
+            return rs;
+        } else {
+            // retrieve session-propertystates
+            Set refStates = new HashSet();
+            for (Iterator it =  rs.iterator(); it.hasNext();) {
+                PropertyState wState = (PropertyState) it.next();
+                ItemState sState = wState.getSessionState();
+                if (sState == null) {
+                    // overlaying state has not been build up to now
+                   sState = getItemState(wState.getPropertyId());
+                }
+                // add property state to list of refering states unless it has
+                // be removed in the transient layer.
+                if (sState.isValid()) {
+                   refStates.add(sState);
+                }
+            }
+            return Collections.unmodifiableCollection(refStates);
+        }
     }
 
     /**
@@ -206,7 +228,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @param nodeState
      */
     public boolean hasReferingStates(NodeState nodeState) {
-        return workspaceItemStateMgr.hasReferingStates(nodeState);
+        try {
+            return !getReferingStates(nodeState).isEmpty();
+        } catch (ItemStateException e) {
+            log.warn("Internal error", e);
+            return false;
+        }
     }
 
     //------------------------------------------< UpdatableItemStateManager >---
@@ -367,33 +394,20 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private void collectTransientStates(ItemState state, ChangeLog changeLog, boolean throwOnStale)
             throws StaleItemStateException, ItemStateException {
         // fail-fast test: check status of this item's state
-        switch (state.getStatus()) {
-            case Status.NEW:
-                {
-                    String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": cannot save a new item.";
-                    log.debug(msg);
-                    throw new ItemStateException(msg);
-                }
+        if (state.getStatus() == Status.NEW) {
+            String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": cannot save a new item.";
+            log.debug(msg);
+            throw new ItemStateException(msg);
         }
-        if (throwOnStale) {
-            switch (state.getStatus()) {
-                case Status.STALE_MODIFIED:
-                    {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": the item cannot be saved because it has been modified externally.";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
-                    }
-                case Status.STALE_DESTROYED:
-                    {
-                        String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": the item cannot be saved because it has been deleted externally.";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
-                    }
-            }
+
+        if (throwOnStale && Status.isStale(state.getStatus())) {
+            String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": the item cannot be saved because it has been modified/removed externally.";
+            log.debug(msg);
+            throw new StaleItemStateException(msg);
         }
 
         // Set of transient states that should be persisted
-        Set transientStates = new HashSet();
+        Set transientStates = new LinkedHashSet();
         state.collectTransientStates(transientStates);
 
         for (Iterator it = transientStates.iterator(); it.hasNext();) {
@@ -522,23 +536,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      * @inheritDoc
      */
     public void visit(SetMixin operation) throws ConstraintViolationException, AccessDeniedException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        // remember if an existing mixin is being removed.
-        boolean anyRemoved;
-
+        // NOTE: nodestate is only modified upon save of the changes!
         QName[] mixinNames = operation.getMixinNames();
         NodeState nState = operation.getNodeState();
 
-        // mixin-names to be execute on the nodestate (and corresponding property state)
+        // new array of mixinNames to be set on the nodestate (and corresponding property state)
         if (mixinNames != null && mixinNames.length > 0) {
-            // find out if any of the existing mixins is removed
-            List originalMixins = new ArrayList();
-            originalMixins.addAll(Arrays.asList(nState.getMixinTypeNames()));
-            originalMixins.removeAll(Arrays.asList(mixinNames));
-            anyRemoved = originalMixins.size() > 0;
-
-            // update nodestate
-            nState.setMixinTypeNames(mixinNames);
-
             // update/create corresponding property state
             if (nState.hasPropertyName(QName.JCR_MIXINTYPES)) {
                 // execute value of existing property
@@ -559,10 +562,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 addPropertyState(nState, pd.getQName(), pd.getRequiredType(), mixinValue, pd, options);
             }
         } else {
-            anyRemoved = nState.getMixinTypeNames().length > 0;
-            // remove all mixins
-            nState.setMixinTypeNames(null);
-
             // remove the jcr:mixinTypes property state if already present
             if (nState.hasPropertyName(QName.JCR_MIXINTYPES)) {
                 try {
@@ -576,53 +575,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             }
         }
 
-        // make sure, the modification of the mixin set did not left child-item
-        // states defined by the removed mixin type(s)
-        // TODO: the following block should be delegated to 'server' - side.
-        if (anyRemoved) {
-            EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
-            // use temp set to avoid ConcurrentModificationException
-            Iterator childProps = new HashSet(nState.getPropertyEntries()).iterator();
-            while (childProps.hasNext()) {
-                try {
-                    ChildPropertyEntry entry = (ChildPropertyEntry) childProps.next();
-                    PropertyState childState = entry.getPropertyState();
-                    QName declNtName = childState.getDefinition().getDeclaringNodeType();
-                    // check if property has been defined by mixin type (or one of its supertypes)
-                    if (!ent.includesNodeType(declNtName)) {
-                        // the remaining effective node type doesn't include the
-                        // node type that declared this property, it is thus safe
-                        // to remove it
-                        int options = 0; // no checks required
-                        removeItemState(childState, options);
-                    }
-                } catch (ItemStateException e) {
-                    // ignore. cleanup will occure upon save anyway
-                    log.error("Error while removing child node defined by removed mixin: {0}", e.getMessage());
-                }
-            }
-            // use temp array to avoid ConcurrentModificationException
-            Iterator childNodes = new ArrayList(nState.getChildNodeEntries()).iterator();
-            while (childNodes.hasNext()) {
-                try {
-                    ChildNodeEntry entry = (ChildNodeEntry) childNodes.next();
-                    NodeState childState = entry.getNodeState();
-                    // check if node has been defined by mixin type (or one of its supertypes)
-                    QName declNtName = childState.getDefinition().getDeclaringNodeType();
-                    if (!ent.includesNodeType(declNtName)) {
-                        // the remaining effective node type doesn't include the
-                        // node type that declared this child node, it is thus safe
-                        // to remove it.
-                        int options = 0; // NOTE: referencial intergrity checked upon save.
-                        removeItemState(childState, options);
-                    }
-                } catch (ItemStateException e) {
-                    // ignore. cleanup will occure upon save anyway
-                    log.error("Error while removing child property defined by removed mixin: {0}", e.getMessage());
-                }
-            }
-        }
-
+        nState.markModified();
         transientStateMgr.addOperation(operation);
     }
 
@@ -734,13 +687,14 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         validator.checkAddProperty(parent, propertyName, pDef, options);
 
         // create property state
-        PropertyState propState = transientStateMgr.createNewPropertyState(propertyName, parent, pDef);
-
-        // NOTE: callers must make sure, the property type is not 'undefined'
-        propState.setValues(values, propertyType);
+        PropertyState propState = transientStateMgr.createNewPropertyState(propertyName, parent, pDef, values, propertyType);
     }
 
-    private void addNodeState(NodeState parent, QName nodeName, QName nodeTypeName, String uuid, QNodeDefinition definition, int options) throws RepositoryException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchNodeTypeException, ItemExistsException, VersionException {
+    private void addNodeState(NodeState parent, QName nodeName, QName nodeTypeName,
+                              String uuid, QNodeDefinition definition, int options)
+        throws RepositoryException, ConstraintViolationException, AccessDeniedException,
+        UnsupportedRepositoryOperationException, NoSuchNodeTypeException,
+        ItemExistsException, VersionException {
 
         // TODO: improve...
         // check if add node is possible. note, that the options differ if
@@ -773,7 +727,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             QPropertyDefinition pd = pda[i];
             QValue[] autoValue = computeSystemGeneratedPropertyValues(nodeState, pd);
             if (autoValue != null) {
-                int propOptions = 0; // nothing to check
+                int propOptions = ItemStateValidator.CHECK_NONE;
                 // execute 'addProperty' without adding operation.
                 addPropertyState(nodeState, pd.getQName(), pd.getRequiredType(), autoValue, pd, propOptions);
             }
@@ -824,19 +778,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         // assert that the property can be modified.
         validator.checkSetProperty(propState, options);
-
-        // free old values as necessary
-        QValue[] oldValues = propState.getValues();
-        if (oldValues != null) {
-            for (int i = 0; i < oldValues.length; i++) {
-                QValue old = oldValues[i];
-                if (old != null) {
-                    // make sure temporarily allocated data is discarded
-                    // before overwriting it (see QValue#discard())
-                    old.discard();
-                }
-            }
-        }
         propState.setValues(iva, valueType);
     }
 
@@ -874,7 +815,11 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             QName name = def.getQName();
             if (QName.MIX_REFERENCEABLE.equals(declaringNT) && QName.JCR_UUID.equals(name)) {
                 // mix:referenceable node type defines jcr:uuid
-                genValues = new QValue[]{QValue.create(parent.getNodeId().getUUID().toString())};
+                String uuid = parent.getUUID();
+                if (uuid == null) {
+                    uuid = UUID.randomUUID().toString();
+                }
+                genValues = new QValue[]{QValue.create(uuid)};
             } else if (QName.NT_BASE.equals(declaringNT)) {
                 // nt:base node type
                 if (QName.JCR_PRIMARYTYPE.equals(name)) {

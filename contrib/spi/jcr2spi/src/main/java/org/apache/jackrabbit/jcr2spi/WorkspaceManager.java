@@ -545,7 +545,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      *                  of a workspace operation. In that case there are no
      *                  local transient changes.
      */
-    private void onEventReceived(EventIterator events, boolean isLocal, ChangeLog changeLog) {
+    private void onEventReceived(EventIterator events, boolean isLocal,
+                                 ChangeLog changeLog) {
         // notify listener
         // need to copy events into a list because we notify multiple listeners
         List eventList = new ArrayList();
@@ -832,7 +833,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
-            events = service.lock(sessionInfo, nId, operation.isDeep());
+            events = service.lock(sessionInfo, nId, operation.isDeep(), operation.isSessionScoped());
         }
 
         public void visit(LockRefresh operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
