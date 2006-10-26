@@ -101,7 +101,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         Operation op = LockOperation.create(wspNodeState, isDeep, isSessionScoped);
         wspManager.execute(op);
 
-        Lock lock = new LockImpl(new LockState(wspNodeState), lhNode, isSessionScoped);
+        Lock lock = new LockImpl(new LockState(wspNodeState), lhNode);
         return lock;
     }
 
@@ -113,7 +113,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         NodeState wspNodeState = getWorkspaceState(nodeState);
         // execute the operation. Note, that its possible that the session is
         // lock holder and still the lock was never accessed. thus the lockMap
-        // does not provide sufficient and relyable information.
+        // does not provide sufficient and reliable information.
         Operation op = LockRelease.create(wspNodeState);
         wspManager.execute(op);
 
@@ -403,10 +403,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
             // retrieve lock holding node. note that this may fail if the session
             // does not have permission to see this node.
             Item lockHoldingNode = itemManager.getItem(lockHoldingState);
-
-            // TODO: we don;t know if lock is session scoped -> set flag to false
-            // TODO: ev. add 'isSessionScoped' to RepositoryService lock-call.
-            LockImpl l = new LockImpl(lstate, (Node)lockHoldingNode, false);
+            LockImpl l = new LockImpl(lstate, (Node)lockHoldingNode);
 
             if (l.lockState.appliesToNodeState(nodeState)) {
                 return l;
@@ -573,7 +570,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
 
         private final LockState lockState;
         private final Node node;
-        private final boolean isSessionScoped;
 
         /**
          *
@@ -582,11 +578,10 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @param lockHoldingNode the lock holding <code>Node</code> itself.
          * @param lockHoldingNode
          */
-        public LockImpl(LockState lockState, Node lockHoldingNode, boolean isSessionScoped) {
+        public LockImpl(LockState lockState, Node lockHoldingNode) {
             this.lockState = lockState;
 
             this.node = lockHoldingNode;
-            this.isSessionScoped = isSessionScoped;
 
             // store lock in the map
             lockMap.put(lockState.lockHoldingState, this);
@@ -631,7 +626,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @see Lock#isSessionScoped()
          */
         public boolean isSessionScoped() {
-            return isSessionScoped;
+            return getLockInfo().isSessionScoped();
         }
 
         /**
