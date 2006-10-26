@@ -19,6 +19,7 @@ import org.apache.jackrabbit.webdav.lock.LockDiscovery;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.lock.Scope;
+import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,8 @@ public class LockInfoImpl implements LockInfo {
         Iterator it = activeLocks.iterator();
         while (it.hasNext()) {
             ActiveLock l = (ActiveLock) it.next();
-            if (l.getType() == Type.WRITE && l.getScope() == Scope.EXCLUSIVE) {
+            Scope sc = l.getScope();
+            if (l.getType() == Type.WRITE && (sc == Scope.EXCLUSIVE || sc == ItemResourceConstants.EXCLUSIVE_SESSION)) {
                 if (activeLock != null) {
                     throw new RepositoryException("Node " + nodeId + " contains multiple exclusive write locks.");
                 } else {
@@ -73,5 +75,9 @@ public class LockInfoImpl implements LockInfo {
 
     public boolean isDeep() {
         return activeLock.isDeep();
+    }
+
+    public boolean isSessionScoped() {
+        return activeLock.getScope() == ItemResourceConstants.EXCLUSIVE_SESSION;
     }
 }

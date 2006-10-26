@@ -26,6 +26,7 @@ import org.w3c.dom.Element;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
 import java.lang.reflect.Constructor;
 
@@ -73,6 +74,7 @@ public class ExceptionConverter {
         switch (davExc.getErrorCode()) {
             case DavServletResponse.SC_NOT_FOUND : return new ItemNotFoundException(msg);
             case DavServletResponse.SC_LOCKED : return new LockException(msg);
+            case DavServletResponse.SC_METHOD_NOT_ALLOWED : return new ConstraintViolationException(msg);
             default: return new RepositoryException(msg);
         }
     }

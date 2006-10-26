@@ -48,6 +48,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
 
     private final NodeId id;
     private final QName qName;
+    private final int index;
 
     private QName primaryNodeTypeName = null;
     private QName[] mixinNodeTypeNames = new QName[0];
@@ -85,6 +86,12 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
             qName = (Path.ROOT_ELEMENT == el) ? QName.ROOT : el.getName();
         }
 
+        DavProperty indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
+        if (indexProp != null && indexProp.getValue() != null) {
+            index = Integer.parseInt(indexProp.getValue().toString());
+        } else {
+            index = Path.INDEX_DEFAULT;
+        }
 
         // retrieve properties
         try {
@@ -127,6 +134,10 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     //-----------------------------------------------------------< NodeInfo >---
     public NodeId getId() {
         return id;
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     public QName getNodetype() {

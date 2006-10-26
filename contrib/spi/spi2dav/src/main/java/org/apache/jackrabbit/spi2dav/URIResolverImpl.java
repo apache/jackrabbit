@@ -125,7 +125,7 @@ class URIResolverImpl implements URIResolver {
                     // append uri of parent node, that is already cached
                     uriBuffer.append(cache.getUri(uuidId));
                 } else {
-                    // request locate-by-uuid report to build the uri
+                    // try to request locate-by-uuid report to build the uri
                     ReportInfo rInfo = new ReportInfo(LocateByUuidReport.LOCATE_BY_UUID_REPORT);
                     rInfo.setContentElement(DomUtil.hrefToXml(uuid, domFactory));
 
@@ -181,13 +181,7 @@ class URIResolverImpl implements URIResolver {
     NodeId buildNodeId(NodeId parentId, MultiStatusResponse response,
                        String workspaceName) throws RepositoryException {
         IdURICache cache = getCache(workspaceName);
-        if (cache.containsUri(response.getHref())) {
-            ItemId id = cache.getItemId(response.getHref());
-            if (id.denotesNode()) {
-                return (NodeId) id;
-            }
-        }
-
+        
         NodeId nodeId;
         DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
 
@@ -249,21 +243,16 @@ class URIResolverImpl implements URIResolver {
      * @inheritDoc
      */
     public Path getQPath(String uri, SessionInfo sessionInfo) throws RepositoryException {
-        String repoUri = getRepositoryUri();
-        String wspUri = getWorkspaceUri(sessionInfo.getWorkspaceName());
+        String rootUri = getRootItemUri(sessionInfo.getWorkspaceName());
         String jcrPath;
-        if (uri.startsWith(wspUri)) {
-            jcrPath = uri.substring(wspUri.length());
-        } else if (uri.startsWith(repoUri)) {
-            jcrPath = uri.substring(repoUri.length());
-            // then cut workspace name
-            jcrPath = jcrPath.substring(jcrPath.indexOf('/', 1));
+        if (uri.startsWith(rootUri)) {
+            jcrPath = uri.substring(rootUri.length());
         } else {
             // todo: probably rather an error?
             jcrPath = uri;
         }
         try {
-            return PathFormat.parse(jcrPath, nsResolver);
+            return PathFormat.parse(Text.unescape(jcrPath), nsResolver);
         } catch (MalformedPathException e) {
             throw new RepositoryException();
         }
