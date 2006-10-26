@@ -22,7 +22,6 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.observation.EventType;
@@ -46,13 +45,18 @@ public class EventImpl implements Event, ObservationConstants {
 
     private final Element eventElement;
     private final int type;
-    private final ItemId itemId;
-    private final NodeId parentId;
+
+    private final SessionInfo sessionInfo;
+    private final URIResolver uriResolver;
+
+    private final String href;
     private final Path qPath;
 
     public EventImpl(Element eventElement, URIResolver uriResolver,
                      SessionInfo sessionInfo) throws RepositoryException, DavException {
         this.eventElement = eventElement;
+        this.uriResolver = uriResolver;
+        this.sessionInfo = sessionInfo;
 
         Element typeEl = DomUtil.getChildElement(eventElement, XML_EVENTTYPE, NAMESPACE);
         EventType[] et = DefaultEventType.createFromXml(typeEl);
@@ -61,16 +65,8 @@ public class EventImpl implements Event, ObservationConstants {
         }
         type = getSpiEventType(SubscriptionImpl.getJcrEventType(et[0]));
 
-        String href = DomUtil.getChildTextTrim(eventElement, DavConstants.XML_HREF, DavConstants.NAMESPACE);
-        if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
-            itemId = uriResolver.getNodeId(href, sessionInfo);
-            String parentHref = Text.getRelativeParent(href, 1, true);
-            parentId = uriResolver.getNodeId(parentHref, sessionInfo);
-        } else {
-            itemId = uriResolver.getPropertyId(href, sessionInfo);
-            parentId = ((PropertyId)itemId).getParentId();
-        }
-        qPath = uriResolver.getQPath(Text.unescape(href), sessionInfo);
+        href = DomUtil.getChildTextTrim(eventElement, DavConstants.XML_HREF, DavConstants.NAMESPACE);
+        qPath = uriResolver.getQPath(href, sessionInfo);
     }
 
     public int getType() {
@@ -82,15 +78,34 @@ public class EventImpl implements Event, ObservationConstants {
     }
 
     public ItemId getItemId() {
-        return itemId;
+        try {
+            if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
+                return uriResolver.getNodeId(href, sessionInfo);
+            } else {
+                return uriResolver.getPropertyId(href, sessionInfo);
+            }
+        } catch (RepositoryException e) {
+            // should never occur
+            log.error("Internal error, while building id of Event.", e);
+            // TODO: check
+            throw new IllegalStateException();
+        }
     }
 
     public NodeId getParentId() {
-        return parentId;
+        try {
+            String parentHref = Text.getRelativeParent(href, 1, true);
+            return uriResolver.getNodeId(parentHref, sessionInfo);
+        } catch (RepositoryException e) {
+            // should never occur
+            log.error("Internal error, while building parentId of Event.", e);
+            // TODO: check
+            throw new IllegalStateException();
+        }
     }
 
     public String getUUID() {
-        return itemId.getUUID();
+        return getItemId().getUUID();
     }
 
     public QName getPrimaryNodeTypeName() {

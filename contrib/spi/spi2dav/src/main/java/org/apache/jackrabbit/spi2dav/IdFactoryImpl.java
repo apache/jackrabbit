@@ -123,7 +123,7 @@ public class IdFactoryImpl implements IdFactory {
 
         boolean equals(ItemId other) {
             return (uuid == null) ? other.getUUID() == null : uuid.equals(other.getUUID())
-                && (path == null) ? other.getPath() == null : path.equals(other.getPath());
+                && ((path == null) ? other.getPath() == null : path.equals(other.getPath()));
         }
 
         /**

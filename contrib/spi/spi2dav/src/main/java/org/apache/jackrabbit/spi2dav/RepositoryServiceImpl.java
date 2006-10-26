@@ -906,12 +906,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#lock(SessionInfo, NodeId, boolean)
+     * @see RepositoryService#lock(SessionInfo, NodeId, boolean, boolean)
      */
-    public EventIterator lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
+    public EventIterator lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
-            LockMethod method = new LockMethod(uri, Scope.EXCLUSIVE, Type.WRITE,
+            Scope scope = (sessionScoped) ? ItemResourceConstants.EXCLUSIVE_SESSION : Scope.EXCLUSIVE;
+            LockMethod method = new LockMethod(uri, scope, Type.WRITE,
                 sessionInfo.getUserID(), DavConstants.INFINITE_TIMEOUT, deep);
             EventIterator events = execute(method, sessionInfo);
 
