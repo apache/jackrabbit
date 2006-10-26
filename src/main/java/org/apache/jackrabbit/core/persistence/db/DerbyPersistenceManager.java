@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.persistence.db;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.persistence.db.DatabasePersistenceManager;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

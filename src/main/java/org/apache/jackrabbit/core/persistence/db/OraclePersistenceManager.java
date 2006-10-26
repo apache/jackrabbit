@@ -112,6 +112,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
      * <code>MODE_READWRITE</code> constants defined there.
      * @see oracle.sql.BLOB#DURATION_SESSION
      * @see oracle.sql.BLOB#MODE_READWRITE
+     * @noinspection JavadocReference
      */
     public void init(PMContext context) throws Exception {
         super.init(context);
@@ -294,7 +295,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
 
         if (!schemaExists) {
             // read ddl from resources
-            InputStream in = getClass().getResourceAsStream(schema + ".ddl");
+            InputStream in = getSchemaDDL();
             if (in == null) {
                 String msg = "Configuration error: unknown schema '" + schema + "'";
                 log.debug(msg);

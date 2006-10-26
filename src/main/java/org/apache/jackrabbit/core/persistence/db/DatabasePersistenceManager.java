@@ -18,22 +18,21 @@ package org.apache.jackrabbit.core.persistence.db;
 
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.persistence.AbstractPersistenceManager;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
+import org.apache.jackrabbit.core.persistence.AbstractPersistenceManager;
+import org.apache.jackrabbit.core.persistence.PMContext;
+import org.apache.jackrabbit.core.persistence.util.BLOBStore;
+import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
+import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.persistence.db.SimpleDbPersistenceManager;
-import org.apache.jackrabbit.core.persistence.util.BLOBStore;
-import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
-import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.util.Text;
@@ -43,19 +42,19 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.FilterInputStream;
-import java.io.ByteArrayInputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.DatabaseMetaData;
 
 /**
  * Abstract base class for database persistence managers. This class
@@ -951,7 +950,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
         if (!schemaExists) {
             // read ddl from resources
-            InputStream in = getClass().getResourceAsStream(schema + ".ddl");
+            InputStream in = getSchemaDDL();
             if (in == null) {
                 String msg = "Configuration error: unknown schema '" + schema + "'";
                 log.debug(msg);
@@ -979,6 +978,14 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 closeStatement(stmt);
             }
         }
+    }
+
+    /**
+     * Returns an input stream to the schema DDL resource.
+     * @return an input stream to the schema DDL resource.
+     */
+    protected InputStream getSchemaDDL() {
+        return getClass().getResourceAsStream(schema + ".ddl");
     }
 
     //--------------------------------------------------------< inner classes >

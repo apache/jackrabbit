@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.state.db;
 
+import java.io.InputStream;
+
 /**
  * Legacy class kept for backward compatibility reasons.
   * @deprecated use {@link org.apache.jackrabbit.core.persistence.db.OraclePersistenceManager}
@@ -23,4 +25,14 @@ package org.apache.jackrabbit.core.state.db;
   */
 public class OraclePersistenceManager
         extends org.apache.jackrabbit.core.persistence.db.OraclePersistenceManager {
+
+    /**
+     * {@inheritDoc}
+     *
+     * Needed to override in order to load the ddl from the new location
+     */
+    protected InputStream getSchemaDDL() {
+        return super.getClass().getResourceAsStream(schema + ".ddl");
+    }
+
 }
