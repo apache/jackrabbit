@@ -16,12 +16,11 @@
  */
 package org.apache.jackrabbit.core.persistence.db;
 
+import org.apache.jackrabbit.core.persistence.util.Serializer;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-
-import org.apache.jackrabbit.core.persistence.util.Serializer;
-import org.apache.jackrabbit.core.persistence.db.DatabasePersistenceManager;
 
 /**
  * <code>SimpleDbPersistenceManager</code> is a generic JDBC-based

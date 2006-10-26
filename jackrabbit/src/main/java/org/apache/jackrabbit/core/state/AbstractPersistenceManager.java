@@ -21,6 +21,7 @@ package org.apache.jackrabbit.core.state;
  * @deprecated use {@link org.apache.jackrabbit.core.persistence.AbstractPersistenceManager}
  *             instead.
  */
-public abstract class AbstractPersistenceManager extends org.apache.jackrabbit.core.persistence.AbstractPersistenceManager {
+public abstract class AbstractPersistenceManager
+        extends org.apache.jackrabbit.core.persistence.AbstractPersistenceManager {
 
 }
