@@ -16,14 +16,11 @@
  */
 package org.apache.jackrabbit.core.persistence.db;
 
-import org.apache.jackrabbit.core.persistence.db.DatabasePersistenceManager;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * Database persistence manager that uses JNDI to acquire the database
