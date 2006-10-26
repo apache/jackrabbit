@@ -74,7 +74,7 @@ class PathElementReference extends ChildNodeReference implements ChildNodeEntry 
      */
     protected ItemState doResolve()
             throws NoSuchItemStateException, ItemStateException {
-        return isf.createNodeState(getId(), getParent());
+        return isf.createNodeState(getId(), parent);
     }
 
     /**

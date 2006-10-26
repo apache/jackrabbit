@@ -84,7 +84,7 @@ abstract class ChildItemReference {
         this.isf = isf;
         this.target = new WeakReference(child);
     }
-
+    
     /**
      * Resolves this <code>ChildItemReference</code> and returns the target
      * <code>ItemState</code> of this reference. This method may return a
@@ -97,7 +97,7 @@ abstract class ChildItemReference {
      *                                  does not exist.
      * @throws ItemStateException       if an error occurs.
      */
-    public ItemState resolve()
+    protected ItemState resolve()
             throws NoSuchItemStateException, ItemStateException {
         // check if cached
         if (target != null) {
@@ -110,16 +110,6 @@ abstract class ChildItemReference {
         ItemState state = doResolve();
         target = new WeakReference(state);
         return state;
-    }
-
-    /**
-     * Returns the parent <code>NodeState</code>. This is the source of this
-     * <code>ChildItemReference</code>.
-     *
-     * @return the parent <code>NodeState</code>.
-     */
-    public NodeState getParent() {
-        return parent;
     }
 
     /**

@@ -80,7 +80,7 @@ class UUIDReference extends ChildNodeReference implements ChildNodeEntry {
      */
     protected ItemState doResolve()
             throws NoSuchItemStateException, ItemStateException {
-        return isf.createNodeState(childId, getParent());
+        return isf.createNodeState(childId, parent);
     }
 
     /**

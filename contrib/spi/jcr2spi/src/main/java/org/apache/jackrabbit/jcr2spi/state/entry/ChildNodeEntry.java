@@ -53,9 +53,9 @@ public interface ChildNodeEntry {
     /**
      * @return the referenced <code>NodeState</code>.
      * @throws NoSuchItemStateException if the <code>NodeState</code> does not
-     *                                  exist anymore.
-     * @throws ItemStateException       if an error occurs while retrieving the
-     *                                  <code>NodeState</code>.
+     * exist anymore.
+     * @throws ItemStateException If an error occurs while retrieving the
+     * <code>NodeState</code>.
      */
     public NodeState getNodeState()
             throws NoSuchItemStateException, ItemStateException;
@@ -66,7 +66,7 @@ public interface ChildNodeEntry {
      * cached and ready to be returned by {@link #getNodeState()}.
      *
      * @return <code>true</code> if the <code>NodeState</code> is available;
-     *         otherwise <code>false</code>.
+     * otherwise <code>false</code>.
      */
     public boolean isAvailable();
 }
