@@ -10,6 +10,8 @@ NOTE: This list only contains major open issues.
    
    missing implementation for:
    > Clone
+   > Copy between Workspaces
+   > Impersonate
    > RegisterNodeType
    > ReregisterNodeTypes
    > UnregisterNodeType
@@ -33,31 +35,7 @@ NOTE: This list only contains major open issues.
    > check consistency of throw clauses.
 
 
-4) Locking: SessionScoped locks (missing)
-   
-   Up to now, the SPI does not provide the possibility to transport the lock
-   scope. We would argue, that the 'server' does not have to care about the
-   scope of a lock.
-   
-   Therefore Lock.isSessionScoped does not return the proper value unless the
-   Session is the lock holder. 
-
-   If the scope flag is included in RepositoryService.lock the following steps
-   are required:
-
-     > RS.lock      -> additional param
-     > RSImpl.lock
-       iss=fales    -> scope = Scope.EXCLUSIVE
-       iss=true     -> ItemResourceConstants.EXLUSIVE_SESSION
-     > LockInfo     -> additional method
-     > LockInfoImpl -> retrieve scope from lockDiscovery
-     > LockImpl     -> mod. constructor (no iss flag)
-                    -> retrive isSessionScoped flag from the lockInfo
-                    -> remove todo bei getLock() methode, der
-                       zur zeit 'iss' auf false setzt.
-
-
-5) Locking: Handling of LockTokens  (problem)
+4) Locking: Handling of LockTokens  (problem)
 
    There are 2 methods in JSR 170 that deal with handling of LockTokens:
    Session.addLockToken, Session.removeLockToken. The spec defines, that
@@ -75,7 +53,7 @@ NOTE: This list only contains major open issues.
       the given locktoken is still hold by another Session object.
 
 
-6) Observation (problem)
+5) Observation (problem)
 
    - distinction between local and external modifications
    - proper order of events
@@ -88,32 +66,32 @@ NOTE: This list only contains major open issues.
      retrieved from the information sent by jcr-server.
 
 
-7) AddNode (problem)
+6) AddNode (problem)
  
    In order to be able to return the created Node, it would be required to
    now its Id if the operation succeeded, since the Node name passed to the
    call may not identify the new Node in case of same-name-siblings.
 
 
-8) Merge (problem)
+7) Merge (problem)
    
    similar to 8)
    The call defines a NodeIterator as return value.
 
 
-9) Transactions (work in progress)
+8) Transactions (work in progress)
 
    Definition of XASessionInfo must be reviewed.
 
 
-10) Extract interface for ItemState and derived classes
+9) Extract interface for ItemState and derived classes
 
 
-11) AccessManager.canRead() seems useless, since the jcr2spi client is only
+10) AccessManager.canRead() seems useless, since the jcr2spi client is only
     able to access Items it can read anyway. Remove method and calls to it?
 
 
-12) Nodetypes, Namespaces (improve)
+11) Nodetypes, Namespaces (improve)
     
     Should the SPI define means for observation of nodetype/namespace
     changes? 
