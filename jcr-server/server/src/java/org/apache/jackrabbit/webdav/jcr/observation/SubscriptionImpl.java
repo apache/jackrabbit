@@ -378,6 +378,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
 
         public Element toXml(Document document) {
             Element bundle = DomUtil.createElement(document, XML_EVENTBUNDLE, NAMESPACE);
+            DomUtil.setAttribute(bundle, XML_EVENT_IS_LOCAL, NAMESPACE, Boolean.toString(!info.isNoLocal()));
             while (events.hasNext()) {
                 Event event = events.nextEvent();
                 Element eventElem = DomUtil.addChildElement(bundle, XML_EVENT, NAMESPACE);
