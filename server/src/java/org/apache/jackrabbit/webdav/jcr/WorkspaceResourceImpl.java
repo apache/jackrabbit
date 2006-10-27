@@ -51,11 +51,12 @@ import javax.jcr.Item;
 import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.observation.EventListener;
-import java.util.Properties;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
 import java.io.IOException;
 
 /**
@@ -209,7 +210,7 @@ public class WorkspaceResourceImpl extends AbstractResource
         if (ItemResourceConstants.JCR_NAMESPACES.equals(property.getName())) {
             NamespacesProperty nsp = new NamespacesProperty(property);
             try {
-                Properties changes = nsp.getNamespaces();
+                Map changes = new HashMap(nsp.getNamespaces());
                 NamespaceRegistry nsReg = getRepositorySession().getWorkspace().getNamespaceRegistry();
                 String[] registeredPrefixes = nsReg.getPrefixes();
                 for (int i = 0; i < registeredPrefixes.length; i++) {
