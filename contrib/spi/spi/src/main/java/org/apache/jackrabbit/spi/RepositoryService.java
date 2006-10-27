@@ -212,7 +212,7 @@ public interface RepositoryService {
      * Completes the this Batch or discard all the previous modifications.
      *
      * @param batch
-     * @return EventIterator
+     * @return EventBundle
      * @throws PathNotFoundException
      * @throws ItemNotFoundException
      * @throws NoSuchNodeTypeException
@@ -224,7 +224,7 @@ public interface RepositoryService {
      * @throws UnsupportedRepositoryOperationException
      * @throws RepositoryException
      */
-    public EventIterator submit(Batch batch) throws PathNotFoundException, ItemNotFoundException, NoSuchNodeTypeException, ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+    public EventBundle[] submit(Batch batch) throws PathNotFoundException, ItemNotFoundException, NoSuchNodeTypeException, ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     //-------------------------------------------------------------< Import >---
     /**
@@ -244,7 +244,7 @@ public interface RepositoryService {
      * @throws RepositoryException
      * @see javax.jcr.Workspace#importXML(String, java.io.InputStream, int)
      */
-    public EventIterator importXml(SessionInfo sessionInfo, NodeId parentId, InputStream xmlStream, int uuidBehaviour) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+    public EventBundle[] importXml(SessionInfo sessionInfo, NodeId parentId, InputStream xmlStream, int uuidBehaviour) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     //---------------------------------------------------------< Copy, Move >---
     /**
@@ -262,7 +262,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#move(String, String)
      */
-    public EventIterator move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+    public EventBundle[] move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -282,7 +282,7 @@ public interface RepositoryService {
      * @see javax.jcr.Workspace#copy(String, String)
      * @see javax.jcr.Workspace#copy(String, String, String)
      */
-    public EventIterator copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
+    public EventBundle[] copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
 
     //------------------------------------------------------< Update, Clone >---
     /**
@@ -296,7 +296,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#update(String)
      */
-    public EventIterator update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException;
+    public EventBundle[] update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -316,7 +316,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#clone(String, String, String, boolean)
      */
-    public EventIterator clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
+    public EventBundle[] clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException;
 
     //------------------------------------------------------------< Locking >---
 
@@ -344,7 +344,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#lock(boolean, boolean)
      */
-    public EventIterator lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
+    public EventBundle[] lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
 
     /**
      * Explicit refresh of an existing lock. Existing locks should be refreshed
@@ -356,7 +356,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.lock.Lock#refresh()
      */
-    public EventIterator refreshLock(SessionInfo sessionInfo, NodeId nodeId) throws LockException, RepositoryException;
+    public EventBundle[] refreshLock(SessionInfo sessionInfo, NodeId nodeId) throws LockException, RepositoryException;
 
     /**
      * Releases the lock on the given node.<p/>
@@ -372,7 +372,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#unlock()
      */
-    public EventIterator unlock(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
+    public EventBundle[] unlock(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
 
     //---------------------------------------------------------< Versioning >---
     /**
@@ -385,7 +385,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#checkin()
      */
-    public EventIterator checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException;
+    public EventBundle[] checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -395,7 +395,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#checkout()
      */
-    public EventIterator checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
+    public EventBundle[] checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -414,7 +414,7 @@ public interface RepositoryService {
      * @see javax.jcr.Node#restore(javax.jcr.version.Version, String, boolean)
      * @see javax.jcr.Node#restoreByLabel(String, boolean)
      */
-    public EventIterator restore(SessionInfo sessionInfo, NodeId nodeId, NodeId versionId, boolean removeExisting) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException;
+    public EventBundle[] restore(SessionInfo sessionInfo, NodeId nodeId, NodeId versionId, boolean removeExisting) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -428,7 +428,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Workspace#restore(javax.jcr.version.Version[], boolean)
      */
-    public EventIterator restore(SessionInfo sessionInfo, NodeId[] versionIds, boolean removeExisting) throws ItemExistsException, UnsupportedRepositoryOperationException, VersionException, LockException, InvalidItemStateException, RepositoryException;
+    public EventBundle[] restore(SessionInfo sessionInfo, NodeId[] versionIds, boolean removeExisting) throws ItemExistsException, UnsupportedRepositoryOperationException, VersionException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -443,7 +443,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#merge(String, boolean)
      */
-    public EventIterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+    public EventBundle[] merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -461,7 +461,7 @@ public interface RepositoryService {
      * @see javax.jcr.Node#cancelMerge(javax.jcr.version.Version)
      * @see javax.jcr.Node#doneMerge(javax.jcr.version.Version)
      */
-    public EventIterator resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds, NodeId[] predecessorIds) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException;
+    public EventBundle[] resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds, NodeId[] predecessorIds) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -472,7 +472,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.version.VersionHistory#addVersionLabel(String, String, boolean)
      */
-    public EventIterator addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) throws VersionException, RepositoryException;
+    public EventBundle[] addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) throws VersionException, RepositoryException;
 
     /**
      * @param sessionInfo
@@ -483,7 +483,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.version.VersionHistory#removeVersionLabel(String)
      */
-    public EventIterator removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label) throws VersionException, RepositoryException;
+    public EventBundle[] removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label) throws VersionException, RepositoryException;
 
     //----------------------------------------------------------< Searching >---
     /**
@@ -507,41 +507,31 @@ public interface RepositoryService {
     //--------------------------------------------------------< Observation >---
 
     /**
-     * Registers a listener to receive events about changes that were applied
-     * by other sessions. In contrast to {@link javax.jcr.observation.ObservationManager#addEventListener)}
-     * this method does not have a <code>noLocal</code> flag.
-     * </p>
-     * The implementation must ensure that {@link EventIterator}s issued to
-     * potential listeners and the ones returned by the individual methods
-     * are in a proper sequence.
+     * Retrieves the external events that occurred since the last call to this
+     * method or any of the other methods of this interface that return {@link
+     * EventBundle}s (e.g. {@link RepositoryService#submit(Batch)}). When
+     * this method returns without an exception the bundle identfier in
+     * <code>sessionInfo</code> will be updated to reference the most recent
+     * event bundle returned by this call.
      *
-     * @param sessionInfo
-     * @param nodeId
-     * @param listener
-     * @param eventTypes
-     * @param isDeep
-     * @param uuid
-     * @param nodeTypeIds
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.observation.ObservationManager#addEventListener(javax.jcr.observation.EventListener, int, String, boolean, String[], String[], boolean)
+     * @param sessionInfo the session info.
+     * @param timeout     a timeout in milliseconds to wait at most for an
+     *                    external event bundle. If <code>timeout</code> is up
+     *                    and no event occurred meanwhile an empty array is
+     *                    returned.
+     * @return an array of <code>EventBundle</code>s representing the external
+     *         events that occurred.
+     * @throws RepositoryException if an error occurs while retrieving the event
+     *                             bundles or the currently set bundle
+     *                             identifier in <code>sessionInfo</code>
+     *                             references an unknown or outdated event
+     *                             bundle.
+     * @throws UnsupportedRepositoryOperationException
+     *                             if this implementation does not support
+     *                             observation.
      */
-    public void addEventListener(SessionInfo sessionInfo, NodeId nodeId, EventListener listener, int eventTypes, boolean isDeep, String[] uuid, QName[] nodeTypeIds) throws RepositoryException;
-
-    /**
-     * Removes the registration of the specified <code>EventListener</code>. If
-     * the event listener was not registered for the node indentified by <code>nodeId</code>
-     * an <code>RepositoryException</code> is thrown. The same applies if the
-     * registration timeouted before or an other error occurs.<p/>
-     * Please note, that all eventlistener registrations must be removed upon
-     * {@link javax.jcr.Session#logout()} logout) of the <code>Session</code>.
-     *
-     * @param sessionInfo
-     * @param nodeId
-     * @param listener
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.observation.ObservationManager#removeEventListener(javax.jcr.observation.EventListener)
-     */
-    public void removeEventListener(SessionInfo sessionInfo, NodeId nodeId, EventListener listener) throws RepositoryException;
+    public EventBundle[] getEvents(SessionInfo sessionInfo, long timeout)
+            throws RepositoryException, UnsupportedRepositoryOperationException;
 
     //---------------------------------------------------------< Namespaces >---
     /**

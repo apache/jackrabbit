@@ -33,15 +33,20 @@ public class SessionInfoImpl implements SessionInfo {
 
     private final CredentialsWrapper credentials;
     private final String workspaceName;
-    private final SubscriptionManager subscrMgr;
 
     private final Set lockTokens = new HashSet();
 
-    SessionInfoImpl(CredentialsWrapper creds, String workspaceName, SubscriptionManager subscrMgr) {
+    private String lastEventBundleId;
+
+    /**
+     * The subscriptionId if this session info is subscribed to observation
+     * events.
+     */
+    private String subscriptionId;
+
+    SessionInfoImpl(CredentialsWrapper creds, String workspaceName) {
         this.credentials = creds;
         this.workspaceName = workspaceName;
-        this.subscrMgr = subscrMgr;
-        subscrMgr.setSessionInfo(this);
     }
 
     //--------------------------------------------------------< SessionInfo >---
@@ -80,12 +85,45 @@ public class SessionInfoImpl implements SessionInfo {
         lockTokens.remove(lockToken);
     }
 
+    /**
+     * @inheritDoc
+     */
+    public String getLastEventBundleId() {
+        return lastEventBundleId;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public void setLastEventBundleId(String eventBundleId) {
+        lastEventBundleId = eventBundleId;
+    }
+
     //--------------------------------------------------------------------------
+
     CredentialsWrapper getCredentials() {
         return credentials;
     }
 
-    SubscriptionManager getSubscriptionManager() {
-        return subscrMgr;
+    /**
+     * Returns the subscriptionId for this <code>SessionInfo</code> or
+     * <code>null</code> if no subscription is present.
+     *
+     * @return the subscriptionId for this <code>SessionInfo</code>.
+     */
+    String getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    /**
+     * Sets a new subscriptionId for this <code>SessionInfo</code>.
+     *
+     * @param subscriptionId the new subscriptionId.
+     * @return the old subscriptionId or <code>null</code> if there was none.
+     */
+    String setSubscriptionId(String subscriptionId) {
+        String old = this.subscriptionId;
+        this.subscriptionId = subscriptionId;
+        return old;
     }
 }

@@ -25,7 +25,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.EventIterator;
+import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,12 +34,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -152,16 +149,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
 
     //-----------------------< InternalEventListener >--------------------------
 
-    public void onEvent(EventIterator events, boolean isLocal) {
-        List eventList = new ArrayList();
-        while (events.hasNext()) {
-            eventList.add(events.nextEvent());
-        }
-        if (eventList.isEmpty()) {
-            return;
-        }
-        eventList = Collections.unmodifiableList(eventList);
-
+    public void onEvent(EventBundle events) {
         // get active listeners
         Map activeListeners;
         synchronized (subscriptions) {
@@ -171,7 +159,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         for (Iterator it = activeListeners.keySet().iterator(); it.hasNext(); ) {
             EventListener listener = (EventListener) it.next();
             EventFilter filter = (EventFilter) activeListeners.get(listener);
-            FilteredEventIterator eventIter = new FilteredEventIterator(eventList, filter, isLocal);
+            FilteredEventIterator eventIter = new FilteredEventIterator(events, filter);
             if (eventIter.hasNext()) {
                 try {
                     listener.onEvent(eventIter);
@@ -185,14 +173,14 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
     }
 
     /**
-     * Same as {@link #onEvent(EventIterator, boolean)} with the boolean flag
-     * set to <code>true</code>.
+     * Same as {@link #onEvent(EventBundle)} but only used for local changes
+     * with a <code>ChangeLog</code>.
      * 
      * @param events
      * @param changeLog
      */
-    public void onEvent(EventIterator events, ChangeLog changeLog) {
-        onEvent(events, true);
+    public void onEvent(EventBundle events, ChangeLog changeLog) {
+        onEvent(events);
     }
 
     //-------------------------< internal >-------------------------------------

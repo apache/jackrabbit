@@ -38,18 +38,16 @@ public class EventIteratorImpl implements EventIterator {
 
     private final SessionInfo sessionInfo;
     private final URIResolver uriResolver;
-    private ElementIterator bundleIterator;
     private ElementIterator eventElementIterator;
 
     private Event next;
     private long pos;
 
-    public EventIteratorImpl(Element eventDiscoveryElem, URIResolver uriResolver, SessionInfo sessionInfo) {
+    public EventIteratorImpl(Element eventBundleElement, URIResolver uriResolver, SessionInfo sessionInfo) {
 
         this.sessionInfo = sessionInfo;
         this.uriResolver = uriResolver;
-        bundleIterator = DomUtil.getChildren(eventDiscoveryElem, ObservationConstants.XML_EVENTBUNDLE, ObservationConstants.NAMESPACE);;
-        retrieveNextEventIterator();
+        this.eventElementIterator = DomUtil.getChildren(eventBundleElement, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
         retrieveNextEvent();
     }
 
@@ -103,18 +101,6 @@ public class EventIteratorImpl implements EventIterator {
                     log.error("Unexpected error while creating event.", e);
                 }
             }
-
-            if (!eventElementIterator.hasNext()) {
-                retrieveNextEventIterator();
-            }
-        }
-    }
-
-    private void retrieveNextEventIterator() {
-        eventElementIterator = null;
-        if (bundleIterator.hasNext()) {
-            Element bundleElem = bundleIterator.nextElement();
-            eventElementIterator =  DomUtil.getChildren(bundleElem, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
         }
     }
 }

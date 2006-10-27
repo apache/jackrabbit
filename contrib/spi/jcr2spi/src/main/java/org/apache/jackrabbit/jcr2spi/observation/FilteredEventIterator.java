@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.observation;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.apache.jackrabbit.spi.EventBundle;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
@@ -25,7 +26,6 @@ import javax.jcr.observation.EventIterator;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Collection;
 
 /**
  */
@@ -65,17 +65,15 @@ class FilteredEventIterator implements EventIterator {
     /**
      * Creates a new <code>FilteredEventIterator</code>.
      *
-     * @param c      an unmodifiable Collection of {@link org.apache.jackrabbit.spi.Event}s.
+     * @param events the {@link org.apache.jackrabbit.spi.Event}s as a bundle.
      * @param filter only event that pass the filter will be dispatched to the
      *               event listener.
-     * @param isLocal if <code>true</code> these are local events.
      */
-    public FilteredEventIterator(Collection c,
-                                 EventFilter filter,
-                                 boolean isLocal) {
-        actualEvents = c.iterator();
+    public FilteredEventIterator(EventBundle events,
+                                 EventFilter filter) {
+        actualEvents = events.getEvents();
         this.filter = filter;
-        this.isLocal = isLocal;
+        this.isLocal = events.isLocal();
         fetchNext();
     }
 

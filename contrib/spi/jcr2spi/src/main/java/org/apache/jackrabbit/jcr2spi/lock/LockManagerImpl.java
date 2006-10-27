@@ -31,6 +31,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.LockInfo;
+import org.apache.jackrabbit.spi.EventBundle;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -261,7 +262,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         // remove any session scoped locks:
         NodeState[] lhStates = (NodeState[]) lockMap.keySet().toArray(new NodeState[lockMap.size()]);
         for (int i = 0; i < lhStates.length; i++) {
-            NodeState nState = (NodeState) lhStates[i];
+            NodeState nState = lhStates[i];
             LockImpl l = (LockImpl) lockMap.get(nState);
             if (l.isSessionScoped()) {
                 try {
@@ -531,7 +532,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
 
         //------------------------------------------< InternalEventListener >---
-        public void onEvent(EventIterator events, boolean isLocal) {
+        public void onEvent(EventBundle events) {
             if (!isLive) {
                 // since we only monitor the removal of the lock (by means
                 // of deletion of the jcr:lockIsDeep property, we are not interested
@@ -539,8 +540,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 return;
             }
 
-            while (events.hasNext()) {
-                Event ev = events.nextEvent();
+            for (EventIterator it = events.getEvents(); it.hasNext(); ) {
+                Event ev = it.nextEvent();
                 // if the jcr:lockIsDeep property related to this Lock got removed,
                 // we assume that the lock has been released.
                 // TODO: not correct to compare nodeIds
@@ -557,7 +558,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
             }
         }
 
-        public void onEvent(EventIterator events, ChangeLog changeLog) {
+        public void onEvent(EventBundle events, ChangeLog changeLog) {
             // nothing to do. not interested in transient modifications
         }
     }

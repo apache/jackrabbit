@@ -42,6 +42,7 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.EventBundle;
 
 import java.util.Collection;
 import java.util.List;
@@ -158,17 +159,18 @@ public class VersionManagerImpl implements VersionManager {
         // TODO find better solution to build the mergeFailed-collection
         final List failedIds = new ArrayList();
         InternalEventListener mergeFailedCollector = new InternalEventListener() {
-            public void onEvent(EventIterator events, boolean isLocal) {
-                if (isLocal) {
-                    while (events.hasNext()) {
-                        Event ev = events.nextEvent();
+            public void onEvent(EventBundle events) {
+                if (events.isLocal()) {
+                    EventIterator it = events.getEvents();
+                    while (it.hasNext()) {
+                        Event ev = it.nextEvent();
                         if (ev.getType() == Event.PROPERTY_ADDED && QName.JCR_MERGEFAILED.equals(ev.getQPath().getNameElement().getName())) {
                             failedIds.add(ev.getParentId());
                         }
                     }
                 }
             }
-            public void onEvent(EventIterator events, ChangeLog changeLog) {
+            public void onEvent(EventBundle events, ChangeLog changeLog) {
                 // nothing to do. we are not interested in transient modifications
             }
         };
