@@ -30,10 +30,11 @@ import org.w3c.dom.Element;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
 
 /**
  * <code>NamespacesProperty</code>...
@@ -42,19 +43,19 @@ public class NamespacesProperty extends AbstractDavProperty implements ItemResou
 
     private static Logger log = LoggerFactory.getLogger(NamespacesProperty.class);
 
-    private final Properties value = new Properties();
+    private final Map value = new HashMap();
 
     public NamespacesProperty(NamespaceRegistry nsReg) throws RepositoryException {
         super(JCR_NAMESPACES, false);
         if (nsReg != null) {
             String[] prefixes = nsReg.getPrefixes();
             for (int i = 0; i < prefixes.length; i++) {
-                value.setProperty(prefixes[i], nsReg.getURI(prefixes[i]));
+                value.put(prefixes[i], nsReg.getURI(prefixes[i]));
             }
         }
     }
 
-    public NamespacesProperty(Properties namespaces) {
+    public NamespacesProperty(Map namespaces) {
         super(JCR_NAMESPACES, false);
         value.putAll(namespaces);
     }
@@ -78,18 +79,18 @@ public class NamespacesProperty extends AbstractDavProperty implements ItemResou
                     String prefix = DomUtil.getText(pElem, Namespace.EMPTY_NAMESPACE.getPrefix());
                     Element uElem = DomUtil.getChildElement(e, XML_URI, ItemResourceConstants.NAMESPACE);
                     String uri = DomUtil.getText(uElem, Namespace.EMPTY_NAMESPACE.getURI());
-                    value.setProperty(prefix, uri);
+                    value.put(prefix, uri);
                 }
             }
         }
     }
 
-    public Properties getNamespaces() {
-        return value;
+    public Map getNamespaces() {
+        return Collections.unmodifiableMap(value);
     }
 
     public Object getValue() {
-        return value;
+        return Collections.unmodifiableMap(value);
     }
 
     /**
@@ -97,10 +98,10 @@ public class NamespacesProperty extends AbstractDavProperty implements ItemResou
      */
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        Enumeration prefixes = value.propertyNames();
-        while (prefixes.hasMoreElements()) {
-            String prefix = (String)prefixes.nextElement();
-            String uri = value.getProperty(prefix);
+        Iterator prefixes = value.keySet().iterator();
+        while (prefixes.hasNext()) {
+            String prefix = (String) prefixes.next();
+            String uri = (String) value.get(prefix);
             Element nsElem = DomUtil.addChildElement(elem, XML_NAMESPACE, ItemResourceConstants.NAMESPACE);
             DomUtil.addChildElement(nsElem, XML_PREFIX, ItemResourceConstants.NAMESPACE, prefix);
             DomUtil.addChildElement(nsElem, XML_URI, ItemResourceConstants.NAMESPACE, uri);
