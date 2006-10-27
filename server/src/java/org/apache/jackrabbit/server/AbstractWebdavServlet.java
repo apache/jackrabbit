@@ -902,6 +902,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
         String versionHref = ((VersionControlledResource) resource).checkin();
         response.setHeader(DeltaVConstants.HEADER_LOCATION, versionHref);
+        response.setStatus(DavServletResponse.SC_CREATED);
     }
 
     /**
