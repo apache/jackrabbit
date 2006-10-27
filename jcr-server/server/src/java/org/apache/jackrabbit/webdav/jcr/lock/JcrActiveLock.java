@@ -47,7 +47,7 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
      * @param lock
      */
     public JcrActiveLock(Lock lock) {
-        this (lock, false);
+        this (lock, lock.isSessionScoped());
     }
 
     /**
