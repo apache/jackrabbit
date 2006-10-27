@@ -191,10 +191,10 @@ public class NodeState extends ItemState {
 
     private void assertAvailability() {
         // TODO: improve this.
-        if (uuid != null) {
+        if (uuid != null && parent != null) {
             // make sure this state is connected to its childNode-entry
             ChildNodeEntry cne = parent.childNodeEntries.get(uuid);
-            if (!cne.isAvailable()) {
+            if (cne != null && !cne.isAvailable()) {
                 try {
                     cne.getNodeState();
                 } catch (ItemStateException e) {
