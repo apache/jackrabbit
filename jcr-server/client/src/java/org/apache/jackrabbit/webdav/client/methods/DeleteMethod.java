@@ -37,6 +37,6 @@ public class DeleteMethod extends DavMethodBase {
     }
 
     protected boolean isSuccess(int statusCode) {
-        return statusCode == DavServletResponse.SC_OK;
+        return statusCode == DavServletResponse.SC_NO_CONTENT;
     }
 }
