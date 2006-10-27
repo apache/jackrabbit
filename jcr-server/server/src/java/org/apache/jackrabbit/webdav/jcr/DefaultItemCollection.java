@@ -32,6 +32,7 @@ import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.lock.JcrActiveLock;
+import org.apache.jackrabbit.webdav.jcr.lock.SessionScopedLockEntry;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
 import org.apache.jackrabbit.webdav.jcr.version.report.ExportViewReport;
 import org.apache.jackrabbit.webdav.jcr.version.report.LocateCorrespondingNodeReport;
@@ -537,7 +538,6 @@ public class DefaultItemCollection extends AbstractItemResource
                         log.warn("Unable to retrieve lock: no item found at '" + getResourcePath() + "'");
                     } else if (((Node) item).isLocked()) {
                         Lock jcrLock = ((Node) item).getLock();
-                        // TODO: find out whether this lock is session-scoped or not!
                         lock = new JcrActiveLock(jcrLock);
                     }
                 } catch (AccessDeniedException e) {
@@ -580,6 +580,8 @@ public class DefaultItemCollection extends AbstractItemResource
             try {
                 boolean sessionScoped = EXCLUSIVE_SESSION.equals(reqLockInfo.getScope());
                 Lock jcrLock = ((Node)item).lock(reqLockInfo.isDeep(), sessionScoped);
+                // add reference to DAVSession for this lock
+                getSession().addReference(jcrLock.getLockToken());
                 return new JcrActiveLock(jcrLock, sessionScoped);
 
             } catch (RepositoryException e) {
@@ -713,7 +715,7 @@ public class DefaultItemCollection extends AbstractItemResource
         }
         // only custom ordering is allowed
         if (!OrderingConstants.ORDERING_TYPE_CUSTOM.equalsIgnoreCase(orderPatch.getOrderingType())) {
-            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY,"Only DAV:custom ordering type supported.");
+            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Only DAV:custom ordering type supported.");
         }
 
         OrderPatch.Member[] instructions = orderPatch.getOrderInstructions();
@@ -793,8 +795,7 @@ public class DefaultItemCollection extends AbstractItemResource
         try {
             if (exists() && ((Node)item).isNodeType(JcrConstants.MIX_LOCKABLE)) {
                 supportedLock.addEntry(Type.WRITE, Scope.EXCLUSIVE);
-                // TODO: do session-scoped lock properly (including session caching and proper scope discovery)
-                //supportedLock.addEntry(new SessionScopedLockEntry());
+                supportedLock.addEntry(new SessionScopedLockEntry());
             }
         } catch (RepositoryException e) {
             log.warn(e.getMessage());
@@ -855,7 +856,7 @@ public class DefaultItemCollection extends AbstractItemResource
                 Item primaryItem = n.getPrimaryItem();
                 addHrefProperty(JCR_PRIMARYITEM, new Item[] {primaryItem}, true);
             } catch (ItemNotFoundException e) {
-                log.info("No primary item present on this node '" + getResourcePath() + "'");
+                log.debug("No primary item present on this node '" + getResourcePath() + "'");
             } catch (RepositoryException e) {
                 log.error("Error while retrieving primary item: " + e.getMessage());
             }
