@@ -98,10 +98,10 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Collection;
+import java.util.Map;
 import java.io.InputStream;
 
 /**
@@ -149,7 +149,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         cache = createItemStateManager();
 
-        Properties repositoryDescriptors = service.getRepositoryDescriptors();
+        Map repositoryDescriptors = service.getRepositoryDescriptors();
 
         nsRegistry = createNamespaceRegistry(repositoryDescriptors);
         ntRegistry = createNodeTypeRegistry(nsRegistry, repositoryDescriptors);
@@ -263,8 +263,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @return
      * @throws RepositoryException
      */
-    private NamespaceRegistryImpl createNamespaceRegistry(Properties descriptors) throws RepositoryException {
-        boolean level2 = Boolean.valueOf(descriptors.getProperty(Repository.LEVEL_2_SUPPORTED)).booleanValue();
+    private NamespaceRegistryImpl createNamespaceRegistry(Map descriptors) throws RepositoryException {
+        boolean level2 = Boolean.valueOf((String) descriptors.get(Repository.LEVEL_2_SUPPORTED)).booleanValue();
         return new NamespaceRegistryImpl(this, service.getRegisteredNamespaces(sessionInfo), level2);
     }
 
@@ -275,7 +275,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @return
      * @throws RepositoryException
      */
-    private NodeTypeRegistry createNodeTypeRegistry(NamespaceRegistry nsRegistry, Properties descriptors) throws RepositoryException {
+    private NodeTypeRegistry createNodeTypeRegistry(NamespaceRegistry nsRegistry, Map descriptors) throws RepositoryException {
         QNodeDefinition rootNodeDef = service.getNodeDefinition(sessionInfo, service.getRootId(sessionInfo));
         QNodeTypeDefinitionIterator it = service.getNodeTypeDefinitions(sessionInfo);
         List ntDefs = new ArrayList();
@@ -294,8 +294,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @return the background polling thread or <code>null</code> if the underlying
      *         <code>RepositoryService</code> does not support observation.
      */
-    private Thread createChangeFeed(Properties descriptors, int pollingInterval) {
-        String desc = descriptors.getProperty(Repository.OPTION_OBSERVATION_SUPPORTED);
+    private Thread createChangeFeed(Map descriptors, int pollingInterval) {
+        String desc = (String) descriptors.get(Repository.OPTION_OBSERVATION_SUPPORTED);
         Thread t = null;
         if (Boolean.valueOf(desc).booleanValue()) {
             t = new Thread(new ExternalChangePolling(pollingInterval));

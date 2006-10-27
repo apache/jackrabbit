@@ -28,7 +28,7 @@ import javax.jcr.Session;
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
-import java.util.Properties;
+import java.util.Map;
 
 /**
  * <code>RepositoryImpl</code>...
@@ -39,7 +39,7 @@ public class RepositoryImpl implements Repository {
 
     // configuration of the repository
     private final RepositoryConfig config;
-    private final Properties descriptors;
+    private final Map descriptors;
 
     private RepositoryImpl(RepositoryConfig config) throws RepositoryException {
         this.config = config;
@@ -63,7 +63,7 @@ public class RepositoryImpl implements Repository {
      * @see Repository#getDescriptor(String)
      */
     public String getDescriptor(String descriptorKey) {
-	return descriptors.getProperty(descriptorKey);
+	return (String) descriptors.get(descriptorKey);
     }
 
     /**

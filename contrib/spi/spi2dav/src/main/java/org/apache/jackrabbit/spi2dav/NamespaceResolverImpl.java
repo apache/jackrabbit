@@ -22,7 +22,9 @@ import org.apache.jackrabbit.name.AbstractNamespaceResolver;
 import org.apache.jackrabbit.name.NamespaceResolver;
 
 import javax.jcr.NamespaceException;
-import java.util.Properties;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
 
 /**
  * <code>NamespaceResolverImpl</code>...
@@ -33,8 +35,8 @@ class NamespaceResolverImpl extends AbstractNamespaceResolver {
 
     // TODO: TO_BE_FIXED. missing notification and subsequent reloading of namespaces causes this resolver to throw NameException
 
-    private Properties prefixToURI = new Properties();
-    private Properties uriToPrefix = new Properties();
+    private Map prefixToURI = new HashMap();
+    private Map uriToPrefix = new HashMap();
 
     void add(String prefix, String uri) {
         prefixToURI.put(prefix, uri);
@@ -46,10 +48,8 @@ class NamespaceResolverImpl extends AbstractNamespaceResolver {
         uriToPrefix.remove(uri);
     }
 
-    Properties getNamespaces() {
-        Properties namespaces = new Properties();
-        namespaces.putAll(prefixToURI);
-        return namespaces;
+    Map getNamespaces() {
+        return Collections.unmodifiableMap(prefixToURI);
     }
     
     //--------------------------------------------------< NamespaceResolver >---

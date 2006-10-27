@@ -144,7 +144,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 import javax.xml.parsers.ParserConfigurationException;
-import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -152,6 +151,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.io.InputStream;
 import java.io.IOException;
 
@@ -348,7 +348,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getRepositoryDescriptors()
      */
-    public Properties getRepositoryDescriptors() throws RepositoryException {
+    public Map getRepositoryDescriptors() throws RepositoryException {
         ReportInfo info = new ReportInfo(RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT, DavConstants.DEPTH_0);
         ReportMethod method = null;
         try {
@@ -357,7 +357,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             getClient((org.apache.commons.httpclient.Credentials) null).executeMethod(method);
             method.checkSuccess();
             Document doc = method.getResponseBodyAsDocument();
-            Properties descriptors = new Properties();
+            Map descriptors = new HashMap();
             if (doc != null) {
                 Element rootElement = doc.getDocumentElement();
                 ElementIterator nsElems = DomUtil.getChildren(rootElement, ItemResourceConstants.XML_DESCRIPTOR, ItemResourceConstants.NAMESPACE);
@@ -366,7 +366,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     String key = DomUtil.getChildText(elem, ItemResourceConstants.XML_DESCRIPTORKEY, ItemResourceConstants.NAMESPACE);
                     String descriptor = DomUtil.getChildText(elem, ItemResourceConstants.XML_DESCRIPTORVALUE, ItemResourceConstants.NAMESPACE);
                     if (key != null && descriptor != null) {
-                        descriptors.setProperty(key, descriptor);
+                        descriptors.put(key, descriptor);
                     } else {
                         log.error("Invalid descriptor key / value pair: " + key + " -> " + descriptor);
                     }
@@ -1241,7 +1241,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getRegisteredNamespaces(SessionInfo)
      */
-    public Properties getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException {
+    public Map getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException {
         ReportInfo info = new ReportInfo(RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT, DEPTH_0);
         ReportMethod method = null;
         try {
@@ -1250,7 +1250,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             method.checkSuccess();
 
             Document doc = method.getResponseBodyAsDocument();
-            Properties namespaces = new Properties();
+            Map namespaces = new HashMap();
             if (doc != null) {
                 Element rootElement = doc.getDocumentElement();
                 ElementIterator nsElems = DomUtil.getChildren(rootElement, ItemResourceConstants.XML_NAMESPACE, ItemResourceConstants.NAMESPACE);
@@ -1264,7 +1264,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     }
                     // any other uri must not be null
                     if (uri != null) {
-                        namespaces.setProperty(prefix, uri);
+                        namespaces.put(prefix, uri);
                         // TODO: not correct since nsRegistry is retrieved from each session
                         nsResolver.add(prefix, uri);
                     } else {
@@ -1288,9 +1288,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#registerNamespace(SessionInfo, String, String)
      */
     public void registerNamespace(SessionInfo sessionInfo, String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
-        Properties namespaces = nsResolver.getNamespaces();
+        Map namespaces = new HashMap(nsResolver.getNamespaces());
         // add new pair that needs to be registered.
-        namespaces.setProperty(prefix, uri);
+        namespaces.put(prefix, uri);
 
         internalSetNamespaces(sessionInfo, namespaces);
         // adjust internal mappings:
@@ -1303,7 +1303,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      */
     public void unregisterNamespace(SessionInfo sessionInfo, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
         String prefix = nsResolver.getPrefix(uri);
-        Properties namespaces = nsResolver.getNamespaces();
+        Map namespaces = new HashMap(nsResolver.getNamespaces());
         // remove pair that needs to be unregistered
         namespaces.remove(prefix);
 
@@ -1322,7 +1322,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    private void internalSetNamespaces(SessionInfo sessionInfo, Properties namespaces) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+    private void internalSetNamespaces(SessionInfo sessionInfo, Map namespaces) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
         DavPropertySet setProperties = new DavPropertySet();
         setProperties.add(new NamespacesProperty(namespaces));
 

@@ -30,9 +30,9 @@ import javax.jcr.NamespaceException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
 import java.util.HashMap;
-import java.util.Properties;
-import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Iterator;
 
 /**
  * <code>NamespaceRegistryImpl</code>...
@@ -72,7 +72,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     private final boolean level2Repository;
 
-    public NamespaceRegistryImpl(NamespaceStorage storage, Properties nsValues, boolean level2Repository) {
+    public NamespaceRegistryImpl(NamespaceStorage storage, Map nsValues, boolean level2Repository) {
         super(true); // enable listener support
         resolver = new CachingNamespaceResolver(this, 1000);
         this.storage = storage;
@@ -80,12 +80,12 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         load(nsValues);
     }
 
-    private void load(Properties nsValues) {
-        Enumeration prefixes = nsValues.propertyNames();
-        while (prefixes.hasMoreElements()) {
-            String prefix = (String) prefixes.nextElement();
+    private void load(Map nsValues) {
+        Iterator prefixes = nsValues.keySet().iterator();
+        while (prefixes.hasNext()) {
+            String prefix = (String) prefixes.next();
             if (!prefixToURI.containsKey(prefix)) {
-                String uri = nsValues.getProperty(prefix);
+                String uri = (String) nsValues.get(prefix);
                 prefixToURI.put(prefix, uri);
                 uriToPrefix.put(uri, prefix);
             }

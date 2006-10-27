@@ -37,7 +37,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.Node;
 import javax.jcr.LoginException;
-import java.util.Properties;
+import java.util.Map;
 import java.io.InputStream;
 
 /**
@@ -59,7 +59,7 @@ public interface RepositoryService {
      * @see javax.jcr.Repository#getDescriptorKeys()
      * @see javax.jcr.Repository#getDescriptor(String)
      */
-    public Properties getRepositoryDescriptors() throws RepositoryException;
+    public Map getRepositoryDescriptors() throws RepositoryException;
 
     //-----------------------------------< SessionInfo creation and release >---
     /**
@@ -535,7 +535,8 @@ public interface RepositoryService {
 
     //---------------------------------------------------------< Namespaces >---
     /**
-     * Retrieve all registered namespaces.
+     * Retrieve all registered namespaces. The namespace to prefix mapping is
+     * done using the prefix as key and the namespace as value in the Map.
      *
      * @param sessionInfo
      * @return
@@ -546,7 +547,7 @@ public interface RepositoryService {
      * @see javax.jcr.NamespaceRegistry#getPrefix(String)
      * @see javax.jcr.NamespaceRegistry#getURI(String)
      */
-    public Properties getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException;
+    public Map getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException;
 
     /**
      * Register a new namespace with the given prefix and uri
