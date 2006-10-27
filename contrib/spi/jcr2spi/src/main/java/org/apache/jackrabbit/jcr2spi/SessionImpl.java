@@ -140,7 +140,7 @@ public class SessionImpl implements Session, ManagerProvider {
         nsMappings = new LocalNamespaceMappings(workspace.getNamespaceRegistryImpl());
 
         // build nodetype manager
-        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), getNamespaceResolver(), getValueFactory());
+        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), getNamespaceResolver(), internalGetValueFactory());
 
         validator = new ItemStateValidator(workspace.getNodeTypeRegistry(), this);
 
@@ -364,6 +364,19 @@ public class SessionImpl implements Session, ManagerProvider {
         // must throw UnsupportedRepositoryOperationException if writing is
         // not supported
         checkSupportedOption(Repository.LEVEL_2_SUPPORTED);
+        return internalGetValueFactory();
+    }
+
+    /**
+     * Same as {@link #getValueFactory()} but omits the check, if this repository
+     * is really level 2 compliant. Therefore, this method may be used for
+     * internal functionality only, that require creation and conversion of
+     * JCR values.
+     *
+     * @return
+     * @throws RepositoryException
+     */
+    ValueFactory internalGetValueFactory() throws RepositoryException {
         return config.getValueFactory();
     }
 

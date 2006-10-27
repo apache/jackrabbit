@@ -273,7 +273,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Value getValue() throws ValueFormatException, RepositoryException {
         QValue value = getQValue();
-        return ValueFormat.getJCRValue(value, session.getNamespaceResolver(), session.getValueFactory());
+        return ValueFormat.getJCRValue(value, session.getNamespaceResolver(), session.internalGetValueFactory());
     }
 
     /**
@@ -283,7 +283,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         QValue[] qValues = getQValues();
         Value[] values = new Value[qValues.length];
         for (int i = 0; i < qValues.length; i++) {
-            values[i] = ValueFormat.getJCRValue(qValues[i], session.getNamespaceResolver(), session.getValueFactory());
+            values[i] = ValueFormat.getJCRValue(qValues[i], session.getNamespaceResolver(), session.internalGetValueFactory());
         }
         return values;
     }
@@ -377,7 +377,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 length = value.getLength();
                 break;
             case PropertyType.NAME:
-                Value jcrValue = ValueFormat.getJCRValue(value, session.getNamespaceResolver(), session.getValueFactory());
+                Value jcrValue = ValueFormat.getJCRValue(value, session.getNamespaceResolver(), session.internalGetValueFactory());
                 length = jcrValue.getString().length();
                 break;
         }
