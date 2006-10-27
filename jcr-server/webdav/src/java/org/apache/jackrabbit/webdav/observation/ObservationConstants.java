@@ -61,6 +61,7 @@ public interface ObservationConstants {
 
     public static final String XML_EVENTDISCOVERY = "eventdiscovery";
     public static final String XML_EVENTBUNDLE = "eventbundle";
+    public static final String XML_EVENT_IS_LOCAL = "islocal";
     public static final String XML_EVENT = "event";
     public static final String XML_EVENTUSERID = "eventuserid";
 
