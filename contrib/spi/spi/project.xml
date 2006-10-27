@@ -22,7 +22,7 @@
     <extend>${basedir}/../project.xml</extend>
     <artifactId>jackrabbit-spi</artifactId>
     <name>Service Provider Interface (SPI)</name>
-    <package>org.apache.jackrabbit.spi.*</package>
+    <package>org.apache.jackrabbit.spi</package>
 
     <!-- ====================================================================== -->
     <!-- D E P E N D E N C I E S                                                -->

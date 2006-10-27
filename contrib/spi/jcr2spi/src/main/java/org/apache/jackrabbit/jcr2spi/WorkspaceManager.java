@@ -56,25 +56,22 @@ import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
-import org.apache.jackrabbit.util.IteratorHelper;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.EventListener;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinitionIterator;
-import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.Batch;
+import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.value.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -114,6 +111,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceManager.class);
 
+    /**
+     * TODO: make configurable
+     */
+    private static final int EXTERNAL_EVENT_POLLING_INTERVAL = 3 * 1000;
+
     private final RepositoryService service;
     private final SessionInfo sessionInfo;
 
@@ -123,11 +125,17 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final NodeTypeRegistry ntRegistry;
 
     /**
-     * This is the event listener that listens on the repository service
-     * for external changes. If <code>null</code> then the underlying repository
-     * service does not support observation.
+     * Monitor object to synchronize the external feed thread with client
+     * threads that call {@link #execute(Operation)} or {@link
+     * #execute(ChangeLog)}.
      */
-    private final EventListener externalChangeListener;
+    private final Object updateMonitor = new Object();
+
+    /**
+     * This is the event polling for external changes. If <code>null</code>
+     * then the underlying repository service does not support observation.
+     */
+    private final Thread externalChangeFeed;
 
     /**
      * List of event listener that are set on this WorkspaceManager to get
@@ -145,7 +153,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         nsRegistry = createNamespaceRegistry(repositoryDescriptors);
         ntRegistry = createNodeTypeRegistry(nsRegistry, repositoryDescriptors);
-        externalChangeListener = createChangeListener(repositoryDescriptors);
+        externalChangeFeed = createChangeFeed(repositoryDescriptors, EXTERNAL_EVENT_POLLING_INTERVAL);
     }
 
     public NamespaceRegistryImpl getNamespaceRegistryImpl() {
@@ -278,30 +286,24 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     /**
-     * Creates and registers an EventListener on the RepositoryService that
-     * listens for external changes.
+     * Creates a background thread which polls for external changes on the
+     * RepositoryService.
      *
-     * @param descriptors the repository descriptors
-     * @return the listener or <code>null</code> if the underlying
+     * @param descriptors the repository descriptors.
+     * @param pollingInterval the polling interval in milliseconds.
+     * @return the background polling thread or <code>null</code> if the underlying
      *         <code>RepositoryService</code> does not support observation.
-     * @throws RepositoryException if an error occurs while registering the
-     *                             event listener.
      */
-    private EventListener createChangeListener(Properties descriptors) throws RepositoryException {
+    private Thread createChangeFeed(Properties descriptors, int pollingInterval) {
         String desc = descriptors.getProperty(Repository.OPTION_OBSERVATION_SUPPORTED);
-        EventListener l = null;
+        Thread t = null;
         if (Boolean.valueOf(desc).booleanValue()) {
-            l = new EventListener() {
-                public void onEvent(EventIterator events) {
-                    // external change
-                    onEventReceived(events, false, null);
-                }
-            };
-            // register for all non-local events
-            service.addEventListener(sessionInfo, service.getRootId(sessionInfo),
-                l, Event.ALL_TYPES, true, null, null);
+            t = new Thread(new ExternalChangePolling(pollingInterval));
+            t.setName("External Change Polling");
+            t.setDaemon(true);
+            t.start();
         }
-        return l;
+        return t;
     }
 
     //---------------------------------------------------< ItemStateManager >---
@@ -366,7 +368,9 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @see UpdatableItemStateManager#execute(Operation)
      */
     public void execute(Operation operation) throws RepositoryException {
-        new OperationVisitorImpl(sessionInfo).execute(operation);
+        synchronized (updateMonitor) {
+            new OperationVisitorImpl(sessionInfo).execute(operation);
+        }
     }
 
     /**
@@ -376,15 +380,18 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @throws RepositoryException
      */
     public void execute(ChangeLog changes) throws RepositoryException {
-        new OperationVisitorImpl(sessionInfo).execute(changes);
+        synchronized (updateMonitor) {
+            new OperationVisitorImpl(sessionInfo).execute(changes);
+        }
     }
 
     public void dispose() {
-        if (externalChangeListener != null) {
+        if (externalChangeFeed != null) {
+            externalChangeFeed.interrupt();
             try {
-                service.removeEventListener(sessionInfo, service.getRootId(sessionInfo), externalChangeListener);
-            } catch (RepositoryException e) {
-                log.warn("Exception while disposing workspace manager: " + e);
+                externalChangeFeed.join();
+            } catch (InterruptedException e) {
+                log.warn("Interrupted while waiting for external change thread to terminate.");
             }
         }
         try {
@@ -537,6 +544,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * </ul>
      *
      * @param events    the events generated by the repository service as a
+     *                  response to the executed operation(s).
      * @param changeLog the local <code>ChangeLog</code> which contains the
      *                  affected transient <code>ItemState</code>s and the
      *                  relevant {@link Operation}s that lead to the
@@ -545,27 +553,21 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      *                  of a workspace operation. In that case there are no
      *                  local transient changes.
      */
-    private void onEventReceived(EventIterator events, boolean isLocal,
-                                 ChangeLog changeLog) {
+    private void onEventReceived(EventBundle[] events, ChangeLog changeLog) {
         // notify listener
-        // need to copy events into a list because we notify multiple listeners
-        List eventList = new ArrayList();
-        while (events.hasNext()) {
-            Event e = events.nextEvent();
-            eventList.add(e);
-        }
-        if (eventList.isEmpty()) {
-            return;
-        }
-
         InternalEventListener[] lstnrs = (InternalEventListener[]) listeners.toArray(new InternalEventListener[listeners.size()]);
-        if (changeLog == null) {
-            for (int i = 0; i < lstnrs.length; i++) {
-                lstnrs[i].onEvent(new EventIteratorImpl(eventList), isLocal);
-            }
-        } else {
-            for (int i = 0; i < lstnrs.length; i++) {
-                lstnrs[i].onEvent(new EventIteratorImpl(eventList), changeLog);
+        for (int i = 0; i < events.length; i++) {
+            EventBundle bundle = events[i];
+            if (bundle.isLocal() && changeLog != null) {
+                // local change from batch operation
+                for (int j = 0; j < lstnrs.length; j++) {
+                    lstnrs[j].onEvent(bundle, changeLog);
+                }
+            } else {
+                // external change or workspace operation
+                for (int j = 0; j < lstnrs.length; j++) {
+                    lstnrs[j].onEvent(bundle);
+                }
             }
         }
     }
@@ -582,7 +584,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         private final SessionInfo sessionInfo;
 
         private Batch batch;
-        private EventIterator events;
+        private EventBundle[] events;
 
         private OperationVisitorImpl(SessionInfo sessionInfo) {
             this.sessionInfo = sessionInfo;
@@ -604,7 +606,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             } finally {
                 if (batch != null) {
                     events = service.submit(batch);
-                    onEventReceived(events, true, changeLog);
+                    onEventReceived(events, changeLog);
                     // reset batch field
                     batch = null;
                 }
@@ -625,7 +627,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                     // a workspace operation is like an external change: there
                     // is no changelog to persist. but still the events must
                     // be reported as local changes.
-                    onEventReceived(events, true, null);
+                    onEventReceived(events, null);
                 }
             }
         }
@@ -782,8 +784,20 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             events = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
-            // todo: improve.... inform operation about modified items (build mergefailed iterator)
-            operation.getEventListener().onEvent(events, true);
+            List externalEventBundles = new ArrayList();
+            for (int i = 0; i < events.length; i++) {
+                if (events[i].isLocal()) {
+                    // todo: improve.... inform operation about modified items (build mergefailed iterator)
+                    operation.getEventListener().onEvent(events[i]);
+                } else {
+                    // otherwise dispatch as external event
+                    externalEventBundles.add(events[i]);
+                }
+            }
+            if (!externalEventBundles.isEmpty()) {
+                EventBundle[] bundles = (EventBundle[]) externalEventBundles.toArray(new EventBundle[externalEventBundles.size()]);
+                onEventReceived(bundles, null);
+            }
         }
 
         public void visit(ResolveMergeConflict operation) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
@@ -859,14 +873,45 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
     }
 
-    private static final class EventIteratorImpl extends IteratorHelper implements EventIterator {
+    /**
+     * Implements the polling for external changes on the repository service.
+     */
+    private final class ExternalChangePolling implements Runnable {
 
-        public EventIteratorImpl(Collection c) {
-            super(c);
+        /**
+         * The polling interval in milliseconds.
+         */
+        private final int pollingInterval;
+
+        /**
+         * Creates a new external change polling with a given polling interval.
+         *
+         * @param pollingInterval the interval in milliseconds.
+         */
+        private ExternalChangePolling(int pollingInterval) {
+            this.pollingInterval = pollingInterval;
         }
 
-        public Event nextEvent() {
-            return (Event) next();
+        public void run() {
+            while (!Thread.interrupted()) {
+                try {
+                    Thread.sleep(pollingInterval);
+                } catch (InterruptedException e) {
+                    // terminate
+                    break;
+                }
+                try {
+                    synchronized (updateMonitor) {
+                        EventBundle[] bundles = service.getEvents(sessionInfo, 0);
+                        if (bundles.length > 0) {
+                            onEventReceived(bundles, null);
+                        }
+                    }
+                } catch (RepositoryException e) {
+                    log.warn("Exception while retrieving event bundles: " + e);
+                    log.debug("Dump:", e);
+                }
+            }
         }
     }
 }

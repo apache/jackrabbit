@@ -16,13 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi.observation;
 
-import org.apache.jackrabbit.spi.EventIterator;
+import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 
 /**
- * <code>InternalEventListener</code> is similar to {@link org.apache.jackrabbit.spi.EventListener}
- * but adds information about the location of the events. Whether they are local
- * or external.
+ * <code>InternalEventListener</code> receives changes as a result of a local
+ * or an external modification.
  */
 public interface InternalEventListener {
 
@@ -30,9 +29,8 @@ public interface InternalEventListener {
      * Gets called when an event occurs.
      *
      * @param events the event set received.
-     * @param isLocal <code>true</code> if these are local changes.
      */
-    public void onEvent(EventIterator events, boolean isLocal);
+    public void onEvent(EventBundle events);
 
-    public void onEvent(EventIterator events, ChangeLog changeLog);
+    public void onEvent(EventBundle events, ChangeLog changeLog);
 }
