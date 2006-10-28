@@ -16,11 +16,14 @@
  */
 package org.apache.jackrabbit.core.state.obj;
 
+import org.apache.jackrabbit.core.state.PersistenceManager;
+
 /**
  * Legacy class kept for backward compatibility reasons.
  * @deprecated use {@link org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager}
  *             instead.
  */
 public class ObjectPersistenceManager
-        extends org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager {
+        extends org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager
+        implements PersistenceManager {
 }
