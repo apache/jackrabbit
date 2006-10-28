@@ -16,11 +16,14 @@
  */
 package org.apache.jackrabbit.core.state.mem;
 
+import org.apache.jackrabbit.core.state.PersistenceManager;
+
 /**
  * Legacy class kept for backward compatibility reasons.
  * @deprecated use {@link org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager}
  *             instead.
  */
 public class InMemPersistenceManager
-        extends org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager {
+        extends org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager
+        implements PersistenceManager {
 }

@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.state.db;
 
+import org.apache.jackrabbit.core.state.PersistenceManager;
+
 import java.io.InputStream;
 
 /**
@@ -24,7 +26,8 @@ import java.io.InputStream;
  *             instead.
  */
 public abstract class DatabasePersistenceManager
-        extends org.apache.jackrabbit.core.persistence.db.DatabasePersistenceManager {
+        extends org.apache.jackrabbit.core.persistence.db.DatabasePersistenceManager
+        implements PersistenceManager {
 
     /**
      * {@inheritDoc}
