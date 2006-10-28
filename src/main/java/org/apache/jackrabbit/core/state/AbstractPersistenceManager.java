@@ -22,6 +22,7 @@ package org.apache.jackrabbit.core.state;
  *             instead.
  */
 public abstract class AbstractPersistenceManager
-        extends org.apache.jackrabbit.core.persistence.AbstractPersistenceManager {
+        extends org.apache.jackrabbit.core.persistence.AbstractPersistenceManager
+        implements PersistenceManager {
 
 }
