@@ -19,11 +19,9 @@ package org.apache.jackrabbit.test.api;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
+import org.xml.sax.helpers.DefaultHandler;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.InvalidSerializedDataException;
@@ -37,6 +35,10 @@ import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -122,7 +124,7 @@ public class SerializationTest extends AbstractJCRTest {
     }
 
     public void doTestVersioningExceptionFileParent(boolean useWorkspace, boolean useHandler)
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+            throws Exception {
         Node n = initVersioningException(true);
 
         FileInputStream in = new FileInputStream(file);
@@ -137,7 +139,7 @@ public class SerializationTest extends AbstractJCRTest {
     }
 
     public void doTestVersioningExceptionFileChild(boolean useWorkspace, boolean useHandler)
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+            throws Exception {
         Node n = initVersioningException(false);
 
         FileInputStream in = new FileInputStream(file);
@@ -151,43 +153,35 @@ public class SerializationTest extends AbstractJCRTest {
         }
     }
 
-    public void testVersioningExceptionFileParentWorkspaceContentHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testVersioningExceptionFileParentWorkspaceContentHandler() throws Exception {
         doTestVersioningExceptionFileParent(WORKSPACE, CONTENTHANDLER);
     }
 
-    public void testVersioningExceptionFileParentSessionContentHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testVersioningExceptionFileParentSessionContentHandler() throws Exception {
         doTestVersioningExceptionFileParent(SESSION, CONTENTHANDLER);
     }
 
-    public void testVersioningExceptionFileParentWorkspace()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testVersioningExceptionFileParentWorkspace() throws Exception {
         doTestVersioningExceptionFileParent(WORKSPACE, STREAM);
     }
 
-    public void testVersioningExceptionFileParentSession()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testVersioningExceptionFileParentSession() throws Exception {
         doTestVersioningExceptionFileParent(SESSION, STREAM);
     }
 
-    public void testVersioningExceptionFileChildWorkspaceContentHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testVersioningExceptionFileChildWorkspaceContentHandler() throws Exception {
         doTestVersioningExceptionFileChild(WORKSPACE, CONTENTHANDLER);
     }
 
-    public void testVersioningExceptionFileChildSessionContentHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testVersioningExceptionFileChildSessionContentHandler() throws Exception {
         doTestVersioningExceptionFileChild(SESSION, CONTENTHANDLER);
     }
 
-    public void testVersioningExceptionFileChildWorkspace()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testVersioningExceptionFileChildWorkspace() throws Exception {
         doTestVersioningExceptionFileChild(WORKSPACE, STREAM);
     }
 
-    public void testVersioningExceptionFileChildSession()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testVersioningExceptionFileChildSession() throws Exception {
         doTestVersioningExceptionFileChild(SESSION, STREAM);
     }
 
@@ -196,7 +190,7 @@ public class SerializationTest extends AbstractJCRTest {
      * Tests whether importing a tree respects locking.
      */
     public void doTestLockException(boolean useWorkspace, boolean useHandler)
-            throws RepositoryException, IOException, SAXException {
+            throws Exception {
         Repository repository = session.getRepository();
         exportRepository(SKIPBINARY, RECURSE);
         if (isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
@@ -219,23 +213,19 @@ public class SerializationTest extends AbstractJCRTest {
         }
     }
 
-    public void testLockExceptionWorkspaceWithHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testLockExceptionWorkspaceWithHandler() throws Exception {
         doTestVersioningExceptionFileChild(WORKSPACE, CONTENTHANDLER);
     }
 
-    public void testLockExceptionSessionWithHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testLockExceptionSessionWithHandler() throws Exception {
         doTestVersioningExceptionFileChild(SESSION, CONTENTHANDLER);
     }
 
-    public void testLockExceptionWorkspace()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testLockExceptionWorkspace() throws Exception {
         doTestVersioningExceptionFileChild(WORKSPACE, STREAM);
     }
 
-    public void testLockExceptionSession()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testLockExceptionSession() throws Exception {
         doTestVersioningExceptionFileChild(SESSION, STREAM);
     }
 
@@ -244,7 +234,8 @@ public class SerializationTest extends AbstractJCRTest {
      * Tests whether importing an invalid XML file throws a SAX exception. The
      * file used here is more or less garbage.
      */
-    public void testInvalidXmlThrowsSaxException() throws IOException {
+    public void testInvalidXmlThrowsSaxException()
+            throws IOException, ParserConfigurationException {
         StringReader in = new StringReader("<this is not a <valid> <xml> file/>");
         ContentHandler ih = null;
         try {
@@ -270,17 +261,16 @@ public class SerializationTest extends AbstractJCRTest {
      * @param ih
      * @param in
      */
-    private void helpTestSaxException(ContentHandler ih, Reader in, String mode) {
-        XMLReader parser = null;
+    private void helpTestSaxException(ContentHandler ih, Reader in, String mode)
+            throws IOException, ParserConfigurationException {
         try {
-            parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-            parser.setContentHandler(ih);
-            parser.setErrorHandler((ErrorHandler) ih);
-            try {
-                parser.parse(new InputSource(in));
-            } catch (IOException e) {
-                fail("Input stream not available for parsing: " + e);
-            }
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setFeature(
+                    "http://xml.org/sax/features/namespace-prefixes", false);
+
+            SAXParser parser = factory.newSAXParser();
+            parser.parse(new InputSource(in), (DefaultHandler) ih);
             fail("Parsing an invalid XML file with via " + mode + " ContentHandler did not throw a SAXException.");
         } catch (SAXException e) {
             // success
@@ -389,7 +379,7 @@ public class SerializationTest extends AbstractJCRTest {
      * not allow same-name siblings.
      */
     public void doTestOverwriteException(boolean useWorkspace, boolean useHandler)
-            throws RepositoryException, IOException, SAXException, NotExecutableException {
+            throws Exception {
         //If deserialization would overwrite an existing item,
         // an ItemExistsException respective a SAXException is thrown.
 
@@ -426,23 +416,19 @@ public class SerializationTest extends AbstractJCRTest {
         }
     }
 
-    public void testOverwriteExceptionWorkspaceWithHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testOverwriteExceptionWorkspaceWithHandler() throws Exception {
         doTestOverwriteException(WORKSPACE, CONTENTHANDLER);
     }
 
-    public void testOverwriteExceptionSessionWithHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testOverwriteExceptionSessionWithHandler() throws Exception {
         doTestOverwriteException(SESSION, CONTENTHANDLER);
     }
 
-    public void testOverwriteExceptionWorkspace()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testOverwriteExceptionWorkspace() throws Exception {
         doTestOverwriteException(WORKSPACE, STREAM);
     }
 
-    public void testOverwriteExceptionSession()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testOverwriteExceptionSession() throws Exception {
         doTestOverwriteException(SESSION, STREAM);
     }
 
@@ -459,7 +445,7 @@ public class SerializationTest extends AbstractJCRTest {
      * @throws IOException
      */
     public void doTestNodeTypeConstraintViolation(boolean useWorkspace, boolean useHandler)
-            throws RepositoryException, FileNotFoundException, IOException, SAXException {
+            throws Exception {
 
         treeComparator.createExampleTree();
         Node node = testRootNode.addNode("ntBase", ntBase);
@@ -491,23 +477,19 @@ public class SerializationTest extends AbstractJCRTest {
     }
 
 
-    public void testNodeTypeConstraintViolationWorkspaceWithHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testNodeTypeConstraintViolationWorkspaceWithHandler() throws Exception {
         doTestNodeTypeConstraintViolation(WORKSPACE, CONTENTHANDLER);
     }
 
-    public void testNodeTypeConstraintViolationSessionWithHandler()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testNodeTypeConstraintViolationSessionWithHandler() throws Exception {
         doTestNodeTypeConstraintViolation(SESSION, CONTENTHANDLER);
     }
 
-    public void testNodeTypeConstraintViolationWorkspace()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testNodeTypeConstraintViolationWorkspace() throws Exception {
         doTestNodeTypeConstraintViolation(WORKSPACE, STREAM);
     }
 
-    public void testNodeTypeConstraintViolationSession()
-            throws RepositoryException, NotExecutableException, IOException, SAXException {
+    public void testNodeTypeConstraintViolationSession() throws Exception {
         doTestNodeTypeConstraintViolation(SESSION, STREAM);
     }
 
@@ -540,7 +522,7 @@ public class SerializationTest extends AbstractJCRTest {
      * Makes sure that importing into the session does not save anything if the
      * session is closed.
      */
-    public void testSessionGetContentHandler() throws RepositoryException, IOException, SAXException {
+    public void testSessionGetContentHandler() throws Exception {
         FileInputStream in = new FileInputStream(file);
         try {
             exportRepository(SAVEBINARY, RECURSE);
@@ -572,21 +554,20 @@ public class SerializationTest extends AbstractJCRTest {
      * @throws IOException
      */
     public void doImport(String absPath, FileInputStream in, boolean useWorkspace, boolean useHandler)
-            throws RepositoryException, IOException, SAXException {
+            throws Exception {
         if (useHandler) {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setFeature(
+                    "http://xml.org/sax/features/namespace-prefixes", false);
+
+            SAXParser parser = factory.newSAXParser();
             if (useWorkspace) {
                 ContentHandler ih = workspace.getImportContentHandler(absPath, 0);
-                XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-                parser.setContentHandler(ih);
-                parser.setErrorHandler((ErrorHandler) ih);
-                parser.parse(new InputSource(in));
+                parser.parse(new InputSource(in), (DefaultHandler) ih);
             } else {
                 ContentHandler ih = session.getImportContentHandler(absPath, 0);
-
-                XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-                parser.setContentHandler(ih);
-                parser.setErrorHandler((ErrorHandler) ih);
-                parser.parse(new InputSource(in));
+                parser.parse(new InputSource(in), (DefaultHandler) ih);
                 session.save();
             }
         } else {
@@ -600,81 +581,83 @@ public class SerializationTest extends AbstractJCRTest {
     }
 
     public void doImportNoSave(String absPath, FileInputStream in, boolean useHandler)
-            throws RepositoryException, IOException, SAXException {
+            throws Exception {
         if (useHandler) {
-            ContentHandler ih = session.getImportContentHandler(absPath, 0);
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setFeature(
+                    "http://xml.org/sax/features/namespace-prefixes", false);
 
-            XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-            parser.setContentHandler(ih);
-            parser.setErrorHandler((ErrorHandler) ih);
-            parser.parse(new InputSource(in));
+            SAXParser parser = factory.newSAXParser();
+            ContentHandler ih = session.getImportContentHandler(absPath, 0);
+            parser.parse(new InputSource(in), (DefaultHandler) ih);
         } else {
             session.importXML(absPath, in, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         }
     }
 //------------< System view export import tests >-----------------------------------
 
-    public void testExportSysView_stream_workspace_skipBinary_noRecurse() throws IOException, RepositoryException {
+    public void testExportSysView_stream_workspace_skipBinary_noRecurse() throws Exception {
         doTest(STREAM, WORKSPACE, SKIPBINARY, NORECURSE);
     }
 
-    public void testExportSysView_stream_workspace_skipBinary_recurse() throws IOException, RepositoryException {
+    public void testExportSysView_stream_workspace_skipBinary_recurse() throws Exception {
         doTest(STREAM, WORKSPACE, SKIPBINARY, RECURSE);
     }
 
-    public void testExportSysView_stream_workspace_saveBinary_noRecurse() throws IOException, RepositoryException {
+    public void testExportSysView_stream_workspace_saveBinary_noRecurse() throws Exception {
         doTest(STREAM, WORKSPACE, SAVEBINARY, NORECURSE);
     }
 
-    public void testExportSysView_stream_workspace_saveBinary_recurse() throws IOException, RepositoryException {
+    public void testExportSysView_stream_workspace_saveBinary_recurse() throws Exception {
         doTest(STREAM, WORKSPACE, SAVEBINARY, RECURSE);
     }
 
-    public void testExportSysView_stream_session_skipBinary_noRecurse() throws IOException, RepositoryException {
+    public void testExportSysView_stream_session_skipBinary_noRecurse() throws Exception {
         doTest(STREAM, SESSION, SKIPBINARY, NORECURSE);
     }
 
-    public void testExportSysView_stream_session_skipBinary_recurse() throws IOException, RepositoryException {
+    public void testExportSysView_stream_session_skipBinary_recurse() throws Exception {
         doTest(STREAM, SESSION, SKIPBINARY, RECURSE);
     }
 
-    public void testExportSysView_stream_session_saveBinary_noRecurse() throws IOException, RepositoryException {
+    public void testExportSysView_stream_session_saveBinary_noRecurse() throws Exception {
         doTest(STREAM, SESSION, SAVEBINARY, NORECURSE);
     }
 
-    public void testExportSysView_stream_session_saveBinary_recurse() throws IOException, RepositoryException {
+    public void testExportSysView_stream_session_saveBinary_recurse() throws Exception {
         doTest(STREAM, SESSION, SAVEBINARY, RECURSE);
     }
 
-    public void testExportSysView_handler_workspace_skipBinary_noRecurse() throws IOException, RepositoryException {
+    public void testExportSysView_handler_workspace_skipBinary_noRecurse() throws Exception {
         doTest(CONTENTHANDLER, WORKSPACE, SKIPBINARY, NORECURSE);
     }
 
-    public void testExportSysView_handler_workspace_skipBinary_recurse() throws IOException, RepositoryException {
+    public void testExportSysView_handler_workspace_skipBinary_recurse() throws Exception {
         doTest(CONTENTHANDLER, WORKSPACE, SKIPBINARY, RECURSE);
     }
 
-    public void testExportSysView_handler_workspace_saveBinary_noRecurse() throws IOException, RepositoryException {
+    public void testExportSysView_handler_workspace_saveBinary_noRecurse() throws Exception {
         doTest(CONTENTHANDLER, WORKSPACE, SAVEBINARY, NORECURSE);
     }
 
-    public void testExportSysView_handler_workspace_saveBinary_recurse() throws IOException, RepositoryException {
+    public void testExportSysView_handler_workspace_saveBinary_recurse() throws Exception {
         doTest(CONTENTHANDLER, WORKSPACE, SAVEBINARY, RECURSE);
     }
 
-    public void testExportSysView_handler_session_skipBinary_noRecurse() throws IOException, RepositoryException {
+    public void testExportSysView_handler_session_skipBinary_noRecurse() throws Exception {
         doTest(CONTENTHANDLER, SESSION, SKIPBINARY, NORECURSE);
     }
 
-    public void testExportSysView_handler_session_skipBinary_recurse() throws IOException, RepositoryException {
+    public void testExportSysView_handler_session_skipBinary_recurse() throws Exception {
         doTest(CONTENTHANDLER, SESSION, SKIPBINARY, RECURSE);
     }
 
-    public void testExportSysView_handler_session_saveBinary_noRecurse() throws IOException, RepositoryException {
+    public void testExportSysView_handler_session_saveBinary_noRecurse() throws Exception {
         doTest(CONTENTHANDLER, SESSION, SAVEBINARY, NORECURSE);
     }
 
-    public void testExportSysView_handler_session_saveBinary_recurse() throws IOException, RepositoryException {
+    public void testExportSysView_handler_session_saveBinary_recurse() throws Exception {
         doTest(CONTENTHANDLER, SESSION, SAVEBINARY, RECURSE);
     }
 
@@ -692,7 +675,7 @@ public class SerializationTest extends AbstractJCRTest {
      *                   subtree
      */
     private void doTest(boolean handler, boolean workspace, boolean skipBinary, boolean noRecurse)
-            throws RepositoryException, IOException {
+            throws Exception {
         exportRepository(skipBinary, noRecurse);
         importRepository(handler, workspace);
         treeComparator.showTree();
@@ -728,38 +711,24 @@ public class SerializationTest extends AbstractJCRTest {
      * @param workspace  True = import into workspace, false = import into
      *                   session
      */
-    public void importRepository(boolean useHandler, boolean workspace) throws RepositoryException, IOException {
-        FileInputStream in = null;
-        try {
-            in = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            fail("Input file not opened: " + e);
-        }
-
+    public void importRepository(boolean useHandler, boolean workspace) throws Exception {
+        FileInputStream in = new FileInputStream(file);
         try {
             if (useHandler) {
+                SAXParserFactory factory = SAXParserFactory.newInstance();
+                factory.setNamespaceAware(true);
+                factory.setFeature(
+                        "http://xml.org/sax/features/namespace-prefixes", false);
+
+                SAXParser parser = factory.newSAXParser();
                 if (workspace) {
                     ContentHandler ih = this.workspace.getImportContentHandler(treeComparator.targetFolder, 0);
-                    try {
-                        XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-                        parser.setContentHandler(ih);
-                        parser.setErrorHandler((ErrorHandler) ih);
-                        parser.parse(new InputSource(in));
-                    } catch (SAXException e) {
-                        fail("Error while parsing the imported repository: " + e);
-                    }
+                    parser.parse(new InputSource(in), (DefaultHandler) ih);
                 } else {
                     ContentHandler ih = session.getImportContentHandler(treeComparator.targetFolder,
                             ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-                    try {
-                        XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-                        parser.setContentHandler(ih);
-                        parser.setErrorHandler((ErrorHandler) ih);
-                        parser.parse(new InputSource(in));
-                        session.save();
-                    } catch (SAXException e) {
-                        fail("Error while parsing the imported repository: " + e);
-                    }
+                    parser.parse(new InputSource(in), (DefaultHandler) ih);
+                    session.save();
                 }
             } else {
                 if (workspace) {
@@ -770,6 +739,8 @@ public class SerializationTest extends AbstractJCRTest {
                     session.save();
                 }
             }
+        } catch (SAXException e) {
+            fail("Error while parsing the imported repository: " + e);
         } finally {
             in.close();
         }
