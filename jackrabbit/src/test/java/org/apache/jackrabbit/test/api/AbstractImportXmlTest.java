@@ -23,9 +23,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Attr;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 import org.xml.sax.InputSource;
-import org.xml.sax.helpers.XMLReaderFactory;
+import org.xml.sax.helpers.DefaultHandler;
 
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -38,6 +37,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -245,7 +247,7 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
      */
     public void importWithHandler(String absPath, Document document,
                                   int uuidBehaviour, boolean withWorkspace)
-            throws RepositoryException, SAXException, IOException {
+            throws Exception {
 
         serialize(document);
         BufferedInputStream bin = new BufferedInputStream(new FileInputStream(file));
@@ -256,11 +258,15 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
         } else {
             handler = session.getImportContentHandler(absPath, uuidBehaviour);
         }
-        XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-        parser.setContentHandler(handler);
 
-        InputSource source = new InputSource(bin);
-        parser.parse(source);
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(
+                "http://xml.org/sax/features/namespace-prefixes", false);
+
+        SAXParser parser = factory.newSAXParser();
+        parser.parse(new InputSource(bin), (DefaultHandler) handler);
+
         if (!withWorkspace) {
             session.save();
         }
@@ -355,9 +361,10 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
      * @throws RepositoryException
      * @throws IOException
      */
-    public void importRefNodeDocument(String absPath, String uuid, int uuidBehaviour,
-                                      boolean withWorkspace, boolean withHandler)
-            throws RepositoryException, IOException, SAXException {
+    public void importRefNodeDocument(
+            String absPath, String uuid, int uuidBehaviour,
+            boolean withWorkspace, boolean withHandler)
+            throws Exception {
 
         Document document = dom.newDocument();
         Element root = document.createElement(rootElem);
