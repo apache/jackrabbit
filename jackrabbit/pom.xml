@@ -433,6 +433,15 @@
           <include>**/*.properties</include>
           <include>**/*.ddl</include>
           <include>META-INF/services/*</include>
+          <include>**/*.cnd</include>
+        </includes>
+      </resource>
+      <resource>
+        <targetPath>META-INF</targetPath>
+        <directory>.</directory>
+        <includes>
+          <include>README.txt</include>
+          <include>NOTICE.txt</include>
         </includes>
       </resource>
     </resources>
@@ -447,6 +456,7 @@
       <testResource>
         <directory>src/test/java</directory>
         <includes>
+          <include>**/*.cnd</include>
           <include>**/*.xml</include>
           <include>**/*.txt</include>
         </includes>
@@ -461,18 +471,43 @@
             <phase>process-sources</phase>
             <configuration>
               <tasks>
-                <echo>Remove files that have been customized in Jackrabbit</echo>
-                <delete>
-                  <fileset dir="target/generated-src/main/java/org/apache/jackrabbit/core/query/sql">
-                    <include name="ASTLiteral.java" />
-                    <include name="ASTContainsExpression.java" />
-                    <include name="ASTPredicate.java" />
-                    <include name="ASTIdentifier.java" />
-                  </fileset>
-                  <fileset dir="target/generated-src/main/java/org/apache/jackrabbit/core/query/xpath">
-                    <include name="SimpleNode.java" />
-                  </fileset>
-                </delete>
+                <ant
+                  antfile="${basedir}/build.xml"
+                  inheritRefs="true">
+                  <target name="deleteSources" />
+                </ant>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>process-test-resources</id>
+            <phase>process-test-resources</phase>
+            <configuration>
+              <tasks>
+                <ant
+                  antfile="${basedir}/build.xml"
+                  inheritRefs="true">
+                  <target name="prepareTestRepository" />
+                </ant>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>clean</id>
+            <phase>clean</phase>
+            <configuration>
+              <tasks>
+                <ant
+                  antfile="${basedir}/build.xml"
+                  inheritRefs="true">
+                  <target name="cleanTestData" />
+                </ant>
               </tasks>
             </configuration>
             <goals>
@@ -496,9 +531,8 @@
             <id>fulltext-jjtree</id>
             <configuration>
               <sourceDirectory>src/main/javacc/fulltext</sourceDirectory>
-              <outputDirectory>
-                target/generated-src/main/java/org/apache/jackrabbit/core/query/lucene/fulltext
-              </outputDirectory>
+              <outputDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/lucene/fulltext</outputDirectory>
+              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.lucene.fulltext</packageName>
             </configuration>
             <goals>
@@ -508,10 +542,9 @@
           <execution>
             <id>fulltext-javacc</id>
             <configuration>
-              <sourceDirectory>
-                target/generated-src/main/java/org/apache/jackrabbit/core/query/lucene/fulltext
-              </sourceDirectory>
+              <sourceDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/lucene/fulltext</sourceDirectory>
               <outputDirectory>target/generated-src/main/java</outputDirectory>
+              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.lucene.fulltext</packageName>
             </configuration>
             <goals>
@@ -523,6 +556,7 @@
             <configuration>
               <sourceDirectory>src/main/javacc/sql</sourceDirectory>
               <outputDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/sql</outputDirectory>
+              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.sql</packageName>
             </configuration>
             <goals>
@@ -534,6 +568,7 @@
             <configuration>
               <sourceDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/sql</sourceDirectory>
               <outputDirectory>target/generated-src/main/java</outputDirectory>
+              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.sql</packageName>
             </configuration>
             <goals>
@@ -545,6 +580,7 @@
             <configuration>
               <sourceDirectory>src/main/javacc/xpath</sourceDirectory>
               <outputDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/xpath</outputDirectory>
+              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.xpath</packageName>
             </configuration>
             <goals>
@@ -556,6 +592,7 @@
             <configuration>
               <sourceDirectory>target/generated-src/main/java/org/apache/jackrabbit/core/query/xpath</sourceDirectory>
               <outputDirectory>target/generated-src/main/java</outputDirectory>
+              <timestampDirectory>target/generated-src/javacc-timestamp</timestampDirectory>
               <packageName>org.apache.jackrabbit.core.query.xpath</packageName>
             </configuration>
             <goals>
@@ -581,12 +618,7 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <excludes>
-            <exclude>**/init/*</exclude>
-          </excludes>
-          <includes>
-            <include>**/*TestAll.java</include>
-          </includes>
+          <skip>true</skip>
           <forkMode>once</forkMode>
           <argLine>-Xmx128m -enableassertions</argLine>
           <systemProperties>
@@ -596,10 +628,45 @@
             </property>
             <property>
               <name>known.issues</name>
-              <value>org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue org.apache.jackrabbit.value.BinaryValueTest#testBinaryValueEquals</value>
+              <value>
+                org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
+                org.apache.jackrabbit.value.BinaryValueTest#testBinaryValueEquals
+              </value>
             </property>
-          </systemProperties>          
+          </systemProperties>
         </configuration>
+        <executions>
+          <execution>
+            <id>do_init</id>
+            <configuration>
+              <skip>false</skip>
+              <includes>
+                <include>**/init/*</include>
+              </includes>
+              <excludes>
+                <exclude>**/*TestAll.java</exclude>
+              </excludes>
+            </configuration>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>do_test</id>
+            <configuration>
+              <skip>false</skip>
+              <excludes>
+                <exclude>**/init/*</exclude>
+              </excludes>
+              <includes>
+                <include>**/*TestAll.java</include>
+              </includes>
+            </configuration>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
