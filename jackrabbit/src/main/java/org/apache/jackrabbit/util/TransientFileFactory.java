@@ -80,20 +80,26 @@ public class TransientFileFactory {
         reaper.setDaemon(true);
         reaper.start();
         // register shutdownhook for final cleaning up
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                // synchronize on the list before iterating over it in order
-                // to avoid ConcurrentModificationException (JCR-549)
-                // @see java.lang.util.Collections.synchronizedList(java.util.List)
-                synchronized(trackedRefs) {
-                    for (Iterator it = trackedRefs.iterator(); it.hasNext();) {
-                        MoribundFileReference fileRef = (MoribundFileReference) it.next();
-                        fileRef.delete();
-                    }
+        try {
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    // synchronize on the list before iterating over it in order
+                    // to avoid ConcurrentModificationException (JCR-549)
+                    // @see java.lang.util.Collections.synchronizedList(java.util.List)
+                    synchronized(trackedRefs) {
+                        for (Iterator it = trackedRefs.iterator(); it.hasNext();) {
+                            MoribundFileReference fileRef = (MoribundFileReference) it.next();
+                            fileRef.delete();
+                        }
 
+                    }
                 }
-            }
-        });
+            });
+        } catch (IllegalStateException e) {
+            // can't register shutdownhook because
+            // jvm shutdown sequence has already begun,
+            // silently ignore... 
+        }
     }
 
     //------------------------------------------------------< factory methods >
