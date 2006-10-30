@@ -541,10 +541,10 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             NodeImpl sysRoot = rootNode.internalAddChildNode(QName.JCR_SYSTEM, nt, SYSTEM_ROOT_NODE_ID);
             // add version storage
             nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_VERSIONSTORAGE);
-            sysRoot.internalAddChildNode(QName.JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_ID);
+            sysRoot.internalAddVirtualChildNode(QName.JCR_VERSIONSTORAGE, nt, VERSION_STORAGE_NODE_ID);
             // add node types
             nt = sysSession.getNodeTypeManager().getNodeType(QName.REP_NODETYPES);
-            sysRoot.internalAddChildNode(QName.JCR_NODETYPES, nt, NODETYPES_NODE_ID);
+            sysRoot.internalAddVirtualChildNode(QName.JCR_NODETYPES, nt, NODETYPES_NODE_ID);
             rootNode.save();
         }
 
