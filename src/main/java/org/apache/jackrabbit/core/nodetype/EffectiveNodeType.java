@@ -615,7 +615,6 @@ public class EffectiveNodeType implements Cloneable {
                         break;
                     } catch (ConstraintViolationException e) {
                         cve = e;
-                        continue;
                     }
                 }
                 if (!satisfied) {
@@ -699,10 +698,7 @@ public class EffectiveNodeType implements Cloneable {
                         // found named node definition
                         return nd;
                     } else {
-                        if (nd.getDefaultPrimaryType() == null) {
-                            // no default node type defined, try next
-                            continue;
-                        } else {
+                        if (nd.getDefaultPrimaryType() != null) {
                             // found node definition with default node type
                             return nd;
                         }
