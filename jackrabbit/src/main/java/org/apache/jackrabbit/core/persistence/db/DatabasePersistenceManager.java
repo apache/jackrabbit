@@ -985,7 +985,9 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
      * @return an input stream to the schema DDL resource.
      */
     protected InputStream getSchemaDDL() {
-        return getClass().getResourceAsStream(schema + ".ddl");
+        // JCR-595: Use the class explicitly instead of using getClass()
+        // to avoid problems when subclassed in a different package
+        return DatabasePersistenceManager.class.getResourceAsStream(schema + ".ddl");
     }
 
     //--------------------------------------------------------< inner classes >
