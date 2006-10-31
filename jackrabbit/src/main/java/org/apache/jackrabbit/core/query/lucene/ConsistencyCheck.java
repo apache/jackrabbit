@@ -155,7 +155,7 @@ class ConsistencyCheck {
         IndexReader reader = index.getIndexReader();
         try {
             for (int i = 0; i < reader.maxDoc(); i++) {
-                if (i > 0 && i % (reader.maxDoc() / 5) == 0) {
+                if (i > 10 && i % (reader.maxDoc() / 5) == 0) {
                     long progress = Math.round((100.0 * (float) i) / ((float) reader.maxDoc() * 2f));
                     log.info("progress: " + progress + "%");
                 }
@@ -185,7 +185,7 @@ class ConsistencyCheck {
         try {
             // run through documents again and check parent
             for (int i = 0; i < reader.maxDoc(); i++) {
-                if (i > 0 && i % (reader.maxDoc() / 5) == 0) {
+                if (i > 10 && i % (reader.maxDoc() / 5) == 0) {
                     long progress = Math.round((100.0 * (float) i) / ((float) reader.maxDoc() * 2f));
                     log.info("progress: " + (progress + 50) + "%");
                 }
