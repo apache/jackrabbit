@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.PropertyType;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.IdentityHashMap;
+import java.util.Collections;
 
 /**
  * Extension to <code>LocalItemStateManager</code> that remembers changes on
@@ -50,15 +53,11 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     private static final String DEFAULT_ATTRIBUTE_NAME = "ChangeLog";
 
     /**
-     * ThreadLocal that holds the ChangeLog while this state manager is in one
-     * of the {@link #prepare}, {@link #commit}, {@link #rollback}
-     * methods.
+     * This map holds the ChangeLog on a per thread basis while this state
+     * manager is in one of the {@link #prepare}, {@link #commit}, {@link
+     * #rollback} methods.
      */
-    private ThreadLocal commitLog = new ThreadLocal() {
-        protected synchronized Object initialValue() {
-            return new CommitLog();
-        }
-    };
+    private final Map commitLogs = Collections.synchronizedMap(new IdentityHashMap());
 
     /**
      * Current instance-local change log.
@@ -134,7 +133,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     public void beforeOperation(TransactionContext tx) {
         ChangeLog txLog = (ChangeLog) tx.getAttribute(attributeName);
         if (txLog != null) {
-            ((CommitLog) commitLog.get()).setChanges(txLog);
+            commitLogs.put(Thread.currentThread(), txLog);
         }
     }
 
@@ -195,7 +194,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * {@inheritDoc}
      */
     public void afterOperation(TransactionContext tx) {
-        ((CommitLog) commitLog.get()).setChanges(null);
+        commitLogs.remove(Thread.currentThread());
     }
 
     /**
@@ -204,7 +203,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * change log was found.
      */
     public ChangeLog getChangeLog() {
-        ChangeLog changeLog = ((CommitLog) commitLog.get()).getChanges();
+        ChangeLog changeLog = (ChangeLog) commitLogs.get(Thread.currentThread());
         if (changeLog == null) {
             changeLog = txLog;
         }
@@ -426,43 +425,6 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         if (refs != null) {
             refs.removeReference(sourceId);
             virtualProvider.setNodeReferences(refs);
-        }
-    }
-
-    //--------------------------< inner classes >-------------------------------
-
-    /**
-     * Helper class that serves as a container for a ChangeLog in a ThreadLocal.
-     * The <code>CommitLog</code> is associated with a <code>ChangeLog</code>
-     * while the <code>TransactionalItemStateManager</code> is in the commit
-     * method.
-     */
-    private static class CommitLog {
-
-        /**
-         * The changes that are about to be committed
-         */
-        private ChangeLog changes;
-
-        /**
-         * Sets changes that are about to be committed.
-         *
-         * @param changes that are about to be committed, or <code>null</code>
-         *                if changes have been committed and the commit log should be reset.
-         */
-        private void setChanges(ChangeLog changes) {
-            this.changes = changes;
-        }
-
-        /**
-         * The changes that are about to be committed, or <code>null</code> if
-         * the <code>TransactionalItemStateManager</code> is currently not
-         * committing any changes.
-         *
-         * @return the changes about to be committed.
-         */
-        private ChangeLog getChanges() {
-            return changes;
         }
     }
 }
