@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.state.db;
 
 import org.apache.jackrabbit.core.state.PersistenceManager;
 
-import java.io.InputStream;
-
 /**
  * Legacy class kept for backward compatibility reasons.
   * @deprecated use {@link org.apache.jackrabbit.core.persistence.db.SimpleDbPersistenceManager}
@@ -28,14 +26,4 @@ import java.io.InputStream;
 public class SimpleDbPersistenceManager
         extends org.apache.jackrabbit.core.persistence.db.SimpleDbPersistenceManager
         implements PersistenceManager {
-
-    /**
-     * {@inheritDoc}
-     *
-     * Needed to override in order to load the ddl from the new location
-     */
-    protected InputStream getSchemaDDL() {
-        return super.getClass().getResourceAsStream(schema + ".ddl");
-    }
-
 }
