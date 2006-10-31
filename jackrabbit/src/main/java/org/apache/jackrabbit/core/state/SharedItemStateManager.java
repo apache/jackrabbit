@@ -21,6 +21,7 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.version.XAVersionManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
@@ -799,6 +800,7 @@ public class SharedItemStateManager
             throws ItemStateException {
 
         NodeState rootState = createInstance(rootNodeId, QName.REP_ROOT, null);
+        NodeState jcrSystemState = createInstance(RepositoryImpl.SYSTEM_ROOT_NODE_ID, QName.REP_SYSTEM, rootNodeId);
 
         // FIXME need to manually setup root node by creating mandatory jcr:primaryType property
         // @todo delegate setup of root node to NodeTypeInstanceHandler
@@ -807,11 +809,14 @@ public class SharedItemStateManager
         NodeDefId nodeDefId;
         // definition of jcr:primaryType property
         PropDef propDef;
+        // id of the jcr:system node's definition
+        NodeDefId jcrSystemDefId;
         try {
             nodeDefId = ntReg.getRootNodeDef().getId();
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(QName.REP_ROOT);
             propDef = ent.getApplicablePropertyDef(QName.JCR_PRIMARYTYPE,
                     PropertyType.NAME, false);
+            jcrSystemDefId = ent.getApplicableChildNodeDef(QName.JCR_SYSTEM, QName.REP_SYSTEM, ntReg).getId();
         } catch (NoSuchNodeTypeException nsnte) {
             String msg = "internal error: failed to create root node";
             log.error(msg, nsnte);
@@ -822,8 +827,9 @@ public class SharedItemStateManager
             throw new ItemStateException(msg, cve);
         }
         rootState.setDefinitionId(nodeDefId);
+        jcrSystemState.setDefinitionId(jcrSystemDefId);
 
-        // create jcr:primaryType property
+        // create jcr:primaryType property on root node state
         rootState.addPropertyName(propDef.getName());
 
         PropertyState prop = createInstance(propDef.getName(), rootNodeId);
@@ -832,9 +838,30 @@ public class SharedItemStateManager
         prop.setMultiValued(propDef.isMultiple());
         prop.setDefinitionId(propDef.getId());
 
+        // create jcr:primaryType property on jcr:system node state
+        jcrSystemState.addPropertyName(propDef.getName());
+
+        PropertyState primaryTypeProp = createInstance(propDef.getName(), jcrSystemState.getNodeId());
+        primaryTypeProp.setValues(new InternalValue[]{InternalValue.create(QName.REP_SYSTEM)});
+        primaryTypeProp.setType(propDef.getRequiredType());
+        primaryTypeProp.setMultiValued(propDef.isMultiple());
+        primaryTypeProp.setDefinitionId(propDef.getId());
+
+        // add child node entry for jcr:system node
+        rootState.addChildNodeEntry(QName.JCR_SYSTEM, RepositoryImpl.SYSTEM_ROOT_NODE_ID);
+
+        // add child node entry for virtual jcr:versionStorage
+        jcrSystemState.addChildNodeEntry(QName.JCR_VERSIONSTORAGE, RepositoryImpl.VERSION_STORAGE_NODE_ID);
+
+        // add child node entry for virtual jcr:nodeTypes
+        jcrSystemState.addChildNodeEntry(QName.JCR_NODETYPES, RepositoryImpl.NODETYPES_NODE_ID);
+
+
         ChangeLog changeLog = new ChangeLog();
         changeLog.added(rootState);
         changeLog.added(prop);
+        changeLog.added(jcrSystemState);
+        changeLog.added(primaryTypeProp);
 
         persistMgr.store(changeLog);
         changeLog.persisted();
