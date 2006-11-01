@@ -201,7 +201,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
         // resolve supertypes recursively
         QName[] supertypes = ntd.getSupertypes();
-        if (supertypes != null && supertypes.length > 0) {
+        if (supertypes.length > 0) {
             EffectiveNodeTypeImpl effSuperType = (EffectiveNodeTypeImpl)ntReg.getEffectiveNodeType(supertypes, ntdMap);
             ent.internalMerge(effSuperType, true);
         }
@@ -493,10 +493,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                         // found node definition
                         return nd;
                     } else {
-                        if (nd.getDefaultPrimaryType() == null) {
-                            // no default node type defined, try next
-                            continue;
-                        } else {
+                        if (nd.getDefaultPrimaryType() != null) {
                             // found node definition with default node type
                             return nd;
                         }
