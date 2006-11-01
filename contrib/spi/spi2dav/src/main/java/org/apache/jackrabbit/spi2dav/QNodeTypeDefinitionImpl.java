@@ -120,106 +120,63 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
         }
     }
 
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof QNodeTypeDefinition) {
-            QNodeTypeDefinition other = (QNodeTypeDefinition) obj;
-            return (name == null ? other.getQName() == null : name.equals(other.getQName()))
-                    && (primaryItemName == null ? other.getPrimaryItemName() == null : primaryItemName.equals(other.getPrimaryItemName()))
-                    && Arrays.equals(supertypes, other.getSupertypes())
-                    && mixin == other.isMixin()
-                    && orderableChildNodes == other.hasOrderableChildNodes()
-                    && Arrays.equals(propDefs, other.getPropertyDefs())
-                    && Arrays.equals(nodeDefs, other.getChildNodeDefs());
-        }
-        return false;
-    }
-
+    //------------------------------------------------< QNodeTypeDefinition >---
     /**
-     * Always returns 0
-     *
-     * @see Object#hashCode()
-     */
-    public int hashCode() {
-        // TODO: can be calculated for the definition is immutable
-        return 0;
-    }
-
-    /**
-     * Returns the name of the node type being defined or
-     * <code>null</code> if not set.
-     *
-     * @return the name of the node type or <code>null</code> if not set.
+     * @see QNodeTypeDefinition#getQName() 
      */
     public QName getQName() {
         return name;
     }
 
     /**
-     * Returns an array containing the names of the supertypes or
-     * <code>null</code> if not set.
-     *
-     * @return an array listing the names of the supertypes or
-     *         <code>null</code> if not set.
+     * @see QNodeTypeDefinition#getSupertypes()
      */
     public QName[] getSupertypes() {
-        return supertypes;
+        if (supertypes.length > 0
+                || isMixin() || QName.NT_BASE.equals(getQName())) {
+            return supertypes;
+        } else {
+            return new QName[] { QName.NT_BASE };
+        }
     }
 
     /**
-     * Returns the value of the mixin flag.
-     *
-     * @return true if this is a mixin node type; false otherwise.
+     * @see QNodeTypeDefinition#isMixin() 
      */
     public boolean isMixin() {
         return mixin;
     }
 
     /**
-     * Returns the value of the orderableChildNodes flag.
-     *
-     * @return true if nodes of this node type can have orderable child nodes; false otherwise.
+     * @see QNodeTypeDefinition#hasOrderableChildNodes()
      */
     public boolean hasOrderableChildNodes() {
         return orderableChildNodes;
     }
 
     /**
-     * Returns the name of the primary item (one of the child items of the
-     * node's of this node type) or <code>null</code> if not set.
-     *
-     * @return the name of the primary item or <code>null</code> if not set.
+     * @see QNodeTypeDefinition#getPrimaryItemName()
      */
     public QName getPrimaryItemName() {
         return primaryItemName;
     }
 
     /**
-     * Returns an array containing the property definitions or
-     * <code>null</code> if not set.
-     *
-     * @return an array containing the property definitions or
-     *         <code>null</code> if not set.
+     * @see QNodeTypeDefinition#getPropertyDefs() 
      */
     public QPropertyDefinition[] getPropertyDefs() {
         return propDefs;
     }
 
     /**
-     * Returns an array containing the child node definitions or
-     * <code>null</code> if not set.
-     *
-     * @return an array containing the child node definitions or
-     *         <code>null</code> if not set.
+     * @see QNodeTypeDefinition#getChildNodeDefs() 
      */
     public QNodeDefinition[] getChildNodeDefs() {
         return nodeDefs;
     }
 
     /**
-     * @inheritDoc
+     * @see QNodeTypeDefinition#getDependencies() 
      */
     public Collection getDependencies() {
         if (dependencies == null) {
@@ -260,5 +217,36 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
             }
         }
         return dependencies;
+    }
+
+    //-------------------------------------------------------------< Object >---
+    /**
+     * @see Object#equals(Object) 
+     */
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof QNodeTypeDefinition) {
+            QNodeTypeDefinition other = (QNodeTypeDefinition) obj;
+            return (name == null ? other.getQName() == null : name.equals(other.getQName()))
+                && (primaryItemName == null ? other.getPrimaryItemName() == null : primaryItemName.equals(other.getPrimaryItemName()))
+                && Arrays.equals(supertypes, other.getSupertypes())
+                && mixin == other.isMixin()
+                && orderableChildNodes == other.hasOrderableChildNodes()
+                && Arrays.equals(propDefs, other.getPropertyDefs())
+                && Arrays.equals(nodeDefs, other.getChildNodeDefs());
+        }
+        return false;
+    }
+
+    /**
+     * Always returns 0
+     *
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        // TODO: can be calculated for the definition is immutable
+        return 0;
     }
 }
