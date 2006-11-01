@@ -50,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -113,6 +114,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * Creates a new <code>NodeTypeManagerImpl</code> instance.
      *
      * @param ntReg      node type registry
+     * @param nsReg      namespace registry
      * @param nsResolver namespace resolver
      */
     public NodeTypeManagerImpl(
@@ -200,6 +202,111 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      */
     public NodeTypeRegistry getNodeTypeRegistry() {
         return ntReg;
+    }
+
+    /**
+     * Registers the node types defined in the given input stream depending
+     * on the content type specified for the stream. This will also register
+     * any namespaces identified in the input stream if they have not already
+     * been registered.
+     *
+     * @param in node type XML stream
+     * @param contentType type of the input stream
+     * @param reregisterExisting flag indicating whether node types should be
+     *                           reregistered if they already exist
+     * @return registered node types
+     * @throws IOException if the input stream could not be read or parsed
+     * @throws RepositoryException if the node types are invalid or another
+     *                             repository error occurs
+     */
+    public NodeType[] registerNodeTypes(InputStream in, String contentType,
+            boolean reregisterExisting)
+            throws IOException, RepositoryException {
+
+        try {
+            Map namespaceMap = new HashMap();
+            List nodeTypeDefs = new ArrayList();
+
+            if (contentType.equalsIgnoreCase(TEXT_XML)
+                    || contentType.equalsIgnoreCase(APPLICATION_XML)) {
+                try {
+                    NodeTypeReader ntr = new NodeTypeReader(in);
+
+                    Properties namespaces = ntr.getNamespaces();
+                    if (namespaces != null) {
+                        Enumeration prefixes = namespaces.propertyNames();
+                        while (prefixes.hasMoreElements()) {
+                            String prefix = (String) prefixes.nextElement();
+                            String uri = namespaces.getProperty(prefix);
+                            namespaceMap.put(prefix, uri);
+                        }
+                    }
+
+                    NodeTypeDef[] defs = ntr.getNodeTypeDefs();
+                    nodeTypeDefs.addAll(Arrays.asList(defs));
+                } catch (IllegalNameException e) {
+                    throw new RepositoryException("Illegal JCR name syntax", e);
+                } catch (UnknownPrefixException e) {
+                    throw new RepositoryException("Unknown namespace prefix", e);
+                }
+            } else if (contentType.equalsIgnoreCase(TEXT_X_JCR_CND)) {
+                try {
+                    NamespaceMapping mapping = new NamespaceMapping(nsResolver);
+                    CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
+                            new InputStreamReader(in), "cnd input stream", mapping);
+
+                    namespaceMap.putAll(mapping.getPrefixToURIMapping());
+
+                    nodeTypeDefs.addAll(reader.getNodeTypeDefs());
+                } catch (ParseException e) {
+                    throw new IOException(e.getMessage());
+                }
+            } else {
+                throw new UnsupportedRepositoryOperationException(
+                        "Unsupported content type: " + contentType);
+            }
+
+            Iterator iterator = namespaceMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry entry = (Map.Entry) iterator.next();
+                nsReg.safeRegisterNamespace((String) entry.getKey(),
+                        (String) entry.getValue());
+            }
+
+            if (reregisterExisting) {
+                // split the node types into new and already registered node types.
+                // this way we can register new node types together with already
+                // registered node types which make circular dependencies possible
+                List newNodeTypeDefs = new ArrayList();
+                List registeredNodeTypeDefs = new ArrayList();
+                for (Iterator iter = nodeTypeDefs.iterator(); iter.hasNext();) {
+                    NodeTypeDef nodeTypeDef = (NodeTypeDef) iter.next();
+                    if (ntReg.isRegistered(nodeTypeDef.getName())) {
+                        registeredNodeTypeDefs.add(nodeTypeDef);
+                    } else {
+                        newNodeTypeDefs.add(nodeTypeDef);
+                    }
+                }
+
+                ArrayList nodeTypes = new ArrayList();
+
+                // register new node types
+                nodeTypes.addAll(Arrays.asList(registerNodeTypes(newNodeTypeDefs)));
+
+                // reregister already existing node types
+                for (Iterator iter = registeredNodeTypeDefs.iterator(); iter.hasNext();) {
+                    NodeTypeDef nodeTypeDef = (NodeTypeDef) iter.next();
+                    ntReg.reregisterNodeType(nodeTypeDef);
+                    nodeTypes.add(getNodeType(nodeTypeDef.getName()));
+                }
+                return (NodeType[]) nodeTypes.toArray(new NodeTypeDef[nodeTypes.size()]);
+            } else {
+                return registerNodeTypes(nodeTypeDefs);
+            }
+
+        } catch (InvalidNodeTypeDefException e) {
+            throw new RepositoryException("Invalid node type definition", e);
+        }
     }
 
     //---------------------------------------------< NodeTypeRegistryListener >
@@ -324,6 +431,11 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     /**
      * Internal helper method for registering a list of node type definitions.
      * Returns an array containing the registered node types.
+     *
+     * @param defs a collection of <code>NodeTypeDef<code> objects
+     * @returns registered node types
+     * @throws InvalidNodeTypeDefException
+     * @throws RepositoryException
      */
     private NodeType[] registerNodeTypes(List defs)
             throws InvalidNodeTypeDefException, RepositoryException {
@@ -355,26 +467,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     public NodeType[] registerNodeTypes(InputSource in)
             throws SAXException, RepositoryException {
         try {
-            NodeTypeReader ntr = new NodeTypeReader(in.getByteStream());
-
-            Properties namespaces = ntr.getNamespaces();
-            if (namespaces != null) {
-                Enumeration prefixes = namespaces.propertyNames();
-                while (prefixes.hasMoreElements()) {
-                    String prefix = (String) prefixes.nextElement();
-                    nsReg.safeRegisterNamespace(
-                            prefix, namespaces.getProperty(prefix));
-                }
-            }
-
-            NodeTypeDef[] defs = ntr.getNodeTypeDefs();
-            return registerNodeTypes(Arrays.asList(defs));
-        } catch (IllegalNameException e) {
-            throw new RepositoryException("Illegal JCR name syntax", e);
-        } catch (UnknownPrefixException e) {
-            throw new RepositoryException("Unknown namespace prefix", e);
-        } catch (InvalidNodeTypeDefException e) {
-            throw new RepositoryException("Invalid node type definition", e);
+            return registerNodeTypes(in.getByteStream(), TEXT_XML);
         } catch (IOException e) {
             throw new SAXException("Error reading node type stream", e);
         }
@@ -392,35 +485,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      */
     public NodeType[] registerNodeTypes(InputStream in, String contentType)
             throws IOException, RepositoryException {
-        try {
-          if (contentType.equalsIgnoreCase(TEXT_XML)
-                  || contentType.equalsIgnoreCase(APPLICATION_XML)) {
-              return registerNodeTypes(new InputSource(in));
-          } else if (contentType.equalsIgnoreCase(TEXT_X_JCR_CND)) {
-              NamespaceMapping mapping = new NamespaceMapping(nsResolver);
-              CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
-                      new InputStreamReader(in), "cnd input stream", mapping);
-
-              Map nsMap = mapping.getPrefixToURIMapping();
-              Iterator iterator = nsMap.entrySet().iterator();
-              while (iterator.hasNext()) {
-                  Map.Entry entry = (Map.Entry) iterator.next();
-                  nsReg.safeRegisterNamespace(
-                          (String) entry.getKey(), (String) entry.getValue());
-              }
-
-              return registerNodeTypes(reader.getNodeTypeDefs());
-          } else {
-              throw new UnsupportedRepositoryOperationException(
-                      "Unsupported content type: " + contentType);
-          }
-        } catch (InvalidNodeTypeDefException e) {
-            throw new RepositoryException("Invalid node type definition", e);
-        } catch (SAXException e) {
-            throw new IOException(e.getMessage());
-        } catch (ParseException e) {
-            throw new IOException(e.getMessage());
-        }
+        return registerNodeTypes(in, contentType, false);
     }
 
     /**
