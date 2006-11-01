@@ -81,7 +81,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      */
     private final String name;
     /**
-     * The Session that created this <code>Workspace</code> object
+     * The Session that created this <code>Workspace</code> object.
      */
     private final SessionImpl session;
 
@@ -94,7 +94,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * The hierarchy manager that reflects workspace state only
      * (i.e. that is isolated from transient changes made through
-     * the session)
+     * the session).
      */
     private HierarchyManager hierManager;
     private LockManager lockManager;
