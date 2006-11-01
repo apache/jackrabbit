@@ -34,11 +34,14 @@ public interface QNodeTypeDefinition {
     QName getQName();
 
     /**
-     * Returns an array containing the names of the supertypes or
-     * <code>null</code> if not set.
+     * Returns an array containing the names of the supertypes. If no
+     * supertypes have been specified, then an empty array is returned
+     * for mixin types and the <code>nt:base</code> primary type and
+     * an array containing just <code>nt:base<code> for other primary types.
+     * <p>
+     * The returned array must not be modified by the application.
      *
-     * @return an array listing the names of the supertypes or
-     *         <code>null</code> if not set.
+     * @return an array of supertype names
      */
     QName[] getSupertypes();
 
