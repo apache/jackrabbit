@@ -186,6 +186,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private final HostConfiguration hostConfig;
     private final HashMap clients = new HashMap();
 
+    private Map descriptors;
+
     public RepositoryServiceImpl(String uri, IdFactory idFactory, ValueFactory valueFactory) throws RepositoryException {
         if (uri == null || "".equals(uri)) {
             throw new RepositoryException("Invalid repository uri '" + uri + "'.");
@@ -245,9 +247,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return requestURI.equals(href);
     }
 
-    private HttpClient getClient(org.apache.commons.httpclient.Credentials credentials) {
-        if (clients.containsKey(credentials)) {
-            return (HttpClient) clients.get(credentials);
+    HttpClient getClient(SessionInfo sessionInfo) throws RepositoryException {
+        if (clients.containsKey(sessionInfo)) {
+            return (HttpClient) clients.get(sessionInfo);
         } else {
             HttpClient client = new HttpClient(new MultiThreadedHttpConnectionManager());
             client.setHostConfiguration(hostConfig);
@@ -255,16 +257,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             client.getParams().setAuthenticationPreemptive(true);
             // NOTE: null credentials only work if 'missing-auth-mapping' param is
             // set on the server
-            client.getState().setCredentials(AuthScope.ANY, credentials);
+            org.apache.commons.httpclient.Credentials creds = null;
+            if (sessionInfo != null) {
+                checkSessionInfo(sessionInfo);
+                creds = ((SessionInfoImpl) sessionInfo).getCredentials().getCredentials();
+            }
+            client.getState().setCredentials(AuthScope.ANY, creds);
 
-            clients.put(credentials, client);
+            clients.put(sessionInfo, client);
             return client;
         }
-    }
-
-    HttpClient getClient(SessionInfo sessionInfo) throws RepositoryException {
-        checkSessionInfo(sessionInfo);
-        return getClient(((SessionInfoImpl) sessionInfo).getCredentials().getCredentials());
     }
 
     private String getItemUri(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException {
@@ -349,39 +351,41 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#getRepositoryDescriptors()
      */
     public Map getRepositoryDescriptors() throws RepositoryException {
-        ReportInfo info = new ReportInfo(RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT, DavConstants.DEPTH_0);
-        ReportMethod method = null;
-        try {
-            method = new ReportMethod(uriResolver.getRepositoryUri(), info);
+        if (descriptors == null) {
+            ReportInfo info = new ReportInfo(RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT, DavConstants.DEPTH_0);
+            ReportMethod method = null;
+            try {
+                method = new ReportMethod(uriResolver.getRepositoryUri(), info);
+                getClient(null).executeMethod(method);
+                method.checkSuccess();
+                Document doc = method.getResponseBodyAsDocument();
 
-            getClient((org.apache.commons.httpclient.Credentials) null).executeMethod(method);
-            method.checkSuccess();
-            Document doc = method.getResponseBodyAsDocument();
-            Map descriptors = new HashMap();
-            if (doc != null) {
-                Element rootElement = doc.getDocumentElement();
-                ElementIterator nsElems = DomUtil.getChildren(rootElement, ItemResourceConstants.XML_DESCRIPTOR, ItemResourceConstants.NAMESPACE);
-                while (nsElems.hasNext()) {
-                    Element elem = nsElems.nextElement();
-                    String key = DomUtil.getChildText(elem, ItemResourceConstants.XML_DESCRIPTORKEY, ItemResourceConstants.NAMESPACE);
-                    String descriptor = DomUtil.getChildText(elem, ItemResourceConstants.XML_DESCRIPTORVALUE, ItemResourceConstants.NAMESPACE);
-                    if (key != null && descriptor != null) {
-                        descriptors.put(key, descriptor);
-                    } else {
-                        log.error("Invalid descriptor key / value pair: " + key + " -> " + descriptor);
+                descriptors = new HashMap();
+                if (doc != null) {
+                    Element rootElement = doc.getDocumentElement();
+                    ElementIterator nsElems = DomUtil.getChildren(rootElement, ItemResourceConstants.XML_DESCRIPTOR, ItemResourceConstants.NAMESPACE);
+                    while (nsElems.hasNext()) {
+                        Element elem = nsElems.nextElement();
+                        String key = DomUtil.getChildText(elem, ItemResourceConstants.XML_DESCRIPTORKEY, ItemResourceConstants.NAMESPACE);
+                        String descriptor = DomUtil.getChildText(elem, ItemResourceConstants.XML_DESCRIPTORVALUE, ItemResourceConstants.NAMESPACE);
+                        if (key != null && descriptor != null) {
+                            descriptors.put(key, descriptor);
+                        } else {
+                            log.error("Invalid descriptor key / value pair: " + key + " -> " + descriptor);
+                        }
                     }
                 }
-            }
-            return descriptors;
-        } catch (IOException e) {
-            throw new RepositoryException(e);
-        } catch (DavException e) {
-            throw ExceptionConverter.generate(e);
-        } finally {
-            if (method != null) {
-                method.releaseConnection();
+            } catch (IOException e) {
+                throw new RepositoryException(e);
+            } catch (DavException e) {
+                throw ExceptionConverter.generate(e);
+            } finally {
+                if (method != null) {
+                    method.releaseConnection();
+                }
             }
         }
+        return descriptors;
     }
 
     /**
@@ -406,10 +410,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // check if the workspace with the given name is accessible
         PropFindMethod method = null;
         try {
+            SessionInfo sessionInfo = new SessionInfoImpl(credentials, workspaceName);
+
             DavPropertyNameSet nameSet = new DavPropertyNameSet();
             nameSet.add(DeltaVConstants.WORKSPACE);
             method = new PropFindMethod(uriResolver.getWorkspaceUri(workspaceName), nameSet, DavConstants.DEPTH_0);
-            getClient(credentials.getCredentials()).executeMethod(method);
+            getClient(sessionInfo).executeMethod(method);
 
             MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
             if (responses.length != 1) {
@@ -423,7 +429,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 if (!wspName.equals(workspaceName)) {
                     throw new LoginException("Login failed: Invalid workspace name " + workspaceName);
                 }
-                return new SessionInfoImpl(credentials, workspaceName);
+                return sessionInfo;
             } else {
                 throw new LoginException("Login failed: Unknown workspace '" + workspaceName+ " '.");
             }
@@ -877,7 +883,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
             method = new PropFindMethod(uri, nameSet, DEPTH_0);
-            initMethod(method, sessionInfo, true);
 
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
