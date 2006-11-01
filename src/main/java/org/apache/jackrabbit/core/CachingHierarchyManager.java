@@ -30,13 +30,14 @@ import org.apache.jackrabbit.util.PathMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 
 /**
  * Implementation of a <code>HierarchyManager</code> that caches paths of
@@ -465,7 +466,19 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 return;
             }
             if (idCache.size() >= upperLimit) {
-                removeLRU();
+                /**
+                 * Remove least recently used item. Scans the LRU list from head to tail
+                 * and removes the first item that has no children.
+                 */
+                LRUEntry entry = head;
+                while (entry != null) {
+                    PathMap.Element element = entry.getElement();
+                    if (element.getChildrenCount() == 0) {
+                        evict(entry, true);
+                        return;
+                    }
+                    entry = entry.getNext();
+                }
             }
 
             PathMap.Element element = pathCache.put(path);
@@ -477,24 +490,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             LRUEntry entry = new LRUEntry(id, element);
             element.set(entry);
             idCache.put(id, entry);
-        }
-    }
-
-    /**
-     * Remove least recently used item. Scans the LRU list from head to tail
-     * and removes the first item that has no children.
-     */
-    private void removeLRU() {
-        synchronized (cacheMonitor) {
-            LRUEntry entry = head;
-            while (entry != null) {
-                PathMap.Element element = entry.getElement();
-                if (element.getChildrenCount() == 0) {
-                    evict(entry, true);
-                    return;
-                }
-                entry = entry.getNext();
-            }
         }
     }
 
@@ -534,15 +529,14 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param removeFromPathCache whether to remove from path cache
      */
     private void remove(LRUEntry entry, boolean removeFromPathCache) {
-        synchronized (cacheMonitor) {
-            if (removeFromPathCache) {
-                PathMap.Element element = entry.getElement();
-                remove(element);
-                element.remove();
-            } else {
-                idCache.remove(entry.getId());
-                entry.remove();
-            }
+        // assert: synchronized (cacheMonitor)
+        if (removeFromPathCache) {
+            PathMap.Element element = entry.getElement();
+            remove(element);
+            element.remove();
+        } else {
+            idCache.remove(entry.getId());
+            entry.remove();
         }
     }
 
@@ -554,19 +548,18 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param removeFromPathCache whether to remove from path cache
      */
     private void evict(LRUEntry entry, boolean removeFromPathCache) {
-        synchronized (cacheMonitor) {
-            if (removeFromPathCache) {
-                PathMap.Element element = entry.getElement();
-                element.traverse(new PathMap.ElementVisitor() {
-                    public void elementVisited(PathMap.Element element) {
-                        evict((LRUEntry) element.get(), false);
-                    }
-                }, false);
-                element.remove(false);
-            } else {
-                idCache.remove(entry.getId());
-                entry.remove();
-            }
+        // assert: synchronized (cacheMonitor)
+        if (removeFromPathCache) {
+            PathMap.Element element = entry.getElement();
+            element.traverse(new PathMap.ElementVisitor() {
+                public void elementVisited(PathMap.Element element) {
+                    evict((LRUEntry) element.get(), false);
+                }
+            }, false);
+            element.remove(false);
+        } else {
+            idCache.remove(entry.getId());
+            entry.remove();
         }
     }
 
@@ -594,13 +587,12 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param element path map element
      */
     private void remove(PathMap.Element element) {
-        synchronized (cacheMonitor) {
-            element.traverse(new PathMap.ElementVisitor() {
-                public void elementVisited(PathMap.Element element) {
-                    remove((LRUEntry) element.get(), false);
-                }
-            }, false);
-        }
+        // assert: synchronized (cacheMonitor)
+        element.traverse(new PathMap.ElementVisitor() {
+            public void elementVisited(PathMap.Element element) {
+                remove((LRUEntry) element.get(), false);
+            }
+        }, false);
     }
 
     /**
