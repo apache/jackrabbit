@@ -243,18 +243,15 @@ public abstract class ValueConstraint {
                 // constraints are OR-ed together
                 boolean satisfied = false;
                 ConstraintViolationException cve = null;
-                for (int j = 0; j < constraints.length; j++) {
+                for (int j = 0; j < constraints.length && !satisfied; j++) {
                     try {
                         ValueConstraint cnstr = ValueConstraint.create(pd.getRequiredType(), constraints[j]);
                         cnstr.check(values[i]);
                         satisfied = true;
-                        break;
                     } catch (ConstraintViolationException e) {
                         cve = e;
-                        continue;
                     } catch (InvalidConstraintException e) {
                         cve = new ConstraintViolationException(e.getMessage(), e);
-                        continue;
                     }
                 }
                 if (!satisfied) {

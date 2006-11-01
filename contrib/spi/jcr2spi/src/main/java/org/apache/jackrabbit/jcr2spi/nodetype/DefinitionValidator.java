@@ -155,7 +155,7 @@ class DefinitionValidator {
 
         // validate supertypes
         QName[] supertypes = ntDef.getSupertypes();
-        if (supertypes != null && supertypes.length > 0) {
+        if (supertypes.length > 0) {
             for (int i = 0; i < supertypes.length; i++) {
                 checkNamespace(supertypes[i]);
                 /**
@@ -197,7 +197,7 @@ class DefinitionValidator {
          * build effective (i.e. merged and resolved) node type from supertypes
          * and check for conflicts
          */
-        if (supertypes != null && supertypes.length > 0) {
+        if (supertypes.length > 0) {
             try {
                 // DIFF JR: use extra method that does not compare to registered nts
                 EffectiveNodeType est = ntRegistry.getEffectiveNodeType(supertypes, validatedDefs);
@@ -508,7 +508,7 @@ class DefinitionValidator {
 
             if (ntdMap.containsKey(stName)) {
                 QName[] sta = ((QNodeTypeDefinition)ntdMap.get(stName)).getSupertypes();
-                if (sta != null && sta.length > 0) {
+                if (sta.length > 0) {
                     // check recursively
                     inheritanceChain.push(stName);
                     checkForCircularInheritance(sta, inheritanceChain, ntdMap);
