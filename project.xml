@@ -321,6 +321,7 @@ indexing, etc.
         </developer>
         <developer>
             <name>Julian Reschke</name>
+            <id>reschke</id>
             <email>julian.reschke@greenbytes.de</email>
             <organization>greenbytes GmbH</organization>
             <roles>
