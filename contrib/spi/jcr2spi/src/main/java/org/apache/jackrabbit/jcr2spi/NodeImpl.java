@@ -545,7 +545,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public String getUUID() throws UnsupportedRepositoryOperationException, RepositoryException {
         checkStatus();
         String uuid = getNodeState().getUUID();
-        if (!isNodeType(QName.MIX_REFERENCEABLE) && uuid != null) {
+        if (uuid == null || !isNodeType(QName.MIX_REFERENCEABLE)) {
             throw new UnsupportedRepositoryOperationException();
         }
         // Node is referenceable -> NodeId must contain a UUID part

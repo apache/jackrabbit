@@ -337,6 +337,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      */
     public void statusChanged(ItemState state, int previousStatus) {
         checkIsSessionState();
+        state.checkIsWorkspaceState();
 
         // the given state is the overlayed state this state (session) is listening to.
         if (state == overlayedState) {
