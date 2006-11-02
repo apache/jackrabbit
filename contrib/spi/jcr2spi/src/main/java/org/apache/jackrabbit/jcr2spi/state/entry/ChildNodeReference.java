@@ -100,7 +100,7 @@ public abstract class ChildNodeReference extends ChildItemReference implements C
      * @see ChildNodeEntry#getIndex()
      */
     public int getIndex() {
-        return parent.getChildNodeIndex(getName(), this);
+        return parent.getChildNodeIndex(this);
     }
 
     /**

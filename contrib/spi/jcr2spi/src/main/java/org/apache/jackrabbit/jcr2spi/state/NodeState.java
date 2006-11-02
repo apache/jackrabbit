@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -280,6 +281,29 @@ public class NodeState extends ItemState {
     }
 
     /**
+     * Returns the index of this node state.
+     *
+     * @return the index.
+     */
+    public int getIndex() throws ItemNotFoundException {
+        if (parent == null) {
+            // the root state may never have siblings
+            return Path.INDEX_DEFAULT;
+        }
+
+        if (getDefinition().allowsSameNameSiblings()) {
+            ChildNodeEntry entry = getParent().getChildNodeEntry(this);
+            if (entry == null) {
+                String msg = "Unable to retrieve index for: " + this;
+                throw new ItemNotFoundException(msg);
+            }
+            return entry.getIndex();
+        } else {
+            return Path.INDEX_DEFAULT;
+        }
+    }
+
+    /**
      * Returns the name of this node's node type.
      *
      * @return the name of this node's node type.
@@ -393,7 +417,7 @@ public class NodeState extends ItemState {
      *         <code>NodeState</code> or <code>null</code> if there's no
      *         matching entry.
      */
-    public synchronized ChildNodeEntry getChildNodeEntry(NodeState nodeState) {
+    private synchronized ChildNodeEntry getChildNodeEntry(NodeState nodeState) {
         return childNodeEntries.get(nodeState);
     }
 
@@ -581,27 +605,32 @@ public class NodeState extends ItemState {
      * Returns the index of the given <code>ChildNodeEntry</code> and with
      * <code>name</code>.
      *
-     * @param name the name of the child node.
      * @param cne  the <code>ChildNodeEntry</code> instance.
      * @return the index of the child node entry or <code>0</code> if it is not
      *         found in this <code>NodeState</code>.
      */
-    public int getChildNodeIndex(QName name, ChildNodeEntry cne) {
-        List sns = childNodeEntries.get(name);
+    public int getChildNodeIndex(ChildNodeEntry cne) {
+        List sns = childNodeEntries.get(cne.getName());
         // index is one based
         int index = 1;
         for (Iterator it = sns.iterator(); it.hasNext(); ) {
-            ChildNodeEntry e = (ChildNodeEntry) it.next();
-            if (e == cne) {
+            ChildNodeEntry entry = (ChildNodeEntry) it.next();
+            if (entry == cne) {
                 return index;
             }
-            // skip removed entries
-            try {
-                if (e.isAvailable() && e.getNodeState().isValid()) {
-                    index++;
+            // skip entries that belong to removed or invalidated states.
+            // NOTE, that in this case the nodestate must be available from the cne.
+            if (entry.isAvailable()) {
+                try {
+                    if (entry.getNodeState().isValid()) {
+                        index++;
+                    }
+                } catch (ItemStateException e) {
+                    // probably removed or stale
                 }
-            } catch (ItemStateException ex) {
-                // probably removed or stale
+            } else {
+                // cne has not been resolved yet -> increase counter.
+                index++;
             }
         }
         // not found
