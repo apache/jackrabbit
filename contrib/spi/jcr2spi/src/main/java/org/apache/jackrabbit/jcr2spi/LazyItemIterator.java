@@ -27,12 +27,14 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.RangeIterator;
 import javax.jcr.version.VersionIterator;
 import javax.jcr.version.Version;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates
@@ -104,17 +106,19 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
         }
     }
 
-    //---------------------------------------------------------< NodeIterator >
+    //-------------------------------------------------------< NodeIterator >---
     /**
      * {@inheritDoc}
+     * @see NodeIterator#nextNode()
      */
     public Node nextNode() {
         return (Node) next();
     }
 
-    //-----------------------------------------------------< PropertyIterator >
+    //---------------------------------------------------< PropertyIterator >---
     /**
      * {@inheritDoc}
+     * @see PropertyIterator#nextProperty()
      */
     public Property nextProperty() {
         return (Property) next();
@@ -123,23 +127,26 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
     //----------------------------------------------------< VersionIterator >---
     /**
      * {@inheritDoc}
+     * @see VersionIterator#nextVersion()
      */
     public Version nextVersion() {
         return (Version) next();
     }
 
-    //--------------------------------------------------------< RangeIterator >
+    //------------------------------------------------------< RangeIterator >---
     /**
      * {@inheritDoc}
+     * @see javax.jcr.RangeIterator#getPosition()
      */
     public long getPosition() {
         return pos;
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * Always returns -1
+     * Always returns -1.
+     *
+     * @return always returns -1.
+     * @see RangeIterator#getSize()
      */
     public long getSize() {
         // Always returns -1, since the original list may contains items that
@@ -150,6 +157,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
 
     /**
      * {@inheritDoc}
+     * @see RangeIterator#skip(long)
      */
     public void skip(long skipNum) {
         if (skipNum < 0) {
@@ -191,9 +199,10 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
         prefetchNext();
     }
 
-    //-------------------------------------------------------------< Iterator >
+    //-----------------------------------------------------------< Iterator >---
     /**
      * {@inheritDoc}
+     * @see java.util.Iterator#hasNext()
      */
     public boolean hasNext() {
         return next != null;
@@ -201,6 +210,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
 
     /**
      * {@inheritDoc}
+     * @see Iterator#next()
      */
     public Object next() {
         if (next == null) {
@@ -214,8 +224,9 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
 
     /**
      * {@inheritDoc}
+     * @see Iterator#remove()
      *
-     * @throws UnsupportedOperationException always since not implemented
+     * @throws UnsupportedOperationException always since removal is not implemented.
      */
     public void remove() {
         throw new UnsupportedOperationException("remove");

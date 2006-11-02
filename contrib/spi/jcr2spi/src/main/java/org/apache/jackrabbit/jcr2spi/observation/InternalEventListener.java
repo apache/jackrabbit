@@ -28,9 +28,9 @@ public interface InternalEventListener {
     /**
      * Gets called when an event occurs.
      *
-     * @param events the event set received.
+     * @param eventBundle the event set received.
      */
-    public void onEvent(EventBundle events);
+    public void onEvent(EventBundle eventBundle);
 
-    public void onEvent(EventBundle events, ChangeLog changeLog);
+    public void onEvent(EventBundle eventBundle, ChangeLog changeLog);
 }

@@ -29,7 +29,26 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.Item;
 
 /**
- * <code>ItemManager</code>...
+ * There's one <code>ItemManager</code> instance per <code>Session</code>
+ * instance. It is the factory for <code>Node</code> and <code>Property</code>
+ * instances.
+ * <p/>
+ * The <code>ItemManager</code>'s responsabilities are:
+ * <ul>
+ * <li>providing access to <code>Item</code> instances by <code>ItemState</code>
+ * whereas <code>Node</code> and <code>Item</code> are only providing relative access.
+ * <li>returning the instance of an existing <code>Node</code> or <code>Property</code>,
+ * given its absolute path.
+ * <li>creating the per-session instance of a <code>Node</code>
+ * or <code>Property</code> that doesn't exist yet and needs to be created first.
+ * <li>guaranteeing that there aren't multiple instances representing the same
+ * <code>Node</code> or <code>Property</code> associated with the same
+ * <code>Session</code> instance.
+ * <li>maintaining a cache of the item instances it created.
+ * </ul>
+ * <p/>
+ * If the parent <code>Session</code> is an <code>XASession</code>, there is
+ * one <code>ItemManager</code> instance per started global transaction.
  */
 public interface ItemManager extends ItemLifeCycleListener {
 
@@ -56,8 +75,9 @@ public interface ItemManager extends ItemLifeCycleListener {
 
 
     /**
+     *
      * @param path
-     * @return
+     * @return The item for the given path.
      * @throws javax.jcr.PathNotFoundException
      * @throws javax.jcr.AccessDeniedException
      * @throws javax.jcr.RepositoryException

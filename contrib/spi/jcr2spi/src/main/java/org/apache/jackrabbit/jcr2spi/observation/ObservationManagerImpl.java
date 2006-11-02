@@ -149,7 +149,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
 
     //-----------------------< InternalEventListener >--------------------------
 
-    public void onEvent(EventBundle events) {
+    public void onEvent(EventBundle eventBundle) {
         // get active listeners
         Map activeListeners;
         synchronized (subscriptions) {
@@ -159,7 +159,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         for (Iterator it = activeListeners.keySet().iterator(); it.hasNext(); ) {
             EventListener listener = (EventListener) it.next();
             EventFilter filter = (EventFilter) activeListeners.get(listener);
-            FilteredEventIterator eventIter = new FilteredEventIterator(events, filter);
+            FilteredEventIterator eventIter = new FilteredEventIterator(eventBundle, filter);
             if (eventIter.hasNext()) {
                 try {
                     listener.onEvent(eventIter);
@@ -176,11 +176,11 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
      * Same as {@link #onEvent(EventBundle)} but only used for local changes
      * with a <code>ChangeLog</code>.
      * 
-     * @param events
+     * @param eventBundle
      * @param changeLog
      */
-    public void onEvent(EventBundle events, ChangeLog changeLog) {
-        onEvent(events);
+    public void onEvent(EventBundle eventBundle, ChangeLog changeLog) {
+        onEvent(eventBundle);
     }
 
     //-------------------------< internal >-------------------------------------

@@ -93,7 +93,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.AccessControlException;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * <code>SessionImpl</code>...
@@ -104,10 +103,6 @@ public class SessionImpl implements Session, ManagerProvider {
 
     private boolean alive;
 
-    /**
-     * the attributes of this session
-     */
-    private final HashMap attributes = new HashMap();
     /**
      * Listeners (weak references)
      */
@@ -166,17 +161,21 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     /**
+     * Always returns <code>null</code>.
+     *
      * @see javax.jcr.Session#getAttribute(String)
      */
     public Object getAttribute(String name) {
-        return attributes.get(name);
+        return null;
     }
 
     /**
+     * Always returns an empty String array.
+     * 
      * @see javax.jcr.Session#getAttributeNames()
      */
     public String[] getAttributeNames() {
-        return (String[]) attributes.keySet().toArray(new String[attributes.size()]);
+        return new String[0];
 
     }
 

@@ -1261,8 +1261,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     *
-     * @return
+     * @return true if this <code>Node</code> is modified or new.
      */
     private boolean hasPendingChanges() {
         return isModified() || isNew();
@@ -1271,9 +1270,8 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Checks if this node is lockable, i.e. has 'mix:lockable'.
      *
-     * @throws UnsupportedRepositoryOperationException
-     *                             if this node is not lockable
-     * @throws RepositoryException if another error occurs
+     * @throws UnsupportedRepositoryOperationException if this node is not lockable.
+     * @throws RepositoryException if another error occurs.
      */
     private void checkIsLockable() throws UnsupportedRepositoryOperationException, RepositoryException {
         checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
@@ -1288,8 +1286,8 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Check whether this node is locked by somebody else.
      *
-     * @throws LockException       if this node is locked by somebody else
-     * @throws RepositoryException if some other error occurs
+     * @throws LockException if this node is locked by somebody else.
+     * @throws RepositoryException if some other error occurs.
      */
     void checkIsLocked() throws LockException, RepositoryException {
         if (!isSupportedOption(Repository.OPTION_LOCKING_SUPPORTED) || isNew()) {
@@ -1302,6 +1300,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * Check if this node is versionable.
      *
      * @throws UnsupportedRepositoryOperationException
      * @throws RepositoryException
@@ -1533,15 +1532,6 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     private NodeState getNodeState() {
         return (NodeState) getItemState();
-    }
-
-    /**
-     * Return the id of this <code>Node</code>.
-     *
-     * @return the id of this <code>Node</code>
-     */
-    private NodeId getNodeId() {
-        return getNodeState().getNodeId();
     }
 
     /**

@@ -51,27 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * There's one <code>ItemManagerImpl</code> instance per <code>Session</code>
- * instance. It is the factory for <code>Node</code> and <code>Property</code>
- * instances.
- * <p/>
- * The <code>ItemManagerImpl</code>'s responsabilities are:
- * <ul>
- * <li>providing access to <code>Item</code> instances by <code>ItemState</code>
- * whereas <code>Node</code> and <code>Item</code> are only providing relative access.
- * <li>returning the instance of an existing <code>Node</code> or <code>Property</code>,
- * given its absolute path.
- * <li>creating the per-session instance of a <code>Node</code>
- * or <code>Property</code> that doesn't exist yet and needs to be created first.
- * <li>guaranteeing that there aren't multiple instances representing the same
- * <code>Node</code> or <code>Property</code> associated with the same
- * <code>Session</code> instance.
- * <li>maintaining a cache of the item instances it created.
- * <li>respecting access rights of associated <code>Session</code> in all methods.
- * </ul>
- * <p/>
- * If the parent <code>Session</code> is an <code>XASession</code>, there is
- * one <code>ItemManagerImpl</code> instance per started global transaction.
+ * <code>ItemManagerImpl</code> implements the <code>ItemManager</code> interface.
  */
 public class ItemManagerImpl implements Dumpable, ItemManager {
 
@@ -139,8 +119,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         try {
             // check sanity of session
             session.checkIsAlive();
-            // check privileges
-            checkAccess(itemState, true);
 
             // always return true if access rights are granted, existence
             // of the state has been asserted before
@@ -175,8 +153,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         Item item = retrieveItem(itemState);
         // not yet in cache, need to create instance
         if (item == null) {
-            // check privileges
-            checkAccess(itemState, false);
             // create instance of item
             if (itemState.isNode()) {
                 item = createNodeInstance((NodeState) itemState);
@@ -195,7 +171,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         // check sanity of session
         session.checkIsAlive();
         parentState.checkIsSessionState();
-        checkAccess(parentState, true);
 
         Iterator iter = parentState.getChildNodeEntries().iterator();
         while (iter.hasNext()) {
@@ -221,7 +196,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         // check sanity of session
         session.checkIsAlive();
         parentState.checkIsSessionState();
-        checkAccess(parentState, true);
 
         Collection nodeEntries = parentState.getChildNodeEntries();
         List childStates = new ArrayList(nodeEntries.size());
@@ -244,7 +218,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         // check sanity of session
         session.checkIsAlive();
         parentState.checkIsSessionState();
-        checkAccess(parentState, true);
 
         Iterator iter = parentState.getPropertyEntries().iterator();
         while (iter.hasNext()) {
@@ -270,7 +243,6 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         // check sanity of session
         session.checkIsAlive();
         parentState.checkIsSessionState();
-        checkAccess(parentState, true);
 
         Collection propEntries = parentState.getPropertyEntries();
         List childStates = new ArrayList(propEntries.size());
@@ -364,29 +336,8 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
 
     //----------------------------------------------------< private methods >---
     /**
-     *
      * @param state
-     * @param removeFromCache
-     * @throws RepositoryException
-     */
-    private void checkAccess(ItemState state, boolean removeFromCache) throws RepositoryException {
-        // check privileges
-        if (!session.getAccessManager().canRead(state)) {
-            if (removeFromCache) {
-                // clear cache
-                Item item = retrieveItem(state);
-                if (item != null) {
-                    evictItem(state);
-                }
-            }
-            throw new AccessDeniedException("Cannot read item: " + state);
-        }
-    }
-
-    /**
-     *
-     * @param state
-     * @return
+     * @return a new <code>Node</code> instance.
      * @throws RepositoryException
      */
     private NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
@@ -413,13 +364,10 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
     }
 
     /**
-     * 
      * @param state
-     * @return
-     * @throws RepositoryException
+     * @return a new <code>Property</code> instance.
      */
-    private PropertyImpl createPropertyInstance(PropertyState state)
-            throws RepositoryException {
+    private PropertyImpl createPropertyInstance(PropertyState state) {
         // 1. get definition for the specified property
         QPropertyDefinition qpd = state.getDefinition();
         PropertyDefinition def = session.getNodeTypeManager().getPropertyDefinition(qpd);

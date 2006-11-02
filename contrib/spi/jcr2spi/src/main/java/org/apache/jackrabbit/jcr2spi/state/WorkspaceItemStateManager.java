@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
-import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,22 +51,22 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
      * since workspace operations are reported as local changes as well and
      * might have invoked changes (autocreated items etc.).
      *
-     * @param events
+     * @param eventBundle
      */
-    public void onEvent(EventBundle events) {
-        pushEvents(getEventCollection(events.getEvents()));
+    public void onEvent(EventBundle eventBundle) {
+        pushEvents(getEventCollection(eventBundle));
     }
 
     /**
      *
-     * @param events
+     * @param eventBundle
      * @param changeLog
      */
-    public void onEvent(EventBundle events, ChangeLog changeLog) {
+    public void onEvent(EventBundle eventBundle, ChangeLog changeLog) {
         if (changeLog == null) {
             throw new IllegalArgumentException("ChangeLog must not be null.");
         }
-        Collection evs = getEventCollection(events.getEvents());
+        Collection evs = getEventCollection(eventBundle);
         // TODO: make sure, that events only contain events related to the modifications submitted with the changelog.
 
         // inform the changelog target state about the transient modifications
@@ -163,10 +163,10 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
         }
     }
 
-    private static Collection getEventCollection(EventIterator events) {
+    private static Collection getEventCollection(EventBundle eventBundle) {
         List evs = new ArrayList();
-        while (events.hasNext()) {
-           evs.add(events.nextEvent());
+        for (EventIterator it = eventBundle.getEvents(); it.hasNext();) {
+           evs.add(it.nextEvent());
         }
         return evs;
     }
