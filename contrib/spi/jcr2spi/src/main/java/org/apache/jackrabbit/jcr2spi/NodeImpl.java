@@ -557,23 +557,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public int getIndex() throws RepositoryException {
         checkStatus();
-
-        if (getNodeState().getDefinition().allowsSameNameSiblings()) {
-            NodeState parentState = getItemState().getParent();
-            if (parentState == null) {
-                // the root node cannot have same-name siblings; always return the
-                // default index
-                return Path.INDEX_DEFAULT;
-            }
-            ChildNodeEntry entry = parentState.getChildNodeEntry(getNodeState());
-            if (entry == null) {
-                String msg = "Unable to retrieve index for: " + safeGetJCRPath();
-                throw new RepositoryException(msg);
-            }
-            return entry.getIndex();
-        } else {
-            return Path.INDEX_DEFAULT;
-        }
+        return getNodeState().getIndex();
     }
 
     /**

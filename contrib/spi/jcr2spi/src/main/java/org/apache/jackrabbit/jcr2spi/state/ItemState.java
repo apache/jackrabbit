@@ -23,7 +23,6 @@ import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -218,23 +217,17 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
         // recursively build path of parent
         buildPath(builder, parentState);
 
+        QName name = state.getQName();
         if (state.isNode()) {
-            NodeState nodeState = (NodeState) state;
-            ChildNodeEntry entry = parentState.getChildNodeEntry(nodeState);
-            if (entry == null) {
-                String msg = "Failed to build path of " + state + ": parent has no such child entry.";
-                log.debug(msg);
-                throw new ItemNotFoundException(msg);
-            }
+            int index = ((NodeState)state).getIndex();
             // add to path
-            if (entry.getIndex() == Path.INDEX_DEFAULT) {
-                builder.addLast(entry.getName());
+            if (index == Path.INDEX_DEFAULT) {
+                builder.addLast(name);
             } else {
-                builder.addLast(entry.getName(), entry.getIndex());
+                builder.addLast(name, index);
             }
         } else {
             PropertyState propState = (PropertyState) state;
-            QName name = propState.getQName();
             // add to path
             builder.addLast(name);
         }
