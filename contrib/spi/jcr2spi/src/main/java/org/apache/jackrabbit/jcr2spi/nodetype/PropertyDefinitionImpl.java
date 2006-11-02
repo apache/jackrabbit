@@ -29,6 +29,7 @@ import javax.jcr.ValueFactory;
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
@@ -67,14 +68,24 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
         QValue[] defVals;
         if (pDef.getRequiredType() == PropertyType.BINARY) {
             try {
-                defVals = QValue.create(pDef.getDefaultValuesAsStream(), pDef.getRequiredType());
+                InputStream[] ins = pDef.getDefaultValuesAsStream();
+                if (ins == null) {
+                    return null;
+                } else {
+                    defVals = QValue.create(ins, pDef.getRequiredType());
+                }
             } catch (IOException e) {
                 String propName = (getName() == null) ? "[null]" : getName();
                 log.error("Illegal default value specified for property " + propName + " in node type " + getDeclaringNodeType(), e);
                 return null;
             }
         } else {
-            defVals = QValue.create(pDef.getDefaultValues(), pDef.getRequiredType());
+            String[] ss = pDef.getDefaultValues();
+            if (ss == null) {
+                return null;
+            } else {
+                defVals = QValue.create(ss, pDef.getRequiredType());
+            }
         }
 
         Value[] values = new Value[defVals.length];
