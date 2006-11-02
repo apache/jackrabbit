@@ -159,9 +159,9 @@ public class VersionManagerImpl implements VersionManager {
         // TODO find better solution to build the mergeFailed-collection
         final List failedIds = new ArrayList();
         InternalEventListener mergeFailedCollector = new InternalEventListener() {
-            public void onEvent(EventBundle events) {
-                if (events.isLocal()) {
-                    EventIterator it = events.getEvents();
+            public void onEvent(EventBundle eventBundle) {
+                if (eventBundle.isLocal()) {
+                    EventIterator it = eventBundle.getEvents();
                     while (it.hasNext()) {
                         Event ev = it.nextEvent();
                         if (ev.getType() == Event.PROPERTY_ADDED && QName.JCR_MERGEFAILED.equals(ev.getQPath().getNameElement().getName())) {
@@ -170,7 +170,7 @@ public class VersionManagerImpl implements VersionManager {
                     }
                 }
             }
-            public void onEvent(EventBundle events, ChangeLog changeLog) {
+            public void onEvent(EventBundle eventBundle, ChangeLog changeLog) {
                 // nothing to do. we are not interested in transient modifications
             }
         };

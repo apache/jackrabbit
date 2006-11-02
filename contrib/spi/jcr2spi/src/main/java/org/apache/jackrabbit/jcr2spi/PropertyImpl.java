@@ -61,7 +61,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                         ItemLifeCycleListener[] listeners) {
         super(itemManager, session, state, listeners);
         this.definition = definition;
-        // value will be read on demand
+        // value will be read (and converted from qualified value) on demand.
     }
 
     //-----------------------------------------------------< Item interface >---

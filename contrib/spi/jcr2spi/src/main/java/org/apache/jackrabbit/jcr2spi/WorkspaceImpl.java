@@ -439,7 +439,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * Validator for the <code>Workspace</code>. It contrast from {@link SessionImpl#getValidator()}
      * in terms of <code>HierarchyManager</code> and <code>ItemManager</code>.
-     * @return
+     * @return validator
      */
     private ItemStateValidator getValidator() {
         if (validator == null) {
@@ -447,6 +447,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         }
         return validator;
     }
+    
     //-----------------------------------------------------< initialization >---
     /**
      * Create the workspace state manager. May be overridden by subclasses.
@@ -459,10 +460,11 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     }
 
     /**
+     * Create the <code>LockManager</code>. May be overridden by subclasses.
      *
      * @param wspManager
      * @param itemManager
-     * @return
+     * @return a new <code>LockManager</code> instance.
      */
     protected LockManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
         if (session.isSupportedOption(Repository.OPTION_LOCKING_SUPPORTED)) {
@@ -475,9 +477,10 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     }
 
     /**
+     * Create the <code>VersionManager</code>. May be overridden by subclasses.
      *
      * @param wspManager
-     * @return
+     * @return a new <code>VersionManager</code> instance.
      */
     protected VersionManager createVersionManager(WorkspaceManager wspManager) {
         if (session.isSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED)) {
@@ -488,8 +491,9 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     }
 
     /**
+     * Create the <code>ObservationManager</code>. May be overridden by subclasses.
      *
-     * @return
+     * @return a new <code>ObservationManager</code> instance
      */
     protected ObservationManager createObservationManager(NamespaceResolver nsResolver, NodeTypeRegistry ntRegistry) {
         ObservationManagerImpl obsMgr = new ObservationManagerImpl(nsResolver, ntRegistry);

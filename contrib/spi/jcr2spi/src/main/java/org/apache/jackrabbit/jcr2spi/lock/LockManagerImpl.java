@@ -532,7 +532,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
 
         //------------------------------------------< InternalEventListener >---
-        public void onEvent(EventBundle events) {
+        public void onEvent(EventBundle eventBundle) {
             if (!isLive) {
                 // since we only monitor the removal of the lock (by means
                 // of deletion of the jcr:lockIsDeep property, we are not interested
@@ -540,7 +540,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 return;
             }
 
-            for (EventIterator it = events.getEvents(); it.hasNext(); ) {
+            for (EventIterator it = eventBundle.getEvents(); it.hasNext(); ) {
                 Event ev = it.nextEvent();
                 // if the jcr:lockIsDeep property related to this Lock got removed,
                 // we assume that the lock has been released.
@@ -558,7 +558,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
             }
         }
 
-        public void onEvent(EventBundle events, ChangeLog changeLog) {
+        public void onEvent(EventBundle eventBundle, ChangeLog changeLog) {
             // nothing to do. not interested in transient modifications
         }
     }

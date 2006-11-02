@@ -37,18 +37,17 @@ public interface HierarchyManager {
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    ItemState getItemState(Path qPath) throws PathNotFoundException, RepositoryException;
+    public ItemState getItemState(Path qPath) throws PathNotFoundException, RepositoryException;
 
     /**
-     * Returns the depth of the specified item which is equivalent to
-     * <code>getQPath(id).getAncestorCount()</code>. The depth reflects the
+     * Returns the depth of the specified item. The depth reflects the
      * absolute hierarchy level.
      *
      * @param itemState item state
      * @return the depth of the specified item
      * @throws RepositoryException if another error occurs
      */
-    int getDepth(ItemState itemState) throws ItemNotFoundException, RepositoryException;
+    public int getDepth(ItemState itemState) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the depth of the specified descendant relative to the given
@@ -65,6 +64,5 @@ public interface HierarchyManager {
      * denote an existing item.
      * @throws RepositoryException If another error occurs.
      */
-    int getRelativeDepth(NodeState ancestor, ItemState descendant)
-            throws ItemNotFoundException, RepositoryException;
+    public int getRelativeDepth(NodeState ancestor, ItemState descendant) throws ItemNotFoundException, RepositoryException;
 }

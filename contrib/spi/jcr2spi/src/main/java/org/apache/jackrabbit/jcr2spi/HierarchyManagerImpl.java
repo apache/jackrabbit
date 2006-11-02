@@ -33,15 +33,16 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**
- * <code>HierarchyManagerImpl</code> ...
+ * <code>HierarchyManagerImpl</code> implements the <code>HierarchyManager</code>
+ * interface.
  */
 public class HierarchyManagerImpl implements HierarchyManager {
 
     private static Logger log = LoggerFactory.getLogger(HierarchyManagerImpl.class);
 
-    protected final ItemStateManager itemStateManager;
+    private final ItemStateManager itemStateManager;
     // used for outputting user-friendly paths and names
-    protected final NamespaceResolver nsResolver;
+    private final NamespaceResolver nsResolver;
 
     public HierarchyManagerImpl(ItemStateManager itemStateManager,
                                 NamespaceResolver nsResolver) {
@@ -50,7 +51,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     //------------------------------------------------------------< private >---
-
     /**
      * Resolve a path into an item state. Recursively invoked method that may be
      * overridden by some subclass to either return cached responses or add
