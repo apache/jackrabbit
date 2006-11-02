@@ -196,9 +196,6 @@ public class QueryImpl implements Query {
             if (!p.isAbsolute()) {
                 throw new RepositoryException(absPath + " is not an absolute path");
             }
-            if (session.itemExists(absPath)) {
-                throw new ItemExistsException(absPath);
-            }
             String jcrParent = PathFormat.format(p.getAncestor(1), nsResolver);
             if (!session.itemExists(jcrParent)) {
                 throw new PathNotFoundException(jcrParent);
