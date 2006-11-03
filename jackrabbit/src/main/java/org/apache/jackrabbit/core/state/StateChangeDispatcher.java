@@ -30,12 +30,12 @@ import java.util.Iterator;
 public class StateChangeDispatcher {
 
     /**
-     * Simple item state listeners (weak references)
+     * Simple item state listeners
      */
     private final Collection listeners = new CopyOnWriteArrayList();
 
     /**
-     * Node state listeners (weak references)
+     * Node state listeners
      */
     private final transient Collection nsListeners = new CopyOnWriteArrayList();
 
