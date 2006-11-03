@@ -24,7 +24,8 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /**
- * Component that holds weak references to listeners interested in changes to item states and dispatches notifications.
+ * Component that holds references to listeners interested in changes to item
+ * states and dispatches notifications.
  */
 public class StateChangeDispatcher {
 
