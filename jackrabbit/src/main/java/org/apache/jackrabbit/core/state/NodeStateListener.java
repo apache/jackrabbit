@@ -37,6 +37,17 @@ public interface NodeStateListener extends ItemStateListener {
                    QName name, int index, NodeId id);
 
     /**
+     * Called when a node has been modified, typically as a result of removal
+     * or addition of a child node.
+     * <p/>
+     * Please note, that this method is not called if 
+     * {@link #stateModified(ItemState)} was called.
+     *
+     * @param state node state that changed
+     */
+    void nodeModified(NodeState state);
+
+    /**
      * Called when the children nodes were replaced by other nodes, typically
      * as result of a reorder operation.
      *

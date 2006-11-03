@@ -177,6 +177,25 @@ public class StateChangeDispatcher {
     /**
      * Notify listeners about changes to some state.
      * @param state node state that changed
+     */
+    public void notifyNodeModified(NodeState state) {
+        // small optimization as there are only a few clients interested in node state modifications
+        if (!nsListeners.isEmpty()) {
+            NodeStateListener[] la;
+            synchronized (nsListeners) {
+                la = (NodeStateListener[]) nsListeners.toArray(new NodeStateListener[nsListeners.size()]);
+            }
+            for (int i = 0; i < la.length; i++) {
+                if (la[i] != null) {
+                    la[i].nodeModified(state);
+                }
+            }
+        }
+    }
+
+    /**
+     * Notify listeners about changes to some state.
+     * @param state node state that changed
      * @param name  name of node that was added
      * @param index index of new node
      * @param id    id of new node

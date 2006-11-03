@@ -21,24 +21,25 @@ import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Collection;
 
 /**
  * Item state manager that handles both transient and persistent items.
@@ -82,9 +83,9 @@ public class SessionItemStateManager
     /**
      * Creates a new <code>SessionItemStateManager</code> instance.
      *
-     * @param rootNodeId
-     * @param stateMgr
-     * @param nsResolver
+     * @param rootNodeId the root node id
+     * @param stateMgr the local item state manager
+     * @param nsResolver the namespace resolver
      */
     public SessionItemStateManager(NodeId rootNodeId,
                                    LocalItemStateManager stateMgr,
@@ -839,6 +840,18 @@ public class SessionItemStateManager
     public void nodesReplaced(NodeState state) {
         if (state.getContainer() == this || !transientStore.contains(state.getId())) {
             dispatcher.notifyNodesReplaced(state);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Pass notification to listeners if a transient state was modified
+     * or if the local state is not overlayed.
+     */
+    public void nodeModified(NodeState state) {
+        if (state.getContainer() == this || !transientStore.contains(state.getId())) {
+            dispatcher.notifyNodeModified(state);
         }
     }
 

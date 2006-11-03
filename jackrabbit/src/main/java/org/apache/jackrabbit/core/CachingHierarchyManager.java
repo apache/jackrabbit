@@ -284,14 +284,16 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     public void stateModified(ItemState modified) {
         if (modified.isNode()) {
-            stateModified((NodeState) modified);
+            nodeModified((NodeState) modified);
         }
     }
 
     /**
+     * {@inheritDoc}
+     *
      * Evict moved or renamed items from the cache.
      */
-    private void stateModified(NodeState modified) {
+    public void nodeModified(NodeState modified) {
         synchronized (cacheMonitor) {
             LRUEntry entry = (LRUEntry) idCache.get(modified.getNodeId());
             if (entry == null) {
@@ -601,6 +603,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      *
      * @param path child path
      * @param id   node id
+     *
+     * @throws PathNotFoundException if hte path was not found
      */
     private void insert(Path path, ItemId id) throws PathNotFoundException {
         synchronized (cacheMonitor) {
@@ -631,6 +635,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      *
      * @param path child path
      * @param id   node id
+     *
+     * @throws PathNotFoundException if the path was not found
      */
     private void remove(Path path, ItemId id) throws PathNotFoundException {
         synchronized (cacheMonitor) {
@@ -677,6 +683,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
          * Create a new instance of this class
          *
          * @param id node id
+         * @param element the path map element for this entry
          */
         public LRUEntry(NodeId id, PathMap.Element element) {
             this.id = id;
