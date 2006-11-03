@@ -395,7 +395,7 @@ public class DefaultItemCollection extends AbstractItemResource
                     throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Cannot create a new non-collection resource without request body.");
                 } else {
                     // PUT : create new or overwrite existing property.
-                    tmpFile = File.createTempFile(TMP_PREFIX + memberName, null, null);
+                    tmpFile = File.createTempFile(TMP_PREFIX + Text.escape(memberName), null, null);
                     FileOutputStream out = new FileOutputStream(tmpFile);
                     IOUtil.spool(in, out);
                     out.close();
