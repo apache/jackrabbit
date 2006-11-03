@@ -22,8 +22,9 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.name.QName;
 
-import javax.jcr.ReferentialIntegrityException;
 import java.util.Iterator;
+
+import javax.jcr.ReferentialIntegrityException;
 
 /**
  * Local <code>ItemStateManager</code> that isolates changes to
@@ -402,7 +403,7 @@ public class LocalItemStateManager
      * we're listening to.
      */
     public void stateModified(ItemState modified) {
-        ItemState local = null;
+        ItemState local;
         if (modified.getContainer() != this) {
             // shared state was modified
             local = cache.retrieve(modified.getId());
@@ -416,6 +417,12 @@ public class LocalItemStateManager
         }
         if (local != null) {
             dispatcher.notifyStateModified(local);
+        } else if (modified.isNode()) {
+            // if the state is not ours (and is not cached) it could have been
+            // vanished from the week-ref cache due to a gc. but there could
+            // still be some listeners (e.g. CachingHierarchyManager) that want
+            // to get notified.
+            dispatcher.notifyNodeModified((NodeState) modified);
         }
     }
 
@@ -487,6 +494,16 @@ public class LocalItemStateManager
      */
     public void nodesReplaced(NodeState state) {
         dispatcher.notifyNodesReplaced(state);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
+     * concerned must be a local state.
+     */
+    public void nodeModified(NodeState state) {
+        dispatcher.notifyNodeModified(state);
     }
 
     /**
