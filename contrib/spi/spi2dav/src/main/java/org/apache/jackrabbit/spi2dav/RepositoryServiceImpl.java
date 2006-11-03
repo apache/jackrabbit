@@ -276,7 +276,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private String getItemUri(NodeId parentId, QName childName, SessionInfo sessionInfo) throws RepositoryException {
         String parentUri = uriResolver.getItemUri(parentId, sessionInfo.getWorkspaceName(), sessionInfo);
         try {
-            return parentUri + "/" + NameFormat.format(childName, nsResolver);
+            return parentUri + "/" + Text.escape(NameFormat.format(childName, nsResolver));
         } catch (NoPrefixDeclaredException e) {
             throw new RepositoryException(e);
         }
