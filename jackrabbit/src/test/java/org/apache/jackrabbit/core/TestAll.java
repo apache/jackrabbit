@@ -37,6 +37,7 @@ public class TestAll extends TestCase {
 
         //suite.addTestSuite(ConcurrencyTest.class);
         //suite.addTestSuite(ConcurrentSaveTest.class);
+        //suite.addTestSuite(ConcurrentNodeModificationTest.class);
         //suite.addTestSuite(LockTest.class);
         suite.addTestSuite(NamespaceRegistryImplTest.class);
         suite.addTestSuite(TransientRepositoryTest.class);
