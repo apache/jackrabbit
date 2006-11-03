@@ -112,6 +112,7 @@ public class SessionItemStateManager
     }
 
     //-------------------------------------------------------------< Dumpable >
+
     /**
      * {@inheritDoc}
      */
@@ -135,6 +136,7 @@ public class SessionItemStateManager
     }
 
     //-----------------------------------------------------< ItemStateManager >
+
     /**
      * {@inheritDoc}
      */
@@ -204,6 +206,7 @@ public class SessionItemStateManager
     }
 
     //--------------------------------------------< UpdatableItemStateManager >
+
     /**
      * {@inheritDoc}
      */
@@ -516,6 +519,7 @@ public class SessionItemStateManager
     }
 
     //------< methods for creating & discarding transient ItemState instances >
+
     /**
      * @param id
      * @param nodeTypeName
@@ -708,6 +712,7 @@ public class SessionItemStateManager
 
     /**
      * Add an <code>ItemStateListener</code>
+     *
      * @param listener the new listener to be informed on modifications
      */
     public void addListener(ItemStateListener listener) {
@@ -716,6 +721,7 @@ public class SessionItemStateManager
 
     /**
      * Remove an <code>ItemStateListener</code>
+     *
      * @param listener an existing listener
      */
     public void removeListener(ItemStateListener listener) {
@@ -772,6 +778,25 @@ public class SessionItemStateManager
             // local state was modified
             ItemState transientState = transientStore.get(modified.getId());
             if (transientState != null) {
+                if (transientState.isNode() && !transientState.isStale()) {
+                    // try to silently merge non-conflicting changes (JCR-584)
+                    NodeStateMerger.MergeContext context =
+                            new NodeStateMerger.MergeContext() {
+                                public boolean isAdded(ItemId id) {
+                                    ItemState is = transientStore.get(id);
+                                    return is != null
+                                            && is.getStatus() == ItemState.STATUS_NEW;
+                                }
+
+                                public boolean isDeleted(ItemId id) {
+                                    return atticStore.contains(id);
+                                }
+                            };
+                    if (NodeStateMerger.merge((NodeState) transientState, context)) {
+                        // merge succeeded
+                        return;
+                    }
+                }
                 transientState.setStatus(ItemState.STATUS_STALE_MODIFIED);
                 visibleState = transientState;
             }

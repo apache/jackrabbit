@@ -131,6 +131,17 @@ public class ChangeLog {
     }
 
     /**
+     * Return a flag indicating whether a given item state is marked as
+     * deleted in this log.
+     *
+     * @return <code>true</code> if item state is marked as deleted in this
+     *         log; <code>false</code> otherwise
+     */
+    public boolean deleted(ItemId id) {
+        return deletedStates.containsKey(id);
+    }
+
+    /**
      * Return a node references object given its id. Returns
      * <code>null</code> if the node reference is not in the modified
      * section.

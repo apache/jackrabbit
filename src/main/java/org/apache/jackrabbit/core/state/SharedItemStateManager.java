@@ -543,9 +543,33 @@ public class SharedItemStateManager
                     ItemState state = (ItemState) iter.next();
                     state.connect(getItemState(state.getId()));
                     if (state.isStale()) {
-                        String msg = state.getId() + " has been modified externally";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
+                        boolean merged = false;
+                        if (state.isNode()) {
+                            NodeStateMerger.MergeContext context =
+                                    new NodeStateMerger.MergeContext() {
+                                        public boolean isAdded(ItemId id) {
+                                            try {
+                                                ItemState is = local.get(id);
+                                                return is != null
+                                                        && is.getStatus() == ItemState.STATUS_NEW;
+                                            } catch (NoSuchItemStateException e) {
+                                                return false;
+                                            }
+                                        }
+
+                                        public boolean isDeleted(ItemId id) {
+                                            return local.deleted(id);
+                                        }
+                                    };
+
+                            merged = NodeStateMerger.merge((NodeState) state, context);
+                        }
+                        if (!merged) {
+                            String msg = state.getId() + " has been modified externally";
+                            log.debug(msg);
+                            throw new StaleItemStateException(msg);
+                        }
+                        // merge succeeded, fall through
                     }
 
                     // update modification count (will be persisted as well)
