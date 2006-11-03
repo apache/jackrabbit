@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.util.WeakIdentityCollection;
-import org.apache.jackrabbit.name.QName;
+import EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.name.QName;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Component that holds weak references to listeners interested in changes to item states and dispatches notifications.
@@ -30,27 +31,24 @@ public class StateChangeDispatcher {
     /**
      * Simple item state listeners (weak references)
      */
-    private final transient Collection listeners = new WeakIdentityCollection(5);
+    private final Collection listeners = new CopyOnWriteArrayList();
 
     /**
      * Node state listeners (weak references)
      */
-    private final transient Collection nsListeners = new WeakIdentityCollection(5);
+    private final transient Collection nsListeners = new CopyOnWriteArrayList();
 
     /**
      * Add an <code>ItemStateListener</code>.
      * @param listener the new listener to be informed on modifications
      */
     public void addListener(ItemStateListener listener) {
-        synchronized (listeners) {
-            assert (!listeners.contains(listener));
-            listeners.add(listener);
-        }
+        assert (!listeners.contains(listener));
+        listeners.add(listener);
+
         if (listener instanceof NodeStateListener) {
-            synchronized (nsListeners) {
-                assert (!nsListeners.contains(listener));
-                nsListeners.add(listener);
-            }
+            assert (!nsListeners.contains(listener));
+            nsListeners.add(listener);
         }
     }
 
@@ -60,13 +58,9 @@ public class StateChangeDispatcher {
      */
     public void removeListener(ItemStateListener listener) {
         if (listener instanceof NodeStateListener) {
-            synchronized (nsListeners) {
-                nsListeners.remove(listener);
-            }
+            nsListeners.remove(listener);
         }
-        synchronized (listeners) {
-            listeners.remove(listener);
-        }
+        listeners.remove(listener);
     }
 
     /**
@@ -74,14 +68,9 @@ public class StateChangeDispatcher {
      * @param created created state.
      */
     public void notifyStateCreated(ItemState created) {
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateCreated(created);
-            }
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            ((ItemStateListener) iter.next()).stateCreated(created);
         }
     }
 
@@ -90,14 +79,9 @@ public class StateChangeDispatcher {
      * @param modified modified state.
      */
     public void notifyStateModified(ItemState modified) {
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateModified(modified);
-            }
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            ((ItemStateListener) iter.next()).stateModified(modified);
         }
     }
 
@@ -106,14 +90,9 @@ public class StateChangeDispatcher {
      * @param destroyed destroyed state.
      */
     public void notifyStateDestroyed(ItemState destroyed) {
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateDestroyed(destroyed);
-            }
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            ((ItemStateListener) iter.next()).stateDestroyed(destroyed);
         }
     }
 
@@ -122,14 +101,9 @@ public class StateChangeDispatcher {
      * @param discarded discarded state.
      */
     public void notifyStateDiscarded(ItemState discarded) {
-        ItemStateListener[] la;
-        synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].stateDiscarded(discarded);
-            }
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            ((ItemStateListener) iter.next()).stateDiscarded(discarded);
         }
     }
 
@@ -141,17 +115,9 @@ public class StateChangeDispatcher {
      * @param id    id of new node
      */
     public void notifyNodeAdded(NodeState state, QName name, int index, NodeId id) {
-        // small optimization as there are only a few clients interested in node state modifications
-        if (!nsListeners.isEmpty()) {
-            NodeStateListener[] la;
-            synchronized (nsListeners) {
-                la = (NodeStateListener[]) nsListeners.toArray(new NodeStateListener[nsListeners.size()]);
-            }
-            for (int i = 0; i < la.length; i++) {
-                if (la[i] != null) {
-                    la[i].nodeAdded(state, name, index, id);
-                }
-            }
+        Iterator iter = nsListeners.iterator();
+        while (iter.hasNext()) {
+            ((NodeStateListener) iter.next()).nodeAdded(state, name, index, id);
         }
     }
 
@@ -160,17 +126,9 @@ public class StateChangeDispatcher {
      * @param state node state that changed
      */
     public void notifyNodesReplaced(NodeState state) {
-        // small optimization as there are only a few clients interested in node state modifications
-        if (!nsListeners.isEmpty()) {
-            NodeStateListener[] la;
-            synchronized (nsListeners) {
-                la = (NodeStateListener[]) nsListeners.toArray(new NodeStateListener[nsListeners.size()]);
-            }
-            for (int i = 0; i < la.length; i++) {
-                if (la[i] != null) {
-                    la[i].nodesReplaced(state);
-                }
-            }
+        Iterator iter = nsListeners.iterator();
+        while (iter.hasNext()) {
+            ((NodeStateListener) iter.next()).nodesReplaced(state);
         }
     }
 
@@ -179,17 +137,9 @@ public class StateChangeDispatcher {
      * @param state node state that changed
      */
     public void notifyNodeModified(NodeState state) {
-        // small optimization as there are only a few clients interested in node state modifications
-        if (!nsListeners.isEmpty()) {
-            NodeStateListener[] la;
-            synchronized (nsListeners) {
-                la = (NodeStateListener[]) nsListeners.toArray(new NodeStateListener[nsListeners.size()]);
-            }
-            for (int i = 0; i < la.length; i++) {
-                if (la[i] != null) {
-                    la[i].nodeModified(state);
-                }
-            }
+        Iterator iter = nsListeners.iterator();
+        while (iter.hasNext()) {
+            ((NodeStateListener) iter.next()).nodeModified(state);
         }
     }
 
@@ -201,17 +151,9 @@ public class StateChangeDispatcher {
      * @param id    id of new node
      */
     public void notifyNodeRemoved(NodeState state, QName name, int index, NodeId id) {
-        // small optimization as there are only a few clients interested in node state modifications
-        if (!nsListeners.isEmpty()) {
-            NodeStateListener[] la;
-            synchronized (nsListeners) {
-                la = (NodeStateListener[]) nsListeners.toArray(new NodeStateListener[nsListeners.size()]);
-            }
-            for (int i = 0; i < la.length; i++) {
-                if (la[i] != null) {
-                    la[i].nodeRemoved(state, name, index, id);
-                }
-            }
+        Iterator iter = nsListeners.iterator();
+        while (iter.hasNext()) {
+            ((NodeStateListener) iter.next()).nodeRemoved(state, name, index, id);
         }
     }
 }
