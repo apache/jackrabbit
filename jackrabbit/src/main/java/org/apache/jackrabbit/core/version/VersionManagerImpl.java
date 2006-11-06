@@ -500,7 +500,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * {@inheritDoc}
      */
     public void externalUpdate(ChangeLog changes, List events) throws RepositoryException {
-        EventStateCollection esc = getEscFactory().createEventStateCollection();
+        EventStateCollection esc = getEscFactory().createEventStateCollection(null);
         esc.addAll(events);
 
         sharedStateMgr.externalUpdate(changes, esc);
