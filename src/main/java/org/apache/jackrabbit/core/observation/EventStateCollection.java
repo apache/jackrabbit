@@ -100,7 +100,7 @@ public final class EventStateCollection {
      * @param pathPrefix the path to prefix the event paths or <code>null</code>
      *                   if no prefix should be used.
      */
-    EventStateCollection(EventDispatcher dispatcher,
+    public EventStateCollection(EventDispatcher dispatcher,
                          SessionImpl session,
                          Path pathPrefix) {
         this.dispatcher = dispatcher;
@@ -185,7 +185,7 @@ public final class EventStateCollection {
                                     getParent(oldPath),
                                     n.getNodeId(),
                                     oldPath.getNameElement(),
-                                    oldParentNodeType,
+                                    oldParentNodeType.getQName(),
                                     mixins,
                                     session));
 
@@ -196,7 +196,7 @@ public final class EventStateCollection {
                                     getParent(newPath),
                                     n.getNodeId(),
                                     newPath.getNameElement(),
-                                    newParentNodeType,
+                                    newParentNodeType.getQName(),
                                     mixins,
                                     session));
                         } else {
@@ -249,14 +249,14 @@ public final class EventStateCollection {
                                         parentPath,
                                         n.getNodeId(),
                                         oldPath.getNameElement(),
-                                        nodeType,
+                                        nodeType.getQName(),
                                         mixins,
                                         session));
                                 events.add(EventState.childNodeAdded(parent.getNodeId(),
                                         parentPath,
                                         n.getNodeId(),
                                         newPath.getNameElement(),
-                                        nodeType,
+                                        nodeType.getQName(),
                                         mixins,
                                         session));
                             }
@@ -290,7 +290,7 @@ public final class EventStateCollection {
                                 parentPath,
                                 child.getId(),
                                 removedElem,
-                                nodeType,
+                                nodeType.getQName(),
                                 mixins,
                                 session));
 
@@ -298,7 +298,7 @@ public final class EventStateCollection {
                                 parentPath,
                                 child.getId(),
                                 addedElem,
-                                nodeType,
+                                nodeType.getQName(),
                                 mixins,
                                 session));
                     }
@@ -312,7 +312,7 @@ public final class EventStateCollection {
                 events.add(EventState.propertyChanged(state.getParentId(),
                         getParent(path),
                         path.getNameElement(),
-                        nodeType,
+                        nodeType.getQName(),
                         mixins,
                         session));
             }
@@ -333,7 +333,7 @@ public final class EventStateCollection {
                         getParent(path),
                         n.getNodeId(),
                         path.getNameElement(),
-                        nodeType,
+                        nodeType.getQName(),
                         mixins,
                         session));
             } else {
@@ -348,7 +348,7 @@ public final class EventStateCollection {
                     events.add(EventState.propertyRemoved(state.getParentId(),
                             getParent(path),
                             path.getNameElement(),
-                            nodeType,
+                            nodeType.getQName(),
                             mixins,
                             session));
                 } catch (NoSuchItemStateException e) {
@@ -379,7 +379,7 @@ public final class EventStateCollection {
                         getParent(path),
                         n.getNodeId(),
                         path.getNameElement(),
-                        nodeType,
+                        nodeType.getQName(),
                         mixins,
                         session));
             } else {
@@ -391,7 +391,7 @@ public final class EventStateCollection {
                 events.add(EventState.propertyAdded(state.getParentId(),
                         getParent(path),
                         path.getNameElement(),
-                        nodeType,
+                        nodeType.getQName(),
                         mixins,
                         session));
             }
@@ -454,7 +454,7 @@ public final class EventStateCollection {
      * Return the list of events.
      * @return list of events
      */
-    List getEvents() {
+    public List getEvents() {
         return Collections.unmodifiableList(events);
     }
 

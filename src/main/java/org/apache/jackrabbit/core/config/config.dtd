@@ -32,7 +32,7 @@
         a Security element that specifies the name of the app-entry
         in the JAAS config and the access manager
 
-        a Workspaces element that specifies the location of the 
+        a Workspaces element that specifies the location of the
         workspaces root directory, the name of the default workspace,
         the maximum idle time before a workspace is automatically
         shutdown (optional) and the workspace configuration root directory
@@ -48,8 +48,11 @@
 
         a Versioning element that is used for configuring
         versioning-related settings
+
+        a Cluster element that is used for configuring an optional
+        clustering node that synchronizes changes made in a cluster
 -->
-<!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning)>
+<!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,Cluster?)>
 
 <!--
     a virtual file system
@@ -154,3 +157,25 @@
 <!ATTLIST Versioning
   rootPath CDATA #REQUIRED
 >
+
+<!--
+    the Cluster element configures the optional participation of this
+    repository in a clustered environment. a literal id may be
+    specified that uniquely identifies this node in a cluster, as well
+    as the delay in seconds before changes to the journal are
+    automatically detected.
+-->
+<!ELEMENT Cluster (Journal)>
+<!ATTLIST Cluster
+  id CDATA #IMPLIED
+  syncDelay CDATA #IMPLIED
+>
+
+<!--
+    the Journal element configures the journal used in clustering; the
+    class attribute specifies the FQN of the class implementing the
+    Journal interface.
+-->
+<!ELEMENT Journal (param*)>
+<!ATTLIST Journal
+  class CDATA #REQUIRED>

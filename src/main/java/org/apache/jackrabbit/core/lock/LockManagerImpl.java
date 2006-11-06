@@ -24,6 +24,8 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.util.PathMap;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
+import org.apache.jackrabbit.core.cluster.LockEventChannel;
+import org.apache.jackrabbit.core.cluster.LockEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -54,11 +56,10 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-
 /**
  * Provides the functionality needed for locking and unlocking nodes.
  */
-public class LockManagerImpl implements LockManager, SynchronousEventListener {
+public class LockManagerImpl implements LockManager, SynchronousEventListener, LockEventListener {
 
     /**
      * Logger
@@ -99,6 +100,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
      * Namespace resolver
      */
     private final NamespaceResolver nsResolver;
+
+    /**
+     * Lock event channel.
+     */
+    private LockEventChannel eventChannel;
 
     /**
      * Create a new instance of this class.
@@ -280,6 +286,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             lockMap.put(path, info);
 
             if (!info.sessionScoped) {
+                if (eventChannel != null) {
+                    eventChannel.locked(node.getNodeId(), isDeep, session.getUserID());
+                }
                 save();
             }
             return info;
@@ -322,6 +331,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
             info.setLive(false);
 
             if (!info.sessionScoped) {
+                if (eventChannel != null) {
+                    eventChannel.unlocked(node.getNodeId());
+                }
                 save();
             }
 
@@ -598,6 +610,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
         savingDisabled = false;
         release();
     }
+
 
     //----------------------------------------------< SynchronousEventListener >
 
@@ -909,6 +922,64 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener {
          * {@inheritDoc}
          */
         public void loggedOut(SessionImpl session) {
+        }
+    }
+
+    //----------------------------------------------------< LockEventListener >
+
+    /**
+     * Set a lock event channel
+     *
+     * @param eventChannel lock event channel
+     */
+    public void setEventChannel(LockEventChannel eventChannel) {
+        this.eventChannel = eventChannel;
+        eventChannel.setListener(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void externalLock(NodeId nodeId, boolean isDeep, String userId) throws RepositoryException {
+        acquire();
+
+        try {
+            Path path = getPath(nodeId);
+
+            // create lock token
+            LockInfo info = new LockInfo(new LockToken(nodeId), false, isDeep, userId);
+            info.setLive(true);
+            lockMap.put(path, info);
+
+            save();
+        } finally {
+            release();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void externalUnlock(NodeId nodeId) throws RepositoryException {
+        acquire();
+
+        try {
+            Path path = getPath(nodeId);
+            PathMap.Element element = lockMap.map(path, true);
+            if (element == null) {
+                throw new LockException("Node not locked: " + path.toString());
+            }
+            AbstractLockInfo info = (AbstractLockInfo) element.get();
+            if (info == null) {
+                throw new LockException("Node not locked: " + path.toString());
+            }
+            element.set(null);
+            info.setLive(false);
+
+            save();
+
+        } finally {
+            release();
         }
     }
 }

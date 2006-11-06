@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.PropertyId;
@@ -74,9 +73,9 @@ public class EventState {
     private final Path.PathElement childRelPath;
 
     /**
-     * The node type of the parent node.
+     * The node type name of the parent node.
      */
-    private final NodeTypeImpl nodeType;
+    private final QName nodeType;
 
     /**
      * Set of mixin QNames assigned to the parent node.
@@ -129,7 +128,7 @@ public class EventState {
                        Path parentPath,
                        NodeId childId,
                        Path.PathElement childPath,
-                       NodeTypeImpl nodeType,
+                       QName nodeType,
                        Set mixins,
                        Session session) {
         int mask = (Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
@@ -173,7 +172,7 @@ public class EventState {
                                             Path parentPath,
                                             NodeId childId,
                                             Path.PathElement childPath,
-                                            NodeTypeImpl nodeType,
+                                            QName nodeType,
                                             Set mixins,
                                             Session session) {
         return new EventState(Event.NODE_ADDED,
@@ -205,7 +204,7 @@ public class EventState {
                                               Path parentPath,
                                               NodeId childId,
                                               Path.PathElement childPath,
-                                              NodeTypeImpl nodeType,
+                                              QName nodeType,
                                               Set mixins,
                                               Session session) {
         return new EventState(Event.NODE_REMOVED,
@@ -235,7 +234,7 @@ public class EventState {
     public static EventState propertyAdded(NodeId parentId,
                                            Path parentPath,
                                            Path.PathElement childPath,
-                                           NodeTypeImpl nodeType,
+                                           QName nodeType,
                                            Set mixins,
                                            Session session) {
         return new EventState(Event.PROPERTY_ADDED,
@@ -265,7 +264,7 @@ public class EventState {
     public static EventState propertyRemoved(NodeId parentId,
                                              Path parentPath,
                                              Path.PathElement childPath,
-                                             NodeTypeImpl nodeType,
+                                             QName nodeType,
                                              Set mixins,
                                              Session session) {
         return new EventState(Event.PROPERTY_REMOVED,
@@ -295,7 +294,7 @@ public class EventState {
     public static EventState propertyChanged(NodeId parentId,
                                              Path parentPath,
                                              Path.PathElement childPath,
-                                             NodeTypeImpl nodeType,
+                                             QName nodeType,
                                              Set mixins,
                                              Session session) {
         return new EventState(Event.PROPERTY_CHANGED,
@@ -359,7 +358,7 @@ public class EventState {
      *
      * @return the node type of the parent associated with this event.
      */
-    public NodeTypeImpl getNodeType() {
+    public QName getNodeType() {
         return nodeType;
     }
 
@@ -384,7 +383,11 @@ public class EventState {
     public Set getNodeTypes(NodeTypeManagerImpl ntMgr) {
         if (allTypes == null) {
             Set tmp = new HashSet();
-            tmp.add(nodeType);
+            try {
+                tmp.add(ntMgr.getNodeType(nodeType));
+            } catch (NoSuchNodeTypeException e) {
+                log.warn("Unknown node type: " + nodeType);
+            }
             for (Iterator it = mixins.iterator(); it.hasNext(); ) {
                 QName mixinName = (QName) it.next();
                 try {
@@ -502,7 +505,7 @@ public class EventState {
         } else if (eventType == Event.PROPERTY_ADDED) {
             return "PropertyAdded";
         } else if (eventType == Event.PROPERTY_CHANGED) {
-            return "PropertyChanged";
+            return "PropertyOperation";
         } else if (eventType == Event.PROPERTY_REMOVED) {
             return "PropertyRemoved";
         } else {
