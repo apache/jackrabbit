@@ -37,6 +37,8 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
+import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -60,7 +62,7 @@ import java.util.List;
 /**
  * This Class implements a VersionManager.
  */
-public class VersionManagerImpl extends AbstractVersionManager implements ItemStateListener {
+public class VersionManagerImpl extends AbstractVersionManager implements ItemStateListener, UpdateEventListener {
 
     /**
      * the default logger
@@ -378,6 +380,16 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     }
 
     /**
+     * Set an event channel to inform about updates.
+     *
+     * @param eventChannel event channel
+     */
+    public void setEventChannel(UpdateEventChannel eventChannel) {
+        sharedStateMgr.setEventChannel(eventChannel);
+        eventChannel.setListener(this);
+    }
+
+    /**
      * {@inheritDoc}
      */
     protected void itemDiscarded(InternalVersionItem item) {
@@ -481,6 +493,18 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * Not used.
      */
     public void stateDiscarded(ItemState discarded) {}
+
+    //--------------------------------------------------< UpdateEventListener >
+
+    /**
+     * {@inheritDoc}
+     */
+    public void externalUpdate(ChangeLog changes, List events) throws RepositoryException {
+        EventStateCollection esc = getEscFactory().createEventStateCollection();
+        esc.addAll(events);
+
+        sharedStateMgr.externalUpdate(changes, esc);
+    }
 
     //--------------------------------------------------------< inner classes >
     /**

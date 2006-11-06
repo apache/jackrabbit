@@ -73,6 +73,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the file system configuration element. */
     public static final String FILE_SYSTEM_ELEMENT = "FileSystem";
 
+    /** Name of the cluster configuration element. */
+    public static final String CLUSTER_ELEMENT = "Cluster";
+
+    /** Name of the journal configuration element. */
+    public static final String JOURNAL_ELEMENT = "Journal";
+
     /** Name of the persistence manager configuration element. */
     public static final String PERSISTENCE_MANAGER_ELEMENT =
         "PersistenceManager";
@@ -95,6 +101,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the default workspace configuration attribute. */
     public static final String DEFAULT_WORKSPACE_ATTRIBUTE =
         "defaultWorkspace";
+
+    /** Name of the id configuration attribute. */
+    public static final String ID_ATTRIBUTE = "id";
+
+    /** Name of the syncDelay configuration attribute. */
+    public static final String SYNC_DELAY_ATTRIBUTE = "syncDelay";
 
     /** Name of the default search index implementation class. */
     public static final String DEFAULT_QUERY_HANDLER =
@@ -196,9 +208,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Optional search configuration
         SearchConfig sc = parseSearchConfig(root);
 
+        // Optional journal configuration
+        ClusterConfig cc = parseClusterConfig(root);
+
         return new RepositoryConfig(home, securityConfig, fsc,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
-                maxIdleTime, template, vc, sc, this);
+                maxIdleTime, template, vc, sc, cc, this);
     }
 
     /**
@@ -425,6 +440,68 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         PersistenceManagerConfig pmc = parsePersistenceManagerConfig(element);
 
         return new VersioningConfig(home, fsc, pmc);
+    }
+
+    /**
+     * Parses cluster configuration. Cluster configuration uses the following format:
+     * <pre>
+     *   &lt;Cluster&gt;
+     *     &lt;Journal ...&gt;
+     *   &lt;/Journal&gt;
+     * </pre>
+     * <p/>
+     * <code>Cluster</code> is a {@link #parseBeanConfig(Element,String) bean configuration}
+     * element.
+     * <p/>
+     * Clustering is an optional feature. If the cluster element is not found, then this
+     * method returns <code>null</code>.
+     *
+     * @param parent parent of the <code>Journal</code> element
+     * @return journal configuration, or <code>null</code>
+     * @throws ConfigurationException if the configuration is broken
+     */
+    protected ClusterConfig parseClusterConfig(Element parent)
+            throws ConfigurationException {
+
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && CLUSTER_ELEMENT.equals(child.getNodeName())) {
+                Element element = (Element) child;
+
+                String id = getAttribute(element, ID_ATTRIBUTE, null);
+                int syncDelay = Integer.parseInt(
+                        getAttribute(element, SYNC_DELAY_ATTRIBUTE, "5"));
+
+                JournalConfig jc = parseJournalConfig(element);
+                return new ClusterConfig(id, syncDelay, jc);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Parses journal configuration. Journal configuration uses the following format:
+     * <pre>
+     *   &lt;Journal class="..."&gt;
+     *     &lt;param name="..." value="..."&gt;
+     *     ...
+     *   &lt;/Journal&gt;
+     * </pre>
+     * <p/>
+     * <code>Journal</code> is a {@link #parseBeanConfig(Element,String) bean configuration}
+     * element.
+     *
+     * @param cluster parent cluster element
+     * @return journal configuration, or <code>null</code>
+     * @throws ConfigurationException if the configuration is broken
+     */
+    protected JournalConfig parseJournalConfig(Element cluster)
+            throws ConfigurationException {
+
+        return new JournalConfig(
+                parseBeanConfig(cluster, JOURNAL_ELEMENT));
     }
 
     /**

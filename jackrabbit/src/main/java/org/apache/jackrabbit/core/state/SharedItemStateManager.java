@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.version.XAVersionManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
@@ -181,6 +182,11 @@ public class SharedItemStateManager
             };
 
     /**
+     * Update event channel.
+     */
+    private UpdateEventChannel eventChannel;
+
+    /**
      * Creates a new <code>SharedItemStateManager</code> instance.
      *
      * @param persistMgr
@@ -211,6 +217,15 @@ public class SharedItemStateManager
      */
     public void setNoLockHack(boolean noLockHack) {
         this.noLockHack = noLockHack;
+    }
+
+    /**
+     * Set an update event channel
+     *
+     * @param eventChannel update event channel
+     */
+    public void setEventChannel(UpdateEventChannel eventChannel) {
+        this.eventChannel = eventChannel;
     }
 
     //-----------------------------------------------------< ItemStateManager >
@@ -619,8 +634,14 @@ public class SharedItemStateManager
                 }
 
                 /* create event states */
-                events.createEventStates(rootNodeId, local,
-                        SharedItemStateManager.this);
+                events.createEventStates(rootNodeId, local, SharedItemStateManager.this);
+
+                /* let listener know about change */
+                if (eventChannel != null) {
+                    eventChannel.updateCreated(local, events);
+                }
+
+                //todo check whether local states are now stale...
 
                 /* Push all changes from the local items to the shared items */
                 local.push();
@@ -645,6 +666,11 @@ public class SharedItemStateManager
             boolean succeeded = false;
 
             try {
+                /* let listener know about preparation */
+                if (eventChannel != null) {
+                    eventChannel.updatePrepared();
+                }
+
                 /* Store items in the underlying persistence manager */
                 long t0 = System.currentTimeMillis();
                 persistMgr.store(shared);
@@ -682,6 +708,11 @@ public class SharedItemStateManager
                 /* dispatch the events */
                 events.dispatch();
 
+                /* let listener know about finished operation */
+                if (eventChannel != null) {
+                    eventChannel.updateCommitted();
+                }
+
             } finally {
                 if (holdingWriteLock) {
                     // exception occured before downgrading lock
@@ -699,6 +730,11 @@ public class SharedItemStateManager
          */
         public void cancel() {
             try {
+                /* let listener know about cancelled operation */
+                if (eventChannel != null) {
+                    eventChannel.updateCancelled();
+                }
+
                 local.disconnect();
 
                 for (Iterator iter = shared.modifiedStates(); iter.hasNext();) {
@@ -771,6 +807,71 @@ public class SharedItemStateManager
                    ItemStateException {
 
         beginUpdate(local, factory, null).end();
+    }
+
+    /**
+     * Handle an external update.
+     *
+     * @param external external change containing only node and property ids.
+     * @param events events to deliver
+     */
+    public void externalUpdate(ChangeLog external, EventStateCollection events) {
+        boolean holdingWriteLock = false;
+
+        ChangeLog shared = new ChangeLog();
+
+        try {
+            acquireWriteLock();
+            holdingWriteLock = true;
+
+            Iterator modifiedStates = external.modifiedStates();
+            while (modifiedStates.hasNext()) {
+                ItemState state = (ItemState) modifiedStates.next();
+                state = cache.retrieve(state.getId());
+                if (state != null) {
+                    try {
+                        state.copy(loadItemState(state.getId()));
+                        shared.modified(state);
+                    } catch (ItemStateException e) {
+                        String msg = "Unable to retrieve state: " + state.getId();
+                        log.warn(msg, e);
+                        state.discard();
+                    }
+                }
+            }
+            Iterator deletedStates = external.deletedStates();
+            while (deletedStates.hasNext()) {
+                ItemState state = (ItemState) deletedStates.next();
+                state = cache.retrieve(state.getId());
+                if (state != null) {
+                    shared.deleted(state);
+                }
+            }
+            shared.persisted();
+
+        } catch (ItemStateException e) {
+            String msg = "Unable to acquire write lock.";
+            log.error(msg);
+        }
+
+        try {
+            acquireReadLock();
+            rwLock.writeLock().release();
+            holdingWriteLock = false;
+
+            events.dispatch();
+        } catch (ItemStateException e) {
+            String msg = "Unable to downgrade to read lock.";
+            log.error(msg);
+        } finally {
+            if (holdingWriteLock) {
+                rwLock.writeLock().release();
+                holdingWriteLock = false;
+            } else {
+                rwLock.readLock().release();
+            }
+        }
+
     }
 
     /**
