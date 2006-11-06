@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -39,16 +40,25 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
+import org.apache.jackrabbit.core.cluster.ClusterNode;
+import org.apache.jackrabbit.core.cluster.ClusterException;
+import org.apache.jackrabbit.core.cluster.ClusterContext;
+import org.apache.jackrabbit.core.cluster.LockEventChannel;
+import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
+import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -82,6 +92,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
+import java.util.List;
 
 /**
  * A <code>RepositoryImpl</code> ...
@@ -183,6 +194,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     private FileLock repLock;
 
     /**
+     * Clustered node used, <code>null</code> if clustering is not configured.
+     */
+    private ClusterNode clusterNode;
+
+    /**
      * Shutdown lock for guaranteeing that no new sessions are started during
      * repository shutdown and that a repository shutdown is not initiated
      * during a login. Each session login acquires a read lock while the
@@ -240,6 +256,13 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             wspInfos.put(config.getName(), info);
         }
 
+        // initialize optional clustering
+        // put here before setting up any other external event source that a cluster node
+        // will be interested in
+        if (repConfig.getClusterConfig() != null) {
+            clusterNode = createClusterNode();
+        }
+
         // init version manager
         vMgr = createVersionManager(repConfig.getVersioningConfig(),
                 delegatingDispatcher);
@@ -278,9 +301,21 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         // after the workspace is initialized we pass a system session to
         // the virtual node type manager
 
-        // todo FIXME it seems odd that the *global* virtual node type manager
+        // todo FIXME it  odd that the *global* virtual node type manager
         // is using a session that is bound to a single specific workspace
         virtNTMgr.setSession(getSystemSession(repConfig.getDefaultWorkspaceName()));
+
+        // now start cluster node as last step
+        if (clusterNode != null) {
+            try {
+                clusterNode.start();
+            } catch (ClusterException e) {
+                String msg = "Unable to start clustered node, forcing shutdown...";
+                log.error(msg, e);
+                shutdown();
+                throw new RepositoryException(msg, e);
+            }
+        }
 
         log.info("Repository started");
     }
@@ -295,6 +330,8 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     protected VersionManager createVersionManager(VersioningConfig vConfig,
                                                   DelegatingObservationDispatcher delegatingDispatcher)
             throws RepositoryException {
+
+
         FileSystem fs = vConfig.getFileSystemConfig().createFileSystem();
         PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
                 fs,
@@ -302,8 +339,13 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 rootNodeId,
                 nsReg,
                 ntReg);
-        return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
+
+        VersionManagerImpl vMgr = new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
                 VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID);
+        if (clusterNode != null) {
+            vMgr.setEventChannel(clusterNode.createUpdateChannel());
+        }
+        return vMgr;
     }
 
     /**
@@ -580,6 +622,21 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
             }
         }
         return systemSearchMgr;
+    }
+
+    /**
+     * Creates the cluster node.
+     *
+     * @return clustered node
+     */
+    private ClusterNode createClusterNode() throws RepositoryException {
+        try {
+            ClusterNode clusterNode = new ClusterNode();
+            clusterNode.init(new ExternalEventListener());
+            return clusterNode;
+        } catch (Exception e) {
+            throw new RepositoryException(e);
+        }
     }
 
     NamespaceRegistryImpl getNamespaceRegistry() {
@@ -877,6 +934,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      */
     private synchronized void doShutdown() {
         log.info("Shutting down repository...");
+
+        // stop optional cluster node
+        if (clusterNode != null) {
+            clusterNode.stop();
+        }
 
         // close active user sessions
         // (copy sessions to array to avoid ConcurrentModificationException;
@@ -1288,7 +1350,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
      * representing the same named workspace, i.e. the same physical
      * storage.
      */
-    protected class WorkspaceInfo {
+    protected class WorkspaceInfo implements UpdateEventListener {
 
         /**
          * workspace configuration (passed in constructor)
@@ -1350,6 +1412,16 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
          * mutex for this workspace, used for locking transactions
          */
         private final Mutex xaLock = new Mutex();
+
+        /**
+         * Update event channel, used in clustered environment.
+         */
+        private UpdateEventChannel updateChannel;
+
+        /**
+         * Lock event channel, used in clustered environment.
+         */
+        private LockEventChannel lockChannel;
 
         /**
          * Creates a new <code>WorkspaceInfo</code> based on the given
@@ -1535,6 +1607,10 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 // 'chicken & egg' bootstrap problems
                 if (lockMgr == null) {
                     lockMgr = new LockManagerImpl(getSystemSession(), fs);
+                    if (clusterNode != null) {
+                        lockChannel = clusterNode.createLockChannel(getName());
+                        lockMgr.setEventChannel(lockChannel);
+                    }
                 }
                 return lockMgr;
             }
@@ -1636,6 +1712,11 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                     } catch (Exception e) {
                         log.error("Unable to add vmgr: " + e.toString(), e);
                     }
+                    if (clusterNode != null) {
+                        updateChannel = clusterNode.createUpdateChannel(getName());
+                        itemStateMgr.setEventChannel(updateChannel);
+                        updateChannel.setListener(this);
+                    }
                 } catch (ItemStateException ise) {
                     String msg = "failed to instantiate shared item state manager";
                     log.debug(msg);
@@ -1708,6 +1789,14 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 }
 
                 log.info("shutting down workspace '" + getName() + "'...");
+
+                // inform cluster node about disposal
+                if (updateChannel != null) {
+                    updateChannel.setListener(null);
+                }
+                if (lockChannel != null) {
+                    lockChannel.setListener(null);
+                }
 
                 // deregister the observation factory of that workspace
                 delegatingDispatcher.removeDispatcher(dispatcher);
@@ -1792,6 +1881,25 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         void lockRelease() {
             xaLock.release();
         }
+
+        //----------------------------------------------< UpdateEventListener >
+
+        /**
+         * {@inheritDoc}
+         */
+        public void externalUpdate(ChangeLog external, List events) throws RepositoryException {
+            try {
+                EventStateCollection esc = new EventStateCollection(
+                        getObservationDispatcher(), null, null);
+                esc.addAll(events);
+
+                getItemStateProvider().externalUpdate(external, esc);
+            } catch (IllegalStateException e) {
+                String msg = "Unable to deliver events: " + e.getMessage();
+                throw new RepositoryException(msg);
+            }
+        }
+
     }
 
     /**
@@ -1877,4 +1985,39 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
         }
     }
 
+    /**
+     * Cluster context passed to a <code>ClusterNode</code>.
+     */
+    class ExternalEventListener implements ClusterContext {
+
+        /**
+         * {@inheritDoc}
+         */
+        public ClusterConfig getClusterConfig() {
+            return getConfig().getClusterConfig();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public NamespaceResolver getNamespaceResovler() {
+            return getNamespaceRegistry();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void updateEventsReady(String workspace) throws RepositoryException {
+            // toggle the initialization of some workspace
+            getWorkspaceInfo(workspace);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void lockEventsReady(String workspace) throws RepositoryException {
+            // toggle the initialization of some workspace's lock manager
+            getWorkspaceInfo(workspace).getLockManager();
+        }
+    }
 }

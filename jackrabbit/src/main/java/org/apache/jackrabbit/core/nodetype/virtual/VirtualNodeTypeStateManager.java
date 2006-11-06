@@ -207,7 +207,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                 parent.getPrimaryPath(),
                 node.getNodeId(),
                 node.getPrimaryPath().getNameElement(),
-                (NodeTypeImpl) parent.getPrimaryNodeType(),
+                ((NodeTypeImpl) parent.getPrimaryNodeType()).getQName(),
                 parent.getMixinTypeNames(),
                 node.getSession()
         ));
@@ -219,7 +219,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                     (NodeId) node.getId(),
                     node.getPrimaryPath(),
                     prop.getPrimaryPath().getNameElement(),
-                    (NodeTypeImpl) node.getPrimaryNodeType(),
+                    ((NodeTypeImpl) node.getPrimaryNodeType()).getQName(),
                     node.getMixinTypeNames(),
                     node.getSession()
             ));
@@ -247,7 +247,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                 parent.getPrimaryPath(),
                 node.getNodeId(),
                 node.getPrimaryPath().getNameElement(),
-                (NodeTypeImpl) parent.getPrimaryNodeType(),
+                ((NodeTypeImpl) parent.getPrimaryNodeType()).getQName(),
                 parent.getMixinTypeNames(),
                 node.getSession()
         ));

@@ -213,6 +213,11 @@ public class RepositoryConfig {
     private final SearchConfig sc;
 
     /**
+     * Optional cluster configuration.
+     */
+    private final ClusterConfig cc;
+
+    /**
      * Creates a repository configuration object.
      *
      * @param template workspace configuration template
@@ -225,13 +230,14 @@ public class RepositoryConfig {
      * @param defaultWorkspace name of the default workspace
      * @param vc versioning configuration
      * @param sc search configuration for system search manager.
+     * @param cc optional cluster configuration
      * @param parser configuration parser
      */
     public RepositoryConfig(String home, SecurityConfig sec, FileSystemConfig fsc,
             String workspaceDirectory, String workspaceConfigDirectory,
             String defaultWorkspace, int workspaceMaxIdleTime,
             Element template, VersioningConfig vc, SearchConfig sc,
-            RepositoryConfigurationParser parser) {
+            ClusterConfig cc, RepositoryConfigurationParser parser) {
         workspaces = new HashMap();
         this.home = home;
         this.sec = sec;
@@ -243,6 +249,7 @@ public class RepositoryConfig {
         this.template = template;
         this.vc = vc;
         this.sc = sc;
+        this.cc = cc;
         this.parser = parser;
     }
 
@@ -728,4 +735,11 @@ public class RepositoryConfig {
         return sc;
     }
 
+    /**
+     * Returns the cluster configuration. Returns <code>null</code> if clustering
+     * has not been configured.
+     */
+    public ClusterConfig getClusterConfig() {
+        return cc;
+    }
 }
