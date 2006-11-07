@@ -101,6 +101,7 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
         // changes which can't possibly be true.
         // @todo further investigate
         connection.setAutoCommit(true);
+        connection.close();
 
         // now it's safe to shutdown the embedded Derby database
         try {
