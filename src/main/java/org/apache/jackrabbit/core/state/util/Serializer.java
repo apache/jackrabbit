@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.state.util;
 
-import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -36,7 +35,8 @@ public final class Serializer {
      */
     public static void serialize(NodeState state, OutputStream stream)
             throws Exception {
-        serialize(state, stream);
+        // delegate to replacement
+        org.apache.jackrabbit.core.persistence.util.Serializer.serialize(state, stream);
     }
 
     /**
@@ -44,27 +44,30 @@ public final class Serializer {
      */
     public static void deserialize(NodeState state, InputStream stream)
             throws Exception {
-        deserialize(state, stream);
+        // delegate to replacement
+        org.apache.jackrabbit.core.persistence.util.Serializer.deserialize(state, stream);
     }
 
     /**
-     * @deprecated use {@link org.apache.jackrabbit.core.persistence.util.Serializer#serialize(PropertyState, OutputStream, BLOBStore)}
+     * @deprecated use {@link org.apache.jackrabbit.core.persistence.util.Serializer#serialize(PropertyState, OutputStream, org.apache.jackrabbit.core.persistence.util.BLOBStore)}
      */
     public static void serialize(PropertyState state,
                                  OutputStream stream,
                                  BLOBStore blobStore)
             throws Exception {
-        serialize(state, stream, blobStore);
+        // delegate to replacement
+        org.apache.jackrabbit.core.persistence.util.Serializer.serialize(state, stream, blobStore);
     }
 
     /**
-     * @deprecated use {@link org.apache.jackrabbit.core.persistence.util.Serializer#deserialize(PropertyState, InputStream, BLOBStore)}
+     * @deprecated use {@link org.apache.jackrabbit.core.persistence.util.Serializer#deserialize(PropertyState, InputStream, org.apache.jackrabbit.core.persistence.util.BLOBStore)}
      */
     public static void deserialize(PropertyState state,
                                    InputStream stream,
                                    BLOBStore blobStore)
             throws Exception {
-        deserialize(state, stream, blobStore);
+        // delegate to replacement
+        org.apache.jackrabbit.core.persistence.util.Serializer.deserialize(state, stream, blobStore);
     }
 
     /**
@@ -72,7 +75,8 @@ public final class Serializer {
      */
     public static void serialize(NodeReferences refs, OutputStream stream)
             throws Exception {
-        serialize(refs, stream);
+        // delegate to replacement
+        org.apache.jackrabbit.core.persistence.util.Serializer.serialize(refs, stream);
     }
 
     /**
@@ -80,6 +84,7 @@ public final class Serializer {
      */
     public static void deserialize(NodeReferences refs, InputStream stream)
             throws Exception {
-        deserialize(refs, stream);
+        // delegate to replacement
+        org.apache.jackrabbit.core.persistence.util.Serializer.deserialize(refs, stream);
     }
 }
