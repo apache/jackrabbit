@@ -16,8 +16,7 @@
  */
 package org.apache.jackrabbit.taglib.size;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 /**
  * Superclass of SizeCalculator 
@@ -27,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 public abstract class AbstractSizeCalculator implements SizeCalculator
 {
     /** Logger */
-    private static Log log = LogFactory.getLog(AbstractSizeCalculator.class);
+	private static Logger log = Logger.getLogger(AbstractSizeCalculator.class);
 
     /** Unit */
     protected int unit = SizeCalculator.BITS;

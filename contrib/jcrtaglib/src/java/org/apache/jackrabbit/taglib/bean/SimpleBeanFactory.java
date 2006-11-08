@@ -16,8 +16,7 @@
  */
 package org.apache.jackrabbit.taglib.bean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 /**
  * Bean creation based on class name.<br>
@@ -27,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SimpleBeanFactory implements BeanFactory
 {
-    private static Log log = LogFactory.getLog(SimpleBeanFactory.class);
+    private static Logger log = Logger.getLogger(SimpleBeanFactory.class);
 
     /**
      * @param id
@@ -37,7 +36,6 @@ public class SimpleBeanFactory implements BeanFactory
     {
         try
         {
-            ClassLoader tcl = Thread.currentThread().getContextClassLoader();
             Class beanClass = Class.forName(id);
             Object bean = beanClass.newInstance();
             return bean;

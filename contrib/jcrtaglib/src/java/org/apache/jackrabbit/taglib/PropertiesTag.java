@@ -30,12 +30,11 @@ import javax.servlet.jsp.jstl.core.LoopTagSupport;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.taglib.comparator.ItemComparator;
 import org.apache.jackrabbit.taglib.filter.ItemFilter;
 import org.apache.jackrabbit.taglib.utils.JCRTagConstants;
 import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Iterates over the properties of the given node.
@@ -45,7 +44,7 @@ import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
 public class PropertiesTag extends LoopTagSupport
 {
     /** logger */
-    private static Log log = LogFactory.getLog(PropertiesTag.class);
+	private static Logger log = Logger.getLogger(PropertiesTag.class);
 
     /** tag name */
     public static String TAG_NAME = "properties";

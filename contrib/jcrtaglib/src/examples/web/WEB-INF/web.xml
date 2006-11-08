@@ -38,15 +38,18 @@
 	
 	<!--  Default repository -->
 	<resource-env-ref>
-		<description>
-			Jackrabbit repository factory
-		</description>
-		<resource-env-ref-name>
-			jcr/repositoryFactory
-		</resource-env-ref-name>
-		<resource-env-ref-type>
-			org.apache.jackrabbit.core.jndi.BindableRepository
-		</resource-env-ref-type>
+		<env-entry-name>jcr/jndi/properties</env-entry-name>
+		<env-entry-value>
+			java.naming.factory.initial=org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory
+			java.naming.provider.url=http://www.apache.org/jackrabbit
+		</env-entry-value>
+		<env-entry-type>java.lang.String</env-entry-type>
+	</resource-env-ref>
+
+	<resource-env-ref>
+		<env-entry-name>jcr/jndi/address</env-entry-name>
+		<env-entry-value>jackrabbit.repository</env-entry-value>
+		<env-entry-type>java.lang.String</env-entry-type>
 	</resource-env-ref>
 
 	<!--  Bean Factory  -->

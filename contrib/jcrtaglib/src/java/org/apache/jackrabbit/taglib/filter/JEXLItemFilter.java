@@ -22,8 +22,7 @@ import org.apache.commons.jexl.Expression;
 import org.apache.commons.jexl.ExpressionFactory;
 import org.apache.commons.jexl.JexlContext;
 import org.apache.commons.jexl.JexlHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 /**
  * It evaluates any javax.jcr.Item based on a JEXL valid expression which
@@ -35,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JEXLItemFilter implements ItemFilter
 {
-    private static Log log = LogFactory.getLog(JEXLItemFilter.class);
+    private static Logger log = Logger.getLogger(JEXLItemFilter.class);
 
     /** Contex */
     JexlContext jc = JexlHelper.createContext();

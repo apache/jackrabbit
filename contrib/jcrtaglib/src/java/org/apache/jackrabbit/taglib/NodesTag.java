@@ -26,13 +26,12 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.jstl.core.LoopTagSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.taglib.comparator.ItemComparator;
 import org.apache.jackrabbit.taglib.filter.ItemFilter;
 import org.apache.jackrabbit.taglib.traverser.Traverser;
 import org.apache.jackrabbit.taglib.utils.JCRTagConstants;
 import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
+import org.apache.log4j.Logger;
 import org.apache.taglibs.standard.tag.common.core.NullAttributeException;
 import org.apache.taglibs.standard.tag.el.core.ExpressionUtil;
 
@@ -43,7 +42,7 @@ import org.apache.taglibs.standard.tag.el.core.ExpressionUtil;
  */
 public class NodesTag extends LoopTagSupport
 {
-    private static Log log = LogFactory.getLog(NodesTag.class);
+	private static Logger log = Logger.getLogger(NodesTag.class);
 
     public static String TAG_NAME = "nodes";
 
@@ -105,7 +104,7 @@ public class NodesTag extends LoopTagSupport
     /**
      * Children Nodes
      */
-    private Iterator nodes;
+    protected Iterator nodes;
 
     /**
      *  

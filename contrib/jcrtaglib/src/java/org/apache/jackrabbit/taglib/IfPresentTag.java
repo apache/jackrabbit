@@ -25,10 +25,9 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.jstl.core.ConditionalTagSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.taglib.utils.JCRTagConstants;
 import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Conditional tag that evaluates the existence of the given node.
@@ -38,7 +37,7 @@ import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
 public class IfPresentTag extends ConditionalTagSupport
 {
     /** Logger */
-    private static Log log = LogFactory.getLog(IfPresentTag.class);
+	private static Logger log = Logger.getLogger(IfPresentTag.class);
 
     /** Tag Name */
     public static String TAG_NAME = "set";

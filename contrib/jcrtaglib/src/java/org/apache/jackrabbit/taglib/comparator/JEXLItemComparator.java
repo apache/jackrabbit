@@ -22,8 +22,7 @@ import org.apache.commons.jexl.Expression;
 import org.apache.commons.jexl.ExpressionFactory;
 import org.apache.commons.jexl.JexlContext;
 import org.apache.commons.jexl.JexlHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 /**
  * It compares any javax.jcr.Item based on a JEXL valid expression wich returns
@@ -34,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JEXLItemComparator implements ItemComparator
 {
-    private static Log log = LogFactory.getLog(JEXLItemComparator.class);
+    private static Logger log = Logger.getLogger(JEXLItemComparator.class);
 
     /** Context */
     JexlContext jc = JexlHelper.createContext();

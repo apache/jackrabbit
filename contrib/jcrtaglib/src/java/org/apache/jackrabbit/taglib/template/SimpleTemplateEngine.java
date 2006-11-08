@@ -21,8 +21,7 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.servlet.jsp.PageContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 /**
  * Template for testing purposes.
@@ -31,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SimpleTemplateEngine implements TemplateEngine
 {
-    private static Log log = LogFactory.getLog(SimpleTemplateEngine.class);
+	private static Logger log = Logger.getLogger(SimpleTemplateEngine.class);
 
     public void setTemplate(String id)
     {

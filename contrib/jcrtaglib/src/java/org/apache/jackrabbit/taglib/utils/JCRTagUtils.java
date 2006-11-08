@@ -28,9 +28,8 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.Tag;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.taglib.bean.BeanFactory;
+import org.apache.log4j.Logger;
 import org.apache.taglibs.standard.tag.common.core.NullAttributeException;
 import org.apache.taglibs.standard.tag.el.core.ExpressionUtil;
 
@@ -41,7 +40,9 @@ import org.apache.taglibs.standard.tag.el.core.ExpressionUtil;
  */
 public class JCRTagUtils
 {
-    private static Log log = LogFactory.getLog(JCRTagUtils.class);
+	private static Logger log = Logger.getLogger(JCRTagUtils.class);
+	
+	private static BeanFactory beanFactory ;
 
     /**
      * Get an object from jndi
@@ -182,8 +183,7 @@ public class JCRTagUtils
      */
     public static Object getBean(String id)
     {
-        BeanFactory factory = (BeanFactory) lookup(JCRTagConstants.JNDI_BEAN_FACTORY);
-        Object bean = factory.getBean(id);
+        Object bean = getBeanFactory().getBean(id);
         if (bean == null)
         {
             log.warn("No bean for id = " + id);
@@ -198,6 +198,18 @@ public class JCRTagUtils
      */
     public static String getMessage(Exception e) {
         return e.getClass().getName() + ". " + e.getMessage() ;
+    }
+    
+    private static BeanFactory getBeanFactory() {
+    	if (beanFactory==null) {
+    		try {
+        		String impl = (String) lookup(JCRTagConstants.JNDI_BEAN_FACTORY);
+        		beanFactory = (BeanFactory) Class.forName(impl).newInstance();
+    		} catch (Exception e) {
+				log.error("unable to create bean factory", e) ;
+			}
+    	}
+    	return beanFactory ;
     }
 
 }

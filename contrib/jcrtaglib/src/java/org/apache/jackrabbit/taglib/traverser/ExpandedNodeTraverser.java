@@ -24,8 +24,7 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 /**
  * <p>
@@ -41,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ExpandedNodeTraverser extends AbstractTraverser
 {
-    private static Log log = LogFactory.getLog(ExpandedNodeTraverser.class);
+	private static Logger log = Logger.getLogger(ExpandedNodeTraverser.class);
 
     /**
      * Preorder strategy recusively only for parent Nodes.

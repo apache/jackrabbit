@@ -26,10 +26,9 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.jstl.core.LoopTagSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.taglib.utils.JCRTagConstants;
 import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
+import org.apache.log4j.Logger;
 import org.apache.taglibs.standard.tag.el.core.ExpressionUtil;
 
 /**
@@ -42,7 +41,7 @@ import org.apache.taglibs.standard.tag.el.core.ExpressionUtil;
 public class QueryTag extends LoopTagSupport
 {
     /** logger */
-    private static Log log = LogFactory.getLog(QueryTag.class);
+	private static Logger log = Logger.getLogger(QueryTag.class);
 
     /** tag name */
     public static String TAG_NAME = "query";
