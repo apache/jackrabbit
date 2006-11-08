@@ -173,6 +173,11 @@ class DocViewImportHandler extends TargetImportHandler {
 
             ArrayList props = new ArrayList(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
+                if (atts.getURI(i).equals(QName.NS_XMLNS_URI)) {
+                    // skip namespace declarations reported as attributes
+                    // see http://issues.apache.org/jira/browse/JCR-620#action_12448164
+                    continue;
+                }
                 QName propName = new QName(atts.getURI(i), atts.getLocalName(i));
                 // decode property name
                 propName = ISO9075.decode(propName);
