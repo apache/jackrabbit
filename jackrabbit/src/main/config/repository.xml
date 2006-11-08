@@ -49,8 +49,8 @@
             a SearchIndex element that is used for configuring Indexing-related
             settings on the /jcr:system tree.
 
-	    a Cluster element that is used for configuring an optional
-	    clustering node that synchronizes changes made in a cluster
+            a Cluster element that is used for configuring an optional
+            clustering node that synchronizes changes made in a cluster
     -->
     <!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?,Cluster?)>
 
@@ -159,11 +159,11 @@
     >
 
     <!--
-	the Cluster element configures the optional participation of this
+        the Cluster element configures the optional participation of this
         repository in a clustered environment. a literal id may be
-	specified that uniquely identifies this node in a cluster, as well
+        specified that uniquely identifies this node in a cluster, as well
         as the delay in seconds before changes to the journal are
-	automatically detected.
+        automatically detected.
     -->
     <!ELEMENT Cluster (Journal)>
     <!ATTLIST Cluster
@@ -172,9 +172,9 @@
     >
 
     <!--
-	the Journal element configures the journal used in clustering; the
+        the Journal element configures the journal used in clustering; the
         class attribute specifies the FQN of the class implementing the
-	Journal interface.
+        Journal interface.
     -->
     <!ELEMENT Journal (param*)>
     <!ATTLIST Journal

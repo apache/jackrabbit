@@ -32,8 +32,11 @@
             a Security element that specifies the name of the app-entry
             in the JAAS config and the access manager
 
-            a Workspaces element that specifies to the location of
-            workspaces root directory and the name of default workspace
+            a Workspaces element that specifies the location of the 
+            workspaces root directory, the name of the default workspace,
+            the maximum idle time before a workspace is automatically
+            shutdown (optional) and the workspace configuration root directory
+            within the virtual repository file system (optional)
 
             a Workspace element that is used as a workspace configuration
             template; it is used to create the initial workspace if there's
@@ -45,8 +48,11 @@
 
             a SearchIndex element that is used for configuring Indexing-related
             settings on the /jcr:system tree.
+
+            a Cluster element that is used for configuring an optional
+            clustering node that synchronizes changes made in a cluster
     -->
-    <!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?)>
+    <!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?,Cluster?)>
 
     <!--
         a virtual file system
@@ -57,7 +63,7 @@
 
     <!--
         the Security element specifies the name (appName attribute)
-        of the JAAS configuration app-entry for this repository. 
+        of the JAAS configuration app-entry for this repository.
 
         it also specifies the access manager to be used (AccessManager element).
     -->
@@ -82,7 +88,7 @@
       name CDATA #REQUIRED
       value CDATA #REQUIRED>
 
-     <!--
+    <!--
         the LoginModule element optionally specifies a JAAS login module to
         authenticate users. This feature allows the use of Jackrabbit in a
         non-JAAS environment.
@@ -91,18 +97,30 @@
     <!ATTLIST LoginModule
       class CDATA #REQUIRED>
 
-   <!--
-        the Workspaces element specifies the workspaces root directory
-        (rootPath attribute) and the name of the default workspace
-        (defaultWorkspace attribute).
+    <!--
+        the Workspaces element specifies the physical workspaces root directory
+        (rootPath attribute), the name of the default workspace
+        (defaultWorkspace attribute), the (optional) maximum amount of time in
+        seconds before an idle workspace is automatically shutdown
+        (maxIdleTime attribute) and the (optional) workspace configuration
+        root directory within the virtual repository file system (configRootPath
+        attribute).
 
         individual workspaces are configured through individual workspace.xml
-        files located in a subfolder each of the workspaces root directory.
+        files located in a subfolder each of either
+
+        a) the physical workspaces root directory
+
+        or, if configRootPath had been specified,
+
+        b) the configuration root directory within the virtual repository file system.
     -->
     <!ELEMENT Workspaces EMPTY>
     <!ATTLIST Workspaces
-      rootPath CDATA #REQUIRED
-      defaultWorkspace CDATA #REQUIRED>
+        rootPath CDATA #REQUIRED
+        defaultWorkspace CDATA #REQUIRED
+        configRootPath CDATA #IMPLIED
+        maxIdleTime CDATA #IMPLIED>
 
     <!--
         the Workspace element serves as a workspace configuration template;
@@ -139,6 +157,29 @@
     <!ATTLIST Versioning
       rootPath CDATA #REQUIRED
     >
+
+    <!--
+        the Cluster element configures the optional participation of this
+        repository in a clustered environment. a literal id may be
+        specified that uniquely identifies this node in a cluster, as well
+        as the delay in seconds before changes to the journal are
+        automatically detected.
+    -->
+    <!ELEMENT Cluster (Journal)>
+    <!ATTLIST Cluster
+      id CDATA #IMPLIED
+      syncDelay CDATA #IMPLIED
+    >
+
+    <!--
+        the Journal element configures the journal used in clustering; the
+        class attribute specifies the FQN of the class implementing the
+        Journal interface.
+    -->
+    <!ELEMENT Journal (param*)>
+    <!ATTLIST Journal
+      class CDATA #REQUIRED>
+
 ]>
 <!-- Example Repository Configuration File -->
 <Repository>
