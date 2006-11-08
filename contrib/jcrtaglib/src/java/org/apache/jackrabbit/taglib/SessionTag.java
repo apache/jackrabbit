@@ -16,21 +16,26 @@
  */
 package org.apache.jackrabbit.taglib;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.naming.InitialContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.taglib.utils.JCRTagConstants;
 import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
+import org.apache.log4j.Logger;
 
 /**
  * <p>
@@ -42,17 +47,27 @@ import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
 public class SessionTag extends TagSupport
 {
     /** logger */
-    private static Log log = LogFactory.getLog(SessionTag.class);
+	private static Logger log = Logger.getLogger(SessionTag.class);
+	
+	/**
+	 * jcr repository
+	 */
+	private static Map repositories = new HashMap() ;
+	
+	/**
+	 * JNDI address where a Repository is registered
+	 */
+	private String jndiAddress = JCRTagConstants.REPOSITORY_JNDI_ADDRESS ;
 
+	/**
+	 * JNDI properties to create the initial context
+	 */
+	private String jndiProperties = JCRTagConstants.REPOSITORY_JNDI_PROPERTIES ;
+	
     /**
      * Session instance
      */
     private Session session;
-
-    /**
-     * Name of the jndi address of a repository other than the default.
-     */
-    private String repositoryJNDI = JCRTagConstants.JNDI_DEFAULT_REPOSITORY;;
 
     /**
      * Workspace name.
@@ -102,7 +117,6 @@ public class SessionTag extends TagSupport
             log.debug("Cleaning state");
         }
         this.password = null;
-        this.repositoryJNDI = JCRTagConstants.JNDI_DEFAULT_REPOSITORY;
         this.var = JCRTagConstants.KEY_SESSION;
         this.user = null;
         this.workspace = null;
@@ -117,16 +131,6 @@ public class SessionTag extends TagSupport
     public void setPassword(String pwd)
     {
         this.password = pwd;
-    }
-
-    /**
-     * Sets the repository JNDI address
-     * 
-     * @param repository
-     */
-    public void setRepositoryJNDI(String repository)
-    {
-        this.repositoryJNDI = repository;
     }
 
     /**
@@ -193,7 +197,7 @@ public class SessionTag extends TagSupport
         this.previousSession = pageContext.getAttribute(this.var);
 
         // Get the repository
-        Repository repo = (Repository) JCRTagUtils.lookup(this.repositoryJNDI);
+        Repository repo = (Repository) this.getRepository();
 
         // Get the session
         try
@@ -294,5 +298,48 @@ public class SessionTag extends TagSupport
         super.release();
         this.init();
     }
+    
+    /**
+     * get a repository either from a cache or via JNDI
+     * 
+     * @return
+     */
+    private Repository getRepository() {
+    	String address = (String) JCRTagUtils.lookup(this.jndiAddress) ;
+    	String props = (String) JCRTagUtils.lookup(this.jndiProperties) ;
+    	String key = props + address; 
+    	
+    	// lookup cached repository
+    	if (repositories.get(key)== null) {
+    		try {
+            	InitialContext ctx = null ;
+            	if (props!=null) {
+            		Properties properties = new Properties() ;
+                	InputStream is = new ByteArrayInputStream(props.getBytes("UTF-8")) ;
+                	properties.load(is) ;
+                	ctx = new InitialContext(properties) ; 
+            	} else {
+            		ctx = new InitialContext();
+            	}
+            	Repository repo = (Repository) ctx.lookup(address) ;
+            	 if (repo!=null) {
+            		 synchronized (this) {
+            			 repositories.put(key, repo) ;	
+        			}
+            	 }
+    		} catch (Exception e) {
+				log.error("unable to get repository", e);
+			}
+    	}
+ 		return (Repository) repositories.get(key) ;
+    }
+
+	public void setJndiAddress(String jndiAddress) {
+		this.jndiAddress = jndiAddress;
+	}
+
+	public void setJndiProperties(String jndiProperties) {
+		this.jndiProperties = jndiProperties;
+	}
 
 }

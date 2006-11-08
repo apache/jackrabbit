@@ -24,11 +24,10 @@ import javax.jcr.Session;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.taglib.template.TemplateEngine;
 import org.apache.jackrabbit.taglib.utils.JCRTagConstants;
 import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Displays Node and property values with the given template engine.
@@ -37,7 +36,7 @@ import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
  */
 public class OutTag extends TagSupport
 {
-    private static Log log = LogFactory.getLog(OutTag.class);
+	private static Logger log = Logger.getLogger(OutTag.class);
 
     /** Tag Name */
     public static String TAG_NAME = "out";

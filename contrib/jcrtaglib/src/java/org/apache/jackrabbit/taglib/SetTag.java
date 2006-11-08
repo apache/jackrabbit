@@ -24,10 +24,9 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.taglib.utils.JCRTagConstants;
 import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
+import org.apache.log4j.Logger;
 import org.apache.taglibs.standard.tag.common.core.Util;
 
 /**
@@ -38,7 +37,7 @@ import org.apache.taglibs.standard.tag.common.core.Util;
 public class SetTag extends TagSupport
 {
     /** logger */
-    private static Log log = LogFactory.getLog(SetTag.class);
+	private static Logger log = Logger.getLogger(SetTag.class);
 
     /** Tag Name */
     public static String TAG_NAME = "set";

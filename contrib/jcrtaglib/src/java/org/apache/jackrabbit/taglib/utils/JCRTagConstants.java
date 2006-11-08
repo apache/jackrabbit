@@ -23,7 +23,9 @@ package org.apache.jackrabbit.taglib.utils;
  */
 public interface JCRTagConstants
 {
-    public static String JNDI_DEFAULT_REPOSITORY = "jcr/repositoryFactory";
+    public static String REPOSITORY_JNDI_PROPERTIES = "jcr/jndi/properties";
+    
+    public static String REPOSITORY_JNDI_ADDRESS = "jcr/jndi/address";
 
     public static String JNDI_BEAN_FACTORY = "jcr/beanFactory";
 

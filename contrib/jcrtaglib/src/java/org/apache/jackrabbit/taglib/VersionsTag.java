@@ -17,34 +17,33 @@
 package org.apache.jackrabbit.taglib;
 
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.version.Version;
-import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspTagException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Iterates over the versions of the given node
  * 
  * @author <a href="mailto:edgarpoce@gmail.com">Edgar Poce </a>
  */
-public class VersionsTag extends NodesTag
-{
-    /** logger */
-    private static Log log = LogFactory.getLog(VersionsTag.class);
+public class VersionsTag extends NodesTag {
+	/** logger */
+	private static Logger log = Logger.getLogger(VersionsTag.class);
 
-    /** tag name */
-    public static String TAG_NAME = "versions";
+	/** tag name */
+	public static String TAG_NAME = "versions";
 
-    /**
-     * Override superclass getNode.
-     * @return the baseVersion of the given Node
-     */
-    protected Node getNode() throws JspException, RepositoryException
-    {
-        Node node = super.getNode() ;
-        Version version = node.getBaseVersion() ;
-        return version ;
-    }
+	@Override
+	protected void prepare() throws JspTagException {
+		try {
+			Node node = super.getNode();
+			this.nodes = node.getVersionHistory().getAllVersions();
+		} catch (Exception e) {
+			String msg = JCRTagUtils.getMessage(e);
+			log.error(msg, e);
+			throw new JspTagException(msg);
+		}
+	}
+
 }

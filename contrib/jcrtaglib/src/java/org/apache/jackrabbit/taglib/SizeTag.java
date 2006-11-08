@@ -29,13 +29,12 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.taglib.filter.ItemFilter;
 import org.apache.jackrabbit.taglib.size.SizeCalculator;
 import org.apache.jackrabbit.taglib.traverser.Traverser;
 import org.apache.jackrabbit.taglib.utils.JCRTagConstants;
 import org.apache.jackrabbit.taglib.utils.JCRTagUtils;
+import org.apache.log4j.Logger;
 import org.apache.taglibs.standard.tag.common.core.NullAttributeException;
 import org.apache.taglibs.standard.tag.el.core.ExpressionUtil;
 
@@ -48,7 +47,7 @@ import org.apache.taglibs.standard.tag.el.core.ExpressionUtil;
 public class SizeTag extends TagSupport
 {
     /** logger */
-    private static Log log = LogFactory.getLog(SizeTag.class);
+	private static Logger log = Logger.getLogger(SizeTag.class);
 
     /** tag name */
     public static String TAG_NAME = "size";

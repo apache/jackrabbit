@@ -25,8 +25,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 /**
  * This Traverser collects the children of the ancestors in the path from the
@@ -38,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
 public class ExpandedNodesTraverser extends AbstractTraverser
 {
 
-    private static Log log = LogFactory.getLog(ExpandedNodesTraverser.class);
+	private static Logger log = Logger.getLogger(ExpandedNodesTraverser.class);
 
     /**
      * Preorder strategy recusively only for parent Nodes.
