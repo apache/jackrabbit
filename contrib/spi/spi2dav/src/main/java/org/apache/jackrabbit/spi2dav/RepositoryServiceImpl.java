@@ -116,6 +116,8 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.IdIterator;
+import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.uuid.UUID;
@@ -155,6 +157,7 @@ import java.util.Set;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collections;
 import java.io.InputStream;
 import java.io.IOException;
 
@@ -188,6 +191,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private final HostConfiguration hostConfig;
     private final HashMap clients = new HashMap();
+
+    private final Map nodeTypeDefinitions = new HashMap();
 
     private Map descriptors;
 
@@ -309,34 +314,19 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     //--------------------------------------------------------------------------
 
     /**
-     * Execute a 'Workspace' operation that immediately needs to return events.
+     * Execute a 'Workspace' operation.
      *
      * @param method
      * @param sessionInfo
-     * @return
      * @throws RepositoryException
      */
-    private EventBundle[] execute(DavMethod method, SessionInfo sessionInfo) throws RepositoryException {
-        // TODO: build specific subscrUri
-        // TODO: check if 'all event' subscription is ok
-        String subscrUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
-        String subscrId = subscribe(subscrUri, S_INFO, null, sessionInfo, null);
+    private void execute(DavMethod method, SessionInfo sessionInfo) throws RepositoryException {
         try {
-            if (isLockMethod(method)) {
-                initMethod(method, sessionInfo, false);
-            } else {
-                initMethod(method, sessionInfo, true);
-            }
+            initMethod(method, sessionInfo, !isLockMethod(method));
+
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
 
-            // TODO: poll until we see our change
-            EventBundle[] events = null;
-            int retries = 10;
-            while ((events == null || events.length == 0) && retries-- > 0) {
-                events = poll(subscrUri, subscrId, sessionInfo);
-            }
-            return events;
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -345,7 +335,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             if (method != null) {
                 method.releaseConnection();
             }
-            unsubscribe(subscrUri, subscrId, sessionInfo);
         }
     }
 
@@ -787,19 +776,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#submit(Batch)
      */
-    public EventBundle[] submit(Batch batch) throws RepositoryException {
+    public void submit(Batch batch) throws RepositoryException {
         if (!(batch instanceof BatchImpl)) {
             throw new RepositoryException("Unknown Batch implementation.");
         }
         BatchImpl batchImpl = (BatchImpl) batch;
         if (batchImpl.isEmpty()) {
             batchImpl.dispose();
-            return new EventBundle[]{EventBundleImpl.EMPTY};
+            return;
         }
         // send batched information
         try {
             HttpClient client = batchImpl.start();
-            EventBundle[] events;
             boolean success = false;
             try {
                 Iterator it = batchImpl.methods();
@@ -816,9 +804,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 // make sure the lock is removed. if any of the methods
                 // failed the unlock is used to abort any pending changes
                 // on the server.
-                events = batchImpl.end(client, success);
+                batchImpl.end(client, success);
             }
-            return events;
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -831,50 +818,49 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#importXml(SessionInfo, NodeId, InputStream, int)
      */
-    public EventBundle[] importXml(SessionInfo sessionInfo, NodeId parentId, InputStream xmlStream, int uuidBehaviour) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+    public void importXml(SessionInfo sessionInfo, NodeId parentId, InputStream xmlStream, int uuidBehaviour) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
         // TODO: improve. currently random name is built instead of retrieving name of new resource from top-level xml element within stream
         QName nodeName = new QName(QName.NS_DEFAULT_URI, UUID.randomUUID().toString());
         String uri = getItemUri(parentId, nodeName, sessionInfo);
         MkColMethod method = new MkColMethod(uri);
         method.setRequestEntity(new InputStreamRequestEntity(xmlStream, "text/xml"));
-
-        return execute(method, sessionInfo);
+        execute(method, sessionInfo);
     }
 
     /**
      * @see RepositoryService#move(SessionInfo, NodeId, NodeId, QName)
      */
-    public EventBundle[] move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+    public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
         String uri = getItemUri(srcNodeId, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
         MoveMethod method = new MoveMethod(uri, destUri, true);
-        return execute(method, sessionInfo);
+        execute(method, sessionInfo);
     }
 
     /**
      * @see RepositoryService#copy(SessionInfo, String, NodeId, NodeId, QName)
      */
-    public EventBundle[] copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+    public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         String uri = uriResolver.getItemUri(srcNodeId, srcWorkspaceName, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
         CopyMethod method = new CopyMethod(uri, destUri, true, false);
-        return execute(method, sessionInfo);
+        execute(method, sessionInfo);
     }
 
     /**
      * @see RepositoryService#update(SessionInfo, NodeId, String)
      */
-    public EventBundle[] update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
+    public void update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         String workspUri = uriResolver.getWorkspaceUri(srcWorkspaceName);
 
-        return update(uri, new String[] {workspUri}, UpdateInfo.UPDATE_BY_WORKSPACE, false, sessionInfo);
+        update(uri, new String[] {workspUri}, UpdateInfo.UPDATE_BY_WORKSPACE, false, sessionInfo);
     }
 
     /**
      * @see RepositoryService#clone(SessionInfo, String, NodeId, NodeId, QName, boolean)
      */
-    public EventBundle[] clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
+    public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, QName destName, boolean removeExisting) throws NoSuchWorkspaceException, ConstraintViolationException, VersionException, AccessDeniedException, PathNotFoundException, ItemExistsException, LockException, UnsupportedRepositoryOperationException, RepositoryException {
         // TODO: missing implementation
         throw new UnsupportedOperationException("Missing implementation");
     }
@@ -924,21 +910,19 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#lock(SessionInfo, NodeId, boolean, boolean)
      */
-    public EventBundle[] lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
+    public void lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
             Scope scope = (sessionScoped) ? ItemResourceConstants.EXCLUSIVE_SESSION : Scope.EXCLUSIVE;
             LockMethod method = new LockMethod(uri, scope, Type.WRITE,
                 sessionInfo.getUserID(), DavConstants.INFINITE_TIMEOUT, deep);
-            EventBundle[] events = execute(method, sessionInfo);
+            execute(method, sessionInfo);
 
             String lockToken = method.getLockToken();
             sessionInfo.addLockToken(lockToken);
 
             // TODO: ev. need to take care of 'timeout' ?
             // TODO: ev. evaluate lock response, if depth and type is according to request?
-            return events;
-
         } catch (IOException e) {
             throw new RepositoryException(e);
         }
@@ -947,18 +931,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#refreshLock(SessionInfo, NodeId)
      */
-    public EventBundle[] refreshLock(SessionInfo sessionInfo, NodeId nodeId) throws LockException, RepositoryException {
+    public void refreshLock(SessionInfo sessionInfo, NodeId nodeId) throws LockException, RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         // since sessionInfo does not allow to retrieve token by NodeId,
         // pass all available lock tokens to the LOCK method (TODO: correct?)
         LockMethod method = new LockMethod(uri, DavConstants.INFINITE_TIMEOUT, sessionInfo.getLockTokens());
-        return execute(method, sessionInfo);
+        execute(method, sessionInfo);
     }
 
     /**
      * @see RepositoryService#unlock(SessionInfo, NodeId)
      */
-    public EventBundle[] unlock(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
+    public void unlock(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         // Note: since sessionInfo does not allow to identify the id of the
         // lock holding node, we need to access the token via lockInfo
@@ -969,56 +953,53 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // TODO: ev. additional check if lt is present on the sessionInfo?
 
         UnLockMethod method = new UnLockMethod(uri, lockToken);
-        EventBundle[] events = execute(method, sessionInfo);
+        execute(method, sessionInfo);
 
         sessionInfo.removeLockToken(lockToken);
-        return events;
     }
 
     /**
      * @see RepositoryService#checkin(SessionInfo, NodeId)
      */
-    public EventBundle[] checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException {
+    public void checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         CheckinMethod method = new CheckinMethod(uri);
-
-        return execute(method, sessionInfo);
+        execute(method, sessionInfo);
     }
 
     /**
      * @see RepositoryService#checkout(SessionInfo, NodeId)
      */
-    public EventBundle[] checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+    public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         CheckoutMethod method = new CheckoutMethod(uri);
-
-        return execute(method, sessionInfo);
+        execute(method, sessionInfo);
     }
 
     /**
      * @see RepositoryService#restore(SessionInfo, NodeId, NodeId, boolean)
      */
-    public EventBundle[] restore(SessionInfo sessionInfo, NodeId nodeId, NodeId versionId, boolean removeExisting) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+    public void restore(SessionInfo sessionInfo, NodeId nodeId, NodeId versionId, boolean removeExisting) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         String vUri = getItemUri(versionId, sessionInfo);
 
-        return update(uri, new String[] {vUri}, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
+        update(uri, new String[] {vUri}, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
     }
 
     /**
      * @see RepositoryService#restore(SessionInfo, NodeId[], boolean)
      */
-    public EventBundle[] restore(SessionInfo sessionInfo, NodeId[] versionIds, boolean removeExisting) throws ItemExistsException, UnsupportedRepositoryOperationException, VersionException, LockException, InvalidItemStateException, RepositoryException {
+    public void restore(SessionInfo sessionInfo, NodeId[] versionIds, boolean removeExisting) throws ItemExistsException, UnsupportedRepositoryOperationException, VersionException, LockException, InvalidItemStateException, RepositoryException {
         String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
         String[] vUris = new String[versionIds.length];
         for (int i = 0; i < versionIds.length; i++) {
             vUris[i] = getItemUri(versionIds[i], sessionInfo);
         }
 
-        return update(uri, vUris, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
+        update(uri, vUris, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
     }
 
-    private EventBundle[] update(String uri, String[] updateSource, int updateType, boolean removeExisting, SessionInfo sessionInfo) throws RepositoryException {
+    private void update(String uri, String[] updateSource, int updateType, boolean removeExisting, SessionInfo sessionInfo) throws RepositoryException {
         try {
             UpdateInfo uInfo;
             if (removeExisting) {
@@ -1030,7 +1011,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
 
             UpdateMethod method = new UpdateMethod(uri, uInfo);
-            return execute(method, sessionInfo);
+            execute(method, sessionInfo);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1040,15 +1021,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#merge(SessionInfo, NodeId, String, boolean)
      */
-    public EventBundle[] merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+    public IdIterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
         try {
             String wspHref = uriResolver.getWorkspaceUri(srcWorkspaceName);
             Element mElem = MergeInfo.createMergeElement(new String[] {wspHref}, bestEffort, false, domFactory);
             MergeInfo mInfo = new MergeInfo(mElem);
 
             MergeMethod method = new MergeMethod(getItemUri(nodeId, sessionInfo), mInfo);
-            // TODO: need to evaluate response?
-            return execute(method, sessionInfo);
+            execute(method, sessionInfo);
+            // TODO: need to evaluate response and return merge failed node ids
+            return new IteratorHelper(Collections.EMPTY_LIST);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1059,7 +1041,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#resolveMergeConflict(SessionInfo, NodeId, NodeId[], NodeId[])
      */
-    public EventBundle[] resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds, NodeId[] predecessorIds) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
+    public void resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds, NodeId[] predecessorIds) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
         try {
             List changeList = new ArrayList();
             String[] mergeFailedHref = new String[mergeFailedIds.length];
@@ -1077,8 +1059,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
 
             PropPatchMethod method = new PropPatchMethod(getItemUri(nodeId, sessionInfo), changeList);
-            // TODO: ev. evaluate response
-            return execute(method, sessionInfo);
+            // TODO: ev. evaluate response ??? change return type of RepositoryService.resolveMergeConflict()?
+            execute(method, sessionInfo);
         } catch (IOException e) {
             throw new RepositoryException(e);
         }
@@ -1087,11 +1069,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#addVersionLabel(SessionInfo,NodeId,NodeId,QName,boolean)
      */
-    public EventBundle[] addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) throws VersionException, RepositoryException {
+    public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label, boolean moveLabel) throws VersionException, RepositoryException {
          try {
             String uri = getItemUri(versionId, sessionInfo);
             LabelMethod method = new LabelMethod(uri, NameFormat.format(label, nsResolver), (moveLabel) ? LabelInfo.TYPE_SET : LabelInfo.TYPE_ADD);
-            return execute(method, sessionInfo);
+            execute(method, sessionInfo);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (NoPrefixDeclaredException e) {
@@ -1102,11 +1084,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#removeVersionLabel(SessionInfo,NodeId,NodeId,QName)
      */
-    public EventBundle[] removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label) throws VersionException, RepositoryException {
+    public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, QName label) throws VersionException, RepositoryException {
         try {
             String uri = getItemUri(versionId, sessionInfo);
             LabelMethod method = new LabelMethod(uri, NameFormat.format(label, nsResolver), LabelInfo.TYPE_REMOVE);
-            return execute(method, sessionInfo);
+            execute(method, sessionInfo);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (NoPrefixDeclaredException e) {
@@ -1161,9 +1143,34 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#getEvents(SessionInfo, long)
+     * @see RepositoryService#createEventFilter(int, org.apache.jackrabbit.name.Path, boolean, String[], org.apache.jackrabbit.name.QName[], boolean)
      */
-    public EventBundle[] getEvents(SessionInfo sessionInfo, long timeout)
+    public EventFilter createEventFilter(int eventTypes,
+                                         Path absPath,
+                                         boolean isDeep,
+                                         String[] uuids,
+                                         QName[] nodeTypeNames,
+                                         boolean noLocal)
+            throws UnsupportedRepositoryOperationException {
+        // resolve node type names
+        // todo what if new node types become available while event filter is still in use?
+        Set resolvedTypeNames = null;
+        if (nodeTypeNames != null) {
+            resolvedTypeNames = new HashSet();
+            synchronized (nodeTypeDefinitions) {
+                for (int i = 0; i < nodeTypeNames.length; i++) {
+                    resolveNodeType(resolvedTypeNames, nodeTypeNames[i]);
+                }
+            }
+        }
+        return new EventFilterImpl(eventTypes, absPath, isDeep, uuids,
+                resolvedTypeNames, noLocal);
+    }
+
+    /**
+     * @see RepositoryService#getEvents(SessionInfo, long, EventFilter[])
+     */
+    public EventBundle[] getEvents(SessionInfo sessionInfo, long timeout, EventFilter[] filters)
             throws RepositoryException, UnsupportedRepositoryOperationException {
         checkSessionInfo(sessionInfo);
 
@@ -1178,6 +1185,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
 
         return poll(rootUri, subscriptionId, sessionInfo);
+        // todo timeout is not respected
     }
 
     private String subscribe(String uri, SubscriptionInfo subscriptionInfo,
@@ -1224,6 +1232,19 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }  finally {
             if (method != null) {
                 method.releaseConnection();
+            }
+        }
+    }
+
+    private void resolveNodeType(Set resolved, QName ntName) {
+        if (!resolved.add(ntName)) {
+            return;
+        }
+        QNodeTypeDefinition def = (QNodeTypeDefinition) nodeTypeDefinitions.get(ntName);
+        if (def != null) {
+            QName[] supertypes = def.getSupertypes();
+            for (int i = 0; i < supertypes.length; i++) {
+                resolveNodeType(resolved, supertypes[i]);
             }
         }
     }
@@ -1448,6 +1469,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             while (it.hasNext()) {
                 ntDefs.add(new QNodeTypeDefinitionImpl(it.nextElement(), nsResolver));
             }
+            // refresh node type definitions map
+            synchronized (nodeTypeDefinitions) {
+                nodeTypeDefinitions.clear();
+                for (Iterator defIt = ntDefs.iterator(); it.hasNext(); ) {
+                    QNodeTypeDefinition def = (QNodeTypeDefinition) defIt.next();
+                    nodeTypeDefinitions.put(def.getQName(), def);
+                }
+            }
             return new IteratorHelper(ntDefs);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -1502,7 +1531,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         private final List methods = new ArrayList();
 
         private String batchId;
-        private String subscriptionId;
 
         private boolean isConsumed = false;
 
@@ -1525,9 +1553,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
                 batchId = method.getLockToken();
 
-                // register subscription
-                String subscrUri = (targetId.denotesNode() ? uri : getItemUri(((PropertyId) targetId).getParentId(), sessionInfo));
-                subscriptionId = subscribe(subscrUri, S_INFO, null, sessionInfo, batchId);
                 return client;
             } catch (IOException e) {
                 throw new RepositoryException(e);
@@ -1536,11 +1561,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        private EventBundle[] end(HttpClient client, boolean commit) throws RepositoryException {
+        private void end(HttpClient client, boolean commit) throws RepositoryException {
             checkConsumed();
 
             String uri = getItemUri(targetId, sessionInfo);
-            String subscrUri = (targetId.denotesNode() ? uri : getItemUri(((PropertyId) targetId).getParentId(), sessionInfo));
 
             UnLockMethod method = null;
             try {
@@ -1554,15 +1578,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.setRequestBody(new TransactionInfo(commit));
                 client.executeMethod(method);
                 method.checkSuccess();
-
-                // retrieve events
-                // TODO: until we see our change!
-                EventBundle[] events = null;
-                int retries = 10;
-                while ((events == null || events.length == 0) && retries-- > 0) {
-                    events = poll(subscrUri, subscriptionId, sessionInfo);
-                }
-                return events;
             } catch (IOException e) {
                 throw new RepositoryException(e);
             } catch (DavException e) {
@@ -1572,8 +1587,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     // release UNLOCK method
                     method.releaseConnection();
                 }
-                // unsubscribe
-                unsubscribe(subscrUri, subscriptionId, sessionInfo);
             }
         }
 

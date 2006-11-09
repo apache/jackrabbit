@@ -122,6 +122,15 @@ public class ChangeLog {
         modifiedRefs.add(refs);
     }
 
+    /**
+     * Call this method when this change log has been sucessfully persisted.
+     * This implementation will call {@link ItemState#refresh(ChangeLog)
+     * ItemState.refresh(this)} on the target item of this change log.
+     */
+    public void persisted() {
+        target.refresh(this);
+    }
+
     //----------------------< Retrieve information present in the ChangeLog >---
     /**
      *

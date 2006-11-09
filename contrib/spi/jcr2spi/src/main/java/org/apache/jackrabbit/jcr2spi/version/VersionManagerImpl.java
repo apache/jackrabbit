@@ -19,7 +19,6 @@ package org.apache.jackrabbit.jcr2spi.version;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
-import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
@@ -43,10 +42,12 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * <code>VersionManagerImpl</code>...
@@ -158,7 +159,14 @@ public class VersionManagerImpl implements VersionManager {
         NodeState wspState = getWorkspaceState(nodeState);
         // TODO find better solution to build the mergeFailed-collection
         final List failedIds = new ArrayList();
+        final EventFilter eventFilter = workspaceManager.createEventFilter(
+                Event.ALL_TYPES, nodeState.getQPath(), true, null, null, false);
         InternalEventListener mergeFailedCollector = new InternalEventListener() {
+
+            public Collection getEventFilters() {
+                return Collections.singletonList(eventFilter);
+            }
+
             public void onEvent(EventBundle eventBundle) {
                 if (eventBundle.isLocal()) {
                     EventIterator it = eventBundle.getEvents();
@@ -169,9 +177,6 @@ public class VersionManagerImpl implements VersionManager {
                         }
                     }
                 }
-            }
-            public void onEvent(EventBundle eventBundle, ChangeLog changeLog) {
-                // nothing to do. we are not interested in transient modifications
             }
         };
 

@@ -101,6 +101,15 @@
             <version>3.1</version>
         </dependency>
         <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.2</version>
+            <url>http://jakarta.apache.org/commons/codec/</url>
+            <properties>
+                <scope>runtime</scope>
+            </properties>
+        </dependency>
+        <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>2.6.2</version>

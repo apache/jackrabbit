@@ -45,19 +45,7 @@ also well suited for a listener based observation implementation on top of the
 SPI. With only little thread synchronization overhead events can be acquired
 using a <code>timeout</code> of {@link java.lang.Long#MAX_VALUE}.
 <p/>
-In addition all methods on the RepositoryService that execute an operation on
-the repository return an array of <code>EventBundle</code>s. This array not
-only contains the bundle that is associated to the previously executed operation
-but also contains all preceeding event bundles not yet delivered since the last
-call to <code>RepositoryService.getEvents()</code> or any other method on the
-<code>RepositoryService</code> which returns <code>EventBundle</code>s. This
-design ensures a consistent sequence of event bundles delivered to the SPI
-client.
-<p/>
 If an SPI implementation does not support observation, the method
 <code>RepositoryService.getEvents()</code> will always throw an
-{@link javax.jcr.UnsupportedRepositoryOperationException} and all methods
-on <code>RepositoryService</code> which return an array of
-<code>EventBundle</code>s will only return one event bundle which is associated
-with the local operation that has just been executed.
+{@link javax.jcr.UnsupportedRepositoryOperationException}.
 </body>

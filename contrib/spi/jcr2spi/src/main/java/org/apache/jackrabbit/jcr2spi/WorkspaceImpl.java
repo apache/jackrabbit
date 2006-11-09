@@ -496,8 +496,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @return a new <code>ObservationManager</code> instance
      */
     protected ObservationManager createObservationManager(NamespaceResolver nsResolver, NodeTypeRegistry ntRegistry) {
-        ObservationManagerImpl obsMgr = new ObservationManagerImpl(nsResolver, ntRegistry);
-        wspManager.addEventListener(obsMgr);
-        return obsMgr;
+        return new ObservationManagerImpl(wspManager, nsResolver, ntRegistry);
     }
 }

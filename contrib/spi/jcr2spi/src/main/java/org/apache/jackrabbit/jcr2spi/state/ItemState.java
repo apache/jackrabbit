@@ -447,11 +447,9 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * successfully submitted to the SPI..
      *
      * @param changeLog
-     * @return a Set of <code>ItemId</code>s in order to allow the caller to
-     * remove those events that have already been processed.
      * @throws IllegalStateException if this state is a 'session' state.
      */
-    abstract Set refresh(ChangeLog changeLog) throws IllegalStateException;
+    abstract void refresh(ChangeLog changeLog) throws IllegalStateException;
 
     /**
      * Copy all state information from overlayed state to this state

@@ -141,7 +141,7 @@ public class NodeState extends ItemState {
         super(overlayedState, parent, initialStatus, isf, idFactory);
         if (overlayedState != null) {
             synchronized (overlayedState) {
-                NodeState wspState = (NodeState) overlayedState;
+                NodeState wspState = overlayedState;
                 name = wspState.name;
                 uuid = wspState.uuid;
                 nodeTypeName = wspState.nodeTypeName;
@@ -713,12 +713,11 @@ public class NodeState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#refresh(ChangeLog)
      */
-    Set refresh(ChangeLog changeLog) throws IllegalStateException {
+    void refresh(ChangeLog changeLog) throws IllegalStateException {
 
         // remember parent states that have need to adjust their uuid/mixintypes
         // or that got a new child entry added or existing entries removed.
         Map modParents = new HashMap();
-        Set processedIds = new HashSet();
 
         // process deleted states from the changelog
         for (Iterator it = changeLog.deletedStates(); it.hasNext();) {
@@ -737,9 +736,6 @@ public class NodeState extends ItemState {
                 }
                 modifiedParent(parent, state, modParents);
             }
-            // don't remove processed state from changelog, but from event list
-            // state on changelog is used for check if parent is deleted as well.
-            processedIds.add(state.getId());
         }
 
         // process added states from the changelog. since the changlog maintains
@@ -787,7 +783,6 @@ public class NodeState extends ItemState {
                 }
 
                 it.remove();
-                processedIds.add(addedState.getId());
             } catch (ItemStateException e) {
                 log.error("Internal error.", e);
             }
@@ -802,7 +797,6 @@ public class NodeState extends ItemState {
                     // move overlayed state as well
                     NodeState newParent = (NodeState) modState.parent.overlayedState;
                     NodeState overlayed = (NodeState) modState.overlayedState;
-                    ItemId removedId = overlayed.getId();
                     try {
                         overlayed.parent.moveEntry(newParent, overlayed, modNodeState.getQName(), modNodeState.getDefinition());
                     } catch (RepositoryException e) {
@@ -813,8 +807,6 @@ public class NodeState extends ItemState {
                     modNodeState.setStatus(Status.EXISTING);
                     it.remove();
 
-                    processedIds.add(removedId);
-                    processedIds.add(modNodeState.getId());
                 } else {
                     modifiedParent((NodeState)modState, null, modParents);
                 }
@@ -832,8 +824,6 @@ public class NodeState extends ItemState {
                     modifiedParent(modState.getParent(), modState, modParents);
                 }
                 it.remove();
-                // remove the property-modification event from the set
-                processedIds.add(modState.getId());
             }
         }
 
@@ -858,8 +848,6 @@ public class NodeState extends ItemState {
                 // TODO: discard state and force reload of all data
             }
         }
-
-        return processedIds;
     }
 
     /**
