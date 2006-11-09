@@ -264,7 +264,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         for (int i = 0; i < lhStates.length; i++) {
             NodeState nState = lhStates[i];
             LockImpl l = (LockImpl) lockMap.get(nState);
-            if (l.isSessionScoped()) {
+            if (l.isSessionScoped() && l.getLockToken() != null) {
                 try {
                     unlock(nState);
                 } catch (RepositoryException e) {
