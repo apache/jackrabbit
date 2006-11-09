@@ -309,6 +309,10 @@ public class TransientItemStateManager extends CachingItemStateManager
                 break;
             case Status.STALE_MODIFIED:
                 // state is now stale. keep in modified. wait until refreshed
+            case Status.MODIFIED:
+                // MODIFIED is only possible on EXISTING states -> thus, there
+                // must not be any transient modifications for that state.
+                // we ignore it.
                 break;
             default:
                 log.error("ItemState has invalid status: " + state.getStatus());

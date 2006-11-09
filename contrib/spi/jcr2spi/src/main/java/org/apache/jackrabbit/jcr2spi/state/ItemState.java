@@ -341,6 +341,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                         synchronized (this) {
                             reset();
                         }
+                        setStatus(Status.MODIFIED);
                     } else if (status == Status.EXISTING_MODIFIED) {
                         setStatus(Status.STALE_MODIFIED);
                     }
@@ -445,11 +446,12 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * Used on the target state of a save call AFTER the changelog has been
      * successfully submitted to the SPI..
      *
-     * @param events
      * @param changeLog
+     * @return a Set of <code>ItemId</code>s in order to allow the caller to
+     * remove those events that have already been processed.
      * @throws IllegalStateException if this state is a 'session' state.
      */
-    abstract void refresh(Collection events, ChangeLog changeLog) throws IllegalStateException;
+    abstract Set refresh(ChangeLog changeLog) throws IllegalStateException;
 
     /**
      * Copy all state information from overlayed state to this state
@@ -527,21 +529,6 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
             default:
                 String msg = "Cannot mark item state with status " + status + " modified.";
                 throw new IllegalStateException(msg);
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    /**
-     *
-     * @param events
-     * @param processedState
-     */
-    static void removeEvent(Collection events, ItemState processedState) {
-        for (Iterator it = events.iterator(); it.hasNext();) {
-            if (((Event)it.next()).getItemId().equals(processedState.getId())) {
-                it.remove();
-                break;
-            }
         }
     }
 }

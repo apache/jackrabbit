@@ -28,7 +28,7 @@ public class PathResolver {
     /**
      * The starting point to resolve the path.
      */
-    private final ItemState start;
+    private final NodeState start;
 
     /**
      * The path to resolve.
@@ -43,7 +43,7 @@ public class PathResolver {
      * @throws IllegalArgumentException if not normalized or starts with a
      *                                  parent ('..') path element.
      */
-    private PathResolver(ItemState start, Path relPath) {
+    private PathResolver(NodeState start, Path relPath) {
         if (!relPath.isNormalized() || relPath.getElement(0).denotesParent()) {
             throw new IllegalArgumentException("path must be relative and must " +
                     "not contain parent path elements");
@@ -66,7 +66,7 @@ public class PathResolver {
      *                                  or starts with a parent ('..') path
      *                                  element.
      */
-    public static ItemState resolve(ItemState start, Path path)
+    public static ItemState resolve(NodeState start, Path path)
             throws NoSuchItemStateException, ItemStateException {
         return new PathResolver(start, path).resolve();
     }
@@ -87,7 +87,7 @@ public class PathResolver {
      *                                  or starts with a parent ('..') path
      *                                  element.
      */
-    public static ItemState lookup(ItemState start, Path path)
+    public static ItemState lookup(NodeState start, Path path)
             throws NoSuchItemStateException, ItemStateException {
         return new PathResolver(start, path).lookup();
     }
@@ -97,15 +97,11 @@ public class PathResolver {
      *
      * @return the resolved item state.
      * @throws NoSuchItemStateException the the item state does not exist.
-     * @throws ItemStateException       if an error occurs while retrieving the
-     *                                  item state.
+     * @throws ItemStateException if an error occurs while retrieving the item state.
      */
     private ItemState resolve()
             throws NoSuchItemStateException, ItemStateException {
-        if (!start.isNode()) {
-            throw new NoSuchItemStateException(path.toString());
-        }
-        NodeState state = (NodeState) start;
+        NodeState state = start;
         for (int i = 0; i < path.getLength(); i++) {
             Path.PathElement elem = path.getElement(i);
             // check for root element
@@ -119,8 +115,8 @@ public class PathResolver {
 
             // first try to resolve node
             if (state.hasChildNodeEntry(elem.getName(), elem.getNormalizedIndex())) {
-                state = state.getChildNodeEntry(elem.getName(),
-                        elem.getNormalizedIndex()).getNodeState();
+                ChildNodeEntry cne = state.getChildNodeEntry(elem.getName(), elem.getNormalizedIndex());
+                state = cne.getNodeState();
             } else if (elem.getIndex() == 0 // property must not have index
                     && state.hasPropertyName(elem.getName())
                     && i == path.getLength() - 1) { // property must be final path element
@@ -133,21 +129,18 @@ public class PathResolver {
     }
 
     /**
-     * Resolves the path but does not the <code>ItemState</code> if it is not
-     * yet loaded.
+     * Resolves the path but does not return the <code>ItemState</code> if it
+     * has not yet been loaded.
      *
      * @return the resolved item state or <code>null</code> if the item is not
-     *         available.
+     * available.
      * @throws NoSuchItemStateException the the item state does not exist.
-     * @throws ItemStateException       if an error occurs while retrieving the
-     *                                  item state.
+     * @throws ItemStateException if an error occurs while retrieving the
+     * item state.
      */
     private ItemState lookup()
             throws NoSuchItemStateException, ItemStateException {
-        if (!start.isNode()) {
-            throw new NoSuchItemStateException(path.toString());
-        }
-        NodeState state = (NodeState) start;
+        NodeState state = start;
         for (int i = 0; i < path.getLength(); i++) {
             Path.PathElement elem = path.getElement(i);
             // first try to resolve node

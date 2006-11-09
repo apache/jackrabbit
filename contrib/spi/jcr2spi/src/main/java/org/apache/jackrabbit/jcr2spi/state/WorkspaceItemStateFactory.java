@@ -73,7 +73,8 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
      */
     public NodeState createRootState(ItemStateManager ism) throws ItemStateException {
         try {
-            return createNodeState(service.getRootId(sessionInfo), ism);
+            NodeInfo info = service.getNodeInfo(sessionInfo, service.getRootId(sessionInfo));
+            return createNodeState(info, null);
         } catch (RepositoryException e) {
             throw new ItemStateException("Internal error while building root state.");
         }
@@ -90,15 +91,13 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
             throws NoSuchItemStateException, ItemStateException {
         try {
             NodeInfo info = service.getNodeInfo(sessionInfo, nodeId);
-
-            // get parent
-            NodeId parentId = (info.getParentId() != null) ? info.getParentId() : null;
-            NodeState parent = (parentId != null) ? (NodeState) ism.getItemState(parentId) : null;
-
-            if (parent != null) {
-                return parent.getChildNodeEntry(info.getQName(), info.getIndex()).getNodeState();
+            NodeId parentId = info.getParentId();
+            if (parentId != null) {
+                NodeState parent = (NodeState) ism.getItemState(parentId);
+                return parent.getChildNodeEntry(nodeId).getNodeState();
             } else {
-                return createNodeState(info, parent);
+                // special case for root state
+                return createNodeState(info, null);
             }
         } catch (ItemNotFoundException e) {
             throw new NoSuchItemStateException(e.getMessage(), e);
@@ -129,8 +128,8 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
     /**
      * Creates the node with information retrieved from <code>info</code>.
      *
-     * @param info   the <code>NodeInfo</code> to use to create the
-     *               <code>NodeState</code>.
+     * @param info the <code>NodeInfo</code> to use to create the
+     * <code>NodeState</code>.
      * @param parent the parent <code>NodeState</code>.
      * @return the new <code>NodeState</code>.
      */

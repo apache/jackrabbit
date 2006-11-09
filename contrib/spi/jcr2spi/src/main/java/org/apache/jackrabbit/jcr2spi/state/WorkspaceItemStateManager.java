@@ -21,6 +21,7 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventIterator;
+import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,14 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
         // that have been persisted now: NEW-states will be connected to their
         // overlayed state, EXISTING_REMOVED states will be definitely removed,
         // EXISTING_MODIFIED states are merged with their workspace-state.
-        changeLog.getTarget().refresh(evs, changeLog);
+        Set processedIds = changeLog.getTarget().refresh(changeLog);
+        for (Iterator it = evs.iterator(); it.hasNext();) {
+            ItemId evId = ((Event)it.next()).getItemId();
+            if (processedIds.contains(evId)) {
+                it.remove();
+            }
+        }
+
         // all events not covered by the changelog must not be handled on the
         // session-states -> treat the same way as events returned by
         // workspace operations.
