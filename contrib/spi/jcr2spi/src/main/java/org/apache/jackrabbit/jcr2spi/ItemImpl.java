@@ -174,7 +174,8 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     /**
      * @see javax.jcr.Item#isSame(Item)
      */
-    public boolean isSame(Item otherItem) {
+    public boolean isSame(Item otherItem) throws RepositoryException {
+        checkStatus();
         if (this == otherItem) {
             return true;
         }
@@ -243,6 +244,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         checkStatus();
 
         if (keepChanges) {
+            // TODO: TOBEFIXED. make sure item is updated to status present on the server.
             return;
         }
 
@@ -315,7 +317,6 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             case Status.REMOVED:
             case Status.STALE_DESTROYED:
                 state.removeListener(this);
-                this.state = null;
                 notifyDestroyed();
                 break;
             /**
@@ -396,7 +397,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      *
      * @throws RepositoryException if this item has been rendered invalid for some reason
      */
-    void checkStatus() throws RepositoryException {
+    protected void checkStatus() throws RepositoryException {
         // check session status
         session.checkIsAlive();
         // check status of this item for read operation
