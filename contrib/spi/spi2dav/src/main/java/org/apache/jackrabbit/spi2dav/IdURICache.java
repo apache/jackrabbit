@@ -68,11 +68,17 @@ class IdURICache {
     public void remove(String uri) {
         String cleanUri = getCleanUri(uri);
         Object itemId = uriToIdCache.remove(cleanUri);
+        if (itemId != null) {
+            idToUriCache.remove(itemId);
+        }
         log.debug("Removed: ItemId = " + itemId + " URI = " + cleanUri);
     }
 
     public void remove(ItemId itemId) {
         Object uri = idToUriCache.remove(itemId);
+        if (uri != null) {
+            uriToIdCache.remove(uri);
+        }
         log.debug("Removed: ItemId = " + itemId + " URI = " + uri);
     }
 

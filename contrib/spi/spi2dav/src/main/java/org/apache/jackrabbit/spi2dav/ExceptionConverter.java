@@ -26,6 +26,7 @@ import org.w3c.dom.Element;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
 import java.lang.reflect.Constructor;
@@ -72,9 +73,11 @@ public class ExceptionConverter {
 
         // make sure an exception is generated
         switch (davExc.getErrorCode()) {
+            // TODO: mapping DAV_error to jcr-exception is ambiguous. to be improved
             case DavServletResponse.SC_NOT_FOUND : return new ItemNotFoundException(msg);
             case DavServletResponse.SC_LOCKED : return new LockException(msg);
             case DavServletResponse.SC_METHOD_NOT_ALLOWED : return new ConstraintViolationException(msg);
+            case DavServletResponse.SC_CONFLICT : return new InvalidItemStateException(msg);
             default: return new RepositoryException(msg);
         }
     }

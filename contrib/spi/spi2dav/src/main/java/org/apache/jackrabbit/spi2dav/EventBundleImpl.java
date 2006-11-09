@@ -18,10 +18,9 @@ package org.apache.jackrabbit.spi2dav;
 
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
-import org.w3c.dom.Element;
+
+import java.util.Collection;
 
 /**
  * <code>EventBundleImpl</code> implements a bundle of events. The individual
@@ -29,46 +28,35 @@ import org.w3c.dom.Element;
  */
 class EventBundleImpl implements EventBundle, ObservationConstants {
 
-    static final EventBundle EMPTY = new EventBundleImpl(null, null, null) {
-        public EventIterator getEvents() {
-            return IteratorHelper.EMPTY;
-        }
-    };
+    static final EventBundle EMPTY = new EventBundleImpl();
 
-    private final Element eventBundleElement;
-
-    private final URIResolver uriResolver;
-
-    private final SessionInfo sessionInfo;
-
+    private final Collection events;
     private final boolean isLocal;
 
+    private EventBundleImpl() {
+        events = null;
+        isLocal = false;
+    }
     /**
      * Creates a new event bundle.
      *
-     * @param eventBundleElement
-     * @param uriResolver
-     * @param sessionInfo
+     * @param events
+     * @param isLocal
      */
-    EventBundleImpl(Element eventBundleElement,
-                    URIResolver uriResolver,
-                    SessionInfo sessionInfo) {
-        this.eventBundleElement = eventBundleElement;
-        this.uriResolver = uriResolver;
-        this.sessionInfo = sessionInfo;
-        String value = null;
-        if (eventBundleElement != null) {
-            value = DomUtil.getAttribute(eventBundleElement,
-                        XML_EVENT_IS_LOCAL, NAMESPACE);
-        }
-        this.isLocal = (value != null) ? Boolean.valueOf(value).booleanValue() : false;
+    EventBundleImpl(Collection events, boolean isLocal) {
+        this.events = events;
+        this.isLocal = isLocal;
     }
 
     /**
      * @inheritDoc
      */
     public EventIterator getEvents() {
-        return new EventIteratorImpl(eventBundleElement, uriResolver, sessionInfo);
+        if (events == null || events.isEmpty()) {
+            return IteratorHelper.EMPTY;
+        } else {
+            return new EventIteratorImpl(events);
+        }
     }
 
     /**

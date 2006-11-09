@@ -238,6 +238,12 @@ class URIResolverImpl implements URIResolver {
         }
     }
 
+    void clearCacheEntries(ItemId itemId, SessionInfo sessionInfo) {
+        IdURICache cache = getCache(sessionInfo.getWorkspaceName());
+        if (cache.containsItemId(itemId)) {
+            cache.remove(itemId);
+        }
+    }
     //-------------------------------------------------------< URI resolver >---
     /**
      * @inheritDoc
@@ -254,7 +260,7 @@ class URIResolverImpl implements URIResolver {
         try {
             return PathFormat.parse(Text.unescape(jcrPath), nsResolver);
         } catch (MalformedPathException e) {
-            throw new RepositoryException();
+            throw new RepositoryException(e);
         }
     }
 

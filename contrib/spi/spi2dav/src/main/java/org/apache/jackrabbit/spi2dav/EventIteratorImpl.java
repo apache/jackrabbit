@@ -15,19 +15,14 @@
 */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.observation.ObservationConstants;
-import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Event;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-import org.w3c.dom.Element;
 
-import javax.jcr.RepositoryException;
 import java.util.NoSuchElementException;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * <code>EventIteratorImpl</code>...
@@ -36,18 +31,13 @@ public class EventIteratorImpl implements EventIterator {
 
     private static Logger log = LoggerFactory.getLogger(EventIteratorImpl.class);
 
-    private final SessionInfo sessionInfo;
-    private final URIResolver uriResolver;
-    private ElementIterator eventElementIterator;
+    private Iterator eventIterator;
 
     private Event next;
     private long pos;
 
-    public EventIteratorImpl(Element eventBundleElement, URIResolver uriResolver, SessionInfo sessionInfo) {
-
-        this.sessionInfo = sessionInfo;
-        this.uriResolver = uriResolver;
-        this.eventElementIterator = DomUtil.getChildren(eventBundleElement, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
+    public EventIteratorImpl(Collection events) {
+        this.eventIterator = events.iterator();
         retrieveNextEvent();
     }
 
@@ -90,15 +80,11 @@ public class EventIteratorImpl implements EventIterator {
     //------------------------------------------------------------< private >---
     private void retrieveNextEvent() {
         next = null;
-        if (eventElementIterator != null) {
-            while (next == null && eventElementIterator.hasNext()) {
-                Element evElem = eventElementIterator.nextElement();
-                try {
-                    next = new EventImpl(evElem, uriResolver, sessionInfo);
-                } catch (RepositoryException e) {
-                    log.error("Unexpected error while creating event.", e);
-                } catch (DavException e) {
-                    log.error("Unexpected error while creating event.", e);
+        if (eventIterator != null) {
+            while (next == null && eventIterator.hasNext()) {
+                Object o = eventIterator.next();
+                if (o instanceof Event) {
+                    next = (Event)o;
                 }
             }
         }
