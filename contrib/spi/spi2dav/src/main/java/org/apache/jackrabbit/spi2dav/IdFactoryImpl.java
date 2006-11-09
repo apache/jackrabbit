@@ -66,7 +66,7 @@ public class IdFactoryImpl implements IdFactory {
     }
 
     //------------------------------------------------------< Inner classes >---
-    private abstract class ItemIdImpl implements ItemId {
+    private static abstract class ItemIdImpl implements ItemId {
 
         private final String uuid;
         private final Path path;
@@ -158,7 +158,7 @@ public class IdFactoryImpl implements IdFactory {
         }
     }
 
-    public class NodeIdImpl extends ItemIdImpl implements NodeId {
+    private static class NodeIdImpl extends ItemIdImpl implements NodeId {
 
         public NodeIdImpl(String uuid) {
             super(uuid, null);
@@ -187,7 +187,7 @@ public class IdFactoryImpl implements IdFactory {
         }
     }
 
-    private class PropertyIdImpl extends ItemIdImpl implements PropertyId {
+    private static class PropertyIdImpl extends ItemIdImpl implements PropertyId {
 
         private final NodeId parentId;
 

@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.HashSet;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
@@ -262,8 +261,7 @@ public class PropertyState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#refresh(ChangeLog)
      */
-    Set refresh(ChangeLog changeLog) throws IllegalStateException {
-        Set processedIds = new HashSet(1);
+    void refresh(ChangeLog changeLog) throws IllegalStateException {
         for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
             ItemState modState = (ItemState) it.next();
             if (modState == this) {
@@ -275,12 +273,8 @@ public class PropertyState extends ItemState {
                 // push changes to overlayed state and reset status
                 ((PropertyState) overlayedState).init(getType(), getValues());
                 setStatus(Status.EXISTING);
-                // parent must not be informed, since all properties that
-                // affect the parent state (uuid, mixins) are protected.
-                processedIds.add(modState.getId());
             }
         }
-        return processedIds;
     }
 
     /**

@@ -17,20 +17,24 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.name.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.UnsupportedRepositoryOperationException;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * <code>WorkspaceItemStateManager</code>
@@ -40,11 +44,25 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceItemStateManager.class);
 
-    public WorkspaceItemStateManager(ItemStateFactory isf, IdFactory idFactory) {
+    private final Collection eventFilter;
+
+    public WorkspaceItemStateManager(WorkspaceManager wspManager, ItemStateFactory isf, IdFactory idFactory) {
         super(isf, idFactory);
+        EventFilter filter = null;
+        try {
+            // todo for now listen to everything
+            filter = wspManager.createEventFilter(Event.ALL_TYPES, Path.ROOT, true, null, null, false);
+        } catch (UnsupportedRepositoryOperationException e) {
+            // repository does not support observation
+        }
+        this.eventFilter = filter == null ? Collections.EMPTY_LIST : Collections.singletonList(filter);
     }
 
     //-------------------------------< InternalEventListener >------------------
+
+    public Collection getEventFilters() {
+        return eventFilter;
+    }
 
     /**
      * Processes <code>events</code> and invalidates cached <code>ItemState</code>s
@@ -56,36 +74,6 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
      */
     public void onEvent(EventBundle eventBundle) {
         pushEvents(getEventCollection(eventBundle));
-    }
-
-    /**
-     *
-     * @param eventBundle
-     * @param changeLog
-     */
-    public void onEvent(EventBundle eventBundle, ChangeLog changeLog) {
-        if (changeLog == null) {
-            throw new IllegalArgumentException("ChangeLog must not be null.");
-        }
-        Collection evs = getEventCollection(eventBundle);
-        // TODO: make sure, that events only contain events related to the modifications submitted with the changelog.
-
-        // inform the changelog target state about the transient modifications
-        // that have been persisted now: NEW-states will be connected to their
-        // overlayed state, EXISTING_REMOVED states will be definitely removed,
-        // EXISTING_MODIFIED states are merged with their workspace-state.
-        Set processedIds = changeLog.getTarget().refresh(changeLog);
-        for (Iterator it = evs.iterator(); it.hasNext();) {
-            ItemId evId = ((Event)it.next()).getItemId();
-            if (processedIds.contains(evId)) {
-                it.remove();
-            }
-        }
-
-        // all events not covered by the changelog must not be handled on the
-        // session-states -> treat the same way as events returned by
-        // workspace operations.
-        pushEvents(evs);
     }
 
     private void pushEvents(Collection events) {

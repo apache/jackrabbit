@@ -57,7 +57,7 @@ public interface SessionInfo {
     /**
      * Sets the identifier of the last {@link EventBundle} delivered using this
      * <code>SessionInfo</code>. This identifier will be used to retrieve the
-     * subsequent event bundles when calling {@link RepositoryService#getEvents(SessionInfo, long)}.
+     * subsequent event bundles when calling {@link RepositoryService#getEvents(SessionInfo, long, EventFilter[])}.
      *
      * @param eventBundleId the identifier of the last {@link EventBundle}
      *                      delivered using this <code>SessionInfo</code>.

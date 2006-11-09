@@ -25,13 +25,12 @@ import org.apache.jackrabbit.jcr2spi.operation.LockOperation;
 import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
 import org.apache.jackrabbit.jcr2spi.operation.LockRefresh;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.EventIterator;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -45,6 +44,8 @@ import javax.jcr.Session;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * <code>LockManagerImpl</code>...
@@ -454,6 +455,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         private final NodeState lockHoldingState;
         private LockInfo lockInfo;
         private boolean isLive = true;
+        private final EventFilter eventFilter;
 
         private LockState(NodeState lockHoldingState) throws LockException, RepositoryException {
             lockHoldingState.checkIsWorkspaceState();
@@ -466,6 +468,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
 
             // register as internal listener to the wsp manager in order to get
             // informed if this lock ends his life.
+            eventFilter = wspManager.createEventFilter(Event.PROPERTY_REMOVED,
+                    lockHoldingState.getQPath(), false, null, null, true);
             wspManager.addEventListener(this);
         }
 
@@ -532,6 +536,17 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
 
         //------------------------------------------< InternalEventListener >---
+
+        /**
+         * @see InternalEventListener#getEventFilters()
+         */
+        public Collection getEventFilters() {
+            return Collections.singletonList(eventFilter);
+        }
+
+        /**
+         * @see InternalEventListener#onEvent(EventBundle)
+         */
         public void onEvent(EventBundle eventBundle) {
             if (!isLive) {
                 // since we only monitor the removal of the lock (by means
@@ -540,26 +555,10 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 return;
             }
 
-            for (EventIterator it = eventBundle.getEvents(); it.hasNext(); ) {
-                Event ev = it.nextEvent();
-                // if the jcr:lockIsDeep property related to this Lock got removed,
-                // we assume that the lock has been released.
-                // TODO: not correct to compare nodeIds
-                if (ev.getType() == Event.PROPERTY_REMOVED
-                    && QName.JCR_LOCKISDEEP.equals(ev.getQPath().getNameElement().getName())
-                    && lockHoldingState.getNodeId().equals(ev.getParentId())) {
-
-                    // this lock has been release by someone else (and not by
-                    // a call to LockManager#unlock -> clean up and set isLive
-                    // flag to false.
-                    unlocked();
-                    break;
-                }
-            }
-        }
-
-        public void onEvent(EventBundle eventBundle, ChangeLog changeLog) {
-            // nothing to do. not interested in transient modifications
+            // this lock has been release by someone else (and not by
+            // a call to LockManager#unlock -> clean up and set isLive
+            // flag to false.
+            unlocked();
         }
     }
 

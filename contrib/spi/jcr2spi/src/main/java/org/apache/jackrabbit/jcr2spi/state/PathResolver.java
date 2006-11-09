@@ -143,6 +143,15 @@ public class PathResolver {
         NodeState state = start;
         for (int i = 0; i < path.getLength(); i++) {
             Path.PathElement elem = path.getElement(i);
+            // check for root element
+            if (elem.denotesRoot()) {
+                if (start.getParent() != null) {
+                    throw new NoSuchItemStateException(path.toString());
+                } else {
+                    continue;
+                }
+            }
+
             // first try to resolve node
             if (state.hasChildNodeEntry(elem.getName(), elem.getNormalizedIndex())) {
                 ChildNodeEntry cne = state.getChildNodeEntry(elem.getName(), elem.getNormalizedIndex());

@@ -19,8 +19,9 @@ package org.apache.jackrabbit.jcr2spi.observation;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.name.NamespaceResolver;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 
@@ -53,6 +54,11 @@ class FilteredEventIterator implements EventIterator {
     private final boolean isLocal;
 
     /**
+     * The namespace resolver of the session that created this event iterator.
+     */
+    private final NamespaceResolver nsResolver;
+
+    /**
      * The next {@link javax.jcr.observation.Event} in this iterator
      */
     private Event next;
@@ -65,15 +71,20 @@ class FilteredEventIterator implements EventIterator {
     /**
      * Creates a new <code>FilteredEventIterator</code>.
      *
-     * @param events the {@link org.apache.jackrabbit.spi.Event}s as a bundle.
-     * @param filter only event that pass the filter will be dispatched to the
-     *               event listener.
+     * @param events     the {@link org.apache.jackrabbit.spi.Event}s as a
+     *                   bundle.
+     * @param filter     only event that pass the filter will be dispatched to
+     *                   the event listener.
+     * @param nsResolver the namespace resolver of the session that created this
+     *                   <code>FilteredEventIterator</code>.
      */
     public FilteredEventIterator(EventBundle events,
-                                 EventFilter filter) {
-        actualEvents = events.getEvents();
+                                 EventFilter filter,
+                                 NamespaceResolver nsResolver) {
+        this.actualEvents = events.getEvents();
         this.filter = filter;
         this.isLocal = events.isLocal();
+        this.nsResolver = nsResolver;
         fetchNext();
     }
 
@@ -151,11 +162,7 @@ class FilteredEventIterator implements EventIterator {
         next = null;
         while (next == null && actualEvents.hasNext()) {
             event = (org.apache.jackrabbit.spi.Event) actualEvents.next();
-            try {
-                next = filter.blocks(event, isLocal) ? null : new EventImpl(filter.getNamespaceResolver(), event);
-            } catch (RepositoryException e) {
-                log.error("Exception while applying filter.", e);
-            }
+            next = filter.accept(event, isLocal) ? new EventImpl(nsResolver, event) : null;
         }
     }
 }

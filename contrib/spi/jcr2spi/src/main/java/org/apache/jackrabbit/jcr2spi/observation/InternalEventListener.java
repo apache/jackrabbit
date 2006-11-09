@@ -17,7 +17,8 @@
 package org.apache.jackrabbit.jcr2spi.observation;
 
 import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
+
+import java.util.Collection;
 
 /**
  * <code>InternalEventListener</code> receives changes as a result of a local
@@ -32,5 +33,15 @@ public interface InternalEventListener {
      */
     public void onEvent(EventBundle eventBundle);
 
-    public void onEvent(EventBundle eventBundle, ChangeLog changeLog);
+    /**
+     * Returns a collection of event filters which is in use by this event
+     * listener. The event bundles delivered to {@link #onEvent} will be filtered
+     * using the collection returned by this method. An event is included
+     * in an event bundles if it is accepted by at least one of the filters
+     * returned by this method.
+     *
+     * @return an unmodifiable collection of {@link EventFilter}s currently
+     * in use by this event listener.
+     */
+    public Collection getEventFilters();
 }

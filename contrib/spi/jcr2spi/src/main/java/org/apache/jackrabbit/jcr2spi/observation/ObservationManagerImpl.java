@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.observation;
 
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NameException;
 import org.apache.jackrabbit.name.NameFormat;
@@ -26,6 +26,7 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.util.IteratorHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>ObservationManagerImpl</code>...
@@ -48,6 +51,11 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
      * The logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(ObservationManagerImpl.class);
+
+    /**
+     * The workspace manager.
+     */
+    private final WorkspaceManager wspManager;
 
     /**
      * The session this observation manager belongs to.
@@ -71,13 +79,16 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
 
     /**
      * Creates a new observation manager for <code>session</code>.
+     * @param wspManager the WorkspaceManager.
      * @param nsResolver NamespaceResolver to be used by this observation manager
      * is based on.
      * @param ntRegistry The <code>NodeTypeRegistry</code> of the session.
      */
-    public ObservationManagerImpl(NamespaceResolver nsResolver, NodeTypeRegistry ntRegistry) {
+    public ObservationManagerImpl(WorkspaceManager wspManager, NamespaceResolver nsResolver, NodeTypeRegistry ntRegistry) {
+        this.wspManager = wspManager;
         this.nsResolver = nsResolver;
         this.ntRegistry = ntRegistry;
+        this.wspManager.addEventListener(this);
     }
 
     /**
@@ -87,8 +98,8 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
                                  int eventTypes,
                                  String absPath,
                                  boolean isDeep,
-                                 String[] uuid,
-                                 String[] nodeTypeName,
+                                 String[] uuids,
+                                 String[] nodeTypeNames,
                                  boolean noLocal) throws RepositoryException {
         Path path;
         try {
@@ -98,18 +109,18 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         }
 
         // create NodeType instances from names
-        QName[] nodeTypeNames;
-        if (nodeTypeName == null) {
-            nodeTypeNames = null;
+        QName[] nodeTypeQNames;
+        if (nodeTypeNames == null) {
+            nodeTypeQNames = null;
         } else {
             try {
-                nodeTypeNames = new QName[nodeTypeName.length];
-                for (int i = 0; i < nodeTypeName.length; i++) {
-                    QName ntName = NameFormat.parse(nodeTypeName[i], nsResolver);
+                nodeTypeQNames = new QName[nodeTypeNames.length];
+                for (int i = 0; i < nodeTypeNames.length; i++) {
+                    QName ntName = NameFormat.parse(nodeTypeNames[i], nsResolver);
                     if (!ntRegistry.isRegistered(ntName)) {
-                        throw new RepositoryException("unknown node type: " + nodeTypeName[i]);
+                        throw new RepositoryException("unknown node type: " + nodeTypeNames[i]);
                     }
-                    nodeTypeNames[i] = ntName;
+                    nodeTypeQNames[i] = ntName;
                 }
             } catch (NameException e) {
                 throw new RepositoryException(e.getMessage());
@@ -117,8 +128,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         }
 
         synchronized (subscriptions) {
-            EventFilter filter = new EventFilter(nsResolver, ntRegistry,
-                    eventTypes, path, isDeep, uuid, nodeTypeNames, noLocal);
+            EventFilter filter = wspManager.createEventFilter(eventTypes, path, isDeep, uuids, nodeTypeQNames, noLocal);
             subscriptions.put(listener, filter);
             readOnlySubscriptions = null;
         }
@@ -149,6 +159,15 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
 
     //-----------------------< InternalEventListener >--------------------------
 
+    public Collection getEventFilters() {
+        List filters = new ArrayList();
+        synchronized (subscriptions) {
+            ensureReadOnlyMap();
+            filters.addAll(readOnlySubscriptions.values());
+        }
+        return filters;
+    }
+
     public void onEvent(EventBundle eventBundle) {
         // get active listeners
         Map activeListeners;
@@ -159,7 +178,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         for (Iterator it = activeListeners.keySet().iterator(); it.hasNext(); ) {
             EventListener listener = (EventListener) it.next();
             EventFilter filter = (EventFilter) activeListeners.get(listener);
-            FilteredEventIterator eventIter = new FilteredEventIterator(eventBundle, filter);
+            FilteredEventIterator eventIter = new FilteredEventIterator(eventBundle, filter, nsResolver);
             if (eventIter.hasNext()) {
                 try {
                     listener.onEvent(eventIter);
@@ -170,17 +189,6 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
                 }
             }
         }
-    }
-
-    /**
-     * Same as {@link #onEvent(EventBundle)} but only used for local changes
-     * with a <code>ChangeLog</code>.
-     * 
-     * @param eventBundle
-     * @param changeLog
-     */
-    public void onEvent(EventBundle eventBundle, ChangeLog changeLog) {
-        onEvent(eventBundle);
     }
 
     //-------------------------< internal >-------------------------------------

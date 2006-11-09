@@ -162,7 +162,7 @@ class URIResolverImpl implements URIResolver {
             if (path != null && !path.denotesRoot()) {
                 try {
                     String jcrPath = PathFormat.format(path, nsResolver);
-                    if (!path.isAbsolute()) {
+                    if (!path.isAbsolute() && !uriBuffer.toString().endsWith("/")) {
                         uriBuffer.append("/");
                     }
                     uriBuffer.append(Text.escapePath(jcrPath));

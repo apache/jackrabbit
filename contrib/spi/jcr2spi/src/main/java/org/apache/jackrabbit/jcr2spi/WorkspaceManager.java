@@ -72,6 +72,7 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.value.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -102,7 +103,13 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Collections;
 import java.io.InputStream;
+
+import EDU.oswego.cs.dl.util.concurrent.Channel;
+import EDU.oswego.cs.dl.util.concurrent.Sync;
+import EDU.oswego.cs.dl.util.concurrent.Latch;
+import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
 
 /**
  * <code>WorkspaceManager</code>...
@@ -132,6 +139,13 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final Object updateMonitor = new Object();
 
     /**
+     * A producer for this channel can request an immediate poll for events
+     * by placing a Sync into the channel. The Sync is released when the event
+     * poll finished.
+     */
+    private final Channel immediateEventRequests = new LinkedQueue();
+
+    /**
      * This is the event polling for external changes. If <code>null</code>
      * then the underlying repository service does not support observation.
      */
@@ -141,7 +155,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * List of event listener that are set on this WorkspaceManager to get
      * notifications about local and external changes.
      */
-    private Set listeners = new HashSet();
+    private final Set listeners = Collections.synchronizedSet(new HashSet());
 
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo) throws RepositoryException {
         this.service = service;
@@ -249,10 +263,35 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         listeners.remove(listener);
     }
 
+    /**
+     * Creates an event filter based on the parameters available in {@link
+     * javax.jcr.observation.ObservationManager#addEventListener}.
+     *
+     * @param eventTypes   A combination of one or more event type constants
+     *                     encoded as a bitmask.
+     * @param path         an absolute path.
+     * @param isDeep       a <code>boolean</code>.
+     * @param uuids        array of UUIDs.
+     * @param nodeTypes    array of node type names.
+     * @param noLocal      a <code>boolean</code>.
+     * @return the event filter instance with the given parameters.
+     * @throws UnsupportedRepositoryOperationException
+     *          if this implementation does not support observation.
+     */
+    public EventFilter createEventFilter(int eventTypes,
+                                         Path path,
+                                         boolean isDeep,
+                                         String[] uuids,
+                                         QName[] nodeTypes,
+                                         boolean noLocal)
+            throws UnsupportedRepositoryOperationException {
+        return service.createEventFilter(eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
+    }
+
     //--------------------------------------------------------------------------
     private ItemStateManager createItemStateManager() {
         ItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, this);
-        WorkspaceItemStateManager ism = new WorkspaceItemStateManager(isf, service.getIdFactory());
+        WorkspaceItemStateManager ism = new WorkspaceItemStateManager(this, isf, service.getIdFactory());
         addEventListener(ism);
         return ism;
     }
@@ -368,8 +407,16 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @see UpdatableItemStateManager#execute(Operation)
      */
     public void execute(Operation operation) throws RepositoryException {
+        Sync eventSignal;
         synchronized (updateMonitor) {
             new OperationVisitorImpl(sessionInfo).execute(operation);
+            eventSignal = getEventPollingRequest();
+        }
+        try {
+            eventSignal.acquire();
+        } catch (InterruptedException e) {
+            Thread.interrupted();
+            log.warn("Interrupted while waiting for events from RepositoryService");
         }
     }
 
@@ -380,8 +427,17 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @throws RepositoryException
      */
     public void execute(ChangeLog changes) throws RepositoryException {
+        Sync eventSignal;
         synchronized (updateMonitor) {
             new OperationVisitorImpl(sessionInfo).execute(changes);
+            changes.persisted();
+            eventSignal = getEventPollingRequest();
+        }
+        try {
+            eventSignal.acquire();
+        } catch (InterruptedException e) {
+            Thread.interrupted();
+            log.warn("Interrupted while waiting for events from RepositoryService");
         }
     }
 
@@ -532,42 +588,17 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
     /**
      * Called when local or external events occured. This method is called after
-     * changes have been applied to the repository. Depending on <code>changeLog</code>
-     * this method is called as a result of:
-     * <ul>
-     * <li>a local <code>save</code> of transient changes. In this case
-     * <code>changeLog</code> is non-<code>null</code>.</li>
-     * <li>an execution of a workspace operation. In this case
-     * <code>changeLog</code> is <code>null</code></li>
-     * <li>an external change to the workspace (another session modified the
-     * workspace). In this case <code>changeLog</code> is <code>null</code></li>
-     * </ul>
+     * changes have been applied to the repository.
      *
-     * @param events    the events generated by the repository service as a
-     *                  response to the executed operation(s).
-     * @param changeLog the local <code>ChangeLog</code> which contains the
-     *                  affected transient <code>ItemState</code>s and the
-     *                  relevant {@link Operation}s that lead to the
-     *                  modifications. If <code>null</code> this method is
-     *                  called as a consequence of an external change or a call
-     *                  of a workspace operation. In that case there are no
-     *                  local transient changes.
+     * @param events the events generated by the repository service as the
+     *               effect of a change.
      */
-    private void onEventReceived(EventBundle[] events, ChangeLog changeLog) {
+    private void onEventReceived(EventBundle[] events) {
         // notify listener
         InternalEventListener[] lstnrs = (InternalEventListener[]) listeners.toArray(new InternalEventListener[listeners.size()]);
         for (int i = 0; i < events.length; i++) {
-            EventBundle bundle = events[i];
-            if (bundle.isLocal() && changeLog != null) {
-                // local change from batch operation
-                for (int j = 0; j < lstnrs.length; j++) {
-                    lstnrs[j].onEvent(bundle, changeLog);
-                }
-            } else {
-                // external change or workspace operation
-                for (int j = 0; j < lstnrs.length; j++) {
-                    lstnrs[j].onEvent(bundle);
-                }
+            for (int j = 0; j < lstnrs.length; j++) {
+                lstnrs[j].onEvent(events[i]);
             }
         }
     }
@@ -584,7 +615,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         private final SessionInfo sessionInfo;
 
         private Batch batch;
-        private EventBundle[] events;
 
         private OperationVisitorImpl(SessionInfo sessionInfo) {
             this.sessionInfo = sessionInfo;
@@ -605,8 +635,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 }
             } finally {
                 if (batch != null) {
-                    events = service.submit(batch);
-                    onEventReceived(events, changeLog);
+                    service.submit(batch);
                     // reset batch field
                     batch = null;
                 }
@@ -617,19 +646,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
          * Executes the operations on the repository service.
          */
         private void execute(Operation workspaceOperation) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
-            boolean success = false;
-            try {
-                log.info("executing: " + workspaceOperation);
-                workspaceOperation.accept(this);
-                success = true;
-            } finally {
-                if (success && events != null) {
-                    // a workspace operation is like an external change: there
-                    // is no changelog to persist. but still the events must
-                    // be reported as local changes.
-                    onEventReceived(events, null);
-                }
-            }
+            log.info("executing: " + workspaceOperation);
+            workspaceOperation.accept(this);
         }
         //-----------------------< OperationVisitor >---------------------------
         // TODO: review retrival of ItemIds for transient modifications 
@@ -671,20 +689,20 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         public void visit(Clone operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             NodeId destParentId = operation.getDestinationParentState().getNodeId();
-            events = service.clone(sessionInfo, operation.getWorkspaceName(), nId, destParentId, operation.getDestinationName(), operation.isRemoveExisting());
+            service.clone(sessionInfo, operation.getWorkspaceName(), nId, destParentId, operation.getDestinationName(), operation.isRemoveExisting());
         }
 
         public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
             NodeId destParentId = operation.getDestinationParentState().getNodeId();
-            events = service.copy(sessionInfo, operation.getWorkspaceName(), nId, destParentId, operation.getDestinationName());
+            service.copy(sessionInfo, operation.getWorkspaceName(), nId, destParentId, operation.getDestinationName());
         }
 
         public void visit(Move operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
             NodeId moveId = operation.getSourceId();
             NodeId destParentId = operation.getDestinationParentState().getNodeId();
             if (batch == null) {
-                events = service.move(sessionInfo, moveId, destParentId, operation.getDestinationName());
+                service.move(sessionInfo, moveId, destParentId, operation.getDestinationName());
             } else {
                 batch.move(moveId, destParentId, operation.getDestinationName());
             }
@@ -692,7 +710,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
-            events = service.update(sessionInfo, nId, operation.getSourceWorkspaceName());
+            service.update(sessionInfo, nId, operation.getSourceWorkspaceName());
         }
 
         public void visit(Remove operation) throws RepositoryException {
@@ -744,11 +762,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         }
 
         public void visit(Checkout operation) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
-            events = service.checkout(sessionInfo, operation.getNodeState().getNodeId());
+            service.checkout(sessionInfo, operation.getNodeState().getNodeId());
         }
 
         public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-            events = service.checkin(sessionInfo, operation.getNodeState().getNodeId());
+            service.checkin(sessionInfo, operation.getNodeState().getNodeId());
         }
 
         public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
@@ -764,7 +782,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
 
             if (nState == null) {
-                events = service.restore(sessionInfo, vIds, operation.removeExisting());
+                service.restore(sessionInfo, vIds, operation.removeExisting());
             } else {
                 if (vIds.length > 1) {
                     throw new IllegalArgumentException("Restore from a single node must specify but one single Version.");
@@ -777,27 +795,14 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 } else {
                     targetId = nState.getNodeId();
                 }
-                events = service.restore(sessionInfo, targetId, vIds[0], operation.removeExisting());
+                service.restore(sessionInfo, targetId, vIds[0], operation.removeExisting());
             }
         }
 
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
-            events = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
-            List externalEventBundles = new ArrayList();
-            for (int i = 0; i < events.length; i++) {
-                if (events[i].isLocal()) {
-                    // todo: improve.... inform operation about modified items (build mergefailed iterator)
-                    operation.getEventListener().onEvent(events[i]);
-                } else {
-                    // otherwise dispatch as external event
-                    externalEventBundles.add(events[i]);
-                }
-            }
-            if (!externalEventBundles.isEmpty()) {
-                EventBundle[] bundles = (EventBundle[]) externalEventBundles.toArray(new EventBundle[externalEventBundles.size()]);
-                onEventReceived(bundles, null);
-            }
+            // todo service should return ids of failed nodes
+            service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
         }
 
         public void visit(ResolveMergeConflict operation) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
@@ -838,7 +843,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                 if (resolveDone) {
                     predecessorIds[i] = vId;
                 }
-                events = service.resolveMergeConflict(sessionInfo, nId, mergeFailedIds, predecessorIds);
+                service.resolveMergeConflict(sessionInfo, nId, mergeFailedIds, predecessorIds);
             } catch (ItemStateException e) {
                 // should not occur.
                 throw new RepositoryException(e);
@@ -847,30 +852,62 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
-            events = service.lock(sessionInfo, nId, operation.isDeep(), operation.isSessionScoped());
+            service.lock(sessionInfo, nId, operation.isDeep(), operation.isSessionScoped());
         }
 
         public void visit(LockRefresh operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
-            events = service.refreshLock(sessionInfo, nId);
+            service.refreshLock(sessionInfo, nId);
         }
 
         public void visit(LockRelease operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
-            events = service.unlock(sessionInfo, nId);
+            service.unlock(sessionInfo, nId);
         }
 
         public void visit(AddLabel operation) throws VersionException, RepositoryException {
             NodeId vhId = operation.getVersionHistoryState().getNodeId();
             NodeId vId = operation.getVersionState().getNodeId();
-            events = service.addVersionLabel(sessionInfo, vhId, vId, operation.getLabel(), operation.moveLabel());
+            service.addVersionLabel(sessionInfo, vhId, vId, operation.getLabel(), operation.moveLabel());
         }
 
         public void visit(RemoveLabel operation) throws VersionException, RepositoryException {
             NodeId vhId = operation.getVersionHistoryState().getNodeId();
             NodeId vId = operation.getVersionState().getNodeId();
-            events = service.removeVersionLabel(sessionInfo, vhId, vId, operation.getLabel());
+            service.removeVersionLabel(sessionInfo, vhId, vId, operation.getLabel());
         }
+    }
+
+    /**
+     * Requests an immediate poll for events. The returned Sync will be
+     * released by the event polling thread when events have been retrieved.
+     */
+    private Sync getEventPollingRequest() {
+        Sync signal;
+        if (externalChangeFeed != null) {
+            // observation supported
+            signal = new Latch();
+            try {
+                immediateEventRequests.put(signal);
+            } catch (InterruptedException e) {
+                log.warn("Unable to request immediate event poll: " + e);
+            }
+        } else {
+            // no observation, return a dummy sync which can be acquired immediately
+            signal = new Sync() {
+                public void acquire() {
+                }
+
+                public boolean attempt(long l) {
+                    return true;
+                }
+
+                public void release() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+        return signal;
     }
 
     /**
@@ -895,21 +932,48 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         public void run() {
             while (!Thread.interrupted()) {
                 try {
-                    Thread.sleep(pollingInterval);
-                } catch (InterruptedException e) {
-                    // terminate
-                    break;
-                }
-                try {
+                    // wait for a signal to do an immediate poll but wait at
+                    // most EXTERNAL_EVENT_POLLING_INTERVAL
+                    Sync signal = (Sync) immediateEventRequests.poll(pollingInterval);
+
                     synchronized (updateMonitor) {
-                        EventBundle[] bundles = service.getEvents(sessionInfo, 0);
+                        // if this thread was waiting for updateMonitor and now
+                        // enters this synchronized block, then a user thread
+                        // has just finished an operation and will probably
+                        // request an immediate event poll. That's why we
+                        // check here again for a sync signal
+                        if (signal == null) {
+                            signal = (Sync) immediateEventRequests.poll(0);
+                        }
+
+                        if (signal != null) {
+                            log.debug("Request for immediate event poll");
+                        }
+
+                        // get filters from listeners
+                        List filters = new ArrayList();
+                        InternalEventListener[] iel = (InternalEventListener[]) listeners.toArray(new InternalEventListener[0]);
+                        for (int i = 0; i < iel.length; i++) {
+                            filters.addAll(iel[i].getEventFilters());
+                        }
+                        EventBundle[] bundles = service.getEvents(sessionInfo,
+                                0, (EventFilter[]) filters.toArray(
+                                        new EventFilter[filters.size()]));
                         if (bundles.length > 0) {
-                            onEventReceived(bundles, null);
+                            onEventReceived(bundles);
+                        }
+                        if (signal != null) {
+                            log.debug("About to signal that events have been delivered");
+                            signal.release();
+                            log.debug("Event delivery signaled");
                         }
                     }
                 } catch (RepositoryException e) {
                     log.warn("Exception while retrieving event bundles: " + e);
                     log.debug("Dump:", e);
+                } catch (InterruptedException e) {
+                    // terminate
+                    break;
                 }
             }
         }
