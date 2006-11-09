@@ -1178,8 +1178,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         String rootUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
         String subscriptionId = sessionInfoImpl.getSubscriptionId();
         if (subscriptionId == null) {
-            SubscriptionInfo subscriptionInfo = new SubscriptionInfo(ALL_EVENTS, true, DavConstants.UNDEFINED_TIMEOUT);
-            subscriptionId = subscribe(rootUri, subscriptionInfo, null, sessionInfo, null);
+            subscriptionId = subscribe(rootUri, S_INFO, null, sessionInfo, null);
             log.debug("Subscribed on server for session info " + sessionInfo);
             sessionInfoImpl.setSubscriptionId(subscriptionId);
         }
