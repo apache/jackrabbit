@@ -32,4 +32,6 @@ public interface RepositoryConfig {
     public ValueFactory getValueFactory() throws RepositoryException;
 
     public String getDefaultWorkspaceName();
+
+    public CacheMaintenance getCacheMaintenanceStrategy();
 }
