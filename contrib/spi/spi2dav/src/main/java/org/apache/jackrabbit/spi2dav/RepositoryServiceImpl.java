@@ -70,6 +70,7 @@ import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.observation.EventType;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
+import org.apache.jackrabbit.webdav.observation.DefaultEventType;
 import org.apache.jackrabbit.webdav.security.SecurityConstants;
 import org.apache.jackrabbit.webdav.security.CurrentUserPrivilegeSetProperty;
 import org.apache.jackrabbit.webdav.security.Privilege;
@@ -97,6 +98,7 @@ import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -114,6 +116,7 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueFormat;
@@ -239,9 +242,17 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
+    private static void initMethod(DavMethod method, BatchImpl batchImpl, boolean addIfHeader) {
+        initMethod(method, batchImpl.sessionInfo,  addIfHeader);
+
+        // add batchId as separate header
+        CodedUrlHeader ch = new CodedUrlHeader(TransactionConstants.HEADER_TRANSACTIONID, batchImpl.batchId);
+        method.setRequestHeader(ch.getHeaderName(), ch.getHeaderValue());
+    }
+
     private static boolean isSameResource(String requestURI, MultiStatusResponse response) {
         String href = response.getHref();
-        if (href.endsWith("/")) {
+        if (href.endsWith("/") && !requestURI.endsWith("/")) {
             href = href.substring(0, href.length() - 1);
         }
         return requestURI.equals(href);
@@ -309,7 +320,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // TODO: build specific subscrUri
         // TODO: check if 'all event' subscription is ok
         String subscrUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
-        String subscrId = subscribe(subscrUri, S_INFO, null, sessionInfo);
+        String subscrId = subscribe(subscrUri, S_INFO, null, sessionInfo, null);
         try {
             if (isLockMethod(method)) {
                 initMethod(method, sessionInfo, false);
@@ -794,10 +805,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 Iterator it = batchImpl.methods();
                 while (it.hasNext()) {
                     DavMethod method = (DavMethod) it.next();
-                    initMethod(method, batchImpl.sessionInfo, true);
-                    // add batchId as separate header
-                    CodedUrlHeader ch = new CodedUrlHeader(TransactionConstants.HEADER_TRANSACTIONID, batchImpl.batchId);
-                    method.setRequestHeader(ch.getHeaderName(), ch.getHeaderValue());
+                    initMethod(method, batchImpl, true);
 
                     client.executeMethod(method);
                     method.checkSuccess();
@@ -883,6 +891,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
             method = new PropFindMethod(uri, nameSet, DEPTH_0);
+            // TODO: not correct. pass tokens in order avoid new session to be created TOBEFIXED
+            initMethod(method, sessionInfo, true);
 
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
@@ -1162,7 +1172,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         String subscriptionId = sessionInfoImpl.getSubscriptionId();
         if (subscriptionId == null) {
             SubscriptionInfo subscriptionInfo = new SubscriptionInfo(ALL_EVENTS, true, DavConstants.UNDEFINED_TIMEOUT);
-            subscriptionId = subscribe(rootUri, subscriptionInfo, null, sessionInfo);
+            subscriptionId = subscribe(rootUri, subscriptionInfo, null, sessionInfo, null);
             log.debug("Subscribed on server for session info " + sessionInfo);
             sessionInfoImpl.setSubscriptionId(subscriptionId);
         }
@@ -1170,7 +1180,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return poll(rootUri, subscriptionId, sessionInfo);
     }
 
-    private String subscribe(String uri, SubscriptionInfo subscriptionInfo, String subscriptionId, SessionInfo sessionInfo) throws RepositoryException {
+    private String subscribe(String uri, SubscriptionInfo subscriptionInfo,
+                             String subscriptionId, SessionInfo sessionInfo,
+                             String batchId) throws RepositoryException {
         SubscribeMethod method = null;
         try {
             if (subscriptionId != null) {
@@ -1178,6 +1190,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             } else {
                 method = new SubscribeMethod(uri, subscriptionInfo);
             }
+
+            if (batchId != null) {
+                // add batchId as separate header
+                CodedUrlHeader ch = new CodedUrlHeader(TransactionConstants.HEADER_TRANSACTIONID, batchId);
+                method.setRequestHeader(ch.getHeaderName(), ch.getHeaderValue());
+            }
+
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
             return method.getSubscriptionId();
@@ -1227,7 +1246,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                         ObservationConstants.NAMESPACE);
                 List bundles = new ArrayList();
                 while (it.hasNext()) {
-                    bundles.add(new EventBundleImpl(it.nextElement(), uriResolver, sessionInfo));
+                    Element bundleElement = it.nextElement();
+                    String value = DomUtil.getAttribute(bundleElement, ObservationConstants.XML_EVENT_IS_LOCAL, NAMESPACE);
+                    boolean isLocal = (value != null) ? Boolean.valueOf(value).booleanValue() : false;
+
+                    bundles.add(new EventBundleImpl(buildEventList(bundleElement, sessionInfo), isLocal));
                 }
                 events = (EventBundle[]) bundles.toArray(new EventBundle[bundles.size()]);
             }
@@ -1241,6 +1264,60 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.releaseConnection();
             }
         }
+    }
+
+    private List buildEventList(Element bundleElement, SessionInfo sessionInfo) {
+        List events = new ArrayList();
+        ElementIterator eventElementIterator = DomUtil.getChildren(bundleElement, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
+        while (eventElementIterator.hasNext()) {
+            Element evElem = eventElementIterator.nextElement();
+            Element typeEl = DomUtil.getChildElement(evElem, ObservationConstants.XML_EVENTTYPE, ObservationConstants.NAMESPACE);
+            EventType[] et = DefaultEventType.createFromXml(typeEl);
+            if (et.length == 0 || et.length > 1) {
+                // should not occur.
+                log.error("Ambigous event type definition: expected one single eventtype.");
+                continue;
+            }
+
+            String href = DomUtil.getChildTextTrim(evElem, DavConstants.XML_HREF, DavConstants.NAMESPACE);
+
+            int type;
+            Path eventPath;
+            try {
+                type = SubscriptionImpl.getJcrEventType(et[0]);
+                eventPath = uriResolver.getQPath(href, sessionInfo);
+            } catch (DavException e) {
+                // should not occur
+                log.error("Internal error while building Event", e);
+                continue;
+            } catch (RepositoryException e) {
+                // should not occur
+                log.error("Internal error while building Event", e);
+                continue;
+            }
+
+            ItemId eventId = null;
+            try {
+                if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
+                    eventId = uriResolver.getNodeId(href, sessionInfo);
+                } else {
+                    eventId = uriResolver.getPropertyId(href, sessionInfo);
+                }
+            } catch (RepositoryException e) {
+                log.warn("Unable to build event itemId: ", e);
+            }
+            String parentHref = Text.getRelativeParent(href, 1, true);
+            NodeId parentId = null;
+            try {
+                parentId = uriResolver.getNodeId(parentHref, sessionInfo);
+            } catch (RepositoryException e) {
+                log.warn("Unable to build event parentId: ", e);
+            }
+
+            events.add(new EventImpl(eventId, eventPath, parentId, type, evElem));
+        }
+
+        return events;
     }
 
     /**
@@ -1440,7 +1517,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 String uri = getItemUri(targetId, sessionInfo);
                 // start special 'lock'
                 LockMethod method = new LockMethod(uri, TransactionConstants.LOCAL, TransactionConstants.TRANSACTION, null, DavConstants.INFINITE_TIMEOUT, true);
-                initMethod(method, sessionInfo, false);
+                initMethod(method, sessionInfo, true);
 
                 HttpClient client = getClient(sessionInfo);
                 client.executeMethod(method);
@@ -1450,7 +1527,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
                 // register subscription
                 String subscrUri = (targetId.denotesNode() ? uri : getItemUri(((PropertyId) targetId).getParentId(), sessionInfo));
-                subscriptionId = subscribe(subscrUri, S_INFO, null, sessionInfo);
+                subscriptionId = subscribe(subscrUri, S_INFO, null, sessionInfo, batchId);
                 return client;
             } catch (IOException e) {
                 throw new RepositoryException(e);
@@ -1470,12 +1547,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 // make sure the lock initially created is removed again on the
                 // server, asking the server to persist the modifications
                 method = new UnLockMethod(uri, batchId);
-                // todo: check if 'initmethod' would work (ev. conflict with TxId header).
-                String[] locktokens = sessionInfo.getLockTokens();
-                if (locktokens != null && locktokens.length > 0) {
-                    IfHeader ifH = new IfHeader(locktokens);
-                    method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
-                }
+                initMethod(method, sessionInfo, true);
+
                 // in contrast to standard UNLOCK, the tx-unlock provides a
                 // request body.
                 method.setRequestBody(new TransactionInfo(commit));

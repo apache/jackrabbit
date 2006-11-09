@@ -21,20 +21,11 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
-import org.apache.jackrabbit.webdav.observation.EventType;
-import org.apache.jackrabbit.webdav.observation.DefaultEventType;
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionImpl;
-import org.apache.jackrabbit.util.Text;
 import org.w3c.dom.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
 
 /**
  * <code>EventImpl</code>...
@@ -43,30 +34,21 @@ public class EventImpl implements Event, ObservationConstants {
 
     private static Logger log = LoggerFactory.getLogger(EventImpl.class);
 
-    private final Element eventElement;
+    private final ItemId eventId;
     private final int type;
+    private final Path eventPath;
+    private final NodeId parentId;
 
-    private final SessionInfo sessionInfo;
-    private final URIResolver uriResolver;
+    private final Element eventElement;
 
-    private final String href;
-    private final Path qPath;
+    public EventImpl(ItemId eventId, Path eventPath, NodeId parentId, int eventType,
+                     Element eventElement) {
+        this.eventId = eventId;
+        this.eventPath = eventPath;
+        this.parentId = parentId;
+        type = getSpiEventType(eventType);
 
-    public EventImpl(Element eventElement, URIResolver uriResolver,
-                     SessionInfo sessionInfo) throws RepositoryException, DavException {
         this.eventElement = eventElement;
-        this.uriResolver = uriResolver;
-        this.sessionInfo = sessionInfo;
-
-        Element typeEl = DomUtil.getChildElement(eventElement, XML_EVENTTYPE, NAMESPACE);
-        EventType[] et = DefaultEventType.createFromXml(typeEl);
-        if (et.length == 0 || et.length > 1) {
-            throw new IllegalArgumentException("Ambigous event type definition: expected one single eventtype.");
-        }
-        type = getSpiEventType(SubscriptionImpl.getJcrEventType(et[0]));
-
-        href = DomUtil.getChildTextTrim(eventElement, DavConstants.XML_HREF, DavConstants.NAMESPACE);
-        qPath = uriResolver.getQPath(href, sessionInfo);
     }
 
     public int getType() {
@@ -74,34 +56,15 @@ public class EventImpl implements Event, ObservationConstants {
     }
 
     public Path getQPath() {
-        return qPath;
+        return eventPath;
     }
 
     public ItemId getItemId() {
-        try {
-            if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
-                return uriResolver.getNodeId(href, sessionInfo);
-            } else {
-                return uriResolver.getPropertyId(href, sessionInfo);
-            }
-        } catch (RepositoryException e) {
-            // should never occur
-            log.error("Internal error, while building id of Event.", e);
-            // TODO: check
-            throw new IllegalStateException();
-        }
+        return eventId;
     }
 
     public NodeId getParentId() {
-        try {
-            String parentHref = Text.getRelativeParent(href, 1, true);
-            return uriResolver.getNodeId(parentHref, sessionInfo);
-        } catch (RepositoryException e) {
-            // should never occur
-            log.error("Internal error, while building parentId of Event.", e);
-            // TODO: check
-            throw new IllegalStateException();
-        }
+        return parentId;
     }
 
     public String getUUID() {
