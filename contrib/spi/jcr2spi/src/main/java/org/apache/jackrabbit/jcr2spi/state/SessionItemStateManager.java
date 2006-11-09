@@ -557,7 +557,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 // create new jcr:mixinTypes property
                 EffectiveNodeType ent = validator.getEffectiveNodeType(nState);
                 QPropertyDefinition pd = ent.getApplicablePropertyDefinition(QName.JCR_MIXINTYPES, PropertyType.NAME, true);
-                QValue[] mixinValue = QValue.create(nState.getMixinTypeNames());
+                QValue[] mixinValue = QValue.create(mixinNames);
                 int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
                 addPropertyState(nState, pd.getQName(), pd.getRequiredType(), mixinValue, pd, options);
             }
@@ -687,7 +687,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         validator.checkAddProperty(parent, propertyName, pDef, options);
 
         // create property state
-        PropertyState propState = transientStateMgr.createNewPropertyState(propertyName, parent, pDef, values, propertyType);
+        transientStateMgr.createNewPropertyState(propertyName, parent, pDef, values, propertyType);
     }
 
     private void addNodeState(NodeState parent, QName nodeName, QName nodeTypeName,
