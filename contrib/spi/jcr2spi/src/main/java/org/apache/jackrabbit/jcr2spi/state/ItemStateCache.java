@@ -87,10 +87,12 @@ public class ItemStateCache implements ItemStateCreationListener {
     private void putToCache(ItemState state) {
         if (state.isNode() && (state.getStatus() == Status.EXISTING || state.getStatus() == Status.MODIFIED)) {
             NodeState nodeState = (NodeState) state;
+            // NOTE: uuid is retrieved from the state and not from the NodeId.
             String uuid = nodeState.getUUID();
             if (uuid != null) {
                 uuid2NodeState.put(uuid, nodeState);
             }
         }
+        // TODO: add caching for other items as well
     }
 }

@@ -188,34 +188,39 @@ public class CachingItemStateManager implements ItemStateManager {
      *         present in the cache.
      */
     protected ItemState lookup(ItemId id) {
-        ItemState state;
+        NodeState start;
         // resolve UUID
         if (id.getUUID() != null) {
-            state = cache.getNodeState(id.getUUID());
-            if (state == null) {
+            start = cache.getNodeState(id.getUUID());
+            if (start == null) {
                 // not cached
                 return null;
             }
         } else {
             // start from root
             try {
-                state = getRootState();
+                start = getRootState();
             } catch (ItemStateException e) {
-                log.warn("unable to get root node state:" + e.getMessage());
+                // should never occur
+                log.error("Error while retrieving root node state:" + e.getMessage());
                 return null;
             }
         }
 
-        // resolve relative path
-        if (id.getPath() != null) {
+        if (id.getPath() == null) {
+            // path is null -> id points to a state identified by uuid
+            return start;
+        } else {
+            // resolve path part
             try {
-                state = PathResolver.lookup(state, id.getPath());
+                return PathResolver.lookup(start, id.getPath());
+            } catch (NoSuchItemStateException e) {
+                log.debug("exception while looking up state with id: " + id);
+                return null;
             } catch (ItemStateException e) {
-                log.warn("exception while looking up state with id: " + id);
+                log.debug("exception while looking up state with id: " + id);
                 return null;
             }
         }
-
-        return state;
     }
 }

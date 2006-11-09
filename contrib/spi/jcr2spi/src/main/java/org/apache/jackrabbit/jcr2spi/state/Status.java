@@ -124,6 +124,7 @@ public class Status {
                        case EXISTING_MODIFIED: /* save, revert */
                        case EXISTING_REMOVED:  /* revert */
                        case STALE_MODIFIED:    /* revert */
+                       case MODIFIED:
                            isValid = true;
                            break;
                        /* REMOVED, STALE_DESTROYED -> false */
@@ -142,9 +143,11 @@ public class Status {
                case REMOVED:
                    isValid = (oldStatus == NEW || oldStatus == EXISTING || oldStatus == EXISTING_REMOVED);
                    break;
-                /* default:
-                   NEW cannot change state to NEW -> false
-                   MODIFIED never applicable to session state -> false */
+               case MODIFIED:
+                   isValid = (oldStatus == EXISTING);
+                   break;
+                   /* default:
+                   NEW cannot change state to NEW -> false */
             }
         }
         return isValid;

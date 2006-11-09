@@ -112,14 +112,15 @@ final class ChildNodeEntries implements Collection {
 
     /**
      * Returns the <code>ChildNodeEntry</code> for the given
-     * <code>nodeState</code>.
+     * <code>nodeState</code>. Note, that this method does not check if the
+     * given childNodeEntry (and its attached NodeState) is still valid.
      *
-     * @param nodeState the node state.
+     * @param childState the child node state for which a entry is searched.
      * @return the <code>ChildNodeEntry</code> or <code>null</code> if there
-     *         is no <code>ChildNodeEntry</code> for <code>nodeState</code>.
+     * is no <code>ChildNodeEntry</code> for the given <code>NodeState</code>.
      */
-    ChildNodeEntry get(NodeState nodeState) {
-        Object o = nameMap.get(nodeState.getQName());
+    ChildNodeEntry get(NodeState childState) {
+        Object o = nameMap.get(childState.getQName());
         if (o == null) {
             // no matching child node entry
             return null;
@@ -131,7 +132,7 @@ final class ChildNodeEntries implements Collection {
                 ChildNodeEntry cne = n.getChildNodeEntry();
                 // only check available child node entries
                 try {
-                    if (cne.isAvailable() && cne.getNodeState() == nodeState) {
+                    if (cne.isAvailable() && cne.getNodeState() == childState) {
                         return cne;
                     }
                 } catch (ItemStateException e) {
@@ -142,7 +143,7 @@ final class ChildNodeEntries implements Collection {
             // single child node with this name
             ChildNodeEntry cne = ((LinkedEntries.LinkNode) o).getChildNodeEntry();
             try {
-                if (cne.isAvailable() && cne.getNodeState() == nodeState) {
+                if (cne.isAvailable() && cne.getNodeState() == childState) {
                     return cne;
                 }
             } catch (ItemStateException e) {
@@ -241,7 +242,7 @@ final class ChildNodeEntries implements Collection {
                     }
                 } else {
                     // then this child node entry has never been accessed
-                    // before and is assumed valid
+                    // before and is assumed valid // TODO: check if correct.
                     index--;
                 }
                 if (index == 0) {
@@ -268,9 +269,9 @@ final class ChildNodeEntries implements Collection {
         if (uuid == null) {
             throw new IllegalArgumentException();
         }
-        List l = get(nodeName);
-        for (Iterator it = l.iterator(); it.hasNext();) {
-            ChildNodeEntry cne = (ChildNodeEntry) it.next();
+        Iterator cneIter = (nodeName != null) ? get(nodeName).iterator() : iterator();
+        while (cneIter.hasNext()) {
+            ChildNodeEntry cne = (ChildNodeEntry) cneIter.next();
             if (uuid.equals(cne.getUUID())) {
                 return cne;
             }
@@ -309,9 +310,9 @@ final class ChildNodeEntries implements Collection {
      * Adds a <code>ChildNodeEntry</code> for a child node with the given
      * name and an optional <code>uuid</code>.
      *
-     * @param nodeName the name of the child node.
-     * @param uuid     the UUID of the child node if it can be identified
-     *                 with a UUID; otherwise <code>null</code>.
+     * @param nodeName The name of the child node.
+     * @param uuid The UUID of the child node if it can be identified with a UUID;
+     * otherwise <code>null</code>.
      * @return the created ChildNodeEntry.
      */
     private ChildNodeEntry add(QName nodeName, String uuid) {
@@ -455,8 +456,7 @@ final class ChildNodeEntries implements Collection {
      * <code>beforeNode</code> does not have a <code>ChildNodeEntry</code>
      * in this <code>ChildNodeEntries</code>.
      */
-    void reorder(NodeState insertNode, NodeState beforeNode)
-        throws NoSuchItemStateException {
+    void reorder(NodeState insertNode, NodeState beforeNode) throws NoSuchItemStateException {
         Object insertObj = nameMap.get(insertNode.getQName());
         // the link node to move
         LinkedEntries.LinkNode insertLN = getLinkNode(insertNode);
@@ -510,19 +510,23 @@ final class ChildNodeEntries implements Collection {
             ChildNodeEntry newCne = ChildNodeReference.create(childState, nodeState.isf, nodeState.idFactory);
             entries.replaceNode(ln, newCne);
         } catch (NoSuchItemStateException e) {
-            log.error("Internal error.", e);
+            // should never occur.
+            log.error("Internal Error: ", e);
         }
     }
 
     /**
      * Returns the matching <code>LinkNode</code> from a list or a single
-     * <code>LinkNode</code>.
+     * <code>LinkNode</code>. Note, that in contrast to {@link #getLinkNode(ChildNodeEntry)}
+     * this method will throw <code>NoSuchItemStateException</code> if none of the
+     * entries matches either due to missing entry for given state name or due
+     * to missing availability of the <code>ChildNodeEntry</code>.
      *
-     * @param nodeState      the <code>NodeState</code> which is the value
-     *                       of on of the <code>LinkNode</code>s.
+     * @param nodeState the <code>NodeState</code> that is compared to the
+     * resolution of any ChildNodeEntry that matches by name.
      * @return the matching <code>LinkNode</code>.
      * @throws NoSuchItemStateException if none of the <code>LinkNode</code>s
-     *                                  matches.
+     * matches.
      */
     private LinkedEntries.LinkNode getLinkNode(NodeState nodeState)
         throws NoSuchItemStateException {
@@ -531,7 +535,7 @@ final class ChildNodeEntries implements Collection {
             // no matching child node entry
             throw new NoSuchItemStateException(nodeState.getQName().toString());
         }
-        
+
         if (listOrLinkNode instanceof List) {
             // has same name sibling
             for (Iterator it = ((List) listOrLinkNode).iterator(); it.hasNext();) {
@@ -560,8 +564,10 @@ final class ChildNodeEntries implements Collection {
         throw new NoSuchItemStateException(nodeState.getQName().toString());
     }
 
-    //---------------------------------------< unmodifiable Collection view >---
-
+    //--------------------------------------------< unmodifiable Collection >---
+    /**
+     * @see Collection#contains(Object)
+     */
     public boolean contains(Object o) {
         if (o instanceof ChildNodeEntry) {
             // narrow down to same name sibling nodes and check list
@@ -571,6 +577,9 @@ final class ChildNodeEntries implements Collection {
         }
     }
 
+    /**
+     * @see Collection#containsAll(Collection)
+     */
     public boolean containsAll(Collection c) {
         Iterator iter = c.iterator();
         while (iter.hasNext()) {
@@ -581,23 +590,38 @@ final class ChildNodeEntries implements Collection {
         return true;
     }
 
+    /**
+     * @see Collection#isEmpty()
+     */
     public boolean isEmpty() {
         return entries.isEmpty();
     }
 
+    /**
+     * @see Collection#iterator()
+     */
     public Iterator iterator() {
         return UnmodifiableIterator.decorate(entries.iterator());
     }
 
+    /**
+     * @see Collection#size()
+     */
     public int size() {
         return entries.size();
     }
 
+    /**
+     * @see Collection#toArray()
+     */
     public Object[] toArray() {
         ChildNodeEntry[] array = new ChildNodeEntry[size()];
         return toArray(array);
     }
 
+    /**
+     * @see Collection#toArray(Object[])
+     */
     public Object[] toArray(Object[] a) {
         if (!a.getClass().getComponentType().isAssignableFrom(ChildNodeEntry.class)) {
             throw new ArrayStoreException();
@@ -616,31 +640,61 @@ final class ChildNodeEntries implements Collection {
         return a;
     }
 
+    /**
+     * Throws <code>UnsupportedOperationException</code>.
+     *
+     * @see Collection#add(Object)
+     */
     public boolean add(Object o) {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Throws <code>UnsupportedOperationException</code>.
+     *
+     * @see Collection#addAll(Collection)
+     */
     public boolean addAll(Collection c) {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Throws <code>UnsupportedOperationException</code>.
+     *
+     * @see Collection#clear()
+     */
     public void clear() {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Throws <code>UnsupportedOperationException</code>.
+     *
+     * @see Collection#remove(Object)
+     */
     public boolean remove(Object o) {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Throws <code>UnsupportedOperationException</code>.
+     *
+     * @see Collection#removeAll(Collection)
+     */
     public boolean removeAll(Collection c) {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Throws <code>UnsupportedOperationException</code>.
+     *
+     * @see Collection#retainAll(Collection)
+     */
     public boolean retainAll(Collection c) {
         throw new UnsupportedOperationException();
     }
 
-
+    //-------------------------------------------------< AbstractLinkedList >---
     /**
      * An implementation of a linked list which provides access to the internal
      * LinkNode which links the entries of the list.
@@ -698,6 +752,7 @@ final class ChildNodeEntries implements Collection {
          *
          * @param value a child node entry.
          * @return a wrapping {@link LinkedEntries.LinkNode}.
+         * @see AbstractLinkedList#createNode(Object)
          */
         protected Node createNode(Object value) {
             return new LinkNode(value);
@@ -705,6 +760,7 @@ final class ChildNodeEntries implements Collection {
 
         /**
          * @return a new <code>LinkNode</code>.
+         * @see AbstractLinkedList#createHeaderNode()
          */
         protected Node createHeaderNode() {
             return new LinkNode();
@@ -746,7 +802,7 @@ final class ChildNodeEntries implements Collection {
             };
         }
 
-        //-----------------------------------------------------------------------
+        //----------------------------------------------------------------------
 
         /**
          * Extends the <code>AbstractLinkedList.Node</code>.

@@ -24,6 +24,7 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 
 /**
  * <code>TransientISFactory</code>...
@@ -33,14 +34,14 @@ final class TransientISFactory implements TransientItemStateFactory {
     private static Logger log = LoggerFactory.getLogger(TransientISFactory.class);
 
     private final IdFactory idFactory;
-    private final ItemStateManager parent;
+    private final ItemStateManager workspaceItemStateMgr;
 
     private ItemStateCache cache;
     private ItemStateCreationListener listener;
 
-    TransientISFactory(IdFactory idFactory, ItemStateManager parent) {
+    TransientISFactory(IdFactory idFactory, ItemStateManager workspaceItemStateMgr) {
         this.idFactory = idFactory;
-        this.parent = parent;
+        this.workspaceItemStateMgr = workspaceItemStateMgr;
     }
 
     //------------------------------------------< TransientItemStateFactory >---
@@ -99,7 +100,7 @@ final class TransientISFactory implements TransientItemStateFactory {
      */
     public NodeState createRootState(ItemStateManager ism) throws ItemStateException {
         // retrieve state to overlay
-        NodeState overlayedState = (NodeState) parent.getRootState();
+        NodeState overlayedState = (NodeState) workspaceItemStateMgr.getRootState();
         NodeState nodeState = new NodeState(overlayedState, null, Status.EXISTING, this, idFactory);
 
         nodeState.addListener(cache);
@@ -117,17 +118,27 @@ final class TransientISFactory implements TransientItemStateFactory {
         NodeState nodeState = cache.getNodeState(nodeId);
         if (nodeState == null) {
             // retrieve state to overlay
-            NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
+            NodeState overlayedState = (NodeState) workspaceItemStateMgr.getItemState(nodeId);
             NodeState overlayedParent = overlayedState.getParent();
 
-            NodeState parentState = null;
-            if (overlayedParent != null) {
+            if (overlayedParent == null) {
+                // special case root state
+                return createRootState(ism);
+            }
+            
+            NodeState parentState = (NodeState) overlayedParent.getSessionState();
+            if (parentState == null) {
                 parentState = (NodeState) ism.getItemState(overlayedParent.getId());
             }
 
-            nodeState = new NodeState(overlayedState, parentState, Status.EXISTING, this, idFactory);
-            nodeState.addListener(cache);
-            cache.created(nodeState);
+            ChildNodeEntry cne = parentState.getChildNodeEntry(nodeId);
+            if (cne != null) {
+                nodeState = cne.getNodeState();
+                nodeState.addListener(cache);
+                cache.created(nodeState);
+            } else {
+                throw new NoSuchItemStateException("No such item " + nodeId.toString());
+            }
         }
         return nodeState;
     }
@@ -142,7 +153,7 @@ final class TransientISFactory implements TransientItemStateFactory {
         NodeState nodeState = cache.getNodeState(nodeId);
         if (nodeState == null) {
             // retrieve state to overlay
-            NodeState overlayedState = (NodeState) parent.getItemState(nodeId);
+            NodeState overlayedState = (NodeState) workspaceItemStateMgr.getItemState(nodeId);
             nodeState = new NodeState(overlayedState, parentState, Status.EXISTING, this, idFactory);
 
             nodeState.addListener(cache);
@@ -162,7 +173,7 @@ final class TransientISFactory implements TransientItemStateFactory {
         PropertyState propState = cache.getPropertyState(propertyId);
         if (propState == null) {
             // retrieve state to overlay
-            PropertyState overlayedState = (PropertyState) parent.getItemState(propertyId);
+            PropertyState overlayedState = (PropertyState) workspaceItemStateMgr.getItemState(propertyId);
             propState = new PropertyState(overlayedState, parentState, Status.EXISTING, this, idFactory);
 
             propState.addListener(cache);
