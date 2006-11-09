@@ -65,7 +65,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                               NodeState state, NodeDefinition definition,
                               ItemLifeCycleListener[] listeners) throws VersionException {
         super(itemMgr, session, state, definition, listeners);
-
         this.vhState = state;
 
         // retrieve nodestate of the jcr:versionLabels node
@@ -89,6 +88,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersionableUUID()
      */
     public String getVersionableUUID() throws RepositoryException {
+        checkStatus();
         return getProperty(QName.JCR_VERSIONABLEUUID).getString();
     }
 
@@ -99,6 +99,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getRootVersion()
      */
     public Version getRootVersion() throws RepositoryException {
+        checkStatus();
         try {
             if (vhState.hasChildNodeEntry(QName.JCR_ROOTVERSION)) {
                 NodeState vState = vhState.getChildNodeEntry(QName.JCR_ROOTVERSION, Path.INDEX_DEFAULT).getNodeState();
@@ -120,6 +121,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getAllVersions()
      */
     public VersionIterator getAllVersions() throws RepositoryException {
+        checkStatus();
         Iterator childIter = vhState.getChildNodeEntries().iterator();
         List versionStates = new ArrayList();
         // all child-nodes except from jcr:versionLabels point to Versions.
@@ -145,6 +147,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersion(String)
      */
     public Version getVersion(String versionName) throws VersionException, RepositoryException {
+        checkStatus();
         NodeState vState = getVersionState(versionName);
         return (Version) itemMgr.getItem(vState);
     }
@@ -157,6 +160,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersionByLabel(String)
      */
     public Version getVersionByLabel(String label) throws RepositoryException {
+        checkStatus();
         NodeState vState = getVersionStateByLabel(getQLabel(label));
         return (Version) itemMgr.getItem(vState);
     }
@@ -171,6 +175,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#addVersionLabel(String, String, boolean)
      */
     public void addVersionLabel(String versionName, String label, boolean moveLabel) throws VersionException, RepositoryException {
+        checkStatus();
         QName qLabel = getQLabel(label);
         NodeState vState = getVersionState(versionName);
         // delegate to version manager that operates on workspace directely
@@ -185,6 +190,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#removeVersionLabel(String)
      */
     public void removeVersionLabel(String label) throws VersionException, RepositoryException {
+        checkStatus();
         QName qLabel = getQLabel(label);
         NodeState vState = getVersionStateByLabel(getQLabel(label));
         // delegate to version manager that operates on workspace directely
@@ -199,6 +205,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#hasVersionLabel(String)
      */
     public boolean hasVersionLabel(String label) throws RepositoryException {
+        checkStatus();
         QName l = getQLabel(label);
         QName[] qLabels = getQLabels();
         for (int i = 0; i < qLabels.length; i++) {
@@ -210,7 +217,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
      * @param version
      * @param label
      * @return
@@ -219,6 +225,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#hasVersionLabel(Version, String)
      */
     public boolean hasVersionLabel(Version version, String label) throws VersionException, RepositoryException {
+        // check-status performed within checkValidVersion
         checkValidVersion(version);
         String vUUID = version.getUUID();
         QName l = getQLabel(label);
@@ -240,6 +247,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersionLabels()
      */
     public String[] getVersionLabels() throws RepositoryException {
+        checkStatus();
         QName[] qLabels = getQLabels();
         String[] labels = new String[qLabels.length];
 
@@ -263,6 +271,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersionLabels(Version)
      */
     public String[] getVersionLabels(Version version) throws VersionException, RepositoryException {
+        // check-status performed within checkValidVersion
         checkValidVersion(version);
         String vUUID = version.getUUID();
 
@@ -293,6 +302,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#removeVersion(String)
      */
     public void removeVersion(String versionName) throws RepositoryException {
+        checkStatus();
         NodeState vState = getVersionState(versionName);
         session.getVersionManager().removeVersion(vhState, vState);
     }
@@ -304,7 +314,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @return
      * @see Item#isSame(Item)
      */
-    public boolean isSame(Item otherItem) {
+    public boolean isSame(Item otherItem) throws RepositoryException {
+        checkStatus();
         if (otherItem instanceof VersionHistoryImpl) {
             // since all version histories are referenceable, protected and live
             // in the same workspace, a simple comparison of the UUIDs is sufficient.

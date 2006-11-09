@@ -96,7 +96,8 @@ public class VersionImpl extends NodeImpl implements Version {
      * @return
      * @see Item#isSame(Item)
      */
-    public boolean isSame(Item otherItem) {
+    public boolean isSame(Item otherItem) throws RepositoryException {
+        checkStatus();
         if (otherItem instanceof VersionImpl) {
             // since all versions are referenceable, protected and live
             // in the same workspace, a simple comparision of the UUIDs is sufficient
