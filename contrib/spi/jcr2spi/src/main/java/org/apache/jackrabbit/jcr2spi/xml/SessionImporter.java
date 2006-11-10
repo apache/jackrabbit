@@ -171,7 +171,7 @@ public class SessionImporter implements Importer, SessionListener {
 
        NodeState nodeState = null;
        if (parent.hasChildNodeEntry(nodeInfo.getName())) {
-           // a node with that name already exists...
+           // a valid child node with that name already exists...
            ChildNodeEntry entry = parent.getChildNodeEntry(nodeInfo.getName(), Path.INDEX_DEFAULT);
            NodeState existing = null;
            try {
