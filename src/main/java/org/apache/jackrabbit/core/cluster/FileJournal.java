@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -45,7 +43,25 @@ import java.util.HashSet;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
 /**
- * File-based journal implementation.
+ * File-based journal implementation. A directory specified as <code>directory</code>
+ * bean property will contain log files and a global revision file, containing the
+ * latest revision file. When the current log file's size exceeds <code>maxSize</code>
+ * bytes, it gets renamed to its name appended by '1'. At the same time, all log files
+ * already having a version counter, get their version counter incremented by <code>1</code>.
+ * <p/>
+ * It is configured through the following properties:
+ * <ul>
+ * <li><code>directory</code>: the shared directory where journal logs and read from
+ * and written to; this is a required property with no default value</li>
+ * <li><code>revision</code>: the filename where the parent cluster node's revision
+ * file should be written to; this is a required property with no default value</li>
+ * <li><code>basename</code>: this is the basename of the journal logs created in
+ * the shared directory; its default value is <code>journal</code></li>
+ * <li><code>maximumSize</code>: this is the maximum size in bytes of a journal log
+ * before a new log will be created; its default value is <code>1048576</code> (1MB)</li>
+ * </ul>
+ *
+ * todo after some iterations, old files should be automatically compressed to save space
  */
 public class FileJournal implements Journal {
 
@@ -53,6 +69,21 @@ public class FileJournal implements Journal {
      * Global revision counter name, located in the journal directory.
      */
     private static final String REVISION_NAME = "revision";
+
+    /**
+     * Log extension.
+     */
+    private static final String LOG_EXTENSION = ".log";
+
+    /**
+     * Default base name for journal files.
+     */
+    private static final String DEFAULT_BASENAME = "journal";
+
+    /**
+     * Default max size of a journal file (1MB).
+     */
+    private static final int DEFAULT_MAXSIZE = 1048576;
 
     /**
      * Logger.
@@ -70,7 +101,7 @@ public class FileJournal implements Journal {
     private NamespaceResolver resolver;
 
     /**
-     * Callback.
+     * Record processor.
      */
     private RecordProcessor processor;
 
@@ -83,6 +114,16 @@ public class FileJournal implements Journal {
      * Revision file name, bean property.
      */
     private String revision;
+
+    /**
+     * Journal file base name, bean property.
+     */
+    private String basename;
+
+    /**
+     * Maximum size of a journal file before a rotation takes place, bean property.
+     */
+    private int maximumSize;
 
     /**
      * Journal root directory.
@@ -152,6 +193,38 @@ public class FileJournal implements Journal {
     }
 
     /**
+     * Bean getter for base name.
+     * @return base name
+     */
+    public String getBasename() {
+        return basename;
+    }
+
+    /**
+     * Bean setter for basename.
+     * @param basename base name
+     */
+    public void setBasename(String basename) {
+        this.basename = basename;
+    }
+
+    /**
+     * Bean getter for maximum size.
+     * @return maximum size
+     */
+    public int getMaximumSize() {
+        return maximumSize;
+    }
+
+    /**
+     * Bean setter for maximum size.
+     * @param maximumSize maximum size
+     */
+    public void setMaximumSize(int maximumSize) {
+        this.maximumSize = maximumSize;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public void init(String id, RecordProcessor processor, NamespaceResolver resolver) throws JournalException {
@@ -166,6 +239,12 @@ public class FileJournal implements Journal {
         if (revision == null) {
             String msg = "Revision not specified.";
             throw new JournalException(msg);
+        }
+        if (basename == null) {
+            basename = DEFAULT_BASENAME;
+        }
+        if (maximumSize == 0) {
+            maximumSize = DEFAULT_MAXSIZE;
         }
         root = new File(directory);
         if (!root.exists() || !root.isDirectory()) {
@@ -182,49 +261,48 @@ public class FileJournal implements Journal {
      * {@inheritDoc}
      */
     public void sync() throws JournalException {
-        final long instanceValue = instanceRevision.get();
-        final long globalValue = globalRevision.get();
-
-        File[] files = root.listFiles(new FilenameFilter() {
+        File[] logFiles = root.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                if (name.endsWith(FileRecord.EXTENSION)) {
-                    int sep = name.indexOf('.');
-                    if (sep > 0) {
-                        try {
-                            long counter = Long.parseLong(name.substring(0, sep), 16);
-                            return counter > instanceValue && counter <= globalValue;
-                        } catch (NumberFormatException e) {
-                            String msg = "Skipping bogusly named journal file '" + name + "': " + e.getMessage();
-                            log.warn(msg);
-                        }
-                    }
-                }
-                return false;
+                return name.startsWith(basename + ".");
             }
         });
-        Arrays.sort(files, new Comparator() {
+        Arrays.sort(logFiles, new Comparator() {
             public int compare(Object o1, Object o2) {
                 File f1 = (File) o1;
                 File f2 = (File) o2;
-                return f1.getName().compareTo(f2.getName());
+                return f1.compareTo(f2);
             }
         });
-        if (files.length > 0) {
-            for (int i = 0; i < files.length; i++) {
-                try {
-                    FileRecord record = new FileRecord(files[i]);
-                    if (!record.getJournalId().equals(id)) {
+
+        long instanceValue = instanceRevision.get();
+        long globalValue = globalRevision.get();
+
+        if (instanceValue < globalValue) {
+            FileRecordCursor cursor = new FileRecordCursor(logFiles,
+                    instanceValue, globalValue);
+            try {
+                while (cursor.hasNext()) {
+                    FileRecord record = cursor.next();
+                    if (!record.getCreator().equals(id)) {
                         process(record);
                     } else {
-                        log.info("Log entry matches journal id, skipped: " + files[i]);
+                        log.info("Log entry matches journal id, skipped: " + record.getRevision());
                     }
-                    instanceRevision.set(record.getCounter());
-                } catch (IllegalArgumentException e) {
-                    String msg = "Skipping bogusly named journal file '" + files[i] + ": " + e.getMessage();
+                    instanceRevision.set(record.getNextRevision());
+                }
+            } catch (IOException e) {
+                String msg = "Unable to iterate over modified records: " + e.getMessage();
+                throw new JournalException(msg);
+
+            } finally {
+                try {
+                    cursor.close();
+                } catch (IOException e) {
+                    String msg = "I/O error while closing record cursor: " + e.getMessage();
                     log.warn(msg);
                 }
             }
-            log.info("Sync finished, instance revision is: " + FileRecord.toHexString(instanceRevision.get()));
+            log.info("Sync finished, instance revision is: " + instanceRevision.get());
         }
     }
 
@@ -235,16 +313,12 @@ public class FileJournal implements Journal {
      * @throws JournalException if an error occurs
      */
     void process(FileRecord record) throws JournalException {
-        File file = record.getFile();
+        log.info("Processing revision: " + record.getRevision());
 
-        log.info("Processing: " + file);
-
-        FileRecordInput in = null;
+        FileRecordInput in = record.getInput(resolver);
         String workspace = null;
 
         try {
-            in = new FileRecordInput(new FileInputStream(file), resolver);
-
             workspace = in.readString();
             if (workspace.equals("")) {
                 workspace = null;
@@ -296,23 +370,19 @@ public class FileJournal implements Journal {
             processor.end();
 
         } catch (NameException e) {
-            String msg = "Unable to read journal entry " + file + ": " + e.getMessage();
+            String msg = "Unable to read revision " + record.getRevision() +
+                    ": " + e.getMessage();
             throw new JournalException(msg);
         } catch (IOException e) {
-            String msg = "Unable to read journal entry " + file + ": " + e.getMessage();
+            String msg = "Unable to read revision " + record.getRevision() +
+                    ": " + e.getMessage();
             throw new JournalException(msg);
         } catch (IllegalArgumentException e) {
-            String msg = "Error while processing journal file " + file + ": " + e.getMessage();
+            String msg = "Error while processing revision " +
+                    record.getRevision() + ": " + e.getMessage();
             throw new JournalException(msg);
         } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    String msg = "I/O error while closing " + file + ": " + e.getMessage();
-                    log.warn(msg);
-                }
-            }
+            in.close();
         }
     }
 
@@ -333,7 +403,9 @@ public class FileJournal implements Journal {
             sync();
 
             tempLog = File.createTempFile("journal", ".tmp", root);
-            out = new FileRecordOutput(new FileOutputStream(tempLog), resolver);
+
+            record = new FileRecord(id, tempLog);
+            out = record.getOutput(resolver);
             out.writeString(workspace != null ? workspace : "");
 
             succeeded = true;
@@ -490,7 +562,8 @@ public class FileJournal implements Journal {
 
         try {
             sync();
-            record = new FileRecord(root, globalRevision.get() + 1, id);
+
+            record.setRevision(globalRevision.get());
 
             prepared = true;
         } finally {
@@ -508,10 +581,22 @@ public class FileJournal implements Journal {
             out.writeChar('\0');
             out.close();
 
-            if (!tempLog.renameTo(record.getFile())) {
-                throw new JournalException("Unable to rename " + tempLog + " to " + record.getFile());
+            long nextRevision = record.getNextRevision();
+
+            File journalFile = new File(root, basename + LOG_EXTENSION);
+
+            FileRecordLog recordLog = new FileRecordLog(journalFile);
+            if (!recordLog.isNew()) {
+                if (nextRevision - recordLog.getFirstRevision() > maximumSize) {
+                    switchLogs();
+                    recordLog = new FileRecordLog(journalFile);
+                }
             }
-            globalRevision.set(record.getCounter());
+            recordLog.append(record);
+
+            tempLog.delete();
+            globalRevision.set(nextRevision);
+            instanceRevision.set(nextRevision);
 
         } catch (IOException e) {
             String msg = "Unable to close journal log " + tempLog + ": " + e.getMessage();
@@ -535,6 +620,48 @@ public class FileJournal implements Journal {
         } finally {
             globalRevision.unlock();
             writeMutex.release();
+        }
+    }
+
+    /**
+     * Move away current journal file (and all other files), incrementing their
+     * version counter. A file named <code>journal.N.log</code> gets renamed to
+     * <code>journal.(N+1).log</code>, whereas the main journal file gets renamed
+     * to <code>journal.1.log</code>.
+     */
+    private void switchLogs() {
+        FilenameFilter filter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.startsWith(basename + ".");
+            }
+        };
+        File[] files = root.listFiles(filter);
+        Arrays.sort(files, new Comparator() {
+            public int compare(Object o1, Object o2) {
+                File f1 = (File) o1;
+                File f2 = (File) o2;
+                return f2.compareTo(f1);
+            }
+        });
+        for (int i = 0; i < files.length; i++) {
+            File file = files[i];
+            String name = file.getName();
+            int sep = name.lastIndexOf('.');
+            if (sep != -1) {
+                String ext = name.substring(sep + 1);
+                if (ext.equals(LOG_EXTENSION)) {
+                    file.renameTo(new File(root, name + ".1"));
+                } else {
+                    try {
+                        int version = Integer.parseInt(ext);
+                        String newName = name.substring(0, sep + 1) +
+                                String.valueOf(version + 1);
+                        file.renameTo(new File(newName));
+                    } catch (NumberFormatException e) {
+                        log.warn("Bogusly named journal file, skipped: " + file);
+                    }
+                }
+            }
         }
     }
 }
