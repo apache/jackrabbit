@@ -27,13 +27,17 @@ import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 
 import java.io.IOException;
 import java.io.DataOutputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 
 /**
- * Defines methods to write members to a file record.
+ * Allows writing data to a <code>FileRecord</code>.
  */
 class FileRecordOutput {
+
+    /**
+     * File record.
+     */
+    private final FileRecord record;
 
     /**
      * Underlying output stream.
@@ -58,11 +62,13 @@ class FileRecordOutput {
     /**
      * Create a new file record.
      *
+     * @param record   file record
      * @param out      outputstream to write to
      * @param resolver namespace resolver
      */
-    public FileRecordOutput(OutputStream out, NamespaceResolver resolver) {
-        this.out = new DataOutputStream(out);
+    public FileRecordOutput(FileRecord record, DataOutputStream out, NamespaceResolver resolver) {
+        this.record = record;
+        this.out = out;
         this.resolver = resolver;
     }
 
@@ -187,7 +193,7 @@ class FileRecordOutput {
                 writeInt(index);
             } else {
                 writeByte(FileRecord.UUID_LITERAL);
-                writeString(nodeId.toString());
+                out.write(nodeId.getUUID().getRawBytes());
             }
         }
     }
@@ -218,6 +224,7 @@ class FileRecordOutput {
             out.close();
         } finally {
             closed = true;
+            record.closed();
         }
     }
 

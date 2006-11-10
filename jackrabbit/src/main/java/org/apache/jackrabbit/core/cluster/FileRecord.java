@@ -16,134 +16,364 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import org.apache.jackrabbit.name.NamespaceResolver;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.DataInput;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 
 /**
- * Represents a file-based record.
+ * Represents a file-based record. Physically, a file record contains its length in the
+ * first 4 bytes, immediately followed by its creator in a length-prefixed, UTF-encoded
+ * string. All further fields are record-specific.
  */
 class FileRecord {
 
     /**
-     * File record extension.
-     */
-    static final String EXTENSION = ".log";
-
-    /**
      * Indicator for a literal UUID.
      */
-    static final byte UUID_LITERAL = 0x00;
+    static final byte UUID_LITERAL = 'L';
 
     /**
      * Indicator for a UUID index.
      */
-    static final byte UUID_INDEX = 0x01;
+    static final byte UUID_INDEX = 'I';
 
     /**
-     * Used for padding long string representations.
+     * Revision.
      */
-    private static final String LONG_PADDING = "0000000000000000";
+    private long revision;
 
     /**
-     * Underlying file.
+     * Underlying input stream.
      */
-    private final File file;
+    private DataInputStream in;
 
     /**
-     * Counter.
+     * File use when creating a new record.
      */
-    private final long counter;
+    private File file;
 
     /**
-     * Journal id.
+     * Underlying output stream.
      */
-    private final String journalId;
+    private DataOutputStream out;
 
     /**
-     * Creates a new file record from an existing file. Retrieves meta data by parsing the file's name.
+     * Record length.
+     */
+    private int length;
+
+    /**
+     * Creator of a record.
+     */
+    private String creator;
+
+    /**
+     * Bytes used by creator when written in UTF encoding and length-prefixed.
+     */
+    private int creatorLength;
+
+    /**
+     * Flag indicating whether bytes need to be skipped at the end.
+     */
+    private boolean consumed;
+
+    /**
+     * Creates a new file record. Used when opening an existing record.
      *
-     * @param file file to use as record
-     * @throws IllegalArgumentException if file name is bogus
+     * @param revision revision this record represents
+     * @param in underlying input stream
+     * @throws IOException if reading the creator fails
      */
-    public FileRecord(File file) throws IllegalArgumentException {
+    public FileRecord(long revision, InputStream in)
+            throws IOException {
+
+        this.revision = revision;
+        if (in instanceof DataInputStream) {
+            this.in = (DataInputStream) in;
+        } else {
+            this.in = new DataInputStream(in);
+        }
+        this.length = this.in.readInt();
+
+        readCreator();
+    }
+
+    /**
+     * Creates a new file record. Used when creating a new record.
+     *
+     * @param creator creator of this record
+     * @param file underlying (temporary) file
+     * @throws IOException if writing the creator fails
+     */
+    public FileRecord(String creator, File file) throws IOException {
+
+        this.creator = creator;
         this.file = file;
 
-        String name = file.getName();
+        this.out = new DataOutputStream(new FileOutputStream(file));
 
-        int sep1 = name.indexOf('.');
-        if (sep1 == -1) {
-            throw new IllegalArgumentException("Missing first . separator.");
-        }
+        writeCreator();
+    }
+
+    /**
+     * Return the journal revision associated with this record.
+     *
+     * @return revision
+     */
+    public long getRevision() {
+        return revision;
+    }
+
+    /**
+     * Set the journal revision associated with this record.
+     *
+     * @param revision journal revision
+     */
+    public void setRevision(long revision) {
+        this.revision = revision;
+    }
+
+    /**
+     * Return the journal counter associated with the next record.
+     *
+     * @return next revision
+     */
+    public long getNextRevision() {
+        return revision + length + 4;
+    }
+
+    /**
+     * Return the creator of this record.
+     *
+     * @return creator
+     */
+    public String getCreator() {
+        return creator;
+    }
+
+    /**
+     * Return an input on this record.
+     *
+     * @param resolver resolver to use when mapping prefixes to full names
+     * @return record input
+     */
+    public FileRecordInput getInput(NamespaceResolver resolver) {
+        consumed = true;
+        return new FileRecordInput(in, resolver);
+    }
+
+    /**
+     * Return an output on this record.
+     *
+     * @param resolver resolver to use when mapping full names to prefixes
+     * @return record output
+     */
+    public FileRecordOutput getOutput(NamespaceResolver resolver) {
+        return new FileRecordOutput(this, out, resolver);
+    }
+
+    /**
+     * Append this record to some output stream.
+     *
+     * @param out outputstream to append to
+     */
+    void append(DataOutputStream out) throws IOException {
+        out.writeInt(length);
+
+        byte[] buffer = new byte[8192];
+        int len;
+
+        InputStream in = new BufferedInputStream(new FileInputStream(file));
         try {
-            counter = Long.parseLong(name.substring(0, sep1), 16);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Unable to decompose long: " + e.getMessage());
+            while ((len = in.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+            out.flush();
+        } finally {
+            in.close();
         }
-        int sep2 = name.lastIndexOf('.');
-        if (sep2 == -1) {
-            throw new IllegalArgumentException("Missing second . separator.");
+    }
+
+    /**
+     * Skip over this record, positioning the underlying input stream
+     * on the next available record.
+     *
+     * @throws IOException if an I/O error occurs
+     */
+    void skip() throws IOException {
+        if (!consumed) {
+            long skiplen = length - creatorLength;
+            while (skiplen > 0) {
+                long skipped = in.skip(skiplen);
+                if (skipped <= 0) {
+                    break;
+                }
+                skiplen -= skipped;
+            }
+            if (skiplen != 0) {
+                String msg = "Unable to skip remaining bytes.";
+                throw new IOException(msg);
+            }
         }
-        journalId = name.substring(sep1 + 1, sep2);
     }
 
     /**
-     * Creates a new file record from a counter and instance ID.
+     * Invoked when output has been closed.
+     */
+    void closed() {
+        length = (int) file.length();
+    }
+
+    /**
+     * Read creator from the underlying data input stream.
      *
-     * @param parent parent directory
-     * @param counter counter to use
-     * @param journalId journal id to use
+     * @throws IOException if an I/O error occurs
      */
-    public FileRecord(File parent, long counter, String journalId) {
-        StringBuffer name = new StringBuffer();
-        name.append(toHexString(counter));
-        name.append('.');
-        name.append(journalId);
-
-        name.append(EXTENSION);
-
-        this.file = new File(parent, name.toString());
-        this.counter = counter;
-        this.journalId = journalId;
+    private void readCreator() throws IOException {
+        UTFByteCounter counter = new UTFByteCounter(in);
+        creator = DataInputStream.readUTF(counter);
+        creatorLength = counter.getBytes();
     }
 
     /**
-     * Return the journal counter associated with this record.
+     * Write creator to the underlying data output stream.
      *
-     * @return counter
+     * @throws IOException if an I/O error occurs
      */
-    public long getCounter() {
-        return counter;
+    private void writeCreator() throws IOException {
+        out.writeUTF(creator);
     }
 
     /**
-     * Return the id of the journal that created this record.
-     *
-     * @return journal id
+     * UTF byte counter. Counts the bytes actually read from a given
+     * <code>DataInputStream</code> that make up a UTF-encoded string.
      */
-    public String getJournalId() {
-        return journalId;
-    }
+    static class UTFByteCounter implements DataInput {
 
-    /**
-     * Return this record's file.
-     *
-     * @return file
-     */
-    public File getFile() {
-        return file;
-    }
+        /**
+         * Underlying input stream.
+         */
+        private final DataInputStream in;
 
-    /**
-     * Return a zero-padded long string representation.
-     */
-    public static String toHexString(long l) {
-        String s = Long.toHexString(l);
-        int padlen = LONG_PADDING.length() - s.length();
-        if (padlen > 0) {
-            s = LONG_PADDING.substring(0, padlen) + s;
+        /**
+         * UTF length.
+         */
+        private int bytes;
+
+        /**
+         * Create a new instance of this class.
+         *
+         * @param in underlying data input stream
+         */
+        public UTFByteCounter(DataInputStream in) {
+            this.in = in;
         }
-        return s;
+
+        /**
+         * Return the number of bytes read from the underlying input stream.
+         *
+         * @return number of bytes
+         */
+        public int getBytes() {
+            return bytes;
+        }
+
+        /**
+         * @see java.io.DataInputStream#readUnsignedShort()
+         *
+         * Remember number of bytes read.
+         */
+        public int readUnsignedShort() throws IOException {
+            try {
+                return in.readUnsignedShort();
+            } finally {
+                bytes += 2;
+            }
+        }
+
+        /**
+         * @see java.io.DataInputStream#readUnsignedShort()
+         *
+         * Remember number of bytes read.
+         */
+        public void readFully(byte b[]) throws IOException {
+            try {
+                in.readFully(b);
+            } finally {
+                bytes += b.length;
+            }
+        }
+
+        /**
+         * @see java.io.DataInputStream#readUnsignedShort()
+         *
+         * Remember number of bytes read.
+         */
+        public void readFully(byte b[], int off, int len) throws IOException {
+            try {
+                in.readFully(b, off, len);
+            } finally {
+                bytes += b.length;
+            }
+        }
+
+        /**
+         * Methods not implemented.
+         */
+        public byte readByte() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public char readChar() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public double readDouble() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public float readFloat() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public int readInt() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+       }
+
+        public int readUnsignedByte() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public long readLong() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public short readShort() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public boolean readBoolean() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public int skipBytes(int n) throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public String readLine() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
+
+        public String readUTF() throws IOException {
+            throw new IllegalStateException("Unexpected call, deliberately not implemented.");
+        }
     }
 }

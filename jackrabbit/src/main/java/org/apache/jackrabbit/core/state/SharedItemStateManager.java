@@ -834,7 +834,7 @@ public class SharedItemStateManager
                         shared.modified(state);
                     } catch (ItemStateException e) {
                         String msg = "Unable to retrieve state: " + state.getId();
-                        log.warn(msg, e);
+                        log.warn(msg);
                         state.discard();
                     }
                 }
