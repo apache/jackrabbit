@@ -27,24 +27,28 @@ import java.sql.SQLException;
  * <code>DerbyPersistenceManager</code> is a JDBC-based
  * <code>PersistenceManager</code> for Jackrabbit that persists
  * <code>ItemState</code> and <code>NodeReferences</code> objects in an
- * embedded Derby database using a simple custom serialization format and a
+ * embedded or standalone Derby database using a simple custom serialization format and a
  * very basic non-normalized database schema (in essence tables with one 'key'
  * and one 'data' column).
  * <p/>
  * It is configured through the following properties:
  * <ul>
  * <li><code>url</code>: the database url of the form
- * <code>"jdbc:derby:[db];[attributes]"</code></li>
+ * <code>"jdbc:derby:[//host:port/][db];[attributes]"</code></li>
  * <li><code>schemaObjectPrefix</code>: prefix to be prepended to schema objects</li>
  * <li><code>driver</code>: the FQN name of the JDBC driver class
- * (default: <code>"org.apache.derby.jdbc.EmbeddedDriver"</code>)</li>
+ * (default: <code>"org.apache.derby.jdbc.EmbeddedDriver"</code>); Use
+ * <code>"org.apache.derby.jdbc.ClientDriver"</code> when using a standalone database</li>
  * <li><code>schema</code>: type of schema to be used
  * (default: <code>"derby"</code>)</li>
- * <li><code>user</code>: the database user (default: <code>""</code>)</li>
- * <li><code>password</code>: the user's password (default: <code>""</code>)</li>
+ * <li><code>user</code>: the database user (default: <code>null</code>)</li>
+ * <li><code>password</code>: the user's password (default: <code>null</code>)</li>
  * <li><code>externalBLOBs</code>: if <code>true</code> (the default) BINARY
  * values (BLOBs) are stored in the local file system;
  * if <code>false</code> BLOBs are stored in the database</li>
+ * <li><code>shutdownOnClose</code>: if <code>true</code> (the default) the
+ * database is shutdown when the last connection is closed;
+ * set this to <code>false</code> when using a standalone database</li>
  * </ul>
  * See also {@link SimpleDbPersistenceManager}.
  * <p/>
@@ -65,6 +69,11 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
     private static Logger log = LoggerFactory.getLogger(DerbyPersistenceManager.class);
 
     /**
+     * Flag indicating whether this derby database should be shutdown on close.
+     */
+    protected boolean shutdownOnClose;
+
+    /**
      * Creates a new <code>SimpleDbPersistenceManager</code> instance.
      */
     public DerbyPersistenceManager() {
@@ -72,8 +81,15 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
         schema = "derby";
         driver = "org.apache.derby.jdbc.EmbeddedDriver";
         schemaObjectPrefix = "";
-        user = "";
-        password = "";
+        shutdownOnClose = true;
+    }
+
+    public boolean getShutdownOnClose() {
+        return shutdownOnClose;
+    }
+
+    public void setShutdownOnClose(boolean shutdownOnClose) {
+        this.shutdownOnClose = shutdownOnClose;
     }
 
     //------------------------------------------< DatabasePersistenceManager >
@@ -103,12 +119,14 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
         connection.setAutoCommit(true);
         connection.close();
 
-        // now it's safe to shutdown the embedded Derby database
-        try {
-            DriverManager.getConnection(url);
-        } catch (SQLException e) {
-            // a shutdown command always raises a SQLException
-            log.info(e.getMessage());
+        if (shutdownOnClose) {
+            // now it's safe to shutdown the embedded Derby database
+            try {
+                DriverManager.getConnection(url);
+            } catch (SQLException e) {
+                // a shutdown command always raises a SQLException
+                log.info(e.getMessage());
+            }
         }
     }
 }
