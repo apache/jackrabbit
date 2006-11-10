@@ -26,16 +26,15 @@ import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.PathFormat;
 import org.apache.jackrabbit.name.MalformedPathException;
+import org.apache.jackrabbit.uuid.Constants;
+import org.apache.jackrabbit.uuid.UUID;
 
-import java.io.File;
-import java.io.RandomAccessFile;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.DataInputStream;
 import java.util.ArrayList;
 
 /**
- * Defines methods to read members out of a file record.
+ * Allows reading data from a <code>FileRecord</code>.
  */
 class FileRecordInput {
 
@@ -65,8 +64,8 @@ class FileRecordInput {
      * @param in       underlying input stream
      * @param resolver namespace resolver
      */
-    public FileRecordInput(InputStream in, NamespaceResolver resolver) {
-        this.in = new DataInputStream(in);
+    public FileRecordInput(DataInputStream in, NamespaceResolver resolver) {
+        this.in = in;
         this.resolver = resolver;
     }
 
@@ -186,20 +185,22 @@ class FileRecordInput {
     public NodeId readNodeId() throws IOException {
         checkOpen();
 
-        byte b = readByte();
-        if (b == FileRecord.UUID_INDEX) {
+        byte uuidType = readByte();
+        if (uuidType == FileRecord.UUID_INDEX) {
             int index = readInt();
             if (index == -1) {
                 return null;
             } else {
                 return (NodeId) uuidIndex.get(index);
             }
-        } else if (b == FileRecord.UUID_LITERAL) {
-            NodeId nodeId = NodeId.valueOf(readString());
+        } else if (uuidType == FileRecord.UUID_LITERAL) {
+            byte[] b = new byte[Constants.UUID_BYTE_LENGTH];
+            in.readFully(b);
+            NodeId nodeId = new NodeId(new UUID(b));
             uuidIndex.add(nodeId);
             return nodeId;
         } else {
-            String msg = "UUID indicator unknown: " + b;
+            String msg = "UUID type unknown: " + uuidType;
             throw new IOException(msg);
         }
     }
@@ -219,18 +220,12 @@ class FileRecordInput {
     }
 
     /**
-     * Close this input.
-     *
-     * @throws IOException if an I/O error occurs
+     * Close this input. Does not close underlying stream as this is a shared resource.
      */
-    public void close() throws IOException {
+    public void close() {
         checkOpen();
 
-        try {
-            in.close();
-        } finally {
-            closed = true;
-        }
+        closed = true;
     }
 
     /**

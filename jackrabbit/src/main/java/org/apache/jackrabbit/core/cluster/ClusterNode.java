@@ -342,7 +342,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
             String msg = "Unable to create log entry: " + e.getMessage();
             log.error(msg);
         } catch (Throwable e) {
-            String msg = "Unexpected error while creating log entry.";
+            String msg = "Unexpected error while preparing log entry.";
             log.error(msg, e);
         }
     }
@@ -357,7 +357,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
             String msg = "Unable to create log entry: " + e.getMessage();
             log.error(msg);
         } catch (Throwable e) {
-            String msg = "Unexpected error while creating log entry.";
+            String msg = "Unexpected error while committing log entry.";
             log.error(msg, e);
         }
     }
@@ -372,7 +372,7 @@ public class ClusterNode implements Runnable, UpdateEventChannel  {
             String msg = "Unable to create log entry: " + e.getMessage();
             log.error(msg);
         } catch (Throwable e) {
-            String msg = "Unexpected error while creating log entry.";
+            String msg = "Unexpected error while cancelling log entry.";
             log.error(msg, e);
         }
     }
