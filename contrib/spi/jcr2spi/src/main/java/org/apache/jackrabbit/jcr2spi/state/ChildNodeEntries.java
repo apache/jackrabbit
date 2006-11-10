@@ -269,7 +269,7 @@ final class ChildNodeEntries implements Collection {
         if (uuid == null) {
             throw new IllegalArgumentException();
         }
-        Iterator cneIter = (nodeName != null) ? get(nodeName).iterator() : iterator();
+        Iterator cneIter = (nodeName != null) ? get(nodeName).iterator() : entries.iterator();
         while (cneIter.hasNext()) {
             ChildNodeEntry cne = (ChildNodeEntry) cneIter.next();
             if (uuid.equals(cne.getUUID())) {
