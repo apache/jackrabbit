@@ -1,0 +1,4 @@
+({
+	displayName: "USD",
+	symbol: "$"
+})

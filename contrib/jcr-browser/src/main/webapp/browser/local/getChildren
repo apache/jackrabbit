@@ -1,0 +1,1 @@
+dojo.debug('I can also put javascript in server answer');([{title:"test",isFolder:true,objectId:"myobj"},{title:"test2",children:[ {title:"test2.1"}  ]}])
