@@ -1,0 +1,194 @@
+<style type="text/css"><!--
+    
+.dojoSplitPane{
+	margin: 5px;
+}
+
+#rightPane {
+	margin: 0;
+}
+
+.dojoMenuBar2 {
+	border-top:1px solid green;
+}
+
+
+h2 {
+	font-weight: bold;
+}
+
+#roundMe{
+	margin:20px;
+	padding:15px;
+	border:1px solid #ccc;
+	width:300px;
+	background-color: #E0E9D3;
+}
+
+div.statusBar {
+	background-color: ThreeDFace;
+	height: 28px;
+	padding: 1px;
+}
+
+div.logoPanel {
+	background-color: ThreeDFace;
+	border: 1px solid;
+	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+	margin: 1px;
+	padding: 0px;
+}
+
+div.statusPanel {
+	background-color: ThreeDFace;
+	border: 1px solid;
+	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+	margin: 1px;
+	padding: 2px 6px;
+}
+
+div.itemList {
+	padding: 0 0 0 0;
+	margin: 0 0 0 0;
+	overflow:auto;
+}
+
+div.treeDiv {
+	padding: 0 0 0 0;
+	margin: 0 0 0 0;
+	overflow:auto;
+}
+
+table.itemList {
+	width: 100%;
+	padding: 0;
+	margin: 0;
+}
+
+table.itemList th {
+	color: #4f6b72;
+	border-right: 1px solid #C1DAD7;
+	border-bottom: 1px solid #C1DAD7;
+	border-top: 1px solid #C1DAD7;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	text-align: left;
+	padding: 3px 3px 3px 6px;
+	background: ThreeDFace;
+}
+
+table.itemList td {
+	border-right: 1px solid #C1DAD7;
+	border-bottom: 1px solid #C1DAD7;
+	background: #fff;
+	padding: 0px;
+	color: gray;
+}
+
+table.itemList a {
+	color: black;
+}
+
+table.itemList tbody.scrollContent td, tbody.scrollContent tr td {
+	background: #FFF;
+	padding: 2px;
+}
+
+table.itemList tbody.scrollContent tr.alt td {
+	background: #e3edfa;
+	padding: 2px;
+}
+
+table.itemList tbody.scrollContent tr.selected td {
+	background: #E0E9D3;
+	padding: 2px;
+}
+table.itemList tbody.scrollContent tr:hover td {
+	background: #a6c2e7;
+	padding: 2px;
+}
+tbody.scrollContent tr.selected:hover td {
+	background: #ff3;
+	padding: 2px;
+}
+
+div.accordionContainer {
+	background-color: white;
+	border: 0px;
+	padding: 0px;
+	margin: 0px;
+	overflow: hidden;
+}
+
+.label , .content {
+	width: 100%;
+}
+
+.label {
+	background: grey;
+	height: 20px;
+	border-top: 1px solid black;
+	border-bottom: 1px solid black;
+}
+
+.content {
+	background: #eeeeee;
+}
+
+div.infoPane {
+	padding: 0;
+	margin: 0;
+	overflow:auto;
+}
+
+table.itemInfo {
+	width: 90%;
+	padding: 10px;
+	margin: 0px;
+}
+
+table.itemInfo td {
+	border-bottom: 1px solid #C1DAD7;
+	background: #fff;
+	padding: 0px;
+	color: gray;
+	align: left;
+}
+
+div.dialog {
+	background : #eee;
+	border : 1px solid #999;
+	-moz-border-radius : 5px;
+	padding : 4px;
+}
+
+table.dialog {
+	padding: 0;
+	margin: 0;
+	width: 400px;
+	align: left;
+}
+
+table.dialog th {
+	color: gray;
+	align: left;
+	font-weight: bold;
+	vertical-align: top;
+}
+
+table.dialog td {
+	color: gray;
+	align: left;
+	vertical-align: top;	
+}
+
+div.targetTreeContainer {
+	background-color: white;
+	border: 1px solid gray;
+	height: 100%;
+	overflow:auto;
+	padding: 0px;
+	margin: 0px;	
+}
+	
+--></style>

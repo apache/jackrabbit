@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<chains>
+
+	<catalog>
+
+		<command name="addMixin"
+			className="org.apache.jackrabbit.command.mixin.AddMixin"/>
+
+		<chain name="checkin">
+			<command name="checkin"
+				className="org.apache.jackrabbit.command.version.Checkin"/>
+			<command name="addVersionLabel"
+				className="org.apache.jackrabbit.command.version.AddVersionLabel"/>
+		</chain>	
+
+		<command name="checkout"
+			className="org.apache.jackrabbit.command.version.Checkout"/>
+
+		<command name="restore"
+			className="org.apache.jackrabbit.command.version.Restore"/>
+
+		<command name="lock"
+			className="org.apache.jackrabbit.command.lock.Lock"/>
+
+		<command name="unlock"
+			className="org.apache.jackrabbit.command.lock.Unlock"/>
+
+	</catalog>			
+
+</chains>	
