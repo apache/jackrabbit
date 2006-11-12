@@ -41,6 +41,7 @@ public class TestAll extends TestCase {
         //suite.addTestSuite(LockTest.class);
         suite.addTestSuite(NamespaceRegistryImplTest.class);
         suite.addTestSuite(TransientRepositoryTest.class);
+        suite.addTestSuite(NodeImplTest.class);
         suite.addTestSuite(XATest.class);
         suite.addTestSuite(ConcurrentLoginTest.class);
 
