@@ -313,6 +313,9 @@ public class TransientItemStateManager extends CachingItemStateManager
                 // MODIFIED is only possible on EXISTING states -> thus, there
                 // must not be any transient modifications for that state.
                 // we ignore it.
+            case Status.INVALIDATED:
+                // only non transient states can change their status to
+                // invalidated -> nothing to do here.
                 break;
             default:
                 log.error("ItemState has invalid status: " + state.getStatus());

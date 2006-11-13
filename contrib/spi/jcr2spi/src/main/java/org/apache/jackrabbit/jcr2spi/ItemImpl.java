@@ -243,31 +243,27 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     public void refresh(boolean keepChanges) throws InvalidItemStateException, RepositoryException {
         checkStatus();
 
-        if (keepChanges) {
-            // TODO: TOBEFIXED. make sure item is updated to status present on the server.
-            return;
+        if (!keepChanges) {
+            // check status of this item's state
+            switch (state.getStatus()) {
+                case Status.NEW:
+                    String msg = "Cannot refresh a new item (" + safeGetJCRPath() + ").";
+                    log.debug(msg);
+                    throw new RepositoryException(msg);
+            }
+
+            // reset all transient modifications from this item and its decendants.
+            try {
+                session.getSessionItemStateManager().undo(state);
+            } catch (ItemStateException e) {
+                String msg = "Unable to undo item (" + safeGetJCRPath() + ")";
+                log.debug(msg);
+                throw new RepositoryException(msg, e);
+            }
         }
 
-        // check status of this item's state
-        switch (state.getStatus()) {
-            case Status.NEW:
-                String msg = "Cannot refresh a new item (" + safeGetJCRPath() + ").";
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            case Status.STALE_DESTROYED:
-                msg = "Cannot refresh on a deleted item (" + safeGetJCRPath() + ").";
-                log.debug(msg);
-                throw new InvalidItemStateException(msg);
-        }
-
-        // reset all transient modifications from this item and its decendants.
-        try {
-            session.getSessionItemStateManager().undo(state);
-        } catch (ItemStateException e) {
-            String msg = "Unable to update item (" + safeGetJCRPath() + ")";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
+        // now refresh to persistent state on server
+        state.refresh();
     }
 
     /**
@@ -393,7 +389,10 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
 
     //------------------------------------------------------< check methods >---
     /**
-     * Performs a sanity check on this item and the associated session.
+     * Performs a sanity check on this item and the associated session. If
+     * the underlying item state is in an invalidated state then it will be
+     * refreshed to get the current status of the item state. The status
+     * check is then performed on the newly retrieved status.
      *
      * @throws RepositoryException if this item has been rendered invalid for some reason
      */
@@ -401,9 +400,17 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // check session status
         session.checkIsAlive();
         // check status of this item for read operation
-        if (state == null || !state.isValid()) {
-            throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
+        if (state != null) {
+            if (state.getStatus() == Status.INVALIDATED) {
+                // refresh to get current status from persistent storage
+                state.refresh();
+            }
+            // now check if valid
+            if (state.isValid()) {
+                return;
+            }
         }
+        throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
     }
 
     /**

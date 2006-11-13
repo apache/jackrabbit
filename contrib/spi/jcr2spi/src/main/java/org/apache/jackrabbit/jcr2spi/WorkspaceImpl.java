@@ -108,6 +108,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         this.session = session;
 
         wspManager = createManager(service, sessionInfo);
+        wspManager.setCacheBehaviour(session.getCacheBehaviour());
     }
 
     //----------------------------------------------------------< Workspace >---

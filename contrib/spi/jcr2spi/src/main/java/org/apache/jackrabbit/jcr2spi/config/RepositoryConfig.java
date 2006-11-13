@@ -33,5 +33,5 @@ public interface RepositoryConfig {
 
     public String getDefaultWorkspaceName();
 
-    public CacheMaintenance getCacheMaintenanceStrategy();
+    public CacheBehaviour getCacheBehaviour();
 }

@@ -249,7 +249,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      *
      * @return the status of this item.
      */
-    public int getStatus() {
+    public final int getStatus() {
         return status;
     }
 
@@ -291,6 +291,23 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
             status = Status.EXISTING;
         }
     }
+
+    /**
+     * Refreshes this item state recursively according to {@link
+     * javax.jcr.Item#refresh(boolean) Item.refresh(true)}. That is, changes
+     * are kept and updated to reflect the current persistent state of this
+     * item.
+     * todo throw exception in case of error?
+     */
+    public abstract void refresh();
+
+    /**
+     * Invalidates this item state recursively. In contrast to {@link #refresh}
+     * this method only sets the status of this item state to {@link
+     * Status#INVALIDATED} and does not acutally update it with the persistent
+     * state in the repository.
+     */
+    public abstract void invalidate();
 
     /**
      * Add an <code>ItemStateLifeCycleListener</code>
@@ -337,7 +354,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
             switch (state.getStatus()) {
                 case Status.MODIFIED:
                     // underlying state has been modified by external changes
-                    if (status == Status.EXISTING) {
+                    if (status == Status.EXISTING || status == Status.INVALIDATED) {
                         synchronized (this) {
                             reset();
                         }
@@ -354,6 +371,10 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                     } else {
                         setStatus(Status.REMOVED);
                     }
+                    break;
+                case Status.INVALIDATED:
+                    // invalidate session state as well
+                    setStatus(Status.INVALIDATED);
                     break;
                 default:
                     // Should never occur, since 'setStatus(int)' already validates
@@ -396,7 +417,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     }
 
     /**
-     * @throws IllegalStateException if this state is a 'workspace' state.
+     * @throws IllegalStateException if this state is a 'session' state.
      */
     public void checkIsSessionState() {
         if (isWorkspaceState) {
@@ -442,6 +463,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     }
 
     //----------------------------------------------------< Session - State >---
+
     /**
      * Used on the target state of a save call AFTER the changelog has been
      * successfully submitted to the SPI..

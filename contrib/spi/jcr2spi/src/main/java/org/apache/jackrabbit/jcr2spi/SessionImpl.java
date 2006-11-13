@@ -38,6 +38,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
@@ -746,6 +747,10 @@ public class SessionImpl implements Session, ManagerProvider {
 
     NodeTypeManagerImpl getNodeTypeManager() {
         return ntManager;
+    }
+
+    CacheBehaviour getCacheBehaviour() {
+        return config.getCacheBehaviour();
     }
 
     //--------------------------------------------------------------------------
