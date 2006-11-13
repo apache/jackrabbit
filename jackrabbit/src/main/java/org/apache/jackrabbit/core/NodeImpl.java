@@ -2644,7 +2644,9 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check lock status
-        if (isLocked()) {
+        try {
+            checkLock();
+        } catch (LockException le) {
             return false;
         }
 
