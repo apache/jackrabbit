@@ -34,7 +34,7 @@ import java.util.Iterator;
  * cache uses a rough estimate of the memory consuption of the cache item
  * states for calculating the maximum number of entries.
  */
-public class MLRUItemStateCache implements ItemStateCache, Cache {
+public class MLRUItemStateCache implements ItemStateCache {
     /** Logger instance */
     private static Logger log = LoggerFactory.getLogger(LRUItemStateCache.class);
 
@@ -45,13 +45,10 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     private long totalMem;
 
     /** the maximum of memory the cache may use */
-    private long maxMem;
+    private final long maxMem;
 
     /** the number of writes */
     private long numWrites = 0;
-
-    /** the access count */
-    private long accessCount = 0;
 
     /**
      * A cache for <code>ItemState</code> instances
@@ -74,7 +71,6 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      */
     public MLRUItemStateCache(int maxMem) {
         this.maxMem = maxMem;
-        CacheManager.getInstance().add(this);
     }
 
     //-------------------------------------------------------< ItemStateCache >
@@ -92,7 +88,6 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      */
     public ItemState retrieve(ItemId id) {
         synchronized (cache) {
-            touch();
             Entry entry = (Entry) cache.remove(id);
             if (entry != null) {
                 // 'touch' item, by adding at end of list
@@ -109,7 +104,6 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      */
     public void update(ItemId id) {
         synchronized (cache) {
-            touch();
             Entry entry = (Entry) cache.get(id);
             if (entry != null) {
                 totalMem -= entry.size;
@@ -124,7 +118,6 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      */
     public void cache(ItemState state) {
         synchronized (cache) {
-            touch();
             ItemId id = state.getId();
             if (cache.containsKey(id)) {
                 log.warn("overwriting cached entry " + id);
@@ -133,18 +126,14 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
             Entry entry = new Entry(state);
             cache.put(id, entry);
             totalMem += entry.size;
-            shrinkIfRequired();
+            // remove items, if too many
+            while (totalMem > maxMem) {
+                id = (ItemId) cache.firstKey();
+                evict(id);
+            }
             if (numWrites++%10000 == 0 && log.isDebugEnabled()) {
                 log.info(this + " size=" + cache.size() + ", " + totalMem + "/" + maxMem);
             }
-        }
-    }
-
-    private void shrinkIfRequired() {
-        // remove items, if too many
-        while (totalMem > maxMem) {
-            ItemId id = (ItemId) cache.firstKey();
-            evict(id);
         }
     }
 
@@ -153,7 +142,6 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
      */
     public void evict(ItemId id) {
         synchronized (cache) {
-            touch();
             Entry entry = (Entry) cache.remove(id);
             if (entry != null) {
                 totalMem -= entry.size;
@@ -210,59 +198,6 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
                 list.add(entry.state);
             }
             return list;
-        }
-    }
-
-    private void touch() {
-        accessCount++;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public long getAccessCount() {
-        return accessCount;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public long getMaxMemorySize() {
-        return maxMem;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public long getMemoryUsed() {
-        synchronized (cache) {
-            totalMem = 0;
-            Iterator iter = cache.values().iterator();
-            while (iter.hasNext()) {
-                Entry entry = (Entry) iter.next();
-                entry.recalc();
-                totalMem += entry.size;
-            }
-        }
-        return totalMem;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void resetAccessCount() {
-        synchronized (cache) {
-            accessCount = 0;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void setMaxMemorySize(long size) {
-        synchronized (cache) {
-            this.maxMem = size;
-            shrinkIfRequired();
         }
     }
 
