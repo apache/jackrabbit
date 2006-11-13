@@ -21,8 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -133,7 +133,7 @@ public class HandleMonitor {
          * Creates a new handle for a file
          * @param file
          */
-        public Handle(File file) {
+        private Handle(File file) {
             this.file = file;
         }
 
@@ -142,7 +142,7 @@ public class HandleMonitor {
          * @return
          * @throws FileNotFoundException
          */
-        public InputStream open() throws FileNotFoundException {
+        private InputStream open() throws FileNotFoundException {
             Handle.MonitoredInputStream in = new Handle.MonitoredInputStream(file);
             streams.add(in);
             return in;
@@ -152,7 +152,7 @@ public class HandleMonitor {
          * Closes a stream
          * @param in
          */
-        public void close(MonitoredInputStream in) {
+        private void close(MonitoredInputStream in) {
             streams.remove(in);
             if (streams.isEmpty()) {
                 HandleMonitor.this.close(file);
@@ -162,14 +162,14 @@ public class HandleMonitor {
         /**
          * Dumps this handle
          */
-        public void dump() {
+        private void dump() {
             dump(false);
         }
 
         /**
          * Dumps this handle
          */
-        public void dump(boolean detailed) {
+        private void dump(boolean detailed) {
             if (detailed) {
                 log.info("- " + file.getPath() + ", " + streams.size());
                 Iterator iter = streams.iterator();
@@ -191,52 +191,29 @@ public class HandleMonitor {
             /**
              * throwable of the time, the stream was created
              */
-            private final Throwable throwable;
+            private final Throwable throwable = new Exception();
 
             /**
              * {@inheritDoc}
              */
-            public MonitoredInputStream(File file) throws FileNotFoundException {
+            private MonitoredInputStream(File file) throws FileNotFoundException {
                 super(file);
-                // register the throwable
-                try {
-                    throw new Exception();
-                } catch (Exception e) {
-                    throwable = e;
-                }
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public MonitoredInputStream(FileDescriptor fdObj) {
-                super(fdObj);
-                // register the throwable
-                try {
-                    throw new Exception();
-                } catch (Exception e) {
-                    throwable = e;
-                }
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public MonitoredInputStream(String name) throws FileNotFoundException {
-                super(name);
-                // register the throwable
-                try {
-                    throw new Exception();
-                } catch (Exception e) {
-                    throwable = e;
-                }
             }
 
             /**
              * dumps this stream
              */
-            public void dump() {
+            private void dump() {
                 log.info("- opened by : ", throwable);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            public void close() throws IOException {
+                // remove myself from the set
+                Handle.this.close(this);
+                super.close();
             }
 
         }
