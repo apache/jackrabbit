@@ -227,8 +227,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                 builder.addLast(name, index);
             }
         } else {
-            PropertyState propState = (PropertyState) state;
-            // add to path
+            // property-state: add to path
             builder.addLast(name);
         }
     }
@@ -333,12 +332,13 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
 
     /**
      * Unmodifiable iterator over the listeners present on this item state.
-     * 
+     *
      * @return
      */
     public Iterator getListeners() {
         return Collections.unmodifiableCollection(listeners).iterator();
     }
+
     //-----------------------------------------< ItemStateLifeCycleListener >---
     /**
      *
@@ -358,6 +358,8 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                         synchronized (this) {
                             reset();
                         }
+                        // temporarily set the state to MODIFIED in order to
+                        // inform listeners.
                         setStatus(Status.MODIFIED);
                     } else if (status == Status.EXISTING_MODIFIED) {
                         setStatus(Status.STALE_MODIFIED);
@@ -417,7 +419,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     }
 
     /**
-     * @throws IllegalStateException if this state is a 'session' state.
+     * @throws IllegalStateException if this state is a 'workspace' state.
      */
     public void checkIsSessionState() {
         if (isWorkspaceState) {
@@ -471,7 +473,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * @param changeLog
      * @throws IllegalStateException if this state is a 'session' state.
      */
-    abstract void refresh(ChangeLog changeLog) throws IllegalStateException;
+    abstract void persisted(ChangeLog changeLog) throws IllegalStateException;
 
     /**
      * Copy all state information from overlayed state to this state
@@ -504,11 +506,12 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     abstract void remove() throws ItemStateException;
 
     /**
-     * Reverts this item state to its initial status and adds itself to the Set
-     * of <code>affectedItemStates</code> if it reverted itself.
+     * Reverts this item state to its initial status (i.e. removing any transient
+     * modifications and adds itself to the Set of <code>affectedItemStates</code>
+     * if it is reverted itself.
      *
      * @param affectedItemStates the set of affected item states that reverted
-     *                           themselfes.
+     * themselfes.
      */
     abstract void revert(Set affectedItemStates);
 

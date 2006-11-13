@@ -131,6 +131,16 @@ public class Status {
         return status == EXISTING_MODIFIED || status == EXISTING_REMOVED || status == NEW;
     }
 
+    /**
+     * Returns true, if the status of an item state can be changed from
+     * <code>oldStatus</code> to <code>newStatus</code>, and false if the
+     * change is illegal or if any of the given status flags is illegal.
+     *
+     * @param oldStatus
+     * @param newStatus
+     * @param isWorkspaceState
+     * @return
+     */
     public static boolean isValidStatusChange(int oldStatus, int newStatus,
                                               boolean isWorkspaceState) {
         if (oldStatus == newStatus) {
@@ -147,24 +157,16 @@ public class Status {
                     break;
                 case MODIFIED:
                     // temporary state when workspace state is updated or refreshed
-                    switch (oldStatus) {
-                        case EXISTING: // refresh of existing item state
-                        case INVALIDATED: // invalidated item state is refreshed
-                            isValid = true;
-                            break;
-                    }
+                    isValid = (oldStatus == EXISTING || oldStatus == INVALIDATED);
                     break;
                 case REMOVED:
-                    switch (oldStatus) {
-                        case EXISTING: // existing workspace state is externally removed
-                        case INVALIDATED: // invalidated item state is refreshed
-                            isValid = true;
-                            break;
-                    }
+                    // existing or invalidated workspace state is externally removed
+                    isValid = (oldStatus == EXISTING || oldStatus == INVALIDATED);
                     break;
                 // default: no other status possible : -> false
             }
         } else {
+            // valid status changes for session-states
             switch (newStatus) {
                 case INVALIDATED:
                     isValid = (oldStatus == EXISTING); // invalidate
@@ -193,7 +195,8 @@ public class Status {
                     isValid = (oldStatus == EXISTING_MODIFIED);
                     break;
                 case REMOVED:
-                    isValid = (oldStatus == NEW || oldStatus == EXISTING || oldStatus == EXISTING_REMOVED || oldStatus == INVALIDATED);
+                    isValid = (oldStatus == NEW || oldStatus == INVALIDATED ||
+                               oldStatus == EXISTING || oldStatus == EXISTING_REMOVED );
                     break;
                 case MODIFIED:
                     isValid = (oldStatus == EXISTING);

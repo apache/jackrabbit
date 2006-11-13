@@ -309,9 +309,9 @@ public class PropertyState extends ItemState {
     //----------------------------------------------------< Session - State >---
     /**
      * {@inheritDoc}
-     * @see ItemState#refresh(ChangeLog)
+     * @see ItemState#persisted(ChangeLog)
      */
-    void refresh(ChangeLog changeLog) throws IllegalStateException {
+    void persisted(ChangeLog changeLog) throws IllegalStateException {
         for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
             ItemState modState = (ItemState) it.next();
             if (modState == this) {
@@ -360,7 +360,6 @@ public class PropertyState extends ItemState {
      * @see ItemState#revert(Set)
      */
     void revert(Set affectedItemStates) {
-        // TODO: TOBEFIXED. revert must include an update with the latest state present on the server
         checkIsSessionState();
 
         switch (getStatus()) {

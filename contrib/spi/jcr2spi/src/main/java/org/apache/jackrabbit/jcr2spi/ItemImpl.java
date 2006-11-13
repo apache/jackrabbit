@@ -241,15 +241,21 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * @see javax.jcr.Item#refresh(boolean)
      */
     public void refresh(boolean keepChanges) throws InvalidItemStateException, RepositoryException {
-        checkStatus();
+        // check session status
+        session.checkIsAlive();
+        // check if item has been removed
+        if (Status.isTerminal(state.getStatus())) {
+            throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
+        }
 
-        if (!keepChanges) {
+        if (keepChanges) {
+            state.refresh();
+        } else {
             // check status of this item's state
-            switch (state.getStatus()) {
-                case Status.NEW:
-                    String msg = "Cannot refresh a new item (" + safeGetJCRPath() + ").";
-                    log.debug(msg);
-                    throw new RepositoryException(msg);
+            if (state.getStatus() == Status.NEW) {
+                String msg = "Cannot refresh a new item (" + safeGetJCRPath() + ").";
+                log.debug(msg);
+                throw new RepositoryException(msg);
             }
 
             // reset all transient modifications from this item and its decendants.
@@ -260,10 +266,9 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
                 log.debug(msg);
                 throw new RepositoryException(msg, e);
             }
+            // now refresh to persistent state as present on the server
+            state.refresh();
         }
-
-        // now refresh to persistent state on server
-        state.refresh();
     }
 
     /**
@@ -400,17 +405,14 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // check session status
         session.checkIsAlive();
         // check status of this item for read operation
-        if (state != null) {
-            if (state.getStatus() == Status.INVALIDATED) {
-                // refresh to get current status from persistent storage
-                state.refresh();
-            }
-            // now check if valid
-            if (state.isValid()) {
-                return;
-            }
+        if (state.getStatus() == Status.INVALIDATED) {
+            // refresh to get current status from persistent storage
+            state.refresh();
         }
-        throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
+        // now check if valid
+        if (!state.isValid()) {
+            throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
+        }
     }
 
     /**
