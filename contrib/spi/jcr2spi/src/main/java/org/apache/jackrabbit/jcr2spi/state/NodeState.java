@@ -207,6 +207,14 @@ public class NodeState extends ItemState {
         return getNodeId();
     }
 
+    public void refresh() {
+        // TODO
+    }
+
+    public void invalidate() {
+        // TODO
+    }
+
     //----------------------------------------------------------< NodeState >---
     /**
      * Returns the id of this node state.
@@ -688,9 +696,9 @@ public class NodeState extends ItemState {
     //----------------------------------------------------< Session - State >---
     /**
      * {@inheritDoc}
-     * @see ItemState#refresh(ChangeLog)
+     * @see ItemState#persisted(ChangeLog)
      */
-    void refresh(ChangeLog changeLog) throws IllegalStateException {
+    void persisted(ChangeLog changeLog) throws IllegalStateException {
 
         // remember parent states that have need to adjust their uuid/mixintypes
         // or that got a new child entry added or existing entries removed.
@@ -938,14 +946,14 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Reverts all property and child node states that belong to this
-     * <code>NodeState</code> and finally reverts this <code>NodeState</code>.
+     * Calls {@link #revert(Set) on all child states and add itself to the
+     * set of affected states, if the current status indicates, that this
+     * <code>NodeState</code> has been transiently modified.
      *
      * @inheritDoc
      * @see ItemState#revert(Set)
      */
     void revert(Set affectedItemStates) {
-        // TODO: TOBEFIXED. revert must include an update with the latest state present on the server
         checkIsSessionState();
 
         // copy to new list, when a property is reverted it may call this node

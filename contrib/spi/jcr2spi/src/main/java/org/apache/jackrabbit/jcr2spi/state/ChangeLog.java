@@ -124,11 +124,11 @@ public class ChangeLog {
 
     /**
      * Call this method when this change log has been sucessfully persisted.
-     * This implementation will call {@link ItemState#refresh(ChangeLog)
+     * This implementation will call {@link ItemState#persisted(ChangeLog)
      * ItemState.refresh(this)} on the target item of this change log.
      */
     public void persisted() {
-        target.refresh(this);
+        target.persisted(this);
     }
 
     //----------------------< Retrieve information present in the ChangeLog >---
