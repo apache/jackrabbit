@@ -150,6 +150,56 @@ public class PropertyState extends ItemState {
         return getPropertyId();
     }
 
+    /**
+     * {@inheritDoc}
+     * @see ItemState#refresh()
+     */
+    public void refresh() {
+        if (isWorkspaceState()) {
+            // refresh from persistent storage
+            try {
+                PropertyState tmp = isf.createPropertyState(getPropertyId(), parent);
+                init(tmp.getType(), tmp.getValues());
+                setStatus(Status.MODIFIED);
+            } catch (NoSuchItemStateException e) {
+                // does not exist anymore
+                setStatus(Status.REMOVED);
+                // todo also remove from parent? how do we make sure the parent
+                // todo does not get modified by this removal?
+                // parent.propertyStateRemoved(this);
+            } catch (ItemStateException e) {
+                // todo rather throw? remove from parent?
+                log.warn("Exception while refreshing property state: " + e);
+                log.debug("Stacktrace: ", e);
+            }
+        } else {
+            // session state
+            if (getStatus() == Status.EXISTING || getStatus() == Status.INVALIDATED) {
+                // calling refresh on the workspace state will in turn
+                // also refresh / reset the session state
+                overlayedState.refresh();
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see ItemState#invalidate()
+     */
+    public void invalidate() {
+        if (isWorkspaceState()) {
+            // workspace state
+            setStatus(Status.INVALIDATED);
+        } else {
+            // todo only invalidate if existing?
+            if (getStatus() == Status.EXISTING) {
+                // set workspace state invalidated, this will in turn invalidate
+                // this (session) state as well
+                overlayedState.invalidate();
+            }
+        }
+    }
+
     //------------------------------------------------------< PropertyState >---
     /**
      * Returns the identifier of this property.

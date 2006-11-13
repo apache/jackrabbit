@@ -24,6 +24,13 @@ public class Status {
     private static Logger log = LoggerFactory.getLogger(Status.class);
 
     /**
+     * A state once read from persistent storage has been set to invalid. This
+     * means that the state needs to be re-fetched from persistent storage when
+     * accessed the next time.
+     */
+    public static final int INVALIDATED = 0;
+
+    /**
      * 'existing', i.e. persistent state
      */
     public static final int EXISTING = 1;
@@ -93,8 +100,35 @@ public class Status {
         return status == EXISTING || status == EXISTING_MODIFIED || status == NEW;
     }
 
+    /**
+     * Returns <code>true</code> if <code>status</code> is one of:
+     * <ul>
+     * <li>{@link #STALE_DESTROYED}</li>
+     * <li>{@link #STALE_MODIFIED}</li>
+     * </ul>
+     *
+     * @param status the status to check.
+     * @return <code>true</code> if <code>status</code> indicates that an item
+     *         state is stale.
+     */
     public static boolean isStale(int status) {
         return status == STALE_DESTROYED || status == STALE_MODIFIED;
+    }
+
+    /**
+     * Returns <code>true</code> if <code>status</code> is one of:
+     * <ul>
+     * <li>{@link #EXISTING_MODIFIED}</li>
+     * <li>{@link #EXISTING_REMOVED}</li>
+     * <li>{@link #NEW}</li>
+     * </ul>
+     *
+     * @param status the status to check.
+     * @return <code>true</code> if <code>status</code> indicates that an item
+     *         state is stale.
+     */
+    public static boolean isTransient(int status) {
+        return status == EXISTING_MODIFIED || status == EXISTING_REMOVED || status == NEW;
     }
 
     public static boolean isValidStatusChange(int oldStatus, int newStatus,
@@ -105,49 +139,67 @@ public class Status {
         boolean isValid = false;
         if (isWorkspaceState) {
             switch (newStatus) {
+                case INVALIDATED:
+                    isValid = (oldStatus == EXISTING);
+                    break;
                 case EXISTING:
                     isValid = (oldStatus == MODIFIED);
                     break;
                 case MODIFIED:
-                    isValid = (oldStatus == EXISTING);
+                    // temporary state when workspace state is updated or refreshed
+                    switch (oldStatus) {
+                        case EXISTING: // refresh of existing item state
+                        case INVALIDATED: // invalidated item state is refreshed
+                            isValid = true;
+                            break;
+                    }
                     break;
                 case REMOVED:
-                    isValid = (oldStatus == EXISTING);
+                    switch (oldStatus) {
+                        case EXISTING: // existing workspace state is externally removed
+                        case INVALIDATED: // invalidated item state is refreshed
+                            isValid = true;
+                            break;
+                    }
                     break;
                 // default: no other status possible : -> false
             }
         } else {
             switch (newStatus) {
-               case EXISTING:
-                   switch (oldStatus) {
-                       case NEW: /* save */
-                       case EXISTING_MODIFIED: /* save, revert */
-                       case EXISTING_REMOVED:  /* revert */
-                       case STALE_MODIFIED:    /* revert */
-                       case MODIFIED:
-                           isValid = true;
-                           break;
-                       /* REMOVED, STALE_DESTROYED -> false */
-                   }
-                   break;
-               case EXISTING_MODIFIED:
-                   isValid = (oldStatus == EXISTING);
-                   break;
-               case EXISTING_REMOVED:
-                   isValid = (oldStatus == EXISTING || oldStatus == EXISTING_MODIFIED);
-                   break;
-               case STALE_MODIFIED:
-               case STALE_DESTROYED:
-                   isValid = (oldStatus == EXISTING_MODIFIED);
-                   break;
-               case REMOVED:
-                   isValid = (oldStatus == NEW || oldStatus == EXISTING || oldStatus == EXISTING_REMOVED);
-                   break;
-               case MODIFIED:
-                   isValid = (oldStatus == EXISTING);
-                   break;
-                   /* default:
-                   NEW cannot change state to NEW -> false */
+                case INVALIDATED:
+                    isValid = (oldStatus == EXISTING); // invalidate
+                    break;
+                case EXISTING:
+                    switch (oldStatus) {
+                        case INVALIDATED: /* refresh */
+                        case NEW: /* save */
+                        case EXISTING_MODIFIED: /* save, revert */
+                        case EXISTING_REMOVED:  /* revert */
+                        case STALE_MODIFIED:    /* revert */
+                        case MODIFIED:
+                            isValid = true;
+                            break;
+                            /* REMOVED, STALE_DESTROYED -> false */
+                    }
+                    break;
+                case EXISTING_MODIFIED:
+                    isValid = (oldStatus == EXISTING);
+                    break;
+                case EXISTING_REMOVED:
+                    isValid = (oldStatus == EXISTING || oldStatus == EXISTING_MODIFIED);
+                    break;
+                case STALE_MODIFIED:
+                case STALE_DESTROYED:
+                    isValid = (oldStatus == EXISTING_MODIFIED);
+                    break;
+                case REMOVED:
+                    isValid = (oldStatus == NEW || oldStatus == EXISTING || oldStatus == EXISTING_REMOVED || oldStatus == INVALIDATED);
+                    break;
+                case MODIFIED:
+                    isValid = (oldStatus == EXISTING);
+                    break;
+                    /* default:
+                    NEW cannot change state to NEW -> false */
             }
         }
         return isValid;

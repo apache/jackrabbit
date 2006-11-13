@@ -56,6 +56,7 @@ import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -127,6 +128,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final SessionInfo sessionInfo;
 
     private final ItemStateManager cache;
+    private CacheBehaviour cacheBehaviour = CacheBehaviour.OBSERVATION;
 
     private final NamespaceRegistryImpl nsRegistry;
     private final NodeTypeRegistry ntRegistry;
@@ -286,6 +288,28 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                                          boolean noLocal)
             throws UnsupportedRepositoryOperationException {
         return service.createEventFilter(eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
+    }
+
+    //----------------------------------------------------< package private >---
+
+    /**
+     * Returns the current cache behaviour. Defaults to {@link
+     * CacheBehaviour#OBSERVATION} unless otherwise set using {@link
+     * #setCacheBehaviour(CacheBehaviour)}.
+     *
+     * @return the current cache behaviour.
+     */
+    CacheBehaviour getCacheBehaviour() {
+        return cacheBehaviour;
+    }
+
+    /**
+     * Sets the cache behaviour for this WorkspaceManager.
+     *
+     * @param behaviour the cache behaviour.
+     */
+    void setCacheBehaviour(CacheBehaviour behaviour) {
+        this.cacheBehaviour = behaviour;
     }
 
     //--------------------------------------------------------------------------

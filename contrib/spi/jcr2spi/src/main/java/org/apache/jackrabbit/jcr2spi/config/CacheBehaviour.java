@@ -16,12 +16,12 @@
 package org.apache.jackrabbit.jcr2spi.config;
 
 /**
- * <code>CacheMaintenance</code> defines constants for the various cache
+ * <code>CacheBehaviour</code> defines constants for the various cache
  * maintenance strategies. The effective strategy depends on two factors,
- * whether the repository implementation supports observation and the strategy
+ * whether the repository implementation supports observation and the behaviour
  * provided in the {@link RepositoryConfig}.
  */
-public final class CacheMaintenance {
+public final class CacheBehaviour {
 
     /**
      * Cache maintenance is stictly done on a manual basis even though the
@@ -31,7 +31,7 @@ public final class CacheMaintenance {
      * <i>manually</i> to get the full effect of his action. E.g. workspace
      * operations will not change any cached state.
      */
-    public static final CacheMaintenance MANUAL = new CacheMaintenance();
+    public static final CacheBehaviour MANUAL = new CacheBehaviour();
 
     /**
      * Cache maintenance is done by invalidating affected items of an operation
@@ -40,7 +40,7 @@ public final class CacheMaintenance {
      * maintenance even though the repository implementation might support
      * observation.
      */
-    public static final CacheMaintenance INVALIDATE = new CacheMaintenance();
+    public static final CacheBehaviour INVALIDATE = new CacheBehaviour();
 
     /**
      * Cache maintenance is done using events from the repository. After an
@@ -49,8 +49,8 @@ public final class CacheMaintenance {
      * events. This strategy requires that the repository implementation
      * supports observation.
      */
-    public static final CacheMaintenance OBSERVATION = new CacheMaintenance();
+    public static final CacheBehaviour OBSERVATION = new CacheBehaviour();
 
-    private CacheMaintenance() {
+    private CacheBehaviour() {
     }
 }

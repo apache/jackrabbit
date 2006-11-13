@@ -21,7 +21,7 @@ import org.apache.jackrabbit.spi2dav.RepositoryServiceImpl;
 import org.apache.jackrabbit.spi2dav.IdFactoryImpl;
 import org.apache.jackrabbit.spi2dav.ValueFactoryImpl;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.jcr2spi.config.CacheMaintenance;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.log4j.PropertyConfigurator;
@@ -85,8 +85,8 @@ public class JCR2SPIRepositoryStub extends RepositoryStub {
                         return name;
                     }
 
-                    public CacheMaintenance getCacheMaintenanceStrategy() {
-                        return CacheMaintenance.OBSERVATION;
+                    public CacheBehaviour getCacheBehaviour() {
+                        return CacheBehaviour.OBSERVATION;
                     }
                 };
 
