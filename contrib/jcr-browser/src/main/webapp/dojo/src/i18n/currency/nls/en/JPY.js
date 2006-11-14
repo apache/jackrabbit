@@ -1,3 +1,0 @@
-({
-	displayName: "Japanese Yen"
-})
