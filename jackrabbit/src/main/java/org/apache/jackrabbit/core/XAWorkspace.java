@@ -53,7 +53,7 @@ public class XAWorkspace extends WorkspaceImpl {
      * {@inheritDoc}
      */
     protected LocalItemStateManager createItemStateManager(SharedItemStateManager shared) {
-        return new XAItemStateManager(shared, this);
+        return new XAItemStateManager(shared, this, rep.getItemStateCacheFactory());
     }
 
     /**

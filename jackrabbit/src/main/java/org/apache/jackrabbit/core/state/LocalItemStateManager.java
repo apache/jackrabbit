@@ -70,8 +70,8 @@ public class LocalItemStateManager
      * @param factory event state collection factory
      */
     public LocalItemStateManager(SharedItemStateManager sharedStateMgr,
-                                 EventStateCollectionFactory factory) {
-        cache = new ItemStateReferenceCache();
+                                 EventStateCollectionFactory factory, ItemStateCacheFactory cacheFactory) {
+        cache = new ItemStateReferenceCache(cacheFactory);
         this.sharedStateMgr = sharedStateMgr;
         this.factory = factory;
 
@@ -344,6 +344,7 @@ public class LocalItemStateManager
         }
         // clear cache
         cache.evictAll();
+        cache.dispose();
     }
 
     /**

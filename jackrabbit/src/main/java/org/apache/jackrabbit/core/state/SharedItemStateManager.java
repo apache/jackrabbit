@@ -196,9 +196,10 @@ public class SharedItemStateManager
     public SharedItemStateManager(PersistenceManager persistMgr,
                                   NodeId rootNodeId,
                                   NodeTypeRegistry ntReg,
-                                  boolean usesReferences)
+                                  boolean usesReferences,
+                                  ItemStateCacheFactory cacheFactory)
             throws ItemStateException {
-        cache = new ItemStateReferenceCache();
+        cache = new ItemStateReferenceCache(cacheFactory);
         this.persistMgr = persistMgr;
         this.ntReg = ntReg;
         this.usesReferences = usesReferences;
