@@ -350,18 +350,23 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void nodeAdded(NodeState state, QName name, int index, NodeId id) {
-        try {
-            Path path = Path.create(getPath(state.getNodeId()), name, index, true);
-            insert(path, id);
-        } catch (PathNotFoundException e) {
-            log.warn("Unable to get path of node " + state.getNodeId()
-                    + ", event ignored.");
-        } catch (MalformedPathException e) {
-            log.warn("Unable to create path of " + id, e);
-        } catch (ItemNotFoundException e) {
-            log.warn("Unable to get path of " + state.getNodeId(), e);
-        } catch (RepositoryException e) {
-            log.warn("Unable to get path of " + state.getNodeId(), e);
+        // Optimization: ignore notifications for nodes that are not in the cache
+        synchronized (cacheMonitor) {
+            if (idCache.containsKey(state.getNodeId())) {
+                try {
+                    Path path = Path.create(getPath(state.getNodeId()), name, index, true);
+                    insert(path, id);
+                } catch (PathNotFoundException e) {
+                    log.warn("Unable to get path of node " + state.getNodeId()
+                            + ", event ignored.");
+                } catch (MalformedPathException e) {
+                    log.warn("Unable to create path of " + id, e);
+                } catch (ItemNotFoundException e) {
+                    log.warn("Unable to find item " + state.getNodeId(), e);
+                } catch (RepositoryException e) {
+                    log.warn("Unable to get path of " + state.getNodeId(), e);
+                }
+            }
         }
     }
 
@@ -396,18 +401,23 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void nodeRemoved(NodeState state, QName name, int index, NodeId id) {
-        try {
-            Path path = Path.create(getPath(state.getNodeId()), name, index, true);
-            remove(path, id);
-        } catch (PathNotFoundException e) {
-            log.warn("Unable to get path of node " + state.getNodeId()
-                    + ", event ignored.");
-        } catch (MalformedPathException e) {
-            log.warn("Unable to create path of " + id, e);
-        } catch (ItemNotFoundException e) {
-            log.warn("Unable to get path of " + state.getNodeId(), e);
-        } catch (RepositoryException e) {
-            log.warn("Unable to get path of " + state.getNodeId(), e);
+        // Optimization: ignore notifications for nodes that are not in the cache
+        synchronized (cacheMonitor) {
+            if (idCache.containsKey(state.getNodeId())) {
+                try {
+                    Path path = Path.create(getPath(state.getNodeId()), name, index, true);
+                    remove(path, id);
+                } catch (PathNotFoundException e) {
+                    log.warn("Unable to get path of node " + state.getNodeId()
+                            + ", event ignored.");
+                } catch (MalformedPathException e) {
+                    log.warn("Unable to create path of " + id, e);
+                } catch (ItemNotFoundException e) {
+                    log.warn("Unable to get path of " + state.getNodeId(), e);
+                } catch (RepositoryException e) {
+                    log.warn("Unable to get path of " + state.getNodeId(), e);
+                }
+            }
         }
     }
 
