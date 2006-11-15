@@ -134,4 +134,11 @@ public class LRUItemStateCache implements ItemStateCache {
     public Collection values() {
         return Collections.unmodifiableCollection(cache.values());
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void dispose() {
+        cache.clear();
+    }
 }

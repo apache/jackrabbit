@@ -21,13 +21,12 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
-import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.DateVersionSelector;
+import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
@@ -168,6 +167,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
             obsMgr.dispose();
             obsMgr = null;
         }
+        stateMgr.dispose();
     }
 
     /**
@@ -757,7 +757,7 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
      * @return local item state manager
      */
     protected LocalItemStateManager createItemStateManager(SharedItemStateManager shared) {
-        return new LocalItemStateManager(shared, this);
+        return new LocalItemStateManager(shared, this, rep.getItemStateCacheFactory());
     }
 
     //------------------------------------------< EventStateCollectionFactory >
@@ -774,4 +774,5 @@ public class WorkspaceImpl implements JackrabbitWorkspace, EventStateCollectionF
         return ((ObservationManagerImpl) getObservationManager()).createEventStateCollection();
     }
 }
+
 
