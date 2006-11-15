@@ -1,0 +1,246 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core.state;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.WeakHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * This class manages the size of the caches used in Jackrabbit. The combined
+ * size of all caches must be limited to avoid out of memory problems. The
+ * available memory is dynamically distributed across the caches each second.
+ * This class tries to calculates the best cache sizes by comparing the access
+ * counts of each cache, and the used memory. The idea is, the more a cache is
+ * accessed, the more memory it should get, while the cache should not shrink
+ * too quickly. A minimum and maximum size per cache is defined as well. After
+ * distributing the memory in this way, there might be some unused memory (if
+ * one or more caches did not use some of the allocated memory). This unused
+ * memory is distributed evenly across the full caches.
+ *
+ */
+public class CacheManager implements CacheAccessListener {
+
+    /** The logger instance. */
+    private static Logger log = LoggerFactory.getLogger(CacheManager.class);
+
+    /** The amount of memory to distribute accross the caches. */
+    private static final long MAX_MEMORY = 16 * 1024 * 1024;
+
+    /** The minimum size of a cache. */
+    private static final long MIN_MEMORY_PER_CACHE = 128 * 1024;
+
+    /** The maximum memory per cache (unless, there is some unused memory). */
+    private static final long MAX_MEMORY_PER_CACHE = 4 * 1024 * 1024;
+
+    /** The set of caches (weakly referenced). */
+    private WeakHashMap caches = new WeakHashMap();
+
+    /** Rebalance the caches each ... milliseconds at most. */
+    private static final int SLEEP = 1000;
+
+    /** The size of a big object, to detect if a cache is full or not. */
+    private static final int BIG_OBJECT_SIZE = 16 * 1024;
+
+    /** The last time the caches where resized. */
+    private volatile long nextResize = System.currentTimeMillis() + SLEEP;
+
+    /**
+     * After one of the caches is accessed a number of times, this method is called.
+     * Resize the caches if required.
+     */
+    public void cacheAccessed() {
+        long now = System.currentTimeMillis();
+        if (now < nextResize) {
+            return;
+        }
+        synchronized (this) {
+            // the previous test was not synchronized (for speed)
+            // so we need another synchronized test
+            if (now < nextResize) {
+                return;
+            }
+            nextResize = now + SLEEP;
+            resizeAll();
+            nextResize = System.currentTimeMillis() + SLEEP;
+        }
+    }
+
+    /**
+     * Re-calcualte the maximum memory for each cache, and set the new limits.
+     */
+    private void resizeAll() {
+        log.info("resizeAll size="+ caches.size());
+        // get strong references
+        // entries in a weak hash map may disappear any time
+        // so can't use size() / keySet() directly
+        // only using the iterator guarantees that we don't get null references
+        ArrayList list = new ArrayList();
+        for (Iterator it = caches.keySet().iterator(); it.hasNext();) {
+            list.add(it.next());
+        }
+        if (list.size() == 0) {
+            // nothing to do
+            return;
+        }
+        CacheInfo[] infos = new CacheInfo[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            infos[i] = new CacheInfo((Cache) list.get(i));
+        }
+        // calculate the total access count and memory used
+        long totalAccessCount = 0;
+        long totalMemoryUsed = 0;
+        for (int i = 0; i < infos.length; i++) {
+            totalAccessCount += infos[i].getAccessCount();
+            totalMemoryUsed += infos[i].getMemoryUsed();
+        }
+        // try to distribute the memory based on the access count
+        // and memory used (higher numbers - more memory)
+        // and find out how many caches are full
+        // 50% is distributed according to access count,
+        // and 50% according to memory used
+        double memoryPerAccess = (double) MAX_MEMORY / 2.
+                / Math.max(1., (double) totalAccessCount);
+        double memoryPerUsed = (double) MAX_MEMORY / 2.
+                / Math.max(1., (double) totalMemoryUsed);
+        int fullCacheCount = 0;
+        for (int i = 0; i < infos.length; i++) {
+            CacheInfo info = infos[i];
+            long mem = (long) (memoryPerAccess * info.getAccessCount());
+            mem += (long) (memoryPerUsed * info.getMemoryUsed());
+            mem = Math.min(mem, MAX_MEMORY_PER_CACHE);
+            if (info.wasFull()) {
+                fullCacheCount++;
+            } else {
+                mem = Math.min(mem, info.getMemoryUsed());
+            }
+            mem = Math.min(mem, MAX_MEMORY_PER_CACHE);
+            mem = Math.max(mem, MIN_MEMORY_PER_CACHE);
+            info.setMemory(mem);
+        }
+        // calculate the unused memory
+        long unusedMemory = MAX_MEMORY;
+        for (int i = 0; i < infos.length; i++) {
+            unusedMemory -= infos[i].getMemory();
+        }
+        // distribute the remaining memory evenly across the full caches
+        if (unusedMemory > 0 && fullCacheCount > 0) {
+            for (int i = 0; i < infos.length; i++) {
+                CacheInfo info = infos[i];
+                if (info.wasFull()) {
+                    info.setMemory(info.getMemory() + unusedMemory
+                            / fullCacheCount);
+                }
+            }
+        }
+        // set the new limit
+        for (int i = 0; i < infos.length; i++) {
+            CacheInfo info = infos[i];
+            Cache cache = info.getCache();
+            log.debug(cache + " now:" + cache.getMaxMemorySize() + " used:"
+                    + info.getMemoryUsed() + " access:" + info.getAccessCount()
+                    + " new:" + info.getMemory());
+            cache.setMaxMemorySize(info.getMemory());
+        }
+    }
+
+    /**
+     * Add a new cache to the list.
+     * This call does not trigger recalculating the cache sizes.
+     *
+     * @param cache the cache to add
+     */
+    public synchronized void add(Cache cache) {
+        caches.put(cache, null);
+    }
+
+    /**
+     * Remove a cache. As this class only has a weak reference to each cache,
+     * calling this method is not strictly required.
+     * This call does not trigger recalculating the cache sizes.
+     *
+     * @param cache
+     *            the cache to remove
+     */
+    public synchronized void remove(Cache cache) {
+        caches.remove(cache);
+    }
+
+    /**
+     * Internal copy of the cache information.
+     */
+    public static class CacheInfo {
+        private Cache cache;
+
+        private long accessCount;
+
+        private long memory;
+
+        private long memoryUsed;
+
+        private boolean wasFull;
+
+        CacheInfo(Cache cache) {
+            this.cache = cache;
+            // copy the data as this runs in a different thread
+            // the exact values are not important, but it is important that the
+            // values don't change
+            this.memory = cache.getMaxMemorySize();
+            this.memoryUsed = cache.getMemoryUsed();
+            this.accessCount = cache.getAccessCount();
+            // reset the access count, so that concurrent cache access is not lost
+            cache.resetAccessCount();
+            // if the memory used plus one large object is smaller than the
+            // allocated memory,
+            // then the memory was not fully used
+            wasFull = (memoryUsed + BIG_OBJECT_SIZE) >= memory;
+        }
+
+        boolean wasFull() {
+            return wasFull;
+        }
+
+        long getAccessCount() {
+            return accessCount;
+        }
+
+        long getMemoryUsed() {
+            return memoryUsed;
+        }
+
+        void setMemory(long mem) {
+            this.memory = mem;
+        }
+
+        long getMemory() {
+            return memory;
+        }
+
+        Cache getCache() {
+            return cache;
+        }
+
+    }
+
+    public void disposeCache(Cache cache) {
+        remove(cache);
+    }
+
+}
