@@ -131,7 +131,7 @@ public class XASessionImpl extends SessionImpl
          * Create array that contains all resources that paricipate in this
          * transactions. Because some resources depend on each other, there is
          * also a workspace scoped lock resource inserted, that guards the
-         * entire transaction from deadlocks (see JCR-335) 
+         * entire transaction from deadlocks (see JCR-335)
          */
         txResources = new InternalXAResource[] {
             ((XAWorkspace) wsp).getXAResourceBegin(),
@@ -158,7 +158,7 @@ public class XASessionImpl extends SessionImpl
             throws RepositoryException {
 
         VersionManagerImpl vMgr = (VersionManagerImpl) rep.getVersionManager();
-        return new XAVersionManager(vMgr, rep.getNodeTypeRegistry(), this);
+        return new XAVersionManager(vMgr, rep.getNodeTypeRegistry(), this, rep.getItemStateCacheFactory());
     }
 
     /**
@@ -370,6 +370,19 @@ public class XASessionImpl extends SessionImpl
      */
     private boolean isAssociated() {
         return tx != null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public synchronized void logout() {
+        super.logout();
+        // dispose the caches
+        try {
+            ((XAVersionManager)versionMgr).close();
+        } catch(Exception e) {
+            log.warn("error while closing XAVersionManager", e);
+        }
     }
 
     /**

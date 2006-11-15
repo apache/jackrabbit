@@ -66,8 +66,8 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      * <code>LRUItemStateCache</code> instance as internal secondary
      * cache.
      */
-    public ItemStateReferenceCache() {
-        this(new MLRUItemStateCache());
+    public ItemStateReferenceCache(ItemStateCacheFactory cacheFactory) {
+        this(cacheFactory.newItemStateCache());
     }
 
     /**
@@ -125,6 +125,13 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
         cache.evict(id);
         // remove from primary cache
         refs.remove(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void dispose() {
+        cache.dispose();
     }
 
     /**

@@ -86,8 +86,8 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * @param factory        event state collection factory
      */
     public XAItemStateManager(SharedItemStateManager sharedStateMgr,
-                              EventStateCollectionFactory factory) {
-        this(sharedStateMgr, factory, DEFAULT_ATTRIBUTE_NAME);
+                              EventStateCollectionFactory factory, ItemStateCacheFactory cacheFactory) {
+        this(sharedStateMgr, factory, DEFAULT_ATTRIBUTE_NAME, cacheFactory);
     }
 
     /**
@@ -99,8 +99,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      */
     public XAItemStateManager(SharedItemStateManager sharedStateMgr,
                               EventStateCollectionFactory factory,
-                              String attributeName) {
-        super(sharedStateMgr, factory);
+                              String attributeName,
+                              ItemStateCacheFactory cacheFactory) {
+        super(sharedStateMgr, factory, cacheFactory);
 
         this.attributeName = attributeName;
     }

@@ -45,6 +45,9 @@ import org.apache.jackrabbit.core.security.AuthContext;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.state.CacheManager;
+import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
+import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.version.VersionManager;
@@ -210,6 +213,16 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     private final ReadWriteLock shutdownLock = new WriterPreferenceReadWriteLock();
 
     /**
+     * There is one cache manager per repository that manages the sizes of the caches used.
+     */
+    private final CacheManager cacheMgr = new CacheManager();
+
+    /**
+     * There is only one item state cache factory
+     */
+    private final ItemStateCacheFactory cacheFactory = new ManagedMLRUItemStateCacheFactory(cacheMgr);
+
+    /**
      * private constructor
      *
      * @param repConfig
@@ -321,6 +334,15 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
     }
 
     /**
+     * Get the item state cache factory of this repository.
+     *
+     * @return the cache manager
+     */
+    public ItemStateCacheFactory getItemStateCacheFactory() {
+        return cacheFactory;
+    }
+
+    /**
      * Creates the version manager.
      *
      * @param vConfig the versioning config
@@ -341,7 +363,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 ntReg);
 
         VersionManagerImpl vMgr = new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
-                VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID);
+                VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory);
         if (clusterNode != null) {
             vMgr.setEventChannel(clusterNode.createUpdateChannel());
         }
@@ -1703,7 +1725,7 @@ public class RepositoryImpl implements JackrabbitRepository, SessionListener,
                 // create item state manager
                 try {
                     itemStateMgr =
-                            new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true);
+                            new SharedItemStateManager(persistMgr, rootNodeId, ntReg, true, cacheFactory);
                     try {
                         itemStateMgr.addVirtualItemStateProvider(
                                 vMgr.getVirtualItemStateProvider());

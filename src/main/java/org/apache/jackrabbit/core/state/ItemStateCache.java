@@ -108,4 +108,9 @@ public interface ItemStateCache {
      * @param id the id of the item that was modified.
      */
     void update(ItemId id);
+
+    /**
+     * Informs the cache that it is no longer in use.
+     */
+    void dispose();
 }

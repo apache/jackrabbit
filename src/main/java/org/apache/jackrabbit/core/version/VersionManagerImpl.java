@@ -21,24 +21,25 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
+import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.ItemStateListener;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
-import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.name.MalformedPathException;
@@ -129,7 +130,8 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     public VersionManagerImpl(PersistenceManager pMgr, FileSystem fs,
                               NodeTypeRegistry ntReg,
                               DelegatingObservationDispatcher obsMgr, NodeId rootId,
-                              NodeId rootParentId) throws RepositoryException {
+                              NodeId rootParentId,
+                              ItemStateCacheFactory cacheFactory) throws RepositoryException {
         try {
             this.pMgr = pMgr;
             this.fs = fs;
@@ -156,9 +158,9 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
                 pMgr.store(cl);
             }
             sharedStateMgr =
-                    new VersionItemStateManager(pMgr, rootId, ntReg);
+                    new VersionItemStateManager(pMgr, rootId, ntReg, cacheFactory);
 
-            stateMgr = new LocalItemStateManager(sharedStateMgr, escFactory);
+            stateMgr = new LocalItemStateManager(sharedStateMgr, escFactory, cacheFactory);
             stateMgr.addListener(this);
 
             NodeState nodeState = (NodeState) stateMgr.getItemState(rootId);
@@ -515,9 +517,10 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
 
         public VersionItemStateManager(PersistenceManager persistMgr,
                                        NodeId rootNodeId,
-                                       NodeTypeRegistry ntReg)
+                                       NodeTypeRegistry ntReg,
+                                       ItemStateCacheFactory cacheFactory)
                 throws ItemStateException {
-            super(persistMgr, rootNodeId, ntReg, false);
+            super(persistMgr, rootNodeId, ntReg, false, cacheFactory);
         }
 
         protected void checkReferentialIntegrity(ChangeLog changes)

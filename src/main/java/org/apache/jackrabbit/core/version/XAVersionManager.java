@@ -24,17 +24,18 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
-import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
@@ -96,14 +97,14 @@ public class XAVersionManager extends AbstractVersionManager
      * Creates a new instance of this class.
      */
     public XAVersionManager(VersionManagerImpl vMgr, NodeTypeRegistry ntReg,
-                            SessionImpl session)
+                            SessionImpl session, ItemStateCacheFactory cacheFactory)
             throws RepositoryException {
 
         this.vMgr = vMgr;
         this.ntReg = ntReg;
         this.session = session;
         this.stateMgr = new XAItemStateManager(vMgr.getSharedStateMgr(),
-                this, CHANGE_LOG_ATTRIBUTE_NAME);
+                this, CHANGE_LOG_ATTRIBUTE_NAME, cacheFactory);
 
         NodeState state;
         try {
@@ -199,6 +200,7 @@ public class XAVersionManager extends AbstractVersionManager
      * {@inheritDoc}
      */
     public void close() throws Exception {
+        stateMgr.dispose();
     }
 
     //---------------------------------------------< VirtualItemStateProvider >
