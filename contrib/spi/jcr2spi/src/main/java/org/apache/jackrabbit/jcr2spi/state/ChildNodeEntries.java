@@ -517,10 +517,9 @@ final class ChildNodeEntries implements Collection {
 
     /**
      * Returns the matching <code>LinkNode</code> from a list or a single
-     * <code>LinkNode</code>. Note, that in contrast to {@link #getLinkNode(ChildNodeEntry)}
-     * this method will throw <code>NoSuchItemStateException</code> if none of the
-     * entries matches either due to missing entry for given state name or due
-     * to missing availability of the <code>ChildNodeEntry</code>.
+     * <code>LinkNode</code>. This method will throw <code>NoSuchItemStateException</code>
+     * if none of the entries matches either due to missing entry for given
+     * state name or due to missing availability of the <code>ChildNodeEntry</code>.
      *
      * @param nodeState the <code>NodeState</code> that is compared to the
      * resolution of any ChildNodeEntry that matches by name.
