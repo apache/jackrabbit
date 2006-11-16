@@ -60,6 +60,9 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
 
     //-------------------------------< InternalEventListener >------------------
 
+    /**
+     * @see InternalEventListener#getEventFilters()
+     */
     public Collection getEventFilters() {
         return eventFilter;
     }
@@ -71,11 +74,18 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
      * might have invoked changes (autocreated items etc.).
      *
      * @param eventBundle
+     * @see InternalEventListener#onEvent(EventBundle)
      */
     public void onEvent(EventBundle eventBundle) {
         pushEvents(getEventCollection(eventBundle));
     }
 
+    /**
+     * Retrieve the workspace state(s) affected by the given event and refresh
+     * them accordingly.
+     * 
+     * @param events
+     */
     private void pushEvents(Collection events) {
         if (events.isEmpty()) {
             return;
