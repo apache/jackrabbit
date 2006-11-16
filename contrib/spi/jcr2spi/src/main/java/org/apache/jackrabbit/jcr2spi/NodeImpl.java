@@ -1547,7 +1547,27 @@ public class NodeImpl extends ItemImpl implements Node {
     private Path getQPath(String relativePath) throws RepositoryException {
         try {
             Path p = PathFormat.parse(relativePath, session.getNamespaceResolver());
-            return Path.create(getQPath(), p, true);
+            return getQPath(p);
+        } catch (MalformedPathException e) {
+            String msg = "Invalid relative path: " + relativePath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+    }
+
+    /**
+     *
+     * @param relativePath
+     * @return
+     * @throws RepositoryException
+     */
+    private Path getQPath(Path relativePath) throws RepositoryException {
+        try {
+            // shortcut
+            if (relativePath.getLength() == 1 && relativePath.getNameElement() == Path.CURRENT_ELEMENT) {
+                return getQPath();
+            }
+            return Path.create(getQPath(), relativePath, true);
         } catch (MalformedPathException e) {
             String msg = "Invalid relative path: " + relativePath;
             log.debug(msg);
@@ -1570,13 +1590,17 @@ public class NodeImpl extends ItemImpl implements Node {
     private NodeState resolveRelativeNodePath(String relPath) throws RepositoryException {
         NodeState targetState = null;
         try {
-            Path p = getQPath(relPath);
-            // if relative path is just the last path element -> simply retrieve
-            // the corresponding child-node.
-            if (p.getLength() == 1) {
-                Path.PathElement pe = p.getNameElement();
-                if (pe.denotesName()) {
-                    // check if node entry exists
+            Path rp = PathFormat.parse(relPath, session.getNamespaceResolver());
+            // shortcut
+            if (rp.getLength() == 1) {
+                Path.PathElement pe = rp.getNameElement();
+                if (pe == Path.CURRENT_ELEMENT) {
+                    targetState = getNodeState();
+                } else if (pe == Path.PARENT_ELEMENT) {
+                    targetState = getNodeState().getParent();
+                } else if (pe.denotesName()) {
+                    // if relative path is just a 'name' -> retrieve the corresponding
+                    // child-node (if existing).
                     int index = pe.getNormalizedIndex();
                     ChildNodeEntry cne = getNodeState().getChildNodeEntry(pe.getName(), index);
                     if (cne != null) {
@@ -1584,6 +1608,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     } // else: there's no child node with that name
                 }
             } else {
+                Path p = getQPath(rp);
                 ItemState itemState = session.getHierarchyManager().getItemState(p.getCanonicalPath());
                 if (itemState.isNode()) {
                     targetState = (NodeState) itemState;
@@ -1612,51 +1637,47 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @param relPath relative path of a (possible) property
      * @return the state of the property at <code>relPath</code> or
-     *         <code>null</code> if no property exists at <code>relPath</code>
+     * <code>null</code> if no property exists at <code>relPath</code>
      * @throws RepositoryException if <code>relPath</code> is not a valid
-     *                             relative path
+     * relative path
      */
     private PropertyState resolveRelativePropertyPath(String relPath) throws RepositoryException {
+        PropertyState targetState = null;
         try {
-            /**
-             * first check if relPath is just a name (in which case we don't
-             * have to build & resolve absolute path)
-             */
-            if (relPath.indexOf('/') == -1) {
-                QName propName = NameFormat.parse(relPath, session.getNamespaceResolver());
-                // check if property entry exists
-                if (getNodeState().hasPropertyName(propName)) {
-                    try {
-                        return getNodeState().getPropertyState(propName);
-                    } catch (ItemStateException e) {
-                        // should not occur due, since existance has been checked
-                        throw new RepositoryException(e);
+            Path rp = PathFormat.parse(relPath, session.getNamespaceResolver());
+            if (rp.getLength() == 1) {
+                // a single path element must always denote a name. '.' and '..'
+                // will never point to a property.
+                if (rp.getNameElement().denotesName()) {
+                    QName propName = rp.getNameElement().getName();
+                    // check if property entry exists
+                    if (getNodeState().hasPropertyName(propName)) {
+                        try {
+                            targetState = getNodeState().getPropertyState(propName);
+                        } catch (ItemStateException e) {
+                            // should not occur due, since existance has been checked
+                            throw new RepositoryException(e);
+                        } // else: there's no property with that name
                     }
-                } else {
-                    // there's no property with that name
-                    return null;
+                } // else: return null.
+            } else {
+                // build and resolve absolute path
+                Path p = getQPath(rp).getCanonicalPath();
+                try {
+                    ItemState itemState = session.getHierarchyManager().getItemState(p);
+                    if (!itemState.isNode()) {
+                        targetState = (PropertyState) itemState;
+                    } // else: not a property
+                } catch (PathNotFoundException e) {
+                    // ignore -> return null;
                 }
             }
-            /**
-             * build and resolve absolute path
-             */
-            Path p = getQPath(relPath).getCanonicalPath();
-            try {
-                ItemState itemState = session.getHierarchyManager().getItemState(p);
-                if (!itemState.isNode()) {
-                    return (PropertyState) itemState;
-                } else {
-                    // not a property
-                    return null;
-                }
-            } catch (PathNotFoundException pnfe) {
-                return null;
-            }
-        } catch (NameException e) {
-            String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
+        } catch (MalformedPathException e) {
+            String msg = "failed to resolve property path " + relPath + " relative to " + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
+        return targetState;
     }
 
     /**
