@@ -18,38 +18,28 @@
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd ">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.jackrabbit</groupId>
+
+<!-- ====================================================================== -->
+<!-- P R O J E C T  D E S C R I P T I O N                                   -->
+<!-- ====================================================================== -->
+  <parent>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit</artifactId>
+    <version>1.2-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
   <artifactId>jackrabbit-jcr-rmi</artifactId>
   <name>JCR-RMI</name>
-  <version>1.1-SNAPSHOT</version>
   <!--
     Keep the description on a single line. Otherwise Maven might generate
     a corrupted MANIFEST.MF (see http://jira.codehaus.org/browse/MJAR-4)
    -->
   <description>JCR-RMI is a transparent Remote Method Invocation (RMI) layer for the Content Repository for Java Technology API (JCR). The layer makes it possible to remotely access JCR content repositories. JCR-RMI is developed as a part of the Apache Jackrabbit project, but the implementation is compatible with all JCR content repositories.</description>
-  <url>http://incubator.apache.org/projects/jackrabbit.html</url>
-  <issueManagement>
-    <url>http://issues.apache.org/jira/browse/JCR</url>
-  </issueManagement>
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>/LICENSE.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk/jcr-rmi</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk/jcr-rmi</developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jcr-rmi/</url>
-  </scm>
-  <organization>
-    <name>The Apache Software Foundation</name>
-    <url>http://incubator.apache.org/projects/jackrabbit.html</url>
-  </organization>
+
   <build>
     <sourceDirectory>src/java</sourceDirectory>
     <testSourceDirectory>src/test</testSourceDirectory>
@@ -102,7 +92,7 @@
                 <echo>Compile RMI stubs</echo>
                 <rmic base="${project.build.outputDirectory}" verify="true"
                       includes="org/apache/jackrabbit/rmi/server/**/Server*.class"
-                      classpathref="maven.compile.classpath" />                
+                      classpathref="maven.compile.classpath" />
               </tasks>
             </configuration>
             <goals>
@@ -117,7 +107,7 @@
             <version>1.0</version>
             <scope>system</scope>
             <systemPath>${java.home}/../lib/tools.jar</systemPath>
-          </dependency>          
+          </dependency>
         </dependencies>
       </plugin>
       <!-- plugin>
@@ -135,6 +125,7 @@
         </plugin -->
     </plugins>
   </build>
+
   <dependencies>
     <!-- Test dependencies -->
     <dependency>
@@ -171,26 +162,5 @@
       <version>1.2.8</version>
     </dependency>
   </dependencies>
-  <distributionManagement>
-    <repository>
-      <id>apache.releases</id>
-      <name>Apache Repository for PMC approved releases</name>
-      <url>
-        scp://cvs.apache.org/www/www.apache.org/dist/maven-repository/
-      </url>
-    </repository>
-    <snapshotRepository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Repository</name>
-      <url>
-        scp://cvs.apache.org/www/cvs.apache.org/maven-snapshot-repository
-      </url>
-    </snapshotRepository>
-    <site>
-      <id>website</id>
-      <url>
-        scp://cvs.apache.org/www/incubator.apache.org/jackrabbit/
-      </url>
-    </site>
-  </distributionManagement>
+
 </project>
