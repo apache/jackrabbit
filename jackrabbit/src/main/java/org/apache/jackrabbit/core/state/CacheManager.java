@@ -87,14 +87,16 @@ public class CacheManager implements CacheAccessListener {
      * Re-calcualte the maximum memory for each cache, and set the new limits.
      */
     private void resizeAll() {
-        log.info("resizeAll size="+ caches.size());
+        log.info("resizeAll size=" + caches.size());
         // get strong references
         // entries in a weak hash map may disappear any time
         // so can't use size() / keySet() directly
         // only using the iterator guarantees that we don't get null references
         ArrayList list = new ArrayList();
-        for (Iterator it = caches.keySet().iterator(); it.hasNext();) {
-            list.add(it.next());
+        synchronized (caches) {
+            for (Iterator it = caches.keySet().iterator(); it.hasNext();) {
+                list.add(it.next());
+            }
         }
         if (list.size() == 0) {
             // nothing to do
@@ -167,8 +169,10 @@ public class CacheManager implements CacheAccessListener {
      *
      * @param cache the cache to add
      */
-    public synchronized void add(Cache cache) {
-        caches.put(cache, null);
+    public void add(Cache cache) {
+        synchronized (caches) {
+            caches.put(cache, null);
+        }
     }
 
     /**
@@ -179,8 +183,10 @@ public class CacheManager implements CacheAccessListener {
      * @param cache
      *            the cache to remove
      */
-    public synchronized void remove(Cache cache) {
-        caches.remove(cache);
+    public void remove(Cache cache) {
+        synchronized (caches) {
+            caches.remove(cache);
+        }
     }
 
     /**
