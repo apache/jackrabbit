@@ -141,6 +141,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ TextsearchQueryNode: ");
+        buffer.append(" Prop=").append(node.getPropertyName());
         buffer.append(" Query=").append(node.getQuery());
         buffer.append("\n");
         return buffer;
