@@ -337,8 +337,9 @@ abstract class AbstractVersionManager implements VersionManager {
 
             stateMgr.edit();
         } catch (IllegalStateException e) {
-            releaseReadLock();
             throw new RepositoryException("Unable to start edit operation.");
+        } finally {
+            releaseReadLock();
         }
 
         boolean succeeded = false;
