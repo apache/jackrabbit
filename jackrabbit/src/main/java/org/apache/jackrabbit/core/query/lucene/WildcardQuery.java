@@ -48,7 +48,7 @@ import java.util.Map;
  * <li><code>_</code> : matches exactly one character</li>
  * </ul>
  */
-public class WildcardQuery extends Query {
+public class WildcardQuery extends Query implements TransformConstants {
 
     /**
      * Logger instance for this class.
@@ -71,6 +71,12 @@ public class WildcardQuery extends Query {
     private final String pattern;
 
     /**
+     * How property values are tranformed before they are matched using the
+     * provided pattern.
+     */
+    private final int transform;
+
+    /**
      * Simple result cache for previously calculated hits.
      * key=IndexReader value=Map{key=String:pattern,value=BitSet:hits}
      */
@@ -79,14 +85,28 @@ public class WildcardQuery extends Query {
     /**
      * Creates a new <code>WildcardQuery</code>.
      *
-     * @param field the name of the field to search.
-     * @param propName name of the property to search.
-     * @param pattern the wildcard pattern.
+     * @param field     the name of the field to search.
+     * @param propName  name of the property to search.
+     * @param pattern   the wildcard pattern.
+     * @param transform how property values are transformed before they are
+     *                  matched using the <code>pattern</code>.
      */
-    public WildcardQuery(String field, String propName, String pattern) {
+    public WildcardQuery(String field, String propName, String pattern, int transform) {
         this.field = field.intern();
         this.propName = propName;
         this.pattern = pattern;
+        this.transform = transform;
+    }
+
+    /**
+     * Creates a new <code>WildcardQuery</code>.
+     *
+     * @param field    the name of the field to search.
+     * @param propName name of the property to search.
+     * @param pattern  the wildcard pattern.
+     */
+    public WildcardQuery(String field, String propName, String pattern) {
+        this(field, propName, pattern, TRANSFORM_NONE);
     }
 
     /**
@@ -101,7 +121,7 @@ public class WildcardQuery extends Query {
     public Query rewrite(IndexReader reader) throws IOException {
         Query stdWildcardQuery = new MultiTermQuery(new Term(FieldNames.PROPERTIES, pattern)) {
             protected FilteredTermEnum getEnum(IndexReader reader) throws IOException {
-                return new WildcardTermEnum(reader, field, propName, pattern);
+                return new WildcardTermEnum(reader, field, propName, pattern, transform);
             }
         };
         try {
@@ -245,7 +265,7 @@ public class WildcardQuery extends Query {
         WildcardQueryScorer(Similarity similarity, IndexReader reader) {
             super(similarity);
             this.reader = reader;
-            this.cacheKey = field + '\uFFFF' + propName + '\uFFFF' + pattern;
+            this.cacheKey = field + '\uFFFF' + propName + '\uFFFF' + transform +'\uFFFF' + pattern;
             // check cache
             synchronized (cache) {
                 Map m = (Map) cache.get(reader);
@@ -313,7 +333,7 @@ public class WildcardQuery extends Query {
             if (hitsCalculated) {
                 return;
             }
-            TermEnum terms = new WildcardTermEnum(reader, field, propName, pattern);
+            TermEnum terms = new WildcardTermEnum(reader, field, propName, pattern, transform);
             try {
                 // use unpositioned TermDocs
                 TermDocs docs = reader.termDocs();
