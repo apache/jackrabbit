@@ -18,17 +18,23 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.FilteredTermEnum;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implements a wildcard term enum that optionally supports embedded property
  * names in lucene term texts.
  */
-class WildcardTermEnum extends FilteredTermEnum {
+class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
 
     /**
      * The pattern matcher.
@@ -56,20 +62,35 @@ class WildcardTermEnum extends FilteredTermEnum {
     private final OffsetCharSequence input;
 
     /**
+     * How terms from the index are transformed.
+     */
+    private final int transform;
+
+    /**
      * Creates a new <code>WildcardTermEnum</code>.
      *
-     * @param reader the index reader.
-     * @param field the lucene field to search.
-     * @param propName the embedded jcr property name or <code>null</code> if
-     *   there is not embedded property name.
-     * @param pattern the pattern to match the values.
-     * @throws IOException if an error occurs while reading from the index.
+     * @param reader    the index reader.
+     * @param field     the lucene field to search.
+     * @param propName  the embedded jcr property name or <code>null</code> if
+     *                  there is not embedded property name.
+     * @param pattern   the pattern to match the values.
+     * @param transform the transformation that should be applied to the term
+     *                  enum from the index reader.
+     * @throws IOException              if an error occurs while reading from
+     *                                  the index.
+     * @throws IllegalArgumentException if <code>transform</code> is not a valid
+     *                                  value.
      */
     public WildcardTermEnum(IndexReader reader,
                             String field,
                             String propName,
-                            String pattern) throws IOException {
+                            String pattern,
+                            int transform) throws IOException {
+        if (transform < TRANSFORM_NONE || transform > TRANSFORM_UPPER_CASE) {
+            throw new IllegalArgumentException("invalid transform parameter");
+        }
         this.field = field;
+        this.transform = transform;
 
         int idx = 0;
         while (idx < pattern.length()
@@ -84,22 +105,31 @@ class WildcardTermEnum extends FilteredTermEnum {
         }
 
         // initialize with prefix as dummy value
-        input = new OffsetCharSequence(prefix.length(), prefix);
+        input = new OffsetCharSequence(prefix.length(), prefix, transform);
         this.pattern = createRegexp(pattern.substring(idx)).matcher(input);
 
-        setEnum(reader.terms(new Term(field, prefix)));
+        if (transform == TRANSFORM_NONE) {
+            setEnum(reader.terms(new Term(field, prefix)));
+        } else {
+            setEnum(new LowerUpperCaseTermEnum(reader, field, propName, pattern, transform));
+        }
     }
 
     /**
      * @inheritDoc
      */
     protected boolean termCompare(Term term) {
-        if (term.field() == field && term.text().startsWith(prefix)) {
-            input.setBase(term.text());
-            return pattern.reset().matches();
+        if (transform == TRANSFORM_NONE) {
+            if (term.field() == field && term.text().startsWith(prefix)) {
+                input.setBase(term.text());
+                return pattern.reset().matches();
+            }
+            endEnum = true;
+            return false;
+        } else {
+            // pre filtered, no need to check
+            return true;
         }
-        endEnum = true;
-        return false;
     }
 
     /**
@@ -169,67 +199,143 @@ class WildcardTermEnum extends FilteredTermEnum {
     }
 
     /**
-     * CharSequence that applies an offset to a base CharSequence. The base
-     * CharSequence can be replaced without creating a new CharSequence.
+     * Implements a term enum which respects the transformation flag and
+     * matches a pattern on the enumerated terms.
      */
-    private static final class OffsetCharSequence implements CharSequence {
+    private class LowerUpperCaseTermEnum extends TermEnum {
 
         /**
-         * The offset to apply to the base CharSequence
+         * The matching terms
          */
-        private final int offset;
+        private final Map orderedTerms = new LinkedHashMap();
 
         /**
-         * The base character sequence
+         * Iterator over all matching terms
          */
-        private CharSequence base;
+        private final Iterator it;
 
-        /**
-         * Creates a new OffsetCharSequence with an <code>offset</code>.
-         *
-         * @param offset the offset
-         * @param base the base CharSequence
-         */
-        OffsetCharSequence(int offset, CharSequence base) {
-            this.offset = offset;
-            this.base = base;
+        public LowerUpperCaseTermEnum(IndexReader reader,
+                                      String field,
+                                      String propName,
+                                      String pattern,
+                                      int transform) throws IOException {
+            if (transform != TRANSFORM_LOWER_CASE && transform != TRANSFORM_UPPER_CASE) {
+                throw new IllegalArgumentException("transform");
+            }
+
+            // create range scans
+            List rangeScans = new ArrayList(2);
+            try {
+                int idx = 0;
+                while (idx < pattern.length()
+                        && Character.isLetterOrDigit(pattern.charAt(idx))) {
+                    idx++;
+                }
+                String patternPrefix = pattern.substring(0, idx);
+                if (patternPrefix.length() == 0) {
+                    // scan full property range
+                    String prefix = FieldNames.createNamedValue(propName, "");
+                    String limit = FieldNames.createNamedValue(propName, "\uFFFF");
+                    rangeScans.add(new RangeScan(reader,
+                            new Term(field, prefix), new Term(field, limit)));
+                } else {
+                    // start with initial lower case
+                    StringBuffer lowerLimit = new StringBuffer(patternPrefix.toUpperCase());
+                    lowerLimit.setCharAt(0, Character.toLowerCase(lowerLimit.charAt(0)));
+                    String prefix = FieldNames.createNamedValue(propName, lowerLimit.toString());
+
+                    StringBuffer upperLimit = new StringBuffer(patternPrefix.toLowerCase());
+                    upperLimit.append('\uFFFF');
+                    String limit = FieldNames.createNamedValue(propName, upperLimit.toString());
+                    rangeScans.add(new RangeScan(reader,
+                            new Term(field, prefix), new Term(field, limit)));
+
+                    // second scan with upper case start
+                    prefix = FieldNames.createNamedValue(propName, patternPrefix.toUpperCase());
+                    upperLimit = new StringBuffer(patternPrefix.toLowerCase());
+                    upperLimit.setCharAt(0, Character.toUpperCase(upperLimit.charAt(0)));
+                    upperLimit.append('\uFFFF');
+                    limit = FieldNames.createNamedValue(propName, upperLimit.toString());
+                    rangeScans.add(new RangeScan(reader,
+                            new Term(field, prefix), new Term(field, limit)));
+                }
+
+                String prefix = FieldNames.createNamedValue(propName, patternPrefix);
+                // initialize with prefix as dummy value
+                OffsetCharSequence input = new OffsetCharSequence(prefix.length(), prefix, transform);
+                Matcher matcher = createRegexp(pattern.substring(idx)).matcher(input);
+
+                // do range scans with patter matcher
+                for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
+                    RangeScan scan = (RangeScan) it.next();
+                    do {
+                        Term t = scan.term();
+                        if (t != null) {
+                            input.setBase(t.text());
+                            if (matcher.reset().matches()) {
+                                orderedTerms.put(t, new Integer(scan.docFreq()));
+                            }
+                        }
+                    } while (scan.next());
+                }
+
+            } finally {
+                // close range scans
+                for (Iterator it = rangeScans.iterator(); it.hasNext(); ) {
+                    RangeScan scan = (RangeScan) it.next();
+                    try {
+                        scan.close();
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                }
+            }
+
+            it = orderedTerms.keySet().iterator();
+            getNext();
         }
 
         /**
-         * Sets a new base sequence.
-         *
-         * @param base the base character sequence
+         * The current term in this enum.
          */
-        public void setBase(CharSequence base) {
-            this.base = base;
+        private Term current;
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean next() {
+            getNext();
+            return current != null;
         }
 
         /**
-         * @inheritDoc
+         * {@inheritDoc}
          */
-        public int length() {
-            return base.length() - offset;
+        public Term term() {
+            return current;
         }
 
         /**
-         * @inheritDoc
+         * {@inheritDoc}
          */
-        public char charAt(int index) {
-            return base.charAt(index + offset);
+        public int docFreq() {
+            Integer docFreq = (Integer) orderedTerms.get(current);
+            return docFreq != null ? docFreq.intValue() : 0;
         }
 
         /**
-         * @inheritDoc
+         * {@inheritDoc}
          */
-        public CharSequence subSequence(int start, int end) {
-            return base.subSequence(start + offset, end + offset);
+        public void close() {
+            // nothing to do here
         }
 
         /**
-         * @inheritDoc
+         * Sets the current field to the next term in this enum or to
+         * <code>null</code> if there is no next.
          */
-        public String toString() {
-            return base.subSequence(offset, base.length()).toString();
+        private void getNext() {
+            current = it.hasNext() ? (Term) it.next() : null;
         }
     }
 }

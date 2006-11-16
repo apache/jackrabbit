@@ -35,6 +35,9 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Implements a variant of the lucene class {@link org.apache.lucene.search.RangeQuery}.
@@ -42,7 +45,7 @@ import java.util.WeakHashMap;
  * but will calculate the matching documents itself. That way a
  * <code>TooManyClauses</code> can be avoided.
  */
-public class RangeQuery extends Query {
+public class RangeQuery extends Query implements TransformConstants {
 
     /**
      * Logger instance for this class.
@@ -73,14 +76,21 @@ public class RangeQuery extends Query {
     private boolean inclusive;
 
     /**
+     * How the term enum is transformed before it is compared to lower and upper
+     * term.
+     */
+    private final int transform;
+
+    /**
      * Creates a new RangeQuery. The lower or the upper term may be
      * <code>null</code>, but not both!
      *
      * @param lowerTerm the lower term of the interval, or <code>null</code>
      * @param upperTerm the upper term of the interval, or <code>null</code>.
      * @param inclusive if <code>true</code> the interval is inclusive.
+     * @param transform how term enums are transformed when read from the index.
      */
-    public RangeQuery(Term lowerTerm, Term upperTerm, boolean inclusive) {
+    public RangeQuery(Term lowerTerm, Term upperTerm, boolean inclusive, int transform) {
         if (lowerTerm == null && upperTerm == null) {
             throw new IllegalArgumentException("At least one term must be non-null");
         }
@@ -97,6 +107,7 @@ public class RangeQuery extends Query {
 
         this.upperTerm = upperTerm;
         this.inclusive = inclusive;
+        this.transform = transform;
     }
 
     /**
@@ -109,13 +120,19 @@ public class RangeQuery extends Query {
      * @throws IOException if an error occurs.
      */
     public Query rewrite(IndexReader reader) throws IOException {
-        Query stdRangeQueryImpl
-                = new org.apache.lucene.search.RangeQuery(lowerTerm, upperTerm, inclusive);
-        try {
-            return stdRangeQueryImpl.rewrite(reader);
-        } catch (BooleanQuery.TooManyClauses e) {
-            log.debug("Too many terms to enumerate, using custom RangeQuery");
-            // failed, use own implementation
+        if (transform == TRANSFORM_NONE) {
+            Query stdRangeQueryImpl
+                    = new org.apache.lucene.search.RangeQuery(lowerTerm, upperTerm, inclusive);
+            try {
+                return stdRangeQueryImpl.rewrite(reader);
+            } catch (BooleanQuery.TooManyClauses e) {
+                log.debug("Too many terms to enumerate, using custom RangeQuery");
+                // failed, use own implementation
+                return this;
+            }
+        } else {
+            // always use our implementation when we need to transform the
+            // term enum
             return this;
         }
     }
@@ -283,6 +300,8 @@ public class RangeQuery extends Query {
             key.append(upperTerm != null ? upperTerm.text() : "");
             key.append('\uFFFF');
             key.append(inclusive);
+            key.append('\uFFFF');
+            key.append(transform);
             this.cacheKey = key.toString();
             // check cache
             synchronized (cache) {
@@ -352,53 +371,121 @@ public class RangeQuery extends Query {
                 return;
             }
 
-            TermEnum enumerator = reader.terms(lowerTerm);
+            String testField = getField();
 
-            try {
-                boolean checkLower = false;
-                if (!inclusive) {
-                    // make adjustments to set to exclusive
-                    checkLower = true;
-                }
+            boolean checkLower = false;
+            if (!inclusive || transform != TRANSFORM_NONE) {
+                // make adjustments to set to exclusive
+                checkLower = true;
+            }
 
-                String testField = getField();
+            int propNameLength = FieldNames.getNameLength(lowerTerm.text());
+            String namePrefix = "";
+            if (propNameLength > 0) {
+                namePrefix = lowerTerm.text().substring(0, propNameLength);
+            }
+            List startTerms = new ArrayList(2);
 
-                TermDocs docs = reader.termDocs();
+            if (transform == TRANSFORM_NONE || lowerTerm.text().length() <= propNameLength) {
+                // use lowerTerm as is
+                startTerms.add(lowerTerm);
+            } else {
+                // first enumerate terms using lower case start character
+                StringBuffer termText = new StringBuffer(propNameLength + 1);
+                termText.append(lowerTerm.text().subSequence(0, propNameLength));
+                char startCharacter = lowerTerm.text().charAt(propNameLength);
+                termText.append(Character.toLowerCase(startCharacter));
+                startTerms.add(new Term(lowerTerm.field(), termText.toString()));
+                // second enumerate terms using upper case start character
+                termText.setCharAt(termText.length() - 1, Character.toUpperCase(startCharacter));
+                startTerms.add(new Term(lowerTerm.field(), termText.toString()));
+            }
+
+            for (Iterator it = startTerms.iterator(); it.hasNext(); ) {
+                Term startTerm = (Term) it.next();
+
+                TermEnum terms = reader.terms(startTerm);
                 try {
-                    do {
-                        Term term = enumerator.term();
-                        if (term != null && term.field() == testField) {
-                            if (!checkLower || term.text().compareTo(lowerTerm.text()) > 0) {
-                                checkLower = false;
+                    TermDocs docs = reader.termDocs();
+                    try {
+                        do {
+                            Term term = terms.term();
+                            if (term != null && term.field() == testField) {
+                                if (checkLower) {
+                                    int compare = termCompare(term.text(), lowerTerm.text(), propNameLength);
+                                    if (compare > 0 || compare == 0 && inclusive) {
+                                        // do not check lower term anymore if no
+                                        // transformation is done on the term enum
+                                        checkLower = transform == TRANSFORM_NONE ? false : true;
+                                    } else {
+                                        // continue with next term
+                                        continue;
+                                    }
+                                }
                                 if (upperTerm != null) {
-                                    int compare = upperTerm.text().compareTo(term.text());
+                                    int compare = termCompare(term.text(), upperTerm.text(), propNameLength);
                                     // if beyond the upper term, or is exclusive and
-                                    // this is equal to the upper term, break out
-                                    if ((compare < 0) || (!inclusive && compare == 0)) {
-                                        break;
+                                    // this is equal to the upper term
+                                    if ((compare > 0) || (!inclusive && compare == 0)) {
+                                        // only break out if no transformation
+                                        // was done on the term from the enum
+                                        if (transform == TRANSFORM_NONE) {
+                                            break;
+                                        } else {
+                                            // because of the transformation
+                                            // it is possible that the next
+                                            // term will be included again if
+                                            // we still enumerate on the same
+                                            // property name
+                                            if (term.text().startsWith(namePrefix)) {
+                                                continue;
+                                            } else {
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
 
-                                docs.seek(enumerator);
+                                docs.seek(terms);
                                 while (docs.next()) {
                                     hits.set(docs.doc());
                                 }
+                            } else {
+                                break;
                             }
-                        } else {
-                            break;
-                        }
-                    } while (enumerator.next());
+                        } while(terms.next());
+                    } finally {
+                        docs.close();
+                    }
                 } finally {
-                    docs.close();
+                    terms.close();
                 }
-            } finally {
-                enumerator.close();
             }
+
             hitsCalculated = true;
             // put to cache
             synchronized (resultMap) {
                 resultMap.put(cacheKey, hits);
             }
+        }
+
+        /**
+         * Compares the <code>text</code> with the <code>other</code> String. This
+         * implementation behaves like {@link String#compareTo(Object)} but also
+         * respects the {@link RangeQuery#transform} property.
+         *
+         * @param text   the text to compare to <code>other</code>. The
+         *               transformation function is applied to this parameter before
+         *               it is compared to <code>other</code>.
+         * @param other  the other String.
+         * @param offset start comparing the two strings at <code>offset</code>.
+         * @return see {@link String#compareTo(Object)}. But also respects {@link
+         *         #transform}.
+         */
+        private int termCompare(String text, String other, int offset) {
+            OffsetCharSequence seq1 = new OffsetCharSequence(offset, text, transform);
+            OffsetCharSequence seq2 = new OffsetCharSequence(offset, other);
+            return seq1.compareTo(seq2);
         }
     }
 }

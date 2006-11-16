@@ -69,4 +69,8 @@ public class DefaultQueryNodeVisitor implements QueryNodeVisitor {
     public Object visit(DerefQueryNode node, Object data) {
         return data;
     }
+
+    public Object visit(PropertyFunctionQueryNode node, Object data) {
+        return data;
+    }
 }

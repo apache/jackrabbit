@@ -31,6 +31,7 @@ import org.apache.jackrabbit.core.query.QueryNodeVisitor;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
+import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
@@ -382,39 +383,36 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     public Object visit(RelationQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
+            StringBuffer propName = new StringBuffer();
+            appendName(node.getProperty(), resolver, propName);
+            // surround name with property function
+            node.acceptOperands(this, propName);
+
+            sb.append(propName);
             if (node.getOperation() == OPERATION_EQ_VALUE || node.getOperation() == OPERATION_EQ_GENERAL) {
-                appendName(node.getProperty(), resolver, sb);
                 sb.append(" = ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GE_VALUE || node.getOperation() == OPERATION_GE_GENERAL) {
-                appendName(node.getProperty(), resolver, sb);
                 sb.append(" >= ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GT_VALUE || node.getOperation() == OPERATION_GT_GENERAL) {
-                appendName(node.getProperty(), resolver, sb);
                 sb.append(" > ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LE_VALUE || node.getOperation() == OPERATION_LE_GENERAL) {
-                appendName(node.getProperty(), resolver, sb);
                 sb.append(" <= ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LIKE) {
-                appendName(node.getProperty(), resolver, sb);
                 sb.append(" LIKE ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LT_VALUE || node.getOperation() == OPERATION_LT_GENERAL) {
-                appendName(node.getProperty(), resolver, sb);
                 sb.append(" < ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NE_VALUE || node.getOperation() == OPERATION_NE_GENERAL) {
-                appendName(node.getProperty(), resolver, sb);
                 sb.append(" <> ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NULL) {
-                appendName(node.getProperty(), resolver, sb);
                 sb.append(" IS NULL");
             } else if (node.getOperation() == OPERATION_NOT_NULL) {
-                appendName(node.getProperty(), resolver, sb);
                 sb.append(" IS NOT NULL");
             } else {
                 exceptions.add(new InvalidQueryException("Invalid operation: " + node.getOperation()));
@@ -449,6 +447,19 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             }
         } else {
             sb.append(" SCORE");
+        }
+        return sb;
+    }
+
+    public Object visit(PropertyFunctionQueryNode node, Object data) {
+        StringBuffer sb = (StringBuffer) data;
+        String functionName = node.getFunctionName();
+        if (functionName.equals(PropertyFunctionQueryNode.LOWER_CASE)) {
+            sb.insert(0, "LOWER(").append(")");
+        } else if (functionName.equals(PropertyFunctionQueryNode.UPPER_CASE)) {
+            sb.insert(0, "UPPER(").append(")");
+        } else {
+            exceptions.add(new InvalidQueryException("Unsupported function: " + functionName));
         }
         return sb;
     }

@@ -45,6 +45,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MixinTest.class);
         suite.addTestSuite(DerefTest.class);
         suite.addTestSuite(VersionStoreQueryTest.class);
+        suite.addTestSuite(UpperLowerCaseQueryTest.class);
 
         // exclude long running tests per default
         //suite.addTestSuite(MassiveRangeTest.class);

@@ -23,7 +23,7 @@ import java.util.Date;
 /**
  * Implements a query node that defines property value relation.
  */
-public class RelationQueryNode extends QueryNode implements QueryConstants {
+public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
 
     /**
      * The name of the property

@@ -82,4 +82,16 @@ public class FieldNames {
         return fieldName + '\uFFFF' + value;
     }
 
+    /**
+     * Returns the length of the field prefix in <code>namedValue</code>. See
+     * also {@link #createNamedValue(String, String)}. If <code>namedValue</code>
+     * does not contain a name prefix, this method return 0.
+     *
+     * @param namedValue the named value as created by {@link #createNamedValue(String, String)}.
+     * @return the length of the field prefix including the separator char
+     *         (\uFFFF).
+     */
+    public static int getNameLength(String namedValue) {
+        return namedValue.indexOf('\uFFFF') + 1;
+    }
 }
