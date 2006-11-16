@@ -113,11 +113,15 @@ public class UserTransactionImpl implements UserTransaction {
 
             if (e.errorCode >= XAException.XA_RBBASE &&
                     e.errorCode <= XAException.XA_RBEND) {
-                throw new RollbackException("Transaction rolled back: " +
-                        "XA_ERR=" + e.errorCode);
+                RollbackException re = new RollbackException(
+                        "Transaction rolled back: XA_ERR=" + e.errorCode);
+                re.initCause(e.getCause());
+                throw re;
             } else {
-                throw new SystemException("Unable to commit transaction: " +
-                        "XA_ERR=" + e.errorCode);
+                SystemException se = new SystemException(
+                        "Unable to commit transaction: XA_ERR=" + e.errorCode);
+                se.initCause(e.getCause());
+                throw se;
             }
         }
     }
@@ -149,9 +153,10 @@ public class UserTransactionImpl implements UserTransaction {
             status = Status.STATUS_ROLLEDBACK;
 
         } catch (XAException e) {
-
-            throw new SystemException("Unable to rollback transaction: " +
-                    "XA_ERR=" + e.errorCode);
+            SystemException se = new SystemException(
+                    "Unable to rollback transaction: XA_ERR=" + e.errorCode);
+            se.initCause(e.getCause());
+            throw se;
         }
     }
 

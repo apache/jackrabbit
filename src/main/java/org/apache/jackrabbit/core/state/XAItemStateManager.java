@@ -150,11 +150,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 }
                 update = sharedStateMgr.beginUpdate(txLog, factory, virtualProvider);
             } catch (ReferentialIntegrityException rie) {
-                log.error(rie.getMessage(), rie);
                 txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to prepare transaction.", rie);
             } catch (ItemStateException ise) {
-                log.error(ise.getMessage(), ise);
                 txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to prepare transaction.", ise);
             }
@@ -170,7 +168,6 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
             try {
                 update.end();
             } catch (ItemStateException ise) {
-                log.error(ise.getMessage(), ise);
                 txLog.undo(sharedStateMgr);
                 throw new TransactionException("Unable to commit transaction.", ise);
             }
