@@ -216,6 +216,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             if (node.getPropertyName() == null) {
                 sb.append(".");
             } else {
+                sb.append("@");
                 sb.append(NameFormat.format(ISO9075.encode(node.getPropertyName()), resolver));
             }
             sb.append(", '");
