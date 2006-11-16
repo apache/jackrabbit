@@ -30,6 +30,8 @@ import org.apache.jackrabbit.core.query.QueryNode;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
+import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
+import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
@@ -53,9 +55,24 @@ import java.util.Map;
 public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
 
     /**
+     * Namespace uri for xpath functions. See also class SearchManager
+     */
+    static final String NS_FN_URI = "http://www.w3.org/2004/10/xpath-functions";
+
+    /**
      * QName for 'fn:not'
      */
-    static final QName FN_NOT = new QName("http://www.w3.org/2004/10/xpath-functions", "not");
+    static final QName FN_NOT = new QName(NS_FN_URI, "not");
+
+    /**
+     * QName for 'fn:lower-case'
+     */
+    static final QName FN_LOWER_CASE = new QName(NS_FN_URI, "lower-case");
+
+    /**
+     * QName for 'fn:upper-case'
+     */
+    static final QName FN_UPPER_CASE = new QName(NS_FN_URI, "upper-case");
 
     /**
      * QName for 'not' as defined in XPath 1.0 (no prefix)
@@ -593,10 +610,24 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             exceptions.add(new InvalidQueryException("Unsupported ComparisonExpr type:" + node.getValue()));
         }
 
-        RelationQueryNode rqn = new RelationQueryNode(queryNode, type);
+        final RelationQueryNode rqn = new RelationQueryNode(queryNode, type);
 
         // traverse
         node.childrenAccept(this, rqn);
+
+        // check if string transformation is valid
+        rqn.acceptOperands(new DefaultQueryNodeVisitor() {
+            public Object visit(PropertyFunctionQueryNode node, Object data) {
+                String functionName = node.getFunctionName();
+                if ((functionName.equals(PropertyFunctionQueryNode.LOWER_CASE)
+                        || functionName.equals(PropertyFunctionQueryNode.UPPER_CASE))
+                            && rqn.getValueType() != QueryConstants.TYPE_STRING) {
+                    String msg = "Upper and lower case function are only supported with String literals";
+                    exceptions.add(new InvalidQueryException(msg));
+                }
+                return data;
+            }
+        }, null);
 
         queryNode.addOperand(rqn);
     }
@@ -850,6 +881,32 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     createOrderSpec(node, (OrderQueryNode) queryNode);
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for jcr:score()"));
+                }
+            } else if (NameFormat.format(FN_LOWER_CASE, resolver).equals(fName)) {
+                if (node.jjtGetNumChildren() == 2) {
+                    if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                        RelationQueryNode relNode = (RelationQueryNode) queryNode;
+                        relNode.addOperand(new PropertyFunctionQueryNode(relNode, PropertyFunctionQueryNode.LOWER_CASE));
+                        // get property name
+                        node.jjtGetChild(1).jjtAccept(this, relNode);
+                    } else {
+                        exceptions.add(new InvalidQueryException("Unsupported location for fn:lower-case()"));
+                    }
+                } else {
+                    exceptions.add(new InvalidQueryException("Wrong number of argument for fn:lower-case()"));
+                }
+            } else if (NameFormat.format(FN_UPPER_CASE, resolver).equals(fName)) {
+                if (node.jjtGetNumChildren() == 2) {
+                    if (queryNode.getType() == QueryNode.TYPE_RELATION) {
+                        RelationQueryNode relNode = (RelationQueryNode) queryNode;
+                        relNode.addOperand(new PropertyFunctionQueryNode(relNode, PropertyFunctionQueryNode.UPPER_CASE));
+                        // get property name
+                        node.jjtGetChild(1).jjtAccept(this, relNode);
+                    } else {
+                        exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
+                    }
+                } else {
+                    exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
                 }
             } else {
                 exceptions.add(new InvalidQueryException("Unsupported function: " + fName));

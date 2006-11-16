@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.query.QueryNode;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
+import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
@@ -295,6 +296,30 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                     value[0] = node;
                     return data;
                 }
+
+                public Object visit(ASTLowerFunction node, Object data) {
+                    getIdentifier(node);
+                    return data;
+                }
+
+                public Object visit(ASTUpperFunction node, Object data) {
+                    getIdentifier(node);
+                    return data;
+                }
+
+                private void getIdentifier(SimpleNode node) {
+                    if (node.jjtGetNumChildren() > 0) {
+                        Node n = node.jjtGetChild(0);
+                        if (n instanceof ASTIdentifier) {
+                            ASTIdentifier identifier = (ASTIdentifier) n;
+                            if (tmp[0] == null) {
+                                tmp[0] = identifier.getName();
+                            } else if (tmp[1] == null) {
+                                tmp[1] = identifier.getName();
+                            }
+                        }
+                    }
+                }
             }, data);
             QName identifier = tmp[0];
 
@@ -312,9 +337,11 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 AndQueryNode between = new AndQueryNode(parent);
                 RelationQueryNode rel = createRelationQueryNode(between,
                         identifier, QueryConstants.OPERATION_GE_GENERAL, (ASTLiteral) node.children[1]);
+                node.childrenAccept(this, rel);
                 between.addOperand(rel);
                 rel = createRelationQueryNode(between,
                         identifier, QueryConstants.OPERATION_LE_GENERAL, (ASTLiteral) node.children[2]);
+                node.childrenAccept(this, rel);
                 between.addOperand(rel);
                 predicateNode = between;
             } else if (type == QueryConstants.OPERATION_GE_GENERAL
@@ -325,6 +352,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                     || type == QueryConstants.OPERATION_EQ_GENERAL) {
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, value[0]);
+                node.childrenAccept(this, predicateNode);
             } else if (type == QueryConstants.OPERATION_LIKE) {
                 ASTLiteral pattern = value[0];
                 if (node.getEscapeString() != null) {
@@ -342,11 +370,13 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 }
                 predicateNode = createRelationQueryNode(parent,
                         identifier, type, pattern);
+                node.childrenAccept(this, predicateNode);
             } else if (type == QueryConstants.OPERATION_IN) {
                 OrQueryNode in = new OrQueryNode(parent);
                 for (int i = 1; i < node.children.length; i++) {
                     RelationQueryNode rel = createRelationQueryNode(in,
                             identifier, QueryConstants.OPERATION_EQ_VALUE, (ASTLiteral) node.children[i]);
+                    node.childrenAccept(this, rel);
                     in.addOperand(rel);
                 }
                 predicateNode = in;
@@ -412,12 +442,12 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     }
 
     public Object visit(ASTLiteral node, Object data) {
-        // do nothing, should never be called actually
+        // do nothing
         return data;
     }
 
     public Object visit(ASTIdentifier node, Object data) {
-        // do nothing, should never be called actually
+        // do nothing
         return data;
     }
 
@@ -465,6 +495,26 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     public Object visit(ASTContainsExpression node, Object data) {
         NAryQueryNode parent = (NAryQueryNode) data;
         parent.addOperand(new TextsearchQueryNode(parent, node.getQuery(), node.getPropertyName()));
+        return parent;
+    }
+
+    public Object visit(ASTLowerFunction node, Object data) {
+        RelationQueryNode parent = (RelationQueryNode) data;
+        if (parent.getValueType() != QueryConstants.TYPE_STRING) {
+            String msg = "LOWER() function is only supported for String literal";
+            throw new IllegalArgumentException(msg);
+        }
+        parent.addOperand(new PropertyFunctionQueryNode(parent, PropertyFunctionQueryNode.LOWER_CASE));
+        return parent;
+    }
+
+    public Object visit(ASTUpperFunction node, Object data) {
+        RelationQueryNode parent = (RelationQueryNode) data;
+        if (parent.getValueType() != QueryConstants.TYPE_STRING) {
+            String msg = "UPPER() function is only supported for String literal";
+            throw new IllegalArgumentException(msg);
+        }
+        parent.addOperand(new PropertyFunctionQueryNode(parent, PropertyFunctionQueryNode.UPPER_CASE));
         return parent;
     }
 

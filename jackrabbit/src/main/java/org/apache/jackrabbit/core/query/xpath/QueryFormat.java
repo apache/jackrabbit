@@ -31,6 +31,7 @@ import org.apache.jackrabbit.core.query.QueryNodeVisitor;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
+import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
@@ -294,13 +295,17 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         try {
 
-            String propName = "@";
+            StringBuffer propName = new StringBuffer();
             // only encode if not position function
             if (node.getProperty().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
-                propName += NameFormat.format(node.getProperty(), resolver);
+                NameFormat.format(node.getProperty(), resolver, propName);
             } else {
-                propName += NameFormat.format(ISO9075.encode(node.getProperty()), resolver);
+                propName.append("@");
+                NameFormat.format(ISO9075.encode(node.getProperty()), resolver, propName);
             }
+
+            // surround name with property function
+            node.acceptOperands(this, propName);
 
             if (node.getOperation() == OPERATION_EQ_VALUE) {
                 sb.append(propName).append(" eq ");
@@ -376,6 +381,25 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             exceptions.add(e);
         }
         return data;
+    }
+
+    public Object visit(PropertyFunctionQueryNode node, Object data) {
+        StringBuffer sb = (StringBuffer) data;
+        String functionName = node.getFunctionName();
+        try {
+            if (functionName.equals(PropertyFunctionQueryNode.LOWER_CASE)) {
+                sb.insert(0, NameFormat.format(XPathQueryBuilder.FN_LOWER_CASE, resolver) + "(");
+                sb.append(")");
+            } else if (functionName.equals(PropertyFunctionQueryNode.UPPER_CASE)) {
+                sb.insert(0, NameFormat.format(XPathQueryBuilder.FN_UPPER_CASE, resolver) + "(");
+                sb.append(")");
+            } else {
+                exceptions.add(new InvalidQueryException("Unsupported function: " + functionName));
+            }
+        } catch (NoPrefixDeclaredException e) {
+            exceptions.add(e);
+        }
+        return sb;
     }
 
     //----------------------------< internal >----------------------------------

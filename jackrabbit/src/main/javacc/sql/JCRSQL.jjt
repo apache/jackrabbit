@@ -100,7 +100,9 @@ TOKEN [ IGNORE_CASE ] :
 | < LIKE: "LIKE" >
 | < NULL: "NULL" >
 | < FROM: "FROM" >
+| < LOWER: "LOWER" >
 | < ORDER: "ORDER" >
+| < UPPER: "UPPER" >
 | < WHERE: "WHERE" >
 | < ESCAPE: "ESCAPE" >
 | < SELECT: "SELECT" >
@@ -304,7 +306,15 @@ void Predicate() :
 {
   (
     (
-      identifier = Identifier() { jjtThis.setIdentifier(identifier); } ( <PERIOD> identifier = Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); jjtThis.setIdentifier(identifier); } )?
+      (
+        (
+          identifier = Identifier() { jjtThis.setIdentifier(identifier); } ( <PERIOD> identifier = Identifier() { Node n = jjtree.popNode(); jjtree.popNode(); jjtree.pushNode(n); jjtThis.setIdentifier(identifier); } )?
+        )
+      |
+        (
+          identifier = PropertyFunction() { jjtThis.setIdentifier(identifier); }
+        )
+      )
       (
         (
           operationType = ComparisonOperation() { jjtThis.setOperationType(operationType); }
@@ -339,7 +349,10 @@ void Predicate() :
     (
       Literal() (<NOT> { jjtThis.setNegate(true); })? <IN>
       (
-        identifier = Identifier()
+        (
+            identifier = Identifier()
+          | identifier = PropertyFunction()
+        )
         {
           jjtThis.setIdentifier(identifier);
           jjtThis.setOperationType(jjtThis.isNegate() ? QueryConstants.OPERATION_NE_GENERAL : QueryConstants.OPERATION_EQ_GENERAL);
@@ -349,6 +362,45 @@ void Predicate() :
   )
 }
 
+QName PropertyFunction() #void :
+{
+  QName identifier;
+}
+{
+  (
+      identifier = LowerFunction()
+    | identifier = UpperFunction()
+  )
+  {
+    return identifier;
+  }
+}
+
+QName LowerFunction() :
+{
+  QName identifier;
+}
+{
+  (
+    <LOWER> "(" identifier = Identifier() ")"
+  )
+  {
+    return identifier;
+  }
+}
+
+QName UpperFunction() :
+{
+  QName identifier;
+}
+{
+  (
+    <UPPER> "(" identifier = Identifier() ")"
+  )
+  {
+    return identifier;
+  }
+}
 
 int ComparisonOperation() #void :
 {

@@ -235,6 +235,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
             buffer.append(" Type=TIMESTAMP Value=").append(node.getDateValue());
         }
         buffer.append("\n");
+        traverse(node.getOperands(), buffer);
         return buffer;
     }
 
@@ -274,6 +275,15 @@ public class QueryTreeDump implements QueryNodeVisitor {
         }
         buffer.append("\n");
         traverse(node.getOperands(), buffer);
+        return buffer;
+    }
+
+    public Object visit(PropertyFunctionQueryNode node, Object data) {
+        StringBuffer buffer = (StringBuffer) data;
+        buffer.append(PADDING, 0, indent);
+        buffer.append("+ PropertyFunctionQueryNode: ");
+        buffer.append(node.getFunctionName());
+        buffer.append("()\n");
         return buffer;
     }
 

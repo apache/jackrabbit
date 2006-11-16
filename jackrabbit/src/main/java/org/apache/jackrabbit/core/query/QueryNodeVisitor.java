@@ -44,4 +44,6 @@ public interface QueryNodeVisitor {
     Object visit(OrderQueryNode node, Object data);
 
     Object visit(DerefQueryNode node, Object data);
+
+    Object visit(PropertyFunctionQueryNode node, Object data);
 }

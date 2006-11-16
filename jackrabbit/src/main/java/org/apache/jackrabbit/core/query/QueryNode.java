@@ -59,6 +59,9 @@ public abstract class QueryNode {
     /** Type value for {@link DerefQueryNode} */
     public static final int TYPE_DEREF = 12;
 
+    /** Type value for {@link PropertyFunctionQueryNode} */
+    public static final int TYPE_PROP_FUNCTION = 13;
+
     /**
      * References the parent of this <code>QueryNode</code>. If this is the root
      * of a query tree, then <code>parent</code> is <code>null</code>.

@@ -33,6 +33,8 @@ import org.apache.jackrabbit.core.query.QueryNodeVisitor;
 import org.apache.jackrabbit.core.query.QueryRootNode;
 import org.apache.jackrabbit.core.query.RelationQueryNode;
 import org.apache.jackrabbit.core.query.TextsearchQueryNode;
+import org.apache.jackrabbit.core.query.PropertyFunctionQueryNode;
+import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.query.lucene.fulltext.ParseException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -585,6 +587,19 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             return data;
         }
 
+        // get property transformation
+        final int[] transform = new int[]{TransformConstants.TRANSFORM_NONE};
+        node.acceptOperands(new DefaultQueryNodeVisitor() {
+            public Object visit(PropertyFunctionQueryNode node, Object data) {
+                if (node.getFunctionName().equals(PropertyFunctionQueryNode.LOWER_CASE)) {
+                    transform[0] = TransformConstants.TRANSFORM_LOWER_CASE;
+                } else if (node.getFunctionName().equals(PropertyFunctionQueryNode.UPPER_CASE)) {
+                    transform[0] = TransformConstants.TRANSFORM_UPPER_CASE;
+                }
+                return data;
+            }
+        }, null);
+
         String field = "";
         try {
             field = NameFormat.format(node.getProperty(), nsMappings);
@@ -598,8 +613,17 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             case QueryConstants.OPERATION_EQ_GENERAL:
                 BooleanQuery or = new BooleanQuery();
                 for (int i = 0; i < stringValues.length; i++) {
-                    or.add(new TermQuery(new Term(FieldNames.PROPERTIES,
-                            FieldNames.createNamedValue(field, stringValues[i]))), false, false);
+                    Term t = new Term(FieldNames.PROPERTIES,
+                                FieldNames.createNamedValue(field, stringValues[i]));
+                    Query q;
+                    if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
+                        q = new CaseTermQuery.Upper(t);
+                    } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                        q = new CaseTermQuery.Lower(t);
+                    } else {
+                        q = new TermQuery(t);
+                    }
+                    or.add(q, false, false);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_EQ_VALUE) {
@@ -612,7 +636,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 for (int i = 0; i < stringValues.length; i++) {
                     Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
                     Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
-                    or.add(new RangeQuery(lower, upper, true), false, false);
+                    or.add(new RangeQuery(lower, upper, true, transform[0]), false, false);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_GE_VALUE) {
@@ -625,7 +649,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 for (int i = 0; i < stringValues.length; i++) {
                     Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
                     Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
-                    or.add(new RangeQuery(lower, upper, false), false, false);
+                    or.add(new RangeQuery(lower, upper, false, transform[0]), false, false);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_GT_VALUE) {
@@ -638,7 +662,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 for (int i = 0; i < stringValues.length; i++) {
                     Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
                     Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    or.add(new RangeQuery(lower, upper, true), false, false);
+                    or.add(new RangeQuery(lower, upper, true, transform[0]), false, false);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_LE_VALUE) {
@@ -651,7 +675,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 if (stringValues[0].equals("%")) {
                     query = new MatchAllQuery(field);
                 } else {
-                    query = new WildcardQuery(FieldNames.PROPERTIES, field, stringValues[0]);
+                    query = new WildcardQuery(FieldNames.PROPERTIES, field, stringValues[0], transform[0]);
                 }
                 break;
             case QueryConstants.OPERATION_LT_VALUE:      // <
@@ -660,7 +684,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 for (int i = 0; i < stringValues.length; i++) {
                     Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
                     Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    or.add(new RangeQuery(lower, upper, false), false, false);
+                    or.add(new RangeQuery(lower, upper, false, transform[0]), false, false);
                 }
                 query = or;
                 if (node.getOperation() == QueryConstants.OPERATION_LT_VALUE) {
@@ -674,7 +698,15 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 // exclude all nodes where 'field' has the term in question
                 for (int i = 0; i < stringValues.length; i++) {
                     Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                    notQuery.add(new TermQuery(t), false, true);
+                    Query q;
+                    if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
+                        q = new CaseTermQuery.Upper(t);
+                    } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                        q = new CaseTermQuery.Lower(t);
+                    } else {
+                        q = new TermQuery(t);
+                    }
+                    notQuery.add(q, false, true);
                 }
                 // and exclude all nodes where 'field' is multi valued
                 notQuery.add(new TermQuery(new Term(FieldNames.MVP, field)), false, true);
@@ -694,7 +726,15 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
                     Query svp = new NotQuery(new TermQuery(new Term(FieldNames.MVP, field)));
                     BooleanQuery and = new BooleanQuery();
-                    and.add(new TermQuery(t), true, false);
+                    Query q;
+                    if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
+                        q = new CaseTermQuery.Upper(t);
+                    } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                        q = new CaseTermQuery.Lower(t);
+                    } else {
+                        q = new TermQuery(t);
+                    }
+                    and.add(q, true, false);
                     and.add(svp, true, false);
                     notQuery.add(and, false, true);
                 }
@@ -716,6 +756,10 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(OrderQueryNode node, Object data) {
+        return data;
+    }
+
+    public Object visit(PropertyFunctionQueryNode node, Object data) {
         return data;
     }
 
