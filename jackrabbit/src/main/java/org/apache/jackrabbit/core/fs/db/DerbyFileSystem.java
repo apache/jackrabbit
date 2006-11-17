@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.fs.db;
 
-import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Connection;
 
 /**
  * <code>DerbyFileSystem</code> is a JDBC-based <code>FileSystem</code>
@@ -37,8 +37,11 @@ import java.sql.SQLException;
  * (default: <code>"org.apache.derby.jdbc.EmbeddedDriver"</code>)</li>
  * <li><code>schema</code>: type of schema to be used
  * (default: <code>"derby"</code>)</li>
- * <li><code>user</code>: the database user (default: <code>""</code>)</li>
- * <li><code>password</code>: the user's password (default: <code>""</code>)</li>
+ * <li><code>user</code>: the database user (default: <code>null</code>)</li>
+ * <li><code>password</code>: the user's password (default: <code>null</code>)</li>
+ * <li><code>shutdownOnClose</code>: if <code>true</code> (the default) the
+ * database is shutdown when the last connection is closed;
+ * set this to <code>false</code> when using a standalone database</li>
  * </ul>
  * See also {@link DbFileSystem}.
  * <p/>
@@ -58,37 +61,44 @@ public class DerbyFileSystem extends DbFileSystem {
     private static Logger log = LoggerFactory.getLogger(DerbyFileSystem.class);
 
     /**
+     * Flag indicating whether this derby database should be shutdown on close.
+     */
+    protected boolean shutdownOnClose;
+
+    /**
      * Creates a new <code>DerbyFileSystem</code> instance.
      */
     public DerbyFileSystem() {
         // preset some attributes to reasonable defaults
         schema = "derby";
         driver = "org.apache.derby.jdbc.EmbeddedDriver";
-        schemaObjectPrefix = "";
-        user = "";
-        password = "";
+        shutdownOnClose = true;
         initialized = false;
     }
 
+    //----------------------------------------------------< setters & getters >
+
+    public boolean getShutdownOnClose() {
+        return shutdownOnClose;
+    }
+
+    public void setShutdownOnClose(boolean shutdownOnClose) {
+        this.shutdownOnClose = shutdownOnClose;
+    }
+
     //-----------------------------------------------< DbFileSystem overrides >
+
     /**
-     * {@inheritDoc}
+     * Closes the given connection and shuts down the embedded Derby
+     * database if <code>shutdownOnClose</code> is set to true.
+     *
+     * @param connection database connection
+     * @throws SQLException if an error occurs
+     * @see DatabaseFileSystem#closeConnection(Connection)
      */
-    public void close() throws FileSystemException {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
-
+    protected void closeConnection(Connection connection) throws SQLException {
         // prepare connection url for issuing shutdown command
-        String url;
-        try {
-            url = con.getMetaData().getURL();
-        } catch (SQLException e) {
-            String msg = "error closing file system";
-            log.error(msg, e);
-            throw new FileSystemException(msg, e);
-        }
-
+        String url = connection.getMetaData().getURL();
         int pos = url.lastIndexOf(';');
         if (pos != -1) {
             // strip any attributes from connection url
@@ -96,15 +106,21 @@ public class DerbyFileSystem extends DbFileSystem {
         }
         url += ";shutdown=true";
 
-        // call base class implementation
-        super.close();
+        // we have to reset the connection to 'autoCommit=true' before closing it;
+        // otherwise Derby would mysteriously complain about some pending uncommitted
+        // changes which can't possibly be true.
+        // @todo further investigate
+        connection.setAutoCommit(true);
+        connection.close();
 
-        // now it's safe to shutdown the embedded Derby database
-        try {
-            DriverManager.getConnection(url);
-        } catch (SQLException e) {
-            // a shutdown command always raises a SQLException
-            log.info(e.getMessage());
+        if (shutdownOnClose) {
+            // now it's safe to shutdown the embedded Derby database
+            try {
+                DriverManager.getConnection(url);
+            } catch (SQLException e) {
+                // a shutdown command always raises a SQLException
+                log.info(e.getMessage());
+            }
         }
     }
 }
