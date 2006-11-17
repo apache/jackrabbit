@@ -55,6 +55,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.LinkedList;
 
 /**
  * Abstract base class for database persistence managers. This class
@@ -88,6 +90,9 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
     // jdbc connection
     protected Connection con;
+
+    // the list of prepared statements, used in close()
+    private List preparedStatements;
 
     // shared prepared statements for NodeState management
     protected PreparedStatement nodeStateInsert;
@@ -189,53 +194,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         checkSchema();
 
         // prepare statements
-        nodeStateInsert =
-                con.prepareStatement("insert into "
-                + schemaObjectPrefix + "NODE (NODE_DATA, NODE_ID) values (?, ?)");
-        nodeStateUpdate =
-                con.prepareStatement("update "
-                + schemaObjectPrefix + "NODE set NODE_DATA = ? where NODE_ID = ?");
-        nodeStateSelect =
-                con.prepareStatement("select NODE_DATA from "
-                + schemaObjectPrefix + "NODE where NODE_ID = ?");
-        nodeStateSelectExist =
-                con.prepareStatement("select 1 from "
-                + schemaObjectPrefix + "NODE where NODE_ID = ?");
-        nodeStateDelete =
-                con.prepareStatement("delete from "
-                + schemaObjectPrefix + "NODE where NODE_ID = ?");
-
-        propertyStateInsert =
-                con.prepareStatement("insert into "
-                + schemaObjectPrefix + "PROP (PROP_DATA, PROP_ID) values (?, ?)");
-        propertyStateUpdate =
-                con.prepareStatement("update "
-                + schemaObjectPrefix + "PROP set PROP_DATA = ? where PROP_ID = ?");
-        propertyStateSelect =
-                con.prepareStatement("select PROP_DATA from "
-                + schemaObjectPrefix + "PROP where PROP_ID = ?");
-        propertyStateSelectExist =
-                con.prepareStatement("select 1 from "
-                + schemaObjectPrefix + "PROP where PROP_ID = ?");
-        propertyStateDelete =
-                con.prepareStatement("delete from "
-                + schemaObjectPrefix + "PROP where PROP_ID = ?");
-
-        nodeReferenceInsert =
-                con.prepareStatement("insert into "
-                + schemaObjectPrefix + "REFS (REFS_DATA, NODE_ID) values (?, ?)");
-        nodeReferenceUpdate =
-                con.prepareStatement("update "
-                + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID = ?");
-        nodeReferenceSelect =
-                con.prepareStatement("select REFS_DATA from "
-                + schemaObjectPrefix + "REFS where NODE_ID = ?");
-        nodeReferenceSelectExist =
-                con.prepareStatement("select 1 from "
-                + schemaObjectPrefix + "REFS where NODE_ID = ?");
-        nodeReferenceDelete =
-                con.prepareStatement("delete from "
-                + schemaObjectPrefix + "REFS where NODE_ID = ?");
+        preparedStatements = initPreparedStatements();
 
         if (externalBLOBs) {
             /**
@@ -252,22 +211,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
              * store BLOBs in db
              */
             blobStore = new DbBLOBStore();
-
-            blobInsert =
-                    con.prepareStatement("insert into "
-                    + schemaObjectPrefix + "BINVAL (BINVAL_DATA, BINVAL_ID) values (?, ?)");
-            blobUpdate =
-                    con.prepareStatement("update "
-                    + schemaObjectPrefix + "BINVAL set BINVAL_DATA = ? where BINVAL_ID = ?");
-            blobSelect =
-                    con.prepareStatement("select BINVAL_DATA from "
-                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?");
-            blobSelectExist =
-                    con.prepareStatement("select 1 from "
-                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?");
-            blobDelete =
-                    con.prepareStatement("delete from "
-                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?");
         }
 
         initialized = true;
@@ -283,31 +226,14 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
         try {
             // close shared prepared statements
-            closeStatement(nodeStateInsert);
-            closeStatement(nodeStateUpdate);
-            closeStatement(nodeStateSelect);
-            closeStatement(nodeStateSelectExist);
-            closeStatement(nodeStateDelete);
+            if (preparedStatements != null) {
+                while (!preparedStatements.isEmpty()) {
+                    closeStatement((PreparedStatement) preparedStatements.remove(0));
+                }
+            }
+            preparedStatements = null;
 
-            closeStatement(propertyStateInsert);
-            closeStatement(propertyStateUpdate);
-            closeStatement(propertyStateSelect);
-            closeStatement(propertyStateSelectExist);
-            closeStatement(propertyStateDelete);
-
-            closeStatement(nodeReferenceInsert);
-            closeStatement(nodeReferenceUpdate);
-            closeStatement(nodeReferenceSelect);
-            closeStatement(nodeReferenceSelectExist);
-            closeStatement(nodeReferenceDelete);
-
-            if (!externalBLOBs) {
-                closeStatement(blobInsert);
-                closeStatement(blobUpdate);
-                closeStatement(blobSelect);
-                closeStatement(blobSelectExist);
-                closeStatement(blobDelete);
-            } else {
+            if (externalBLOBs) {
                 // close BLOB file system
                 blobFS.close();
                 blobFS = null;
@@ -788,7 +714,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     //----------------------------------< misc. helper methods & overridables >
 
     /**
-     * Initializes the database connection used by this file system.
+     * Initializes the database connection used by this persistence manager.
      * <p>
      * Subclasses should normally override the {@link #getConnection()}
      * method instead of this one. The default implementation calls
@@ -988,6 +914,85 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         // JCR-595: Use the class explicitly instead of using getClass()
         // to avoid problems when subclassed in a different package
         return DatabasePersistenceManager.class.getResourceAsStream(schema + ".ddl");
+    }
+
+    /**
+     * Initializes the prepared statements and returns them in a list. please
+     * note that this list is used to close the statements in the {@link #close()}
+     * call.
+     *
+     * @return the list of prepared statements
+     * @throws SQLException
+     */
+    protected List initPreparedStatements() throws SQLException {
+        List stmts = new LinkedList();
+
+        stmts.add(nodeStateInsert =
+                con.prepareStatement("insert into "
+                + schemaObjectPrefix + "NODE (NODE_DATA, NODE_ID) values (?, ?)"));
+        stmts.add(nodeStateUpdate =
+                con.prepareStatement("update "
+                + schemaObjectPrefix + "NODE set NODE_DATA = ? where NODE_ID = ?"));
+        stmts.add(nodeStateSelect =
+                con.prepareStatement("select NODE_DATA from "
+                + schemaObjectPrefix + "NODE where NODE_ID = ?"));
+        stmts.add(nodeStateSelectExist =
+                con.prepareStatement("select 1 from "
+                + schemaObjectPrefix + "NODE where NODE_ID = ?"));
+        stmts.add(nodeStateDelete =
+                con.prepareStatement("delete from "
+                + schemaObjectPrefix + "NODE where NODE_ID = ?"));
+
+        stmts.add(propertyStateInsert =
+                con.prepareStatement("insert into "
+                + schemaObjectPrefix + "PROP (PROP_DATA, PROP_ID) values (?, ?)"));
+        stmts.add(propertyStateUpdate =
+                con.prepareStatement("update "
+                + schemaObjectPrefix + "PROP set PROP_DATA = ? where PROP_ID = ?"));
+        stmts.add(propertyStateSelect =
+                con.prepareStatement("select PROP_DATA from "
+                + schemaObjectPrefix + "PROP where PROP_ID = ?"));
+        stmts.add(propertyStateSelectExist =
+                con.prepareStatement("select 1 from "
+                + schemaObjectPrefix + "PROP where PROP_ID = ?"));
+        stmts.add(propertyStateDelete =
+                con.prepareStatement("delete from "
+                + schemaObjectPrefix + "PROP where PROP_ID = ?"));
+
+        stmts.add(nodeReferenceInsert =
+                con.prepareStatement("insert into "
+                + schemaObjectPrefix + "REFS (REFS_DATA, NODE_ID) values (?, ?)"));
+        stmts.add(nodeReferenceUpdate =
+                con.prepareStatement("update "
+                + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID = ?"));
+        stmts.add(nodeReferenceSelect =
+                con.prepareStatement("select REFS_DATA from "
+                + schemaObjectPrefix + "REFS where NODE_ID = ?"));
+        stmts.add(nodeReferenceSelectExist =
+                con.prepareStatement("select 1 from "
+                + schemaObjectPrefix + "REFS where NODE_ID = ?"));
+        stmts.add(nodeReferenceDelete =
+                con.prepareStatement("delete from "
+                + schemaObjectPrefix + "REFS where NODE_ID = ?"));
+
+        if (!externalBLOBs) {
+            stmts.add(blobInsert =
+                    con.prepareStatement("insert into "
+                    + schemaObjectPrefix + "BINVAL (BINVAL_DATA, BINVAL_ID) values (?, ?)"));
+            stmts.add(blobUpdate =
+                    con.prepareStatement("update "
+                    + schemaObjectPrefix + "BINVAL set BINVAL_DATA = ? where BINVAL_ID = ?"));
+            stmts.add(blobSelect =
+                    con.prepareStatement("select BINVAL_DATA from "
+                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?"));
+            stmts.add(blobSelectExist =
+                    con.prepareStatement("select 1 from "
+                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?"));
+            stmts.add(blobDelete =
+                    con.prepareStatement("delete from "
+                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?"));
+        }
+        return stmts;
     }
 
     //--------------------------------------------------------< inner classes >
