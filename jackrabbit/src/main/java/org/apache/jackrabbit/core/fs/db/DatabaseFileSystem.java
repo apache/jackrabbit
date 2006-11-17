@@ -1105,11 +1105,11 @@ public class DatabaseFileSystem implements FileSystem {
     }
 
     /**
-     * initializes the prepared statements and returns the list of them. please
-     * note, that this list is used to close the statements in the {@link #close()}
+     * Initializes the prepared statements and returns them in a list. please
+     * note that this list is used to close the statements in the {@link #close()}
      * call.
      *
-     * @return the list of prepared statements.
+     * @return the list of prepared statements
      * @throws SQLException
      */
     protected List initPreparedStatements() throws SQLException {

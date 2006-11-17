@@ -58,7 +58,7 @@ import java.sql.SQLException;
  *       &lt;param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/&gt;
  *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
  *       &lt;param name="externalBLOBs" value="false"/&gt;
- *  &lt;/PersistenceManager&gt;
+ *   &lt;/PersistenceManager&gt;
  * </pre>
  */
 public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
@@ -84,6 +84,8 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
         shutdownOnClose = true;
     }
 
+    //----------------------------------------------------< setters & getters >
+
     public boolean getShutdownOnClose() {
         return shutdownOnClose;
     }
@@ -95,8 +97,8 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
     //------------------------------------------< DatabasePersistenceManager >
 
     /**
-     * Closes the given connection by shutting down the embedded Derby
-     * database.
+     * Closes the given connection and shuts down the embedded Derby
+     * database if <code>shutdownOnClose</code> is set to true.
      *
      * @param connection database connection
      * @throws SQLException if an error occurs
