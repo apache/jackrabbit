@@ -330,7 +330,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      */
     private NamespaceRegistryImpl createNamespaceRegistry(Map descriptors) throws RepositoryException {
         boolean level2 = Boolean.valueOf((String) descriptors.get(Repository.LEVEL_2_SUPPORTED)).booleanValue();
-        return new NamespaceRegistryImpl(this, service.getRegisteredNamespaces(sessionInfo), level2);
+        return new NamespaceRegistryImpl(this, level2);
     }
 
     /**
@@ -591,6 +591,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     //---------------------------------------------------< NamespaceStorage >---
+
+    public Map getRegisteredNamespaces() throws RepositoryException {
+        return service.getRegisteredNamespaces(sessionInfo);
+    }
+
     /**
      * @inheritDoc
      */
