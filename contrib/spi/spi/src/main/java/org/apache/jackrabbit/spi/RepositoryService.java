@@ -38,6 +38,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.Node;
 import javax.jcr.LoginException;
+import javax.jcr.ReferentialIntegrityException;
 import java.util.Map;
 import java.io.InputStream;
 
@@ -397,6 +398,20 @@ public interface RepositoryService {
     public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
 
     /**
+     *
+     * @param sessionInfo
+     * @param versionHistoryId
+     * @param versionId
+     * @throws ReferentialIntegrityException
+     * @throws AccessDeniedException
+     * @throws UnsupportedRepositoryOperationException
+     * @throws VersionException
+     * @throws RepositoryException
+     * @see javax.jcr.version.VersionHistory#removeVersion(String)
+     */
+    public void removeVersion(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId) throws ReferentialIntegrityException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException;
+
+    /**
      * @param sessionInfo
      * @param nodeId
      * @param versionId
@@ -552,7 +567,7 @@ public interface RepositoryService {
      *                    returned.
      * @param filters     the filters that are applied to the external events as
      *                    they occurred on the repository. An event is included
-     *                    in an event bundle if it is {@link EventFilter#accept(Event)
+     *                    in an event bundle if it is {@link EventFilter#accept(Event, boolean)
      *                    accept}ed by at least one of the supplied filters. If
      *                    an empty array is passed none of the potential events
      *                    are include in an event bundle. This allows a client
