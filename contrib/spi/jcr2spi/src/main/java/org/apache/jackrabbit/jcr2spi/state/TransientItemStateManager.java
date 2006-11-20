@@ -96,15 +96,6 @@ public class TransientItemStateManager extends CachingItemStateManager
     }
 
     /**
-     * Removes the <code>operation</code> from the list of operations.
-     * @param operation the Operation to remove.
-     * @return <code>true</code> if the operation was removed.
-     */
-    boolean removeOperation(Operation operation) {
-        return changeLog.removeOperation(operation);
-    }
-
-    /**
      * @return <code>true</code> if this transient ISM has pending changes.
      */
     boolean hasPendingChanges() {
@@ -169,14 +160,13 @@ public class TransientItemStateManager extends CachingItemStateManager
     }
 
     /**
-     * Disposes a collection of {@link org.apache.jackrabbit.jcr2spi.operation.Operation}s.
+     * Remove the states and operations listed in the changeLog from the
+     * internal changeLog.
      *
-     * @param operations the operations.
+     * @param subChangeLog
      */
-    void disposeOperations(Iterator operations) {
-        while (operations.hasNext()) {
-            changeLog.removeOperation((Operation) operations.next());
-        }
+    void dispose(ChangeLog subChangeLog) {
+        changeLog.removeAll(subChangeLog);
     }
 
     //---------------------------------------------------< ItemStateManager >---
@@ -250,11 +240,6 @@ public class TransientItemStateManager extends CachingItemStateManager
      * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
      */
     public void statusChanged(ItemState state, int previousStatus) {
-        if (!Status.isValidStatusChange(previousStatus, state.getStatus(), false)) {
-            log.error("ItemState has invalid status: " + state.getStatus());
-            return;
-        }
-
         // TODO: depending on status of state adapt change log
         // e.g. a revert on states will reset the status from
         // 'existing modified' to 'existing'.

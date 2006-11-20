@@ -26,6 +26,7 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
@@ -243,22 +244,33 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     public void refresh(boolean keepChanges) throws InvalidItemStateException, RepositoryException {
         // check session status
         session.checkIsAlive();
-        // check if item has been removed
+        // check if item has been removed by this or another session
         if (Status.isTerminal(state.getStatus())) {
             throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
         }
 
+        /* If 'keepChanges' is true, items that do not have changes pending have
+           their state refreshed to reflect the current saved state */
         if (keepChanges) {
-            state.refresh();
+            if (state.getStatus() != Status.NEW  &&
+                session.getCacheBehaviour() != CacheBehaviour.OBSERVATION) {
+                // merge current transient modifications with latest changes
+                // from the 'server'.
+                // Note, that with Observation-CacheBehaviour no manuel refresh
+                // is required. changes get pushed automatically.
+                state.reload(true);
+            }
         } else {
-            // check status of this item's state
+            // check status of item state
             if (state.getStatus() == Status.NEW) {
                 String msg = "Cannot refresh a new item (" + safeGetJCRPath() + ").";
                 log.debug(msg);
                 throw new RepositoryException(msg);
             }
 
-            // reset all transient modifications from this item and its decendants.
+            /*
+            Reset all transient modifications from this item and its decendants.
+            */
             try {
                 session.getSessionItemStateManager().undo(state);
             } catch (ItemStateException e) {
@@ -266,8 +278,12 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
                 log.debug(msg);
                 throw new RepositoryException(msg, e);
             }
-            // now refresh to persistent state as present on the server
-            state.refresh();
+            /* Unless the session is in 'observation' mode, mark all states
+               within this tree 'invalidated' in order to have them refreshed
+               from the server upon the next access.*/
+            if (session.getCacheBehaviour() != CacheBehaviour.OBSERVATION) {
+                state.invalidate(true);
+            }
         }
     }
 
@@ -407,7 +423,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // check status of this item for read operation
         if (state.getStatus() == Status.INVALIDATED) {
             // refresh to get current status from persistent storage
-            state.refresh();
+            state.reload(false);
         }
         // now check if valid
         if (!state.isValid()) {

@@ -65,6 +65,12 @@ public class AddLabel extends AbstractOperation {
         visitor.visit(this);
     }
 
+    /**
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        // TODO
+    }
     //----------------------------------------< Access Operation Parameters >---
     public NodeState getVersionHistoryState() {
         return versionHistoryState;

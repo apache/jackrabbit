@@ -48,6 +48,12 @@ public class Checkin extends AbstractOperation {
         return nodeState;
     }
 
+    /**
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        // TODO
+    }
     //------------------------------------------------------------< Factory >---
     public static Operation create(NodeState nodeState) {
         return new Checkin(nodeState);

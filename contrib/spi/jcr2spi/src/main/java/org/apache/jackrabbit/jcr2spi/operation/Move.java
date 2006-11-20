@@ -72,6 +72,18 @@ public class Move extends AbstractOperation {
         visitor.visit(this);
     }
 
+    /**
+     * Throws UnsupportedOperationException
+     *
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        if (srcState.isWorkspaceState()) {
+            // TODO
+        } else {
+            throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+        }
+    }
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getSourceId() {
         return srcId;

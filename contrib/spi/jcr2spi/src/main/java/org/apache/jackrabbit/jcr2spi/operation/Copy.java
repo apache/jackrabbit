@@ -47,6 +47,12 @@ public class Copy extends AbstractCopy  {
         visitor.visit(this);
     }
 
+    /**
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        // TODO
+    }
     //------------------------------------------------------------< Factory >---
     public static Operation create(Path srcPath, Path destPath,
                                    String srcWorkspaceName,

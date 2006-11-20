@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.util.Collection;
-import java.util.Set;
 import java.util.Iterator;
 import java.util.Collections;
 
@@ -283,22 +282,35 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
             }
         }
         if (status == Status.MODIFIED) {
-            // change back tmp MODIFIED status, that is used only to have a marker
-            // to inform the overlaying state, that it needs to synchronize with
-            // its overlayed state again
+            /*
+            change back tmp MODIFIED status, that is used as marker only to
+            force the overlaying state to synchronize as well as to inform
+            other listeners about changes.
+            */
             // TODO: improve...
             status = Status.EXISTING;
         }
     }
 
     /**
-     * Refreshes this item state recursively according to {@link
-     * javax.jcr.Item#refresh(boolean) Item.refresh(true)}. That is, changes
-     * are kept and updated to reflect the current persistent state of this
-     * item.
+     * Reloads this item state recursively. If '<code>keepChanges</code>' is
+     * true, states with transient changes are left untouched. Otherwise this
+     * state gets its data reloaded from the persistent state.
      * todo throw exception in case of error?
      */
-    public abstract void refresh();
+    public abstract void reload(boolean keepChanges);
+
+    /**
+     * Merge all data from the given state into this state. If
+     * '<code>keepChanges</code>' is true, transient modifications present on
+     * this state are not touched. Otherwise this state is completely reset
+     * according to the given other state.
+     *
+     * @param another
+     * @param keepChanges
+     * @return true if this state has been modified
+     */
+    abstract boolean merge(ItemState another, boolean keepChanges);
 
     /**
      * Invalidates this item state recursively. In contrast to {@link #refresh}
@@ -306,7 +318,7 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * Status#INVALIDATED} and does not acutally update it with the persistent
      * state in the repository.
      */
-    public abstract void invalidate();
+    public abstract void invalidate(boolean recursive);
 
     /**
      * Add an <code>ItemStateLifeCycleListener</code>
@@ -356,12 +368,14 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                     // underlying state has been modified by external changes
                     if (status == Status.EXISTING || status == Status.INVALIDATED) {
                         synchronized (this) {
-                            reset();
+                            if (merge(state, false) || status == Status.INVALIDATED) {
+                                // temporarily set the state to MODIFIED in order
+                                // to inform listeners.
+                                setStatus(Status.MODIFIED);
+                            }
                         }
-                        // temporarily set the state to MODIFIED in order to
-                        // inform listeners.
-                        setStatus(Status.MODIFIED);
                     } else if (status == Status.EXISTING_MODIFIED) {
+                        // TODO: try to merge changes
                         setStatus(Status.STALE_MODIFIED);
                     }
                     // else: this status is EXISTING_REMOVED => ignore.
@@ -375,8 +389,10 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
                     }
                     break;
                 case Status.INVALIDATED:
-                    // invalidate session state as well
-                    setStatus(Status.INVALIDATED);
+                    // invalidate this session state if it is EXISTING.
+                    if (status == Status.EXISTING) {
+                        setStatus(Status.INVALIDATED);
+                    }
                     break;
                 default:
                     // Should never occur, since 'setStatus(int)' already validates
@@ -476,11 +492,6 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
     abstract void persisted(ChangeLog changeLog) throws IllegalStateException;
 
     /**
-     * Copy all state information from overlayed state to this state
-     */
-    abstract void reset();
-
-    /**
      * Connect this state to some underlying overlayed state.
      */
     void connect(ItemState overlayedState) {
@@ -500,31 +511,95 @@ public abstract class ItemState implements ItemStateLifeCycleListener {
      * Status#REMOVED} depending on the current status.
      *
      * @throws ItemStateException if an error occurs while removing this item
-     *                            state. e.g. this item state is not valid
-     *                            anymore.
+     * state. e.g. this item state is not valid anymore.
      */
-    abstract void remove() throws ItemStateException;
+    void remove() throws ItemStateException {
+        checkIsSessionState();
+        if (!isValid()) {
+            throw new ItemStateException("Cannot remove an invalid ItemState");
+        }
+        int oldStatus = getStatus();
+        if (oldStatus == Status.NEW) {
+            setStatus(Status.REMOVED);
+        } else {
+            setStatus(Status.EXISTING_REMOVED);
+        }
+        // now inform parent
+        getParent().childStatusChanged(this, oldStatus);
+    }
 
     /**
      * Reverts this item state to its initial status (i.e. removing any transient
-     * modifications and adds itself to the Set of <code>affectedItemStates</code>
-     * if it is reverted itself.
-     *
-     * @param affectedItemStates the set of affected item states that reverted
-     * themselfes.
+     * modifications.
      */
-    abstract void revert(Set affectedItemStates);
+    void revert() throws ItemStateException {
+        checkIsSessionState();
+
+        switch (getStatus()) {
+            case Status.EXISTING_MODIFIED:
+            case Status.STALE_MODIFIED:
+                // revert state from overlayed
+                merge(overlayedState, false);
+                setStatus(Status.EXISTING);
+                break;
+            case Status.EXISTING_REMOVED:
+                // revert state from overlayed
+                merge(overlayedState, false);
+                setStatus(Status.EXISTING);
+                parent.childStatusChanged(this, Status.EXISTING_REMOVED);
+                break;
+            case Status.NEW:
+                remove();
+                break;
+            case Status.STALE_DESTROYED:
+                // overlayed does not exist any more
+                // cannot call 'remove' on invalid state -> manuall remove
+                setStatus(Status.REMOVED);
+                parent.childStatusChanged(this, Status.STALE_DESTROYED);
+                break;
+            default:
+                // Cannot revert EXISTING, REMOVED, INVALIDATED, MODIFIED states.
+                // State was implicitely reverted
+                log.debug("State with status " + getStatus() + " cannot be reverted.");
+        }
+    }
 
     /**
-     * Checks if this <code>ItemState</code> is transiently modified or new and
-     * adds itself to the <code>Set</code> of <code>transientStates</code> if
-     * that is the case. It this <code>ItemState</code> has children it will
-     * call the method {@link #collectTransientStates(Collection)} on those
-     * <code>ItemState</code>s.
+     * Checks if this <code>ItemState</code> is transiently modified, new or stale
+     * modified. and adds itself to the <code>ChangeLog</code>.
+     * If this <code>ItemState</code> has children it will call
+     * {@link #collectStates(ChangeLog, boolean)} recursively.
      *
-     * @param transientStates the <code>Set</code> of transient <code>ItemState</code>,
+     * @param changeLog the <code>ChangeLog</code> collecting the transient
+     * item states present in a given tree.
+     * @param throwOnStale If the given flag is true, this methods throws
+     * StaleItemStateException if this state is stale.
+     * @throws StaleItemStateException if <code>throwOnStale</code> is true and
+     * this state is stale.
      */
-    abstract void collectTransientStates(Collection transientStates);
+    void collectStates(ChangeLog changeLog, boolean throwOnStale) throws StaleItemStateException {
+        checkIsSessionState();
+        if (throwOnStale && Status.isStale(getStatus())) {
+            String msg = "Cannot save changes: " + getId() + " has been modified externally.";
+            log.debug(msg);
+            throw new StaleItemStateException(msg);
+        }
+        // only interested in transient modifications or stale-modified states
+        switch (getStatus()) {
+            case Status.NEW:
+                changeLog.added(this);
+                break;
+            case Status.EXISTING_MODIFIED:
+            case Status.STALE_MODIFIED:
+                changeLog.modified(this);
+                break;
+            case Status.EXISTING_REMOVED:
+                changeLog.deleted(this);
+                break;
+            default:
+                log.debug("Collecting states: Ignored ItemState with status " + getStatus());
+        }
+    }
 
     /**
      * Marks this item state as modified.

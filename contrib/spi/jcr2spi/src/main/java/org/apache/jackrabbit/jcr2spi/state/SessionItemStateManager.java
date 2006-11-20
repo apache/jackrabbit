@@ -44,6 +44,7 @@ import org.apache.jackrabbit.jcr2spi.operation.LockRefresh;
 import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
 import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
 import org.apache.jackrabbit.name.NamespaceResolver;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -55,6 +56,7 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.value.QValue;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.commons.collections.iterators.IteratorChain;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
@@ -79,7 +81,6 @@ import java.util.HashSet;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.io.InputStream;
 import java.io.IOException;
 
@@ -285,17 +286,17 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         }
 
         // collect the changes to be saved
-        ChangeLog changeLog = getChangeLog(state);
+        ChangeLog changeLog = getChangeLog(state, true);
         if (!changeLog.isEmpty()) {
             // only pass changelog if there are transient modifications available
             // for the specified item and its decendants.
             workspaceItemStateMgr.execute(changeLog);
-        }
 
-        // remove operations just processed
-        transientStateMgr.disposeOperations(changeLog.getOperations());
-        // now its save to clear the changeLog
-        changeLog.reset();
+            // remove states and operations just processed from the transient ISM
+            transientStateMgr.dispose(changeLog);
+            // now its save to clear the changeLog
+            changeLog.reset();
+        }
     }
 
     /**
@@ -309,18 +310,21 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
      *                            to be canceled as well in another sub-tree.
      */
     public void undo(ItemState itemState) throws ItemStateException, ConstraintViolationException {
-        // check if self contained
-        ChangeLog changeLog = new ChangeLog(itemState);
-        collectTransientStates(itemState, changeLog, false);
-        changeLog.checkIsSelfContained();
-        changeLog.collectOperations(transientStateMgr.getOperations());
+        ChangeLog changeLog = getChangeLog(itemState, false);
+        if (!changeLog.isEmpty()) {
+            // now do it for real
+            // TODO: check if states are reverted in correct order
+            Iterator[] its = new Iterator[] {changeLog.addedStates(), changeLog.deletedStates(), changeLog.modifiedStates()};
+            IteratorChain chain = new IteratorChain(its);
+            while (chain.hasNext()) {
+                ItemState state = (ItemState) chain.next();
+                state.revert();
+            }
 
-        // now do it for real
-        Set affectedItemStates = new HashSet();
-        itemState.revert(affectedItemStates);
-
-        // remove all canceled operations
-        transientStateMgr.disposeOperations(changeLog.getOperations());
+            // remove transient states and related operations from the t-statemanager
+            transientStateMgr.dispose(changeLog);
+            changeLog.reset();
+        }
     }
 
     /**
@@ -364,85 +368,35 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     /**
      *
      * @param itemState
+     * @param throwOnStale Throws StaleItemStateException if either the given
+     * <code>ItemState</code> or any of its decendants is stale and the flag is true.
      * @return
-     * @throws StaleItemStateException
-     * @throws ItemStateException
-     */
-    private ChangeLog getChangeLog(ItemState itemState) throws StaleItemStateException, ItemStateException, ConstraintViolationException {
-        // build changelog for affected and decendant states only
-        ChangeLog changeLog = new ChangeLog(itemState);
-        collectTransientStates(itemState, changeLog, true);
-        changeLog.collectOperations(transientStateMgr.getOperations());
-
-        changeLog.checkIsSelfContained();
-        return changeLog;
-    }
-
-    /**
-     * Builds a <code>ChangeLog</code> of transient (i.e. new, modified or
-     * deleted) item states that are within the scope of <code>state</code>.
-     *
      * @throws StaleItemStateException if a stale <code>ItemState</code> is
-     *                                 encountered while traversing the state
-     *                                 hierarchy. The <code>changeLog</code>
-     *                                 might have been populated with some
-     *                                 transient item states. A client should
-     *                                 therefore not reuse the <code>changeLog</code>
-     *                                 if such an exception is thrown.
+     * encountered while traversing the state hierarchy. The <code>changeLog</code>
+     * might have been populated with some transient item states. A client should
+     * therefore not reuse the <code>changeLog</code> if such an exception is thrown.
      * @throws ItemStateException if <code>state</code> is a new item state.
      */
-    private void collectTransientStates(ItemState state, ChangeLog changeLog, boolean throwOnStale)
-            throws StaleItemStateException, ItemStateException {
+    private ChangeLog getChangeLog(ItemState itemState, boolean throwOnStale) throws StaleItemStateException, ItemStateException, ConstraintViolationException {
+        // build changelog for affected and decendant states only
+        ChangeLog changeLog = new ChangeLog(itemState);
         // fail-fast test: check status of this item's state
-        if (state.getStatus() == Status.NEW) {
-            String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": cannot save a new item.";
+        if (itemState.getStatus() == Status.NEW) {
+            String msg = "Cannot save an item with status NEW (" +LogUtil.safeGetJCRPath(itemState, nsResolver)+ ").";
             log.debug(msg);
             throw new ItemStateException(msg);
         }
-
-        if (throwOnStale && Status.isStale(state.getStatus())) {
-            String msg = LogUtil.safeGetJCRPath(state, nsResolver) + ": the item cannot be saved because it has been modified/removed externally.";
+        if (throwOnStale && Status.isStale(itemState.getStatus())) {
+            String msg =  "Attempt to save an item, that has been externally modified (" +LogUtil.safeGetJCRPath(itemState, nsResolver)+ ").";
             log.debug(msg);
             throw new StaleItemStateException(msg);
         }
+        // collect transient/stale states that should be persisted or reverted
+        itemState.collectStates(changeLog, throwOnStale);
 
-        // Set of transient states that should be persisted
-        Set transientStates = new LinkedHashSet();
-        state.collectTransientStates(transientStates);
-
-        for (Iterator it = transientStates.iterator(); it.hasNext();) {
-            ItemState transientState = (ItemState) it.next();
-            // fail-fast test: check status of transient state
-            switch (transientState.getStatus()) {
-                case Status.NEW:
-                    changeLog.added(transientState);
-                    break;
-                case Status.EXISTING_MODIFIED:
-                    changeLog.modified(transientState);
-                    break;
-                case Status.EXISTING_REMOVED:
-                    changeLog.deleted(transientState);
-                    break;
-                case Status.STALE_MODIFIED:
-                    if (throwOnStale) {
-                        String msg = transientState.getId() + ": the item cannot be saved because it has been modified externally.";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
-                    } else {
-                        changeLog.modified(transientState);
-                    }
-                case Status.STALE_DESTROYED:
-                    if (throwOnStale) {
-                        String msg = transientState.getId() + ": the item cannot be saved because it has been deleted externally.";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
-                    }
-                default:
-                    log.debug("unexpected state status (" + transientState.getStatus() + ")");
-                    // ignore
-                    break;
-            }
-        }
+        changeLog.collectOperations(transientStateMgr.getOperations());
+        changeLog.checkIsSelfContained();
+        return changeLog;
     }
 
     //--------------------------------------------------------------------------
@@ -659,6 +613,10 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         throw new UnsupportedOperationException("Internal error: RemoveLabel cannot be handled by session ItemStateManager.");
     }
 
+    public void visit(RemoveVersion operation) throws VersionException, AccessDeniedException, ReferentialIntegrityException, RepositoryException {
+        throw new UnsupportedOperationException("Internal error: RemoveVersion cannot be handled by session ItemStateManager.");
+    }
+
     //--------------------------------------------< Internal State Handling >---
     /**
      *
@@ -745,7 +703,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     private void removeItemState(ItemState itemState, int options) throws RepositoryException {
         validator.checkRemoveItem(itemState, options);
-        // recursively remove the complete tree including the given node state.
+        // recursively remove the given state and all child states.
         boolean success = false;
         try {
             itemState.remove();
@@ -843,6 +801,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
                 // nt:version node type defines jcr:created property
                 genValues = new QValue[]{QValue.create(Calendar.getInstance())};
             }
+            // TODO: defaults???
         }
         return genValues;
     }

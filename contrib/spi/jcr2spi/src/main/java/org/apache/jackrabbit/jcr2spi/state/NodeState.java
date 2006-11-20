@@ -27,6 +27,7 @@ import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.entry.ChildPropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.entry.PropertyReference;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildItemEntry;
 import org.apache.jackrabbit.value.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -40,8 +41,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Map;
+import java.util.Arrays;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -161,7 +162,9 @@ public class NodeState extends ItemState {
         if (mixinTypeNames != null) {
             this.mixinTypeNames = mixinTypeNames;
         }
-        // re-create property references
+        // set the node references
+        this.references = references;
+        // add property references
         propertiesInAttic.clear();
         properties.clear();
         Iterator it = propertyNames.iterator();
@@ -170,15 +173,13 @@ public class NodeState extends ItemState {
             ChildPropertyEntry pe = PropertyReference.create(this, propName, isf, idFactory);
             properties.put(propName, pe);
         }
-        // re-create child node entries
+        // add child node entries
         childNodeEntries.removeAll();
         it = childEntries.iterator();
         while (it.hasNext()) {
             ChildNodeEntry cne = (ChildNodeEntry) it.next();
             childNodeEntries.add(cne.getName(), cne.getUUID(), cne.getIndex());
         }
-        // set the node references
-        this.references = references;
     }
 
     //----------------------------------------------------------< ItemState >---
@@ -207,14 +208,175 @@ public class NodeState extends ItemState {
         return getNodeId();
     }
 
-    public void refresh() {
-        // TODO
+    /**
+     * {@inheritDoc}
+     * @see ItemState#reload(boolean)
+     */
+    public void reload(boolean keepChanges) {
+        // recursivly reload states from peristent storage including props
+        // that are in the attic.
+        for (Iterator it = getAllChildEntries(true, true); it.hasNext();) {
+            ChildItemEntry ce = (ChildItemEntry) it.next();
+            if (ce.isAvailable()) {
+                try {
+                    ce.getItemState().reload(keepChanges);
+                } catch (ItemStateException e) {
+                    // should not occur
+                }
+            }
+        }
+
+        if (isWorkspaceState()) {
+            // reload from persistent storage ('keepChanges' not relevant).
+            try {
+                NodeState tmp = isf.createNodeState(getNodeId(), parent);
+                if (merge(tmp, false) || getStatus() == Status.INVALIDATED) {
+                    setStatus(Status.MODIFIED);
+                }
+            } catch (NoSuchItemStateException e) {
+                // remove entry from parent
+                parent.childNodeEntries.remove(this);
+                // inform overlaying state and listeners
+                setStatus(Status.REMOVED);
+            } catch (ItemStateException e) {
+                // todo rather throw? remove from parent?
+                log.warn("Exception while refreshing property state: " + e);
+                log.debug("Stacktrace: ", e);
+            }
+        } else {
+            /* session-state: if keepChanges is true only existing or invalidated
+               states must be updated. otherwise the state gets updated and might
+               be marked 'Stale' if transient changes are present and the
+               workspace-state is modified. */
+            if (!keepChanges || getStatus() == Status.EXISTING || getStatus() == Status.INVALIDATED) {
+                // calling refresh on the workspace state will in turn reset this state
+                overlayedState.reload(keepChanges);
+            }
+        }
     }
 
-    public void invalidate() {
-        // TODO
+    boolean merge(ItemState another, boolean keepChanges) {
+        if (another == null) {
+            return false;
+        }
+        if (another == null || !another.isNode()) {
+            throw new IllegalArgumentException("Attempt to merge node state with property state.");
+        }
+        boolean modified = false;
+        synchronized (another) {
+            NodeState nState = (NodeState) another;
+            name = nState.name;
+            setUUID(nState.uuid);
+            nodeTypeName = nState.nodeTypeName;
+            definition = nState.definition;
+
+            // refs, mixin-types can be copied. they are never transiently changed.
+            references = nState.references;
+            List mixN = Arrays.asList(nState.mixinTypeNames);
+            modified = (mixN.size() != mixinTypeNames.length || !mixN.containsAll(Arrays.asList(mixinTypeNames)));
+            mixinTypeNames = nState.mixinTypeNames;
+
+            if (!keepChanges && !propertiesInAttic.isEmpty()) {
+                // remove all entries in the attic
+                modified = true;
+                propertiesInAttic.clear();
+            }
+
+            /* merge child entries without loosing valid entries and connected states. */
+            // add all entry from wspState that are missing in this state
+            for (Iterator it = nState.getAllChildEntries(false, false); it.hasNext();) {
+                ChildItemEntry ce = (ChildItemEntry) it.next();
+                QName childName = ce.getName();
+                if (ce.denotesNode()) {
+                    ChildNodeEntry cne = (ChildNodeEntry) ce;
+                    int index = cne.getIndex();
+                    if (!childNodeEntries.contains(childName, index, cne.getUUID())) {
+                        modified = true;
+                        childNodeEntries.add(childName, cne.getUUID(), index);
+                    }
+                } else {
+                    if (!hasPropertyName(childName)) {
+                        modified = true;
+                        addPropertyEntry(PropertyReference.create(this, childName, isf, idFactory));
+                    }
+                }
+            }
+
+            // if keepChanges is false, remove all entries from this state,
+            // that are missing in the given other state.
+            if (!keepChanges) {
+                for (Iterator it = getAllChildEntries(true, false); it.hasNext();) {
+                    ChildItemEntry ce = (ChildItemEntry) it.next();
+                    QName childName = ce.getName();
+                    boolean toRemove = false;
+                    if (ce.denotesNode()) {
+                        ChildNodeEntry cne = (ChildNodeEntry) ce;
+                        int index = cne.getIndex();
+                        toRemove = !nState.childNodeEntries.contains(childName, index, cne.getUUID());
+                    } else {
+                        toRemove = !nState.properties.containsKey(childName);
+                    }
+
+                    if (toRemove) {
+                        modified = true;
+                        if (ce.isAvailable()) {
+                            // TODO: check if correct.
+                            try {
+                                ItemState st = ce.getItemState();
+                                if (st.getStatus() == Status.EXISTING_MODIFIED) {
+                                    st.setStatus(Status.STALE_DESTROYED);
+                                } else {
+                                    st.setStatus(Status.REMOVED);
+                                }
+                            } catch (ItemStateException e) {
+                                log.error("Internal error", e);
+                            }
+                        }
+                        // and remove the corresponding entry
+                        if (ce.denotesNode()) {
+                            childNodeEntries.remove(childName, ((ChildNodeEntry)ce).getIndex());
+                        } else {
+                            properties.remove(childName);
+                        }
+                    }
+                }
+            }
+        }
+
+        return modified;
     }
 
+    /**
+     * {@inheritDoc}
+     * @see ItemState#invalidate(boolean)
+     */
+    public void invalidate(boolean recursive) {
+        if (recursive) {
+            for (Iterator it = getAllChildEntries(false, false); it.hasNext();) {
+                ChildItemEntry ce = (ChildItemEntry) it.next();
+                if (ce.isAvailable()) {
+                    try {
+                        ce.getItemState().invalidate(true);
+                    } catch (ItemStateException e) {
+                        // should not occur
+                    }
+                }
+            }
+            // TODO: props-in-attic?
+        }
+        // ... and invalidate this state
+        if (isWorkspaceState()) {
+            // workspace state
+            setStatus(Status.INVALIDATED);
+        } else {
+            // todo only invalidate if existing?
+            if (getStatus() == Status.EXISTING) {
+                // set workspace state invalidated, this will in turn invalidate
+                // this (session) state as well
+                overlayedState.setStatus(Status.INVALIDATED);
+            }
+        }
+    }
     //----------------------------------------------------------< NodeState >---
     /**
      * Returns the id of this node state.
@@ -578,8 +740,9 @@ public class NodeState extends ItemState {
      *
      * @param propName
      */
-    private void removePropertyEntry(QName propName) {
-        if (properties.remove(propName) != null) {
+    private ChildPropertyEntry removePropertyEntry(QName propName) {
+        ChildPropertyEntry cpe = (ChildPropertyEntry) properties.remove(propName);
+        if (cpe != null) {
             if (isWorkspaceState()) {
                 if (QName.JCR_UUID.equals(propName)) {
                     setUUID(null);
@@ -588,6 +751,7 @@ public class NodeState extends ItemState {
                 }
             }
         }
+        return cpe;
     }
 
     /**
@@ -699,7 +863,7 @@ public class NodeState extends ItemState {
      * @see ItemState#persisted(ChangeLog)
      */
     void persisted(ChangeLog changeLog) throws IllegalStateException {
-
+        // TODO: review...in case of CacheBehaviour.MANUAL and .INVALIDATION, some states must be invalidate (e.g. autocreated)
         // remember parent states that have need to adjust their uuid/mixintypes
         // or that got a new child entry added or existing entries removed.
         Map modParents = new HashMap();
@@ -760,7 +924,7 @@ public class NodeState extends ItemState {
                 }
 
                 // make sure the new state gets updated (e.g. uuid created by server)
-                addedState.reset();
+                addedState.merge(addedState.overlayedState, true);
                 // and mark the added-state existing
                 addedState.setStatus(Status.EXISTING);
                 // if parent is modified -> remember for final status reset
@@ -829,7 +993,9 @@ public class NodeState extends ItemState {
         IteratorChain chain = new IteratorChain(its);
         while (chain.hasNext()) {
             ItemState state = (ItemState) chain.next();
-            if (!(state.getStatus() == Status.EXISTING || state.getStatus() == Status.REMOVED)) {
+            if (!(state.getStatus() == Status.EXISTING ||
+                  state.getStatus() == Status.REMOVED ||
+                  state.getStatus() == Status.INVALIDATED)) {
                 // error: state has not been processed
                 // TODO: discard state and force reload of all data
             }
@@ -837,245 +1003,79 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * {@inheritDoc}
-     * @see ItemState#reset()
-     */
-    synchronized void reset() {
-        checkIsSessionState();
-
-        if (overlayedState != null) {
-            synchronized (overlayedState) {
-                NodeState wspState = (NodeState) overlayedState;
-                name = wspState.name;
-                setUUID(wspState.uuid);
-                nodeTypeName = wspState.nodeTypeName;
-                definition = wspState.definition;
-
-                mixinTypeNames = wspState.mixinTypeNames;
-
-                // remove all entries in the attic
-                propertiesInAttic.clear();
-
-                // merge prop-names
-                Collection wspPropNames = wspState.getPropertyNames();
-                for (Iterator it = wspPropNames.iterator(); it.hasNext();) {
-                    QName propName = (QName) it.next();
-                    if (!hasPropertyName(propName)) {
-                        addPropertyEntry(PropertyReference.create(this, propName, isf, idFactory));
-                    }
-                }
-                for (Iterator it = properties.keySet().iterator(); it.hasNext();) {
-                    // remove all prop-entries in the session state that are
-                    // not present in the wsp-state.
-                    if (!wspPropNames.contains(it.next())) {
-                        it.remove();
-                    }
-                }
-
-                // merge child node entries
-                for (Iterator it = wspState.getChildNodeEntries().iterator(); it.hasNext();) {
-                    ChildNodeEntry cne = (ChildNodeEntry) it.next();
-                    int index = cne.getIndex();
-                    if (!childNodeEntries.contains(cne.getName(), index, cne.getUUID())) {
-                        childNodeEntries.add(cne.getName(), cne.getUUID(), index);
-                    }
-                }
-                List toRemove = new ArrayList();
-                for (Iterator it = getChildNodeEntries().iterator(); it.hasNext();) {
-                    ChildNodeEntry cne = (ChildNodeEntry) it.next();
-                    if (!wspState.childNodeEntries.contains(cne.getName(), cne.getIndex(), cne.getUUID())) {
-                        toRemove.add(cne);
-                    }
-                }
-                for (Iterator it = toRemove.iterator(); it.hasNext();) {
-                    ChildNodeEntry cne = (ChildNodeEntry) it.next();
-                    childNodeEntries.remove(cne.getName(), cne.getIndex());
-                }
-                // set the node references
-                references = wspState.references;
-            }
-        }
-    }
-
-    /**
+     * Recursively removes all child states and then calls {@link ItemState#remove()}.
+     *
      * @inheritDoc
      * @see ItemState#remove()
      */
     void remove() throws ItemStateException {
         checkIsSessionState();
-
         if (!isValid()) {
             throw new ItemStateException("cannot remove an invalid NodeState");
         }
-        // first remove all properties
-        for (Iterator it = properties.values().iterator(); it.hasNext(); ) {
-            ChildPropertyEntry cpe = ((ChildPropertyEntry) it.next());
-            if (cpe.isAvailable()) {
-                PropertyState pState = cpe.getPropertyState();
-                if (pState.isValid()) {
-                    pState.remove();
-                } else {
+        for (Iterator it = getAllChildEntries(true, false); it.hasNext();) {
+            ChildItemEntry ce = (ChildItemEntry) it.next();
+            if (ce.isAvailable()) {
+                ItemState childState = ce.getItemState();
+                if (childState.isValid()) {
+                    childState.remove();
+                } else if (!ce.denotesNode()) {
                     // remove invalid property state from properties map
                     it.remove();
+                    // TODO: check if for node-entries no action is required
                 }
-            } else {
+            } else if (!ce.denotesNode()) {
                 // remove unresolved entry from properties map
                 it.remove();
+                // TODO check if for node entries no action required
             }
         }
-        // move all properties from attic back to properties map
-        properties.putAll(propertiesInAttic);
-        propertiesInAttic.clear();
 
-        // then remove child node entries
-        for (Iterator it = childNodeEntries.iterator(); it.hasNext(); ) {
-            NodeState nodeState = ((ChildNodeEntry) it.next()).getNodeState();
-            if (nodeState.isValid()) {
-                nodeState.remove();
-            } else {
-                // already removed
-            }
+        if (!propertiesInAttic.isEmpty()) {
+            // move all properties from attic back to properties map
+            properties.putAll(propertiesInAttic);
+            propertiesInAttic.clear();
         }
-        if (getStatus() == Status.EXISTING || getStatus() == Status.EXISTING_MODIFIED) {
-            setStatus(Status.EXISTING_REMOVED);
-        } else if (getStatus() == Status.NEW) {
-            setStatus(Status.REMOVED);
-        }
-        // now inform parent
-        getParent().childNodeStateRemoved(this);
+
+        // process this state as well.
+        super.remove();
     }
 
     /**
-     * Calls {@link #revert(Set) on all child states and add itself to the
-     * set of affected states, if the current status indicates, that this
-     * <code>NodeState</code> has been transiently modified.
+     * Calls {@link ItemState#revert()} and moves all properties from the attic
+     * back into th properties map.
      *
      * @inheritDoc
-     * @see ItemState#revert(Set)
+     * @see ItemState#revert()
      */
-    void revert(Set affectedItemStates) {
-        checkIsSessionState();
-
-        // copy to new list, when a property is reverted it may call this node
-        // state to remove itself from properties.
-        List props = new ArrayList(properties.values());
-        for (Iterator it = props.iterator(); it.hasNext(); ) {
-            ChildPropertyEntry entry = (ChildPropertyEntry) it.next();
-            if (entry.isAvailable()) {
-                try {
-                    PropertyState propState = entry.getPropertyState();
-                    propState.revert(affectedItemStates);
-                } catch (ItemStateException e) {
-                    // should not happen because PropertyReference is resolved
-                    log.warn("Unable to get PropertyState from resolved PropertyReference");
-                }
-            } else {
-                // not touched or accessed before
-            }
-        }
-
-        // revert property states in attic
-        props.clear();
-        props.addAll(propertiesInAttic.values());
-        for (Iterator it = props.iterator(); it.hasNext(); ) {
-            PropertyReference ref = (PropertyReference) it.next();
-            try {
-                PropertyState propState = ref.getPropertyState();
-                propState.revert(affectedItemStates);
-            } catch (ItemStateException e) {
-                // probably stale destroyed property
-                // cleaned up when propertiesInAttic is cleared
-            }
-        }
-        propertiesInAttic.clear();
-
-        // now revert child node states
-        List children = new ArrayList(childNodeEntries);
-        for (Iterator it = children.iterator(); it.hasNext(); ) {
-            ChildNodeEntry entry = (ChildNodeEntry) it.next();
-            if (entry.isAvailable()) {
-                try {
-                    NodeState nodeState = entry.getNodeState();
-                    nodeState.revert(affectedItemStates);
-                } catch (ItemStateException e) {
-                    // should not happen because ChildNodeReference is resolved
-                    log.warn("Unable to get NodeState from resolved ChildNodeReference");
-                }
-            } else {
-                // not touched or accessed before
-            }
-        }
-
-        // now revert this node state
-        switch (getStatus()) {
-            case Status.EXISTING:
-                // nothing to do
-                break;
-            case Status.EXISTING_MODIFIED:
-            case Status.EXISTING_REMOVED:
-            case Status.STALE_MODIFIED:
-                // revert state from overlayed
-                reset();
-                setStatus(Status.EXISTING);
-                affectedItemStates.add(this);
-                break;
-            case Status.NEW:
-                // set removed
-                setStatus(Status.REMOVED);
-                // remove from parent
-                getParent().childNodeStateRemoved(this);
-                affectedItemStates.add(this);
-                break;
-            case Status.REMOVED:
-                // shouldn't happen actually, because a 'removed' state is not
-                // accessible anymore
-                log.warn("trying to revert an already removed node state");
-                getParent().childNodeStateRemoved(this);
-                break;
-            case Status.STALE_DESTROYED:
-                // overlayed state does not exist anymore
-                getParent().childNodeStateRemoved(this);
-                affectedItemStates.add(this);
-                break;
+    void revert() throws ItemStateException {
+        super.revert();
+        if (!propertiesInAttic.isEmpty()) {
+            // move all properties from attic back to properties map
+            properties.putAll(propertiesInAttic);
+            propertiesInAttic.clear();
         }
     }
 
     /**
+     * Adds this state to the changeLog if it is transiently modified, new or stale
+     * and subsequently calls this method on all child states including those
+     * property states that have been moved to the attic.
+     *
      * @inheritDoc
-     * @see ItemState#collectTransientStates(Collection)
+     * @see ItemState#collectStates(ChangeLog, boolean)
      */
-    void collectTransientStates(Collection transientStates) {
-        checkIsSessionState();
+    void collectStates(ChangeLog changeLog, boolean throwOnStale) throws StaleItemStateException {
+        super.collectStates(changeLog, throwOnStale);
 
-        switch (getStatus()) {
-            case Status.EXISTING_MODIFIED:
-            case Status.EXISTING_REMOVED:
-            case Status.NEW:
-            case Status.STALE_DESTROYED:
-            case Status.STALE_MODIFIED:
-                transientStates.add(this);
-        }
-        // call available property states
-        for (Iterator it = properties.values().iterator(); it.hasNext(); ) {
-            ChildPropertyEntry entry = (ChildPropertyEntry) it.next();
-            if (entry.isAvailable()) {
+        // collect transient child states including properties in attic.
+        for (Iterator it = getAllChildEntries(false, true); it.hasNext();) {
+            ChildItemEntry ce = (ChildItemEntry) it.next();
+            if (ce.isAvailable()) {
                 try {
-                    entry.getPropertyState().collectTransientStates(transientStates);
+                    ce.getItemState().collectStates(changeLog, throwOnStale);
                 } catch (ItemStateException e) {
                     // should not happen because ref is available
-                }
-            }
-        }
-        // add all properties in attic
-        transientStates.addAll(propertiesInAttic.values());
-        // call available child node states
-        for (Iterator it = childNodeEntries.iterator(); it.hasNext(); ) {
-            ChildNodeEntry cne = (ChildNodeEntry) it.next();
-            if (cne.isAvailable()) {
-                try {
-                    cne.getNodeState().collectTransientStates(transientStates);
-                } catch (ItemStateException e) {
-                    // should not happen because cne is available
                 }
             }
         }
@@ -1098,32 +1098,11 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Notifies this node state that a child node state has been removed.
-     *
-     * @param childState the node state that has been removed.
-     * @throws IllegalArgumentException if <code>this</code> is not the parent
-     *                                  of <code>nodeState</code>.
-     */
-    private synchronized void childNodeStateRemoved(NodeState childState) {
-        checkIsSessionState();
-
-        if (childState.getParent() != this) {
-            throw new IllegalArgumentException("This NodeState is not the parent of nodeState");
-        }
-        // if nodeState does not exist anymore remove its child node entry
-        if (childState.getStatus() == Status.REMOVED) {
-            childNodeEntries.remove(childState);
-        }
-        markModified();
-    }
-
-    /**
      * Adds a property state to this node state.
      *
      * @param propState the property state to add.
-     * @throws ItemExistsException      if <code>this</code> node state already
-     *                                  contains a property state with the same
-     *                                  name as <code>propState</code>.
+     * @throws ItemExistsException If <code>this</code> node state already
+     * contains a valid property state with the same name as <code>propState</code>.
      * @throws IllegalArgumentException if <code>this</code> is not the parent
      *                                  of <code>propState</code>.
      */
@@ -1157,24 +1136,45 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * Notifies this node state that a property state has been removed.
+     * Notifies this node state that a child item state has been removed or
+     * otherwise modified.
      *
-     * @param propState the property state that has been removed.
+     * @param childState the child item state that has been removed or modified.
      * @throws IllegalArgumentException if <code>this</code> is not the parent
-     *                                  of <code>propState</code>.
+     * of the given <code>ItemState</code>.
      */
-    synchronized void propertyStateRemoved(PropertyState propState) {
+    synchronized void childStatusChanged(ItemState childState, int previousStatus) {
         checkIsSessionState();
-        if (propState.getParent() != this) {
+        if (childState.getParent() != this) {
             throw new IllegalArgumentException("This NodeState is not the parent of propState");
         }
-        // remove property state from map of properties if it does not exist
-        // anymore, otherwise leave the property state in the map
-        if (propState.getStatus() == Status.REMOVED) {
-            removePropertyEntry(propState.getQName());
+
+        switch (childState.getStatus()) {
+            case Status.EXISTING_REMOVED:
+                markModified();
+                break;
+            case Status.REMOVED:
+                if (childState.isNode()) {
+                    childNodeEntries.remove((NodeState) childState);
+                } else {
+                    removePropertyEntry(childState.getQName());
+                }
+                // TODO: not correct. removing a NEW state may even remove the 'modified'
+                // flag from the parent, if this NEW state was the only modification.
+                if (previousStatus != Status.NEW) {
+                    markModified();
+                }
+                break;
+            case Status.EXISTING:
+                if (previousStatus == Status.EXISTING_REMOVED && !childState.isNode()) {
+                    QName propName = childState.getQName();
+                    if (propertiesInAttic.containsKey(propName)) {
+                        properties.put(childState.getQName(), propertiesInAttic.remove(propName));
+                    }
+                }
         }
-        markModified();
     }
+
     /**
      * Reorders the child node <code>insertNode</code> before the child node
      * <code>beforeNode</code>.
@@ -1219,6 +1219,14 @@ public class NodeState extends ItemState {
         newParent.markModified();
     }
 
+    /**
+     *
+     * @param newParent
+     * @param childState
+     * @param newName
+     * @param newDefinition
+     * @throws RepositoryException
+     */
     private void moveEntry(NodeState newParent, NodeState childState, QName newName, QNodeDefinition newDefinition) throws RepositoryException {
         ChildNodeEntry oldEntry = childNodeEntries.remove(childState);
         if (oldEntry != null) {
@@ -1234,6 +1242,36 @@ public class NodeState extends ItemState {
         }
     }
 
+    /**
+     *
+     * @param createNewList if true, both properties and childNodeEntries are
+     * copied to new list, since recursive calls may call this node state to
+     * inform the removal of a child entry.
+     *
+     * @return
+     */
+    private Iterator getAllChildEntries(boolean createNewList, boolean includeAttic) {
+        Iterator[] its;
+        if (createNewList) {
+            List props = new ArrayList(properties.values());
+            List children = new ArrayList(childNodeEntries);
+            if (includeAttic) {
+                List attic = new ArrayList(propertiesInAttic.values());
+                its = new Iterator[] {attic.iterator(), props.iterator(), children.iterator()};
+            } else {
+                its = new Iterator[] {props.iterator(), children.iterator()};
+            }
+        } else {
+            if (includeAttic) {
+                its = new Iterator[] {propertiesInAttic.values().iterator(), properties.values().iterator(), childNodeEntries.iterator()};
+            } else {
+                its = new Iterator[] {properties.values().iterator(),
+                    childNodeEntries.iterator()};
+            }
+        }
+        IteratorChain chain = new IteratorChain(its);
+        return chain;
+    }
     //-------------------------------< internal >-------------------------------
     /**
      * Returns <code>true</code> if the collection of child node
@@ -1373,7 +1411,7 @@ public class NodeState extends ItemState {
 
             // make sure all other modifications on the overlayed state are
             // reflected on the session-state.
-            sState.reset();
+            sState.merge(overlayed, false);
             // make sure, the session-state gets its status reset to Existing.
             if (sState.getStatus() == Status.EXISTING_MODIFIED) {
                 sState.setStatus(Status.EXISTING);

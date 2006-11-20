@@ -31,7 +31,7 @@ import java.lang.ref.WeakReference;
  * @see ChildNodeReference
  * @see PropertyReference
  */
-abstract class ChildItemReference {
+abstract class ChildItemReference implements ChildItemEntry {
 
     /**
      * Cached weak reference to the target NodeState.
@@ -39,14 +39,14 @@ abstract class ChildItemReference {
     private WeakReference target;
 
     /**
+     * The name of the target item state.
+     */
+    private final QName name;
+
+    /**
      * The parent that owns this <code>ChildItemReference</code>.
      */
     protected final NodeState parent;
-
-    /**
-     * The name of the target item state.
-     */
-    protected final QName name;
 
     /**
      * The item state factory to create the the item state.
@@ -135,4 +135,20 @@ abstract class ChildItemReference {
      */
     protected abstract ItemState doResolve()
             throws NoSuchItemStateException, ItemStateException;
+
+    /**
+     * @inheritDoc
+     * @see ChildItemEntry#getName()
+     */
+    public QName getName() {
+        return name;
+    }
+
+    /**
+     * @inheritDoc
+     * @see ChildItemEntry#isAvailable()
+     */
+    public boolean isAvailable() {
+        return isResolved();
+    }
 }

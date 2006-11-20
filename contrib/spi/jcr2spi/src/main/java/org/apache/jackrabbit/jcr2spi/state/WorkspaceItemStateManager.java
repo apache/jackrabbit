@@ -55,7 +55,7 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
         } catch (UnsupportedRepositoryOperationException e) {
             // repository does not support observation
         }
-        this.eventFilter = filter == null ? Collections.EMPTY_LIST : Collections.singletonList(filter);
+        this.eventFilter = (filter == null) ? Collections.EMPTY_LIST : Collections.singletonList(filter);
     }
 
     //-------------------------------< InternalEventListener >------------------
@@ -83,7 +83,7 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
     /**
      * Retrieve the workspace state(s) affected by the given event and refresh
      * them accordingly.
-     * 
+     *
      * @param events
      */
     private void pushEvents(Collection events) {

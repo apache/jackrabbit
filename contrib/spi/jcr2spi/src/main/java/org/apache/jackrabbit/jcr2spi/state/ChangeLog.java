@@ -48,11 +48,6 @@ public class ChangeLog {
     final Set deletedStates = new LinkedHashSet();
 
     /**
-     * Modified references
-     */
-    final Set modifiedRefs = new LinkedHashSet();
-
-    /**
      * Type of operation this changelog is collection state modifications for.
      */
     private Set operations = new LinkedHashSet();
@@ -111,15 +106,6 @@ public class ChangeLog {
             modifiedStates.remove(state);
             deletedStates.add(state);
         }
-    }
-
-    /**
-     * A references has been modified
-     *
-     * @param refs refs that has been modified
-     */
-    public void modified(NodeReferences refs) {
-        modifiedRefs.add(refs);
     }
 
     /**
@@ -184,12 +170,18 @@ public class ChangeLog {
     }
 
     /**
-     * Return an iterator over all modified references.
+     * Removes the subset of this changelog represented by the given
+     * <code>ChangeLog</code> from this changelog.
      *
-     * @return iterator over all modified references.
+     * @param subChangeLog remove all entries (states, operations) present in
+     * the given changelog from this changelog.
      */
-    public Iterator modifiedRefs() {
-        return modifiedRefs.iterator();
+    public void removeAll(ChangeLog subChangeLog) {
+        addedStates.removeAll(subChangeLog.addedStates);
+        modifiedStates.removeAll(subChangeLog.modifiedStates);
+        deletedStates.removeAll(subChangeLog.deletedStates);
+
+        operations.removeAll(subChangeLog.operations);
     }
 
     /**
@@ -245,7 +237,6 @@ public class ChangeLog {
         }
     }
 
-    //-----------------------------< Inform ChangeLog about Success/Failure >---
     /**
      * Reset this change log, removing all members inside the
      * maps we built.
@@ -254,7 +245,6 @@ public class ChangeLog {
         addedStates.clear();
         modifiedStates.clear();
         deletedStates.clear();
-        modifiedRefs.clear();
         // also clear all operations
         operations.clear();
     }
@@ -272,19 +262,7 @@ public class ChangeLog {
         buf.append("#addedStates=").append(addedStates.size());
         buf.append(", #modifiedStates=").append(modifiedStates.size());
         buf.append(", #deletedStates=").append(deletedStates.size());
-        buf.append(", #modifiedRefs=").append(modifiedRefs.size());
         buf.append("}");
         return buf.toString();
-    }
-
-    //----------------------------------< for derived classes >-----------------
-
-    /**
-     * Removes the <code>operation</code> from the list of operations.
-     * @param operation the Operation to remove.
-     * @return <code>true</code> if the operation was removed.
-     */
-    protected boolean removeOperation(Operation operation) {
-        return operations.remove(operation);
     }
 }

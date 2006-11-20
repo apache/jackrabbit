@@ -285,7 +285,7 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
         this.cache = cache;
     }
 
-    //------------------------------------------------------< ChildNodeEntry >---
+    //-----------------------------------------------------< ChildNodeEntry >---
     private class CNE implements ChildNodeEntry {
 
         private final QName name;
@@ -300,6 +300,10 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
 
         public NodeId getId() {
             throw new UnsupportedOperationException();
+        }
+
+        public boolean denotesNode() {
+            return true;
         }
 
         public QName getName() {
@@ -319,6 +323,10 @@ public class WorkspaceItemStateFactory implements ItemStateFactory {
         }
 
         public boolean isAvailable() {
+            throw new UnsupportedOperationException();
+        }
+
+        public ItemState getItemState() throws NoSuchItemStateException, ItemStateException {
             throw new UnsupportedOperationException();
         }
     }

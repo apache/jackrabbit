@@ -52,6 +52,13 @@ public class Clone extends AbstractCopy {
         visitor.visit(this);
     }
 
+    /**
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        // TODO
+    }
+
     //----------------------------------------< Access Operation Parameters >---
     public boolean isRemoveExisting() {
         return removeExisting;
