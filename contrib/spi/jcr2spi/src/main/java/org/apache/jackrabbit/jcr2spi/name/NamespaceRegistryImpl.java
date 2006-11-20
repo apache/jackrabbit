@@ -24,6 +24,8 @@ import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameCache;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.util.XMLChar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.NamespaceException;
@@ -39,6 +41,8 @@ import java.util.Iterator;
  */
 public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     implements NamespaceRegistry, NameCache {
+
+    private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
     private static final HashSet reservedPrefixes = new HashSet();
     private static final HashSet reservedURIs = new HashSet();
@@ -72,26 +76,95 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
     private final boolean level2Repository;
 
-    public NamespaceRegistryImpl(NamespaceStorage storage, Map nsValues, boolean level2Repository) {
+    /**
+     * Create a new <code>NamespaceRegistryImpl</code>.
+     *
+     * @param storage
+     * @param level2Repository
+     * @throws RepositoryException
+     */
+    public NamespaceRegistryImpl(NamespaceStorage storage, boolean level2Repository)
+        throws RepositoryException {
         super(true); // enable listener support
+
         resolver = new CachingNamespaceResolver(this, 1000);
         this.storage = storage;
         this.level2Repository = level2Repository;
-        load(nsValues);
+
+        load();
     }
 
-    private void load(Map nsValues) {
+    /**
+     * Load all mappings from the <code>NamespaceStorage</code> and update this
+     * registry.
+     *
+     * @throws RepositoryException
+     */
+    private void load() throws RepositoryException {
+        Map nsValues = storage.getRegisteredNamespaces();
         Iterator prefixes = nsValues.keySet().iterator();
         while (prefixes.hasNext()) {
             String prefix = (String) prefixes.next();
-            if (!prefixToURI.containsKey(prefix)) {
-                String uri = (String) nsValues.get(prefix);
-                prefixToURI.put(prefix, uri);
-                uriToPrefix.put(uri, prefix);
-            }
+            String uri = (String) nsValues.get(prefix);
+            addMapping(prefix, uri);
         }
     }
 
+    /**
+     * Add a namespace with the given uri and prefix. If for the given
+     * <code>uri</code> is already registered with a different prefix, the
+     * existing mapping gets replaced.
+     *
+     * @param prefix
+     * @param uri
+     */
+    private void addMapping(String prefix, String uri) {
+        if (uriToPrefix.containsKey(uri)) {
+            String oldPrefix = (String) uriToPrefix.get(uri);
+            replaceMapping(oldPrefix, prefix, uri);
+        } else {
+            prefixToURI.put(prefix, uri);
+            uriToPrefix.put(uri, prefix);
+            notifyNamespaceAdded(prefix, uri);
+        }
+    }
+
+    /**
+     * Remove the entries with the given prefix and uri from the registry
+     * and inform all listeners.
+     *
+     * @param prefix
+     * @param uri
+     */
+    private void removeMapping(String prefix, String uri) {
+        prefixToURI.remove(prefix).toString();
+        uriToPrefix.remove(uri);
+        // notify listeners
+        notifyNamespaceRemoved(uri);
+    }
+
+    /**
+     * Replace an existing registered namespace with the given <code>oldPrefix</code>
+     * by an entry with the new prefix. Subsequently all listeners are informed
+     * about the remapped namespace.
+     *
+     * @param oldPrefix
+     * @param prefix
+     * @param uri
+     */
+    private void replaceMapping(String oldPrefix, String prefix, String uri) {
+        if (oldPrefix.equals(prefix)) {
+            // mapping already existing -> nothing to do.
+            return;
+        }
+        prefixToURI.remove(oldPrefix);
+        prefixToURI.put(prefix, uri);
+        uriToPrefix.put(uri, prefix);
+        // notify: remapped existing namespace uri to new prefix
+        notifyNamespaceRemapped(oldPrefix, prefix, uri);
+    }
+
+    //--------------------------------------------------< NamespaceRegistry >---
     /**
      * @see NamespaceRegistry#registerNamespace(String, String)
      */
@@ -145,23 +218,10 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
         // inform storage before mappings are added to maps and propagated to listeners
         storage.registerNamespace(prefix, uri);
-
-        // remove old prefix mapping
-        if (oldPrefix != null) {
-            prefixToURI.remove(oldPrefix);
-            uriToPrefix.remove(uri);
-        }
-        // add new prefix mapping
-        prefixToURI.put(prefix, uri);
-        uriToPrefix.put(uri, prefix);
-
-        // notify listeners
-        if (oldPrefix != null) {
-            // remapped existing namespace uri to new prefix
-            notifyNamespaceRemapped(oldPrefix, prefix, uri);
+        if (oldPrefix == null) {
+            addMapping(prefix, uri);
         } else {
-            // added new namespace uri mapped to prefix
-            notifyNamespaceAdded(prefix, uri);
+            replaceMapping(oldPrefix, prefix, uri);
         }
     }
 
@@ -181,14 +241,11 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         }
 
         // inform storage before mappings are added to maps and propagated to listeners
-        storage.unregisterNamespace(prefixToURI.get(prefix).toString());
+        String uri = prefixToURI.get(prefix).toString();
+        storage.unregisterNamespace(uri);
 
-        // update caches
-        String uri = prefixToURI.remove(prefix).toString();
-        uriToPrefix.remove(uri);
-
-        // notify listeners
-        notifyNamespaceRemoved(uri);
+        // update caches and notify listeners
+        removeMapping(prefix, uri);
     }
 
     /**
@@ -204,7 +261,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      */
     public String[] getURIs() throws RepositoryException {
         return (String[]) uriToPrefix.keySet().toArray(new String[uriToPrefix.keySet().size()]);
-
     }
 
     /**
@@ -212,10 +268,21 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * @see org.apache.jackrabbit.name.NamespaceResolver#getURI(String)
      */
     public String getURI(String prefix) throws NamespaceException {
+        if (!prefixToURI.containsKey(prefix)) {
+            // reload mappings in order to make sure, the NamespaceRegistry is
+            // up to date, and try to retrieve the uri again.
+            try {
+                load();
+            } catch (RepositoryException ex) {
+                log.warn("Internal error while loading registered namespaces.");
+            }
+        }
+
         String uri = (String) prefixToURI.get(prefix);
         if (uri == null) {
             throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
         }
+
         return uri;
     }
 
@@ -224,10 +291,20 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      * @see org.apache.jackrabbit.name.NamespaceResolver#getPrefix(String)
      */
     public String getPrefix(String uri) throws NamespaceException {
+        if (!uriToPrefix.containsKey(uri)) {
+            // reload mappings in order to make sure, the NamespaceRegistry is
+            // up to date, and try to retrieve the prefix again.
+            try {
+                load();
+            } catch (RepositoryException ex) {
+                log.warn("Internal error while loading registered namespaces.");
+            }
+        }
         String prefix = (String) uriToPrefix.get(uri);
         if (prefix == null) {
             throw new NamespaceException(uri + ": is not a registered namespace uri.");
         }
+
         return prefix;
     }
 
@@ -257,16 +334,25 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
         return resolver.retrieveName(jcrName);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String retrieveName(QName name) {
         // just delegate to internal cache
         return resolver.retrieveName(name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void cacheName(String jcrName, QName name) {
         // just delegate to internal cache
         resolver.cacheName(jcrName, name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void evictAllNames() {
         // just delegate to internal cache
         resolver.evictAllNames();
