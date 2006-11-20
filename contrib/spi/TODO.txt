@@ -77,6 +77,9 @@ NOTE: This list only contains major open issues.
    
    similar to 8)
    The call defines a NodeIterator as return value.
+   
+   In addition: fallback required if Observation is not supported feature.
+   
 
 
 8) Transactions (work in progress)
@@ -95,5 +98,10 @@ NOTE: This list only contains major open issues.
     
     Should the SPI define means for observation of nodetype/namespace
     changes? 
+
+
+12) LockManager currently relies on Observation in order to detect
+    if a lock gets released by someone else.
+    => that needs to be fixed.
 
 
