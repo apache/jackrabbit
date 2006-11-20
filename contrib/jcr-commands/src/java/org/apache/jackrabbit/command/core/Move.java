@@ -18,7 +18,8 @@ package org.apache.jackrabbit.command.core;
 
 import java.util.ResourceBundle;
 
-import javax.jcr.Workspace;
+import javax.jcr.Item;
+import javax.jcr.Session;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
@@ -43,6 +44,9 @@ public class Move implements Command {
     /** destination path */
     private String destAbsPathKey = "destAbsPath";
 
+    /** persistent key */
+    private String persistentKey = "persistent";
+
     /**
      * {@inheritDoc}
      */
@@ -50,21 +54,33 @@ public class Move implements Command {
         String srcAbsPath = (String) ctx.get(this.srcAbsPathKey);
         String destAbsPath = (String) ctx.get(this.destAbsPathKey);
 
+        boolean persistent = Boolean.valueOf(
+                (String) ctx.get(this.persistentKey)).booleanValue();
+
         if (!srcAbsPath.startsWith("/") || !destAbsPath.startsWith("/")) {
             throw new IllegalArgumentException(bundle
-                .getString("exception.illegalargument")
+                    .getString("exception.illegalargument")
                     + ". "
                     + bundle.getString("exception.only.absolute.path")
                     + ".");
         }
 
-        Workspace w = CommandHelper.getSession(ctx).getWorkspace();
+        Session s = CommandHelper.getSession(ctx);
 
         if (log.isDebugEnabled()) {
             log.debug("moving node from " + srcAbsPath + " to " + destAbsPath);
         }
 
-        w.move(srcAbsPath, destAbsPath);
+        if (destAbsPath.endsWith("/")) {
+            Item source = s.getItem(srcAbsPath);
+            destAbsPath = destAbsPath + source.getName();
+        }
+
+        if (persistent) {
+            s.getWorkspace().move(srcAbsPath, destAbsPath);
+        } else {
+            s.move(srcAbsPath, destAbsPath);
+        }
 
         return false;
     }
@@ -78,7 +94,7 @@ public class Move implements Command {
 
     /**
      * @param destAbsPathKey
-     *        the destintation absolute path key to set
+     *            the destintation absolute path key to set
      */
     public void setDestAbsPathKey(String destAbsPathKey) {
         this.destAbsPathKey = destAbsPathKey;
@@ -93,9 +109,17 @@ public class Move implements Command {
 
     /**
      * @param srcAbsPathKey
-     *        the source absolute path key to set
+     *            the source absolute path key to set
      */
     public void setSrcAbsPathKey(String srcAbsPathKey) {
         this.srcAbsPathKey = srcAbsPathKey;
+    }
+
+    public String getPersistentKey() {
+        return persistentKey;
+    }
+
+    public void setPersistentKey(String persistentKey) {
+        this.persistentKey = persistentKey;
     }
 }

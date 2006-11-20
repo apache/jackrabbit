@@ -51,6 +51,12 @@ public class AddNode implements Command {
             log.debug("adding node at " + node.getPath() + "/" + name);
         }
 
+        // If the new node name starts with / add it to the root node
+        if (name.startsWith("/")) {
+            node = CommandHelper.getSession(ctx).getRootNode();
+            name = name.substring(1);
+        }
+
         if (nodeType == null) {
             node.addNode(name);
         } else {
@@ -68,7 +74,7 @@ public class AddNode implements Command {
 
     /**
      * @param nodeTypeKey
-     *        Set the context attribute key for the node type attribute.
+     *            Set the context attribute key for the node type attribute.
      */
     public void setTypeKey(String nodeTypeKey) {
         this.typeKey = nodeTypeKey;
@@ -83,7 +89,7 @@ public class AddNode implements Command {
 
     /**
      * @param relPathKey
-     *        the relative path key to set
+     *            the relative path key to set
      */
     public void setRelPathKey(String relPathKey) {
         this.relPathKey = relPathKey;

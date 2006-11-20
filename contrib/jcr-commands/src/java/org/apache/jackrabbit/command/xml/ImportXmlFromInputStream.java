@@ -17,26 +17,27 @@
 package org.apache.jackrabbit.command.xml;
 
 import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
-import org.apache.jackrabbit.command.CommandException;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Import the xml view from the given file to the current working <code>Node</code>
+ * Import the xml view to the target <code>Node</code>
  */
-public class ImportXmlFromFile implements Command {
+public class ImportXmlFromInputStream implements Command {
 
     // ---------------------------- < keys >
 
     /** doc view file key */
-    private String srcFsPathKey = "srcFsPath";
+    private String inputStreamKey = "inputStream";
+
+    /** flag that indicates whether to use the transient space or not */
+    private String persistentKey = "persistent";
 
     /** target node */
     private String destJcrPathKey = "destJcrPath";
@@ -48,37 +49,25 @@ public class ImportXmlFromFile implements Command {
      * {@inheritDoc}
      */
     public boolean execute(Context ctx) throws Exception {
-        String file = (String) ctx.get(this.srcFsPathKey);
+        InputStream is = (InputStream) ctx.get(this.inputStreamKey);
         String dest = (String) ctx.get(this.destJcrPathKey);
+        String persistent = (String) ctx.get(this.persistentKey);
+
         int uuidBehaviour = Integer.valueOf(
-            (String) ctx.get(this.uuidBehaviourKey)).intValue();
-        File f = new File(file);
-        if (!f.exists()) {
-            throw new CommandException("exception.file.not.found",
-                new String[] {
-                    file
-                });
-        }
-        BufferedInputStream in = new BufferedInputStream(new FileInputStream(f));
+                (String) ctx.get(this.uuidBehaviourKey)).intValue();
+
+        BufferedInputStream bis = new BufferedInputStream(is);
         Session s = CommandHelper.getSession(ctx);
         Node n = CommandHelper.getNode(ctx, dest);
-        s.importXML(n.getPath(), in, uuidBehaviour);
+
+        if (persistent != null
+                && Boolean.valueOf(persistent).equals(Boolean.TRUE)) {
+            s.getWorkspace().importXML(n.getPath(), bis, uuidBehaviour);
+        } else {
+            s.importXML(n.getPath(), bis, uuidBehaviour);
+        }
+
         return false;
-    }
-
-    /**
-     * @return the from key
-     */
-    public String getSrcFsPathKey() {
-        return srcFsPathKey;
-    }
-
-    /**
-     * @param fromKey
-     *        the from key to set
-     */
-    public void setSrcFsPathKey(String fromKey) {
-        this.srcFsPathKey = fromKey;
     }
 
     /**
@@ -90,7 +79,7 @@ public class ImportXmlFromFile implements Command {
 
     /**
      * @param uuidBehaviourKey
-     *        the uuidBehaviourKey to set
+     *            the uuidBehaviourKey to set
      */
     public void setUuidBehaviourKey(String uuidBehaviourKey) {
         this.uuidBehaviourKey = uuidBehaviourKey;
@@ -105,9 +94,39 @@ public class ImportXmlFromFile implements Command {
 
     /**
      * @param destJcrPathKey
-     *        the destination jcr path key to set
+     *            the destination jcr path key to set
      */
     public void setDestJcrPathKey(String destJcrPathKey) {
         this.destJcrPathKey = destJcrPathKey;
+    }
+
+    /**
+     * @return the inputStreamKey
+     */
+    public String getInputStreamKey() {
+        return inputStreamKey;
+    }
+
+    /**
+     * @param inputStreamKey
+     *            the inputStreamKey to set
+     */
+    public void setInputStreamKey(String inputStreamKey) {
+        this.inputStreamKey = inputStreamKey;
+    }
+
+    /**
+     * @return the persistentKey
+     */
+    public String getPersistentKey() {
+        return persistentKey;
+    }
+
+    /**
+     * @param persistentKey
+     *            the persistentKey to set
+     */
+    public void setPersistentKey(String persistentKey) {
+        this.persistentKey = persistentKey;
     }
 }

@@ -779,6 +779,20 @@
       default=","/>
   </command>
 
+  <command name="setnamespaceprefix" impl="setNamespacePrefix">
+    <alias name="setnsprefix"/>  
+    <argument
+      name="prefix"
+      position="0"
+      arg-name="word.prefix"
+      description="word.prefix"/>
+    <argument
+      name="uri"
+      position="1"
+      arg-name="word.uri"
+      description="word.uri"/>
+  </command>
+  
   <command name="setproperty" impl="setProperty">
     <alias name="setprop"/>
     <alias name="setp"/>

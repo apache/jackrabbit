@@ -36,157 +36,216 @@ import org.apache.commons.chain.Catalog;
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.config.ConfigParser;
 import org.apache.commons.chain.impl.CatalogFactoryBase;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.jackrabbit.command.CommandHelper;
 import org.apache.log4j.Logger;
 
 /**
  * <p>
  * Servlet that handler jcr requests with commons-chain.<br>
- * Usage scenarion example: JCR Ajax server.
+ * Usage scenario example: JCR Ajax server.
  * </p>
  */
 public class JcrCommandServlet extends HttpServlet {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private static Logger log = Logger.getLogger(JcrCommandServlet.class);
+    private static Logger log = Logger.getLogger(JcrCommandServlet.class);
 
-	private static String CATALOG_KEY = "catalog";
+    private static String CATALOG_KEY = "catalog";
 
-	private static String JNDI_PROPERTIES_KEY = "jndi.properties";
+    private static String JNDI_PROPERTIES_KEY = "jndi.properties";
 
-	private static String JNDI_ADDRESS_KEY = "jndi.address";
+    private static String JNDI_ADDRESS_KEY = "jndi.address";
 
-	private static String USER_KEY = "user";
+    private static String USER_KEY = "user";
 
-	private static String PASSWORD_KEY = "password";
+    private static String PASSWORD_KEY = "password";
 
-	public static String COMMAND_KEY = "command";
+    public static String COMMAND_KEY = "command";
 
-	public static String OUTPUT_FLAVOR_KEY = "flavor";
+    public static String OUTPUT_FLAVOR_KEY = "flavor";
 
-	private static String DEFAULT_OUTPUT_FLAVOR = "text/plain";
+    private static String DEFAULT_OUTPUT_FLAVOR = "text/plain";
 
-	/**
-	 * jcr repository
-	 */
-	private Repository repository;
+    private static String PRINT_SUCCESS_KEY = "print.success";
 
-	/**
-	 * user name to login
-	 */
-	private String user;
+    private static String SUCCESS_MESSAGE_KEY = "success.message.key";
 
-	/**
-	 * password to login
-	 */
-	private String password;
+    private static String AUTO_SAVE_KEY = "auto.save";
 
-	/**
-	 * commons chain catalog
-	 */
-	private Catalog catalog;
+    private static String SESSION_KEY = "session.key";
 
-	public void service(HttpServletRequest req, HttpServletResponse res)
-			throws ServletException, IOException {
+    /**
+     * key under which the jcr is stored in the http session
+     */
+    private String sessionKey = CommandHelper.SESSION_KEY;
 
-		// read parameters
-		String cmdName = req.getParameter(COMMAND_KEY);
-		String flavor = req.getParameter(OUTPUT_FLAVOR_KEY);
-		if (flavor == null) {
-			flavor = DEFAULT_OUTPUT_FLAVOR;
-		}
+    /**
+     * flag that indicates whether a "success" string should be printed in the
+     * response
+     */
+    private boolean printSuccess;
 
-		// set content type
-		res.setContentType(flavor);
+    /**
+     * Sucess message context key
+     */
+    private String successMessageKey = "success.message";
 
-		// process command
-		Session session = null;
-		try {
+    /**
+     * flag that indicates whether the changes should be saved automatically
+     */
+    private boolean autoSave;
 
-			if (this.user == null) {
-				session = this.repository.login(req.getRemoteUser());
-			} else {
-				session = this.repository.login(new SimpleCredentials(
-						this.user, this.password.toCharArray()));
-			}
+    /**
+     * jcr repository
+     */
+    private Repository repository;
 
-			PrintWriter pw = null;
-			try {
-				// create context
-				JcrServletWebContext ctx = new JcrServletWebContext(session,
-						getServletContext(), req, res);
+    /**
+     * user name to login
+     */
+    private String user;
 
-				// get writer
-				pw = CommandHelper.getOutput(ctx);
+    /**
+     * password to login
+     */
+    private String password;
 
-				// lookup command
-				Command cmd = catalog.getCommand(cmdName);
-				if (cmd == null) {
-					throw new IllegalArgumentException("command " + cmdName
-							+ " not found");
-				}
+    /**
+     * commons chain catalog
+     */
+    private Catalog catalog;
 
-				// execute command
-				cmd.execute(ctx);
+    public void service(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
 
-				// save changes
-				session.save();
+        // read parameters
+        String cmdName = req.getRequestURI().substring(
+                req.getContextPath().length() + req.getServletPath().length());
+        String flavor = req.getParameter(OUTPUT_FLAVOR_KEY);
+        if (flavor == null) {
+            flavor = DEFAULT_OUTPUT_FLAVOR;
+        }
 
-				// write success message
-				pw.write("success");
+        // set content type
+        res.setContentType(flavor);
+        // try to get the jcr session from the httpsession
+        boolean closeSession = false;
+        Session session = (Session) req.getSession().getAttribute(
+                this.sessionKey);
+        try {
+            if (session == null) {
+                if (this.user == null) {
+                    session = this.repository.login(req.getRemoteUser());
+                } else {
+                    session = this.repository.login(new SimpleCredentials(
+                            this.user, this.password.toCharArray()));
+                }
+                // If a new session was created then close it after running the
+                // command
+                closeSession = true;
+            }
 
-			} catch (Exception e) {
-				// write error message
-				pw.write("an error occured\n");
-				pw.write(e.getMessage());
+            PrintWriter pw = null;
+            try {
+                // create context
+                JcrServletWebContext ctx = new JcrServletWebContext(session,
+                        getServletContext(), req, res);
 
-			} finally {
-				pw.close();
+                // get writer
+                pw = CommandHelper.getOutput(ctx);
 
-			}
+                // lookup command
+                Command cmd = catalog.getCommand(cmdName);
+                if (cmd == null) {
+                    throw new IllegalArgumentException("command " + cmdName
+                            + " not found");
+                }
 
-		} catch (Exception e) {
-			throw new ServletException(e);
+                // execute command
+                cmd.execute(ctx);
 
-		} finally {
-			if (session != null) {
-				session.logout();
-			}
+                if (this.autoSave) {
+                    // save changes
+                    session.save();
+                }
 
-		}
-	}
+                if (this.printSuccess) {
+                    // write success message
+                    String msg = (String) ctx.get(successMessageKey);
+                    if (msg == null) {
+                        pw.write("success");
+                    } else {
+                        pw.write(msg);
+                    }
+                }
 
-	public void init(ServletConfig cfg) throws ServletException {
-		super.init(cfg);
+            } catch (Exception e) {
+                pw.write(ClassUtils.getShortClassName(e.getClass()) + "\n"
+                        + e.getMessage());
+            } finally {
+                pw.close();
 
-		String jndiProperties = cfg.getInitParameter(JNDI_PROPERTIES_KEY);
-		String jndiAddress = cfg.getInitParameter(JNDI_ADDRESS_KEY);
-		this.user = cfg.getInitParameter(USER_KEY);
-		this.password = cfg.getInitParameter(PASSWORD_KEY);
+            }
 
-		try {
+        } catch (Exception e) {
+            throw new ServletException(e);
 
-			// parse catalog
-			ConfigParser parser = new ConfigParser();
-			parser.parse(JcrCommandServlet.class.getClassLoader().getResource(
-					cfg.getInitParameter(CATALOG_KEY)));
-			catalog = CatalogFactoryBase.getInstance().getCatalog();
+        } finally {
+            if (closeSession && session != null) {
+                session.logout();
+            }
 
-			// get repository
-			InputStream is = new ByteArrayInputStream(jndiProperties
-					.getBytes("UTF-8"));
-			Properties props = new Properties();
-			props.load(is);
-			InitialContext ctx = new InitialContext(props);
-			this.repository = (Repository) ctx.lookup(jndiAddress);
+        }
+    }
 
-		} catch (Exception e) {
-			String msg = "unable to get repository through jndi";
-			log.error(msg, e);
-			throw new ServletException(msg, e);
+    public void init(ServletConfig cfg) throws ServletException {
+        super.init(cfg);
 
-		}
-	}
+        String jndiProperties = cfg.getInitParameter(JNDI_PROPERTIES_KEY);
+        String jndiAddress = cfg.getInitParameter(JNDI_ADDRESS_KEY);
+        this.user = cfg.getInitParameter(USER_KEY);
+        this.password = cfg.getInitParameter(PASSWORD_KEY);
+        
+        this.successMessageKey = cfg.getInitParameter(SUCCESS_MESSAGE_KEY);
+
+        if (cfg.getInitParameter(PRINT_SUCCESS_KEY) != null) {
+            this.printSuccess = Boolean.valueOf(cfg
+                    .getInitParameter(PRINT_SUCCESS_KEY));
+        }
+
+        if (cfg.getInitParameter(AUTO_SAVE_KEY) != null) {
+            this.autoSave = Boolean
+                    .valueOf(cfg.getInitParameter(AUTO_SAVE_KEY));
+        }
+
+        if (cfg.getInitParameter(SESSION_KEY) != null) {
+            this.sessionKey = cfg.getInitParameter(SESSION_KEY);
+        }
+
+        try {
+
+            // parse catalog
+            ConfigParser parser = new ConfigParser();
+            parser.parse(JcrCommandServlet.class.getClassLoader().getResource(
+                    cfg.getInitParameter(CATALOG_KEY)));
+            catalog = CatalogFactoryBase.getInstance().getCatalog();
+
+            // get repository
+            InputStream is = new ByteArrayInputStream(jndiProperties
+                    .getBytes("UTF-8"));
+            Properties props = new Properties();
+            props.load(is);
+            InitialContext ctx = new InitialContext(props);
+            this.repository = (Repository) ctx.lookup(jndiAddress);
+
+        } catch (Exception e) {
+            String msg = "unable to get repository through jndi";
+            log.error(msg, e);
+            throw new ServletException(msg, e);
+
+        }
+    }
 
 }

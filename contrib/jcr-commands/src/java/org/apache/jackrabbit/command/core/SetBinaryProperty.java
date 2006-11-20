@@ -16,56 +16,39 @@
  */
 package org.apache.jackrabbit.command.core;
 
-import javax.jcr.Item;
+import java.io.InputStream;
 
-import org.apache.commons.chain.Command;
+import javax.jcr.Node;
+
 import org.apache.commons.chain.Context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Save the current working <code>Item</code> if specified, or the current
- * working <code>Session</code>
+ * Set a binary <code>Property</code>
  */
-public class Save implements Command {
+public class SetBinaryProperty extends AbstractSetProperty {
     /** logger */
-    private static Log log = LogFactory.getLog(Save.class);
-
-    // ---------------------------- < keys >
-    /** path key */
-    private String pathKey = "path";
+    private static Log log = LogFactory.getLog(SetBinaryProperty.class);
 
     /**
      * {@inheritDoc}
      */
     public boolean execute(Context ctx) throws Exception {
-        String path = (String) ctx.get(this.pathKey);
+        InputStream value = (InputStream) ctx.get(this.valueKey);
+        String name = (String) ctx.get(this.nameKey);
+        String parent = (String) ctx.get(this.parentPathKey);
 
-        if (path == null) {
-            log.debug("saving session");
-            CommandHelper.getSession(ctx).save();
-        } else {
-            log.debug("saving node at " + path);
-            Item i = CommandHelper.getItem(ctx, path);
-            i.save();
+        Node node = CommandHelper.getNode(ctx, parent);
+        if (log.isDebugEnabled()) {
+            log.debug("setting property to node at " + node.getPath()
+                    + ". property=" + name + " value=" + value);
         }
+
+        node.setProperty(name, value);
 
         return false;
     }
 
-    /**
-     * @return the path key
-     */
-    public String getPathKey() {
-        return pathKey;
-    }
-
-    /**
-     * @param pathKey
-     *        the path key to set
-     */
-    public void setPathKey(String pathKey) {
-        this.pathKey = pathKey;
-    }
 }

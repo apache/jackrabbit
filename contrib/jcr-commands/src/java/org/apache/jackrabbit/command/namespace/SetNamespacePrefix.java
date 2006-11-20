@@ -14,9 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.command.core;
-
-import javax.jcr.Item;
+package org.apache.jackrabbit.command.namespace;
 
 import org.apache.commons.chain.Command;
 import org.apache.commons.chain.Context;
@@ -25,47 +23,59 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Save the current working <code>Item</code> if specified, or the current
- * working <code>Session</code>
+ * Sets a namespace prefix
  */
-public class Save implements Command {
+public class SetNamespacePrefix implements Command {
     /** logger */
-    private static Log log = LogFactory.getLog(Save.class);
+    private static Log log = LogFactory.getLog(SetNamespacePrefix.class);
 
     // ---------------------------- < keys >
-    /** path key */
-    private String pathKey = "path";
+    /** prefix key */
+    private String prefixKey = "prefix";
+
+    /** uri key */
+    private String uriKey = "uri";
 
     /**
      * {@inheritDoc}
      */
     public boolean execute(Context ctx) throws Exception {
-        String path = (String) ctx.get(this.pathKey);
-
-        if (path == null) {
-            log.debug("saving session");
-            CommandHelper.getSession(ctx).save();
-        } else {
-            log.debug("saving node at " + path);
-            Item i = CommandHelper.getItem(ctx, path);
-            i.save();
+        String prefix = (String) ctx.get(this.prefixKey);
+        String uri = (String) ctx.get(this.uriKey);
+        if (log.isDebugEnabled()) {
+            log.debug("setting namespace prefix uri=" + uri + " new prefix=" + prefix);
         }
-
+        CommandHelper.getSession(ctx).setNamespacePrefix(prefix, uri);
         return false;
     }
 
     /**
-     * @return the path key
+     * @return the prefix key.
      */
-    public String getPathKey() {
-        return pathKey;
+    public String getPrefixKey() {
+        return prefixKey;
     }
 
     /**
-     * @param pathKey
-     *        the path key to set
+     * @param prefixKey
+     *        the prefix key to set
      */
-    public void setPathKey(String pathKey) {
-        this.pathKey = pathKey;
+    public void setPrefixKey(String prefixKey) {
+        this.prefixKey = prefixKey;
+    }
+
+    /**
+     * @return the uri key
+     */
+    public String getUriKey() {
+        return uriKey;
+    }
+
+    /**
+     * @param uriKey
+     *        the uri key to set
+     */
+    public void setUriKey(String uriKey) {
+        this.uriKey = uriKey;
     }
 }
