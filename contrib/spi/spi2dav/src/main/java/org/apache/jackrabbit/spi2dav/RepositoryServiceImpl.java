@@ -144,6 +144,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.LoginException;
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -973,6 +974,15 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         CheckoutMethod method = new CheckoutMethod(uri);
+        execute(method, sessionInfo);
+    }
+
+    /**
+     * @see RepositoryService#removeVersion(SessionInfo, NodeId, NodeId)
+     */
+    public void removeVersion(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId) throws ReferentialIntegrityException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        String uri = getItemUri(versionId, sessionInfo);
+        DeleteMethod method = new DeleteMethod(uri);
         execute(method, sessionInfo);
     }
 
