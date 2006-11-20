@@ -47,6 +47,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.util.Iterator;
@@ -62,6 +63,8 @@ public class WorkspaceImporter implements Importer {
 
     private final NodeState importTarget;
     private final WorkspaceImpl wsp;
+    private final SessionImpl session;
+    private final VersionManager versionManager;
     private final NodeTypeRegistry ntReg;
     private final HierarchyManager hierMgr;
     private final BatchedItemOperations itemOps;
@@ -103,20 +106,20 @@ public class WorkspaceImporter implements Importer {
                              int uuidBehavior)
             throws PathNotFoundException, ConstraintViolationException,
             VersionException, LockException, RepositoryException {
+        this.wsp = wsp;
+        this.session = (SessionImpl) wsp.getSession();
+        this.versionManager = session.getVersionManager();
+        this.ntReg = ntReg;
+        this.uuidBehavior = uuidBehavior;
 
-        SessionImpl ses = (SessionImpl) wsp.getSession();
-        itemOps = new BatchedItemOperations(wsp.getItemStateManager(),
-                ntReg, ses.getLockManager(), ses, wsp.getHierarchyManager(),
-                ses.getNamespaceResolver());
+        itemOps = new BatchedItemOperations(
+                wsp.getItemStateManager(), ntReg, session.getLockManager(),
+                session, wsp.getHierarchyManager(), session.getNamespaceResolver());
         hierMgr = wsp.getHierarchyManager();
 
         // perform preliminary checks
         itemOps.verifyCanWrite(parentPath);
         importTarget = itemOps.getNodeState(parentPath);
-
-        this.wsp = wsp;
-        this.ntReg = ntReg;
-        this.uuidBehavior = uuidBehavior;
 
         aborted = false;
 
@@ -264,10 +267,6 @@ public class WorkspaceImporter implements Importer {
          */
         EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
         if (ent.includesNodeType(QName.MIX_VERSIONABLE)) {
-            PropDef def;
-            PropertyState prop;
-            SessionImpl session = (SessionImpl) wsp.getSession();
-            VersionManager vMgr = session.getVersionManager();
             /**
              * check if there's already a version history for that
              * node; this would e.g. be the case if a versionable node
@@ -276,46 +275,55 @@ public class WorkspaceImporter implements Importer {
              * IMPORT_UUID_COLLISION_REPLACE_EXISTING;
              * otherwise create a new version history
              */
-            VersionHistory vh = vMgr.getVersionHistory(session, node);
-            if (vh == null) {
-                vh = vMgr.createVersionHistory(session, node);
+            VersionHistory history = versionManager.getVersionHistory(session, node);
+            if (history == null) {
+                history = versionManager.createVersionHistory(session, node);
             }
+            Version rootVersion = history.getRootVersion();
 
             // jcr:versionHistory
-            if (!node.hasPropertyName(QName.JCR_VERSIONHISTORY)) {
-                def = itemOps.findApplicablePropertyDefinition(QName.JCR_VERSIONHISTORY,
-                        PropertyType.REFERENCE, false, node);
-                prop = itemOps.createPropertyState(node, QName.JCR_VERSIONHISTORY,
-                        PropertyType.REFERENCE, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getUUID()))});
-            }
+            conditionalAddProperty(
+                    node, QName.JCR_VERSIONHISTORY, PropertyType.REFERENCE, false,
+                    InternalValue.create(new UUID(history.getUUID())));
 
             // jcr:baseVersion
-            if (!node.hasPropertyName(QName.JCR_BASEVERSION)) {
-                def = itemOps.findApplicablePropertyDefinition(QName.JCR_BASEVERSION,
-                        PropertyType.REFERENCE, false, node);
-                prop = itemOps.createPropertyState(node, QName.JCR_BASEVERSION,
-                        PropertyType.REFERENCE, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
-            }
+            conditionalAddProperty(
+                    node, QName.JCR_BASEVERSION, PropertyType.REFERENCE, false,
+                    InternalValue.create(new UUID(rootVersion.getUUID())));
 
             // jcr:predecessors
-            if (!node.hasPropertyName(QName.JCR_PREDECESSORS)) {
-                def = itemOps.findApplicablePropertyDefinition(QName.JCR_PREDECESSORS,
-                        PropertyType.REFERENCE, true, node);
-                prop = itemOps.createPropertyState(node, QName.JCR_PREDECESSORS,
-                        PropertyType.REFERENCE, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
-            }
+            conditionalAddProperty(
+                    node, QName.JCR_PREDECESSORS, PropertyType.REFERENCE, true,
+                    InternalValue.create(new UUID(rootVersion.getUUID())));
 
             // jcr:isCheckedOut
-            if (!node.hasPropertyName(QName.JCR_ISCHECKEDOUT)) {
-                def = itemOps.findApplicablePropertyDefinition(QName.JCR_ISCHECKEDOUT,
-                        PropertyType.BOOLEAN, false, node);
-                prop = itemOps.createPropertyState(node, QName.JCR_ISCHECKEDOUT,
-                        PropertyType.BOOLEAN, def);
-                prop.setValues(new InternalValue[]{InternalValue.create(true)});
-            }
+            conditionalAddProperty(
+                    node, QName.JCR_ISCHECKEDOUT, PropertyType.BOOLEAN, false,
+                    InternalValue.create(true));
+        }
+    }
+
+    /**
+     * Adds the the given property to a node unless the property already
+     * exists.
+     *
+     * @param node the node to which the property is added
+     * @param name name of the property
+     * @param type property type (see {@link PropertyType})
+     * @param multiple whether the property is multivalued
+     * @param value initial value of the property, if it needs to be added
+     * @throws RepositoryException if the property could not be added
+     */
+    private void conditionalAddProperty(
+            NodeState node, QName name, int type, boolean multiple,
+            InternalValue value)
+            throws RepositoryException {
+        if (!node.hasPropertyName(name)) {
+            PropDef def = itemOps.findApplicablePropertyDefinition(
+                    name, type, multiple, node);
+            PropertyState prop = itemOps.createPropertyState(
+                    node, name, type, def);
+            prop.setValues(new InternalValue[] { value });
         }
     }
 
@@ -403,9 +411,8 @@ public class WorkspaceImporter implements Importer {
                 // there's no node with that name...
                 if (id == null) {
                     // no potential uuid conflict, always create new node
-
-                    NodeDef def =
-                            itemOps.findApplicableNodeDefinition(nodeName, ntName, parent);
+                    NodeDef def = itemOps.findApplicableNodeDefinition(
+                            nodeName, ntName, parent);
                     if (def.isProtected()) {
                         // skip protected node
                         parents.push(null); // push null onto stack for skipped node
@@ -415,32 +422,7 @@ public class WorkspaceImporter implements Importer {
                     }
 
                     if (parent.hasPropertyName(nodeName)) {
-                        /**
-                         * a property with the same name already exists; if this property
-                         * has been imported as well (e.g. through document view import
-                         * where an element can have the same name as one of the attributes
-                         * of its parent element) we have to rename the onflicting property;
-                         *
-                         * see http://issues.apache.org/jira/browse/JCR-61
-                         */
-                        PropertyId propId = new PropertyId(parent.getNodeId(), nodeName);
-                        PropertyState conflicting = itemOps.getPropertyState(propId);
-                        if (conflicting.getStatus() == ItemState.STATUS_NEW) {
-                            // assume this property has been imported as well;
-                            // rename conflicting property
-                            // @todo use better reversible escaping scheme to create unique name
-                            QName newName = new QName(nodeName.getNamespaceURI(), nodeName.getLocalName() + "_");
-                            if (parent.hasPropertyName(newName)) {
-                                newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
-                            }
-                            PropertyState newProp =
-                                    itemOps.createPropertyState(parent, newName,
-                                            conflicting.getType(), conflicting.getValues().length);
-                            newProp.setValues(conflicting.getValues());
-                            parent.removePropertyName(nodeName);
-                            itemOps.store(parent);
-                            itemOps.destroy(conflicting);
-                        }
+                        resolvePropertyNameConflict(parent, nodeName);
                     }
 
                     // check if new node can be added (check access rights &
@@ -453,21 +435,14 @@ public class WorkspaceImporter implements Importer {
                     node = itemOps.createNodeState(parent, nodeName, ntName, mixins, null, def);
                 } else {
                     // potential uuid conflict
-                    NodeState conflicting;
-
                     try {
-                        conflicting = itemOps.getNodeState(id);
-                    } catch (ItemNotFoundException infe) {
-                        conflicting = null;
-                    }
-                    if (conflicting != null) {
+                        NodeState conflicting = itemOps.getNodeState(id);
                         // resolve uuid conflict
                         node = resolveUUIDConflict(parent, conflicting, nodeInfo);
-                    } else {
+                    } catch (ItemNotFoundException e) {
                         // create new with given uuid
-
-                        NodeDef def =
-                                itemOps.findApplicableNodeDefinition(nodeName, ntName, parent);
+                        NodeDef def = itemOps.findApplicableNodeDefinition(
+                                nodeName, ntName, parent);
                         if (def.isProtected()) {
                             // skip protected node
                             parents.push(null); // push null onto stack for skipped node
@@ -510,6 +485,40 @@ public class WorkspaceImporter implements Importer {
                 aborted = true;
                 itemOps.cancel();
             }
+        }
+    }
+
+    /**
+     * Resolves a conflict where a property with the same name as a node
+     * being imported already exists; if this property has been imported
+     * as well (e.g. through document view import where an element can have
+     * the same name as one of the attributes of its parent element) we have
+     * to rename the onflicting property.
+     *
+     * @see http://issues.apache.org/jira/browse/JCR-61
+     * @param parent parent node
+     * @param name name of the node being imported
+     * @throws RepositoryException
+     */
+    private void resolvePropertyNameConflict(NodeState parent, QName name)
+            throws RepositoryException {
+        PropertyId propId = new PropertyId(parent.getNodeId(), name);
+        PropertyState conflicting = itemOps.getPropertyState(propId);
+        if (conflicting.getStatus() == ItemState.STATUS_NEW) {
+            // assume this property has been imported as well;
+            // rename conflicting property
+            // @todo use better reversible escaping scheme to create unique name
+            QName newName = new QName(name.getNamespaceURI(), name.getLocalName() + "_");
+            while (parent.hasPropertyName(newName)) {
+                newName = new QName(newName.getNamespaceURI(), newName.getLocalName() + "_");
+            }
+            InternalValue[] values = conflicting.getValues();
+            PropertyState newProp = itemOps.createPropertyState(
+                    parent, newName, conflicting.getType(), values.length);
+            newProp.setValues(values);
+            parent.removePropertyName(name);
+            itemOps.store(parent);
+            itemOps.destroy(conflicting);
         }
     }
 
@@ -616,4 +625,5 @@ public class WorkspaceImporter implements Importer {
             itemOps.update();
         }
     }
+
 }
