@@ -62,12 +62,14 @@ function refreshPath() {
  * Populate the item list thorugh ajax
  */
 function populateItemList(){
+	var w=dojo.widget.byId("itemList");
+	w.store.setData([]);
+
 	var kw = {
 		url: "itemlist.jsp?path=" + currentItem,
 		mimetype: "text/javascript",
 		load: function(type, data, http) {
 			var w=dojo.widget.byId("itemList");
-			w.store.setData([]);
 			w.store.setData(data);
 			// Connect to on click event
 			var row = dojo.byId("itemList").getElementsByTagName('tr');
@@ -88,27 +90,15 @@ function onClickItemList() {
  * Populate the description panel thorugh ajax
  */
 function populateInfo(){
-	// Item
-	var kwitem = {
-		url: "info/item.jsp?path=" + currentItem,
-		mimetype: "text/html",
-		load: function(type, data, http) {
-			var pathDiv = document.getElementById('itemInfo');
-			pathDiv.innerHTML= data;
-		}
-	};
-	dojo.io.bind(kwitem);
 
-	// definition
-	var kwdef = {
-		url: "info/definition.jsp?path=" + currentItem,
-		mimetype: "text/html",
-		load: function(type, data, http) {
-			var pathDiv = document.getElementById('definitionInfo');
-			pathDiv.innerHTML= data;
-		}
-	};
-	dojo.io.bind(kwdef);
+	var itemTab = dojo.widget.byId("itemTab");
+	itemTab.setUrl("info/item.jsp?path=" + currentItem); 
+	
+	var typeTab = dojo.widget.byId("typeTab");
+	typeTab.setUrl("info/type.jsp?path=" + currentItem); 
+
+	var definitionTab = dojo.widget.byId("definitionTab");
+	definitionTab.setUrl("info/definition.jsp?path=" + currentItem); 
 
 }
 
@@ -135,7 +125,19 @@ function hideDialog() {
 */
 function submitDialog() {
 	try{
-		dojoForm(document.getElementById('dialogForm'));
+		dojoForm(document.getElementById('dialogForm'), new Array());
+	} catch(E) {
+		hideDialog();
+	};
+	hideDialog();
+}
+
+/*
+* Submits the dialog and reloads the array of tree nodes.
+*/
+function submitDialog(nodes) {
+	try{
+		dojoForm(document.getElementById('dialogForm'), nodes);
 	} catch(E) {
 		hideDialog();
 	};
@@ -145,19 +147,30 @@ function submitDialog() {
 /*
 * Helper function to submit a form through ajax
 */
-function dojoForm(form) {
+function dojoForm(form, nodes) {
 	var kw = {
-		mimetype: "text/plain",
 		formNode: form,
+		mimetype: "text/plain",
 		load: function(t, txt, e) {
-			var pathDiv = document.getElementById('path');
-			pathDiv.innerHTML= "<strong><font color='red'>" + txt + "</font></strong>" ;
-			setTimeout("refreshPath()", 10000)
-		},
+			var treeController = dojo.widget.manager.getWidgetById('treeController');
+			var treeSelector = dojo.widget.manager.getWidgetById('selector');
+			for (key in nodes) {
+				var node = nodes[key];
+				if (node==null) {
+					node = dojo.widget.manager.getWidgetById('/');
+				}
+				treeSelector.deselectAll() ;
+				treeController.collapse(node) ;
+				treeController.expand(node) ;
+				treeSelector.select(node) ;
+			}
+			dojo.event.topic.publish("successMessageTopic", txt);
+		},		
 		error: function(t, e) {
-			dojo.debug("Error!... " + e.message);
+			dojo.event.topic.publish("errorMessageTopic", {message: e.message, type: "ERROR"});
 		}
 	};
 	dojo.io.bind(kw);
 	return false;
 }
+

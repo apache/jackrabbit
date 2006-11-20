@@ -1,7 +1,9 @@
 <%@taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 <%@taglib uri="http://jakarta.apache.org/taglib/string" prefix="str" %>
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
-<jcr:session>
+<%
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
+%>
 <div class="dialog">
 <h3>Workspace - Accessible workspaces</h3>
 <hr height="1"/>
@@ -13,4 +15,3 @@
 <hr height="1"/>
 <input type="button" value="Close" onClick="hideDialog();"/>
 </div>
-</jcr:session>

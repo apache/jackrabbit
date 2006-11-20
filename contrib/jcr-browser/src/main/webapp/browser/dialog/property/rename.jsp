@@ -3,15 +3,14 @@
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <% 
 pageContext.setAttribute("path", request.getParameter("path")); 
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
 %>
-<jcr:session>
 <jcr:set var="item" item="${path}"/>
-
-
 <div class="dialog">
 <h3>Property - Rename</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="response.txt" id="dialogForm" 
+method="POST" onsubmit="return false;">
 <table class="dialog">
 
 <c:if test="${item.node}">
@@ -42,6 +41,3 @@ pageContext.setAttribute("path", request.getParameter("path"));
 </table>
 </form>
 </div>
-
-
-</jcr:session>

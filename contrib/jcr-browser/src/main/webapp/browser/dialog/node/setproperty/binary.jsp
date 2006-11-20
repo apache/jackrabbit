@@ -1,8 +1,58 @@
 <%@taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 <%@taglib uri="http://jakarta.apache.org/taglib/string" prefix="str" %>
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
-<c:set var="type" scope="request">binary</c:set>
-<c:set var="editor" scope="request">
-<input type="file" name="value"/>
-</c:set>
-<c:import url="setproperty.jsp"></c:import>
+<% 
+pageContext.setAttribute("path", request.getParameter("path")); 
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
+%>
+<div class="dialog">
+<jcr:set var="node" item="${path}"/>
+<c:if test="${!node.node}">
+	<jcr:set var="node" item="${node.parent}"/>
+</c:if>
+<h3>Node - Set Binary property</h3>
+<hr height="1"/>	
+<form 
+	action="<c:url value="/command/node/setbinaryproperty.iframe?flavor=text/html"/>" 
+	id="dialogForm" 
+	enctype="multipart/form-data" 
+	method="POST" 
+	onsubmit="return false;">
+<table class="dialog">
+<tr>
+	<th width="100">Parent</th>
+	<td>
+	<input type="hidden" name="type" value="Binary"/>
+	<input type="hidden" name="parentPath" value="<c:out value="${node.path}"/>"/>
+	<input type="hidden" name="type" value="Date"/>	
+	<c:out value="${node.path}"/>
+	</td>
+</tr>
+<tr>
+	<th>Name</th>
+	<td><input type="text" name="name"/></td>
+</tr>
+<tr>
+	<th>Binary</th>
+	<td>
+		<input type="file" name="file"/>
+</tr>
+<tr>
+	<td colspan="2" align="center">
+		<hr height="1"/>
+		<input type="button" value="Submit" onClick="internalSubmitDialog();"/>
+		<input type="button" value="Cancel" onClick="hideDialog();"/>
+	</td>
+</tr>
+</table>
+</form>
+</div>
+<script language="JavaScript" type="text/javascript">
+function internalSubmitDialog() {
+	// nodes to refresh 
+	var parent = dojo.widget.manager.getWidgetById(currentItem);
+	var nodes = new Array(parent);
+	submitDialog(nodes);
+}
+</script>
+

@@ -1,7 +1,8 @@
 <div class="dialog">
 <h3>Session - Export document view</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="response.txt" id="dialogForm"
+method="POST" onsubmit="return false;">
 <table class="dialog">
 <tr>
 	<th height="25" width="100">Skip binary</th>

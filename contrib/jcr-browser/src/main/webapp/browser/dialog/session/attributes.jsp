@@ -2,7 +2,9 @@
 <%@taglib uri="http://jakarta.apache.org/taglib/string" prefix="str" %>
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <%@page import="javax.jcr.Session"%>
-<jcr:session>
+<%
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
+%>
 <div class="dialog">
 <h3>Session - Attributes</h3>
 <hr height="1"/>
@@ -17,4 +19,3 @@
 <hr height="1"/>
 <input type="button" value="Close" onClick="hideDialog();"/>
 </div>
-</jcr:session>

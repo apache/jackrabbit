@@ -15,10 +15,42 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 -->
-
-<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/j2ee/dtds/web-app_2_2.dtd">
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">
 <web-app>
+	
 	<display-name>Jackrabbit JCR Browser</display-name>
+
+	<!-- ====================================================================== -->
+	<!-- F I L T E R                                                            -->
+	<!-- ====================================================================== -->
+
+	<filter>
+		<filter-name>loginFilter</filter-name>
+		<filter-class>org.apache.jackrabbit.browser.LoginFilter</filter-class>
+	</filter>
+	
+	<filter>
+		<filter-name>iframeIOFilter</filter-name>
+		<filter-class>org.apache.jackrabbit.browser.iframeio.IFrameIOFilter</filter-class>
+	</filter>	
+
+	<filter-mapping>
+		<filter-name>loginFilter</filter-name>
+		<url-pattern>/browser/*</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>iframeIOFilter</filter-name>
+		<url-pattern>*.iframe</url-pattern>
+	</filter-mapping>
+	
+	<!-- ====================================================================== -->
+	<!-- L I S T E N E R                                                        -->
+	<!-- ====================================================================== -->
+	<listener>
+		<listener-class>org.apache.jackrabbit.browser.JcrSessionListener</listener-class>
+	</listener>
+
     <!-- ====================================================================== -->
     <!-- L O G G I N G   S E R V L E T                                          -->
     <!-- ====================================================================== -->
@@ -178,6 +210,22 @@
 			<param-name>password</param-name>
 			<param-value>admin</param-value>
 		</init-param>
+		<init-param>
+			<param-name>print.success</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>success.message.key</param-name>
+			<param-value>success.message</param-value>
+		</init-param>
+		<init-param>
+			<param-name>auto.save</param-name>
+			<param-value>false</param-value>
+		</init-param>					
+		<init-param>
+			<param-name>session.key</param-name>
+			<param-value>jcr.session</param-value>
+		</init-param>	
 		<load-on-startup>6</load-on-startup>
 	</servlet>
 
@@ -194,8 +242,9 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>JCR commands</servlet-name>
-		<url-pattern>/command</url-pattern>
+		<url-pattern>/command/*</url-pattern>
 	</servlet-mapping>
+
 	<!-- ====================================================================== -->
 	<!-- T A G L I B S                                                          -->
 	<!-- ====================================================================== -->
@@ -284,16 +333,11 @@
 		<env-entry-type>java.lang.String</env-entry-type>
 	</env-entry>
 	
+	
 	<!-- ====================================================================== -->
 	<!-- L O G I N                                                              -->
 	<!-- ====================================================================== -->
 	
-	<!--
-	  Define the Members-only area, by defining
-	  a "Security Constraint" on this Application, and
-	  mapping it to the subdirectory (URL) that we want
-	  to restrict.
-	 -->
 	<security-constraint>
 	  <web-resource-collection>
 	    <web-resource-name>

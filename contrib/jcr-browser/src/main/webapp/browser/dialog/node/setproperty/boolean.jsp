@@ -3,6 +3,8 @@
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <c:set var="type" scope="request">boolean</c:set>
 <c:set var="editor" scope="request">
-<input type="checkbox" name="value"/>
+<input type="hidden" name="type" value="Boolean"/>
+<input type="radio" name="value" value="true" />true
+<input type="radio" name="value" value="false" checked="checked"/>false
 </c:set>
-<c:import url="setproperty.jsp"></c:import>
+<jsp:include flush="true" page="setproperty.jsp"></jsp:include>

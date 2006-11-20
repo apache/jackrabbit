@@ -4,9 +4,10 @@
 <%@page import="javax.jcr.PropertyType"%>
 <% 
 pageContext.setAttribute("path", request.getParameter("path")); 
+pageContext.setAttribute("jcrsession", session.getAttribute("jcr.session"));
 %>
-<jcr:session>
 [<% int index = 0 ;%>
+<%@page import="javax.jcr.Property"%>
 <jcr:set var="parent" item="${path}"/>
 <c:forEach var="node" items="${parent.nodes}">
 {
@@ -14,7 +15,7 @@ Id:'<str:escape><c:out value="${node.path}"/></str:escape>',
 Index:<%= index++ %>,
 Node:'<str:escape><c:out value="${node.node}"/></str:escape>',
 Name:'<a href="<c:url value="/repository/default"/><str:escape><c:out value="${node.path}"/></str:escape>" target="_new"><str:escape><c:out value="${node.name}"/></str:escape></a>',
-Value:'',
+Value:'-',
 Type:'<str:escape><c:out value="${node.primaryNodeType.name}"/></str:escape>',
 New:'<c:out value="${node.new}"/>',
 Modified:'<c:out value="${node.modified}"/>'
@@ -22,7 +23,9 @@ Modified:'<c:out value="${node.modified}"/>'
 </c:forEach>
 <% int nodesIndex = index ;%>
 <c:forEach var="prop" items="${parent.properties}">
-<% if (nodesIndex!=index) {%>,<%}%>
+<% 
+Property prop = (Property) pageContext.getAttribute("prop") ;
+if (nodesIndex!=index) {%>,<%}%>
 {
 	Id:'<str:escape><c:out value="${prop.path}"/></str:escape>',
 	Index:<%= index++ %>,
@@ -38,10 +41,9 @@ Modified:'<c:out value="${node.modified}"/>'
 	</c:otherwise> 
 </c:choose>
 
-	Type:'<str:escape><%= PropertyType.nameFromValue((int) pageContext.getAttributesScope("prop")) %></str:escape>',
+	Type:'<str:escape><%= PropertyType.nameFromValue(prop.getType()) %></str:escape>',
 	New:'<c:out value="${prop.new}"/>',
 	Modified:'<c:out value="${prop.modified}"/>'
 }
 </c:forEach>
 ]
-</jcr:session>
