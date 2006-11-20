@@ -31,7 +31,7 @@ public class Remove extends AbstractOperation {
 
     private ItemState removeState;
 
-    private Remove(ItemState removeState) {
+    protected Remove(ItemState removeState) {
         this.removeState = removeState;
 
         addAffectedItemState(removeState);
@@ -40,11 +40,19 @@ public class Remove extends AbstractOperation {
 
     //----------------------------------------------------------< Operation >---
     /**
-     *
-     * @param visitor
+     * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         visitor.visit(this);
+    }
+
+    /**
+     * Throws UnsupportedOperationException
+     *
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
     }
 
     //----------------------------------------< Access Operation Parameters >---

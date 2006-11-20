@@ -32,7 +32,6 @@ import org.apache.jackrabbit.jcr2spi.nodetype.ValueConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -78,7 +77,7 @@ public class PropertyState extends ItemState {
         this.name = overlayedState.name;
         this.def = overlayedState.def;
 
-        reset();
+        init(overlayedState.getType(), overlayedState.getValues());
     }
 
     /**
@@ -152,41 +151,69 @@ public class PropertyState extends ItemState {
 
     /**
      * {@inheritDoc}
-     * @see ItemState#refresh()
+     * @see ItemState#reload(boolean)
      */
-    public void refresh() {
+    public void reload(boolean keepChanges) {
         if (isWorkspaceState()) {
-            // refresh from persistent storage
+            // refresh from persistent storage ('keepChanges' not relevant).
             try {
                 PropertyState tmp = isf.createPropertyState(getPropertyId(), parent);
-                init(tmp.getType(), tmp.getValues());
-                setStatus(Status.MODIFIED);
+                if (merge(tmp, false) || getStatus() == Status.INVALIDATED) {
+                    setStatus(Status.MODIFIED);
+                }
             } catch (NoSuchItemStateException e) {
-                // does not exist anymore
+                // TODO: make sure the property-entry is removed from the parent state
+                // inform overlaying state and listeners
                 setStatus(Status.REMOVED);
-                // todo also remove from parent? how do we make sure the parent
-                // todo does not get modified by this removal?
-                // parent.propertyStateRemoved(this);
             } catch (ItemStateException e) {
                 // todo rather throw? remove from parent?
                 log.warn("Exception while refreshing property state: " + e);
                 log.debug("Stacktrace: ", e);
             }
         } else {
-            // session state
-            if (getStatus() == Status.EXISTING || getStatus() == Status.INVALIDATED) {
-                // calling refresh on the workspace state will in turn
-                // also refresh / reset the session state
-                overlayedState.refresh();
+            /* session-state: if keepChanges is true only existing or invalidated
+               states must be updated. otherwise the state gets updated and might
+               be marked 'Stale' if transient changes are present and the
+               workspace-state is modified. */
+            if (!keepChanges || getStatus() == Status.EXISTING || getStatus() == Status.INVALIDATED) {
+                // calling refresh on the workspace state will in turn reset this state
+                overlayedState.reload(keepChanges);
             }
         }
     }
 
     /**
-     * {@inheritDoc}
-     * @see ItemState#invalidate()
+     * If <code>keepChanges</code> is true, this method does nothing and returns
+     * false. Otherwise type and values of the other property state are compared
+     * to this state. If they differ, they will be copied to this state and
+     * this method returns true.
+     *
+     * @see ItemState#merge(ItemState, boolean)
      */
-    public void invalidate() {
+    boolean merge(ItemState another, boolean keepChanges) {
+        if (another == null) {
+            return false;
+        }
+        if (another.isNode()) {
+            throw new IllegalArgumentException("Attempt to merge property state with node state.");
+        }
+        if (keepChanges || !diff(this, (PropertyState) another)) {
+            // nothing to do.
+            return false;
+        }
+
+        synchronized (another) {
+            PropertyState pState = (PropertyState) another;
+            init(pState.type, pState.values);
+        }
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see ItemState#invalidate(boolean)
+     */
+    public void invalidate(boolean recursive) {
         if (isWorkspaceState()) {
             // workspace state
             setStatus(Status.INVALIDATED);
@@ -195,7 +222,7 @@ public class PropertyState extends ItemState {
             if (getStatus() == Status.EXISTING) {
                 // set workspace state invalidated, this will in turn invalidate
                 // this (session) state as well
-                overlayedState.invalidate();
+                overlayedState.invalidate(recursive);
             }
         }
     }
@@ -282,20 +309,8 @@ public class PropertyState extends ItemState {
                 break;
 
             case Event.PROPERTY_CHANGED:
-                // TODO: improve.
-                /* retrieve property value and type from server even if
-                   changes were issued from this session (changelog).
-                   this is currently the only way to update the workspace
-                   state, which is not connected to its overlaying session-state.
-                */
-                try {
-                    PropertyState tmp = isf.createPropertyState(getPropertyId(), parent);
-                    init(tmp.getType(), tmp.getValues());
-                    setStatus(Status.MODIFIED);
-                } catch (ItemStateException e) {
-                    // TODO: rather throw?
-                    log.error("Internal Error", e);
-                }
+                // retrieve modified property value and type from server.
+                reload(false);
                 break;
 
             case Event.PROPERTY_ADDED:
@@ -318,7 +333,8 @@ public class PropertyState extends ItemState {
                 /*
                 NOTE: overlayedState must be existing, otherwise save was not
                 possible on prop. Similarly a property can only be the changelog
-                target, if it was modified. removal, add must be persisted on parent.
+                target, if it was modified. removal, add and implicit modification
+                of protected properties must be persisted by save on parent.
                 */
                 // push changes to overlayed state and reset status
                 ((PropertyState) overlayedState).init(getType(), getValues());
@@ -326,100 +342,7 @@ public class PropertyState extends ItemState {
             }
         }
     }
-
-    /**
-     * {@inheritDoc}
-     * @see ItemState#reset()
-     */
-    synchronized void reset() {
-        checkIsSessionState();
-        if (overlayedState != null) {
-            synchronized (overlayedState) {
-                PropertyState wspState = (PropertyState) overlayedState;
-                init(wspState.type, wspState.values);
-            }
-        }
-    }
-
-    /**
-     * @inheritDoc
-     * @see ItemState#remove()
-     */
-    void remove() {
-        checkIsSessionState();
-        if (getStatus() == Status.NEW) {
-            setStatus(Status.REMOVED);
-        } else {
-            setStatus(Status.EXISTING_REMOVED);
-        }
-        getParent().propertyStateRemoved(this);
-    }
-
-    /**
-     * @inheritDoc
-     * @see ItemState#revert(Set)
-     */
-    void revert(Set affectedItemStates) {
-        checkIsSessionState();
-
-        switch (getStatus()) {
-            case Status.EXISTING:
-                // nothing to do
-                break;
-            case Status.EXISTING_MODIFIED:
-            case Status.EXISTING_REMOVED:
-            case Status.STALE_MODIFIED:
-                // revert state from overlayed
-                reset();
-                setStatus(Status.EXISTING);
-                affectedItemStates.add(this);
-                break;
-            case Status.NEW:
-                // set removed
-                setStatus(Status.REMOVED);
-                // and remove from parent
-                getParent().propertyStateRemoved(this);
-                affectedItemStates.add(this);
-                break;
-            case Status.REMOVED:
-                // shouldn't happen actually, because a 'removed' state is not
-                // accessible anymore
-                log.warn("trying to revert an already removed property state");
-                getParent().propertyStateRemoved(this);
-                break;
-            case Status.STALE_DESTROYED:
-                // overlayed does not exist anymore
-                getParent().propertyStateRemoved(this);
-                affectedItemStates.add(this);
-                break;
-        }
-    }
-
-    /**
-     * @inheritDoc
-     * @see ItemState#collectTransientStates(Collection)
-     */
-    void collectTransientStates(Collection transientStates) {
-        checkIsSessionState();
-
-        switch (getStatus()) {
-            case Status.EXISTING_MODIFIED:
-            case Status.EXISTING_REMOVED:
-            case Status.NEW:
-            case Status.STALE_DESTROYED:
-            case Status.STALE_MODIFIED:
-                transientStates.add(this);
-                break;
-            case Status.EXISTING:
-            case Status.REMOVED:
-                log.debug("Collecting transient states: Ignored PropertyState with status " + getStatus());
-                break;
-            default:
-                // should never occur. status is validated upon setStatus(int)
-                log.error("Internal error: Invalid state " + getStatus());
-        }
-    }
-
+    
     /**
      * Sets the value(s) of this property.
      *
@@ -469,5 +392,35 @@ public class PropertyState extends ItemState {
             }
         }
         ValueConstraint.checkValueConstraints(definition, values);
+    }
+
+    /**
+     * Returns true, if type and/or values of the given property states differ.
+     *
+     * @param p1
+     * @param p2
+     * @return if the 2 <code>PropertyState</code>s are different in terms of
+     * type and/or values.
+     */
+    private static boolean diff(PropertyState p1, PropertyState p2) {
+        // compare type
+        if (p1.getType() != p2.getType()) {
+            return true;
+        }
+
+        QValue[] vs1 = p1.getValues();
+        QValue[] vs2 = p2.getValues();
+        if (vs1.length != vs2.length) {
+            return true;
+        } else {
+            for (int i = 0; i < vs1.length; i++) {
+                boolean eq = (vs1[i] == null) ? vs2[i] == null : vs1[i].equals(vs2[i]);
+                if (!eq) {
+                    return true;
+                }
+            }
+        }
+        // no difference
+        return false;
     }
 }

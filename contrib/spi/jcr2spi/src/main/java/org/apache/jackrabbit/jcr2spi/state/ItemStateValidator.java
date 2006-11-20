@@ -320,8 +320,7 @@ public class ItemStateValidator {
      * @throws RepositoryException
      */
     public void checkIsWritable(NodeState parentState, int options) throws VersionException,
-        LockException, ItemNotFoundException,
-        ItemExistsException, PathNotFoundException, RepositoryException {
+        LockException, ItemNotFoundException, ItemExistsException, PathNotFoundException, RepositoryException {
 
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
             // make sure current session is granted read access on parent node
@@ -329,17 +328,14 @@ public class ItemStateValidator {
                 throw new ItemNotFoundException(safeGetJCRPath(parentState));
             }
         }
-
         // make sure there's no foreign lock on parent node
         if ((options & CHECK_LOCK) == CHECK_LOCK) {
             checkLock(parentState);
         }
-
         // make sure parent node is checked-out
         if ((options & CHECK_VERSIONING) == CHECK_VERSIONING) {
             checkIsCheckedOut(parentState);
         }
-
         // constraints
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             // make sure parent node is not protected
@@ -451,13 +447,11 @@ public class ItemStateValidator {
                 throw new AccessDeniedException(safeGetJCRPath(parentState) + ": not allowed to create property with name " + propertyName);
             }
         }
-
         // constraints on property
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             // if definition is available check if prop-def is not protected either.
             checkProtection(definition);
         }
-
         // collisions
         if ((options & CHECK_COLLISION) == CHECK_COLLISION) {
             checkCollision(parentState, propertyName);
@@ -512,14 +506,12 @@ public class ItemStateValidator {
                 throw new AccessDeniedException(safeGetJCRPath(parentState) + ": not allowed to add child node '" + nodeName +"'");
             }
         }
-
         // node type constraints
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             // make sure there's an applicable definition for new child node
             EffectiveNodeType entParent = getEffectiveNodeType(parentState);
             entParent.checkAddNodeConstraints(nodeName, nodeTypeName);
         }
-
         // collisions
         if ((options & CHECK_COLLISION) == CHECK_COLLISION) {
             checkCollision(parentState, nodeName, nodeTypeName);
@@ -589,7 +581,6 @@ public class ItemStateValidator {
             // check if target not protected and not mandatory
             checkRemoveConstraints(targetState);
         }
-
         // check referential integrity of state to be deleted
         if ((options & CHECK_REFERENCES) == CHECK_REFERENCES) {
             checkReferences(targetState);

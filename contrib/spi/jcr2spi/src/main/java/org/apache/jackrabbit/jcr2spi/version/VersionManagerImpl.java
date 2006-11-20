@@ -27,14 +27,15 @@ import org.apache.jackrabbit.jcr2spi.operation.Checkin;
 import org.apache.jackrabbit.jcr2spi.operation.Restore;
 import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
 import org.apache.jackrabbit.jcr2spi.operation.Merge;
-import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.name.QName;
@@ -120,7 +121,7 @@ public class VersionManagerImpl implements VersionManager {
 
     public void removeVersion(NodeState versionHistoryState, NodeState versionState) throws RepositoryException {
         NodeState wspVersionState = getWorkspaceState(versionState);
-        Operation op = Remove.create(wspVersionState);
+        Operation op = RemoveVersion.create(wspVersionState);
         workspaceManager.execute(op);
     }
 
@@ -157,16 +158,21 @@ public class VersionManagerImpl implements VersionManager {
 
     public Collection merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
         NodeState wspState = getWorkspaceState(nodeState);
+        // TODO : needs to be fixed... repository may not support observation
         // TODO find better solution to build the mergeFailed-collection
+        EventFilter eventFilter;
+        try {
+            eventFilter = workspaceManager.createEventFilter(Event.ALL_TYPES, nodeState.getQPath(), true, null, null, false);
+        } catch (UnsupportedRepositoryOperationException e) {
+            eventFilter = null;
+        }
         final List failedIds = new ArrayList();
-        final EventFilter eventFilter = workspaceManager.createEventFilter(
-                Event.ALL_TYPES, nodeState.getQPath(), true, null, null, false);
+        final Collection fts = (eventFilter == null) ? Collections.EMPTY_LIST : Collections.singletonList(eventFilter);
+
         InternalEventListener mergeFailedCollector = new InternalEventListener() {
-
             public Collection getEventFilters() {
-                return Collections.singletonList(eventFilter);
+                return fts;
             }
-
             public void onEvent(EventBundle eventBundle) {
                 if (eventBundle.isLocal()) {
                     EventIterator it = eventBundle.getEvents();

@@ -43,6 +43,12 @@ public class Checkout extends AbstractOperation {
         visitor.visit(this);
     }
 
+    /**
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        // TODO
+    }
     //----------------------------------------< Access Operation Parameters >---
     public NodeState getNodeState() {
         return nodeState;

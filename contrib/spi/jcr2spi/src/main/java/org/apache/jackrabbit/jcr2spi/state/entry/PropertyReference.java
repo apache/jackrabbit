@@ -105,14 +105,7 @@ public class PropertyReference extends ChildItemReference implements ChildProper
      * @inheritDoc
      */
     public PropertyId getId() {
-        return idFactory.createPropertyId(parent.getNodeId(), name);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public QName getName() {
-        return name;
+        return idFactory.createPropertyId(parent.getNodeId(), getName());
     }
 
     /**
@@ -123,10 +116,20 @@ public class PropertyReference extends ChildItemReference implements ChildProper
     }
 
     /**
+     * Returns false.
+     *
      * @inheritDoc
-     * @see ChildPropertyEntry#isAvailable()
+     * @see ChildItemEntry#denotesNode()
      */
-    public boolean isAvailable() {
-        return isResolved();
+    public boolean denotesNode() {
+        return false;
+    }
+
+    /**
+     * @inheritDoc
+     * @see ChildItemEntry#getItemState()
+     */
+    public ItemState getItemState() throws NoSuchItemStateException, ItemStateException {
+        return getPropertyState();
     }
 }

@@ -16,47 +16,44 @@
  */
 package org.apache.jackrabbit.jcr2spi.state.entry;
 
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.name.QName;
 
 /**
- * <code>ChildNodeEntry</code> specifies the name, index (in the case of
- * same-name siblings) and the UUID of a child node entry.
+ * <code>ChildItemEntry</code>...
  */
-public interface ChildNodeEntry extends ChildItemEntry {
+public interface ChildItemEntry {
 
     /**
-     * @return the <code>NodeId</code> of this child node entry.
+     * True if this ChildItemEntry would resolve to a <code>NodeState</code>.
+     * 
+     * @return
      */
-    public NodeId getId();
+    public boolean denotesNode();
 
     /**
-     * @return the name of this child node entry.
+     * @return the name of this child entry.
      */
     public QName getName();
 
     /**
-     * @return the UUID of the node state which is referenced by this child node
-     * entry or <code>null</code> if the node state cannot be identified with a
-     * UUID.
+     * Returns <code>true</code> if the referenced <code>NodeState</code> is
+     * available. That is, the referenced <code>NodeState</code> is already
+     * cached and ready to be returned by {@link #getItemState()}.
+     *
+     * @return <code>true</code> if the <code>NodeState</code> is available;
+     * otherwise <code>false</code>.
      */
-    public String getUUID();
+    public boolean isAvailable();
 
     /**
-     * @return the index of this child node entry to suppport same-name siblings.
-     */
-    public int getIndex();
-
-    /**
-     * @return the referenced <code>NodeState</code>.
-     * @throws NoSuchItemStateException if the <code>NodeState</code> does not
+     * @return the referenced <code>ItemState</code>.
+     * @throws NoSuchItemStateException if the <code>ItemState</code> does not
      * exist anymore.
      * @throws ItemStateException If an error occurs while retrieving the
-     * <code>NodeState</code>.
+     * <code>ItemState</code>.
      */
-    public NodeState getNodeState()
-            throws NoSuchItemStateException, ItemStateException;
+    public ItemState getItemState() throws NoSuchItemStateException, ItemStateException;
 }

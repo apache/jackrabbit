@@ -22,6 +22,7 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
 
 /**
  * <code>ChildNodeReference</code> implements common functionality for child
@@ -105,14 +106,6 @@ public abstract class ChildNodeReference extends ChildItemReference implements C
 
     /**
      * @inheritDoc
-     * @see ChildNodeEntry#getName()
-     */
-    public QName getName() {
-        return name;
-    }
-
-    /**
-     * @inheritDoc
      * @see ChildNodeEntry#getNodeState()
      */
     public NodeState getNodeState()
@@ -121,10 +114,20 @@ public abstract class ChildNodeReference extends ChildItemReference implements C
     }
 
     /**
+     * Returns true.
+     * 
      * @inheritDoc
-     * @see ChildNodeEntry#isAvailable()
+     * @see ChildItemEntry#denotesNode()
      */
-    public boolean isAvailable() {
-        return isResolved();
+    public boolean denotesNode() {
+        return true;
+    }
+
+    /**
+     * @inheritDoc
+     * @see ChildItemEntry#getItemState()
+     */
+    public ItemState getItemState() throws NoSuchItemStateException, ItemStateException {
+        return getNodeState();
     }
 }

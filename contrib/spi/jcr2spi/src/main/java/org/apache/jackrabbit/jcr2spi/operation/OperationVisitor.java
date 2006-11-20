@@ -26,6 +26,7 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.MergeException;
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.version.VersionException;
 
 /**
@@ -72,4 +73,6 @@ public interface OperationVisitor {
     public void visit(AddLabel operation) throws VersionException, RepositoryException;
 
     public void visit(RemoveLabel operation) throws VersionException, RepositoryException;
+
+    public void visit(RemoveVersion operation) throws VersionException, AccessDeniedException, ReferentialIntegrityException, RepositoryException;
 }

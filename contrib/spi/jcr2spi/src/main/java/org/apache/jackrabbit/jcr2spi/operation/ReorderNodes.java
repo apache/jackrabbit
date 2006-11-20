@@ -52,6 +52,14 @@ public class ReorderNodes extends AbstractOperation {
         visitor.visit(this);
     }
 
+    /**
+     * Throws UnsupportedOperationException
+     *
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+    }
     //----------------------------------------< Access Operation Parameters >---
     public NodeState getParentState() {
         return parentState;

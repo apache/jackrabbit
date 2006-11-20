@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.state.entry;
 
 import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.NoSuchItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
@@ -25,17 +24,12 @@ import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 /**
  * <code>ChildPropertyEntry</code>...
  */
-public interface ChildPropertyEntry {
+public interface ChildPropertyEntry extends ChildItemEntry {
 
     /**
      * @return the <code>NodeId</code> of this child node entry.
      */
     public PropertyId getId();
-
-    /**
-     * @return the name of this child node entry.
-     */
-    public QName getName();
 
     /**
      * @return the referenced <code>PropertyState</code>.
@@ -45,14 +39,4 @@ public interface ChildPropertyEntry {
      * <code>PropertyState</code>.
      */
     public PropertyState getPropertyState() throws NoSuchItemStateException, ItemStateException;
-
-    /**
-     * Returns <code>true</code> if the referenced <code>PropertyState</code> is
-     * available. That is, the referenced <code>PropertyState</code> is already
-     * cached and ready to be returned by {@link #getPropertyState()}.
-     *
-     * @return <code>true</code> if the <code>PropertyState</code> is available;
-     *         otherwise <code>false</code>.
-     */
-    public boolean isAvailable();
 }

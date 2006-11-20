@@ -23,6 +23,7 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 
 import javax.jcr.version.VersionException;
 import java.util.Collection;
@@ -53,4 +54,12 @@ public interface Operation {
      * @return collection of affected <code>ItemState</code>s.
      */
     public Collection getAffectedItemStates();
+
+    /**
+     * In case of {@link CacheBehaviour#MANUAL} or {@link CacheBehaviour#INVALIDATE}
+     * the result of the operation will not be pushed by observation events.
+     * Instead the workspace operations must make sure, that the affected
+     * item states are properly refreshed or invalidated.
+     */
+    public void persisted();
 }
