@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.command.core;
 
+import javax.jcr.Item;
 import javax.jcr.Workspace;
 
 import org.apache.commons.chain.Command;
@@ -27,7 +28,9 @@ import org.apache.jackrabbit.command.CommandHelper;
 /**
  * Copy a Node. <br>
  * If the source <code>Workspace</code> is unset it will create a copy of the
- * given <code>Node</code> from the current working <code>Workspace</code>.
+ * given <code>Node</code> from the current working <code>Workspace</code>.<br>
+ * If the target path ends with '/' the source node will be copied as a child of
+ * the target node maintaining the name.
  */
 public class Copy implements Command {
     /** logger */
@@ -64,6 +67,11 @@ public class Copy implements Command {
                     + "] to [" + w.getName() + ":" + destAbsPath + "]");
         }
 
+        if (destAbsPath.endsWith("/")) {
+            Item source = CommandHelper.getSession(ctx).getItem(srcAbsPath);
+            destAbsPath = destAbsPath + source.getName();
+        }
+
         w.copy(srcWorkspace, srcAbsPath, destAbsPath);
 
         return false;
@@ -78,8 +86,9 @@ public class Copy implements Command {
 
     /**
      * sets the destination absolute path key
+     * 
      * @param destAbsPathKey
-     *        the destination absolute path key
+     *            the destination absolute path key
      */
     public void setDestAbsPathKey(String destAbsPathKey) {
         this.destAbsPathKey = destAbsPathKey;
@@ -94,8 +103,9 @@ public class Copy implements Command {
 
     /**
      * Sets the source absolute path key
+     * 
      * @param srcAbsPathKey
-     *        the source absolute path key
+     *            the source absolute path key
      */
     public void setSrcAbsPathKey(String srcAbsPathKey) {
         this.srcAbsPathKey = srcAbsPathKey;
@@ -110,8 +120,9 @@ public class Copy implements Command {
 
     /**
      * Sets the source <code>Workspace</code> key
+     * 
      * @param srcWorkspaceKey
-     *        the source <code>Workspace</code> key
+     *            the source <code>Workspace</code> key
      */
     public void setSrcWorkspaceKey(String srcWorkspaceKey) {
         this.srcWorkspaceKey = srcWorkspaceKey;

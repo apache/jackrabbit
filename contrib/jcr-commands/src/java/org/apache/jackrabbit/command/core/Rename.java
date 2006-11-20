@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.command.core;
 
-import javax.jcr.Node;
+import javax.jcr.Item;
 import javax.jcr.Session;
 
 import org.apache.commons.chain.Command;
@@ -26,7 +26,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Rename a <code>Node<code>
+ * Rename a <code>Node<code><br>
+ * The persistent flag indicates whether to use the session or the workspace 
+ * to perform the move command
  */
 public class Rename implements Command {
     /** logger */
@@ -39,6 +41,9 @@ public class Rename implements Command {
     /** destination path */
     private String destPathKey = "destPath";
 
+    /** persistent key */
+    private String persistentKey = "persistent";
+
     /**
      * {@inheritDoc}
      */
@@ -46,17 +51,29 @@ public class Rename implements Command {
         String from = (String) ctx.get(this.srcPathKey);
         String to = (String) ctx.get(this.destPathKey);
 
+        boolean persistent = Boolean.valueOf(
+                (String) ctx.get(this.persistentKey)).booleanValue();
+
         if (log.isDebugEnabled()) {
             log.debug("renaming node from " + from + " to " + to);
         }
 
         Session s = CommandHelper.getSession(ctx);
-        Node nodeFrom = CommandHelper.getNode(ctx, from);
-        if (nodeFrom.getDepth() == 1) {
-            s.move(nodeFrom.getPath(), "/" + to);
+        Item itemFrom = CommandHelper.getItem(ctx, from);
+        if (itemFrom.getDepth() == 1) {
+            if (persistent) {
+                s.getWorkspace().move(itemFrom.getPath(), "/" + to);
+            } else {
+                s.move(itemFrom.getPath(), "/" + to);
+            }
         } else {
-            s.move(nodeFrom.getPath(), nodeFrom.getParent().getPath() + "/"
-                    + to);
+            if (persistent) {
+                s.getWorkspace().move(itemFrom.getPath(),
+                        itemFrom.getParent().getPath() + "/" + to);
+            } else {
+                s.move(itemFrom.getPath(), itemFrom.getParent().getPath() + "/"
+                        + to);
+            }
         }
 
         return false;
@@ -71,7 +88,7 @@ public class Rename implements Command {
 
     /**
      * @param destPathKey
-     *        the destination path key to set
+     *            the destination path key to set
      */
     public void setDestPathKey(String destPathKey) {
         this.destPathKey = destPathKey;
@@ -86,9 +103,17 @@ public class Rename implements Command {
 
     /**
      * @param srcPathKey
-     *        the source path key to set
+     *            the source path key to set
      */
     public void setSrcPathKey(String srcPathKey) {
         this.srcPathKey = srcPathKey;
+    }
+
+    public String getPersistentKey() {
+        return persistentKey;
+    }
+
+    public void setPersistentKey(String persistentKey) {
+        this.persistentKey = persistentKey;
     }
 }

@@ -77,8 +77,13 @@
 		<command name="importFileSystem"
 			className="org.apache.jackrabbit.command.fs.ImportFileSystem"/>
 
-		<command name="importXmlFromFile"
-			className="org.apache.jackrabbit.command.xml.ImportXmlFromFile"/>
+		<chain name="importXmlFromFile">
+			<command name="fileToInputStream"
+				className="org.apache.jackrabbit.command.fs.FileToInputStream"
+				destKey="inputStream"/>
+			<command name="importXmlFromInputStream"
+				className="org.apache.jackrabbit.command.xml.ImportXmlFromInputStream"/>
+		</chain >
 
 		<command name="lock"
 			className="org.apache.jackrabbit.command.lock.Lock"/>
@@ -223,8 +228,15 @@
 		<command name="setProperty"
 			className="org.apache.jackrabbit.command.core.SetProperty"/>
 			
-		<command name="setPropertyFromFile"
-			className="org.apache.jackrabbit.command.fs.SetPropertyFromFile"/>
+		<chain name="setPropertyFromFile">
+			<command name="fileToInputStream"
+				className="org.apache.jackrabbit.command.fs.FileToInputStream"
+				srcFsPathKey="value"
+				destKey="inputStream"/>
+			<command name="setBinaryProperty"
+				className="org.apache.jackrabbit.command.core.SetBinaryProperty"
+				valueKey="inputStream"/>
+		</chain >
 
 		<command name="source"
 			className="org.apache.jackrabbit.command.cli.SourceCommand"/>
@@ -240,6 +252,9 @@
 				className="org.apache.commons.chain.generic.RemoveCommand"
 				fromKey="collected"/>
 		</chain>
+
+		<command name="setNamespacePrefix"
+			className="org.apache.jackrabbit.command.namespace.SetNamespacePrefix"/>
 
 		<command name="startJackrabbit"
 			className="org.apache.jackrabbit.command.ext.StartJackrabbit"/>

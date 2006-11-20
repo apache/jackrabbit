@@ -19,6 +19,7 @@ package org.apache.jackrabbit.command.info;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.apache.commons.chain.Command;
@@ -111,12 +112,12 @@ public class Help implements Command {
 
         CommandLine desc = factory.getCommandLine(cmdName);
 
-        out.println(bundle.getString("word.description") + ": ");
+        out.println(getString(bundle, "word.description") + ": ");
         out.println(desc.getLocalizedDescription());
         out.println();
 
         // Usage
-        out.print(bundle.getString("word.usage") + ":");
+        out.print(getString(bundle, "word.usage") + ":");
         out.print(desc.getName() + " ");
 
         // Arguments
@@ -144,7 +145,7 @@ public class Help implements Command {
 
         // Alias
         if (desc.getAlias().size() > 0) {
-            out.print(bundle.getString("word.alias") + ":");
+            out.print(getString(bundle, "word.alias") + ":");
             iter = desc.getAlias().iterator();
             while (iter.hasNext()) {
                 out.print((String) iter.next() + " ");
@@ -156,21 +157,21 @@ public class Help implements Command {
 
         // Arguments details
         if (desc.getArguments().size() > 0) {
-            out.println("<" + bundle.getString("word.arguments") + ">");
+            out.println("<" + getString(bundle, "word.arguments") + ">");
             printParam(ctx, desc.getArguments().values());
         }
 
         // Options details
         if (desc.getOptions().values().size() > 0) {
             out.println();
-            out.println("<" + bundle.getString("word.options") + ">");
+            out.println("<" + getString(bundle, "word.options") + ">");
             printParam(ctx, desc.getOptions().values());
         }
 
         // flag details
         if (desc.getFlags().values().size() > 0) {
             out.println();
-            out.println("<" + bundle.getString("word.flags") + ">");
+            out.println("<" + getString(bundle, "word.flags") + ">");
             printParam(ctx, desc.getFlags().values());
         }
 
@@ -188,10 +189,10 @@ public class Help implements Command {
         };
 
         String[] header = new String[] {
-                bundle.getString("word.name"),
-                bundle.getString("word.argument"),
-                bundle.getString("word.required"),
-                bundle.getString("word.description")
+                getString(bundle, "word.name"),
+                getString(bundle, "word.argument"),
+                getString(bundle, "word.required"),
+                getString(bundle, "word.description")
         };
 
         PrintHelper.printRow(ctx, width, header);
@@ -223,5 +224,14 @@ public class Help implements Command {
      */
     public void setCommandKey(String commandKey) {
         this.commandKey = commandKey;
+    }
+    
+    private String getString(ResourceBundle bundle, String key) {
+        try {
+            return bundle.getString(key) ;
+        } catch (MissingResourceException e) {
+            return "not available";
+        }
+          
     }
 }
