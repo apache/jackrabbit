@@ -3,6 +3,7 @@
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <c:set var="type" scope="request">name</c:set>
 <c:set var="editor" scope="request">
+<input type="hidden" name="type" value="Name"/>
 <input type="text" name="value"/>
 </c:set>
 <c:import url="setproperty.jsp"></c:import>

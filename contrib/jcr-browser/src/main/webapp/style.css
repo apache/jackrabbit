@@ -157,15 +157,14 @@ table.itemInfo td {
 
 div.dialog {
 	background : #eee;
-	border : 1px solid #999;
+	border : 2px solid #5178a1;
 	-moz-border-radius : 5px;
 	padding : 4px;
+	width: 350px;
 }
 
 table.dialog {
-	padding: 0;
-	margin: 0;
-	width: 400px;
+	width: 100%;
 	align: left;
 }
 
@@ -190,5 +189,11 @@ div.targetTreeContainer {
 	padding: 0px;
 	margin: 0px;	
 }
-	
+
+.dojoToasterContent {
+	overflow: auto;
+	font: 12px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+	font-weight: bold;	
+}
+
 --></style>

@@ -3,15 +3,14 @@
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <% 
 pageContext.setAttribute("path", request.getParameter("path")); 
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
 %>
-<jcr:session>
 <jcr:set var="item" item="${path}"/>
-
-
 <div class="dialog">
 <h3>Property - Save</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="<c:url value="/command/property/save" />" id="dialogForm" 
+	method="POST" onsubmit="return false;">
 <table class="dialog">
 
 <c:if test="${item.node}">
@@ -22,7 +21,10 @@ pageContext.setAttribute("path", request.getParameter("path"));
 
 <tr>
 	<th>Property</th>
-	<td><c:out value="${item.path}"/></td>
+	<td>
+	<input type="hidden" name="path" value="<c:out value="${item.path}"/>"/>	
+	<c:out value="${item.path}"/>
+	</td>
 </tr>
 
 </c:if>
@@ -30,13 +32,20 @@ pageContext.setAttribute("path", request.getParameter("path"));
 <tr>
 	<td colspan="2" align="center">
 		<hr height="1"/>
-<c:if test="${!item.node}"><input type="button" value="Submit" onClick="submitDialog();"/></c:if>
+<c:if test="${!item.node}">
+<input type="button" value="Submit" onClick="internalSubmitDialog();"/>
+</c:if>
 		<input type="button" value="Cancel" onClick="hideDialog();"/>
 	</td>
 </tr>
 </table>
 </form>
 </div>
-
-
-</jcr:session>
+<script language="JavaScript" type="text/javascript">
+function internalSubmitDialog() {
+	// nodes to refresh 
+	var parent = dojo.widget.manager.getWidgetById(currentItem);
+	var nodes = new Array(parent);
+	submitDialog(nodes);
+}
+</script>

@@ -1,11 +1,14 @@
 <%@taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 <%@taglib uri="http://jakarta.apache.org/taglib/string" prefix="str" %>
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
-<jcr:session>
+<%
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
+%>
 <div class="dialog">
 <h3>Session - Show tokens</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="response.txt" id="dialogForm" 
+method="POST" onsubmit="return false;">
 <table class="dialog">
 <c:forEach var="token" items="${jcrsession.lockTokens}">
 <tr>
@@ -21,4 +24,3 @@
 </table>
 </form>
 </div>
-</jcr:session>

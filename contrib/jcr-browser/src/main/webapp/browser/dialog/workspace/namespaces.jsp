@@ -2,8 +2,10 @@
 <%@taglib uri="http://jakarta.apache.org/taglib/string" prefix="str" %>
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <%@page import="javax.jcr.NamespaceRegistry"%>
+<%
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
+%>
 <div class="dialog">
-<jcr:session>
 <h3>Registered namespaces</h3>
 <hr height="1"/>	
 <table class="dialog">
@@ -26,6 +28,4 @@
 	</td>
 </tr>
 </table>
-
-</jcr:session>
 </div>

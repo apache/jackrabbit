@@ -3,8 +3,8 @@
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <% 
 pageContext.setAttribute("path", request.getParameter("path")); 
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
 %>
-<jcr:session>
 <jcr:set var="node" item="${path}"/>
 <c:if test="${!node.node}">
 	<jcr:set var="node" item="${node.parent}"/>
@@ -12,7 +12,8 @@ pageContext.setAttribute("path", request.getParameter("path"));
 <div class="dialog">
 <h3>Node - Set mandatory properties</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="response.txt" id="dialogForm" 
+method="POST" onsubmit="return false;">
 <table class="dialog">
 <tr>
 	<th>Node</th>
@@ -39,4 +40,3 @@ pageContext.setAttribute("path", request.getParameter("path"));
 </table>
 </form>
 </div>
-</jcr:session>

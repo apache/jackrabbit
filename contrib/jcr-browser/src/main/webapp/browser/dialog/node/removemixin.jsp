@@ -3,8 +3,8 @@
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <% 
 pageContext.setAttribute("path", request.getParameter("path")); 
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
 %>
-<jcr:session>
 <jcr:set var="node" item="${path}"/>
 <c:if test="${!node.node}">
 	<jcr:set var="node" item="${node.parent}"/>
@@ -12,11 +12,14 @@ pageContext.setAttribute("path", request.getParameter("path"));
 <div class="dialog">
 <h3>Node - Remove mixin</h3>
 <hr height="1"/>
-<form action="response.txt" id="dialogForm">
+<form action="<c:url value="/command/node/removemixin"/>" id="dialogForm" 
+method="POST" onsubmit="return false;">
 <table class="dialog">
 <tr>
 	<th>Node</th>
-	<td><c:out value="${node.path}"/></td>
+	<td>
+	<input type="hidden" name="path" value="<c:out value="${node.path}"/>" />
+	<c:out value="${node.path}"/></td>
 </tr>
 <tr>
 	<th>Mixin</th>
@@ -33,7 +36,7 @@ pageContext.setAttribute("path", request.getParameter("path"));
 <tr>
 	<td colspan="2">
 <hr height="1"/>
-<input type="button" value="Submit" onClick="submitDialog();"/>
+<input type="button" value="Submit" onClick="internalSubmitDialog();"/>
 <input type="button" value="Close" onClick="hideDialog();"/>
 	</td>
 </tr>
@@ -41,4 +44,12 @@ pageContext.setAttribute("path", request.getParameter("path"));
 </table>
 </form>
 </div>
-</jcr:session>
+
+<script language="JavaScript" type="text/javascript">
+function internalSubmitDialog() {
+	// nodes to refresh 
+	var node = dojo.widget.manager.getWidgetById(currentItem);
+	var nodes = new Array(node);
+	submitDialog(nodes);
+}
+</script>

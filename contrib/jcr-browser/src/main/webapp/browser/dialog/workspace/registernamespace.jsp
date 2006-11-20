@@ -1,11 +1,14 @@
 <%@taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 <%@taglib uri="http://jakarta.apache.org/taglib/string" prefix="str" %>
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
+<%
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
+%>
 <div class="dialog">
-<jcr:session>
 <h3>Register namespace</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="<c:url value="/command/workspace/registernamespace"/>" id="dialogForm" 
+method="POST" onsubmit="return false;">
 <table class="dialog">
 <tr>
 	<th height="25" width="50">prefix</th>
@@ -24,5 +27,4 @@
 </tr>
 </table>
 </form>
-</jcr:session>
 </div>

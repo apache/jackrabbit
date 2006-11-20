@@ -3,8 +3,8 @@
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <% 
 pageContext.setAttribute("path", request.getParameter("path")); 
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
 %>
-<jcr:session>
 <jcr:set var="node" item="${path}"/>
 <c:if test="${!node.node}">
 	<jcr:set var="node" item="${node.parent}"/>
@@ -12,32 +12,46 @@ pageContext.setAttribute("path", request.getParameter("path"));
 <div class="dialog">
 <h3>Node - Save</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="<c:url value="/command/node/versioning/restore"/>" id="dialogForm" 
+method="POST" onsubmit="return false;">
 <table class="dialog">
 <tr>
 	<th>Node</th>
-	<td><c:out value="${node.path}"/></td>
+	<td>
+	<input type="hidden" name="path" value="<c:out value="${node.path}"/>" />
+	<c:out value="${node.path}"/></td>
 </tr>
 <tr>
 	<th>Version</th>
 	<td>
-	<select name="removeExisting">
-		<option>1.0 - "version 1.0"</option>
+	<select name="version">
+	<jcr:versions var="version" node="${node}">
+		<option value="<c:out value="${version.name}"/>"><c:out value="${version.name}"/></option>
+	</jcr:versions>
 	</select>
 	</td>
 </tr>
 <tr>
 	<th>Remove existing</th>
-	<td><input type="checkbox" name="removeExisting"/></td>
+	<td>
+	<input type="checkbox" name="removeExisting" value="true" checked="checked"/>
+	</td>
 </tr>
 <tr>
 	<td colspan="2" align="center">
 		<hr height="1"/>
-		<input type="button" value="Submit" onClick="submitDialog();"/>
+		<input type="button" value="Submit" onClick="internalSubmitDialog();"/>
 		<input type="button" value="Cancel" onClick="hideDialog();"/>
 	</td>
 </tr>
 </table>
 </form>
 </div>
-</jcr:session>
+<script language="JavaScript" type="text/javascript">
+function internalSubmitDialog() {
+	// nodes to refresh 
+	var node = dojo.widget.manager.getWidgetById(currentItem);
+	var nodes = new Array(node);
+	submitDialog(nodes);
+}
+</script>

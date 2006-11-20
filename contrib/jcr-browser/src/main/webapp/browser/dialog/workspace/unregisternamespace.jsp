@@ -2,22 +2,25 @@
 <%@taglib uri="http://jakarta.apache.org/taglib/string" prefix="str" %>
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <%@page import="javax.jcr.NamespaceRegistry"%>
+<%
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
+%>
 <div class="dialog">
-<jcr:session>
 <h3>Unregister namespace</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="<c:url value="/command/workspace/unregisternamespace"/>" id="dialogForm" 
+method="POST" onsubmit="return false;">
 <table class="dialog">
 <tr>
 	<th>Prefix: Uri</th>
 </tr>
 <tr>
 	<td>
-		<select name="uri">
+		<select name="prefix">
 			<c:set value="${jcrsession.workspace.namespaceRegistry}" var="namespaceRegistry"/>
 			<c:forEach var="prefix" items="${namespaceRegistry.prefixes}">
 <%String uri = ((NamespaceRegistry) pageContext.getAttribute("namespaceRegistry")).getURI(pageContext.getAttribute("prefix").toString()) ;%>			
-				<option value="<%= uri %>"><c:out value="${prefix}"/>: <%= uri %></option>
+				<option value="<c:out value="${prefix}"/>"><c:out value="${prefix}"/>: <%= uri %></option>
 			</c:forEach>			
 		</select>
 	</td>
@@ -32,5 +35,4 @@
 </tr>
 </table>
 </form>
-</jcr:session>
 </div>

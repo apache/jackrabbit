@@ -2,11 +2,14 @@
 <%@taglib uri="http://jakarta.apache.org/taglib/string" prefix="str" %>
 <%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <%@page import="javax.jcr.NamespaceRegistry"%>
+<%
+pageContext.setAttribute("jcrsession",session.getAttribute("jcr.session"));
+%>
 <div class="dialog">
-<jcr:session>
 <h3>Session - Set Namespace prefix</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="<c:url value="/command/session/setnamespaceprefix" />" id="dialogForm" 
+method="POST" onsubmit="return false;">
 <table class="dialog">
 <tr>
 	<th>Prefix: Uri</th>
@@ -36,5 +39,4 @@
 </tr>
 </table>
 </form>
-</jcr:session>
 </div>

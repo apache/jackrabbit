@@ -1,7 +1,11 @@
+<%@taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+<%@taglib uri="http://jakarta.apache.org/taglib/string" prefix="str" %>
+<%@taglib uri="http://jackrabbit.apache.org/jcr-taglib" prefix="jcr" %>
 <div class="dialog">
 <h3>Session - Add Lock Token</h3>
 <hr height="1"/>	
-<form action="response.txt" id="dialogForm">
+<form action="<c:url value="/command/session/locking/addtoken" />" id="dialogForm" 
+method="POST" onsubmit="return false;">
 <table class="dialog">
 <tr>
 	<th height="25" width="100">Token</th>
