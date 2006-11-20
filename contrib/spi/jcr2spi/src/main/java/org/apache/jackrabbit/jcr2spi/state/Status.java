@@ -199,7 +199,7 @@ public class Status {
                                oldStatus == EXISTING || oldStatus == EXISTING_REMOVED );
                     break;
                 case MODIFIED:
-                    isValid = (oldStatus == EXISTING);
+                    isValid = (oldStatus == EXISTING || oldStatus == INVALIDATED);
                     break;
                     /* default:
                     NEW cannot change state to NEW -> false */
