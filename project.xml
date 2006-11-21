@@ -21,16 +21,12 @@
     <!-- ====================================================================== -->
     <pomVersion>3</pomVersion>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>server</artifactId>
+    <artifactId>jackrabbit-jcr-server</artifactId>
     
-    <name>Jackrabbit-Server</name>
+    <name>Jackrabbit WebDAV Server</name>
     <currentVersion>1.1-SNAPSHOT</currentVersion>
     <inceptionYear>2005</inceptionYear>
     <package>org.apache.jackrabbit.*</package>
-    <description>
-        WebDAV library and WebDAV based JCR client/server connection facility.
-    </description>
-    <shortDescription>JCRWebdav Server</shortDescription>
     
     <licenses>
         <license>
@@ -39,4 +35,77 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <!-- ====================================================================== -->
+    <!-- D E P E N D E N C I E S                                                -->
+    <!-- ====================================================================== -->
+    <dependencies>
+        <!-- internal dependencies -->
+        <dependency>
+            <artifactId>jackrabbit-webdav</artifactId>
+            <groupId>org.apache.jackrabbit</groupId>
+            <version>${pom.currentVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
+            <version>${jackrabbit.build.version.jackrabbit}</version>
+        </dependency>
+
+        <!-- external dependencies -->
+        <dependency>
+            <groupId>jsr170</groupId>
+            <artifactId>jcr</artifactId>
+            <version>${jackrabbit.build.version.jcr}</version>
+        </dependency>
+        
+        <!-- non-jackrabbit dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>servletapi</groupId>
+            <artifactId>servletapi</artifactId>
+            <version>2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.6.2</version>
+            <url>http://xerces.apache.org/xerces2-j/</url>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xmlParserAPIs</artifactId>
+            <version>2.0.2</version>
+        </dependency>
+    </dependencies>
+
+    <!-- ====================================================================== -->
+    <!-- B U I L D  D E S C R I P T I O N                                       -->
+    <!-- ====================================================================== -->
+    <build>
+        <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
+        <resources>
+            <resource>
+                <targetPath>META-INF</targetPath>
+                <directory>..</directory>
+                <includes>
+                    <include>LICENSE.txt</include>
+                    <include>README.txt</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.xsd</include>
+                    <include>**/*.properties</include>
+                    <include>**/*.dtd</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
 </project>
