@@ -166,7 +166,7 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
     private void addResponses(DavResource res, int depth, MultiStatus ms) {
         MultiStatusResponse response = getResponse(res, propertyElements);
         ms.addResponse(response);
-        if (depth > 0) {
+        if (depth > 0 && res.isCollection()) {
             DavResourceIterator it = res.getMembers();
             while (it.hasNext()) {
                 addResponses(it.nextResource(), depth-1, ms);
