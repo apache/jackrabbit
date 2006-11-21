@@ -33,7 +33,7 @@ import java.util.ArrayList;
  */
 public class SubscriptionDiscovery extends AbstractDavProperty {
 
-    private Subscription[] subscriptions = new Subscription[0];
+    private final Subscription[] subscriptions;
 
     /**
      * Create a new <code>SubscriptionDiscovery</code> that lists the given
@@ -45,6 +45,8 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
         super(ObservationConstants.SUBSCRIPTIONDISCOVERY, true);
         if (subscriptions != null) {
             this.subscriptions = subscriptions;
+        } else {
+            this.subscriptions = new Subscription[0];
         }
     }
 
@@ -58,6 +60,8 @@ public class SubscriptionDiscovery extends AbstractDavProperty {
         super(ObservationConstants.SUBSCRIPTIONDISCOVERY, true);
         if (subscription != null) {
             this.subscriptions = new Subscription[]{subscription};
+        } else {
+            this.subscriptions = new Subscription[0];
         }
     }
 
