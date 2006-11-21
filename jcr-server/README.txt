@@ -2,8 +2,8 @@ README - Jackrabbit JCR Server
 ===============================================================================
 
 This project contains WebDAV based JCR server implementations.
-
 Currently 2 different server implementations are provided:
+
 
 1) WebDAV server ('simple')
 -------------------------------------------------------------------------------
@@ -14,10 +14,16 @@ Currently 2 different server implementations are provided:
   Futher information such as configuration as well as the
   SimpleWebdavServlet itself may be found in the 'webapp' project.
   
-  Source: <jackrabbit>/jcr-server/src/main/java/org/apache/jackrabbit/webdav/simple
-          <jackrabbit>/jcr-server/src/main/java/org/apache/jackrabbit/server
-          <jackrabbit>/webapp/src/main/java/org/apache/jackrabbit/j2ee/SimpleWebdavServlet.java
-
+  Packages:
+  
+  - org.apache.jackrabbit.server         = server
+  - org.apache.jackrabbit.server.io      = import/export
+  - org.apache.jackrabbit.webdav.simple  = dav-resource implementation + config.
+  
+  Servlet (webapp project):
+  
+  - org.apache.jackrabbit.j2ee.SimpleWebdavServlet.java 
+  
 
 2) 'jcr' server:
 -------------------------------------------------------------------------------
@@ -28,12 +34,18 @@ Currently 2 different server implementations are provided:
    The 'client' counterpart of this server is under development and
    can be found within the <jackrabbit>/contrib/spi contribution.
    
-   Source: <jackrabbit>/jcr-server/src/main/java/org/apache/jackrabbit/webdav/jcr
-           <jackrabbit>/jcr-server/src/main/java/org/apache/jackrabbit/server
-           <jackrabbit>/webapp/src/main/java/org/apache/jackrabbit/j2ee/JCRServerServlet.java
+   Packages:
+
+   - org.apache.jackrabbit.server     = server
+   - org.apache.jackrabbit.server.jcr = jcr-server specific server part
+   - org.apache.jackrabbit.webdav.jcr = dav-resources, reports, properties   
+   
+   Servlet (webapp project):
+   
+   - org.apache.jackrabbit.j2ee.JCRServerServlet.java
            
    Further reading:
-   http://www.day.com/jsr170/server/JCR_Webdav_Protocol.zip">JCR_Webdav_Protocol.zip
+   - http://www.day.com/jsr170/server/JCR_Webdav_Protocol.zip">JCR_Webdav_Protocol.zip
 
 
 Requirements
