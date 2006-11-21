@@ -34,10 +34,10 @@
       <p>
         Note that JCR specification defines no standard communication
         protocol for inter-JVM repository access, and that Jackrabbit
-        supports no such protocol by default. However, the Jackrabbit
-        <code>contrib</code> subdirectory contains tools for using JCR
-        content repositories over the RMI and Webdav protocols (see the
-        <code>jcr-rmi</code> and <code>jcr-server</code> contrib packages).
+        supports no such protocol by default. However, Jackrabbit
+        contains tools for using JCR content repositories over the RMI 
+        and WebDAV protocols (see the <code>jcr-rmi</code> and the
+        <code>jcr-server</code>, <code>webapp</code> packages).
       </p>
       <p>
         This how-to contains instructions for accessing a JCR-RMI server
