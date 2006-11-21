@@ -20,11 +20,12 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
+import org.apache.commons.collections.map.LinkedMap;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * MultiStatus representing the content of a multistatus response body and
@@ -36,7 +37,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * Map collecting the responses for this multistatus, where every href must
      * only occure one single time.
      */
-    private HashMap responses = new HashMap();
+    private Map responses = new LinkedMap();
 
     /**
      * A general response description at the multistatus top level is used to
@@ -59,7 +60,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
     public void addResourceProperties(DavResource resource, DavPropertyNameSet propNameSet,
                                       int propFindType, int depth) {
         addResponse(new MultiStatusResponse(resource, propNameSet, propFindType));
-        if (depth > 0) {
+        if (depth > 0 && resource.isCollection()) {
             DavResourceIterator iter = resource.getMembers();
             while (iter.hasNext()) {
                 addResourceProperties(iter.nextResource(), propNameSet, propFindType, depth-1);
@@ -95,7 +96,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      */
     public void addResourceStatus(DavResource resource, int status, int depth) {
         addResponse(new MultiStatusResponse(resource.getHref(), status));
-        if (depth > 0) {
+        if (depth > 0 && resource.isCollection()) {
             DavResourceIterator iter = resource.getMembers();
             while (iter.hasNext()) {
                 addResourceStatus(iter.nextResource(), status, depth-1);
