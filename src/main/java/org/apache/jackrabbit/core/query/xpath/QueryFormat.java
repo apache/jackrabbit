@@ -36,6 +36,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
 
@@ -119,7 +120,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 try {
                     sb.append(pipe);
                     sb.append('@');
-                    sb.append(NameFormat.format(ISO9075.encode(selectProps[i]), resolver));
+                    NameFormat.format(ISO9075.encode(selectProps[i]), resolver, sb);
                     pipe = "|";
                 } catch (NoPrefixDeclaredException e) {
                     exceptions.add(e);
@@ -171,7 +172,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         QueryNode[] operands = node.getOperands();
         if (operands.length > 0) {
             try {
-                sb.append(NameFormat.format(XPathQueryBuilder.FN_NOT_10, resolver));
+                NameFormat.format(XPathQueryBuilder.FN_NOT_10, resolver, sb);
                 sb.append("(");
                 operands[0].accept(this, sb);
                 sb.append(")");
@@ -186,8 +187,9 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         sb.append("@");
         try {
-            sb.append(NameFormat.format(ISO9075.encode(node.getPropertyName()), resolver));
-            sb.append("='").append(NameFormat.format(node.getValue(), resolver));
+            NameFormat.format(ISO9075.encode(node.getPropertyName()), resolver, sb);
+            sb.append("='");
+            NameFormat.format(node.getValue(), resolver, sb);
         } catch (NoPrefixDeclaredException e) {
             exceptions.add(e);
         }
@@ -199,8 +201,9 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         try {
             sb.append("@");
-            sb.append(NameFormat.format(QName.JCR_PRIMARYTYPE, resolver));
-            sb.append("='").append(NameFormat.format(node.getValue(), resolver));
+            NameFormat.format(QName.JCR_PRIMARYTYPE, resolver, sb);
+            sb.append("='");
+            NameFormat.format(node.getValue(), resolver, sb);
             sb.append("'");
         } catch (NoPrefixDeclaredException e) {
             exceptions.add(e);
@@ -211,13 +214,29 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     public Object visit(TextsearchQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
-            sb.append(NameFormat.format(XPathQueryBuilder.JCR_CONTAINS, resolver));
+            NameFormat.format(XPathQueryBuilder.JCR_CONTAINS, resolver, sb);
             sb.append("(");
-            if (node.getPropertyName() == null) {
+            Path relPath = node.getRelativePath();
+            if (relPath == null) {
                 sb.append(".");
             } else {
-                sb.append("@");
-                sb.append(NameFormat.format(ISO9075.encode(node.getPropertyName()), resolver));
+                Path.PathElement[] elements = relPath.getElements();
+                String slash = "";
+                for (int i = 0; i < elements.length; i++) {
+                    sb.append(slash);
+                    slash = "/";
+                    if (node.getReferencesProperty() && i == elements.length - 1) {
+                        sb.append("@");
+                    }
+                    if (elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
+                        sb.append("*");
+                    } else {
+                        NameFormat.format(ISO9075.encode(elements[i].getName()), resolver, sb);
+                    }
+                    if (elements[i].getIndex() != 0) {
+                        sb.append("[").append(elements[i].getIndex()).append("]");
+                    }
+                }
             }
             sb.append(", '");
             sb.append(node.getQuery().replaceAll("'", "''"));
@@ -253,9 +272,9 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         } else {
             try {
                 if (node.getNameTest().getLocalName().length() == 0) {
-                    sb.append(NameFormat.format(XPathQueryBuilder.JCR_ROOT, resolver));
+                    NameFormat.format(XPathQueryBuilder.JCR_ROOT, resolver, sb);
                 } else {
-                    sb.append(NameFormat.format(ISO9075.encode(node.getNameTest()), resolver));
+                    NameFormat.format(ISO9075.encode(node.getNameTest()), resolver, sb);
                 }
             } catch (NoPrefixDeclaredException e) {
                 exceptions.add(e);
@@ -276,14 +295,14 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     public Object visit(DerefQueryNode node, Object data) {
         StringBuffer sb = (StringBuffer) data;
         try {
-            sb.append(NameFormat.format(XPathQueryBuilder.JCR_DEREF, resolver));
+            NameFormat.format(XPathQueryBuilder.JCR_DEREF, resolver, sb);
             sb.append("(@");
-            sb.append(NameFormat.format(ISO9075.encode(node.getRefProperty()), resolver));
+            NameFormat.format(ISO9075.encode(node.getRefProperty()), resolver, sb);
             sb.append(", '");
             if (node.getNameTest() == null) {
                 sb.append("*");
             } else {
-                sb.append(NameFormat.format(ISO9075.encode(node.getNameTest()), resolver));
+                NameFormat.format(ISO9075.encode(node.getNameTest()), resolver, sb);
             }
             sb.append("')");
         } catch (NoPrefixDeclaredException e) {
@@ -296,64 +315,80 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         try {
 
-            StringBuffer propName = new StringBuffer();
+            StringBuffer propPath = new StringBuffer();
             // only encode if not position function
-            if (node.getProperty().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
-                NameFormat.format(node.getProperty(), resolver, propName);
+            Path relPath = node.getRelativePath();
+            if (relPath.getNameElement().getName().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
+                NameFormat.format(XPathQueryBuilder.FN_POSITION_FULL, resolver, propPath);
             } else {
-                propName.append("@");
-                NameFormat.format(ISO9075.encode(node.getProperty()), resolver, propName);
+                Path.PathElement[] elements = relPath.getElements();
+                String slash = "";
+                for (int i = 0; i < elements.length; i++) {
+                    propPath.append(slash);
+                    slash = "/";
+                    if (i == elements.length - 1) {
+                        propPath.append("@");
+                    }
+                    if (elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
+                        propPath.append("*");
+                    } else {
+                        NameFormat.format(ISO9075.encode(elements[i].getName()), resolver, propPath);
+                    }
+                    if (elements[i].getIndex() != 0) {
+                        propPath.append("[").append(elements[i].getIndex()).append("]");
+                    }
+                }
             }
 
             // surround name with property function
-            node.acceptOperands(this, propName);
+            node.acceptOperands(this, propPath);
 
             if (node.getOperation() == OPERATION_EQ_VALUE) {
-                sb.append(propName).append(" eq ");
+                sb.append(propPath).append(" eq ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_EQ_GENERAL) {
-                sb.append(propName).append(" = ");
+                sb.append(propPath).append(" = ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GE_GENERAL) {
-                sb.append(propName).append(" >= ");
+                sb.append(propPath).append(" >= ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GE_VALUE) {
-                sb.append(propName).append(" ge ");
+                sb.append(propPath).append(" ge ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GT_GENERAL) {
-                sb.append(propName).append(" > ");
+                sb.append(propPath).append(" > ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_GT_VALUE) {
-                sb.append(propName).append(" gt ");
+                sb.append(propPath).append(" gt ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LE_GENERAL) {
-                sb.append(propName).append(" <= ");
+                sb.append(propPath).append(" <= ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LE_VALUE) {
-                sb.append(propName).append(" le ");
+                sb.append(propPath).append(" le ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LIKE) {
-                sb.append(NameFormat.format(XPathQueryBuilder.JCR_LIKE, resolver));
-                sb.append("(").append(propName).append(", ");
+                NameFormat.format(XPathQueryBuilder.JCR_LIKE, resolver, sb);
+                sb.append("(").append(propPath).append(", ");
                 appendValue(node, sb);
                 sb.append(")");
             } else if (node.getOperation() == OPERATION_LT_GENERAL) {
-                sb.append(propName).append(" < ");
+                sb.append(propPath).append(" < ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_LT_VALUE) {
-                sb.append(propName).append(" lt ");
+                sb.append(propPath).append(" lt ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NE_GENERAL) {
-                sb.append(propName).append(" != ");
+                sb.append(propPath).append(" != ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NE_VALUE) {
-                sb.append(propName).append(" ne ");
+                sb.append(propPath).append(" ne ");
                 appendValue(node, sb);
             } else if (node.getOperation() == OPERATION_NULL) {
-                sb.append(NameFormat.format(XPathQueryBuilder.FN_NOT, resolver));
-                sb.append("(").append(propName).append(")");
+                NameFormat.format(XPathQueryBuilder.FN_NOT, resolver, sb);
+                sb.append("(").append(propPath).append(")");
             } else if (node.getOperation() == OPERATION_NOT_NULL) {
-                sb.append(propName);
+                sb.append(propPath);
             } else {
                 exceptions.add(new InvalidQueryException("Invalid operation: " + node.getOperation()));
             }
@@ -372,7 +407,8 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             for (int i = 0; i < specs.length; i++) {
                 sb.append(comma);
                 QName prop = ISO9075.encode(specs[i].getProperty());
-                sb.append(" @").append(NameFormat.format(prop, resolver));
+                sb.append(" @");
+                NameFormat.format(prop, resolver, sb);
                 if (!specs[i].isAscending()) {
                     sb.append(" descending");
                 }
@@ -425,7 +461,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         } else if (node.getValueType() == TYPE_DATE || node.getValueType() == TYPE_TIMESTAMP) {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             cal.setTime(node.getDateValue());
-            b.append(NameFormat.format(XPathQueryBuilder.XS_DATETIME, resolver));
+            NameFormat.format(XPathQueryBuilder.XS_DATETIME, resolver, b);
             b.append("('").append(ISO8601.format(cal)).append("')");
         } else if (node.getValueType() == TYPE_POSITION) {
             if (node.getPositionValue() == LocationStepQueryNode.LAST) {

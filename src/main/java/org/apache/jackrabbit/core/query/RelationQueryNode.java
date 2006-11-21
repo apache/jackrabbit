@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 
 import java.util.Date;
 
@@ -26,9 +28,16 @@ import java.util.Date;
 public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
 
     /**
-     * The name of the property
+     * Acts as an syntetic placeholder for a location step that matches any
+     * name. This is required becase a JCR path does not allow a QName with
+     * a single '*' (star) character.
      */
-    private QName property;
+    public static final QName STAR_NAME_TEST = new QName(QName.NS_REP_URI, "__star__");
+
+    /**
+     * The relative path to the property.
+     */
+    private Path relPath;
 
     /**
      * If <code>true</code> this relation query node contains a value preceded
@@ -93,13 +102,13 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
      * <code>value</code> and an <code>operation</code> type.
      *
      * @param parent    the parent node for this query node.
-     * @param property  the name of a property.
+     * @param relPath   the relative path to a property.
      * @param value     a property value
      * @param operation the type of the relation.
      */
-    public RelationQueryNode(QueryNode parent, QName property, long value, int operation) {
+    public RelationQueryNode(QueryNode parent, Path relPath, long value, int operation) {
         super(parent);
-        this.property = property;
+        this.relPath = relPath;
         this.valueLong = value;
         this.operation = operation;
         this.type = TYPE_LONG;
@@ -110,13 +119,13 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
      * <code>value</code> and an <code>operation</code> type.
      *
      * @param parent    the parent node for this query node.
-     * @param property  the name of a property.
+     * @param relPath   the relative path to a property.
      * @param value     a property value
      * @param operation the type of the relation.
      */
-    public RelationQueryNode(QueryNode parent, QName property, double value, int operation) {
+    public RelationQueryNode(QueryNode parent, Path relPath, double value, int operation) {
         super(parent);
-        this.property = property;
+        this.relPath = relPath;
         this.valueDouble = value;
         this.operation = operation;
         this.type = TYPE_DOUBLE;
@@ -127,13 +136,13 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
      * <code>value</code> and an <code>operation</code> type.
      *
      * @param parent    the parent node for this query node.
-     * @param property  the name of a property.
+     * @param relPath   the relative path to a property.
      * @param value     a property value
      * @param operation the type of the relation.
      */
-    public RelationQueryNode(QueryNode parent, QName property, Date value, int operation) {
+    public RelationQueryNode(QueryNode parent, Path relPath, Date value, int operation) {
         super(parent);
-        this.property = property;
+        this.relPath = relPath;
         this.valueDate = value;
         this.operation = operation;
         this.type = TYPE_DATE;
@@ -144,13 +153,13 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
      * <code>value</code> and an <code>operation</code> type.
      *
      * @param parent    the parent node for this query node.
-     * @param property  the name of a property.
+     * @param relPath   the relative path to a property.
      * @param value     a property value
      * @param operation the type of the relation.
      */
-    public RelationQueryNode(QueryNode parent, QName property, String value, int operation) {
+    public RelationQueryNode(QueryNode parent, Path relPath, String value, int operation) {
         super(parent);
-        this.property = property;
+        this.relPath = relPath;
         this.valueString = value;
         this.operation = operation;
         this.type = TYPE_STRING;
@@ -192,21 +201,77 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
     }
 
     /**
-     * Returns the name of the property in this relation query node.
+     * Returns the name of the property in this relation query node. Please
+     * note that this method does not return the full relative path that
+     * reference the property to match, but only the name of the final name
+     * element of the path returned by {@link #getRelativePath()}.
      *
      * @return the name of the property in this relation query node.
+     * @deprecated Use {@link #getRelativePath()} instead.
      */
     public QName getProperty() {
-        return property;
+        return relPath == null ? null : relPath.getNameElement().getName();
     }
 
     /**
      * Sets a new property name for this relation query node.
      *
      * @param name the new property name.
+     * @deprecated Use {@link #setRelativePath(Path)} instead.
      */
     public void setProperty(QName name) {
-        property = name;
+        Path.PathBuilder builder = new Path.PathBuilder();
+        builder.addLast(name);
+        try {
+            this.relPath = builder.getPath();
+        } catch (MalformedPathException e) {
+            // path is always valid
+        }
+    }
+
+    /**
+     * @return the relative path that references the property in this relation.
+     */
+    public Path getRelativePath() {
+        return relPath;
+    }
+
+    /**
+     * Sets the relative path to the property in this relation.
+     *
+     * @param relPath the relative path to a property.
+     * @throws IllegalArgumentException if <code>relPath</code> is absolute.
+     */
+    public void setRelativePath(Path relPath) {
+        if (relPath != null && relPath.isAbsolute()) {
+            throw new IllegalArgumentException("relPath must be relative");
+        }
+        this.relPath = relPath;
+    }
+
+    /**
+     * Adds a path element to the existing relative path. To add a path element
+     * which matches all node names use {@link #STAR_NAME_TEST}.
+     *
+     * @param element the path element to append.
+     */
+    public void addPathElement(Path.PathElement element) {
+        Path.PathBuilder builder = new Path.PathBuilder();
+        if (relPath != null) {
+            builder.addAll(relPath.getElements());
+        }
+        builder.addLast(element);
+        try {
+            relPath = builder.getPath();
+        } catch (MalformedPathException e) {
+            // path is always valid
+        }
+        // try to normalize the path
+        try {
+            relPath = relPath.getNormalizedPath();
+        } catch (MalformedPathException e) {
+            // just keep the original in that case
+        }
     }
 
     /**
@@ -329,7 +394,7 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
                     && valueLong == other.valueLong
                     && valuePosition == other.valuePosition
                     && (valueString == null ? other.valueString == null : valueString.equals(other.valueString))
-                    && (property == null ? other.property == null : property.equals(other.property));
+                    && (relPath == null ? other.relPath== null : relPath.equals(other.relPath));
         }
         return false;
     }

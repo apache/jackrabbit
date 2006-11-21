@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 
 import java.util.Arrays;
 
@@ -141,7 +142,22 @@ public class QueryTreeDump implements QueryNodeVisitor {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ TextsearchQueryNode: ");
-        buffer.append(" Prop=").append(node.getPropertyName());
+        buffer.append(" Path=");
+        Path relPath = node.getRelativePath();
+        if (relPath == null) {
+            buffer.append(".");
+        } else {
+            Path.PathElement[] elements = relPath.getElements();
+            String slash = "";
+            for (int i = 0; i < elements.length; i++) {
+                buffer.append(slash);
+                slash = "/";
+                if (node.getReferencesProperty() && i == elements.length - 1) {
+                    buffer.append("@");
+                }
+                buffer.append(elements[i]);
+            }
+        }
         buffer.append(" Query=").append(node.getQuery());
         buffer.append("\n");
         return buffer;
@@ -221,7 +237,22 @@ public class QueryTreeDump implements QueryNodeVisitor {
         } else {
             buffer.append("!!UNKNOWN OPERATION!!");
         }
-        buffer.append(" Prop=" + node.getProperty());
+        buffer.append(" Prop=");
+        Path relPath = node.getRelativePath();
+        if (relPath == null) {
+            buffer.append(relPath);
+        } else {
+            Path.PathElement[] elements = relPath.getElements();
+            String slash = "";
+            for (int i = 0; i < elements.length; i++) {
+                buffer.append(slash);
+                slash = "/";
+                if (i == elements.length - 1) {
+                    buffer.append("@");
+                }
+                buffer.append(elements[i]);
+            }
+        }
         if (node.getValueType() == QueryConstants.TYPE_DATE) {
             buffer.append(" Type=DATE Value=").append(node.getDateValue());
         } else if (node.getValueType() == QueryConstants.TYPE_DOUBLE) {

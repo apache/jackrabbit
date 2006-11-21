@@ -36,6 +36,7 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.NoPrefixDeclaredException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.util.ISO8601;
 
 import javax.jcr.query.InvalidQueryException;
@@ -266,13 +267,18 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         // escape quote
         String query = node.getQuery().replaceAll("'", "''");
         sb.append("CONTAINS(");
-        if (node.getPropertyName() == null) {
+        if (node.getRelativePath() == null) {
             sb.append("*");
         } else {
-            try {
-                appendName(node.getPropertyName(), resolver, sb);
-            } catch (NoPrefixDeclaredException e) {
-                exceptions.add(e);
+            if (node.getRelativePath().getLength() > 1
+                    || !node.getReferencesProperty()) {
+                exceptions.add(new InvalidQueryException("Child axis not supported in SQL"));
+            } else {
+                try {
+                    appendName(node.getRelativePath().getNameElement().getName(), resolver, sb);
+                } catch (NoPrefixDeclaredException e) {
+                    exceptions.add(e);
+                }
             }
         }
         sb.append(", '");
@@ -381,10 +387,15 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     }
 
     public Object visit(RelationQueryNode node, Object data) {
+        Path relPath = node.getRelativePath();
+        if (relPath.getLength() > 1) {
+            exceptions.add(new InvalidQueryException("Child axis not supported in SQL"));
+            return data;
+        }
         StringBuffer sb = (StringBuffer) data;
         try {
             StringBuffer propName = new StringBuffer();
-            appendName(node.getProperty(), resolver, propName);
+            appendName(relPath.getNameElement().getName(), resolver, propName);
             // surround name with property function
             node.acceptOperands(this, propName);
 

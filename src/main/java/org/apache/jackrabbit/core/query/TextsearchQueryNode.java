@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 
 /**
  * Implements a query node that defines a textsearch clause.
@@ -29,11 +31,18 @@ public class TextsearchQueryNode extends QueryNode {
     private final String query;
 
     /**
-     * Limits the scope of this textsearch clause to properties with this name.
+     * Limits the scope of this textsearch clause to a node or a property with
+     * the given relative path.
      * If <code>null</code> the scope of this textsearch clause is the fulltext
-     * index of all properties of a node.
+     * index of all properties of the context node.
      */
-    private QName propertyName;
+    private Path relPath;
+
+    /**
+     * If set to <code>true</code> {@link #relPath} references a property,
+     * otherwise references a node.
+     */
+    private boolean propertyRef;
 
     /**
      * Creates a new <code>TextsearchQueryNode</code> with a <code>parent</code>
@@ -44,22 +53,26 @@ public class TextsearchQueryNode extends QueryNode {
      * @param query  the textsearch statement.
      */
     public TextsearchQueryNode(QueryNode parent, String query) {
-        this(parent, query, null);
+        this(parent, query, null, false);
     }
 
     /**
      * Creates a new <code>TextsearchQueryNode</code> with a <code>parent</code>
-     * and a textsearch <code>query</code> statement. The scope of the query
-     * is property with name <code>propertyName</code>.
+     * and a textsearch <code>query</code> statement. The scope of the query is
+     * the property or node referenced by <code>relPath</code>.
      *
-     * @param parent the parent node of this query node.
-     * @param query  the textsearch statement.
-     * @param propertyName scope of the fulltext search.
+     * @param parent     the parent node of this query node.
+     * @param query      the textsearch statement.
+     * @param relPath    scope of the fulltext search. If <code>null</code> the
+     *                   context node is searched.
+     * @param isProperty if <code>relPath</code> references a property or a
+     *                   node.
      */
-    public TextsearchQueryNode(QueryNode parent, String query, QName propertyName) {
+    public TextsearchQueryNode(QueryNode parent, String query, Path relPath, boolean isProperty) {
         super(parent);
         this.query = query;
-        this.propertyName = propertyName;
+        this.relPath = relPath;
+        this.propertyRef = isProperty;
     }
 
     /**
@@ -90,21 +103,98 @@ public class TextsearchQueryNode extends QueryNode {
     /**
      * Returns a property name if the scope is limited to just a single property
      * or <code>null</code> if the scope is spawned across all properties of a
-     * node.
+     * node. Please note that this method does not return the full relative path
+     * that reference the item to match, but only the name of the final name
+     * element of the path returned by {@link #getRelativePath()}.
      *
      * @return property name or <code>null</code>.
+     * @deprecated Use {@link #getRelativePath()} instead.
      */
     public QName getPropertyName() {
-        return propertyName;
+        return relPath == null ? null : relPath.getNameElement().getName();
     }
 
     /**
      * Sets a new name as the search scope for this fulltext query.
      *
      * @param property the name of the property.
+     * @deprecated Use {@link #setRelativePath(Path)} instead.
      */
     public void setPropertyName(QName property) {
-        this.propertyName = property;
+        Path.PathBuilder builder = new Path.PathBuilder();
+        builder.addLast(property);
+        try {
+            this.relPath = builder.getPath();
+            this.propertyRef = true;
+        } catch (MalformedPathException e) {
+            // path is always valid
+        }
+    }
+
+    /**
+     * @return the relative path that references the item where the textsearch
+     *         is performed. Returns <code>null</code> if the textsearch is
+     *         performed on the context node.
+     */
+    public Path getRelativePath() {
+        return relPath;
+    }
+
+    /**
+     * Sets the relative path to the item where the textsearch is performed. If
+     * <code>relPath</code> is <code>null</code> the textsearch is performed on
+     * the context node.
+     *
+     * @param relPath the relative path to an item.
+     * @throws IllegalArgumentException if <code>relPath</code> is absolute.
+     */
+    public void setRelativePath(Path relPath) {
+        if (relPath != null && relPath.isAbsolute()) {
+            throw new IllegalArgumentException("relPath must be relative");
+        }
+        this.relPath = relPath;
+        if (relPath == null) {
+            // context node is never a property
+            propertyRef = false;
+        }
+    }
+
+    /**
+     * Adds a path element to the existing relative path. To add a path element
+     * which matches all node names use {@link RelationQueryNode#STAR_NAME_TEST}.
+     *
+     * @param element the path element to append.
+     */
+    public void addPathElement(Path.PathElement element) {
+        Path.PathBuilder builder = new Path.PathBuilder();
+        if (relPath != null) {
+            builder.addAll(relPath.getElements());
+        }
+        builder.addLast(element);
+        try {
+            relPath = builder.getPath();
+        } catch (MalformedPathException e) {
+            // path is always valid
+        }
+    }
+
+    /**
+     * @return <code>true</code> if {@link #getRelativePath()} references a
+     *         property, returns <code>false</code> if it references a node.
+     */
+    public boolean getReferencesProperty() {
+        return propertyRef;
+    }
+
+    /**
+     * Is set to <code>true</code>, indicates that {@link #getRelativePath()}
+     * references a property, if set to <code>false</code> indicates that it
+     * references a node.
+     *
+     * @param b flag whether a property is referenced.
+     */
+    public void setReferencesProperty(boolean b) {
+        propertyRef = b;
     }
 
     /**
@@ -114,7 +204,8 @@ public class TextsearchQueryNode extends QueryNode {
         if (obj instanceof TextsearchQueryNode) {
             TextsearchQueryNode other = (TextsearchQueryNode) obj;
             return (query == null ? other.query == null : query.equals(other.query))
-                    && (propertyName == null ? other.propertyName == null : propertyName.equals(other.propertyName));
+                    && (relPath == null ? other.relPath == null : relPath.equals(other.relPath)
+                    && propertyRef == other.propertyRef);
         }
         return false;
     }
