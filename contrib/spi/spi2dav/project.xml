@@ -46,17 +46,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-client</artifactId>
+            <artifactId>jackrabbit-webdav</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-server</artifactId>
-            <version>${jackrabbit.build.version.jackrabbit}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-webdav</artifactId>
             <version>${jackrabbit.build.version.jackrabbit}</version>
         </dependency>
 
