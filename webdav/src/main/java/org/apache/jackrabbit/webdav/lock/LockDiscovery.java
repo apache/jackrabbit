@@ -165,7 +165,7 @@ public class LockDiscovery extends AbstractDavProperty {
         public String getToken() {
             Element ltEl = DomUtil.getChildElement(alElement, XML_LOCKTOKEN, NAMESPACE);
             if (ltEl != null) {
-                return DomUtil.getChildText(alElement, XML_HREF, NAMESPACE);
+                return DomUtil.getChildText(ltEl, XML_HREF, NAMESPACE);
             }
             return null;
         }
