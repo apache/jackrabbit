@@ -114,7 +114,7 @@
                 </includes>
             </resource>
             <resource>
-                <directory>src/java</directory>
+                <directory>src/main/java</directory>
                 <includes>
                     <include>**/*.xml</include>
                     <include>**/*.xsd</include>
