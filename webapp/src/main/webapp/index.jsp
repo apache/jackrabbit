@@ -68,43 +68,7 @@
         </ul>
     </li>
 </ol>
-<p/><p/>
-<h3>Basic overview</h3><p/>
-<ol>
-    <li><b>webdav module</b> (library only)<p/>
-      <ul>
-          <li>aim: JSR170 independent WebDAV library</li>
-          <li>packages: org.apache.jackrabbit.webdav</li>
-      </ul>
-      <p/>
-    </li>
-    <li><b>server module</b><p/>
-      <ul>
-          <li>aim: server and server-side WebDAV implementation</li>
-          <li>packages:
-              <br>- org.apache.jackrabbit.server
-              <br>- org.apache.jackrabbit.server.jcr = jcr-server specific server part
-              <br>- org.apache.jackrabbit.server.io  = import/export
-              <br>- org.apache.jackrabbit.webdav.simple = simple (filebased) webdav implementation
-              <br>- org.apache.jackrabbit.webdav.jcr = jcr-server (itembased) webdav implementation
-          </li>
-      </ul>
-      <p/>
-    </li>
-    <li><b>webapp module</b> (jackrabbit-server)<p/>
-      <ul>
-          <li>aim: contains the webapp</li>
-          <li>packages: org.apache.jackrabbit.j2ee (servlets)</li>
-      </ul>
-      <p/>
-    </li>
-    <li><b>client module</b><p/>
-      <ul>
-          <li>aim: provide jcr-client and WebDAV transport layer for the client</li>
-          <li>packages: - Not Available -</li>
-      </ul>
-    </li>
-</ol>
+<p/>
 <%
     Repository rep = RepositoryAccessServlet.getRepository(pageContext.getServletContext());
 
