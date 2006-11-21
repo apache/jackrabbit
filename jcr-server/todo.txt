@@ -1,45 +1,5 @@
 -------------------------------------------------------------------
-todo webdav/version
--------------------------------------------------------------------
-
-- review: compliance to deltaV
-- reconsider feature-sets (see also JCR-394)
-- CHECKOUT may contain request body (working-resource, activity, checkout-in-place)
-- CHECKIN may contain request body (working-resource, checkout-in-place)
-- VERSION-CONTROL may contain request body (workspace f.)
-- BASELINE/ACTIVITY: missing support in library
-
--------------------------------------------------------------------
-todo webdav/ordering
--------------------------------------------------------------------
-
-- respect Position header with creation of new collection members by
-  PUT, COPY, MKCOL requests
-  
-
--------------------------------------------------------------------
-todo webdav/search
--------------------------------------------------------------------
-
-- SearchResource should extend DavResource
-- library misses support for the DAV:basicsearch
-
-
--------------------------------------------------------------------
-todo webdav/transaction
--------------------------------------------------------------------
-
-- review naming of the lock scopes. 'global','local' are not correct in
-  this context.
-- repository transactions ('global') are only possible with jackrabbit, where
-  the session represents the XAResource itself.
-  since j2ee explicitely requires any usertransaction to be completed
-  upon the end of the servletes service method.
-  general review necessary....
-
-
--------------------------------------------------------------------
-todo jcr-server implementation
+TODO 'jcr' server implementation
 -------------------------------------------------------------------
 
 general 
@@ -69,7 +29,13 @@ lock
   - remove after timeout (>> releasing cached sessions)
   - define reasonable timeout or make timeout configurable
   - createLock must respect existing locks in the subtree, for lock is always deep.
-
+  - repository transactions ('global') are only possible with jackrabbit, where
+  the session represents the XAResource itself.
+  since j2ee explicitely requires any usertransaction to be completed
+  upon the end of the servletes service method.
+  general review necessary....
+  
+ 
 observation
 
 - make sure all expired subscriptions are removed.
