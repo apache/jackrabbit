@@ -1,64 +1,56 @@
-README - JCR Server
--------------------
+README - Jackrabbit JCR Server
+===============================================================================
 
-WebDAV library and WebDAV based JCR client/server connection facility.
+This project contains WebDAV based JCR server implementations.
+
+Currently 2 different server implementations are provided:
+
+1) WebDAV server ('simple')
+-------------------------------------------------------------------------------
+
+  DAV1,2 compliant WebDAV server implementation to access a
+  JSR170 repository.
+  
+  Futher information such as configuration as well as the
+  SimpleWebdavServlet itself may be found in the 'webapp' project.
+  
+  Source: <jackrabbit>/jcr-server/src/main/java/org/apache/jackrabbit/webdav/simple
+          <jackrabbit>/jcr-server/src/main/java/org/apache/jackrabbit/server
+          <jackrabbit>/webapp/src/main/java/org/apache/jackrabbit/j2ee/SimpleWebdavServlet.java
+
+
+2) 'jcr' server:
+-------------------------------------------------------------------------------
+
+   Server used to remove JSR170 calls via WebDAV.
+   No particular effort to be compliant to WebDAV related RFCs.
+   
+   The 'client' counterpart of this server is under development and
+   can be found within the <jackrabbit>/contrib/spi contribution.
+   
+   Source: <jackrabbit>/jcr-server/src/main/java/org/apache/jackrabbit/webdav/jcr
+           <jackrabbit>/jcr-server/src/main/java/org/apache/jackrabbit/server
+           <jackrabbit>/webapp/src/main/java/org/apache/jackrabbit/j2ee/JCRServerServlet.java
+           
+   Further reading:
+   http://www.day.com/jsr170/server/JCR_Webdav_Protocol.zip">JCR_Webdav_Protocol.zip
+
 
 Requirements
-------------
+--------------------------------------------------------------------------------
 
 This project assumes that you have already successfully compiled and 
-installed the parent project Jackrabbit and the jcr-rmi project
+installed the Jackrabbit 
+
+- jcr-commons module and the 
+- webdav project
+
 into your maven repository. If this is not the case, go back to the root
-project and launch
-
-  commons:  maven jar:install
-
-which will build and copy Jackrabbit into ~/.maven/repository/org.apache.jackrabbit/jars
-
-Also go to the jcr-rmi project and launch
-
-  maven jar:install
-
-which will build and copy jcr-rmi to ~/.maven/repository/org.apache.jackrabbit/jars
-
-After building all dependencies one can build the actual server webapp
-
-  cd webdav
-  maven jar:install
-
-  cd ../server
-  maven jar:install
-
-  cd ../client
-  maven jar:install
-
-  cd ../webapp
-  maven
-
-
-What do I download as a total newbie?
-=====================================
-
-That depends on what you want:
-
-* You want a deployable Jackrabbit installation with WebDAV and
-  optional RMI support? Download jackrabbit-server-1.0.war.
-
-* You want to add webdav support to your existing JCR implementation?
-  Download all the jar files.
-
-* You want to use a generic webdav library as a dependency in some
-  other project? Download jackrabbit-jcr-webdav-1.0.jar.
-
-There isn't much in the way of documentation about these
-things, but that will hopefully improve over time.  Please feel
-free to add to our documentation wiki at
-
-  http://wiki.apache.org/jackrabbit/
+project and build the corresponding projects.
 
 
 License (see also LICENSE.txt)
-==============================
+--------------------------------------------------------------------------------
 
 Collective work: Copyright 2006 The Apache Software Foundation.
 
