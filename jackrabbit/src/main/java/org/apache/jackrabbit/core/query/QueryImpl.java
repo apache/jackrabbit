@@ -25,6 +25,8 @@ import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.NameFormat;
 import org.apache.jackrabbit.name.PathFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -37,11 +39,17 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
+import java.text.NumberFormat;
 
 /**
  * Provides the default implementation for a JCR query.
  */
 public class QueryImpl extends AbstractQueryImpl {
+
+    /**
+     * The logger instance for this class
+     */
+    private static final Logger log = LoggerFactory.getLogger(QueryImpl.class);
 
     /**
      * The session of the user executing this query
@@ -130,7 +138,17 @@ public class QueryImpl extends AbstractQueryImpl {
      */
     public QueryResult execute() throws RepositoryException {
         checkInitialized();
-        return query.execute();
+        long time = System.currentTimeMillis();
+        QueryResult result = query.execute();
+        if (log.isDebugEnabled()) {
+            time = System.currentTimeMillis() - time;
+            NumberFormat format = NumberFormat.getNumberInstance();
+            format.setMinimumFractionDigits(2);
+            format.setMaximumFractionDigits(2);
+            String seconds = format.format((double) time / 1000);
+            log.debug("executed in " + seconds + " s. (" + statement + ")");
+        }
+        return result;
     }
 
     /**

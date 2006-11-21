@@ -35,6 +35,8 @@ import org.apache.jackrabbit.name.NamespaceResolver;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.UnknownPrefixException;
 import org.apache.jackrabbit.name.NameFormat;
+import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.name.MalformedPathException;
 import org.apache.jackrabbit.util.ISO8601;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -494,7 +496,17 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
     public Object visit(ASTContainsExpression node, Object data) {
         NAryQueryNode parent = (NAryQueryNode) data;
-        parent.addOperand(new TextsearchQueryNode(parent, node.getQuery(), node.getPropertyName()));
+        try {
+            Path relPath = null;
+            if (node.getPropertyName() != null) {
+                Path.PathBuilder builder = new Path.PathBuilder();
+                builder.addLast(node.getPropertyName());
+                relPath = builder.getPath();
+            }
+            parent.addOperand(new TextsearchQueryNode(parent, node.getQuery(), relPath, true));
+        } catch (MalformedPathException e) {
+            // path is always valid
+        }
         return parent;
     }
 
@@ -541,26 +553,32 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         RelationQueryNode node = null;
 
         try {
+            Path.PathBuilder builder = new Path.PathBuilder();
+            builder.addLast(propertyName);
+            Path relPath = builder.getPath();
             if (literal.getType() == QueryConstants.TYPE_DATE) {
                 SimpleDateFormat format = new SimpleDateFormat(DATE_PATTERN);
                 Date date = format.parse(stringValue);
-                node = new RelationQueryNode(parent, propertyName, date, operationType);
+                node = new RelationQueryNode(parent, relPath, date, operationType);
             } else if (literal.getType() == QueryConstants.TYPE_DOUBLE) {
                 double d = Double.parseDouble(stringValue);
-                node = new RelationQueryNode(parent, propertyName, d, operationType);
+                node = new RelationQueryNode(parent, relPath, d, operationType);
             } else if (literal.getType() == QueryConstants.TYPE_LONG) {
                 long l = Long.parseLong(stringValue);
-                node = new RelationQueryNode(parent, propertyName, l, operationType);
+                node = new RelationQueryNode(parent, relPath, l, operationType);
             } else if (literal.getType() == QueryConstants.TYPE_STRING) {
-                node = new RelationQueryNode(parent, propertyName, stringValue, operationType);
+                node = new RelationQueryNode(parent, relPath, stringValue, operationType);
             } else if (literal.getType() == QueryConstants.TYPE_TIMESTAMP) {
                 Calendar c = ISO8601.parse(stringValue);
-                node = new RelationQueryNode(parent, propertyName, c.getTime(), operationType);
+                node = new RelationQueryNode(parent, relPath, c.getTime(), operationType);
             }
         } catch (java.text.ParseException e) {
             throw new IllegalArgumentException(e.toString());
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(e.toString());
+        } catch (MalformedPathException e) {
+            // path is always valid, but throw anyway
+            throw new IllegalArgumentException(e.getMessage());
         }
 
         if (node == null) {
