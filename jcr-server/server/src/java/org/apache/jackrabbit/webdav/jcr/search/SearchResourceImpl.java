@@ -120,7 +120,7 @@ public class SearchResourceImpl implements SearchResource {
 
         // test if query is defined by requested repository node
         String itemPath = locator.getRepositoryPath();
-        if (!rootNode.getPath().equals(itemPath)) {
+        if (itemPath != null && !rootNode.getPath().equals(itemPath)) {
             String qNodeRelPath = itemPath.substring(1);
             if (rootNode.hasNode(qNodeRelPath)) {
                 Node qNode = rootNode.getNode(qNodeRelPath);
@@ -139,7 +139,7 @@ public class SearchResourceImpl implements SearchResource {
 
         /* test if resource path does not exist -> thus indicating that
         the query must be made persistent by calling Query.save(String) */
-        if (!getRepositorySession().itemExists(itemPath)) {
+        if (itemPath != null && !getRepositorySession().itemExists(itemPath)) {
             try {
                 q.storeAsNode(itemPath);
             } catch (RepositoryException e) {
