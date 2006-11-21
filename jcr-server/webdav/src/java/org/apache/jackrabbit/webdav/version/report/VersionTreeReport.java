@@ -156,7 +156,7 @@ public class VersionTreeReport implements Report, DeltaVConstants {
         } catch (DavException e) {
             log.error(e.toString());
         }
-        if (depth > 0) {
+        if (depth > 0 && res.isCollection()) {
             DavResourceIterator it = res.getMembers();
             while (it.hasNext()) {
                 buildResponse(it.nextResource(), propNameSet, depth-1, ms);
