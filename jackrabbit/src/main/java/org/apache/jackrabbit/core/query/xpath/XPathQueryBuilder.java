@@ -481,6 +481,15 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 }
                 node.childrenAccept(this, queryNode);
                 break;
+            case JJTPREDICATE:
+                if (queryNode.getType() == QueryNode.TYPE_LOCATION
+                        || queryNode.getType() == QueryNode.TYPE_DEREF) {
+                    node.childrenAccept(this, queryNode);
+                } else {
+                    // predicate not allowed here
+                    exceptions.add(new InvalidQueryException("Unsupported location for predicate"));
+                }
+                break;
             default:
                 // per default traverse
                 node.childrenAccept(this, queryNode);
