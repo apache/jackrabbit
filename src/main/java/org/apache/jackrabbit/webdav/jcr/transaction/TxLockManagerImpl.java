@@ -280,7 +280,7 @@ public class TxLockManagerImpl implements TxLockManager {
      */
     private ActiveLock getLock(String lockToken, Scope scope, DavResource resource) {
         if (!(resource instanceof TransactionResource)) {
-            log.info("TransactionResource expected");
+            log.warn("TransactionResource expected");
             return null;
         }
 
@@ -356,7 +356,7 @@ public class TxLockManagerImpl implements TxLockManager {
      */
     private static void removeExpired(Transaction tx, TransactionMap responsibleMap,
                                       TransactionResource resource) {
-        log.info("Removing expired transaction lock " + tx);
+        log.debug("Removing expired transaction lock " + tx);
         try {
             tx.rollback(resource);
             removeReferences(tx, responsibleMap, resource);
@@ -375,8 +375,8 @@ public class TxLockManagerImpl implements TxLockManager {
      */
     private static void addReferences(Transaction tx, TransactionMap responsibleMap,
                                       TransactionResource resource) throws DavException {
-        log.info("Adding transactionId '" + tx.getId() + "' as session lock token.");
-        getRepositorySession(resource).addLockToken(tx.getId());
+        log.debug("Adding transactionId '" + tx.getId() + "' as session lock token.");
+        resource.getSession().addLockToken(tx.getId());
 
         responsibleMap.put(tx.getId(), tx);
         resource.getSession().addReference(tx.getId());
@@ -391,7 +391,7 @@ public class TxLockManagerImpl implements TxLockManager {
      */
     private static void removeReferences(Transaction tx, TransactionMap responsibleMap,
                                          TransactionResource resource) {
-        log.info("Removing transactionId '" + tx.getId() + "' from session lock tokens.");
+        log.debug("Removing transactionId '" + tx.getId() + "' from session lock tokens.");
         resource.getSession().removeLockToken(tx.getId());
 
         responsibleMap.remove(tx.getId());
