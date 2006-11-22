@@ -16,8 +16,13 @@
  */
 package org.apache.jackrabbit.browser;
 
+import java.io.ByteArrayInputStream;
+import java.util.Properties;
+
+import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.naming.InitialContext;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -29,9 +34,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.jackrabbit.command.CommandHelper;
 
 /**
- * Filter that binds the jcr session to http session
+ * Filter stores the jcr session in http session. It also synchronizes
  */
-public class LoginFilter implements Filter {
+public class JcrLoginFilter implements Filter {
+
+	private static Repository repository;
 
 	public void destroy() {
 
@@ -40,13 +47,13 @@ public class LoginFilter implements Filter {
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws java.io.IOException, ServletException {
 
-		chain.doFilter(request, response);
+		HttpServletRequest httpRequest = (HttpServletRequest) request;
 
+		// Create the jcr session if necessary
 		try {
-			HttpServletRequest httpRequest = (HttpServletRequest) request;
 			if (httpRequest.getSession()
 					.getAttribute(CommandHelper.SESSION_KEY) == null) {
-				Session s = JcrSessionListener.getRepository().login(
+				Session s = getRepository().login(
 						new SimpleCredentials(httpRequest.getRemoteUser(), ""
 								.toCharArray()));
 				httpRequest.getSession().setAttribute(
@@ -56,10 +63,41 @@ public class LoginFilter implements Filter {
 			throw new ServletException(
 					"unable to bind jcr session to http session", e);
 		}
+
+		// get the session from the http session
+		Object session = httpRequest.getSession().getAttribute(
+				CommandHelper.SESSION_KEY);
+
+		// Synchronize request
+		synchronized (session) {
+			chain.doFilter(request, response);
+		}
+
 	}
 
 	public void init(FilterConfig cfg) throws ServletException {
 
+	}
+
+	public static Repository getRepository() {
+		if (repository == null) {
+			try {
+				InitialContext ctx = new InitialContext();
+				String jndiAddress = (String) ctx
+						.lookup("java:comp/env/jcr/jndi/address");
+				String jndiProperties = (String) ctx
+						.lookup("java:comp/env/jcr/jndi/properties");
+				Properties properties = new Properties();
+				properties.load(new ByteArrayInputStream(jndiProperties
+						.getBytes()));
+				InitialContext repoCtx = new InitialContext(properties);
+				repository = (Repository) repoCtx.lookup(jndiAddress);
+			} catch (Exception e) {
+				throw new IllegalStateException(
+						"unable to retrieve repository. ", e);
+			}
+		}
+		return repository;
 	}
 
 }
