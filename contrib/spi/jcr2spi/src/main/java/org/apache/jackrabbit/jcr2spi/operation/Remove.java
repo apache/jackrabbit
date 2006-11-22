@@ -29,7 +29,7 @@ import javax.jcr.version.VersionException;
  */
 public class Remove extends AbstractOperation {
 
-    private ItemState removeState;
+    protected ItemState removeState;
 
     protected Remove(ItemState removeState) {
         this.removeState = removeState;

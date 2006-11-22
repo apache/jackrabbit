@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
@@ -46,20 +47,25 @@ public class WorkspaceItemStateManager extends CachingItemStateManager
 
     private final Collection eventFilter;
 
-    public WorkspaceItemStateManager(WorkspaceManager wspManager, ItemStateFactory isf, IdFactory idFactory) {
+    public WorkspaceItemStateManager(WorkspaceManager wspManager,
+                                     CacheBehaviour cacheBehaviour,
+                                     ItemStateFactory isf, IdFactory idFactory) {
         super(isf, idFactory);
-        EventFilter filter = null;
-        try {
-            // todo for now listen to everything
-            filter = wspManager.createEventFilter(Event.ALL_TYPES, Path.ROOT, true, null, null, false);
-        } catch (UnsupportedRepositoryOperationException e) {
-            // repository does not support observation
+        if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
+            EventFilter filter = null;
+            try {
+                // todo for now listen to everything
+                filter = wspManager.createEventFilter(Event.ALL_TYPES, Path.ROOT, true, null, null, false);
+            } catch (UnsupportedRepositoryOperationException e) {
+                // spi does not support observation
+            }
+            this.eventFilter = (filter == null) ? Collections.EMPTY_LIST : Collections.singletonList(filter);
+        } else {
+            this.eventFilter = Collections.EMPTY_LIST;
         }
-        this.eventFilter = (filter == null) ? Collections.EMPTY_LIST : Collections.singletonList(filter);
     }
 
     //-------------------------------< InternalEventListener >------------------
-
     /**
      * @see InternalEventListener#getEventFilters()
      */

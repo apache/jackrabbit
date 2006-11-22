@@ -22,7 +22,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
 
 /**
- * <code>Remove</code>...
+ * <code>RemoveVersion</code>...
  */
 public class RemoveVersion extends Remove {
 
@@ -39,10 +39,15 @@ public class RemoveVersion extends Remove {
     }
 
     /**
+     * Invalidates the <code>NodeState</code> that has been updated and all
+     * its decendants. Second, the parent state gets invalidated.
+     *
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        NodeState parent = removeState.getParent();
+        removeState.invalidate(true);
+        parent.invalidate(false);
     }
 
     //------------------------------------------------------------< Factory >---

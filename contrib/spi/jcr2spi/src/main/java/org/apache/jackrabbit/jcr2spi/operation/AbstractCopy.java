@@ -72,6 +72,16 @@ public abstract class AbstractCopy extends AbstractOperation {
         this.srcWorkspaceName = srcWorkspaceName;
     }
 
+    //----------------------------------------------------------< Operation >---
+    /**
+     * Invalidate the destination parent <code>NodeState</code>.
+     * 
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        destParentState.invalidate(false);
+    }
+
     //----------------------------------------< Access Operation Parameters >---
     public String getWorkspaceName() {
         return srcWorkspaceName;

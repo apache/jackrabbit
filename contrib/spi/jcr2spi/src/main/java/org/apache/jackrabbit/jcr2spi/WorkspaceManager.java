@@ -130,7 +130,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private final SessionInfo sessionInfo;
 
     private final ItemStateManager cache;
-    private CacheBehaviour cacheBehaviour = CacheBehaviour.OBSERVATION;
+    private final CacheBehaviour cacheBehaviour;
 
     private final NamespaceRegistryImpl nsRegistry;
     private final NodeTypeRegistry ntRegistry;
@@ -161,9 +161,11 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      */
     private final Set listeners = Collections.synchronizedSet(new HashSet());
 
-    public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo) throws RepositoryException {
+    public WorkspaceManager(RepositoryService service, CacheBehaviour cacheBehaviour,
+                            SessionInfo sessionInfo) throws RepositoryException {
         this.service = service;
         this.sessionInfo = sessionInfo;
+        this.cacheBehaviour = cacheBehaviour;
 
         cache = createItemStateManager();
 
@@ -171,7 +173,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         nsRegistry = createNamespaceRegistry(repositoryDescriptors);
         ntRegistry = createNodeTypeRegistry(nsRegistry, repositoryDescriptors);
-        externalChangeFeed = createChangeFeed(repositoryDescriptors, EXTERNAL_EVENT_POLLING_INTERVAL);
+        externalChangeFeed = createChangeFeed(EXTERNAL_EVENT_POLLING_INTERVAL);
     }
 
     public NamespaceRegistryImpl getNamespaceRegistryImpl() {
@@ -240,11 +242,23 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         sessionInfo.removeLockToken(lt);
     }
 
+    /**
+     *
+     * @return
+     * @throws RepositoryException
+     */
     public String[] getSupportedQueryLanguages() throws RepositoryException {
         // TODO: review
         return service.getSupportedQueryLanguages(sessionInfo);
     }
 
+    /**
+     *
+     * @param statement
+     * @param language
+     * @return
+     * @throws RepositoryException
+     */
     public QueryInfo executeQuery(String statement, String language)
             throws RepositoryException {
         return service.executeQuery(sessionInfo, statement, language);
@@ -282,42 +296,20 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @throws UnsupportedRepositoryOperationException
      *          if this implementation does not support observation.
      */
-    public EventFilter createEventFilter(int eventTypes,
-                                         Path path,
-                                         boolean isDeep,
-                                         String[] uuids,
-                                         QName[] nodeTypes,
+    public EventFilter createEventFilter(int eventTypes, Path path, boolean isDeep,
+                                         String[] uuids, QName[] nodeTypes,
                                          boolean noLocal)
-            throws UnsupportedRepositoryOperationException {
+        throws UnsupportedRepositoryOperationException {
         return service.createEventFilter(eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
     }
-
-    //----------------------------------------------------< package private >---
-
-    /**
-     * Returns the current cache behaviour. Defaults to {@link
-     * CacheBehaviour#OBSERVATION} unless otherwise set using {@link
-     * #setCacheBehaviour(CacheBehaviour)}.
-     *
-     * @return the current cache behaviour.
-     */
-    CacheBehaviour getCacheBehaviour() {
-        return cacheBehaviour;
-    }
-
-    /**
-     * Sets the cache behaviour for this WorkspaceManager.
-     *
-     * @param behaviour the cache behaviour.
-     */
-    void setCacheBehaviour(CacheBehaviour behaviour) {
-        this.cacheBehaviour = behaviour;
-    }
-
     //--------------------------------------------------------------------------
+    /**
+     *
+     * @return
+     */
     private ItemStateManager createItemStateManager() {
         ItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, this);
-        WorkspaceItemStateManager ism = new WorkspaceItemStateManager(this, isf, service.getIdFactory());
+        WorkspaceItemStateManager ism = new WorkspaceItemStateManager(this, cacheBehaviour, isf, service.getIdFactory());
         addEventListener(ism);
         return ism;
     }
@@ -354,20 +346,15 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * Creates a background thread which polls for external changes on the
      * RepositoryService.
      *
-     * @param descriptors the repository descriptors.
      * @param pollingInterval the polling interval in milliseconds.
      * @return the background polling thread or <code>null</code> if the underlying
      *         <code>RepositoryService</code> does not support observation.
      */
-    private Thread createChangeFeed(Map descriptors, int pollingInterval) {
-        String desc = (String) descriptors.get(Repository.OPTION_OBSERVATION_SUPPORTED);
-        Thread t = null;
-        if (Boolean.valueOf(desc).booleanValue()) {
-            t = new Thread(new ExternalChangePolling(pollingInterval));
-            t.setName("External Change Polling");
-            t.setDaemon(true);
-            t.start();
-        }
+    private Thread createChangeFeed(int pollingInterval) {
+        Thread t = new Thread(new ExternalChangePolling(pollingInterval));
+        t.setName("External Change Polling");
+        t.setDaemon(true);
+        t.start();
         return t;
     }
 
@@ -1021,6 +1008,10 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
                             log.debug("Event delivery signaled");
                         }
                     }
+                } catch (UnsupportedRepositoryOperationException e) {
+                    log.error("SPI implementation does not support observation: " + e);
+                    // terminate
+                    break;
                 } catch (RepositoryException e) {
                     log.warn("Exception while retrieving event bundles: " + e);
                     log.debug("Dump:", e);

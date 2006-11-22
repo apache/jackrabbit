@@ -19,7 +19,10 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -66,10 +69,23 @@ public class AddLabel extends AbstractOperation {
     }
 
     /**
+     * Invalidates the jcr:versionlabel nodestate present with the given
+     * version history. If '<code>moveLabel</code>' is true, all decendant states
+     * (property states) are invalidated as well.
+     *
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        ChildNodeEntry lnEntry = versionHistoryState.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
+        if (lnEntry.isAvailable()) {
+            try {
+                NodeState labelNodeState = lnEntry.getNodeState();
+                // if an existing label must be moved -> invalidate recursively
+                labelNodeState.invalidate(moveLabel);
+            } catch (ItemStateException e) {
+                // ignore
+            }
+        }
     }
     //----------------------------------------< Access Operation Parameters >---
     public NodeState getVersionHistoryState() {

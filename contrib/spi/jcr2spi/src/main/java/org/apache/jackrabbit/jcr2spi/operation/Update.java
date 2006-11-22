@@ -50,10 +50,13 @@ public class Update extends AbstractOperation {
     }
 
     /**
+     * Invalidates the <code>NodeState</code> that has been updated and all
+     * its decendants.
+     * 
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        nodeState.invalidate(true);
     }
 
     //----------------------------------------< Access Operation Parameters >---

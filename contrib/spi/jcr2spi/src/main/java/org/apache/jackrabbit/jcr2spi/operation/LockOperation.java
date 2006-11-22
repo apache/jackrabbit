@@ -52,10 +52,12 @@ public class LockOperation extends AbstractOperation {
     }
 
     /**
+     * Invalidates the <code>NodeState</code> that has been locked.
+     *
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        nodeState.invalidate(false);
     }
 
     //----------------------------------------< Access Operation Parameters >---

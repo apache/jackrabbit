@@ -466,7 +466,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
             // child properties nor from the original lock request.
             this.lockInfo = wspManager.getLockInfo(lockHoldingState.getNodeId());
 
-            // TODO: TOBEFIXED...repository may not support observation
+            // TODO: TOBEFIXED...SPI may not support observation
             // register as internal listener to the wsp manager in order to get
             // informed if this lock ends his life.
             eventFilter = wspManager.createEventFilter(Event.PROPERTY_REMOVED,
