@@ -17,6 +17,9 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildPropertyEntry;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -25,6 +28,8 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * <code>ResolveMergeConflict</code>...
@@ -54,10 +59,25 @@ public class ResolveMergeConflict extends AbstractOperation {
     }
 
     /**
+     * Invalidates the <code>NodeState</code> that had a merge conflict pending
+     * and all its child properties.
+     *
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        Collection propEntries = nodeState.getPropertyEntries();
+        for (Iterator it = propEntries.iterator(); it.hasNext();) {
+            ChildPropertyEntry pe = (ChildPropertyEntry) it.next();
+            if (pe.isAvailable()) {
+                try {
+                    PropertyState st = pe.getPropertyState();
+                    st.invalidate(false);
+                } catch (ItemStateException e) {
+                    // ignore
+                }
+            }
+        }
+        nodeState.invalidate(false);
     }
     //----------------------------------------< Access Operation Parameters >---
     public NodeState getNodeState() {

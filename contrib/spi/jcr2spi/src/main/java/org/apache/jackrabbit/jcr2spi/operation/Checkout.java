@@ -44,12 +44,20 @@ public class Checkout extends AbstractOperation {
     }
 
     /**
+     * Invalidate the target <code>NodeState</code>.
+     *
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        nodeState.invalidate(false);
+        // TODO: invalidate the corresponding part of the version storage
     }
+
     //----------------------------------------< Access Operation Parameters >---
+    /**
+     *
+     * @return
+     */
     public NodeState getNodeState() {
         return nodeState;
     }

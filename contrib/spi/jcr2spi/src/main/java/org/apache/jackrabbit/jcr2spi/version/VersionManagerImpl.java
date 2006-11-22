@@ -158,7 +158,7 @@ public class VersionManagerImpl implements VersionManager {
 
     public Collection merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
         NodeState wspState = getWorkspaceState(nodeState);
-        // TODO : needs to be fixed... repository may not support observation
+        // TODO : needs to be fixed... SPI may not support observation
         // TODO find better solution to build the mergeFailed-collection
         EventFilter eventFilter;
         try {

@@ -51,7 +51,7 @@ public class LockRefresh extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        // nothing to do.
     }
     
     //----------------------------------------< Access Operation Parameters >---

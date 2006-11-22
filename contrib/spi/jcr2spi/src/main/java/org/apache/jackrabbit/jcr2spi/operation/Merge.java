@@ -28,7 +28,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 /**
- * <code>Update</code>...
+ * <code>Merge</code>...
  */
 public class Merge extends AbstractOperation {
 
@@ -55,10 +55,13 @@ public class Merge extends AbstractOperation {
     }
 
     /**
+     * Invalidates the target nodestate and all descendants.
+     *
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        nodeState.invalidate(true);
+        // TODO: invalidate the corresponding part of the version storage
     }
 
     //----------------------------------------< Access Operation Parameters >---

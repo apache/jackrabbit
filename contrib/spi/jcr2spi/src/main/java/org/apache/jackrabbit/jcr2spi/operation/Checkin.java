@@ -39,22 +39,38 @@ public class Checkin extends AbstractOperation {
     }
 
     //----------------------------------------------------------< Operation >---
+
+    /**
+     * @see Operation#accept(OperationVisitor)
+     */
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
         visitor.visit(this);
     }
 
+    /**
+     * Invalidate the target <code>NodeState</code>.
+     *
+     * @see Operation#persisted()
+     */
+    public void persisted() {
+        nodeState.invalidate(false);
+        // TODO: invalidate the corresponding part of the version storage
+    }
     //----------------------------------------< Access Operation Parameters >---
+    /**
+     *
+     * @return The nodeState to be checked in.
+     */
     public NodeState getNodeState() {
         return nodeState;
     }
 
-    /**
-     * @see Operation#persisted()
-     */
-    public void persisted() {
-        // TODO
-    }
     //------------------------------------------------------------< Factory >---
+    /**
+     *
+     * @param nodeState
+     * @return
+     */
     public static Operation create(NodeState nodeState) {
         return new Checkin(nodeState);
     }

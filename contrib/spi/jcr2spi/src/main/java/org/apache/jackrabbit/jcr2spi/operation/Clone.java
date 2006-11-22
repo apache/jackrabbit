@@ -17,7 +17,11 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.name.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemExistsException;
@@ -33,14 +37,21 @@ import javax.jcr.version.VersionException;
  */
 public class Clone extends AbstractCopy {
 
+    private static Logger log = LoggerFactory.getLogger(Clone.class);
+
     private final boolean removeExisting;
+    /* In case of 'removeExisting' and INVALIDATION-cachebehaviour we need
+       to invalidate the complete tree. */
+    private final ManagerProvider destMgrProvider;
 
     private Clone(Path srcPath, Path destPath, String srcWorkspaceName,
                   boolean removeExisting, ManagerProvider srcMgrProvider,
                   ManagerProvider destMgrProvider)
         throws RepositoryException {
         super(srcPath, destPath, srcWorkspaceName, srcMgrProvider, destMgrProvider);
+
         this.removeExisting = removeExisting;
+        this.destMgrProvider = destMgrProvider;
     }
 
     //----------------------------------------------------------< Operation >---
@@ -56,7 +67,18 @@ public class Clone extends AbstractCopy {
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        if (removeExisting) {
+            // invalidate the complete tree
+            try {
+                NodeState rootState = destMgrProvider.getItemStateManager().getRootState();
+                rootState.invalidate(true);
+            } catch (ItemStateException e) {
+                // TODO: fallback behaviour?
+                log.error("Cannot invalidate root state.", e.getMessage());
+            }
+        } else {
+            super.persisted();
+        }
     }
 
     //----------------------------------------< Access Operation Parameters >---

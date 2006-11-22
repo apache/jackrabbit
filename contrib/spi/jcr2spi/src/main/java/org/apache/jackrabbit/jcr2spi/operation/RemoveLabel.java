@@ -19,7 +19,10 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.name.QName;
+import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
+import org.apache.jackrabbit.jcr2spi.state.entry.ChildNodeEntry;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -30,7 +33,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 /**
- * <code>AddLabel</code>...
+ * <code>RemoveLabel</code>...
  */
 public class RemoveLabel extends AbstractOperation {
 
@@ -64,10 +67,21 @@ public class RemoveLabel extends AbstractOperation {
     }
 
     /**
+     * Invalidates the jcr:versionlabel nodestate present with the given
+     * version history and all decendant states (property states).
+     *
      * @see Operation#persisted()
      */
     public void persisted() {
-        // TODO
+        ChildNodeEntry lnEntry = versionHistoryState.getChildNodeEntry(QName.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
+        if (lnEntry.isAvailable()) {
+            try {
+                NodeState labelNodeState = lnEntry.getNodeState();
+                labelNodeState.invalidate(true);
+            } catch (ItemStateException e) {
+                // ignore
+            }
+        }
     }
 
     //----------------------------------------< Access Operation Parameters >---

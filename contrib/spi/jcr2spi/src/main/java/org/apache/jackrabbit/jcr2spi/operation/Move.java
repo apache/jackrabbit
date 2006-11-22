@@ -73,13 +73,17 @@ public class Move extends AbstractOperation {
     }
 
     /**
-     * Throws UnsupportedOperationException
+     * Throws UnsupportedOperationException if this Move Operation is a transient
+     * modification. Otherwise, the moved state as well as both parent states
+     * are invalidated.
      *
      * @see Operation#persisted()
      */
     public void persisted() {
         if (srcState.isWorkspaceState()) {
-            // TODO
+            srcParentState.invalidate(false);
+            destParentState.invalidate(false);
+            srcState.invalidate(false);
         } else {
             throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
         }

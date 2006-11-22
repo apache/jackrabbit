@@ -39,6 +39,7 @@ import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.jcr2spi.xml.WorkspaceContentHandler;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -107,8 +108,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         this.name = name;
         this.session = session;
 
-        wspManager = createManager(service, sessionInfo);
-        wspManager.setCacheBehaviour(session.getCacheBehaviour());
+        wspManager = createManager(service, session.getCacheBehaviour(), sessionInfo);
     }
 
     //----------------------------------------------------------< Workspace >---
@@ -456,8 +456,10 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @param service the RepositoryService
      * @return state manager
      */
-    protected WorkspaceManager createManager(RepositoryService service, SessionInfo sessionInfo) throws RepositoryException {
-        return new WorkspaceManager(service, sessionInfo);
+    protected WorkspaceManager createManager(RepositoryService service,
+                                             CacheBehaviour cacheBehaviour,
+                                             SessionInfo sessionInfo) throws RepositoryException {
+        return new WorkspaceManager(service, cacheBehaviour, sessionInfo);
     }
 
     /**

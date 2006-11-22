@@ -30,7 +30,7 @@ import javax.jcr.version.Version;
 import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
- * <code>Update</code>...
+ * <code>Restore</code>...
  */
 public class Restore extends AbstractOperation {
 
