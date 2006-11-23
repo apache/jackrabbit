@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.jndi;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.config.ConfigurationException;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
@@ -87,7 +88,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
     /**
      * The delegate repository instance. Created by {@link #init() init}.
      */
-    private transient Repository delegatee;
+    protected transient Repository delegatee;
 
     /**
      * Thread that is registered as shutdown hook after {@link #init} has been
@@ -102,7 +103,7 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      * @param configFilePath repository configuration file path
      * @param repHomeDir     repository home directory path
      */
-    private BindableRepository(String configFilePath, String repHomeDir) {
+    protected BindableRepository(String configFilePath, String repHomeDir) {
         this.configFilePath = configFilePath;
         this.repHomeDir = repHomeDir;
         delegatee = null;
@@ -131,10 +132,9 @@ class BindableRepository implements Repository, Referenceable, Serializable {
      *
      * @throws RepositoryException if the repository cannot be created
      */
-    private void init() throws RepositoryException {
-        RepositoryConfig config =
-                RepositoryConfig.create(configFilePath, repHomeDir);
-        delegatee = RepositoryImpl.create(config);
+    protected void init() throws RepositoryException {
+        RepositoryConfig config = createRepositoryConfig(configFilePath, repHomeDir);
+        delegatee = createRepository(config);
         hook = new Thread() {
             public void run() {
                 shutdown();
@@ -142,6 +142,35 @@ class BindableRepository implements Repository, Referenceable, Serializable {
         };
 
         Runtime.getRuntime().addShutdownHook(hook);
+    }
+
+    /**
+     * Creates a repository configuration from a path to the repository.xml file
+     * and the repository home directory.
+     *
+     * @param configFilePath path to the repository.xml file.
+     * @param repHomeDir     the repository home directory.
+     * @return the repository configuration.
+     * @throws ConfigurationException on configuration error.
+     */
+    protected RepositoryConfig createRepositoryConfig(String configFilePath,
+                                                      String repHomeDir)
+            throws ConfigurationException {
+        return RepositoryConfig.create(configFilePath, repHomeDir);
+    }
+
+    /**
+     * Creates a plain repository instance from a repository
+     * <code>config</code>.
+     *
+     * @param config the repository configuration.
+     * @return the repository instance.
+     * @throws RepositoryException if an error occurs while creating the
+     *                             repository instance.
+     */
+    protected Repository createRepository(RepositoryConfig config)
+            throws RepositoryException {
+        return RepositoryImpl.create(config);
     }
 
     //-----------------------------------------------------------< Repository >
