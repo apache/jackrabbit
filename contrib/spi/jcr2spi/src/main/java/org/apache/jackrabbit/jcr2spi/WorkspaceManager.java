@@ -75,6 +75,7 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.IdIterator;
 import org.apache.jackrabbit.value.QValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -185,7 +186,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     }
 
     public String[] getWorkspaceNames() throws RepositoryException {
-        // TODO: review
         return service.getWorkspaceNames(sessionInfo);
     }
 
@@ -248,7 +248,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
      * @throws RepositoryException
      */
     public String[] getSupportedQueryLanguages() throws RepositoryException {
-        // TODO: review
         return service.getSupportedQueryLanguages(sessionInfo);
     }
 
@@ -685,8 +684,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             workspaceOperation.accept(this);
         }
         //-----------------------< OperationVisitor >---------------------------
-        // TODO: review retrival of ItemIds for transient modifications 
-
         public void visit(AddNode operation) throws RepositoryException {
             NodeId parentId = operation.getParentState().getNodeId();
             batch.addNode(parentId, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid());
@@ -836,8 +833,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
-            // todo service should return ids of failed nodes
-            service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
+            IdIterator failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
+            operation.setFailedIds(failed);
         }
 
         public void visit(ResolveMergeConflict operation) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
@@ -887,7 +884,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
 
         public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
             NodeId nId = operation.getNodeState().getNodeId();
-            service.lock(sessionInfo, nId, operation.isDeep(), operation.isSessionScoped());
+            LockInfo lInfo = service.lock(sessionInfo, nId, operation.isDeep(), operation.isSessionScoped());
+            operation.setLockInfo(lInfo);
         }
 
         public void visit(LockRefresh operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {

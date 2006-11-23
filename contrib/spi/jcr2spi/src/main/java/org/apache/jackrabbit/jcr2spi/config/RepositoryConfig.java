@@ -24,7 +24,6 @@ import javax.jcr.ValueFactory;
 /**
  * <code>RepositoryConfig</code>...
  */
-// TODO: needs to be done properly
 public interface RepositoryConfig {
 
     public RepositoryService getRepositoryService() throws RepositoryException;

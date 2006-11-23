@@ -410,7 +410,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
 
     //------------------------------------< implementation specific methods >---
     void dispose() {
-        // TODO.
         // NOTE: wspManager has already been disposed upon SessionItemStateManager.dispose()
     }
 
