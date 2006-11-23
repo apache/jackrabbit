@@ -36,6 +36,8 @@ public class LockOperation extends AbstractOperation {
     private final boolean isDeep;
     private final boolean isSessionScoped;
 
+    private LockInfo lockInfo = null;
+
     private LockOperation(NodeState nodeState, boolean isDeep, boolean isSessionScoped) {
         this.nodeState = nodeState;
         this.isDeep = isDeep;
@@ -75,10 +77,19 @@ public class LockOperation extends AbstractOperation {
     }
 
     public void setLockInfo(LockInfo lockInfo) {
+        if (lockInfo == null) {
+            throw new IllegalArgumentException("IdIterator must not be null.");
+        }
+        if (this.lockInfo != null) {
+            throw new IllegalStateException("Merge operation has already been executed -> FailedIds already set.");
+        }
         this.lockInfo = lockInfo;
     }
 
     public LockInfo getLockInfo() {
+        if (lockInfo == null) {
+            throw new IllegalStateException("Merge operation has not been executed yet.");
+        }
         return lockInfo;
     }
     //------------------------------------------------------------< Factory >---
