@@ -19,10 +19,10 @@ package org.apache.jackrabbit.jcr2spi.version;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.IdIterator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
-import java.util.Collection;
 
 /**
  * <code>VersionManager</code>...
@@ -59,7 +59,7 @@ public interface VersionManager {
      * by the user of the API.
      * @see #resolveMergeConflict(NodeState,NodeState,boolean)
      */
-    public Collection merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException;
+    public IdIterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException;
 
     /**
      * 

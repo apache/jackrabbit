@@ -100,10 +100,10 @@ public class LockManagerImpl implements LockManager, SessionListener {
 
         // execute the operation
         NodeState wspNodeState = getWorkspaceState(nodeState);
-        Operation op = LockOperation.create(wspNodeState, isDeep, isSessionScoped);
+        LockOperation op = LockOperation.create(wspNodeState, isDeep, isSessionScoped);
         wspManager.execute(op);
 
-        Lock lock = new LockImpl(new LockState(wspNodeState), lhNode);
+        Lock lock = new LockImpl(new LockState(wspNodeState, op.getLockInfo()), lhNode);
         return lock;
     }
 
@@ -457,14 +457,19 @@ public class LockManagerImpl implements LockManager, SessionListener {
         private boolean isLive = true;
         private final EventFilter eventFilter;
 
-        private LockState(NodeState lockHoldingState) throws LockException, RepositoryException {
+        private LockState(NodeState lockHoldingState, LockInfo lockInfo)
+            throws LockException, RepositoryException{
             lockHoldingState.checkIsWorkspaceState();
 
             this.lockHoldingState = lockHoldingState;
-            // retrieve lock info from wsp-manager, in order to get the complete
-            // lockInfo including lock-token, which is not available from the
-            // child properties nor from the original lock request.
-            this.lockInfo = wspManager.getLockInfo(lockHoldingState.getNodeId());
+            if (lockInfo == null) {
+                // retrieve lock info from wsp-manager, in order to get the complete
+                // lockInfo including lock-token, which is not available from the
+                // child properties nor from the original lock request.
+                this.lockInfo = wspManager.getLockInfo(lockHoldingState.getNodeId());
+            } else {
+                this.lockInfo = lockInfo;
+            }
 
             // TODO: TOBEFIXED...SPI may not support observation
             // register as internal listener to the wsp manager in order to get
@@ -472,6 +477,10 @@ public class LockManagerImpl implements LockManager, SessionListener {
             eventFilter = wspManager.createEventFilter(Event.PROPERTY_REMOVED,
                     lockHoldingState.getQPath(), false, null, null, true);
             wspManager.addEventListener(this);
+        }
+
+        private LockState(NodeState lockHoldingState) throws LockException, RepositoryException {
+            this(lockHoldingState, null);
         }
 
         private void refresh() throws RepositoryException {

@@ -53,7 +53,8 @@ import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.IdIterator;
+import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +93,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 
 /**
  * <code>NodeImpl</code>...
@@ -882,15 +882,15 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure the workspace exists and is accessible for this session.
         session.checkAccessibleWorkspace(srcWorkspace);
 
-        Collection failedIds = session.getVersionManager().merge(getNodeState(), srcWorkspace, bestEffort);
-        if (failedIds.isEmpty()) {
+        IdIterator failedIds = session.getVersionManager().merge(getNodeState(), srcWorkspace, bestEffort);
+        if (failedIds.getSize() == 0) {
             return IteratorHelper.EMPTY;
         } else {
             List failedStates = new ArrayList();
-            Iterator it = failedIds.iterator();
-            while (it.hasNext()) {
+            while (failedIds.hasNext()) {
                 try {
-                    ItemState state = session.getItemStateManager().getItemState((NodeId) it.next());
+                    ItemId id = failedIds.nextId();
+                    ItemState state = session.getItemStateManager().getItemState(id);
                     if (state.isNode()) {
                         failedStates.add(state);
                     } else {
@@ -902,7 +902,11 @@ public class NodeImpl extends ItemImpl implements Node {
                     throw new RepositoryException(e);
                 }
             }
-            return new LazyItemIterator(itemMgr, failedStates);
+            if (failedStates.isEmpty()) {
+                return IteratorHelper.EMPTY;
+            } else {
+                return new LazyItemIterator(itemMgr, failedStates);
+            }
         }
     }
 

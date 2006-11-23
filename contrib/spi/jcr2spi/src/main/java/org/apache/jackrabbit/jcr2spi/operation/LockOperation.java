@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.LockInfo;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -73,6 +74,13 @@ public class LockOperation extends AbstractOperation {
         return isSessionScoped;
     }
 
+    public void setLockInfo(LockInfo lockInfo) {
+        this.lockInfo = lockInfo;
+    }
+
+    public LockInfo getLockInfo() {
+        return lockInfo;
+    }
     //------------------------------------------------------------< Factory >---
     /**
      *
@@ -80,8 +88,8 @@ public class LockOperation extends AbstractOperation {
      * @param isDeep
      * @return
      */
-    public static Operation create(NodeState nodeState, boolean isDeep, boolean isSessionScoped) {
-        Operation lck = new LockOperation(nodeState, isDeep, isSessionScoped);
+    public static LockOperation create(NodeState nodeState, boolean isDeep, boolean isSessionScoped) {
+        LockOperation lck = new LockOperation(nodeState, isDeep, isSessionScoped);
         return lck;
     }
 }

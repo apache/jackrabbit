@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.IdIterator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
@@ -35,13 +35,13 @@ public class Merge extends AbstractOperation {
     private final NodeState nodeState;
     private final String srcWorkspaceName;
     private final boolean bestEffort;
-    private final InternalEventListener eventListener;
 
-    private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, InternalEventListener eventListener) {
+    private IdIterator failedIds = null;
+
+    private Merge(NodeState nodeState, String srcWorkspaceName, boolean bestEffort) {
         this.nodeState = nodeState;
         this.srcWorkspaceName = srcWorkspaceName;
         this.bestEffort = bestEffort;
-        this.eventListener = eventListener;
 
         this.addAffectedItemState(nodeState);
     }
@@ -77,10 +77,22 @@ public class Merge extends AbstractOperation {
         return bestEffort;
     }
 
-    public InternalEventListener getEventListener() {
-        return eventListener;
+    public void setFailedIds(IdIterator failedIds) {
+        if (failedIds == null) {
+            throw new IllegalArgumentException("IdIterator must not be null.");
+        }
+        if (this.failedIds != null) {
+            throw new IllegalStateException("Merge operation has already been executed -> FailedIds already set.");
+        }
+        this.failedIds = failedIds;
     }
 
+    public IdIterator getFailedIds() {
+        if (failedIds == null) {
+            throw new IllegalStateException("Merge operation has not been executed yet.");
+        }
+        return failedIds;
+    }
     //------------------------------------------------------------< Factory >---
     /**
      *
@@ -88,7 +100,7 @@ public class Merge extends AbstractOperation {
      * @param srcWorkspaceName
      * @return
      */
-    public static Operation create(NodeState nodeState, String srcWorkspaceName, boolean bestEffort, InternalEventListener eventListener) {
-        return new Merge(nodeState, srcWorkspaceName, bestEffort, eventListener);
+    public static Merge create(NodeState nodeState, String srcWorkspaceName, boolean bestEffort) {
+        return new Merge(nodeState, srcWorkspaceName, bestEffort);
     }
 }

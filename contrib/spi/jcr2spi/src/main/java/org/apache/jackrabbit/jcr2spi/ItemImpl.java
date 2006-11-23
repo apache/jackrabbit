@@ -306,7 +306,9 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * @param previousStatus
      */
     public void statusChanged(ItemState state, int previousStatus) {
-        // TODO: ev. assert that state is this.state?
+        if (state != this.state) {
+            throw new IllegalArgumentException("Invalid argument: ItemState with changed status must be this.state.");
+        }
 
         switch (state.getStatus()) {
             /**

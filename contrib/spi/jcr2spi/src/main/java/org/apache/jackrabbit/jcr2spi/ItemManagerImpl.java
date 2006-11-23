@@ -351,10 +351,11 @@ public class ItemManagerImpl implements Dumpable, ItemManager {
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
 
         // check special nodes
-        if (state.getNodeTypeName().equals(QName.NT_VERSION)) {
+        QName ntName = state.getNodeTypeName();
+        if (QName.NT_VERSION.equals(ntName)) {
             // version
             return new VersionImpl(this, session, state, def, listeners);
-        } else if (state.getNodeTypeName().equals(QName.NT_VERSIONHISTORY)) {
+        } else if (QName.NT_VERSIONHISTORY.equals(ntName)) {
             // version-history
             return new VersionHistoryImpl(this, session, state, def, listeners);
         } else {

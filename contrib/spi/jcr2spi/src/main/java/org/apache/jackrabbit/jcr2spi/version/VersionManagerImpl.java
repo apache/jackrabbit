@@ -20,7 +20,6 @@ import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateException;
 import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Checkout;
 import org.apache.jackrabbit.jcr2spi.operation.Checkin;
@@ -35,20 +34,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
-import org.apache.jackrabbit.spi.EventIterator;
-import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.EventFilter;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+import org.apache.jackrabbit.spi.IdIterator;
 
 /**
  * <code>VersionManagerImpl</code>...
@@ -156,39 +146,11 @@ public class VersionManagerImpl implements VersionManager {
         workspaceManager.execute(op);
     }
 
-    public Collection merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
+    public IdIterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws RepositoryException {
         NodeState wspState = getWorkspaceState(nodeState);
-        // TODO : needs to be fixed... SPI may not support observation
-        // TODO find better solution to build the mergeFailed-collection
-        EventFilter eventFilter;
-        try {
-            eventFilter = workspaceManager.createEventFilter(Event.ALL_TYPES, nodeState.getQPath(), true, null, null, false);
-        } catch (UnsupportedRepositoryOperationException e) {
-            eventFilter = null;
-        }
-        final List failedIds = new ArrayList();
-        final Collection fts = (eventFilter == null) ? Collections.EMPTY_LIST : Collections.singletonList(eventFilter);
-
-        InternalEventListener mergeFailedCollector = new InternalEventListener() {
-            public Collection getEventFilters() {
-                return fts;
-            }
-            public void onEvent(EventBundle eventBundle) {
-                if (eventBundle.isLocal()) {
-                    EventIterator it = eventBundle.getEvents();
-                    while (it.hasNext()) {
-                        Event ev = it.nextEvent();
-                        if (ev.getType() == Event.PROPERTY_ADDED && QName.JCR_MERGEFAILED.equals(ev.getQPath().getNameElement().getName())) {
-                            failedIds.add(ev.getParentId());
-                        }
-                    }
-                }
-            }
-        };
-
-        Operation op = Merge.create(wspState, workspaceName, bestEffort, mergeFailedCollector);
+        Merge op = Merge.create(wspState, workspaceName, bestEffort);
         workspaceManager.execute(op);
-        return failedIds;
+        return op.getFailedIds();
     }
 
     public void resolveMergeConflict(NodeState nodeState, NodeState versionState, boolean done) throws RepositoryException {
