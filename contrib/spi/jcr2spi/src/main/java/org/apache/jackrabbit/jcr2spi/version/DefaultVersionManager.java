@@ -26,6 +26,7 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.name.QName;
 import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.IdIterator;
 
 /**
  * <code>DefaultVersionManager</code>...
