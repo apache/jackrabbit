@@ -367,9 +367,7 @@ abstract class AbstractVersionManager implements VersionManager {
      */
     protected InternalVersion checkin(InternalVersionHistoryImpl history, NodeImpl node)
             throws RepositoryException {
-
-        acquireReadLock();
-        String versionName;
+        WriteOperation operation = startWriteOperation();
         try {
             // 1. search a predecessor, suitable for generating the new name
             Value[] values = node.getProperty(QName.JCR_PREDECESSORS).getValues();
@@ -382,7 +380,7 @@ abstract class AbstractVersionManager implements VersionManager {
             }
 
             // 2. generate version name (assume no namespaces in version names)
-            versionName = best.getName().getLocalName();
+            String versionName = best.getName().getLocalName();
             int pos = versionName.lastIndexOf('.');
             if (pos > 0) {
                 versionName = versionName.substring(0, pos + 1)
@@ -396,31 +394,13 @@ abstract class AbstractVersionManager implements VersionManager {
                 versionName += ".1";
             }
 
-            stateMgr.edit();
-        } catch (IllegalStateException e) {
-            releaseReadLock();
-            throw new RepositoryException("Unable to start edit operation.");
-        }
-
-        boolean succeeded = false;
-
-        try {
-            acquireWriteLock();
-            releaseReadLock();
-
             InternalVersionImpl v = history.checkin(new QName("", versionName), node);
-            stateMgr.update();
-            succeeded = true;
-
+            operation.save();
             return v;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
-            if (!succeeded) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
-            }
-            releaseWriteLock();
+            operation.close();
         }
     }
 
