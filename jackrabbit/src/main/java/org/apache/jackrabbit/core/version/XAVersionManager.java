@@ -462,7 +462,7 @@ public class XAVersionManager extends AbstractVersionManager
      * Delegate the call to our XA item state manager.
      */
     public void prepare(TransactionContext tx) throws TransactionException {
-        vMgr.aquireWriteLock();
+        vMgr.acquireWriteLock();
         vMgr.getSharedStateMgr().setNoLockHack(true);
         vmgrLocked = true;
         ((XAItemStateManager) stateMgr).prepare(tx);
@@ -526,7 +526,7 @@ public class XAVersionManager extends AbstractVersionManager
             throws RepositoryException {
 
         NodeState state;
-        aquireReadLock();
+        acquireReadLock();
         try {
             state = (NodeState) stateMgr.getItemState(history.getId());
         } catch (ItemStateException e) {

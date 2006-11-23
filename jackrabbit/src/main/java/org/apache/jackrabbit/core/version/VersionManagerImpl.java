@@ -222,7 +222,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * {@inheritDoc}
      */
     public boolean hasItem(NodeId id) {
-        aquireReadLock();
+        acquireReadLock();
         try {
             return stateMgr.hasItemState(id);
         } finally {
@@ -240,7 +240,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
             return null;
         }
         try {
-            aquireReadLock();
+            acquireReadLock();
             synchronized (versionItems) {
                 InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
                 if (item == null) {
@@ -356,7 +356,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * @param items items updated
      */
     public void itemsUpdated(Collection items) {
-        aquireReadLock();
+        acquireReadLock();
         try {
             synchronized (versionItems) {
                 Iterator iter = items.iterator();
@@ -396,7 +396,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      */
     protected void itemDiscarded(InternalVersionItem item) {
         // evict removed item from cache
-        aquireReadLock();
+        acquireReadLock();
         versionItems.remove(item.getId());
         releaseReadLock();
     }
@@ -407,7 +407,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * @return <code>true</code> if the references could be set.
      */
     public boolean setNodeReferences(NodeReferences references) {
-        aquireWriteLock();
+        acquireWriteLock();
         try {
             // filter out version storage intern ones
             NodeReferences refs = new NodeReferences(references.getId());
@@ -435,7 +435,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * {@inheritDoc}
      */
     protected List getItemReferences(InternalVersionItem item) {
-        aquireReadLock();
+        acquireReadLock();
         try {
             NodeReferences refs = pMgr.load(new NodeReferencesId(item.getId()));
             return refs.getReferences();
@@ -484,7 +484,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      */
     public void stateDestroyed(ItemState destroyed) {
         // evict removed item from cache
-        aquireReadLock();
+        acquireReadLock();
         versionItems.remove(destroyed.getId());
         releaseReadLock();
     }

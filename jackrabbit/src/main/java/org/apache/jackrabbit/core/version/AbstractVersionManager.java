@@ -118,7 +118,7 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * aquires the write lock on this version manager.
      */
-    protected void aquireWriteLock() {
+    protected void acquireWriteLock() {
         while (true) {
             try {
                 rwLock.writeLock().acquire();
@@ -139,7 +139,7 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * aquires the read lock on this version manager.
      */
-    protected void aquireReadLock() {
+    protected void acquireReadLock() {
         while (true) {
             try {
                 rwLock.readLock().acquire();
@@ -162,7 +162,7 @@ abstract class AbstractVersionManager implements VersionManager {
      */
     public VersionHistory getVersionHistory(Session session, NodeState node)
             throws RepositoryException {
-        aquireReadLock();
+        acquireReadLock();
         try {
             NodeId vhId = getVersionHistoryId(node);
             if (vhId == null) {
@@ -218,7 +218,7 @@ abstract class AbstractVersionManager implements VersionManager {
     InternalVersionHistory createVersionHistory(NodeState node)
             throws RepositoryException {
 
-        aquireWriteLock();
+        acquireWriteLock();
         try {
             stateMgr.edit();
         } catch (IllegalStateException e) {
@@ -307,7 +307,7 @@ abstract class AbstractVersionManager implements VersionManager {
     protected InternalVersion checkin(InternalVersionHistoryImpl history, NodeImpl node)
             throws RepositoryException {
 
-        aquireReadLock();
+        acquireReadLock();
         String versionName;
         try {
             // 1. search a predecessor, suitable for generating the new name
@@ -344,7 +344,7 @@ abstract class AbstractVersionManager implements VersionManager {
         boolean succeeded = false;
 
         try {
-            aquireWriteLock();
+            acquireWriteLock();
             releaseReadLock();
 
             InternalVersionImpl v = history.checkin(new QName("", versionName), node);
@@ -376,7 +376,7 @@ abstract class AbstractVersionManager implements VersionManager {
     protected void removeVersion(InternalVersionHistoryImpl history, QName name)
             throws VersionException, RepositoryException {
 
-        aquireWriteLock();
+        acquireWriteLock();
         try {
             stateMgr.edit();
         } catch (IllegalStateException e) {
@@ -413,7 +413,7 @@ abstract class AbstractVersionManager implements VersionManager {
                                               boolean move)
             throws RepositoryException {
 
-        aquireWriteLock();
+        acquireWriteLock();
         try {
             stateMgr.edit();
         } catch (IllegalStateException e) {
