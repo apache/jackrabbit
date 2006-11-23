@@ -524,18 +524,16 @@ public class XAVersionManager extends AbstractVersionManager
      */
     private InternalVersionHistoryImpl makeLocalCopy(InternalVersionHistoryImpl history)
             throws RepositoryException {
-
-        NodeState state;
         acquireReadLock();
         try {
-            state = (NodeState) stateMgr.getItemState(history.getId());
+            NodeState state = (NodeState) stateMgr.getItemState(history.getId());
+            NodeStateEx stateEx = new NodeStateEx(stateMgr, ntReg, state, null);
+            return new InternalVersionHistoryImpl(this, stateEx);
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to make local copy", e);
         } finally {
             releaseReadLock();
         }
-        NodeStateEx stateEx = new NodeStateEx(stateMgr, ntReg, state, null);
-        return new InternalVersionHistoryImpl(this, stateEx);
     }
 
     /**
