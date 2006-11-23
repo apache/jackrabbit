@@ -130,7 +130,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     public InternalVersion[] getSuccessors() {
         try {
-            vMgr.aquireReadLock();
+            vMgr.acquireReadLock();
             InternalValue[] values = node.getPropertyValues(QName.JCR_SUCCESSORS);
             if (values != null) {
                 InternalVersion[] versions = new InternalVersion[values.length];
