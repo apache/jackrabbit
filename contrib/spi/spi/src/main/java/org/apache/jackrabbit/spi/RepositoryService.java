@@ -337,6 +337,7 @@ public interface RepositoryService {
      * @param nodeId
      * @param deep
      * @param sessionScoped
+     * @return returns the <code>LockInfo</code> associated with this lock.
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.lock.LockException
      * @throws javax.jcr.AccessDeniedException
@@ -344,7 +345,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#lock(boolean, boolean)
      */
-    public void lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
+    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException;
 
     /**
      * Explicit refresh of an existing lock. Existing locks should be refreshed
@@ -450,7 +451,7 @@ public interface RepositoryService {
      * @param srcWorkspaceName
      * @param bestEffort
      * @return an <code>IdIterator</code> over all nodes that received a merge
-     *         result of "fail" in the course of this operation.
+     * result of "fail" in the course of this operation.
      * @throws javax.jcr.NoSuchWorkspaceException
      * @throws javax.jcr.AccessDeniedException
      * @throws javax.jcr.MergeException
@@ -522,27 +523,28 @@ public interface RepositoryService {
     //--------------------------------------------------------< Observation >---
 
     /**
-     * Creates an event filter based on the parameters available in {@link
-     * javax.jcr.observation.ObservationManager#addEventListener}.
+     * Creates an event filter. If the repository supportes observation, the
+     * filter created is based on the parameters available in {@link
+     * javax.jcr.observation.ObservationManager#addEventListener}.<p/>
+     * Note, that an SPI implementation may support observation even if
+     * the corresponding {@link javax.jcr.Repository#OPTION_OBSERVATION_SUPPORTED repository descriptor}
+     * does not return 'true'.
      *
-     * @param eventTypes   A combination of one or more event type constants
-     *                     encoded as a bitmask.
-     * @param absPath      an absolute path.
-     * @param isDeep       a <code>boolean</code>.
-     * @param uuid         array of UUIDs.
-     * @param nodeTypeName array of node type names.
-     * @param noLocal      a <code>boolean</code>.
+     * @param eventTypes A combination of one or more event type constants
+     * encoded as a bitmask.
+     * @param absPath An absolute path.
+     * @param isDeep A <code>boolean</code>.
+     * @param uuid Array of UUIDs.
+     * @param nodeTypeName Array of node type names.
+     * @param noLocal A <code>boolean</code>.
      * @return the event filter instance with the given parameters.
-     * @throws UnsupportedRepositoryOperationException
-     *          if this implementation does not support observation.
+     * @throws UnsupportedRepositoryOperationException if this SPI implementation
+     * does not allow to create event filters.
      * @see javax.jcr.observation.ObservationManager#addEventListener(javax.jcr.observation.EventListener, int, String, boolean, String[], String[], boolean)
      */
-    public EventFilter createEventFilter(int eventTypes,
-                                         Path absPath,
-                                         boolean isDeep,
-                                         String[] uuid,
-                                         QName[] nodeTypeName,
-                                         boolean noLocal)
+    public EventFilter createEventFilter(int eventTypes, Path absPath,
+                                         boolean isDeep, String[] uuid,
+                                         QName[] nodeTypeName, boolean noLocal)
             throws UnsupportedRepositoryOperationException;
 
     /**
@@ -558,7 +560,10 @@ public interface RepositoryService {
      * also support event filters instanciated by the client itself. An
      * implementation may require special deployment in that case, e.g. to make
      * the event filter implementation class available to the repository
-     * server.
+     * server.<p/>
+     * Note, that an SPI implementation may support observation even if
+     * the corresponding {@link javax.jcr.Repository#OPTION_OBSERVATION_SUPPORTED repository descriptor}
+     * does not return 'true'.
      *
      * @param sessionInfo the session info.
      * @param timeout     a timeout in milliseconds to wait at most for an
@@ -581,15 +586,12 @@ public interface RepositoryService {
      *                              identifier in <code>sessionInfo</code>
      *                              references an unknown or outdated event
      *                              bundle.
-     * @throws UnsupportedRepositoryOperationException
-     *                              if this implementation does not support
-     *                              observation.
+     * @throws UnsupportedRepositoryOperationException If this SPI implementation
+     * does not support observation.
      * @throws InterruptedException if the calling thread is interrupted while
-     *                              waiting for events within the specified
-     *                              <code>timeout</code>.
+     * waiting for events within the specified <code>timeout</code>.
      */
-    public EventBundle[] getEvents(SessionInfo sessionInfo,
-                                   long timeout,
+    public EventBundle[] getEvents(SessionInfo sessionInfo, long timeout,
                                    EventFilter[] filters)
             throws RepositoryException, UnsupportedRepositoryOperationException, InterruptedException;
 

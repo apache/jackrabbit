@@ -911,7 +911,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#lock(SessionInfo, NodeId, boolean, boolean)
      */
-    public void lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
+    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
             Scope scope = (sessionScoped) ? ItemResourceConstants.EXCLUSIVE_SESSION : Scope.EXCLUSIVE;
@@ -922,10 +922,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String lockToken = method.getLockToken();
             sessionInfo.addLockToken(lockToken);
 
-            // TODO: ev. need to take care of 'timeout' ?
-            // TODO: ev. evaluate lock response, if depth and type is according to request?
+            LockDiscovery disc = method.getResponseAsLockDiscovery();
+            return new LockInfoImpl(disc, nodeId);
         } catch (IOException e) {
             throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
         }
     }
 
