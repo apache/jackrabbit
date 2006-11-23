@@ -158,6 +158,82 @@ abstract class AbstractVersionManager implements VersionManager {
     }
 
     /**
+     * Helper for managing write operations.
+     */
+    private class WriteOperation {
+
+        /**
+         * Flag for successful completion of the write operation.
+         */
+        private boolean success = false;
+
+        /**
+         * Saves the pending operations in the {@link StateManager}.
+         *
+         * @throws ItemStateException if the pending state is invalid
+         * @throws RepositoryException if the pending state could not be persisted
+         */
+        public void save() throws ItemStateException, RepositoryException {
+            stateMgr.update();
+            success = true;
+        }
+
+        /**
+         * Closes the write operation. The pending operations are cancelled
+         * if they could not be properly saved. Finally the write lock is
+         * released.
+         */
+        public void close() {
+            try {
+                if (!success) {
+                    // update operation failed, cancel all modifications
+                    stateMgr.cancel();
+                }
+            } finally {
+                releaseWriteLock();
+            }
+        }
+    }
+
+    /**
+     * Starts a write operation by acquiring the write lock and setting the
+     * item state manager to the "edit" state. If something goes wrong, the
+     * write lock is released and an exception is thrown.
+     * <p>
+     * The pattern for using this method and the returned helper instance is:
+     * <pre>
+     *     WriteOperation operation = startWriteOperation();
+     *     try {
+     *         ...
+     *         operation.save(); // if everything is OK
+     *         ...
+     *     } catch (...) {
+     *         ...
+     *     } finally {
+     *         operation.close();
+     *     }
+     * </pre>
+     *
+     * @return write operation helper
+     * @throws RepositoryException if the write operation could not be started
+     */
+    private WriteOperation startWriteOperation() throws RepositoryException {
+        boolean success = false;
+        acquireWriteLock();
+        try {
+            stateMgr.edit();
+            success = true;
+            return new WriteOperation();
+        } catch (IllegalStateException e) {
+            throw new RepositoryException("Unable to start edit operation.", e);
+        } finally {
+            if (!success) {
+                releaseWriteLock();
+            }
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public VersionHistory getVersionHistory(Session session, NodeState node)
@@ -217,17 +293,7 @@ abstract class AbstractVersionManager implements VersionManager {
      */
     InternalVersionHistory createVersionHistory(NodeState node)
             throws RepositoryException {
-
-        acquireWriteLock();
-        try {
-            stateMgr.edit();
-        } catch (IllegalStateException e) {
-            releaseWriteLock();
-            throw new RepositoryException("Unable to start edit operation", e);
-        }
-
-        boolean succeeded = false;
-
+        WriteOperation operation = startWriteOperation();
         try {
             // create deep path
             String uuid = node.getNodeId().getUUID().toString();
@@ -251,8 +317,7 @@ abstract class AbstractVersionManager implements VersionManager {
                     this, root, new NodeId(UUID.randomUUID()), historyNodeName, node);
 
             // end update
-            stateMgr.update();
-            succeeded = true;
+            operation.save();
 
             log.info("Created new version history " + hist.getId() + " for " + node + ".");
             return hist;
@@ -260,11 +325,7 @@ abstract class AbstractVersionManager implements VersionManager {
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
-            if (!succeeded) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
-            }
-            releaseWriteLock();
+            operation.close();
         }
     }
 
@@ -375,27 +436,14 @@ abstract class AbstractVersionManager implements VersionManager {
      */
     protected void removeVersion(InternalVersionHistoryImpl history, QName name)
             throws VersionException, RepositoryException {
-
-        acquireWriteLock();
-        try {
-            stateMgr.edit();
-        } catch (IllegalStateException e) {
-            releaseWriteLock();
-            throw new VersionException("Unable to start edit operation", e);
-        }
-        boolean succeeded = false;
+        WriteOperation operation = startWriteOperation();
         try {
             history.removeVersion(name);
-            stateMgr.update();
-            succeeded = true;
+            operation.save();
         } catch (ItemStateException e) {
             log.error("Error while storing: " + e.toString());
         } finally {
-            if (!succeeded) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
-            }
-            releaseWriteLock();
+            operation.close();
         }
     }
 
@@ -412,30 +460,17 @@ abstract class AbstractVersionManager implements VersionManager {
                                               QName version, QName label,
                                               boolean move)
             throws RepositoryException {
-
-        acquireWriteLock();
+        WriteOperation operation = startWriteOperation();
         try {
-            stateMgr.edit();
-        } catch (IllegalStateException e) {
-            releaseWriteLock();
-            throw new VersionException("Unable to start edit operation", e);
-        }
-        InternalVersion v = null;
-        boolean success = false;
-        try {
-            v = history.setVersionLabel(version, label, move);
-            stateMgr.update();
-            success = true;
+            InternalVersion v = history.setVersionLabel(version, label, move);
+            operation.save();
+            return v;
         } catch (ItemStateException e) {
             log.error("Error while storing: " + e.toString());
+            return null;
         } finally {
-            if (!success) {
-                // update operation failed, cancel all modifications
-                stateMgr.cancel();
-            }
-            releaseWriteLock();
+            operation.close();
         }
-        return v;
     }
 
     /**
