@@ -239,8 +239,8 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
         if (id.equals(getHistoryRootId())) {
             return null;
         }
+        acquireReadLock();
         try {
-            acquireReadLock();
             synchronized (versionItems) {
                 InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
                 if (item == null) {
@@ -397,8 +397,11 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     protected void itemDiscarded(InternalVersionItem item) {
         // evict removed item from cache
         acquireReadLock();
-        versionItems.remove(item.getId());
-        releaseReadLock();
+        try {
+            versionItems.remove(item.getId());
+        } finally {
+            releaseReadLock();
+        }
     }
 
     /**
@@ -440,11 +443,10 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
             NodeReferences refs = pMgr.load(new NodeReferencesId(item.getId()));
             return refs.getReferences();
         } catch (ItemStateException e) {
-            // ignore
+            return Collections.EMPTY_LIST;
         } finally {
             releaseReadLock();
         }
-        return Collections.EMPTY_LIST;
     }
 
     /**
@@ -485,8 +487,11 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     public void stateDestroyed(ItemState destroyed) {
         // evict removed item from cache
         acquireReadLock();
-        versionItems.remove(destroyed.getId());
-        releaseReadLock();
+        try {
+            versionItems.remove(destroyed.getId());
+        } finally {
+            releaseReadLock();
+        }
     }
 
     /**
