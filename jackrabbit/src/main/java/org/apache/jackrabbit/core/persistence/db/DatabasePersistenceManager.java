@@ -55,8 +55,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
-import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * Abstract base class for database persistence managers. This class
@@ -91,37 +91,45 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     // jdbc connection
     protected Connection con;
 
-    // the list of prepared statements, used in close()
-    private List preparedStatements;
+    // internal flag governing whether an automatic reconnect should be
+    // attempted after a SQLException had been encountered    
+    protected boolean autoReconnect = true;
+    // time to sleep in ms before a reconnect is attempted
+    protected static final int SLEEP_BEFORE_RECONNECT = 10000;
 
-    // shared prepared statements for NodeState management
-    protected PreparedStatement nodeStateInsert;
-    protected PreparedStatement nodeStateUpdate;
-    protected PreparedStatement nodeStateSelect;
-    protected PreparedStatement nodeStateSelectExist;
-    protected PreparedStatement nodeStateDelete;
+    // the map of prepared statements (key: sql stmt, value: prepared stmt)
+    private HashMap preparedStatements = new HashMap();
 
-    // shared prepared statements for PropertyState management
-    protected PreparedStatement propertyStateInsert;
-    protected PreparedStatement propertyStateUpdate;
-    protected PreparedStatement propertyStateSelect;
-    protected PreparedStatement propertyStateSelectExist;
-    protected PreparedStatement propertyStateDelete;
+    // SQL statements for NodeState management
+    protected String nodeStateInsertSQL;
+    protected String nodeStateUpdateSQL;
+    protected String nodeStateSelectSQL;
+    protected String nodeStateSelectExistSQL;
+    protected String nodeStateDeleteSQL;
 
-    // shared prepared statements for NodeReference management
-    protected PreparedStatement nodeReferenceInsert;
-    protected PreparedStatement nodeReferenceUpdate;
-    protected PreparedStatement nodeReferenceSelect;
-    protected PreparedStatement nodeReferenceSelectExist;
-    protected PreparedStatement nodeReferenceDelete;
+    // SQL statements for PropertyState management
+    protected String propertyStateInsertSQL;
+    protected String propertyStateUpdateSQL;
+    protected String propertyStateSelectSQL;
+    protected String propertyStateSelectExistSQL;
+    protected String propertyStateDeleteSQL;
 
-    // shared prepared statements for BLOB management
+    // SQL statements for NodeReference management
+    protected String nodeReferenceInsertSQL;
+    protected String nodeReferenceUpdateSQL;
+    protected String nodeReferenceSelectSQL;
+    protected String nodeReferenceSelectExistSQL;
+    protected String nodeReferenceDeleteSQL;
+
+    // SQL statements for BLOB management
     // (if <code>externalBLOBs==false</code>)
-    protected PreparedStatement blobInsert;
-    protected PreparedStatement blobUpdate;
-    protected PreparedStatement blobSelect;
-    protected PreparedStatement blobSelectExist;
-    protected PreparedStatement blobDelete;
+    protected String blobInsertSQL;
+    protected String blobUpdateSQL;
+    protected String blobSelectSQL;
+    protected String blobSelectExistSQL;
+    protected String blobDeleteSQL;
+
+
 
     /**
      * file system where BLOB data is stored
@@ -193,8 +201,11 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         // check if schema objects exist and create them if necessary
         checkSchema();
 
+        // build sql statements
+        buildSQLStatements();
+
         // prepare statements
-        preparedStatements = initPreparedStatements();
+        initPreparedStatements();
 
         if (externalBLOBs) {
             /**
@@ -226,12 +237,10 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
         try {
             // close shared prepared statements
-            if (preparedStatements != null) {
-                while (!preparedStatements.isEmpty()) {
-                    closeStatement((PreparedStatement) preparedStatements.remove(0));
-                }
+            for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
+                closeStatement((PreparedStatement) it.next());
             }
-            preparedStatements = null;
+            preparedStatements.clear();
 
             if (externalBLOBs) {
                 // close BLOB file system
@@ -253,12 +262,39 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
      */
     public synchronized void store(ChangeLog changeLog)
             throws ItemStateException {
-        ItemStateException ise = null;
+        // temporarily disable automatic reconnect feature
+        // since the changes need to be persisted atomically
+        autoReconnect = false;
         try {
-            super.store(changeLog);
-        } catch (ItemStateException e) {
-            ise = e;
-        } finally {
+            ItemStateException ise = null;
+            // number of attempts to store the changes
+            int trials = 2;
+            while (true) {
+                try {
+                    super.store(changeLog);
+                    break;
+                } catch (ItemStateException e) {
+                    // catch exception and fall through...
+                    ise = e;
+                }
+
+                if (ise != null && ise.getCause() instanceof SQLException
+                        && --trials > 0) {
+                    // a SQLException has been thrown, try to reconnect
+                    log.warn("storing changes failed, about to reconnect...", ise.getCause());
+
+                    // try to reconnect
+                    if (reestablishConnection()) {
+                        // now let's give it another try
+                        ise = null;
+                        continue;
+                    } else {
+                        // reconnect failed, proceed with error processing
+                        break;
+                    }
+                }
+            }
+
             if (ise == null) {
                 // storing the changes succeeded, now commit the changes
                 try {
@@ -279,6 +315,9 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 // re-throw original exception
                 throw ise;
             }
+        } finally {
+            // re-enable automatic reconnect feature
+            autoReconnect = true;
         }
     }
 
@@ -291,13 +330,11 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = nodeStateSelect;
-        synchronized (stmt) {
+        synchronized (nodeStateSelectSQL) {
             ResultSet rs = null;
             InputStream in = null;
             try {
-                stmt.setString(1, id.toString());
-                stmt.execute();
+                Statement stmt = executeStmt(nodeStateSelectSQL, new Object[]{id.toString()});
                 rs = stmt.getResultSet();
                 if (!rs.next()) {
                     throw new NoSuchItemStateException(id.toString());
@@ -318,7 +355,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             } finally {
                 closeStream(in);
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -332,13 +368,11 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = propertyStateSelect;
-        synchronized (stmt) {
+        synchronized (propertyStateSelectSQL) {
             ResultSet rs = null;
             InputStream in = null;
             try {
-                stmt.setString(1, id.toString());
-                stmt.execute();
+                Statement stmt = executeStmt(propertyStateSelectSQL, new Object[]{id.toString()});
                 rs = stmt.getResultSet();
                 if (!rs.next()) {
                     throw new NoSuchItemStateException(id.toString());
@@ -359,7 +393,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             } finally {
                 closeStream(in);
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -381,7 +414,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         // check if insert or update
         boolean update = state.getStatus() != ItemState.STATUS_NEW;
         //boolean update = exists(state.getId());
-        PreparedStatement stmt = (update) ? nodeStateUpdate : nodeStateInsert;
+        String sql = (update) ? nodeStateUpdateSQL : nodeStateInsertSQL;
 
         try {
             ByteArrayOutputStream out =
@@ -390,11 +423,8 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             Serializer.serialize(state, out);
 
             // we are synchronized on this instance, therefore we do not
-            // not have to additionally synchronize on the preparedStatement
-
-            stmt.setBytes(1, out.toByteArray());
-            stmt.setString(2, state.getNodeId().toString());
-            stmt.executeUpdate();
+            // not have to additionally synchronize on the sql statement
+            executeStmt(sql, new Object[]{out.toByteArray(), state.getNodeId().toString()});
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
@@ -402,8 +432,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             String msg = "failed to write node state: " + state.getNodeId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -425,7 +453,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         // check if insert or update
         boolean update = state.getStatus() != ItemState.STATUS_NEW;
         //boolean update = exists(state.getId());
-        PreparedStatement stmt = (update) ? propertyStateUpdate : propertyStateInsert;
+        String sql = (update) ? propertyStateUpdateSQL : propertyStateInsertSQL;
 
         try {
             ByteArrayOutputStream out =
@@ -434,11 +462,8 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             Serializer.serialize(state, out, blobStore);
 
             // we are synchronized on this instance, therefore we do not
-            // not have to additionally synchronize on the preparedStatement
-
-            stmt.setBytes(1, out.toByteArray());
-            stmt.setString(2, state.getPropertyId().toString());
-            stmt.executeUpdate();
+            // not have to additionally synchronize on the sql statement
+            executeStmt(sql, new Object[]{out.toByteArray(), state.getPropertyId().toString()});
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
@@ -446,8 +471,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             String msg = "failed to write property state: " + state.getPropertyId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -460,16 +483,14 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = nodeStateDelete;
         try {
-            stmt.setString(1, state.getNodeId().toString());
-            stmt.executeUpdate();
+            // we are synchronized on this instance, therefore we do not
+            // not have to additionally synchronize on the sql statement
+            executeStmt(nodeStateDeleteSQL, new Object[]{state.getNodeId().toString()});
         } catch (Exception e) {
             String msg = "failed to delete node state: " + state.getNodeId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -504,16 +525,14 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             }
         }
 
-        PreparedStatement stmt = propertyStateDelete;
         try {
-            stmt.setString(1, state.getPropertyId().toString());
-            stmt.executeUpdate();
+            // we are synchronized on this instance, therefore we do not
+            // not have to additionally synchronize on the sql statement
+            executeStmt(propertyStateDeleteSQL, new Object[]{state.getPropertyId().toString()});
         } catch (Exception e) {
             String msg = "failed to delete property state: " + state.getPropertyId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -526,13 +545,12 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = nodeReferenceSelect;
-        synchronized (stmt) {
+        synchronized (nodeReferenceSelectSQL) {
             ResultSet rs = null;
             InputStream in = null;
             try {
-                stmt.setString(1, targetId.toString());
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        nodeReferenceSelectSQL, new Object[]{targetId.toString()});
                 rs = stmt.getResultSet();
                 if (!rs.next()) {
                     throw new NoSuchItemStateException(targetId.toString());
@@ -553,7 +571,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             } finally {
                 closeStream(in);
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -575,7 +592,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
         // check if insert or update
         boolean update = exists(refs.getId());
-        PreparedStatement stmt = (update) ? nodeReferenceUpdate : nodeReferenceInsert;
+        String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
         try {
             ByteArrayOutputStream out =
@@ -584,11 +601,8 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             Serializer.serialize(refs, out);
 
             // we are synchronized on this instance, therefore we do not
-            // not have to additionally synchronize on the preparedStatement
-
-            stmt.setBytes(1, out.toByteArray());
-            stmt.setString(2, refs.getId().toString());
-            stmt.executeUpdate();
+            // not have to additionally synchronize on the sql statement
+            executeStmt(sql, new Object[]{out.toByteArray(), refs.getId().toString()});
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
@@ -596,8 +610,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             String msg = "failed to write node references: " + refs.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -610,16 +622,14 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = nodeReferenceDelete;
         try {
-            stmt.setString(1, refs.getId().toString());
-            stmt.executeUpdate();
+            // we are synchronized on this instance, therefore we do not
+            // not have to additionally synchronize on the sql statement
+            executeStmt(nodeReferenceDeleteSQL, new Object[]{refs.getId().toString()});
         } catch (Exception e) {
             String msg = "failed to delete node references: " + refs.getId();
             log.error(msg, e);
             throw new ItemStateException(msg, e);
-        } finally {
-            resetStatement(stmt);
         }
     }
 
@@ -631,12 +641,10 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = nodeStateSelectExist;
-        synchronized (stmt) {
+        synchronized (nodeStateSelectExistSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, id.toString());
-                stmt.execute();
+                Statement stmt = executeStmt(nodeStateSelectExistSQL, new Object[]{id.toString()});
                 rs = stmt.getResultSet();
 
                 // a node state exists if the result has at least one entry
@@ -647,7 +655,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 throw new ItemStateException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -660,12 +667,11 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = propertyStateSelectExist;
-        synchronized (stmt) {
+        synchronized (propertyStateSelectExistSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, id.toString());
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        propertyStateSelectExistSQL, new Object[]{id.toString()});
                 rs = stmt.getResultSet();
 
                 // a property state exists if the result has at least one entry
@@ -676,7 +682,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 throw new ItemStateException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -689,12 +694,11 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
             throw new IllegalStateException("not initialized");
         }
 
-        PreparedStatement stmt = nodeReferenceSelectExist;
-        synchronized (stmt) {
+        synchronized (nodeReferenceSelectExistSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, targetId.toString());
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        nodeReferenceSelectExistSQL, new Object[]{targetId.toString()});
                 rs = stmt.getResultSet();
 
                 // a reference exists if the result has at least one entry
@@ -706,7 +710,6 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 throw new ItemStateException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -760,6 +763,110 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
      */
     protected void closeConnection(Connection connection) throws Exception {
         connection.close();
+    }
+
+    /**
+     * Re-establishes the database connection. This method is called by
+     * {@link #store(ChangeLog)} and {@link #executeStmt(String, Object[])}
+     * after a <code>SQLException</code> had been encountered.
+     * @return true if the connection could be successfully re-established,
+     *         false otherwise.
+     */
+    protected synchronized boolean reestablishConnection() {
+        // in any case try to shut down current connection
+        // gracefully in order to avoid potential memory leaks
+
+        // close shared prepared statements
+        for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
+            closeStatement((PreparedStatement) it.next());
+        }
+        preparedStatements.clear();
+        try {
+            closeConnection(con);
+        } catch (Exception ignore) {
+        }
+
+        // sleep for a while to give database a chance
+        // to restart before a reconnect is attempted
+
+        try {
+            Thread.sleep(SLEEP_BEFORE_RECONNECT);
+        } catch (InterruptedException ignore) {
+        }
+
+        // now try to re-establish connection
+
+        try {
+            initConnection();
+            initPreparedStatements();
+            return true;
+        } catch (Exception e) {
+            log.error("failed to re-establish connection", e);
+            // reconnect failed
+            return false;
+        }
+    }
+
+    /**
+     * Executes the given SQL statement with the specified parameters.
+     * If a <code>SQLException</code> is encountered and
+     * <code>autoReconnect==true</code> <i>one</i> attempt is made to re-establish
+     * the database connection and re-execute the statement.
+     *
+     * @param sql    statement to execute
+     * @param params parameters to set
+     * @return the <code>Statement</code> object that had been executed
+     * @throws SQLException if an error occurs
+     */
+    protected Statement executeStmt(String sql, Object[] params)
+            throws SQLException {
+        int trials = autoReconnect ? 2 : 1;
+        while (true) {
+            PreparedStatement stmt = (PreparedStatement) preparedStatements.get(sql);
+            try {
+                for (int i = 0; i < params.length; i++) {
+                    if (params[i] instanceof SizedInputStream) {
+                        SizedInputStream in = (SizedInputStream) params[i];
+                        stmt.setBinaryStream(i + 1, in, (int) in.getSize());
+                    } else {
+                        stmt.setObject(i + 1, params[i]);
+                    }
+                }
+                stmt.execute();
+                resetStatement(stmt);
+                return stmt;
+            } catch (SQLException se) {
+                if (--trials == 0) {
+                    // no more trials, re-throw
+                    throw se;
+                }
+                log.warn("execute failed, about to reconnect...", se.getMessage());
+
+                // try to reconnect
+                if (reestablishConnection()) {
+                    // reconnect succeeded; check whether it's possible to
+                    // re-execute the prepared stmt with the given parameters
+                    for (int i = 0; i < params.length; i++) {
+                        if (params[i] instanceof SizedInputStream) {
+                            SizedInputStream in = (SizedInputStream) params[i];
+                            if (in.isConsumed()) {
+                                // we're unable to re-execute the prepared stmt
+                                // since an InputStream paramater has already
+                                // been 'consumed';
+                                // re-throw previous SQLException
+                                throw se;
+                            }
+                        }
+                    }
+
+                    // try again to execute the statement
+                    continue;
+                } else {
+                    // reconnect failed, re-throw previous SQLException
+                    throw se;
+                }
+            }
+        }
     }
 
     /**
@@ -917,85 +1024,147 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     }
 
     /**
-     * Initializes the prepared statements and returns them in a list. please
-     * note that this list is used to close the statements in the {@link #close()}
-     * call.
-     *
-     * @return the list of prepared statements
-     * @throws SQLException
+     * Builds the SQL statements
      */
-    protected List initPreparedStatements() throws SQLException {
-        List stmts = new LinkedList();
+    protected void buildSQLStatements() {
+        nodeStateInsertSQL = "insert into "
+                + schemaObjectPrefix + "NODE (NODE_DATA, NODE_ID) values (?, ?)";
 
-        stmts.add(nodeStateInsert =
-                con.prepareStatement("insert into "
-                + schemaObjectPrefix + "NODE (NODE_DATA, NODE_ID) values (?, ?)"));
-        stmts.add(nodeStateUpdate =
-                con.prepareStatement("update "
-                + schemaObjectPrefix + "NODE set NODE_DATA = ? where NODE_ID = ?"));
-        stmts.add(nodeStateSelect =
-                con.prepareStatement("select NODE_DATA from "
-                + schemaObjectPrefix + "NODE where NODE_ID = ?"));
-        stmts.add(nodeStateSelectExist =
-                con.prepareStatement("select 1 from "
-                + schemaObjectPrefix + "NODE where NODE_ID = ?"));
-        stmts.add(nodeStateDelete =
-                con.prepareStatement("delete from "
-                + schemaObjectPrefix + "NODE where NODE_ID = ?"));
+        nodeStateUpdateSQL = "update "
+                + schemaObjectPrefix + "NODE set NODE_DATA = ? where NODE_ID = ?";
+        nodeStateSelectSQL = "select NODE_DATA from "
+                + schemaObjectPrefix + "NODE where NODE_ID = ?";
+        nodeStateSelectExistSQL = "select 1 from "
+                + schemaObjectPrefix + "NODE where NODE_ID = ?";
+        nodeStateDeleteSQL = "delete from "
+                + schemaObjectPrefix + "NODE where NODE_ID = ?";
 
-        stmts.add(propertyStateInsert =
-                con.prepareStatement("insert into "
-                + schemaObjectPrefix + "PROP (PROP_DATA, PROP_ID) values (?, ?)"));
-        stmts.add(propertyStateUpdate =
-                con.prepareStatement("update "
-                + schemaObjectPrefix + "PROP set PROP_DATA = ? where PROP_ID = ?"));
-        stmts.add(propertyStateSelect =
-                con.prepareStatement("select PROP_DATA from "
-                + schemaObjectPrefix + "PROP where PROP_ID = ?"));
-        stmts.add(propertyStateSelectExist =
-                con.prepareStatement("select 1 from "
-                + schemaObjectPrefix + "PROP where PROP_ID = ?"));
-        stmts.add(propertyStateDelete =
-                con.prepareStatement("delete from "
-                + schemaObjectPrefix + "PROP where PROP_ID = ?"));
+        propertyStateInsertSQL = "insert into "
+                + schemaObjectPrefix + "PROP (PROP_DATA, PROP_ID) values (?, ?)";
+        propertyStateUpdateSQL = "update "
+                + schemaObjectPrefix + "PROP set PROP_DATA = ? where PROP_ID = ?";
+        propertyStateSelectSQL = "select PROP_DATA from "
+                + schemaObjectPrefix + "PROP where PROP_ID = ?";
+        propertyStateSelectExistSQL = "select 1 from "
+                + schemaObjectPrefix + "PROP where PROP_ID = ?";
+        propertyStateDeleteSQL = "delete from "
+                + schemaObjectPrefix + "PROP where PROP_ID = ?";
 
-        stmts.add(nodeReferenceInsert =
-                con.prepareStatement("insert into "
-                + schemaObjectPrefix + "REFS (REFS_DATA, NODE_ID) values (?, ?)"));
-        stmts.add(nodeReferenceUpdate =
-                con.prepareStatement("update "
-                + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID = ?"));
-        stmts.add(nodeReferenceSelect =
-                con.prepareStatement("select REFS_DATA from "
-                + schemaObjectPrefix + "REFS where NODE_ID = ?"));
-        stmts.add(nodeReferenceSelectExist =
-                con.prepareStatement("select 1 from "
-                + schemaObjectPrefix + "REFS where NODE_ID = ?"));
-        stmts.add(nodeReferenceDelete =
-                con.prepareStatement("delete from "
-                + schemaObjectPrefix + "REFS where NODE_ID = ?"));
+        nodeReferenceInsertSQL = "insert into "
+                + schemaObjectPrefix + "REFS (REFS_DATA, NODE_ID) values (?, ?)";
+        nodeReferenceUpdateSQL = "update "
+                + schemaObjectPrefix + "REFS set REFS_DATA = ? where NODE_ID = ?";
+        nodeReferenceSelectSQL = "select REFS_DATA from "
+                + schemaObjectPrefix + "REFS where NODE_ID = ?";
+        nodeReferenceSelectExistSQL = "select 1 from "
+                + schemaObjectPrefix + "REFS where NODE_ID = ?";
+        nodeReferenceDeleteSQL = "delete from "
+                + schemaObjectPrefix + "REFS where NODE_ID = ?";
 
         if (!externalBLOBs) {
-            stmts.add(blobInsert =
-                    con.prepareStatement("insert into "
-                    + schemaObjectPrefix + "BINVAL (BINVAL_DATA, BINVAL_ID) values (?, ?)"));
-            stmts.add(blobUpdate =
-                    con.prepareStatement("update "
-                    + schemaObjectPrefix + "BINVAL set BINVAL_DATA = ? where BINVAL_ID = ?"));
-            stmts.add(blobSelect =
-                    con.prepareStatement("select BINVAL_DATA from "
-                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?"));
-            stmts.add(blobSelectExist =
-                    con.prepareStatement("select 1 from "
-                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?"));
-            stmts.add(blobDelete =
-                    con.prepareStatement("delete from "
-                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?"));
+            blobInsertSQL = "insert into "
+                    + schemaObjectPrefix + "BINVAL (BINVAL_DATA, BINVAL_ID) values (?, ?)";
+            blobUpdateSQL = "update "
+                    + schemaObjectPrefix + "BINVAL set BINVAL_DATA = ? where BINVAL_ID = ?";
+            blobSelectSQL =
+                    "select BINVAL_DATA from "
+                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?";
+            blobSelectExistSQL =
+                    "select 1 from "
+                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?";
+            blobDeleteSQL = "delete from "
+                    + schemaObjectPrefix + "BINVAL where BINVAL_ID = ?";
         }
-        return stmts;
+    }
+
+    /**
+     * Initializes the map of prepared statements.
+     *
+     * @throws SQLException if an error occurs
+     */
+    protected void initPreparedStatements() throws SQLException {
+        preparedStatements.put(
+                nodeStateInsertSQL, con.prepareStatement(nodeStateInsertSQL));
+        preparedStatements.put(
+                nodeStateUpdateSQL, con.prepareStatement(nodeStateUpdateSQL));
+        preparedStatements.put(
+                nodeStateSelectSQL, con.prepareStatement(nodeStateSelectSQL));
+        preparedStatements.put(
+                nodeStateSelectExistSQL, con.prepareStatement(nodeStateSelectExistSQL));
+        preparedStatements.put(
+                nodeStateDeleteSQL, con.prepareStatement(nodeStateDeleteSQL));
+
+        preparedStatements.put(
+                propertyStateInsertSQL, con.prepareStatement(propertyStateInsertSQL));
+        preparedStatements.put(
+                propertyStateUpdateSQL, con.prepareStatement(propertyStateUpdateSQL));
+        preparedStatements.put(
+                propertyStateSelectSQL, con.prepareStatement(propertyStateSelectSQL));
+        preparedStatements.put(
+                propertyStateSelectExistSQL, con.prepareStatement(propertyStateSelectExistSQL));
+        preparedStatements.put(
+                propertyStateDeleteSQL, con.prepareStatement(propertyStateDeleteSQL));
+
+        preparedStatements.put(
+                nodeReferenceInsertSQL, con.prepareStatement(nodeReferenceInsertSQL));
+        preparedStatements.put(
+                nodeReferenceUpdateSQL, con.prepareStatement(nodeReferenceUpdateSQL));
+        preparedStatements.put(
+                nodeReferenceSelectSQL, con.prepareStatement(nodeReferenceSelectSQL));
+        preparedStatements.put(
+                nodeReferenceSelectExistSQL, con.prepareStatement(nodeReferenceSelectExistSQL));
+        preparedStatements.put(
+                nodeReferenceDeleteSQL, con.prepareStatement(nodeReferenceDeleteSQL));
+
+        if (!externalBLOBs) {
+            preparedStatements.put(blobInsertSQL, con.prepareStatement(blobInsertSQL));
+            preparedStatements.put(blobUpdateSQL, con.prepareStatement(blobUpdateSQL));
+            preparedStatements.put(blobSelectSQL, con.prepareStatement(blobSelectSQL));
+            preparedStatements.put(blobSelectExistSQL, con.prepareStatement(blobSelectExistSQL));
+            preparedStatements.put(blobDeleteSQL, con.prepareStatement(blobDeleteSQL));
+        }
     }
 
     //--------------------------------------------------------< inner classes >
+
+    class SizedInputStream extends FilterInputStream {
+        private final long size;
+        private boolean consumed = false;
+
+        SizedInputStream(InputStream in, long size) {
+            super(in);
+            this.size = size;
+        }
+
+        long getSize() {
+            return size;
+        }
+
+        boolean isConsumed() {
+            return consumed;
+        }
+
+        public int read() throws IOException {
+            consumed = true;
+            return super.read();
+        }
+
+        public long skip(long n) throws IOException {
+            consumed = true;
+            return super.skip(n);
+        }
+
+        public int read(byte b[]) throws IOException {
+            consumed = true;
+            return super.read(b);
+        }
+
+        public int read(byte b[], int off, int len) throws IOException {
+            consumed = true;
+            return super.read(b, off, len);
+        }
+    }
+
     class DbBLOBStore implements BLOBStore {
         /**
          * {@inheritDoc}
@@ -1014,38 +1183,32 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
          * {@inheritDoc}
          */
         public InputStream get(String blobId) throws Exception {
-            PreparedStatement stmt = blobSelect;
-            synchronized (stmt) {
-                try {
-                    stmt.setString(1, blobId);
-                    stmt.execute();
-                    final ResultSet rs = stmt.getResultSet();
-                    if (!rs.next()) {
-                        closeResultSet(rs);
-                        throw new Exception("no such BLOB: " + blobId);
-                    }
-                    InputStream in = rs.getBinaryStream(1);
-                    if (in == null) {
-                        // some databases treat zero-length values as NULL;
-                        // return empty InputStream in such a case
-                        closeResultSet(rs);
-                        return new ByteArrayInputStream(new byte[0]);
-                    }
-
-                    /**
-                     * return an InputStream wrapper in order to
-                     * close the ResultSet when the stream is closed
-                     */
-                    return new FilterInputStream(in) {
-                        public void close() throws IOException {
-                            in.close();
-                            // now it's safe to close ResultSet
-                            closeResultSet(rs);
-                        }
-                    };
-                } finally {
-                    resetStatement(stmt);
+            synchronized (blobSelectSQL) {
+                Statement stmt = executeStmt(blobSelectSQL, new Object[]{blobId});
+                final ResultSet rs = stmt.getResultSet();
+                if (!rs.next()) {
+                    closeResultSet(rs);
+                    throw new Exception("no such BLOB: " + blobId);
                 }
+                InputStream in = rs.getBinaryStream(1);
+                if (in == null) {
+                    // some databases treat zero-length values as NULL;
+                    // return empty InputStream in such a case
+                    closeResultSet(rs);
+                    return new ByteArrayInputStream(new byte[0]);
+                }
+
+                /**
+                 * return an InputStream wrapper in order to
+                 * close the ResultSet when the stream is closed
+                 */
+                return new FilterInputStream(in) {
+                    public void close() throws IOException {
+                        in.close();
+                        // now it's safe to close ResultSet
+                        closeResultSet(rs);
+                    }
+                };
             }
         }
 
@@ -1054,36 +1217,22 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
          */
         public synchronized void put(String blobId, InputStream in, long size)
                 throws Exception {
-            PreparedStatement stmt = blobSelectExist;
-            try {
-                stmt.setString(1, blobId);
-                stmt.execute();
-                ResultSet rs = stmt.getResultSet();
-                // a BLOB exists if the result has at least one entry
-                boolean exists = rs.next();
-                resetStatement(stmt);
-                closeResultSet(rs);
+            Statement stmt = executeStmt(blobSelectExistSQL, new Object[]{blobId});
+            ResultSet rs = stmt.getResultSet();
+            // a BLOB exists if the result has at least one entry
+            boolean exists = rs.next();
+            closeResultSet(rs);
 
-                stmt = (exists) ? blobUpdate : blobInsert;
-                stmt.setBinaryStream(1, in, (int) size);
-                stmt.setString(2, blobId);
-                stmt.executeUpdate();
-            } finally {
-                resetStatement(stmt);
-            }
+            String sql = (exists) ? blobUpdateSQL : blobInsertSQL;
+            executeStmt(sql, new Object[]{new SizedInputStream(in, size), blobId});
         }
 
         /**
          * {@inheritDoc}
          */
         public synchronized boolean remove(String blobId) throws Exception {
-            PreparedStatement stmt = blobDelete;
-            try {
-                stmt.setString(1, blobId);
-                return stmt.executeUpdate() == 1;
-            } finally {
-                resetStatement(stmt);
-            }
+            Statement stmt = executeStmt(blobDeleteSQL, new Object[]{blobId});
+            return stmt.getUpdateCount() == 1;
         }
     }
 }
