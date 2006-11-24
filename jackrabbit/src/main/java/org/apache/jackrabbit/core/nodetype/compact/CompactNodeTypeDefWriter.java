@@ -16,24 +16,25 @@
  */
 package org.apache.jackrabbit.core.nodetype.compact;
 
-import org.apache.jackrabbit.name.QName;
-import org.apache.jackrabbit.name.NamespaceResolver;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.ValueConstraint;
-import org.apache.jackrabbit.core.value.InternalValue;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
 import javax.jcr.version.OnParentVersionAction;
-import java.io.Writer;
-import java.io.StringWriter;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Iterator;
+
+import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.ValueConstraint;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.name.NamespaceResolver;
+import org.apache.jackrabbit.name.QName;
 
 /**
  * Prints node type defs in a compact notation
@@ -322,15 +323,7 @@ public class CompactNodeTypeDefWriter {
      * @throws IOException
      */
     private void writeItemDefName(QName name) throws IOException {
-        String s = resolve(name);
-        // check for '-' and '+'
-        if (s.indexOf('-') >= 0 || s.indexOf('+') >= 0) {
-            out.write('\'');
-            out.write(s);
-            out.write('\'');
-        } else {
-            out.write(s);
-        }
+        out.write(resolve(name));
     }
     /**
      * write required types
@@ -375,16 +368,25 @@ public class CompactNodeTypeDefWriter {
                 if (nsWriter != null) {
                     if (!usedNamespaces.contains(prefix)) {
                         usedNamespaces.add(prefix);
-                        nsWriter.write('<');
+                        nsWriter.write("<'");
                         nsWriter.write(prefix);
-                        nsWriter.write("='");
+                        nsWriter.write("'='");
                         nsWriter.write(escape(qname.getNamespaceURI()));
                         nsWriter.write("'>\n");
                     }
                 }
                 prefix += ":";
             }
-            return prefix + qname.getLocalName();
+
+            String resolvedName = prefix + qname.getLocalName();
+
+            // check for '-' and '+'
+            if (resolvedName.indexOf('-') >= 0 || resolvedName.indexOf('+') >= 0) {
+                return "'" + resolvedName + "'";
+            } else {
+                return resolvedName;
+            }
+
         } catch (NamespaceException e) {
             return qname.toString();
         }
