@@ -78,10 +78,10 @@ public abstract class LazyReader extends Reader {
             try {
                 // try to initialize reader
                 initializeReader();
-            } catch (IOException e) {
+            } catch (Throwable t) {
                 log.warn("exception initializing reader " +
-                        getClass().getName() + ": " + e);
-                log.debug("Dump: ", e);
+                        getClass().getName() + ": " + t);
+                log.debug("Dump: ", t);
                 // assign null reader
                 delegate = NULL_READER;
             }
