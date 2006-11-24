@@ -143,7 +143,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
         // check if insert or update
         boolean update = state.getStatus() != ItemState.STATUS_NEW;
         //boolean update = exists((NodeId) state.getId());
-        PreparedStatement stmt = (update) ? nodeStateUpdate : nodeStateInsert;
+        String sql = (update) ? nodeStateUpdateSQL : nodeStateInsertSQL;
 
         Blob blob = null;
         try {
@@ -153,12 +153,9 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
             Serializer.serialize(state, out);
 
             // we are synchronized on this instance, therefore we do not
-            // not have to additionally synchronize on the preparedStatement
-
+            // not have to additionally synchronize on the sql statement
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            stmt.setBlob(1, blob);
-            stmt.setString(2, state.getId().toString());
-            stmt.executeUpdate();
+            executeStmt(sql, new Object[]{blob, state.getNodeId().toString()});
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
@@ -167,11 +164,10 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
-            resetStatement(stmt);
             if (blob != null) {
                 try {
                     freeTemporaryBlob(blob);
-                } catch (Exception e1) {
+                } catch (Exception ignore) {
                 }
             }
         }
@@ -188,7 +184,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
         // check if insert or update
         boolean update = state.getStatus() != ItemState.STATUS_NEW;
         //boolean update = exists((PropertyId) state.getId());
-        PreparedStatement stmt = (update) ? propertyStateUpdate : propertyStateInsert;
+        String sql = (update) ? propertyStateUpdateSQL : propertyStateInsertSQL;
 
         Blob blob = null;
         try {
@@ -198,12 +194,9 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
             Serializer.serialize(state, out, blobStore);
 
             // we are synchronized on this instance, therefore we do not
-            // not have to additionally synchronize on the preparedStatement
-
+            // not have to additionally synchronize on the sql statement
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            stmt.setBlob(1, blob);
-            stmt.setString(2, state.getId().toString());
-            stmt.executeUpdate();
+            executeStmt(sql, new Object[]{blob, state.getPropertyId().toString()});
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
@@ -212,11 +205,10 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
-            resetStatement(stmt);
             if (blob != null) {
                 try {
                     freeTemporaryBlob(blob);
-                } catch (Exception e1) {
+                } catch (Exception ignore) {
                 }
             }
         }
@@ -232,7 +224,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
 
         // check if insert or update
         boolean update = exists(refs.getId());
-        PreparedStatement stmt = (update) ? nodeReferenceUpdate : nodeReferenceInsert;
+        String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
         Blob blob = null;
         try {
@@ -242,12 +234,9 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
             Serializer.serialize(refs, out);
 
             // we are synchronized on this instance, therefore we do not
-            // not have to additionally synchronize on the preparedStatement
-
+            // not have to additionally synchronize on the sql statement
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            stmt.setBlob(1, blob);
-            stmt.setString(2, refs.getId().toString());
-            stmt.executeUpdate();
+            executeStmt(sql, new Object[]{blob, refs.getId().toString()});
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
@@ -256,11 +245,10 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
-            resetStatement(stmt);
             if (blob != null) {
                 try {
                     freeTemporaryBlob(blob);
-                } catch (Exception e1) {
+                } catch (Exception ignore) {
                 }
             }
         }
@@ -384,29 +372,22 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
          */
         public synchronized void put(String blobId, InputStream in, long size)
                 throws Exception {
-            PreparedStatement stmt = blobSelectExist;
+            Statement stmt = executeStmt(blobSelectExistSQL, new Object[]{blobId});
+            ResultSet rs = stmt.getResultSet();
+            // a BLOB exists if the result has at least one entry
+            boolean exists = rs.next();
+            closeResultSet(rs);
+
             Blob blob = null;
             try {
-                stmt.setString(1, blobId);
-                stmt.execute();
-                ResultSet rs = stmt.getResultSet();
-                // a BLOB exists if the result has at least one entry
-                boolean exists = rs.next();
-                resetStatement(stmt);
-                closeResultSet(rs);
-
-                stmt = (exists) ? blobUpdate : blobInsert;
-
+                String sql = (exists) ? blobUpdateSQL : blobInsertSQL;
                 blob = createTemporaryBlob(in);
-                stmt.setBlob(1, blob);
-                stmt.setString(2, blobId);
-                stmt.executeUpdate();
+                executeStmt(sql, new Object[]{blob, blobId});
             } finally {
-                resetStatement(stmt);
                 if (blob != null) {
                     try {
                         freeTemporaryBlob(blob);
-                    } catch (Exception e1) {
+                    } catch (Exception ignore) {
                     }
                 }
             }

@@ -46,6 +46,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Iterator;
+import java.util.HashMap;
 
 /**
  * Base class for database file systems. This class contains common
@@ -78,28 +80,31 @@ public class DatabaseFileSystem implements FileSystem {
     // jdbc connection
     protected Connection con;
 
-    // the list of prepared statements, used in close()
-    private List preparedStatements;
+    // time to sleep in ms before a reconnect is attempted
+    protected static final int SLEEP_BEFORE_RECONNECT = 10000;
 
-    // shared prepared statements
-    protected PreparedStatement selectExistStmt;
-    protected PreparedStatement selectFileExistStmt;
-    protected PreparedStatement selectFolderExistStmt;
-    protected PreparedStatement selectChildCountStmt;
-    protected PreparedStatement selectDataStmt;
-    protected PreparedStatement selectLastModifiedStmt;
-    protected PreparedStatement selectLengthStmt;
-    protected PreparedStatement selectFileNamesStmt;
-    protected PreparedStatement selectFolderNamesStmt;
-    protected PreparedStatement selectFileAndFolderNamesStmt;
-    protected PreparedStatement deleteFileStmt;
-    protected PreparedStatement deleteFolderStmt;
-    protected PreparedStatement insertFileStmt;
-    protected PreparedStatement insertFolderStmt;
-    protected PreparedStatement updateDataStmt;
-    protected PreparedStatement updateLastModifiedStmt;
-    protected PreparedStatement copyFileStmt;
-    protected PreparedStatement copyFilesStmt;
+    // the map of prepared statements (key: sql stmt, value: prepared stmt)
+    private HashMap preparedStatements = new HashMap();
+
+    // SQL statements
+    protected String selectExistSQL;
+    protected String selectFileExistSQL;
+    protected String selectFolderExistSQL;
+    protected String selectChildCountSQL;
+    protected String selectDataSQL;
+    protected String selectLastModifiedSQL;
+    protected String selectLengthSQL;
+    protected String selectFileNamesSQL;
+    protected String selectFolderNamesSQL;
+    protected String selectFileAndFolderNamesSQL;
+    protected String deleteFileSQL;
+    protected String deleteFolderSQL;
+    protected String insertFileSQL;
+    protected String insertFolderSQL;
+    protected String updateDataSQL;
+    protected String updateLastModifiedSQL;
+    protected String copyFileSQL;
+    protected String copyFilesSQL;
 
     /**
      * Default constructor
@@ -177,8 +182,11 @@ public class DatabaseFileSystem implements FileSystem {
             // check if schema objects exist and create them if necessary
             checkSchema();
 
+            // build sql statements
+            buildSQLStatements();
+
             // prepare statements
-            preparedStatements = initPreparedStatements();
+            initPreparedStatements();
 
             // finally verify that there's a file system root entry
             verifyRootExists();
@@ -201,14 +209,10 @@ public class DatabaseFileSystem implements FileSystem {
 
         try {
             // close shared prepared statements
-            if (preparedStatements != null) {
-                while (!preparedStatements.isEmpty()) {
-                    closeStatement(
-                            (PreparedStatement) preparedStatements.remove(0)
-                    );
-                }
+            for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
+                closeStatement((PreparedStatement) it.next());
             }
-            preparedStatements = null;
+            preparedStatements.clear();
 
             // close jdbc connection
             closeConnection(con);
@@ -252,18 +256,15 @@ public class DatabaseFileSystem implements FileSystem {
         String name = FileSystemPathUtil.getName(filePath);
 
         int count = 0;
-        PreparedStatement stmt = deleteFileStmt;
-        synchronized (stmt) {
+        synchronized (deleteFileSQL) {
             try {
-                stmt.setString(1, parentDir);
-                stmt.setString(2, name);
-                count = stmt.executeUpdate();
+                Statement stmt = executeStmt(
+                        deleteFileSQL, new Object[]{parentDir, name});
+                count = stmt.getUpdateCount();
             } catch (SQLException e) {
                 String msg = "failed to delete file: " + filePath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
-            } finally {
-                resetStatement(stmt);
             }
         }
 
@@ -290,20 +291,18 @@ public class DatabaseFileSystem implements FileSystem {
         String name = FileSystemPathUtil.getName(folderPath);
 
         int count = 0;
-        PreparedStatement stmt = deleteFolderStmt;
-        synchronized (stmt) {
+        synchronized (deleteFolderSQL) {
             try {
-                stmt.setString(1, parentDir);
-                stmt.setString(2, name);
-                stmt.setString(3, folderPath);
-                stmt.setString(4, folderPath + FileSystem.SEPARATOR + "%");
-                count = stmt.executeUpdate();
+                Statement stmt = executeStmt(deleteFolderSQL, new Object[]{
+                        parentDir,
+                        name,
+                        folderPath,
+                        folderPath + FileSystem.SEPARATOR + "%"});
+                count = stmt.getUpdateCount();
             } catch (SQLException e) {
                 String msg = "failed to delete folder: " + folderPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
-            } finally {
-                resetStatement(stmt);
             }
         }
 
@@ -325,13 +324,11 @@ public class DatabaseFileSystem implements FileSystem {
         String parentDir = FileSystemPathUtil.getParentDir(path);
         String name = FileSystemPathUtil.getName(path);
 
-        PreparedStatement stmt = selectExistStmt;
-        synchronized (stmt) {
+        synchronized (selectExistSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, parentDir);
-                stmt.setString(2, name);
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        selectExistSQL, new Object[]{parentDir, name});
                 rs = stmt.getResultSet();
 
                 // a file system entry exists if the result set
@@ -343,7 +340,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -361,13 +357,11 @@ public class DatabaseFileSystem implements FileSystem {
         String parentDir = FileSystemPathUtil.getParentDir(path);
         String name = FileSystemPathUtil.getName(path);
 
-        PreparedStatement stmt = selectFileExistStmt;
-        synchronized (stmt) {
+        synchronized (selectFileExistSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, parentDir);
-                stmt.setString(2, name);
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        selectFileExistSQL, new Object[]{parentDir, name});
                 rs = stmt.getResultSet();
 
                 // a file exists if the result set has at least one entry
@@ -378,7 +372,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -396,13 +389,11 @@ public class DatabaseFileSystem implements FileSystem {
         String parentDir = FileSystemPathUtil.getParentDir(path);
         String name = FileSystemPathUtil.getName(path);
 
-        PreparedStatement stmt = selectFolderExistStmt;
-        synchronized (stmt) {
+        synchronized (selectFolderExistSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, parentDir);
-                stmt.setString(2, name);
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        selectFolderExistSQL, new Object[]{parentDir, name});
                 rs = stmt.getResultSet();
 
                 // a folder exists if the result set has at least one entry
@@ -413,7 +404,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -431,13 +421,11 @@ public class DatabaseFileSystem implements FileSystem {
         String parentDir = FileSystemPathUtil.getParentDir(path);
         String name = FileSystemPathUtil.getName(path);
 
-        PreparedStatement stmt = selectLastModifiedStmt;
-        synchronized (stmt) {
+        synchronized (selectLastModifiedSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, parentDir);
-                stmt.setString(2, name);
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        selectLastModifiedSQL, new Object[]{parentDir, name});
                 rs = stmt.getResultSet();
                 if (!rs.next()) {
                     throw new FileSystemException("no such file system entry: " + path);
@@ -449,7 +437,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -467,13 +454,11 @@ public class DatabaseFileSystem implements FileSystem {
         String parentDir = FileSystemPathUtil.getParentDir(filePath);
         String name = FileSystemPathUtil.getName(filePath);
 
-        PreparedStatement stmt = selectLengthStmt;
-        synchronized (stmt) {
+        synchronized (selectLengthSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, parentDir);
-                stmt.setString(2, name);
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        selectLengthSQL, new Object[]{parentDir, name});
                 rs = stmt.getResultSet();
                 if (!rs.next()) {
                     throw new FileSystemException("no such file: " + filePath);
@@ -485,7 +470,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -504,12 +488,10 @@ public class DatabaseFileSystem implements FileSystem {
             throw new FileSystemException("no such file system entry: " + path);
         }
 
-        PreparedStatement stmt = selectChildCountStmt;
-        synchronized (stmt) {
+        synchronized (selectChildCountSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, path);
-                stmt.execute();
+                Statement stmt = executeStmt(selectChildCountSQL, new Object[]{path});
                 rs = stmt.getResultSet();
                 if (!rs.next()) {
                     return false;
@@ -526,7 +508,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -545,12 +526,11 @@ public class DatabaseFileSystem implements FileSystem {
             throw new FileSystemException("no such folder: " + folderPath);
         }
 
-        PreparedStatement stmt = selectFileAndFolderNamesStmt;
-        synchronized (stmt) {
+        synchronized (selectFileAndFolderNamesSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, folderPath);
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        selectFileAndFolderNamesSQL, new Object[]{folderPath});
                 rs = stmt.getResultSet();
                 ArrayList names = new ArrayList();
                 while (rs.next()) {
@@ -569,7 +549,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -588,12 +567,11 @@ public class DatabaseFileSystem implements FileSystem {
             throw new FileSystemException("no such folder: " + folderPath);
         }
 
-        PreparedStatement stmt = selectFileNamesStmt;
-        synchronized (stmt) {
+        synchronized (selectFileNamesSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, folderPath);
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        selectFileNamesSQL, new Object[]{folderPath});
                 rs = stmt.getResultSet();
                 ArrayList names = new ArrayList();
                 while (rs.next()) {
@@ -606,7 +584,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -625,12 +602,11 @@ public class DatabaseFileSystem implements FileSystem {
             throw new FileSystemException("no such folder: " + folderPath);
         }
 
-        PreparedStatement stmt = selectFolderNamesStmt;
-        synchronized (stmt) {
+        synchronized (selectFolderNamesSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, folderPath);
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        selectFolderNamesSQL, new Object[]{folderPath});
                 rs = stmt.getResultSet();
                 ArrayList names = new ArrayList();
                 while (rs.next()) {
@@ -649,7 +625,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
     }
@@ -668,19 +643,17 @@ public class DatabaseFileSystem implements FileSystem {
         String name = FileSystemPathUtil.getName(filePath);
 
         int count = 0;
-        PreparedStatement stmt = updateLastModifiedStmt;
-        synchronized (stmt) {
+        synchronized (updateLastModifiedSQL) {
             try {
-                stmt.setLong(1, System.currentTimeMillis());
-                stmt.setString(2, parentDir);
-                stmt.setString(3, name);
-                count = stmt.executeUpdate();
+                Statement stmt = executeStmt(updateLastModifiedSQL, new Object[]{
+                        new Long(System.currentTimeMillis()),
+                        parentDir,
+                        name});
+                count = stmt.getUpdateCount();
             } catch (SQLException e) {
                 String msg = "failed to touch file: " + filePath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
-            } finally {
-                resetStatement(stmt);
             }
         }
 
@@ -702,12 +675,11 @@ public class DatabaseFileSystem implements FileSystem {
         String parentDir = FileSystemPathUtil.getParentDir(filePath);
         String name = FileSystemPathUtil.getName(filePath);
 
-        PreparedStatement stmt = selectDataStmt;
-        synchronized (stmt) {
+        synchronized (selectDataSQL) {
             try {
-                stmt.setString(1, parentDir);
-                stmt.setString(2, name);
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        updateLastModifiedSQL, new Object[]{parentDir, name});
+
                 final ResultSet rs = stmt.getResultSet();
                 if (!rs.next()) {
                     throw new FileSystemException("no such file: " + filePath);
@@ -728,8 +700,6 @@ public class DatabaseFileSystem implements FileSystem {
                 String msg = "failed to retrieve data of file: " + filePath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
-            } finally {
-                resetStatement(stmt);
             }
         }
     }
@@ -765,39 +735,39 @@ public class DatabaseFileSystem implements FileSystem {
                 public void close() throws IOException {
                     super.close();
 
-                    PreparedStatement stmt = null;
                     InputStream in = null;
                     try {
                         if (isFile(filePath)) {
-                            stmt = updateDataStmt;
-                            synchronized (stmt) {
+                            synchronized (updateDataSQL) {
                                 long length = tmpFile.length();
                                 in = new FileInputStream(tmpFile);
-                                stmt.setBinaryStream(1, in, (int) length);
-                                stmt.setLong(2, System.currentTimeMillis());
-                                stmt.setLong(3, length);
-                                stmt.setString(4, parentDir);
-                                stmt.setString(5, name);
-                                stmt.executeUpdate();
+                                executeStmt(updateDataSQL,
+                                        new Object[]{
+                                            new SizedInputStream(in, length),
+                                            new Long(System.currentTimeMillis()),
+                                            new Long(length),
+                                            parentDir,
+                                            name
+                                        });
                             }
                         } else {
-                            stmt = insertFileStmt;
-                            stmt.setString(1, parentDir);
-                            stmt.setString(2, name);
-                            long length = tmpFile.length();
-                            in = new FileInputStream(tmpFile);
-                            stmt.setBinaryStream(3, in, (int) length);
-                            stmt.setLong(4, System.currentTimeMillis());
-                            stmt.setLong(5, length);
-                            stmt.executeUpdate();
+                            synchronized (insertFileSQL) {
+                                long length = tmpFile.length();
+                                in = new FileInputStream(tmpFile);
+                                executeStmt(insertFileSQL,
+                                        new Object[]{
+                                            parentDir,
+                                            name,
+                                            new SizedInputStream(in, length),
+                                            new Long(System.currentTimeMillis()),
+                                            new Long(length)
+                                        });
+                            }
                         }
 
                     } catch (Exception e) {
                         throw new IOException(e.getMessage());
                     } finally {
-                        if (stmt != null) {
-                            resetStatement(stmt);
-                        }
                         if (in != null) {
                             in.close();
                         }
@@ -864,39 +834,39 @@ public class DatabaseFileSystem implements FileSystem {
                 public void close() throws IOException {
                     raf.close();
 
-                    PreparedStatement stmt = null;
                     InputStream in = null;
                     try {
                         if (isFile(filePath)) {
-                            stmt = updateDataStmt;
-                            synchronized (stmt) {
+                            synchronized (updateDataSQL) {
                                 long length = tmpFile.length();
                                 in = new FileInputStream(tmpFile);
-                                stmt.setBinaryStream(1, in, (int) length);
-                                stmt.setLong(2, System.currentTimeMillis());
-                                stmt.setLong(3, length);
-                                stmt.setString(4, parentDir);
-                                stmt.setString(5, name);
-                                stmt.executeUpdate();
+                                executeStmt(updateDataSQL,
+                                        new Object[]{
+                                            new SizedInputStream(in, length),
+                                            new Long(System.currentTimeMillis()),
+                                            new Long(length),
+                                            parentDir,
+                                            name
+                                        });
                             }
                         } else {
-                            stmt = insertFileStmt;
-                            stmt.setString(1, parentDir);
-                            stmt.setString(2, name);
-                            long length = tmpFile.length();
-                            in = new FileInputStream(tmpFile);
-                            stmt.setBinaryStream(3, in, (int) length);
-                            stmt.setLong(4, System.currentTimeMillis());
-                            stmt.setLong(5, length);
-                            stmt.executeUpdate();
+                            synchronized (insertFileSQL) {
+                                long length = tmpFile.length();
+                                in = new FileInputStream(tmpFile);
+                                executeStmt(insertFileSQL,
+                                        new Object[]{
+                                            parentDir,
+                                            name,
+                                            new SizedInputStream(in, length),
+                                            new Long(System.currentTimeMillis()),
+                                            new Long(length)
+                                        });
+                            }
                         }
 
                     } catch (Exception e) {
                         throw new IOException(e.getMessage());
                     } finally {
-                        if (stmt != null) {
-                            resetStatement(stmt);
-                        }
                         if (in != null) {
                             in.close();
                         }
@@ -1024,6 +994,110 @@ public class DatabaseFileSystem implements FileSystem {
     }
 
     /**
+     * Re-establishes the database connection. This method is called by
+     * {@link #executeStmt(String, Object[])} after a <code>SQLException</code>
+     * had been encountered.
+     *
+     * @return true if the connection could be successfully re-established,
+     *         false otherwise.
+     */
+    protected synchronized boolean reestablishConnection() {
+        // in any case try to shut down current connection
+        // gracefully in order to avoid potential memory leaks
+
+        // close shared prepared statements
+        for (Iterator it = preparedStatements.values().iterator(); it.hasNext(); ) {
+            closeStatement((PreparedStatement) it.next());
+        }
+        preparedStatements.clear();
+        try {
+            closeConnection(con);
+        } catch (Exception ignore) {
+        }
+
+        // sleep for a while to give database a chance
+        // to restart before a reconnect is attempted
+
+        try {
+            Thread.sleep(SLEEP_BEFORE_RECONNECT);
+        } catch (InterruptedException ignore) {
+        }
+
+        // now try to re-establish connection
+
+        try {
+            initConnection();
+            initPreparedStatements();
+            return true;
+        } catch (Exception e) {
+            log.error("failed to re-establish connection", e);
+            // reconnect failed
+            return false;
+        }
+    }
+
+    /**
+     * Executes the given SQL statement with the specified parameters.
+     * If a <code>SQLException</code> is encountered <i>one</i> attempt is made
+     * to re-establish the database connection and re-execute the statement.
+     *
+     * @param sql    statement to execute
+     * @param params parameters to set
+     * @return the <code>Statement</code> object that had been executed
+     * @throws SQLException if an error occurs
+     */
+    protected Statement executeStmt(String sql, Object[] params)
+            throws SQLException {
+        int trials = 2;
+        while (true) {
+            PreparedStatement stmt = (PreparedStatement) preparedStatements.get(sql);
+            try {
+                for (int i = 0; i < params.length; i++) {
+                    if (params[i] instanceof SizedInputStream) {
+                        SizedInputStream in = (SizedInputStream) params[i];
+                        stmt.setBinaryStream(i + 1, in, (int) in.getSize());
+                    } else {
+                        stmt.setObject(i + 1, params[i]);
+                    }
+                }
+                stmt.execute();
+                resetStatement(stmt);
+                return stmt;
+            } catch (SQLException se) {
+                if (--trials == 0) {
+                    // no more trials, re-throw
+                    throw se;
+                }
+                log.warn("execute failed, about to reconnect...", se.getMessage());
+
+                // try to reconnect
+                if (reestablishConnection()) {
+                    // reconnect succeeded; check whether it's possible to
+                    // re-execute the prepared stmt with the given parameters
+                    for (int i = 0; i < params.length; i++) {
+                        if (params[i] instanceof SizedInputStream) {
+                            SizedInputStream in = (SizedInputStream) params[i];
+                            if (in.isConsumed()) {
+                                // we're unable to re-execute the prepared stmt
+                                // since an InputStream paramater has already
+                                // been 'consumed';
+                                // re-throw previous SQLException
+                                throw se;
+                            }
+                        }
+                    }
+
+                    // try again to execute the statement
+                    continue;
+                } else {
+                    // reconnect failed, re-throw previous SQLException
+                    throw se;
+                }
+            }
+        }
+    }
+
+    /**
      * Makes sure that <code>schemaObjectPrefix</code> does only consist of
      * characters that are allowed in names on the target database. Illegal
      * characters will be escaped as necessary.
@@ -1105,104 +1179,141 @@ public class DatabaseFileSystem implements FileSystem {
     }
 
     /**
-     * Initializes the prepared statements and returns them in a list. please
-     * note that this list is used to close the statements in the {@link #close()}
-     * call.
-     *
-     * @return the list of prepared statements
-     * @throws SQLException
+     * Builds the SQL statements
      */
-    protected List initPreparedStatements() throws SQLException {
-        List stmts = new LinkedList();
-        stmts.add(insertFileStmt = con.prepareStatement("insert into "
+    protected void buildSQLStatements() {
+        insertFileSQL = "insert into "
                 + schemaObjectPrefix + "FSENTRY "
                 + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
-                + "values (?, ?, ?, ?, ?)"));
+                + "values (?, ?, ?, ?, ?)";
 
-        stmts.add(insertFolderStmt = con.prepareStatement("insert into "
+        insertFolderSQL = "insert into "
                 + schemaObjectPrefix + "FSENTRY "
                 + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_LASTMOD, FSENTRY_LENGTH) "
-                + "values (?, ?, ?, 0)"));
+                + "values (?, ?, ?, 0)";
 
-        stmts.add(updateDataStmt = con.prepareStatement("update "
+        updateDataSQL = "update "
                 + schemaObjectPrefix + "FSENTRY "
                 + "set FSENTRY_DATA = ?, FSENTRY_LASTMOD = ?, FSENTRY_LENGTH = ? "
                 + "where FSENTRY_PATH = ? and FSENTRY_NAME = ? "
-                + "and FSENTRY_DATA is not null"));
+                + "and FSENTRY_DATA is not null";
 
-        stmts.add(updateLastModifiedStmt = con.prepareStatement("update "
+        updateLastModifiedSQL = "update "
                 + schemaObjectPrefix + "FSENTRY set FSENTRY_LASTMOD = ? "
                 + "where FSENTRY_PATH = ? and FSENTRY_NAME = ? "
-                + "and FSENTRY_DATA is not null"));
+                + "and FSENTRY_DATA is not null";
 
-        stmts.add(selectExistStmt = con.prepareStatement("select 1 from "
+        selectExistSQL = "select 1 from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ?"));
+                + "and FSENTRY_NAME = ?";
 
-        stmts.add(selectFileExistStmt = con.prepareStatement("select 1 from "
+        selectFileExistSQL = "select 1 from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null";
 
-        stmts.add(selectFolderExistStmt = con.prepareStatement("select 1 from "
+        selectFolderExistSQL = "select 1 from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is null";
 
-        stmts.add(selectFileNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
+        selectFileNamesSQL = "select FSENTRY_NAME from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_DATA is not null"));
+                + "and FSENTRY_DATA is not null";
 
-        stmts.add(selectFolderNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
+        selectFolderNamesSQL = "select FSENTRY_NAME from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_DATA is null"));
+                + "and FSENTRY_DATA is null";
 
-        stmts.add(selectFileAndFolderNamesStmt = con.prepareStatement("select FSENTRY_NAME from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ?"));
+        selectFileAndFolderNamesSQL = "select FSENTRY_NAME from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ?";
 
-        stmts.add(selectChildCountStmt = con.prepareStatement("select count(FSENTRY_NAME) from "
-                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ?  "));
+        selectChildCountSQL = "select count(FSENTRY_NAME) from "
+                + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ?  ";
 
-        stmts.add(selectDataStmt = con.prepareStatement("select FSENTRY_DATA from "
+        selectDataSQL = "select FSENTRY_DATA from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null";
 
-        stmts.add(selectLastModifiedStmt = con.prepareStatement("select FSENTRY_LASTMOD from "
+        selectLastModifiedSQL = "select FSENTRY_LASTMOD from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ?"));
+                + "and FSENTRY_NAME = ?";
 
-        stmts.add(selectLengthStmt = con.prepareStatement("select FSENTRY_LENGTH from "
+        selectLengthSQL = "select FSENTRY_LENGTH from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null";
 
-        stmts.add(deleteFileStmt = con.prepareStatement("delete from "
+        deleteFileSQL = "delete from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null";
 
-        stmts.add(deleteFolderStmt = con.prepareStatement("delete from "
+        deleteFolderSQL = "delete from "
                 + schemaObjectPrefix + "FSENTRY where "
                 + "(FSENTRY_PATH = ? and FSENTRY_NAME = ? and FSENTRY_DATA is null) "
                 + "or (FSENTRY_PATH = ?) "
-                + "or (FSENTRY_PATH like ?) "));
+                + "or (FSENTRY_PATH like ?) ";
 
-        stmts.add(copyFileStmt = con.prepareStatement("insert into "
+        copyFileSQL = "insert into "
                 + schemaObjectPrefix + "FSENTRY "
                 + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
                 + "select ?, ?, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null"));
+                + "and FSENTRY_NAME = ? and FSENTRY_DATA is not null";
 
-        stmts.add(copyFilesStmt = con.prepareStatement("insert into "
+        copyFilesSQL = "insert into "
                 + schemaObjectPrefix + "FSENTRY "
                 + "(FSENTRY_PATH, FSENTRY_NAME, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH) "
                 + "select ?, FSENTRY_NAME, FSENTRY_DATA, "
                 + "FSENTRY_LASTMOD, FSENTRY_LENGTH from "
                 + schemaObjectPrefix + "FSENTRY where FSENTRY_PATH = ? "
-                + "and FSENTRY_DATA is not null"));
+                + "and FSENTRY_DATA is not null";
+    }
 
-        return stmts;
+    /**
+     * Initializes the map of prepared statements.
+     *
+     * @throws SQLException if an error occurs
+     */
+    protected void initPreparedStatements() throws SQLException {
+        preparedStatements.put(
+                selectExistSQL, con.prepareStatement(selectExistSQL));
+        preparedStatements.put(
+                selectFileExistSQL, con.prepareStatement(selectFileExistSQL));
+        preparedStatements.put(
+                selectFolderExistSQL, con.prepareStatement(selectFolderExistSQL));
+        preparedStatements.put(
+                selectChildCountSQL, con.prepareStatement(selectChildCountSQL));
+        preparedStatements.put(
+                selectDataSQL, con.prepareStatement(selectDataSQL));
+        preparedStatements.put(
+                selectLastModifiedSQL, con.prepareStatement(selectLastModifiedSQL));
+        preparedStatements.put(
+                selectLengthSQL, con.prepareStatement(selectLengthSQL));
+        preparedStatements.put(
+                selectFileNamesSQL, con.prepareStatement(selectFileNamesSQL));
+        preparedStatements.put(
+                selectFolderNamesSQL, con.prepareStatement(selectFolderNamesSQL));
+        preparedStatements.put(
+                selectFileAndFolderNamesSQL, con.prepareStatement(selectFileAndFolderNamesSQL));
+        preparedStatements.put(
+                deleteFileSQL, con.prepareStatement(deleteFileSQL));
+        preparedStatements.put(
+                deleteFolderSQL, con.prepareStatement(deleteFolderSQL));
+        preparedStatements.put(
+                insertFileSQL, con.prepareStatement(insertFileSQL));
+        preparedStatements.put(
+                insertFolderSQL, con.prepareStatement(insertFolderSQL));
+        preparedStatements.put(
+                updateDataSQL, con.prepareStatement(updateDataSQL));
+        preparedStatements.put(
+                updateLastModifiedSQL, con.prepareStatement(updateLastModifiedSQL));
+        preparedStatements.put(
+                copyFileSQL, con.prepareStatement(copyFileSQL));
+        preparedStatements.put(
+                copyFilesSQL, con.prepareStatement(copyFilesSQL));
+
     }
 
     /**
@@ -1213,13 +1324,12 @@ public class DatabaseFileSystem implements FileSystem {
      */
     protected void verifyRootExists() throws Exception {
         // check if root file system entry exists
-        PreparedStatement stmt = selectFolderExistStmt;
-        synchronized (stmt) {
+        synchronized (selectFolderExistSQL) {
             ResultSet rs = null;
             try {
-                stmt.setString(1, FileSystem.SEPARATOR);
-                stmt.setString(2, "");
-                stmt.execute();
+                Statement stmt = executeStmt(
+                        selectFolderExistSQL,
+                        new Object[]{FileSystem.SEPARATOR, ""});
                 rs = stmt.getResultSet();
 
                 if (rs.next()) {
@@ -1232,7 +1342,6 @@ public class DatabaseFileSystem implements FileSystem {
                 throw new FileSystemException(msg, e);
             } finally {
                 closeResultSet(rs);
-                resetStatement(stmt);
             }
         }
 
@@ -1258,19 +1367,18 @@ public class DatabaseFileSystem implements FileSystem {
             }
         }
 
-        PreparedStatement stmt = insertFolderStmt;
-        synchronized (stmt) {
+        synchronized (insertFolderSQL) {
             try {
-                stmt.setString(1, parentDir);
-                stmt.setString(2, name);
-                stmt.setLong(3, System.currentTimeMillis());
-                stmt.executeUpdate();
+                executeStmt(
+                        insertFolderSQL,
+                        new Object[]{
+                                parentDir,
+                                name,
+                                new Long(System.currentTimeMillis())});
             } catch (SQLException e) {
                 String msg = "failed to create folder entry: " + folderPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
-            } finally {
-                resetStatement(stmt);
             }
         }
     }
@@ -1299,18 +1407,13 @@ public class DatabaseFileSystem implements FileSystem {
             copyDeepFolder(src, dest);
         }
 
-        PreparedStatement stmt = copyFilesStmt;
-        synchronized (stmt) {
+        synchronized (copyFilesSQL) {
             try {
-                stmt.setString(1, destPath);
-                stmt.setString(2, srcPath);
-                stmt.executeUpdate();
+                executeStmt(copyFilesSQL, new Object[]{destPath, srcPath});
             } catch (SQLException e) {
                 String msg = "failed to copy file entries from " + srcPath + " to " + destPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
-            } finally {
-                resetStatement(stmt);
             }
         }
     }
@@ -1342,20 +1445,20 @@ public class DatabaseFileSystem implements FileSystem {
         }
 
         int count = 0;
-        PreparedStatement stmt = copyFileStmt;
-        synchronized (stmt) {
+        synchronized (copyFileSQL) {
             try {
-                stmt.setString(1, destParentDir);
-                stmt.setString(2, destName);
-                stmt.setString(3, srcParentDir);
-                stmt.setString(4, srcName);
-                count = stmt.executeUpdate();
+                Statement stmt = executeStmt(
+                        selectFolderExistSQL,
+                        new Object[]{
+                                destParentDir,
+                                destName,
+                                srcParentDir,
+                                srcName});
+                count = stmt.getUpdateCount();
             } catch (SQLException e) {
                 String msg = "failed to copy file from " + srcPath + " to " + destPath;
                 log.error(msg, e);
                 throw new FileSystemException(msg, e);
-            } finally {
-                resetStatement(stmt);
             }
         }
 
@@ -1413,6 +1516,46 @@ public class DatabaseFileSystem implements FileSystem {
             } catch (SQLException se) {
                 log.error("failed closing Statement", se);
             }
+        }
+    }
+
+    //--------------------------------------------------------< inner classes >
+
+    class SizedInputStream extends FilterInputStream {
+        private final long size;
+        private boolean consumed = false;
+
+        SizedInputStream(InputStream in, long size) {
+            super(in);
+            this.size = size;
+        }
+
+        long getSize() {
+            return size;
+        }
+
+        boolean isConsumed() {
+            return consumed;
+        }
+
+        public int read() throws IOException {
+            consumed = true;
+            return super.read();
+        }
+
+        public long skip(long n) throws IOException {
+            consumed = true;
+            return super.skip(n);
+        }
+
+        public int read(byte b[]) throws IOException {
+            consumed = true;
+            return super.read(b);
+        }
+
+        public int read(byte b[], int off, int len) throws IOException {
+            consumed = true;
+            return super.read(b, off, len);
         }
     }
 }
