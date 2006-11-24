@@ -89,7 +89,7 @@ public class StringValue extends BaseNonStreamValue
      *      <code>Calendar</code> instance.
      */
     public Calendar getDate() throws ValueFormatException {
-        return DateValue.toCalendar(value);
+        return ISO8601.parse(value);
     }
 
     /**
